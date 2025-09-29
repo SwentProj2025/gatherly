@@ -1,2 +1,2 @@
-# gatherly
-Team 22 app for CS-311 at EPFL
+# Gatherly
+Arriving at EPFL can be complicated, you might not have built working habits, nor connected with friends to work with, or you might be overwhelmed by the number of tasks to do. Our app aims to help you achieve your academic goals by helping you connect with people who are looking for study groups or friends but also encouraging you to focus without your phone thanks to a timer that rewards you the more time you spend focusing and organising your tasks in a to do list. Manage your workflow and your social circle!
