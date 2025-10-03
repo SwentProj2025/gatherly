@@ -1,4 +1,4 @@
-package com.android.sample
+package com.android.gatherly
 
 import kotlin.math.sqrt
 
