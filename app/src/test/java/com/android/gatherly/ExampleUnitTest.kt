@@ -1,4 +1,4 @@
-package com.android.sample
+package com.android.gatherly
 
 import org.junit.Assert.*
 import org.junit.Test
