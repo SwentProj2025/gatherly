@@ -118,10 +118,10 @@ android {
         res.setSrcDirs(emptyList<File>())
         resources.setSrcDirs(emptyList<File>())
     }
-    //getByName("test") {
-    //            java.srcDirs("src/test/java")
-    //            resources.srcDirs("src/test/resources")
-    //        }    TODO if we want to implement androidTest only tests just like bootcamp
+    sourceSets.getByName("test") {
+                java.srcDirs("src/test/java")
+                resources.srcDirs("src/test/resources")
+            }   // TODO if we want to implement androidTest only tests just like bootcamp
 }
 
 
@@ -132,9 +132,7 @@ fun DependencyHandlerScope.globalTestImplementation(dep: Any) {
 }
 
 dependencies {
-    // Core - RETIREZ une des deux dépendances core-ktx dupliquées
-    implementation(libs.androidx.core.ktx) // Gardez celle-ci
-    // implementation(libs.core.ktx) // COMMENTEZ ou SUPPRIMEZ celle-ci
+    implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -194,7 +192,7 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore")
     implementation("com.google.firebase:firebase-auth-ktx")
 
-    // Credential Manager - avec exclusions
+    // Credential Manager (for Google Sign-In)
     implementation(libs.credentials) {
         exclude(group = "com.google.android.play", module = "core")
     }
@@ -219,7 +217,6 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
 }
 
-// Ajoutez cette résolution strategy
 configurations.all {
     resolutionStrategy {
         eachDependency {
