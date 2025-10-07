@@ -3,6 +3,9 @@ package com.android.gatherly.model.todo
 import com.google.firebase.Timestamp
 import java.util.Locale
 
+/**
+ * Represents a single [ToDo] item within the app.
+ */
 data class ToDo(
     val uid: String,
     val name: String,
@@ -13,11 +16,12 @@ data class ToDo(
     val ownerId: String
 )
 
+/**
+ * Represents the state of a [ToDo] item.
+ */
 enum class ToDoStatus {
-    CREATED,
-    STARTED,
-    ENDED,
-    ARCHIVED
+  ONGOING,
+  ENDED
 }
 
 /**
@@ -27,5 +31,5 @@ enum class ToDoStatus {
  */
 fun ToDoStatus.displayString(): String =
     name.replace("_", " ").lowercase(Locale.ROOT).replaceFirstChar {
-        if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString()
+      if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString()
     }
