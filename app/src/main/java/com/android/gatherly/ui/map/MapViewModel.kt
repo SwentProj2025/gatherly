@@ -72,6 +72,7 @@ class MapViewModel(private val placeholderTodoRepository: BootcampToDosRepositor
     _uiState.value = _uiState.value.copy(expandedTodoId = null)
   }
 
+  /* TODO : IMPLEMENT THIS PROPERLY
   /** Function that updates the lastConsultedTodoId when causing navigation to the todo screen. */
   fun onTodoConsulted(todoId: String) {
     _uiState.value =
@@ -80,4 +81,5 @@ class MapViewModel(private val placeholderTodoRepository: BootcampToDosRepositor
             // TODO : update camera position accordingly
         )
   }
+  */
 }
