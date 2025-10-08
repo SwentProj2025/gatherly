@@ -155,7 +155,7 @@ dependencies {
     implementation(libs.material)
     implementation(libs.compose.material.icons.extended)
 
-    implementation(platform("com.google.firebase:firebase-bom:32.8.0"))
+    implementation(platform("com.google.firebase:firebase-bom:32.8.0")) // Version plus stable
 
     // Jetpack Compose
     implementation(platform(libs.androidx.compose.bom))
@@ -208,9 +208,6 @@ dependencies {
 
     // Networking
     implementation(libs.okhttp)
-
-    // Google Maps services
-    implementation(libs.play.services.maps)
 
     // Testing
     androidTestImplementation(libs.mockk.android)
