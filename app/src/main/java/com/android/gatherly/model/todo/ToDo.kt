@@ -4,7 +4,9 @@ import com.android.gatherly.model.map.Location
 import com.google.firebase.Timestamp
 import java.util.Locale
 
-/** Represents a single [ToDo] item within the app. */
+/**
+ * Represents a single [ToDo] item within the app.
+ */
 data class ToDo(
     val uid: String,
     val name: String,
@@ -17,7 +19,9 @@ data class ToDo(
     val ownerId: String
 )
 
-/** Represents the state of a [ToDo] item. */
+/**
+ * Represents the state of a [ToDo] item.
+ */
 enum class ToDoStatus {
   ONGOING,
   ENDED
