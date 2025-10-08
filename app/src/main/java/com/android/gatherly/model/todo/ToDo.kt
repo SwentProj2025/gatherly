@@ -12,6 +12,7 @@ data class ToDo(
     val description: String,
     val assigneeName: String,
     val dueDate: Timestamp,
+    val dueTime: Timestamp?,
     val status: ToDoStatus,
     val ownerId: String
 )
