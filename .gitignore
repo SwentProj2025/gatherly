@@ -7,7 +7,15 @@
 .externalNativeBuild
 .cxx
 local.properties
+#Firebase config
+google-services.json
 
 # Keystore files
 *.jks
 *.keystore
+
+# Firebase emulator logs
+firestore-debug.log
+
+# Local dev/test directories
+app/src/main/java/com/android/gatherly/model/map/
