@@ -43,7 +43,7 @@ data class UIState(
 private fun getDrawableTodos(todos: List<ToDo>): List<ToDo> {
   return todos.filter { it.status != ToDoStatus.ENDED && it.location != null }
 }
-// !isComplete && location != null
+
 class MapViewModel(private val placeholderTodoRepository: ToDosRepository) : ViewModel() {
   private val _uiState: MutableStateFlow<UIState> = MutableStateFlow(UIState())
   val uiState: StateFlow<UIState> = _uiState.asStateFlow()
