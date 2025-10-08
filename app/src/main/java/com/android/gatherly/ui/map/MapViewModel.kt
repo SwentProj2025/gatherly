@@ -4,9 +4,9 @@ package com.android.gatherly.ui.map
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.android.gatherly.model.todo.BootcampToDo
-import com.android.gatherly.model.todo.BootcampToDosRepository
+import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
+import com.android.gatherly.model.todo.ToDosRepository
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,7 +26,7 @@ val EPFL_LATLNG = LatLng(46.5197, 6.5663)
  *   by latestConsulterMarker) */
  */
 data class UIState(
-    val todoList: List<BootcampToDo> = emptyList(),
+    val todoList: List<ToDo> = emptyList(),
     /* TODO : eventList: List<CampusEvent> = emptyList() */
     val expandedTodoId: String? = null,
     val lastConsultedTodoId: String? = null,
@@ -40,11 +40,11 @@ data class UIState(
  * @param todos input list of todos to filter from
  * @return list of drawable todos
  */
-private fun getDrawableTodos(todos: List<BootcampToDo>): List<BootcampToDo> {
+private fun getDrawableTodos(todos: List<ToDo>): List<ToDo> {
   return todos.filter { it.status != ToDoStatus.ENDED && it.location != null }
 }
 // !isComplete && location != null
-class MapViewModel(private val placeholderTodoRepository: BootcampToDosRepository) : ViewModel() {
+class MapViewModel(private val placeholderTodoRepository: ToDosRepository) : ViewModel() {
   private val _uiState: MutableStateFlow<UIState> = MutableStateFlow(UIState())
   val uiState: StateFlow<UIState> = _uiState.asStateFlow()
 

@@ -1,7 +1,6 @@
 package com.android.gatherly.viewmodel
 
-import com.android.gatherly.model.todo.BootcampToDo
-import com.android.gatherly.model.todo.BootcampToDosRepositoryLocal
+import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.ui.map.MapViewModel
 import kotlinx.coroutines.Dispatchers
@@ -36,7 +35,7 @@ class MapViewModelTests {
 
   val testObjects = MapViewModelTestsTodos.testedTodos
 
-  fun isDrawable(todo: BootcampToDo): Boolean {
+  fun isDrawable(todo: ToDo): Boolean {
     return todo.status != ToDoStatus.ENDED && todo.location != null
   }
 
@@ -79,7 +78,7 @@ class MapViewModelTests {
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun getDrawableTodosRetrievesCorrectList() = runTest {
-    val repo = BootcampToDosRepositoryLocal()
+    val repo = FakeToDosRepositoryLocal()
     for (todo in testObjects) {
       repo.addTodo(todo)
     }
@@ -87,18 +86,18 @@ class MapViewModelTests {
     val vm = MapViewModel(repo)
     advanceUntilIdle()
 
-    val expectedList: List<BootcampToDo> =
+    val expectedList: List<ToDo> =
         listOf(
             MapViewModelTestsTodos.incompleteTodoWithLocation1,
             MapViewModelTestsTodos.incompleteTodoWithLocation2)
 
-    val actualList: List<BootcampToDo> = vm.uiState.value.todoList
+    val actualList: List<ToDo> = vm.uiState.value.todoList
     assertEquals(expectedList, actualList)
   }
 
   @Test
   fun onTodoMarkerTapped_UpdatesExpandedTodoId() = runTest {
-    val repo = BootcampToDosRepositoryLocal()
+    val repo = FakeToDosRepositoryLocal()
     val vm = MapViewModel(repo)
 
     assertNull(vm.uiState.value.expandedTodoId)
@@ -110,7 +109,7 @@ class MapViewModelTests {
 
   @Test
   fun onTodoMarkerDismissed_ClearsExpandedTodoId() = runTest {
-    val repo = BootcampToDosRepositoryLocal()
+    val repo = FakeToDosRepositoryLocal()
     val vm = MapViewModel(repo)
 
     vm.onTodoMarkerTapped("todo1")
