@@ -9,6 +9,7 @@
 local.properties
 #Firebase config
 google-services.json
+app/google-services.json
 
 # Keystore files
 *.jks
