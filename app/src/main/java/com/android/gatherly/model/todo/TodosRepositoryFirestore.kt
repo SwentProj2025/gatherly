@@ -1,5 +1,6 @@
 package com.android.gatherly.model.todo
 
+import com.android.gatherly.model.map.Location
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
@@ -170,11 +171,26 @@ class ToDosRepositoryFirestore(private val db: FirebaseFirestore) : ToDosReposit
     val assigneeName = doc.getString("assigneeName") ?: return null
     val dueDate = doc.getTimestamp("dueDate") ?: return null
         val dueTime = doc.getTimestamp("dueTime")
+        val locationMap =
+            doc.get("location")
+                    as?
+                    Map<*, *>
+        val location =
+            locationMap?.let { locMap ->
+                val lat = locMap["latitude"] as? Double
+                val lng = locMap["longitude"] as? Double
+                val locName = locMap["name"] as? String
+                if (lat != null && lng != null && locName != null) {
+                    Location(lat, lng, locName)
+                } else {
+                    null
+                }
+            }
     val ownerId = doc.getString("ownerId") ?: return null
     val statusStr = doc.getString("status") ?: ToDoStatus.ONGOING.name
     val status = ToDoStatus.valueOf(statusStr)
 
-    return ToDo(uid, name, description, assigneeName, dueDate, dueTime, status, ownerId)
+    return ToDo(uid, name, description, assigneeName, dueDate, dueTime, location, status, ownerId)
   }
 
     /**
@@ -193,6 +209,10 @@ class ToDosRepositoryFirestore(private val db: FirebaseFirestore) : ToDosReposit
         "assigneeName" to todo.assigneeName,
         "dueDate" to todo.dueDate,
         "dueTime" to todo.dueTime,
+        "location" to
+                todo.location?.let { loc ->
+                    mapOf("latitude" to loc.latitude, "longitude" to loc.longitude, "name" to loc.name)
+                },
         "status" to todo.status.name,
         "ownerId" to todo.ownerId)
   }
