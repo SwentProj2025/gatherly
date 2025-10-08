@@ -6,8 +6,8 @@ plugins {
     alias(libs.plugins.jetbrainsKotlinAndroid)
     alias(libs.plugins.ktfmt)
     id("jacoco")
-    id("com.google.gms.google-services")
-    //alias(libs.plugins.gms)
+    //id("com.google.gms.google-services")
+    alias(libs.plugins.gms)
 }
 
 android {
@@ -188,20 +188,16 @@ dependencies {
     implementation(libs.androidx.navigation.ui.ktx)
 
     // Firebase
-    implementation("com.google.firebase:firebase-database-ktx")
-    implementation("com.google.firebase:firebase-firestore")
-    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation(libs.firebase.database.ktx)
+    implementation(libs.firebase.firestore)
+    implementation(libs.firebase.ui.auth)
+    implementation(libs.firebase.auth.ktx)
+    implementation(libs.firebase.auth)
 
     // Credential Manager (for Google Sign-In)
-    implementation(libs.credentials) {
-        exclude(group = "com.google.android.play", module = "core")
-    }
-    implementation(libs.credentials.play.services.auth) {
-        exclude(group = "com.google.android.play", module = "core")
-    }
-    implementation(libs.googleid) {
-        exclude(group = "com.google.android.play", module = "core")
-    }
+    implementation(libs.credentials)
+    implementation(libs.credentials.play.services.auth)
+    implementation(libs.googleid)
 
     // Networking
     implementation(libs.okhttp)
