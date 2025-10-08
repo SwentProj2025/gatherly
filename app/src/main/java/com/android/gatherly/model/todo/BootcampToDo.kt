@@ -1,6 +1,6 @@
 package com.android.gatherly.model.todo
 
-// This code is taken from the CS-311 (EPFL) bootcamp and slightly modified.
+// This code is taken from the CS-311 (EPFL).
 
 import com.android.gatherly.ui.map.Location
 import com.google.firebase.Timestamp
@@ -15,7 +15,6 @@ data class BootcampToDo(
     val location: Location?,
     val status: ToDoStatus,
     val ownerId: String,
-    val isComplete: Boolean
 )
 
 enum class ToDoStatus {
@@ -34,7 +33,3 @@ fun ToDoStatus.displayString(): String =
     name.replace("_", " ").lowercase(Locale.ROOT).replaceFirstChar {
       if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString()
     }
-
-fun BootcampToDo.isDrawable(): Boolean {
-  return !isComplete && location != null
-}

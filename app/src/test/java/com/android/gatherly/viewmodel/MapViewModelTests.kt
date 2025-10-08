@@ -2,7 +2,7 @@ package com.android.gatherly.viewmodel
 
 import com.android.gatherly.model.todo.BootcampToDo
 import com.android.gatherly.model.todo.BootcampToDosRepositoryLocal
-import com.android.gatherly.model.todo.isDrawable
+import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.ui.map.MapViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -36,15 +36,19 @@ class MapViewModelTests {
 
   val testObjects = MapViewModelTestsTodos.testedTodos
 
+  fun isDrawable(todo: BootcampToDo): Boolean {
+    return todo.status != ToDoStatus.ENDED && todo.location != null
+  }
+
   @Test
   fun isDrawableWorksOn_IncompleteTodoWithLocation() = runTest {
     // Should be drawable as todos are incomplete and have location
     val expectedResult1 = true
-    val actualResult1 = MapViewModelTestsTodos.incompleteTodoWithLocation1.isDrawable()
+    val actualResult1 = isDrawable(MapViewModelTestsTodos.incompleteTodoWithLocation1)
     assertEquals(expectedResult1, actualResult1)
 
     val expectedResult2 = true
-    val actualResult2 = MapViewModelTestsTodos.incompleteTodoWithLocation2.isDrawable()
+    val actualResult2 = isDrawable(MapViewModelTestsTodos.incompleteTodoWithLocation2)
     assertEquals(expectedResult2, actualResult2)
   }
 
@@ -52,7 +56,7 @@ class MapViewModelTests {
   fun isDrawableWorksOn_CompleteTodoWithLocation() = runTest {
     // Should not be drawable as todo is complete
     val expectedResult = false
-    val actualResult = MapViewModelTestsTodos.completeTodoWithLocation.isDrawable()
+    val actualResult = isDrawable(MapViewModelTestsTodos.completeTodoWithLocation)
     assertEquals(expectedResult, actualResult)
   }
 
@@ -60,7 +64,7 @@ class MapViewModelTests {
   fun isDrawableWorksOn_IncompleteTodoWithoutLocation() = runTest {
     // Should not be drawable as todo has no location
     val expectedResult = false
-    val actualResult = MapViewModelTestsTodos.incompleteTodoWithoutLocation.isDrawable()
+    val actualResult = isDrawable(MapViewModelTestsTodos.incompleteTodoWithoutLocation)
     assertEquals(expectedResult, actualResult)
   }
 
@@ -68,7 +72,7 @@ class MapViewModelTests {
   fun isDrawableWorksOn_CompleteTodoWithoutLocation() = runTest {
     // Should not be drawable as todo is complete (lazy evaluation)
     val expectedResult = false
-    val actualResult = MapViewModelTestsTodos.completeTodoWithoutLocation.isDrawable()
+    val actualResult = isDrawable(MapViewModelTestsTodos.completeTodoWithoutLocation)
     assertEquals(expectedResult, actualResult)
   }
 

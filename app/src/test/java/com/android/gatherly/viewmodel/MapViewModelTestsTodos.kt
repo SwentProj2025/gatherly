@@ -19,8 +19,7 @@ object MapViewModelTestsTodos {
           dueDate = Timestamp(1730000000, 0),
           location = testLocation1,
           status = ToDoStatus.STARTED,
-          ownerId = "user123",
-          isComplete = false)
+          ownerId = "user123")
 
   val incompleteTodoWithLocation2 =
       BootcampToDo(
@@ -31,8 +30,7 @@ object MapViewModelTestsTodos {
           dueDate = Timestamp(1730000000, 0),
           location = testLocation1,
           status = ToDoStatus.STARTED,
-          ownerId = "user123",
-          isComplete = false)
+          ownerId = "user123")
 
   val completeTodoWithLocation =
       BootcampToDo(
@@ -43,8 +41,7 @@ object MapViewModelTestsTodos {
           dueDate = Timestamp(1729000000, 0),
           location = testLocation2,
           status = ToDoStatus.ENDED,
-          ownerId = "user123",
-          isComplete = true)
+          ownerId = "user123")
 
   val incompleteTodoWithoutLocation =
       BootcampToDo(
@@ -55,8 +52,7 @@ object MapViewModelTestsTodos {
           dueDate = Timestamp(1731000000, 0),
           location = null,
           status = ToDoStatus.CREATED,
-          ownerId = "user123",
-          isComplete = false)
+          ownerId = "user123")
 
   val completeTodoWithoutLocation =
       BootcampToDo(
@@ -67,8 +63,7 @@ object MapViewModelTestsTodos {
           dueDate = Timestamp(1728000000, 0),
           location = null,
           status = ToDoStatus.ARCHIVED,
-          ownerId = "user123",
-          isComplete = true)
+          ownerId = "user123")
 
   val testedTodos: List<BootcampToDo> =
       listOf(

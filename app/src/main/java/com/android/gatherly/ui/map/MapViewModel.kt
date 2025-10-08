@@ -6,7 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.todo.BootcampToDo
 import com.android.gatherly.model.todo.BootcampToDosRepository
-import com.android.gatherly.model.todo.isDrawable
+import com.android.gatherly.model.todo.ToDoStatus
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -41,9 +41,9 @@ data class UIState(
  * @return list of drawable todos
  */
 private fun getDrawableTodos(todos: List<BootcampToDo>): List<BootcampToDo> {
-  return todos.filter { it.isDrawable() }
+  return todos.filter { it.status != ToDoStatus.ENDED && it.location != null }
 }
-
+// !isComplete && location != null
 class MapViewModel(private val placeholderTodoRepository: BootcampToDosRepository) : ViewModel() {
   private val _uiState: MutableStateFlow<UIState> = MutableStateFlow(UIState())
   val uiState: StateFlow<UIState> = _uiState.asStateFlow()
