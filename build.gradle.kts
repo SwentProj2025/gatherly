@@ -3,10 +3,11 @@ plugins {
     alias(libs.plugins.androidApplication) apply false
     alias(libs.plugins.jetbrainsKotlinAndroid) apply false
     alias(libs.plugins.ktfmt) apply false
+    alias(libs.plugins.gms) apply false
     //alias(libs.plugins.sonar) //apply false
 
     id("org.sonarqube") version "4.4.1.3373"   //"6.3.1.5724"
-    id("com.google.gms.google-services") version "4.4.3" apply false
+    //id("com.google.gms.google-services") version "4.4.3" apply false
 }
 
 sonar {
