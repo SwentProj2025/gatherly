@@ -23,17 +23,19 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
 
 object SignInScreenTestTags {
-  const val LOGIN_TITLE = "loginTitle"
+  const val WELCOME_TITLE = "welcomeTitle"
+  const val WELCOME_SUBTITLE = "welcomeSubtitle"
   const val GOOGLE_BUTTON = "googleButton"
   const val ANONYMOUS_BUTTON = "anonymousButton"
   const val SIGN_UP_BUTTON = "signUpButton"
 }
 
-// placeholder Color definitions TODO replace by values in res / define a theme
+// Temporary color definitions that should be moved to the theme once it's designed
 private val DarkBackground = Color(0xFF1A1D23)
 private val ButtonBackground = Color(0xFF2D3139)
 private val TextWhite = Color(0xFFFFFFFF)
 
+/** Main sign-in screen providing various authentication options (Google, anonymous...). */
 @Composable
 fun SignInScreen(
     authViewModel: SignInViewModel = viewModel(),
@@ -66,7 +68,7 @@ fun SignInScreen(
                     WelcomeSection()
                     Spacer(modifier = Modifier.height(60.dp))
 
-                    // Sign In Buttons Section TODO have a section for that ? what's cleaner ?
+                    // Sign In Buttons Section
                     Column(
                         modifier = Modifier.fillMaxWidth(),
                         verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -84,7 +86,7 @@ fun SignInScreen(
                         }
                   }
 
-              // SignUpSection()
+              // SignUpSection() not a core functionality, may be added here in the future
               Spacer(modifier = Modifier.height(32.dp))
             }
       })
@@ -93,25 +95,23 @@ fun SignInScreen(
 @Composable
 fun WelcomeSection() {
 
-  Column(
-      horizontalAlignment = Alignment.Start,
-      modifier = Modifier.fillMaxWidth().testTag(SignInScreenTestTags.LOGIN_TITLE)) {
-        Text(
-            text = "Welcome to Gatherly,",
-            color = TextWhite,
-            fontSize = 32.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.fillMaxWidth())
+  Column(horizontalAlignment = Alignment.Start, modifier = Modifier.fillMaxWidth()) {
+    Text(
+        text = "Welcome to Gatherly,",
+        color = TextWhite,
+        fontSize = 32.sp,
+        fontWeight = FontWeight.Bold,
+        modifier = Modifier.fillMaxWidth().testTag(SignInScreenTestTags.WELCOME_TITLE))
 
-        Spacer(modifier = Modifier.height(20.dp))
+    Spacer(modifier = Modifier.height(20.dp))
 
-        Text(
-            text = "Your workflow and social events app!",
-            color = TextWhite,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Normal,
-            modifier = Modifier.fillMaxWidth())
-      }
+    Text(
+        text = "Your workflow and social events app!",
+        color = TextWhite,
+        fontSize = 20.sp,
+        fontWeight = FontWeight.Normal,
+        modifier = Modifier.fillMaxWidth().testTag(SignInScreenTestTags.WELCOME_SUBTITLE))
+  }
 }
 
 @Composable
@@ -131,14 +131,12 @@ fun SignInButton(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
             modifier = Modifier.fillMaxWidth()) {
-              // Load the Google logo from resources
               iconResId?.let { id ->
                 Image(
                     painter = painterResource(id = id),
-                    contentDescription = null, // action still clear with button text description
+                    contentDescription = null, // Action still clear with button text description
                     modifier = Modifier.size(30.dp).padding(end = 8.dp))
               }
-              // Text for the button
               Text(text = text, fontSize = 16.sp, fontWeight = FontWeight.Medium)
             }
       }
@@ -147,7 +145,7 @@ fun SignInButton(
 @Composable
 fun SignUpSection() {
   TextButton(
-      onClick = { /* TODO sign up ?*/},
+      onClick = {},
       modifier = Modifier.fillMaxWidth().testTag(SignInScreenTestTags.SIGN_UP_BUTTON)) {
         Text(
             text = "Don't have an account? Sign up",
