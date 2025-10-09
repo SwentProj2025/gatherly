@@ -1,7 +1,6 @@
 package com.android.gatherly.model.todo
 
 import com.android.gatherly.model.map.Location
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
@@ -30,8 +29,7 @@ class ToDosRepositoryFirestore(private val db: FirebaseFirestore) : ToDosReposit
    * @throws IllegalStateException if no user is signed in.
    */
   private fun currentUserId(): String {
-    return Firebase.auth.currentUser?.uid
-        ?: throw IllegalStateException("No signed in user")
+    return Firebase.auth.currentUser?.uid ?: throw IllegalStateException("No signed in user")
   }
 
   /**
