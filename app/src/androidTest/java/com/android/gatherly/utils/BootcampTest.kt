@@ -1,6 +1,7 @@
 package com.github.se.bootcamp.utils
 
 import androidx.activity.ComponentActivity
+import androidx.compose.material3.NavigationBar
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.assertIsDisplayed
@@ -17,18 +18,25 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.rules.ActivityScenarioRule
+import com.android.gatherly.ui.SignIn.SignInScreenTestTags
+import com.android.gatherly.ui.focusTimer.FocusTimerScreenTestTags
+import com.android.gatherly.ui.homePage.HomePageScreenTestTags
+/*
 import com.github.se.bootcamp.HttpClientProvider
 import com.github.se.bootcamp.model.map.Location
 import com.github.se.bootcamp.model.todo.ToDo
 import com.github.se.bootcamp.model.todo.ToDoStatus
 import com.github.se.bootcamp.model.todo.ToDosRepository
 import com.github.se.bootcamp.model.todo.ToDosRepositoryProvider
-import com.github.se.bootcamp.ui.navigation.NavigationTestTags
-import com.github.se.bootcamp.ui.overview.AddToDoScreenTestTags
+ */
+import com.android.gatherly.ui.navigation.NavigationTestTags
+/*
+import com.android.gatherly.ui.overview.AddToDoScreenTestTags
 import com.github.se.bootcamp.ui.overview.EditToDoScreenTestTags
-import com.github.se.bootcamp.ui.overview.OverviewScreenTestTags
-import com.github.se.bootcamp.utils.FakeHttpClient.FakeLocation
-import com.github.se.bootcamp.utils.FakeHttpClient.locationSuggestions
+
+ */
+import com.android.gatherly.ui.overview.OverviewScreenTestTags
+import com.android.gatherly.ui.profile.ProfileScreenTestTags
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseUser
 import java.text.SimpleDateFormat
@@ -63,15 +71,18 @@ enum class BootcampMilestone {
  */
 abstract class BootcampTest(val milestone: BootcampMilestone) {
 
-  abstract fun createInitializedRepository(): ToDosRepository
-
+  //abstract fun createInitializedRepository(): ToDosRepository
+/*
   open fun initializeHTTPClient(): OkHttpClient = FakeHttpClient.getClient()
 
-  val repository: ToDosRepository
-    get() = ToDosRepositoryProvider.repository
+  /*val repository: ToDosRepository
+    get() = ToDosRepositoryProvider.repository*/
 
-  val httpClient
+
+  /*val httpClient
     get() = HttpClientProvider.client
+
+   */
 
   val shouldSignInAnounymously: Boolean =
       when (milestone) {
@@ -100,7 +111,9 @@ abstract class BootcampTest(val milestone: BootcampMilestone) {
     }
   }
 
-  open val todo1 =
+ */
+
+  /*open val todo1 =
       ToDo(
           uid = "0",
           name = "Buy groceries",
@@ -133,15 +146,17 @@ abstract class BootcampTest(val milestone: BootcampMilestone) {
           status = ToDoStatus.ARCHIVED,
           ownerId = "user")
 
+
+*/
   @Before
   open fun setUp() {
-    ToDosRepositoryProvider.repository = createInitializedRepository()
-    HttpClientProvider.client = initializeHTTPClient()
-    if (shouldSignInAnounymously) {
-      runTest { FirebaseEmulator.auth.signInAnonymously().await() }
-    }
+    //ToDosRepositoryProvider.repository = createInitializedRepository()
+    //HttpClientProvider.client = initializeHTTPClient()
+    //if (shouldSignInAnounymously) {
+      //runTest { FirebaseEmulator.auth.signInAnonymously().await() }
+    //}
   }
-
+/*
   @After
   open fun tearDown() {
     if (FirebaseEmulator.isRunning) {
@@ -149,6 +164,10 @@ abstract class BootcampTest(val milestone: BootcampMilestone) {
       FirebaseEmulator.clearAuthEmulator()
     }
   }
+
+ */
+/*
+
 
   fun ComposeTestRule.enterAddTodoTitle(title: String) =
       onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_TITLE).performTextInput(title)
@@ -242,6 +261,7 @@ abstract class BootcampTest(val milestone: BootcampMilestone) {
     onNodeWithTag(OverviewScreenTestTags.CREATE_TODO_BUTTON).assertIsDisplayed().performClick()
   }
 
+
   private fun ComposeTestRule.waitUntilTodoIsDisplayed(todo: ToDo): SemanticsNodeInteraction {
     checkOverviewScreenIsDisplayed()
     waitUntil(UI_WAIT_TIMEOUT) {
@@ -273,17 +293,72 @@ abstract class BootcampTest(val milestone: BootcampMilestone) {
         .assertIsDisplayed()
         .assertTextContains("Create a new task", substring = false, ignoreCase = true)
   }
+  */
 
   fun ComposeTestRule.checkOverviewScreenIsNotDisplayed() {
-    onNodeWithTag(OverviewScreenTestTags.TODO_LIST).assertDoesNotExist()
+    onNodeWithTag(OverviewScreenTestTags.OverviewText).assertDoesNotExist()
   }
 
   fun ComposeTestRule.checkOverviewScreenIsDisplayed() {
-    onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
+    onNodeWithTag(NavigationTestTags.TOP_NAVIGATION_MENU)
         .assertIsDisplayed()
         .assertTextContains("overview", substring = true, ignoreCase = true)
   }
 
+  fun ComposeTestRule.checkHomeScreenIsNotDisplayed() {
+    onNodeWithTag(HomePageScreenTestTags.HOMETEXT).assertDoesNotExist()
+  }
+
+  fun ComposeTestRule.checkHomeScreenIsDisplayed() {
+    onNodeWithTag(NavigationTestTags.TOP_NAVIGATION_MENU)
+      .assertIsDisplayed()
+      .assertTextContains("home page", substring = true, ignoreCase = true)
+  }
+
+  fun ComposeTestRule.checkTimerScreenIsNotDisplayed() {
+    onNodeWithTag(FocusTimerScreenTestTags.TIMERTEXT).assertDoesNotExist()
+  }
+
+  fun ComposeTestRule.checkTimerScreenIsDisplayed() {
+    onNodeWithTag(NavigationTestTags.TOP_NAVIGATION_MENU)
+      .assertIsDisplayed()
+      .assertTextContains("focus timer", substring = true, ignoreCase = true)
+  }
+
+  fun ComposeTestRule.checkProfileScreenIsNotDisplayed() {
+    onNodeWithTag(ProfileScreenTestTags.ProfileText).assertDoesNotExist()
+  }
+
+  fun ComposeTestRule.checkProfileScreenIsDisplayed() {
+    onNodeWithTag(NavigationTestTags.TOP_NAVIGATION_MENU)
+      .assertIsDisplayed()
+      .assertTextContains("Your profile", substring = true, ignoreCase = true)
+  }
+
+  fun ComposeTestRule.checkSettingsScreenIsNotDisplayed() {
+    onNodeWithTag(ProfileScreenTestTags.ProfileText).assertDoesNotExist()
+  }
+
+  fun ComposeTestRule.checkSettingsScreenIsDisplayed() {
+    onNodeWithTag(NavigationTestTags.TOP_NAVIGATION_MENU)
+      .assertIsDisplayed()
+      .assertTextContains("Your profile", substring = true, ignoreCase = true)
+  }
+
+  fun ComposeTestRule.checkSignInScreenIsNotDisplayed() {
+    onNodeWithTag(SignInScreenTestTags.SignInText).assertDoesNotExist()
+  }
+
+  fun ComposeTestRule.checkSignInScreenIsDisplayed() {
+    onNodeWithTag(NavigationTestTags.TOP_NAVIGATION_MENU)
+      .assertIsDisplayed()
+      .assertTextContains("SignIN page", substring = true, ignoreCase = true)
+  }
+
+
+
+
+    /*
   fun ComposeTestRule.checkEditToDoScreenIsDisplayed() {
     onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
         .assertIsDisplayed()
@@ -333,13 +408,13 @@ abstract class BootcampTest(val milestone: BootcampMilestone) {
             useUnmergedTree = true)
         .assertIsDisplayed()
   }
-
+*/
   fun ComposeTestRule.checkMapScreenIsDisplayed() {
-    onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
+    onNodeWithTag(NavigationTestTags.TOP_NAVIGATION_MENU)
         .assertIsDisplayed()
         .assertTextContains("map", substring = true, ignoreCase = true)
   }
-
+/*
   fun ComposeTestRule.onLocationSuggestion(location: Location): SemanticsNodeInteraction {
     val hasTextLocation = hasText(location.name)
     val containsTextLocation = hasTextLocation.or(hasAnyDescendant(hasTextLocation))
@@ -390,4 +465,6 @@ abstract class BootcampTest(val milestone: BootcampMilestone) {
       return Timestamp(calendar.time)
     }
   }
+
+   */
 }
