@@ -1,11 +1,13 @@
 package com.android.gatherly.model.todo
 
 import com.android.gatherly.model.map.Location
-import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.ktx.Firebase
 import java.util.NoSuchElementException
 import kotlinx.coroutines.tasks.await
+
 /**
  * Firestore-based implementation of [ToDosRepository].
  *
@@ -17,39 +19,35 @@ import kotlinx.coroutines.tasks.await
  */
 class ToDosRepositoryFirestore(private val db: FirebaseFirestore) : ToDosRepository {
 
-    /**
-     * Reference to the "todos" collection of the currently signed-in user.
-     */
-    private val collection get() = db.collection("users")
-        .document(currentUserId())
-        .collection("todos")
+  /** Reference to the "todos" collection of the currently signed-in user. */
+  private val collection
+    get() = db.collection("users").document(currentUserId()).collection("todos")
 
-    /**
-     * Returns the UID of the currently authenticated Firebase user.
-     *
-     * @throws IllegalStateException if no user is signed in.
-     */
+  /**
+   * Returns the UID of the currently authenticated Firebase user.
+   *
+   * @throws IllegalStateException if no user is signed in.
+   */
   private fun currentUserId(): String {
-    return FirebaseAuth.getInstance().currentUser?.uid
-        ?: throw IllegalStateException("No signed in user")
+    return Firebase.auth.currentUser?.uid ?: throw IllegalStateException("No signed in user")
   }
 
-    /**
-     * Creates and returns a new Firestore document ID.
-     *
-     * This method does **not** contact Firestore; it only generates
-     * a client-side identifier that will later be used for a new document.
-     */
+  /**
+   * Creates and returns a new Firestore document ID.
+   *
+   * This method does **not** contact Firestore; it only generates a client-side identifier that
+   * will later be used for a new document.
+   */
   override fun getNewUid(): String {
     return collection.document().id
   }
 
-    /**
-     * Fetches all todos belonging to the current user.
-     *
-     * @return A list of todos owned by the user.
-     * @throws IllegalStateException if no user is signed in.
-     */
+  /**
+   * Fetches all todos belonging to the current user.
+   *
+   * @return A list of todos owned by the user.
+   * @throws IllegalStateException if no user is signed in.
+   */
   override suspend fun getAllTodos(): List<ToDo> {
     val snap =
         collection
@@ -59,14 +57,14 @@ class ToDosRepositoryFirestore(private val db: FirebaseFirestore) : ToDosReposit
     return snap.documents.mapNotNull { doc -> snapshotToToDo(doc) }
   }
 
-    /**
-     * Retrieves a single todo by ID.
-     *
-     * @param todoID The unique ID matching the wanted [ToDo].
-     * @return The matching [ToDo].
-     * @throws NoSuchElementException if the [ToDo] is missing.
-     * @throws SecurityException if the document's ownerId differs from the current user.
-     */
+  /**
+   * Retrieves a single todo by ID.
+   *
+   * @param todoID The unique ID matching the wanted [ToDo].
+   * @return The matching [ToDo].
+   * @throws NoSuchElementException if the [ToDo] is missing.
+   * @throws SecurityException if the document's ownerId differs from the current user.
+   */
   override suspend fun getTodo(todoID: String): ToDo {
     val doc = collection.document(todoID).get().await()
     val todo = snapshotToToDo(doc) ?: throw NoSuchElementException("Todo with id=$todoID not found")
@@ -76,27 +74,27 @@ class ToDosRepositoryFirestore(private val db: FirebaseFirestore) : ToDosReposit
     return todo
   }
 
-    /**
-     * Adds a new [ToDo] for the signed-in user.
-     *
-     * Overwrites the `ownerId` field of the new [ToDo] with the current user's UID.
-     *
-     * @param toDo The [ToDo] item to create.
-     * @throws IllegalStateException if no user is signed in.
-     */
+  /**
+   * Adds a new [ToDo] for the signed-in user.
+   *
+   * Overwrites the `ownerId` field of the new [ToDo] with the current user's UID.
+   *
+   * @param toDo The [ToDo] item to create.
+   * @throws IllegalStateException if no user is signed in.
+   */
   override suspend fun addTodo(toDo: ToDo) {
     val ownedToDo = toDo.copy(ownerId = currentUserId())
     collection.document(ownedToDo.uid).set(todoToMap(ownedToDo)).await()
   }
 
-    /**
-     * Updates an existing [ToDo] with new data.
-     *
-     * @param todoID The unique ID matching the [ToDo] to update.
-     * @param newValue The new [ToDo] content to store.
-     * @throws NoSuchElementException if no document matches the given ID.
-     * @throws SecurityException if the [ToDo] is not owned by the signed-in user.
-     */
+  /**
+   * Updates an existing [ToDo] with new data.
+   *
+   * @param todoID The unique ID matching the [ToDo] to update.
+   * @param newValue The new [ToDo] content to store.
+   * @throws NoSuchElementException if no document matches the given ID.
+   * @throws SecurityException if the [ToDo] is not owned by the signed-in user.
+   */
   override suspend fun editTodo(todoID: String, newValue: ToDo) {
     val doc = collection.document(todoID).get().await()
     val existing =
@@ -110,13 +108,13 @@ class ToDosRepositoryFirestore(private val db: FirebaseFirestore) : ToDosReposit
     collection.document(todoID).set(todoToMap(newValue)).await()
   }
 
-    /**
-     * Deletes a [ToDo] by ID.
-     *
-     * @param todoID The unique ID matching the [ToDo] to delete.
-     * @throws NoSuchElementException if the [ToDo] does not exist.
-     * @throws SecurityException if the [ToDo] is not owned by the signed-in user.
-     */
+  /**
+   * Deletes a [ToDo] by ID.
+   *
+   * @param todoID The unique ID matching the [ToDo] to delete.
+   * @throws NoSuchElementException if the [ToDo] does not exist.
+   * @throws SecurityException if the [ToDo] is not owned by the signed-in user.
+   */
   override suspend fun deleteTodo(todoID: String) {
     val doc = collection.document(todoID).get().await()
     val existing =
@@ -129,63 +127,60 @@ class ToDosRepositoryFirestore(private val db: FirebaseFirestore) : ToDosReposit
     collection.document(todoID).delete().await()
   }
 
-    /**
-     * Toggles a [ToDo]'s completion status between [ToDoStatus.ONGOING] and [ToDoStatus.ENDED].
-     *
-     * @param todoID The unique ID matching the [ToDo] to toggle.
-     * @throws NoSuchElementException if the [ToDo] does not exist.
-     * @throws SecurityException if the [ToDo] is not owned by the signed-in user.
-     */
-    override suspend fun toggleStatus(todoID: String) {
-        val todo = getTodo(todoID)
-        val newStatus = if (todo.status == ToDoStatus.ENDED) ToDoStatus.ONGOING else ToDoStatus.ENDED
-        editTodo(todoID, todo.copy(status = newStatus))
-    }
+  /**
+   * Toggles a [ToDo]'s completion status between [ToDoStatus.ONGOING] and [ToDoStatus.ENDED].
+   *
+   * @param todoID The unique ID matching the [ToDo] to toggle.
+   * @throws NoSuchElementException if the [ToDo] does not exist.
+   * @throws SecurityException if the [ToDo] is not owned by the signed-in user.
+   */
+  override suspend fun toggleStatus(todoID: String) {
+    val todo = getTodo(todoID)
+    val newStatus = if (todo.status == ToDoStatus.ENDED) ToDoStatus.ONGOING else ToDoStatus.ENDED
+    editTodo(todoID, todo.copy(status = newStatus))
+  }
 
-    /**
-     * Fetches all [ToDo]s marked as [ToDoStatus.ENDED].
-     *
-     * @return A list of completed [ToDo]s of the current user.
-     * @throws IllegalStateException if no user is signed in.
-     */
-    override suspend fun getAllEndedTodos(): List<ToDo> {
-        val snap =
-            collection
-                .whereEqualTo("ownerId", currentUserId())
-                .whereEqualTo("status", ToDoStatus.ENDED.name)
-                .get()
-                .await() // QuerySnapShot in this case pretty much list of docs.
-        return snap.documents.mapNotNull { doc -> snapshotToToDo(doc) }
-    }
+  /**
+   * Fetches all [ToDo]s marked as [ToDoStatus.ENDED].
+   *
+   * @return A list of completed [ToDo]s of the current user.
+   * @throws IllegalStateException if no user is signed in.
+   */
+  override suspend fun getAllEndedTodos(): List<ToDo> {
+    val snap =
+        collection
+            .whereEqualTo("ownerId", currentUserId())
+            .whereEqualTo("status", ToDoStatus.ENDED.name)
+            .get()
+            .await() // QuerySnapShot in this case pretty much list of docs.
+    return snap.documents.mapNotNull { doc -> snapshotToToDo(doc) }
+  }
 
-    /**
-     * Converts a Firestore [DocumentSnapshot] into a [ToDo] object.
-     *
-     * @param doc The Firestore document representing a [ToDo].
-     * @return The constructed [ToDo], or `null` if required fields are missing.
-     */
-    private fun snapshotToToDo(doc: DocumentSnapshot): ToDo? {
+  /**
+   * Converts a Firestore [DocumentSnapshot] into a [ToDo] object.
+   *
+   * @param doc The Firestore document representing a [ToDo].
+   * @return The constructed [ToDo], or `null` if required fields are missing.
+   */
+  private fun snapshotToToDo(doc: DocumentSnapshot): ToDo? {
     val uid = doc.getString("uid") ?: return null
     val name = doc.getString("name") ?: return null
     val description = doc.getString("description") ?: return null
     val assigneeName = doc.getString("assigneeName") ?: return null
     val dueDate = doc.getTimestamp("dueDate") ?: return null
-        val dueTime = doc.getTimestamp("dueTime")
-        val locationMap =
-            doc.get("location")
-                    as?
-                    Map<*, *>
-        val location =
-            locationMap?.let { locMap ->
-                val lat = locMap["latitude"] as? Double
-                val lng = locMap["longitude"] as? Double
-                val locName = locMap["name"] as? String
-                if (lat != null && lng != null && locName != null) {
-                    Location(lat, lng, locName)
-                } else {
-                    null
-                }
-            }
+    val dueTime = doc.getTimestamp("dueTime")
+    val locationMap = doc.get("location") as? Map<*, *>
+    val location =
+        locationMap?.let { locMap ->
+          val lat = locMap["latitude"] as? Double
+          val lng = locMap["longitude"] as? Double
+          val locName = locMap["name"] as? String
+          if (lat != null && lng != null && locName != null) {
+            Location(lat, lng, locName)
+          } else {
+            null
+          }
+        }
     val ownerId = doc.getString("ownerId") ?: return null
     val statusStr = doc.getString("status") ?: ToDoStatus.ONGOING.name
     val status = ToDoStatus.valueOf(statusStr)
@@ -193,14 +188,14 @@ class ToDosRepositoryFirestore(private val db: FirebaseFirestore) : ToDosReposit
     return ToDo(uid, name, description, assigneeName, dueDate, dueTime, location, status, ownerId)
   }
 
-    /**
-     * Converts a [ToDo] into a Firestore-compatible map.
-     *
-     * Used by [addTodo] and [editTodo] when writing data to Firestore.
-     *
-     * @param todo The [ToDo] to serialize.
-     * @return A map of field names to values compatible with Firestore.
-     */
+  /**
+   * Converts a [ToDo] into a Firestore-compatible map.
+   *
+   * Used by [addTodo] and [editTodo] when writing data to Firestore.
+   *
+   * @param todo The [ToDo] to serialize.
+   * @return A map of field names to values compatible with Firestore.
+   */
   private fun todoToMap(todo: ToDo): Map<String, Any?> {
     return mapOf(
         "uid" to todo.uid,
@@ -210,9 +205,9 @@ class ToDosRepositoryFirestore(private val db: FirebaseFirestore) : ToDosReposit
         "dueDate" to todo.dueDate,
         "dueTime" to todo.dueTime,
         "location" to
-                todo.location?.let { loc ->
-                    mapOf("latitude" to loc.latitude, "longitude" to loc.longitude, "name" to loc.name)
-                },
+            todo.location?.let { loc ->
+              mapOf("latitude" to loc.latitude, "longitude" to loc.longitude, "name" to loc.name)
+            },
         "status" to todo.status.name,
         "ownerId" to todo.ownerId)
   }
