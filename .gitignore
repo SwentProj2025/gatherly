@@ -9,6 +9,7 @@
 local.properties
 #Firebase config
 google-services.json
+app/google-services.json
 
 # Keystore files
 *.jks
@@ -16,6 +17,5 @@ google-services.json
 
 # Firebase emulator logs
 firestore-debug.log
+firebase-debug.log
 
-# Local dev/test directories
-app/src/main/java/com/android/gatherly/model/map/
