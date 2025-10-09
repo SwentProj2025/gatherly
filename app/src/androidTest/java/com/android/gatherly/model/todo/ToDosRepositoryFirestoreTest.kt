@@ -3,10 +3,10 @@ package com.android.gatherly.model.todo
 import com.android.gatherly.model.map.Location
 import com.android.gatherly.utils.FirestoreGatherlyTest
 import com.google.firebase.Timestamp
-import java.util.NoSuchElementException
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
 import org.junit.Test
+import java.util.NoSuchElementException
 
 /**
  * Integration tests for [ToDosRepositoryFirestore] using the Firebase Emulator Suite.
