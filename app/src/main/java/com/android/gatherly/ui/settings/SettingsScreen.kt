@@ -1,4 +1,4 @@
-package com.android.gatherly.ui.homePage
+package com.android.gatherly.ui.settings
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.padding
@@ -13,25 +13,24 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.android.gatherly.ui.navigation.BottomNavigationMenu
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.NavigationTestTags
-import com.android.gatherly.ui.navigation.Screen
 import com.android.gatherly.ui.navigation.TopNavigationMenu_HomePage_Profile
 import com.android.gatherly.ui.navigation.Tab
+import com.android.gatherly.ui.navigation.TopNavigationMenu
 
-object HomePageScreenTestTags{
+object SettingsScreenTestTags{
 }
 
 @Composable
-fun HomePageScreen(
-    homePageViewModel: HomePageViewModel = viewModel(),
+fun SettingsScreen(
+    settingsViewModel: SettingsViewModel = viewModel(),
     credentialManager: CredentialManager = CredentialManager.create(LocalContext.current),
     onSignedOut: () -> Unit = {},
     navigationActions: NavigationActions? = null,
 ) {
     val context = LocalContext.current
-    val uiState by homePageViewModel.uiState.collectAsState()
+    val uiState by settingsViewModel.uiState.collectAsState()
 
     LaunchedEffect(uiState.signedOut) {
         if (uiState.signedOut) {
@@ -41,11 +40,11 @@ fun HomePageScreen(
     }
 
     Scaffold(
-        topBar = {TopNavigationMenu_HomePage_Profile(
-            selectedTab = Tab.HomePage,
+        topBar = {TopNavigationMenu(
+            selectedTab = Tab.Map,
             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
             modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
-            onSignedOut =  {homePageViewModel.signOut(credentialManager)}
+            onSignedOut =  {settingsViewModel.signOut(credentialManager)}
 
         )},
 
@@ -59,7 +58,7 @@ fun HomePageScreen(
          */
         content = { padding ->
             Text(
-                text = "Home page",
+                text = "Settings",
                 modifier = Modifier.padding(padding)
             )
         }

@@ -1,24 +1,22 @@
-package com.android.gatherly.ui.homePage
+package com.android.gatherly.ui.settings
 
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.launch
 
-data class HomePageUIState(
+data class SettingsUIState(
     val errorMsg: String? = null,
     val signedOut: Boolean = false
 )
 
-class HomePageViewModel(
+class SettingsViewModel(
     //private val authRepository: AuthRepository = AuthRepositoryFirebase(),
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(HomePageUIState())
-    val uiState: StateFlow<HomePageUIState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(SettingsUIState())
+    val uiState: StateFlow<SettingsUIState> = _uiState.asStateFlow()
 
 
     /*fun signOut(credentialManager: CredentialManager): Unit {

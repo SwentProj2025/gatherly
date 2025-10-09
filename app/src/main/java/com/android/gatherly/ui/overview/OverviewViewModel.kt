@@ -1,4 +1,4 @@
-package com.android.gatherly.ui.map
+package com.android.gatherly.ui.overview
 
 import androidx.lifecycle.ViewModel
 import androidx.credentials.CredentialManager
@@ -6,16 +6,16 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-data class MapUIState(
+data class OverviewUIState(
     val errorMsg: String? = null,
     val signedOut: Boolean = false
 )
 
-class MapViewModel(
+class OverviewViewModel(
     //private val authRepository: AuthRepository = AuthRepositoryFirebase(),
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow(MapUIState())
-    val uiState: StateFlow<MapUIState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(OverviewUIState())
+    val uiState: StateFlow<OverviewUIState> = _uiState.asStateFlow()
 
 
     /*fun signOut(credentialManager: CredentialManager): Unit {

@@ -1,4 +1,4 @@
-package com.android.gatherly.ui.map
+package com.android.gatherly.ui.SignIn
 
 import androidx.lifecycle.ViewModel
 import androidx.credentials.CredentialManager
@@ -6,33 +6,19 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-data class MapUIState(
+data class SignInUIState(
     val errorMsg: String? = null,
-    val signedOut: Boolean = false
+    val signedIn: Boolean = false
 )
 
-class MapViewModel(
+class SignInViewModel(
     //private val authRepository: AuthRepository = AuthRepositoryFirebase(),
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow(MapUIState())
-    val uiState: StateFlow<MapUIState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(SignInUIState())
+    val uiState: StateFlow<SignInUIState> = _uiState.asStateFlow()
 
 
-    /*fun signOut(credentialManager: CredentialManager): Unit {
-        viewModelScope.launch {
-            authRepository
-                .signOut()
-                .fold(
-                    onSuccess = { _uiState.update { it.copy(signedOut = true) } },
-                    onFailure = { throwable ->
-                        _uiState.update { it.copy(errorMsg = throwable.localizedMessage) }
-                    })
-            credentialManager.clearCredentialState(ClearCredentialStateRequest())
-        }
-    }
-     */
-
-    fun signOut(credentialManager: CredentialManager): Unit {
+    fun signIn(credentialManager: CredentialManager): Unit {
 
     }
 }

@@ -1,7 +1,6 @@
-package com.android.gatherly.ui.events
+package com.android.gatherly.ui.map
 
 import androidx.compose.runtime.Composable
-import com.android.gatherly.ui.focusTimer.FocusTimerViewModel
 import android.widget.Toast
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -20,19 +19,20 @@ import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu
 
-object EventsScreenTestTags{
+object MapScreenTestTags{
+    const val MapText = "MAP"
 }
 
 @Composable
-fun EventsScreen(
-    eventsViewModel: EventsViewModel = viewModel(),
+fun MapScreen(
+    mapViewModel: MapViewModel = viewModel(),
     credentialManager: CredentialManager = CredentialManager.create(LocalContext.current),
     onSignedOut: () -> Unit = {},
     navigationActions: NavigationActions? = null,
 ) {
 
     val context = LocalContext.current
-    val uiState by eventsViewModel.uiState.collectAsState()
+    val uiState by mapViewModel.uiState.collectAsState()
 
     LaunchedEffect(uiState.signedOut) {
         if (uiState.signedOut) {
@@ -43,23 +43,23 @@ fun EventsScreen(
 
     Scaffold(
         topBar = {TopNavigationMenu(
-            selectedTab = Tab.Events,
+            selectedTab = Tab.Map,
             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
             modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
-            onSignedOut =  {eventsViewModel.signOut(credentialManager)}
+            onSignedOut =  {mapViewModel.signOut(credentialManager)}
 
         )},
 
         bottomBar = {
             BottomNavigationMenu(
-                selectedTab = Tab.Events,
+                selectedTab = Tab.Map,
                 onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
                 modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU)
             )},
         content = { padding ->
             Text(
-                text = "Events page",
-                modifier = Modifier.padding(padding)
+                text = "MAP",
+                modifier = Modifier.padding(padding).testTag(MapScreenTestTags.MapText)
             )
         }
     )

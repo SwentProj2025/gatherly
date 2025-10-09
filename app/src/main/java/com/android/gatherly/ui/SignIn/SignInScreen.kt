@@ -1,4 +1,4 @@
-package com.android.gatherly.ui.map
+package com.android.gatherly.ui.SignIn
 
 import androidx.compose.runtime.Composable
 import android.widget.Toast
@@ -19,46 +19,33 @@ import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu
 
-object MapScreenTestTags{
+object SignInScreenTestTags{
+    const val SignInText = "SignIN"
 }
 
 @Composable
-fun MapScreen(
-    mapViewModel: MapViewModel = viewModel(),
+fun SignInScreen(
+    signInViewModel: SignInViewModel = viewModel(),
     credentialManager: CredentialManager = CredentialManager.create(LocalContext.current),
-    onSignedOut: () -> Unit = {},
+    onSignedIn: () -> Unit = {},
     navigationActions: NavigationActions? = null,
 ) {
 
     val context = LocalContext.current
-    val uiState by mapViewModel.uiState.collectAsState()
+    val uiState by signInViewModel.uiState.collectAsState()
 
-    LaunchedEffect(uiState.signedOut) {
-        if (uiState.signedOut) {
-            onSignedOut()
-            Toast.makeText(context, "Logout successful", Toast.LENGTH_SHORT).show()
+    LaunchedEffect(uiState.signedIn) {
+        if (uiState.signedIn) {
+            onSignedIn()
+            Toast.makeText(context, "LogIn successful", Toast.LENGTH_SHORT).show()
         }
     }
 
     Scaffold(
-        topBar = {TopNavigationMenu(
-            selectedTab = Tab.Map,
-            onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
-            modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
-            onSignedOut =  {mapViewModel.signOut(credentialManager)}
-
-        )},
-
-        bottomBar = {
-            BottomNavigationMenu(
-                selectedTab = Tab.Map,
-                onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
-                modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU)
-            )},
         content = { padding ->
             Text(
-                text = "MAP",
-                modifier = Modifier.padding(padding)
+                text = "SignIN page",
+                modifier = Modifier.padding(padding).testTag(SignInScreenTestTags.SignInText)
             )
         }
     )

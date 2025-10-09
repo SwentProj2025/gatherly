@@ -1,4 +1,4 @@
-package com.android.gatherly.ui.map
+package com.android.gatherly.ui.overview
 
 import androidx.compose.runtime.Composable
 import android.widget.Toast
@@ -19,19 +19,20 @@ import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu
 
-object MapScreenTestTags{
+object OverviewScreenTestTags{
+    const val OverviewText = "createTodoFab"
 }
 
 @Composable
-fun MapScreen(
-    mapViewModel: MapViewModel = viewModel(),
+fun OverviewScreen(
+    overviewViewModel: OverviewViewModel = viewModel(),
     credentialManager: CredentialManager = CredentialManager.create(LocalContext.current),
     onSignedOut: () -> Unit = {},
     navigationActions: NavigationActions? = null,
 ) {
 
     val context = LocalContext.current
-    val uiState by mapViewModel.uiState.collectAsState()
+    val uiState by overviewViewModel.uiState.collectAsState()
 
     LaunchedEffect(uiState.signedOut) {
         if (uiState.signedOut) {
@@ -45,7 +46,7 @@ fun MapScreen(
             selectedTab = Tab.Map,
             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
             modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
-            onSignedOut =  {mapViewModel.signOut(credentialManager)}
+            onSignedOut =  {overviewViewModel.signOut(credentialManager)}
 
         )},
 
@@ -57,8 +58,8 @@ fun MapScreen(
             )},
         content = { padding ->
             Text(
-                text = "MAP",
-                modifier = Modifier.padding(padding)
+                text = "OVERVIEW",
+                modifier = Modifier.padding(padding).testTag(OverviewScreenTestTags.OverviewText)
             )
         }
     )
