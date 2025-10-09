@@ -45,7 +45,8 @@ private fun getDrawableTodos(todos: List<ToDo>): List<ToDo> {
   return todos.filter { it.status != ToDoStatus.ENDED && it.location != null }
 }
 
-class MapViewModel(private val repository: ToDosRepository = ToDosRepositoryLocalMapTest()) : ViewModel() {
+class MapViewModel(private val repository: ToDosRepository = ToDosRepositoryLocalMapTest()) :
+    ViewModel() {
 
   private val _uiState: MutableStateFlow<UIState> = MutableStateFlow(UIState())
   val uiState: StateFlow<UIState> = _uiState.asStateFlow()
