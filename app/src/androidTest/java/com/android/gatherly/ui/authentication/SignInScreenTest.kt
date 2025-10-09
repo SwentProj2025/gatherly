@@ -65,15 +65,21 @@ class SignInScreenTest : FirestoreGatherlyTest() {
       SignInScreen(authViewModel = viewModel, credentialManager = fakeCredentialManager)
     }
 
+    // Click the Google sign-in button
     composeTestRule
         .onNodeWithTag(SignInScreenTestTags.GOOGLE_BUTTON)
         .assertIsDisplayed()
         .performClick()
 
-    sleep(WAIT_TIMEOUT)
+    // Wait until uiState becomes true or timeout is reached
+    composeTestRule.waitUntil(timeoutMillis = WAIT_TIMEOUT) { viewModel.uiState.value }
 
-    assert(viewModel.uiState.value)
-    assert(FirebaseEmulator.auth.currentUser != null)
-    assert(FirebaseEmulator.auth.currentUser!!.email == "test@example.com")
+    // Assert that the state is updated and user is signed in
+    assert(viewModel.uiState.value) { "ViewModel did not report signed in" }
+    val currentUser = FirebaseEmulator.auth.currentUser
+    assert(currentUser != null) { "FirebaseEmulator has no signed-in user" }
+    assert(currentUser!!.email == "test@example.com") {
+      "Signed-in user's email does not match expected"
+    }
   }
 }
