@@ -7,7 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosRepository
-import com.android.gatherly.model.todo.ToDosRepositoryProvider
+import com.android.gatherly.model.todo.ToDosRepositoryLocalMapTest
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -45,7 +45,7 @@ private fun getDrawableTodos(todos: List<ToDo>): List<ToDo> {
   return todos.filter { it.status != ToDoStatus.ENDED && it.location != null }
 }
 
-class MapViewModel(private val repository: ToDosRepository = ToDosRepositoryProvider.repository) : ViewModel() {
+class MapViewModel(private val repository: ToDosRepository = ToDosRepositoryLocalMapTest()) : ViewModel() {
 
   private val _uiState: MutableStateFlow<UIState> = MutableStateFlow(UIState())
   val uiState: StateFlow<UIState> = _uiState.asStateFlow()
