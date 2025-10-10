@@ -6,7 +6,6 @@ package com.android.gatherly.ui.navigation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.AccountCircle
@@ -134,15 +133,14 @@ fun TopNavigationMenu(
     onSignedOut: () -> Unit = {}
 ) {
   TopAppBar(
-      title =
-          { Box(modifier = Modifier.fillMaxWidth()) {
-                  Text(
-                      text = selectedTab.name,
-                      modifier = Modifier.align(Alignment.Center),
-                      textAlign = TextAlign.Center
-                  )
-              }
-          },
+      title = {
+        Box(modifier = Modifier.fillMaxWidth()) {
+          Text(
+              text = selectedTab.name,
+              modifier = Modifier.align(Alignment.Center).testTag(NavigationTestTags.TOP_BAR_TITLE),
+              textAlign = TextAlign.Center)
+        }
+      },
       navigationIcon = {
         IconButton(
             onClick = { onTabSelected(Tab.HomePage) }, modifier = Modifier.testTag("HOME_BUTTON")) {
@@ -176,18 +174,18 @@ fun TopDropdownMenu(onTabSelected: (Tab) -> Unit, onSignedOut: () -> Unit = {}) 
       // Profile section
       DropdownMenuItem(
           text = { Text("Profile") },
-          leadingIcon = { Icon(
-              imageVector = Tab.Profile.icon,
-              contentDescription = Tab.Profile.name )},
+          leadingIcon = {
+            Icon(imageVector = Tab.Profile.icon, contentDescription = Tab.Profile.name)
+          },
           onClick = { onTabSelected(Tab.Profile) },
           modifier = Modifier.testTag(NavigationTestTags.PROFILE_TAB))
 
       // Settings section
       DropdownMenuItem(
           text = { Text("Settings") },
-          leadingIcon = { Icon(
-              imageVector = Tab.Settings.icon,
-              contentDescription = Tab.Settings.name )},
+          leadingIcon = {
+            Icon(imageVector = Tab.Settings.icon, contentDescription = Tab.Settings.name)
+          },
           onClick = { onTabSelected(Tab.Settings) },
           modifier = Modifier.testTag(NavigationTestTags.SETTINGS_TAB))
 
@@ -224,7 +222,6 @@ bottomBar = {
 content = ...
 */
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopNavigationMenu_HomePage_Profile(
@@ -235,20 +232,18 @@ fun TopNavigationMenu_HomePage_Profile(
 ) {
   TopAppBar(
       title = {
-          Box(modifier = Modifier.fillMaxWidth()) {
-              Text(
-                  text = selectedTab.name,
-                  modifier = Modifier.align(Alignment.Center),
-                  textAlign = TextAlign.Center
-              )
-          }
+        Box(modifier = Modifier.fillMaxWidth()) {
+          Text(
+              text = selectedTab.name,
+              modifier = Modifier.align(Alignment.Center).testTag(NavigationTestTags.TOP_BAR_TITLE),
+              textAlign = TextAlign.Center)
+        }
       },
       actions = { TopDropdownMenu(onTabSelected = onTabSelected, onSignedOut = onSignedOut) },
       modifier =
           modifier.fillMaxWidth().height(60.dp).testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
   )
 }
-
 
 /*
 
@@ -289,7 +284,7 @@ fun TopNavigationMenu_Goback(
       title = {
         Text(
             text = selectedTab.name,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth().testTag(NavigationTestTags.TOP_BAR_TITLE),
             textAlign = TextAlign.Center)
       },
       navigationIcon = {

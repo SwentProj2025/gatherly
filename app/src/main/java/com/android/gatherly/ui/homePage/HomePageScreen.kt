@@ -22,8 +22,6 @@ object HomePageScreenTestTags {
   const val HOMETEXT = "Homepage"
 }
 
-
-
 @Composable
 fun HomePageScreen(
     homePageViewModel: HomePageViewModel = viewModel(),
@@ -46,7 +44,6 @@ fun HomePageScreen(
         TopNavigationMenu_HomePage_Profile(
             selectedTab = Tab.HomePage,
             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
-            modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
             onSignedOut = { homePageViewModel.signOut(credentialManager) })
       },
 

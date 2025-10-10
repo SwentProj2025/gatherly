@@ -93,4 +93,9 @@ open class NavigationActions(
   open fun navigateToHome() {
     navController.popBackStack(Screen.HomePage.route, inclusive = false)
   }
+
+  open fun navigateToSignIn() {
+    navController.popBackStack(Screen.Login.route, inclusive = false)
+  }
+
 }

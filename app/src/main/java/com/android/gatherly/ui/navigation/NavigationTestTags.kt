@@ -19,6 +19,8 @@ object NavigationTestTags {
 
   const val DROPMENU = "DropMenu"
 
+  const val TOP_BAR_TITLE = "TopBarTitle"
+
   fun getTabTestTag(tab: Tab): String =
       when (tab) {
         is Tab.Overview -> OVERVIEW_TAB

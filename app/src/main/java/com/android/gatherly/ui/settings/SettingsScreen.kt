@@ -40,7 +40,7 @@ fun SettingsScreen(
   Scaffold(
       topBar = {
         TopNavigationMenu(
-            selectedTab = Tab.Map,
+            selectedTab = Tab.Settings,
             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
             modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
             onSignedOut = { settingsViewModel.signOut(credentialManager) })

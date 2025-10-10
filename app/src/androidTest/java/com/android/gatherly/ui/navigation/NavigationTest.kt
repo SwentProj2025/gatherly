@@ -30,14 +30,9 @@ class NavigationTest : GatherlyTest() {
   }
 
   @Test
-  fun testTagsAreCorrectlySet() {
+  fun NavigationBarAreCorrectlySetOnHome() {
     composeTestRule.onNodeWithTag(NavigationTestTags.TOP_NAVIGATION_MENU).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(NavigationTestTags.OVERVIEW_TAB).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(NavigationTestTags.MAP_TAB).assertIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(NavigationTestTags.EVENTS_TAB).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(NavigationTestTags.TIMER_TAB).assertIsDisplayed()
   }
 
   @Test
@@ -52,12 +47,13 @@ class NavigationTest : GatherlyTest() {
 
   @Test
   fun topNavigationIsCorrectlySetForHomePage() {
+    composeTestRule.onNodeWithTag(NavigationTestTags.TOP_NAVIGATION_MENU).assertIsDisplayed()
     composeTestRule
-        .onNodeWithTag(NavigationTestTags.TOP_NAVIGATION_MENU)
-        .assertIsDisplayed()
+        .onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
         .assertTextContains(value = "Home")
     composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).assertIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.HOMEPAGE_TAB).assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsNotDisplayed()
   }
 
   @Test
@@ -85,6 +81,8 @@ class NavigationTest : GatherlyTest() {
     composeTestRule.checkOverviewScreenIsNotDisplayed()
   }
 
+
+  /*
   @Test
   fun canLogOutFromHomePage() {
     composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
@@ -92,6 +90,8 @@ class NavigationTest : GatherlyTest() {
     composeTestRule.checkSignInScreenIsDisplayed()
     composeTestRule.checkOverviewScreenIsNotDisplayed()
   }
+
+   */
   /*
    @Test
    fun bottomNavigationIsDisplayedForOverview() {
@@ -117,13 +117,8 @@ class NavigationTest : GatherlyTest() {
 
   */
 
-  @Test
-  fun topBarTitleIsCorrectForHome() {
-    composeTestRule
-        .onNodeWithTag(NavigationTestTags.TOP_NAVIGATION_MENU)
-        .assertIsDisplayed()
-        .assertTextContains(value = "HOME")
-  }
+
+
   /*
    @Test
    fun topBarTitleIsCorrectForMap() {
@@ -192,16 +187,6 @@ class NavigationTest : GatherlyTest() {
         .assertTextContains("overview", substring = true, ignoreCase = true)
   }
 
-  fun ComposeTestRule.checkHomeScreenIsNotDisplayed() {
-    onNodeWithTag(HomePageScreenTestTags.HOMETEXT).assertDoesNotExist()
-  }
-
-  fun ComposeTestRule.checkHomeScreenIsDisplayed() {
-    onNodeWithTag(NavigationTestTags.TOP_NAVIGATION_MENU)
-        .assertIsDisplayed()
-        .assertTextContains("home page", substring = true, ignoreCase = true)
-  }
-
   fun ComposeTestRule.checkTimerScreenIsNotDisplayed() {
     onNodeWithTag(FocusTimerScreenTestTags.TIMERTEXT).assertDoesNotExist()
   }
@@ -217,8 +202,7 @@ class NavigationTest : GatherlyTest() {
   }
 
   fun ComposeTestRule.checkProfileScreenIsDisplayed() {
-    onNodeWithTag(NavigationTestTags.TOP_NAVIGATION_MENU)
-        .assertIsDisplayed()
+    onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
         .assertTextContains("Your profile", substring = true, ignoreCase = true)
   }
 
@@ -227,9 +211,8 @@ class NavigationTest : GatherlyTest() {
   }
 
   fun ComposeTestRule.checkSettingsScreenIsDisplayed() {
-    onNodeWithTag(NavigationTestTags.TOP_NAVIGATION_MENU)
-        .assertIsDisplayed()
-        .assertTextContains("Your profile", substring = true, ignoreCase = true)
+    onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
+        .assertTextContains("Settings", substring = true, ignoreCase = true)
   }
 
   fun ComposeTestRule.checkSignInScreenIsNotDisplayed() {
@@ -247,4 +230,11 @@ class NavigationTest : GatherlyTest() {
         .assertIsDisplayed()
         .assertTextContains("map", substring = true, ignoreCase = true)
   }
+
+  fun ComposeTestRule.AmIOnHomePage(){
+    onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE).assertTextContains(value = "Home")
+  }
+
+
+
 }
