@@ -4,12 +4,14 @@ import android.graphics.*
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -25,8 +27,6 @@ import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import java.text.SimpleDateFormat
 import java.util.Locale
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.ui.graphics.toArgb
 
 // Portions of the code in this file are copy-pasted from the Bootcamp solution provided by the
 // SwEnt staff.
@@ -35,8 +35,8 @@ import androidx.compose.ui.graphics.toArgb
 /**
  * A composable screen displaying ToDos as interactive markers on a Google Map.
  *
- * @param viewModel The MapViewModel instance providing the list of ToDos, the current
- *   camera position, and marker interaction handlers.
+ * @param viewModel The MapViewModel instance providing the list of ToDos, the current camera
+ *   position, and marker interaction handlers.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -87,8 +87,6 @@ fun MapScreen(viewModel: MapViewModel = viewModel()) {
       })
 }
 
-
-
 /**
  * Creates a small rounded marker icon displaying a ToDo title.
  *
@@ -98,8 +96,8 @@ fun MapScreen(viewModel: MapViewModel = viewModel()) {
 @Composable
 private fun todoIcon(title: String): BitmapDescriptor {
   val density = LocalDensity.current
-    val primary = MaterialTheme.colorScheme.primary
-    val onPrimary = MaterialTheme.colorScheme.onPrimary
+  val primary = MaterialTheme.colorScheme.primary
+  val onPrimary = MaterialTheme.colorScheme.onPrimary
   return remember(title) {
     // Text Style
     val textPaint =
@@ -149,8 +147,8 @@ private fun todoExpanded(
     expanded: Boolean = false
 ): BitmapDescriptor {
   val density = LocalDensity.current
-    val primary = MaterialTheme.colorScheme.primary
-    val onPrimary = MaterialTheme.colorScheme.onPrimary
+  val primary = MaterialTheme.colorScheme.primary
+  val onPrimary = MaterialTheme.colorScheme.onPrimary
   return remember(title, description, dateText, expanded) {
 
     // Title style

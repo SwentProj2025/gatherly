@@ -1,6 +1,5 @@
 package com.android.gatherly.model.map
 
-import android.util.Log
 import java.io.IOException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
