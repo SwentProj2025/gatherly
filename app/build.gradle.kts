@@ -247,7 +247,6 @@ tasks.withType<Test> {
 
 tasks.register("jacocoTestReport", JacocoReport::class) {
     mustRunAfter("testDebugUnitTest", "connectedDebugAndroidTest")
-    // DEBUG
     doFirst {
         println("JaCoCo execution data files: ${executionData.files}")
         println("JaCoCo class directories: ${classDirectories.files}")
@@ -256,7 +255,6 @@ tasks.register("jacocoTestReport", JacocoReport::class) {
     reports {
         xml.required = true
         html.required = true
-        // DEBUG
         xml.outputLocation = file("${project.layout.buildDirectory.get()}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml")
         html.outputLocation = file("${project.layout.buildDirectory.get()}/reports/jacoco/jacocoTestReport/html")
     }
@@ -271,7 +269,6 @@ tasks.register("jacocoTestReport", JacocoReport::class) {
     )
     // JaCoCo needs to match execution data against the same classes used at test runtime.
     // Include both Kotlin classes and Java bytecode to avoid class mismatch errors.
-
     val debugTree = fileTree("${project.layout.buildDirectory.get()}/tmp/kotlin-classes/debug") {
         exclude(fileFilter)
     }
