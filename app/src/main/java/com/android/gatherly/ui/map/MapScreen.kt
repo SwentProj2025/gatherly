@@ -1,10 +1,10 @@
 package com.android.gatherly.ui.map
 
-import androidx.compose.runtime.Composable
 import android.widget.Toast
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -19,9 +19,11 @@ import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu
 
-object MapScreenTestTags{
-    const val MapText = "MAP"
+object MapScreenTestTags {
+  const val MapText = "MAP"
 }
+
+data class MapUIState(val errorMsg: String? = null, val onSignedOut: Boolean = false)
 
 @Composable
 fun MapScreen(
@@ -31,36 +33,31 @@ fun MapScreen(
     navigationActions: NavigationActions? = null,
 ) {
 
-    val context = LocalContext.current
-    val uiState by mapViewModel.uiState.collectAsState()
+  val context = LocalContext.current
+  val uiState by mapViewModel.uiState.collectAsState()
 
-    LaunchedEffect(uiState.signedOut) {
-        if (uiState.signedOut) {
-            onSignedOut()
-            Toast.makeText(context, "Logout successful", Toast.LENGTH_SHORT).show()
-        }
+  LaunchedEffect(uiState.onSignedOut) {
+    if (uiState.onSignedOut) {
+      onSignedOut()
+      Toast.makeText(context, "Logout successful", Toast.LENGTH_SHORT).show()
     }
+  }
 
-    Scaffold(
-        topBar = {TopNavigationMenu(
+  Scaffold(
+      topBar = {
+        TopNavigationMenu(
             selectedTab = Tab.Map,
             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
             modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
-            onSignedOut =  {mapViewModel.signOut(credentialManager)}
-
-        )},
-
-        bottomBar = {
-            BottomNavigationMenu(
-                selectedTab = Tab.Map,
-                onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
-                modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU)
-            )},
-        content = { padding ->
-            Text(
-                text = "MAP",
-                modifier = Modifier.padding(padding).testTag(MapScreenTestTags.MapText)
-            )
-        }
-    )
+            onSignedOut = { mapViewModel.onSignedOut(credentialManager) })
+      },
+      bottomBar = {
+        BottomNavigationMenu(
+            selectedTab = Tab.Map,
+            onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
+            modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU))
+      },
+      content = { padding ->
+        Text(text = "MAP", modifier = Modifier.padding(padding).testTag(MapScreenTestTags.MapText))
+      })
 }

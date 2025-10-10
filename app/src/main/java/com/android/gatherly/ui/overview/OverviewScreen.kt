@@ -1,10 +1,10 @@
 package com.android.gatherly.ui.overview
 
-import androidx.compose.runtime.Composable
 import android.widget.Toast
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -19,8 +19,8 @@ import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu
 
-object OverviewScreenTestTags{
-    const val OverviewText = "createTodoFab"
+object OverviewScreenTestTags {
+  const val OverviewText = "createTodoFab"
 }
 
 @Composable
@@ -31,36 +31,33 @@ fun OverviewScreen(
     navigationActions: NavigationActions? = null,
 ) {
 
-    val context = LocalContext.current
-    val uiState by overviewViewModel.uiState.collectAsState()
+  val context = LocalContext.current
+  val uiState by overviewViewModel.uiState.collectAsState()
 
-    LaunchedEffect(uiState.signedOut) {
-        if (uiState.signedOut) {
-            onSignedOut()
-            Toast.makeText(context, "Logout successful", Toast.LENGTH_SHORT).show()
-        }
+  LaunchedEffect(uiState.signedOut) {
+    if (uiState.signedOut) {
+      onSignedOut()
+      Toast.makeText(context, "Logout successful", Toast.LENGTH_SHORT).show()
     }
+  }
 
-    Scaffold(
-        topBar = {TopNavigationMenu(
-            selectedTab = Tab.Map,
+  Scaffold(
+      topBar = {
+        TopNavigationMenu(
+            selectedTab = Tab.Overview,
             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
             modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
-            onSignedOut =  {overviewViewModel.signOut(credentialManager)}
-
-        )},
-
-        bottomBar = {
-            BottomNavigationMenu(
-                selectedTab = Tab.Map,
-                onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
-                modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU)
-            )},
-        content = { padding ->
-            Text(
-                text = "OVERVIEW",
-                modifier = Modifier.padding(padding).testTag(OverviewScreenTestTags.OverviewText)
-            )
-        }
-    )
+            onSignedOut = { overviewViewModel.signOut(credentialManager) })
+      },
+      bottomBar = {
+        BottomNavigationMenu(
+            selectedTab = Tab.Overview,
+            onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
+            modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU))
+      },
+      content = { padding ->
+        Text(
+            text = "OVERVIEW",
+            modifier = Modifier.padding(padding).testTag(OverviewScreenTestTags.OverviewText))
+      })
 }

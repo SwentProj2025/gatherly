@@ -16,12 +16,11 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.ui.navigation.BottomNavigationMenu
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.NavigationTestTags
-import com.android.gatherly.ui.navigation.Screen
-import com.android.gatherly.ui.navigation.TopNavigationMenu_HomePage_Profile
 import com.android.gatherly.ui.navigation.Tab
+import com.android.gatherly.ui.navigation.TopNavigationMenu_HomePage_Profile
 
-object ProfileScreenTestTags{
-    const val ProfileText = "profile"
+object ProfileScreenTestTags {
+  const val ProfileText = "profile"
 }
 
 @Composable
@@ -31,36 +30,33 @@ fun ProfileScreen(
     onSignedOut: () -> Unit = {},
     navigationActions: NavigationActions? = null,
 ) {
-    val context = LocalContext.current
-    val uiState by profileViewModel.uiState.collectAsState()
+  val context = LocalContext.current
+  val uiState by profileViewModel.uiState.collectAsState()
 
-    LaunchedEffect(uiState.signedOut) {
-        if (uiState.signedOut) {
-            onSignedOut()
-            Toast.makeText(context, "Logout successful", Toast.LENGTH_SHORT).show()
-        }
+  LaunchedEffect(uiState.signedOut) {
+    if (uiState.signedOut) {
+      onSignedOut()
+      Toast.makeText(context, "Logout successful", Toast.LENGTH_SHORT).show()
     }
+  }
 
-    Scaffold(
-        topBar = {TopNavigationMenu_HomePage_Profile(
+  Scaffold(
+      topBar = {
+        TopNavigationMenu_HomePage_Profile(
             selectedTab = Tab.Profile,
             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
             modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
-            onSignedOut =  {profileViewModel.signOut(credentialManager)}
-
-        )},
-
-        bottomBar = {
-            BottomNavigationMenu(
-                selectedTab = Tab.Profile,
-                onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
-                modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU)
-            )},
-        content = { padding ->
-            Text(
-                text = "Your profile",
-                modifier = Modifier.padding(padding).testTag(ProfileScreenTestTags.ProfileText)
-            )
-        }
-    )
+            onSignedOut = { profileViewModel.signOut(credentialManager) })
+      },
+      bottomBar = {
+        BottomNavigationMenu(
+            selectedTab = Tab.Profile,
+            onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
+            modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU))
+      },
+      content = { padding ->
+        Text(
+            text = "Your profile",
+            modifier = Modifier.padding(padding).testTag(ProfileScreenTestTags.ProfileText))
+      })
 }

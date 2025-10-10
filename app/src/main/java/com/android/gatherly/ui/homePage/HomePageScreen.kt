@@ -13,16 +13,16 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.android.gatherly.ui.navigation.BottomNavigationMenu
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.NavigationTestTags
-import com.android.gatherly.ui.navigation.Screen
-import com.android.gatherly.ui.navigation.TopNavigationMenu_HomePage_Profile
 import com.android.gatherly.ui.navigation.Tab
+import com.android.gatherly.ui.navigation.TopNavigationMenu_HomePage_Profile
 
-object HomePageScreenTestTags{
-    const val HOMETEXT = "Homepage"
+object HomePageScreenTestTags {
+  const val HOMETEXT = "Homepage"
 }
+
+
 
 @Composable
 fun HomePageScreen(
@@ -31,38 +31,36 @@ fun HomePageScreen(
     onSignedOut: () -> Unit = {},
     navigationActions: NavigationActions? = null,
 ) {
-    val context = LocalContext.current
-    val uiState by homePageViewModel.uiState.collectAsState()
+  val context = LocalContext.current
+  val uiState by homePageViewModel.uiState.collectAsState()
 
-    LaunchedEffect(uiState.signedOut) {
-        if (uiState.signedOut) {
-            onSignedOut()
-            Toast.makeText(context, "Logout successful", Toast.LENGTH_SHORT).show()
-        }
+  LaunchedEffect(uiState.signedOut) {
+    if (uiState.signedOut) {
+      onSignedOut()
+      Toast.makeText(context, "Logout successful", Toast.LENGTH_SHORT).show()
     }
+  }
 
-    Scaffold(
-        topBar = {TopNavigationMenu_HomePage_Profile(
+  Scaffold(
+      topBar = {
+        TopNavigationMenu_HomePage_Profile(
             selectedTab = Tab.HomePage,
             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
             modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
-            onSignedOut =  {homePageViewModel.signOut(credentialManager)}
+            onSignedOut = { homePageViewModel.signOut(credentialManager) })
+      },
 
-        )},
+      /*bottomBar = {
+         BottomNavigationMenu(
+             selectedTab = Tab.HomePage,
+             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
+             modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU)
+         )},
 
-        /*bottomBar = {
-            BottomNavigationMenu(
-                selectedTab = Tab.HomePage,
-                onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
-                modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU)
-            )},
-
-         */
-        content = { padding ->
-            Text(
-                text = "Home page",
-                modifier = Modifier.padding(padding).testTag(HomePageScreenTestTags.HOMETEXT)
-            )
-        }
-    )
+      */
+      content = { padding ->
+        Text(
+            text = "Home page",
+            modifier = Modifier.padding(padding).testTag(HomePageScreenTestTags.HOMETEXT))
+      })
 }

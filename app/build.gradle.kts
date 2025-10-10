@@ -24,7 +24,7 @@ android {
 
 
     defaultConfig {
-        applicationId = "com.github.se.gatherly"
+        applicationId = "com.android.gatherly"
         minSdk = 29
         targetSdk = 34
         versionCode = 1

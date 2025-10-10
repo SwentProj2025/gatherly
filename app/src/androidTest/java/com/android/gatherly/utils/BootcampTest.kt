@@ -1,26 +1,5 @@
 package com.github.se.bootcamp.utils
 
-import androidx.activity.ComponentActivity
-import androidx.compose.material3.NavigationBar
-import androidx.compose.ui.test.SemanticsMatcher
-import androidx.compose.ui.test.SemanticsNodeInteraction
-import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertIsNotDisplayed
-import androidx.compose.ui.test.assertTextContains
-import androidx.compose.ui.test.hasAnyDescendant
-import androidx.compose.ui.test.hasTestTag
-import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.junit4.AndroidComposeTestRule
-import androidx.compose.ui.test.junit4.ComposeTestRule
-import androidx.compose.ui.test.onAllNodesWithTag
-import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performTextClearance
-import androidx.compose.ui.test.performTextInput
-import androidx.test.ext.junit.rules.ActivityScenarioRule
-import com.android.gatherly.ui.SignIn.SignInScreenTestTags
-import com.android.gatherly.ui.focusTimer.FocusTimerScreenTestTags
-import com.android.gatherly.ui.homePage.HomePageScreenTestTags
 /*
 import com.github.se.bootcamp.HttpClientProvider
 import com.github.se.bootcamp.model.map.Location
@@ -29,25 +8,26 @@ import com.github.se.bootcamp.model.todo.ToDoStatus
 import com.github.se.bootcamp.model.todo.ToDosRepository
 import com.github.se.bootcamp.model.todo.ToDosRepositoryProvider
  */
-import com.android.gatherly.ui.navigation.NavigationTestTags
 /*
 import com.android.gatherly.ui.overview.AddToDoScreenTestTags
 import com.github.se.bootcamp.ui.overview.EditToDoScreenTestTags
 
  */
+
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertTextContains
+import androidx.compose.ui.test.junit4.ComposeTestRule
+import androidx.compose.ui.test.onNodeWithTag
+import com.android.gatherly.ui.SignIn.SignInScreenTestTags
+import com.android.gatherly.ui.focusTimer.FocusTimerScreenTestTags
+import com.android.gatherly.ui.homePage.HomePageScreenTestTags
+import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.overview.OverviewScreenTestTags
 import com.android.gatherly.ui.profile.ProfileScreenTestTags
-import com.google.firebase.Timestamp
+import com.android.gatherly.utils.FakeHttpClient
+import com.android.gatherly.utils.FirebaseEmulator
 import com.google.firebase.auth.FirebaseUser
-import java.text.SimpleDateFormat
-import java.util.Calendar
-import java.util.Locale
-import junit.framework.TestCase.assertEquals
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.test.runTest
 import okhttp3.OkHttpClient
-import org.junit.After
 import org.junit.Before
 
 const val UI_WAIT_TIMEOUT = 5_000L
@@ -71,18 +51,17 @@ enum class BootcampMilestone {
  */
 abstract class BootcampTest(val milestone: BootcampMilestone) {
 
-  //abstract fun createInitializedRepository(): ToDosRepository
-/*
+  // abstract fun createInitializedRepository(): ToDosRepository
+
   open fun initializeHTTPClient(): OkHttpClient = FakeHttpClient.getClient()
 
   /*val repository: ToDosRepository
-    get() = ToDosRepositoryProvider.repository*/
-
+  get() = ToDosRepositoryProvider.repository*/
 
   /*val httpClient
-    get() = HttpClientProvider.client
+   get() = HttpClientProvider.client
 
-   */
+  */
 
   val shouldSignInAnounymously: Boolean =
       when (milestone) {
@@ -111,62 +90,60 @@ abstract class BootcampTest(val milestone: BootcampMilestone) {
     }
   }
 
- */
-
   /*open val todo1 =
-      ToDo(
-          uid = "0",
-          name = "Buy groceries",
-          description = "Milk, eggs, bread, and butter",
-          assigneeName = "Alice",
-          dueDate = Timestamp.Companion.fromDate(2025, Calendar.SEPTEMBER, 1),
-          location = Location(46.5191, 6.5668, "Lausanne Coop"),
-          status = ToDoStatus.CREATED,
-          ownerId = "user")
+        ToDo(
+            uid = "0",
+            name = "Buy groceries",
+            description = "Milk, eggs, bread, and butter",
+            assigneeName = "Alice",
+            dueDate = Timestamp.Companion.fromDate(2025, Calendar.SEPTEMBER, 1),
+            location = Location(46.5191, 6.5668, "Lausanne Coop"),
+            status = ToDoStatus.CREATED,
+            ownerId = "user")
 
-  open val todo2 =
-      ToDo(
-          uid = "1",
-          name = "Walk the dog",
-          description = "Take Fido for a walk in the park",
-          assigneeName = "Bob",
-          dueDate = Timestamp.Companion.fromDate(2025, Calendar.OCTOBER, 15),
-          location = Location(46.5210, 6.5790, "Parc de Mon Repos"),
-          status = ToDoStatus.STARTED,
-          ownerId = "user")
+    open val todo2 =
+        ToDo(
+            uid = "1",
+            name = "Walk the dog",
+            description = "Take Fido for a walk in the park",
+            assigneeName = "Bob",
+            dueDate = Timestamp.Companion.fromDate(2025, Calendar.OCTOBER, 15),
+            location = Location(46.5210, 6.5790, "Parc de Mon Repos"),
+            status = ToDoStatus.STARTED,
+            ownerId = "user")
 
-  open val todo3 =
-      ToDo(
-          uid = "2",
-          name = "Read a book",
-          description = "Finish reading 'Clean Code'",
-          assigneeName = "Charlie",
-          dueDate = Timestamp.Companion.fromDate(2025, Calendar.NOVEMBER, 10),
-          location = Location(46.5200, 6.5800, "City Library"),
-          status = ToDoStatus.ARCHIVED,
-          ownerId = "user")
+    open val todo3 =
+        ToDo(
+            uid = "2",
+            name = "Read a book",
+            description = "Finish reading 'Clean Code'",
+            assigneeName = "Charlie",
+            dueDate = Timestamp.Companion.fromDate(2025, Calendar.NOVEMBER, 10),
+            location = Location(46.5200, 6.5800, "City Library"),
+            status = ToDoStatus.ARCHIVED,
+            ownerId = "user")
 
 
-*/
+  */
   @Before
   open fun setUp() {
-    //ToDosRepositoryProvider.repository = createInitializedRepository()
-    //HttpClientProvider.client = initializeHTTPClient()
-    //if (shouldSignInAnounymously) {
-      //runTest { FirebaseEmulator.auth.signInAnonymously().await() }
-    //}
+    // ToDosRepositoryProvider.repository = createInitializedRepository()
+    // HttpClientProvider.client = initializeHTTPClient()
+    // if (shouldSignInAnounymously) {
+    // runTest { FirebaseEmulator.auth.signInAnonymously().await() }
+    // }
   }
-/*
-  @After
-  open fun tearDown() {
-    if (FirebaseEmulator.isRunning) {
-      FirebaseEmulator.auth.signOut()
-      FirebaseEmulator.clearAuthEmulator()
-    }
-  }
+  /*
+   @After
+   open fun tearDown() {
+     if (FirebaseEmulator.isRunning) {
+       FirebaseEmulator.auth.signOut()
+       FirebaseEmulator.clearAuthEmulator()
+     }
+   }
 
- */
-/*
+  */
+  /*
 
 
   fun ComposeTestRule.enterAddTodoTitle(title: String) =
@@ -311,8 +288,8 @@ abstract class BootcampTest(val milestone: BootcampMilestone) {
 
   fun ComposeTestRule.checkHomeScreenIsDisplayed() {
     onNodeWithTag(NavigationTestTags.TOP_NAVIGATION_MENU)
-      .assertIsDisplayed()
-      .assertTextContains("home page", substring = true, ignoreCase = true)
+        .assertIsDisplayed()
+        .assertTextContains("home page", substring = true, ignoreCase = true)
   }
 
   fun ComposeTestRule.checkTimerScreenIsNotDisplayed() {
@@ -321,8 +298,8 @@ abstract class BootcampTest(val milestone: BootcampMilestone) {
 
   fun ComposeTestRule.checkTimerScreenIsDisplayed() {
     onNodeWithTag(NavigationTestTags.TOP_NAVIGATION_MENU)
-      .assertIsDisplayed()
-      .assertTextContains("focus timer", substring = true, ignoreCase = true)
+        .assertIsDisplayed()
+        .assertTextContains("focus timer", substring = true, ignoreCase = true)
   }
 
   fun ComposeTestRule.checkProfileScreenIsNotDisplayed() {
@@ -331,8 +308,8 @@ abstract class BootcampTest(val milestone: BootcampMilestone) {
 
   fun ComposeTestRule.checkProfileScreenIsDisplayed() {
     onNodeWithTag(NavigationTestTags.TOP_NAVIGATION_MENU)
-      .assertIsDisplayed()
-      .assertTextContains("Your profile", substring = true, ignoreCase = true)
+        .assertIsDisplayed()
+        .assertTextContains("Your profile", substring = true, ignoreCase = true)
   }
 
   fun ComposeTestRule.checkSettingsScreenIsNotDisplayed() {
@@ -341,8 +318,8 @@ abstract class BootcampTest(val milestone: BootcampMilestone) {
 
   fun ComposeTestRule.checkSettingsScreenIsDisplayed() {
     onNodeWithTag(NavigationTestTags.TOP_NAVIGATION_MENU)
-      .assertIsDisplayed()
-      .assertTextContains("Your profile", substring = true, ignoreCase = true)
+        .assertIsDisplayed()
+        .assertTextContains("Your profile", substring = true, ignoreCase = true)
   }
 
   fun ComposeTestRule.checkSignInScreenIsNotDisplayed() {
@@ -351,70 +328,67 @@ abstract class BootcampTest(val milestone: BootcampMilestone) {
 
   fun ComposeTestRule.checkSignInScreenIsDisplayed() {
     onNodeWithTag(NavigationTestTags.TOP_NAVIGATION_MENU)
-      .assertIsDisplayed()
-      .assertTextContains("SignIN page", substring = true, ignoreCase = true)
-  }
-
-
-
-
-    /*
-  fun ComposeTestRule.checkEditToDoScreenIsDisplayed() {
-    onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
         .assertIsDisplayed()
-        .assertTextContains("Edit Todo", substring = false, ignoreCase = true)
+        .assertTextContains("SignIN page", substring = true, ignoreCase = true)
   }
 
-  fun ComposeTestRule.checkBottomBarIsNotDisplayed() {
-    onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsNotDisplayed()
-    onNodeWithTag(NavigationTestTags.OVERVIEW_TAB).assertIsNotDisplayed()
-    onNodeWithTag(NavigationTestTags.MAP_TAB).assertIsNotDisplayed()
-  }
-
-  fun ComposeTestRule.checkErrorMessageIsDisplayedForAddTodo() =
-      onNodeWithTag(AddToDoScreenTestTags.ERROR_MESSAGE, useUnmergedTree = true).assertIsDisplayed()
-
-  fun ComposeTestRule.checkErrorMessageIsDisplayedForEditTodo() =
-      onNodeWithTag(EditToDoScreenTestTags.ERROR_MESSAGE, useUnmergedTree = true)
+  /*
+    fun ComposeTestRule.checkEditToDoScreenIsDisplayed() {
+      onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
           .assertIsDisplayed()
-
-  fun checkNoTodoWereAdded(action: () -> Unit) {
-    val numberOfTodos = runBlocking { repository.getAllTodos().size }
-    action()
-    runTest { assertEquals(numberOfTodos, repository.getAllTodos().size) }
-  }
-
-  fun checkTodoWasNotEdited(editingTodo: ToDo = todo1, block: () -> Unit) {
-    val todoBeforeEdit = runBlocking { repository.getTodo(editingTodo.uid) }
-    block()
-    runTest {
-      val todoAfterEdit = repository.getTodo(editingTodo.uid)
-      assertEquals(todoBeforeEdit, todoAfterEdit)
+          .assertTextContains("Edit Todo", substring = false, ignoreCase = true)
     }
-  }
 
-  fun ComposeTestRule.enterEditTodoStatus(currentStatus: ToDoStatus, status: ToDoStatus) {
-    val numberOfClick =
-        (status.ordinal - currentStatus.ordinal + ToDoStatus.entries.size) % ToDoStatus.entries.size
-    for (i in 0 until numberOfClick) {
-      onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_STATUS).assertIsDisplayed().performClick()
+    fun ComposeTestRule.checkBottomBarIsNotDisplayed() {
+      onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsNotDisplayed()
+      onNodeWithTag(NavigationTestTags.OVERVIEW_TAB).assertIsNotDisplayed()
+      onNodeWithTag(NavigationTestTags.MAP_TAB).assertIsNotDisplayed()
     }
-  }
 
-  fun ComposeTestRule.onTodoItem(todo: ToDo, matcher: SemanticsMatcher) {
-    onNode(
-            hasTestTag(OverviewScreenTestTags.getTestTagForTodoItem(todo))
-                .and(hasAnyDescendant(matcher)),
-            useUnmergedTree = true)
-        .assertIsDisplayed()
-  }
-*/
+    fun ComposeTestRule.checkErrorMessageIsDisplayedForAddTodo() =
+        onNodeWithTag(AddToDoScreenTestTags.ERROR_MESSAGE, useUnmergedTree = true).assertIsDisplayed()
+
+    fun ComposeTestRule.checkErrorMessageIsDisplayedForEditTodo() =
+        onNodeWithTag(EditToDoScreenTestTags.ERROR_MESSAGE, useUnmergedTree = true)
+            .assertIsDisplayed()
+
+    fun checkNoTodoWereAdded(action: () -> Unit) {
+      val numberOfTodos = runBlocking { repository.getAllTodos().size }
+      action()
+      runTest { assertEquals(numberOfTodos, repository.getAllTodos().size) }
+    }
+
+    fun checkTodoWasNotEdited(editingTodo: ToDo = todo1, block: () -> Unit) {
+      val todoBeforeEdit = runBlocking { repository.getTodo(editingTodo.uid) }
+      block()
+      runTest {
+        val todoAfterEdit = repository.getTodo(editingTodo.uid)
+        assertEquals(todoBeforeEdit, todoAfterEdit)
+      }
+    }
+
+    fun ComposeTestRule.enterEditTodoStatus(currentStatus: ToDoStatus, status: ToDoStatus) {
+      val numberOfClick =
+          (status.ordinal - currentStatus.ordinal + ToDoStatus.entries.size) % ToDoStatus.entries.size
+      for (i in 0 until numberOfClick) {
+        onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_STATUS).assertIsDisplayed().performClick()
+      }
+    }
+
+    fun ComposeTestRule.onTodoItem(todo: ToDo, matcher: SemanticsMatcher) {
+      onNode(
+              hasTestTag(OverviewScreenTestTags.getTestTagForTodoItem(todo))
+                  .and(hasAnyDescendant(matcher)),
+              useUnmergedTree = true)
+          .assertIsDisplayed()
+    }
+  */
   fun ComposeTestRule.checkMapScreenIsDisplayed() {
     onNodeWithTag(NavigationTestTags.TOP_NAVIGATION_MENU)
         .assertIsDisplayed()
         .assertTextContains("map", substring = true, ignoreCase = true)
   }
-/*
+  /*
   fun ComposeTestRule.onLocationSuggestion(location: Location): SemanticsNodeInteraction {
     val hasTextLocation = hasText(location.name)
     val containsTextLocation = hasTextLocation.or(hasAnyDescendant(hasTextLocation))

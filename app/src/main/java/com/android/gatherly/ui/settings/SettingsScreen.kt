@@ -15,12 +15,10 @@ import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.NavigationTestTags
-import com.android.gatherly.ui.navigation.TopNavigationMenu_HomePage_Profile
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu
 
-object SettingsScreenTestTags{
-}
+object SettingsScreenTestTags {}
 
 @Composable
 fun SettingsScreen(
@@ -29,38 +27,32 @@ fun SettingsScreen(
     onSignedOut: () -> Unit = {},
     navigationActions: NavigationActions? = null,
 ) {
-    val context = LocalContext.current
-    val uiState by settingsViewModel.uiState.collectAsState()
+  val context = LocalContext.current
+  val uiState by settingsViewModel.uiState.collectAsState()
 
-    LaunchedEffect(uiState.signedOut) {
-        if (uiState.signedOut) {
-            onSignedOut()
-            Toast.makeText(context, "Logout successful", Toast.LENGTH_SHORT).show()
-        }
+  LaunchedEffect(uiState.signedOut) {
+    if (uiState.signedOut) {
+      onSignedOut()
+      Toast.makeText(context, "Logout successful", Toast.LENGTH_SHORT).show()
     }
+  }
 
-    Scaffold(
-        topBar = {TopNavigationMenu(
+  Scaffold(
+      topBar = {
+        TopNavigationMenu(
             selectedTab = Tab.Map,
             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
             modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
-            onSignedOut =  {settingsViewModel.signOut(credentialManager)}
+            onSignedOut = { settingsViewModel.signOut(credentialManager) })
+      },
 
-        )},
+      /*bottomBar = {
+         BottomNavigationMenu(
+             selectedTab = Tab.HomePage,
+             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
+             modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU)
+         )},
 
-        /*bottomBar = {
-            BottomNavigationMenu(
-                selectedTab = Tab.HomePage,
-                onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
-                modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU)
-            )},
-
-         */
-        content = { padding ->
-            Text(
-                text = "Settings",
-                modifier = Modifier.padding(padding)
-            )
-        }
-    )
+      */
+      content = { padding -> Text(text = "Settings", modifier = Modifier.padding(padding)) })
 }

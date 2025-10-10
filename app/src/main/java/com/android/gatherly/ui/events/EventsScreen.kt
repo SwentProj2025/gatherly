@@ -1,11 +1,10 @@
 package com.android.gatherly.ui.events
 
-import androidx.compose.runtime.Composable
-import com.android.gatherly.ui.focusTimer.FocusTimerViewModel
 import android.widget.Toast
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -20,8 +19,8 @@ import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu
 
-object EventsScreenTestTags{
-    const val EVENTSTEXT = "EVENTS"
+object EventsScreenTestTags {
+  const val EVENTSTEXT = "EVENTS"
 }
 
 @Composable
@@ -32,36 +31,33 @@ fun EventsScreen(
     navigationActions: NavigationActions? = null,
 ) {
 
-    val context = LocalContext.current
-    val uiState by eventsViewModel.uiState.collectAsState()
+  val context = LocalContext.current
+  val uiState by eventsViewModel.uiState.collectAsState()
 
-    LaunchedEffect(uiState.signedOut) {
-        if (uiState.signedOut) {
-            onSignedOut()
-            Toast.makeText(context, "Logout successful", Toast.LENGTH_SHORT).show()
-        }
+  LaunchedEffect(uiState.signedOut) {
+    if (uiState.signedOut) {
+      onSignedOut()
+      Toast.makeText(context, "Logout successful", Toast.LENGTH_SHORT).show()
     }
+  }
 
-    Scaffold(
-        topBar = {TopNavigationMenu(
+  Scaffold(
+      topBar = {
+        TopNavigationMenu(
             selectedTab = Tab.Events,
             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
             modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
-            onSignedOut =  {eventsViewModel.signOut(credentialManager)}
-
-        )},
-
-        bottomBar = {
-            BottomNavigationMenu(
-                selectedTab = Tab.Events,
-                onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
-                modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU)
-            )},
-        content = { padding ->
-            Text(
-                text = "Events page",
-                modifier = Modifier.padding(padding).testTag(EventsScreenTestTags.EVENTSTEXT)
-            )
-        }
-    )
+            onSignedOut = { eventsViewModel.signOut(credentialManager) })
+      },
+      bottomBar = {
+        BottomNavigationMenu(
+            selectedTab = Tab.Events,
+            onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
+            modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU))
+      },
+      content = { padding ->
+        Text(
+            text = "Events page",
+            modifier = Modifier.padding(padding).testTag(EventsScreenTestTags.EVENTSTEXT))
+      })
 }
