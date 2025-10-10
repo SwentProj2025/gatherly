@@ -1,5 +1,6 @@
 package com.android.gatherly.ui.authentication
 
+import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -40,9 +41,10 @@ private val TextWhite = Color(0xFFFFFFFF)
 fun SignInScreen(
     authViewModel: SignInViewModel = viewModel(),
     credentialManager: CredentialManager = CredentialManager.create(LocalContext.current),
-    onSignedIn: () -> Unit = {}
+    onSignedIn: () -> Unit = {},
+    context: Context = LocalContext.current,
 ) {
-  val context = LocalContext.current
+
   val isSignedIn by authViewModel.uiState.collectAsState()
 
   // Navigate to overview screen on successful login

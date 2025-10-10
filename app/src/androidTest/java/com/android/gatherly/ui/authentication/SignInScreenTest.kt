@@ -1,10 +1,13 @@
 package com.android.gatherly.ui.authentication
 
+import android.content.Context
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.android.gatherly.screen.authentication.WAIT_TIMEOUT
 import com.android.gatherly.utils.FakeCredentialManager
 import com.android.gatherly.utils.FakeJwtGenerator
 import com.android.gatherly.utils.FirebaseEmulator
@@ -20,7 +23,7 @@ const val WAIT_TIMEOUT = 5_000L
 @RunWith(AndroidJUnit4::class)
 class SignInScreenTest : FirestoreGatherlyTest() {
 
-  private lateinit var viewModel: SignInViewModel
+  private lateinit var signInViewModel: SignInViewModel
 
   @get:Rule val composeTestRule = createComposeRule()
 
@@ -28,12 +31,12 @@ class SignInScreenTest : FirestoreGatherlyTest() {
   override fun setUp() {
     super.setUp()
     FirebaseEmulator.auth.signOut()
-    viewModel = SignInViewModel()
   }
 
   @Test
   fun signInScreen_componentsAreDisplayed() {
-    composeTestRule.setContent { SignInScreen(authViewModel = viewModel) }
+    signInViewModel = SignInViewModel()
+    composeTestRule.setContent { SignInScreen(authViewModel = signInViewModel) }
 
     composeTestRule.onNodeWithTag(SignInScreenTestTags.WELCOME_TITLE).assertIsDisplayed()
     composeTestRule.onNodeWithTag(SignInScreenTestTags.WELCOME_SUBTITLE).assertIsDisplayed()
@@ -43,7 +46,8 @@ class SignInScreenTest : FirestoreGatherlyTest() {
 
   @Test
   fun canSignInAnonymously() {
-    composeTestRule.setContent { SignInScreen(authViewModel = viewModel) }
+    signInViewModel = SignInViewModel()
+    composeTestRule.setContent { SignInScreen(authViewModel = signInViewModel) }
 
     composeTestRule
         .onNodeWithTag(SignInScreenTestTags.ANONYMOUS_BUTTON)
@@ -52,17 +56,23 @@ class SignInScreenTest : FirestoreGatherlyTest() {
 
     sleep(WAIT_TIMEOUT) // Wait for StateFlow to update
 
-    assert(viewModel.uiState.value)
+    assert(signInViewModel.uiState.value)
     assert(FirebaseEmulator.auth.currentUser != null)
   }
 
   @Test
   fun canSignInWithGoogle() {
+    val context = ApplicationProvider.getApplicationContext<Context>()
     val fakeToken = FakeJwtGenerator.createFakeGoogleIdToken("12345", email = "test@example.com")
     val fakeCredentialManager = FakeCredentialManager.create(fakeToken)
 
+    signInViewModel = SignInViewModel()
+
     composeTestRule.setContent {
-      SignInScreen(authViewModel = viewModel, credentialManager = fakeCredentialManager)
+      SignInScreen(
+          authViewModel = signInViewModel,
+          credentialManager = fakeCredentialManager,
+          context = context)
     }
 
     // Click the Google sign-in button
@@ -72,10 +82,10 @@ class SignInScreenTest : FirestoreGatherlyTest() {
         .performClick()
 
     // Wait until uiState becomes true or timeout is reached
-    composeTestRule.waitUntil(timeoutMillis = WAIT_TIMEOUT) { viewModel.uiState.value }
+    composeTestRule.waitUntil(timeoutMillis = WAIT_TIMEOUT) { signInViewModel.uiState.value }
 
     // Assert that the state is updated and user is signed in
-    assert(viewModel.uiState.value) { "ViewModel did not report signed in" }
+    assert(signInViewModel.uiState.value) { "ViewModel did not report signed in" }
     val currentUser = FirebaseEmulator.auth.currentUser
     assert(currentUser != null) { "FirebaseEmulator has no signed-in user" }
     assert(currentUser!!.email == "test@example.com") {
