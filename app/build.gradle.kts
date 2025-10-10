@@ -247,10 +247,16 @@ tasks.withType<Test> {
 
 tasks.register("jacocoTestReport", JacocoReport::class) {
     mustRunAfter("testDebugUnitTest", "connectedDebugAndroidTest")
-
+    doFirst {
+        println("JaCoCo execution data files: ${executionData.files}")
+        println("JaCoCo class directories: ${classDirectories.files}")
+        println("JaCoCo source directories: ${sourceDirectories.files}")
+    }
     reports {
         xml.required = true
         html.required = true
+        xml.outputLocation = file("${project.layout.buildDirectory.get()}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml")
+        html.outputLocation = file("${project.layout.buildDirectory.get()}/reports/jacoco/jacocoTestReport/html")
     }
 
     val fileFilter = listOf(
@@ -261,14 +267,20 @@ tasks.register("jacocoTestReport", JacocoReport::class) {
         "**/*Test*.*",
         "android/**/*.*",
     )
-
+    // JaCoCo needs to match execution data against the same classes used at test runtime.
+    // Include both Kotlin classes and Java bytecode to avoid class mismatch errors.
     val debugTree = fileTree("${project.layout.buildDirectory.get()}/tmp/kotlin-classes/debug") {
         exclude(fileFilter)
     }
 
+    val javacDebugTree = fileTree("${project.layout.buildDirectory.get()}/intermediates/javac/debug/classes") {
+        exclude(fileFilter)
+    }
+
+
     val mainSrc = "${project.layout.projectDirectory}/src/main/java"
     sourceDirectories.setFrom(files(mainSrc))
-    classDirectories.setFrom(files(debugTree))
+    classDirectories.setFrom(files(debugTree, javacDebugTree))
     executionData.setFrom(fileTree(project.layout.buildDirectory.get()) {
         include("outputs/unit_test_code_coverage/debugUnitTest/testDebugUnitTest.exec")
         include("outputs/code_coverage/debugAndroidTest/connected/*/coverage.ec")
