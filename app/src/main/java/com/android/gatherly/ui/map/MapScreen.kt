@@ -25,11 +25,19 @@ import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 import java.text.SimpleDateFormat
 import java.util.Locale
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.ui.graphics.toArgb
 
 // Portions of the code in this file are copy-pasted from the Bootcamp solution provided by the
 // SwEnt staff.
 // The icons were created with the help of an LLM (ChatGPT).
 
+/**
+ * A composable screen displaying ToDos as interactive markers on a Google Map.
+ *
+ * @param viewModel The MapViewModel instance providing the list of ToDos, the current
+ *   camera position, and marker interaction handlers.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MapScreen(viewModel: MapViewModel = viewModel()) {
@@ -79,15 +87,24 @@ fun MapScreen(viewModel: MapViewModel = viewModel()) {
       })
 }
 
-// Simple icon with the title
+
+
+/**
+ * Creates a small rounded marker icon displaying a ToDo title.
+ *
+ * @param title the title of the toDo to render inside the marker icon.
+ * @return A [BitmapDescriptor] representing the ToDo marker icon.
+ */
 @Composable
 private fun todoIcon(title: String): BitmapDescriptor {
   val density = LocalDensity.current
+    val primary = MaterialTheme.colorScheme.primary
+    val onPrimary = MaterialTheme.colorScheme.onPrimary
   return remember(title) {
     // Text Style
     val textPaint =
         Paint().apply {
-          color = Color.WHITE
+          color = onPrimary.toArgb()
           textSize = with(density) { 20.sp.toPx() }
         }
 
@@ -103,7 +120,7 @@ private fun todoIcon(title: String): BitmapDescriptor {
     val c = Canvas(bmp)
 
     // Box
-    val bg = Paint().apply { color = Color.BLUE }
+    val bg = Paint().apply { color = primary.toArgb() }
     c.drawRoundRect(RectF(0f, 0f, w.toFloat(), h.toFloat()), 12f, 12f, bg)
 
     // Text
@@ -115,27 +132,37 @@ private fun todoIcon(title: String): BitmapDescriptor {
   }
 }
 
-// Expanded icon with title, date, description
+/**
+ * Creates an expanded marker icon displaying a ToDo’s title, description, and due date.
+ *
+ * @param title The title of the ToDo displayed as the first line.
+ * @param description The ToDo description displayed below the title.
+ * @param dateText The formatted due date text to display below the title.
+ * @param expanded Whether the icon represents an expanded state (affects recomposition key).
+ * @return A [BitmapDescriptor] representing the expanded ToDo marker icon.
+ */
 @Composable
-fun todoExpanded(
+private fun todoExpanded(
     title: String,
     description: String,
     dateText: String,
     expanded: Boolean = false
 ): BitmapDescriptor {
   val density = LocalDensity.current
+    val primary = MaterialTheme.colorScheme.primary
+    val onPrimary = MaterialTheme.colorScheme.onPrimary
   return remember(title, description, dateText, expanded) {
 
     // Title style
     val titlePaint =
         Paint().apply {
-          color = Color.WHITE
+          color = onPrimary.toArgb()
           textSize = with(density) { 20.sp.toPx() }
         }
     // Body Style
     val bodyPaint =
         Paint().apply {
-          color = Color.WHITE
+          color = onPrimary.toArgb()
           textSize = with(density) { 15.sp.toPx() }
         }
 
@@ -171,7 +198,7 @@ fun todoExpanded(
     val c = Canvas(bmp)
 
     // Box
-    val bg = Paint().apply { color = Color.BLUE }
+    val bg = Paint().apply { color = primary.toArgb() }
     c.drawRoundRect(RectF(0f, 0f, width.toFloat(), height.toFloat()), corner, corner, bg)
 
     // Draw text lines

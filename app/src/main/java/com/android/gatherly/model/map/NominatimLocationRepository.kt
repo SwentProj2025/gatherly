@@ -49,21 +49,17 @@ class NominatimLocationRepository(private val client: OkHttpClient) : LocationRe
           val response = client.newCall(request).execute()
           response.use {
             if (!response.isSuccessful) {
-              Log.d("NominatimLocationRepository", "Unexpected code $response")
               throw Exception("Unexpected code $response")
             }
 
             val body = response.body?.string()
             if (body != null) {
-              Log.d("NominatimLocationRepository", "Body: $body")
               return@withContext parseBody(body)
             } else {
-              Log.d("NominatimLocationRepository", "Empty body")
               return@withContext emptyList()
             }
           }
         } catch (e: IOException) {
-          Log.e("NominatimLocationRepository", "Failed to execute request", e)
           throw e
         }
       }
