@@ -13,6 +13,8 @@ import com.android.gatherly.utils.FakeJwtGenerator
 import com.android.gatherly.utils.FirebaseEmulator
 import com.android.gatherly.utils.FirestoreGatherlyTest
 import java.lang.Thread.sleep
+import org.junit.Assert.assertTrue
+import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -34,6 +36,21 @@ class SignInScreenTest : FirestoreGatherlyTest() {
   }
 
   @Test
+  fun google_sign_in_is_configured() {
+    val context = ApplicationProvider.getApplicationContext<Context>()
+
+    val resourceId =
+        context.resources.getIdentifier("default_web_client_id", "string", context.packageName)
+
+    // Skip test if resource doesn't exist (useful for CI environments)
+    assumeTrue("Google Sign-In not configured - skipping test", resourceId != 0)
+
+    val clientId = context.getString(resourceId)
+    assertTrue(
+        "Invalid Google client ID format: $clientId", clientId.endsWith(".googleusercontent.com"))
+  }
+
+  @Test
   fun signInScreen_componentsAreDisplayed() {
     signInViewModel = SignInViewModel()
     composeTestRule.setContent { SignInScreen(authViewModel = signInViewModel) }
@@ -45,26 +62,10 @@ class SignInScreenTest : FirestoreGatherlyTest() {
   }
 
   @Test
-  fun canSignInAnonymously() {
-    signInViewModel = SignInViewModel()
-    composeTestRule.setContent { SignInScreen(authViewModel = signInViewModel) }
-
-    composeTestRule
-        .onNodeWithTag(SignInScreenTestTags.ANONYMOUS_BUTTON)
-        .assertIsDisplayed()
-        .performClick()
-
-    sleep(WAIT_TIMEOUT) // Wait for StateFlow to update
-
-    assert(signInViewModel.uiState.value)
-    assert(FirebaseEmulator.auth.currentUser != null)
-  }
-
-  @Test
   fun canSignInWithGoogle() {
-    val context = ApplicationProvider.getApplicationContext<Context>()
     val fakeToken = FakeJwtGenerator.createFakeGoogleIdToken("12345", email = "test@example.com")
     val fakeCredentialManager = FakeCredentialManager.create(fakeToken)
+    val context = ApplicationProvider.getApplicationContext<Context>()
 
     signInViewModel = SignInViewModel()
 
@@ -91,5 +92,21 @@ class SignInScreenTest : FirestoreGatherlyTest() {
     assert(currentUser!!.email == "test@example.com") {
       "Signed-in user's email does not match expected"
     }
+  }
+
+  @Test
+  fun canSignInAnonymously() {
+    signInViewModel = SignInViewModel()
+    composeTestRule.setContent { SignInScreen(authViewModel = signInViewModel) }
+
+    composeTestRule
+        .onNodeWithTag(SignInScreenTestTags.ANONYMOUS_BUTTON)
+        .assertIsDisplayed()
+        .performClick()
+
+    sleep(WAIT_TIMEOUT) // Wait for StateFlow to update
+
+    assert(signInViewModel.uiState.value)
+    assert(FirebaseEmulator.auth.currentUser != null)
   }
 }
