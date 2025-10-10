@@ -1,6 +1,5 @@
 package com.android.gatherly.ui.authentication
 
-import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -42,9 +41,9 @@ fun SignInScreen(
     authViewModel: SignInViewModel = viewModel(),
     credentialManager: CredentialManager = CredentialManager.create(LocalContext.current),
     onSignedIn: () -> Unit = {},
-    context: Context = LocalContext.current,
 ) {
 
+  val context = LocalContext.current
   val isSignedIn by authViewModel.uiState.collectAsState()
 
   // Navigate to overview screen on successful login
@@ -88,7 +87,6 @@ fun SignInScreen(
                         }
                   }
 
-              // SignUpSection() not a core functionality, may be added here in the future
               Spacer(modifier = Modifier.height(32.dp))
             }
       })
@@ -141,19 +139,6 @@ fun SignInButton(
               }
               Text(text = text, fontSize = 16.sp, fontWeight = FontWeight.Medium)
             }
-      }
-}
-
-@Composable
-fun SignUpSection() {
-  TextButton(
-      onClick = {},
-      modifier = Modifier.fillMaxWidth().testTag(SignInScreenTestTags.SIGN_UP_BUTTON)) {
-        Text(
-            text = "Don't have an account? Sign up",
-            color = TextWhite,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Medium)
       }
 }
 
