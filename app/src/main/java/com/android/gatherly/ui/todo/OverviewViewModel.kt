@@ -21,6 +21,8 @@ import kotlinx.coroutines.launch
  */
 data class OverviewUIState(
     val todos: List<ToDo> = emptyList(),
+    val errorMsg: String? = null,
+    val isLoading: Boolean = false,
 )
 
 /**
@@ -50,8 +52,14 @@ class OverviewViewModel(
   /** Fetches all todos from the repository and updates the UI state. */
   private fun getAllTodos() {
     viewModelScope.launch {
-      val todos = todoRepository.getAllTodos()
-      _uiState.value = OverviewUIState(todos = todos)
+      _uiState.value = _uiState.value.copy(isLoading = true, errorMsg = null)
+      try {
+        val todos = todoRepository.getAllTodos()
+        _uiState.value = OverviewUIState(todos = todos, isLoading = false)
+      } catch (e: Exception) {
+        _uiState.value =
+            _uiState.value.copy(todos = emptyList(), errorMsg = e.message, isLoading = false)
+      }
     }
   }
 }
