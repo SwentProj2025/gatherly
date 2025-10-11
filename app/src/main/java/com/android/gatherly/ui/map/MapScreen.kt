@@ -1,6 +1,7 @@
 package com.android.gatherly.ui.map
 
 import android.graphics.*
+import android.widget.Toast
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -8,15 +9,24 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.createBitmap
+import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.android.gatherly.ui.navigation.BottomNavigationMenu
+import com.android.gatherly.ui.navigation.NavigationActions
+import com.android.gatherly.ui.navigation.NavigationTestTags
+import com.android.gatherly.ui.navigation.Tab
+import com.android.gatherly.ui.navigation.TopNavigationMenu
 import com.google.android.gms.maps.model.*
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.CameraPosition
@@ -28,31 +38,12 @@ import com.google.maps.android.compose.rememberCameraPositionState
 import java.text.SimpleDateFormat
 import java.util.Locale
 
-import android.widget.Toast
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.testTag
-import androidx.credentials.CredentialManager
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.android.gatherly.ui.navigation.BottomNavigationMenu
-import com.android.gatherly.ui.navigation.NavigationActions
-import com.android.gatherly.ui.navigation.NavigationTestTags
-import com.android.gatherly.ui.navigation.Tab
-import com.android.gatherly.ui.navigation.TopNavigationMenu
-
 // Portions of the code in this file are copy-pasted from the Bootcamp solution provided by the
 // SwEnt staff.
 // The icons were created with the help of an LLM (ChatGPT).
 
 object MapScreenTestTags {
-    const val MapText = "MAP"
+  const val MapText = "MAP"
 }
 
 data class MapUIState(val errorMsg: String? = null, val onSignedOut: Boolean = false)
@@ -65,7 +56,7 @@ data class MapUIState(val errorMsg: String? = null, val onSignedOut: Boolean = f
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-//fun MapScreen(viewModel: MapViewModel = viewModel()) {
+// fun MapScreen(viewModel: MapViewModel = viewModel()) {
 fun MapScreen(
     viewModel: MapViewModel = viewModel(),
     credentialManager: CredentialManager = CredentialManager.create(LocalContext.current),
@@ -75,7 +66,6 @@ fun MapScreen(
 
   val uiState by viewModel.uiState.collectAsState()
   val context = LocalContext.current
-  //val uiState by mapViewModel.uiState.collectAsState()
 
   LaunchedEffect(uiState.onSignedOut) {
     if (uiState.onSignedOut) {
@@ -86,17 +76,17 @@ fun MapScreen(
 
   Scaffold(
       topBar = {
-          TopNavigationMenu(
-              selectedTab = Tab.Map,
-              onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
-              modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
-              onSignedOut = { viewModel.onSignedOut(credentialManager) })
+        TopNavigationMenu(
+            selectedTab = Tab.Map,
+            onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
+            modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
+            onSignedOut = { viewModel.onSignedOut(credentialManager) })
       },
       bottomBar = {
-          BottomNavigationMenu(
-              selectedTab = Tab.Map,
-              onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
-              modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU))
+        BottomNavigationMenu(
+            selectedTab = Tab.Map,
+            onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
+            modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU))
       },
 
       /*content = { padding ->
@@ -143,7 +133,7 @@ fun MapScreen(
                     })
               }
             }
-
+      })
 }
 
 /**

@@ -59,7 +59,7 @@ sealed class Tab(val name: String, val icon: ImageVector, val destination: Scree
 
   object Settings : Tab("Settings", Icons.Outlined.Settings, Screen.SettingsScreen)
 
-  object SignOut : Tab("Sign In", Icons.Outlined.Person, Screen.Login)
+  object SignOut : Tab("Sign In", Icons.Outlined.Person, Screen.SignIn)
 
   object Friends : Tab("Friends", Icons.Outlined.Diversity1, Screen.FriendsScreen)
 }

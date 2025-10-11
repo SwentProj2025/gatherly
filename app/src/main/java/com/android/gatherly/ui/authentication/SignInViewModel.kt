@@ -15,11 +15,34 @@ import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.Companion.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
 import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.auth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+
+/**
+ * Represents the UI state for authentication.
+ *
+ * @property isLoading Whether an authentication operation is in progress.
+ * @property user The currently signed-in [FirebaseUser], or null if not signed in.
+ * @property errorMsg An error message to display, or null if there is no error.
+ * @property signedOut True if a sign-out operation has completed.
+ */
+
+/*
+data class AuthUIState(
+    val isLoading: Boolean = false,
+    val user: FirebaseUser? = null,
+    val errorMsg: String? = null,
+    val signedOut: Boolean = false
+)
+
+data class AuthUIState(val isAnonym: Boolean = false, val isGoogle: Boolean = false)
+
+ */
 
 class SignInViewModel : ViewModel() {
   // UI State containing the user sign in status
@@ -28,6 +51,8 @@ class SignInViewModel : ViewModel() {
   // Read-only UI State presented to the UI
   val uiState: StateFlow<Boolean>
     get() = _uiState
+  //private val _uiState = MutableStateFlow(AuthUIState())
+  //val uiState: StateFlow<AuthUIState> = _uiState
 
   /** Authenticate to Firebase */
   private fun authenticateFirebaseWithGoogle(credential: Credential) {
@@ -43,16 +68,36 @@ class SignInViewModel : ViewModel() {
         Firebase.auth
             .signInWithCredential(firebaseCredential)
             .addOnSuccessListener {
+                //_uiState.update { it.copy(isGoogle = true) }
               Log.d("Firebase authentication with Google", "Successful authentication")
-              _uiState.value = true
+              /*_uiState.update {
+                it.copy(
+                    isLoading = false,
+                    errorMsg = null,
+                    signedOut = false,
+                    user = Firebase.auth.currentUser)
+              }*/
+
             }
             .addOnFailureListener {
               Log.e(
                   "Firebase authentication with Google",
                   "Failed to authenticate Firebase credentials")
+              /*_uiState.update {
+                it.copy(
+                    isLoading = false, errorMsg = "Failed to SignIn", signedOut = true, user = null)
+              }*/
             }
       } else {
         Log.e("Google credentials", "Failed to recognize Google credentials")
+        /*_uiState.update {
+          it.copy(
+              isLoading = false,
+              errorMsg = "Failed to recognize Google credentials",
+              signedOut = true,
+              user = null)
+        }*/
+
       }
     }
   }
@@ -82,14 +127,37 @@ class SignInViewModel : ViewModel() {
 
   /** Sign in anonymously */
   fun signInAnonymously() {
-    Firebase.auth
-        .signInAnonymously()
-        .addOnSuccessListener {
-          Log.d("Firebase anonymous authentication", "Successful authentication")
-          _uiState.value = true
-        }
-        .addOnFailureListener {
-          Log.e("Firebase anonymous authentication", "Failed to authenticate Firebase credentials")
-        }
+      //viewModelScope.launch {
+      // _uiState.update { it.copy(isLoading = true, errorMsg = null) }
+
+      //Log.e("Function signInAnonymously", "IS IN ")
+      Firebase.auth
+          .signInAnonymously()
+          .addOnSuccessListener {
+           // _uiState.update { it.copy(isAnonym = true) }
+
+            //Log.e("Firebase anonymous authentication", "Successful authentication")
+            /*_uiState.update {
+              it.copy(
+                  isLoading = false,
+                  errorMsg = null,
+                  signedOut = false,
+                  user = Firebase.auth.currentUser)
+            }*/
+          }
+          .addOnFailureListener {
+            Log.e(
+                "Firebase anonymous authentication", "Failed to authenticate Firebase credentials")
+            /*_uiState.update {
+              it.copy(
+                  isLoading = false, errorMsg = "Failed to SignIn", signedOut = true, user = null)
+            }*/
+          }
+    //}
   }
+  /*
+   fun clearErrorMsg() {
+     _uiState.update { it.copy(errorMsg = null) }
+   }
+  */
 }

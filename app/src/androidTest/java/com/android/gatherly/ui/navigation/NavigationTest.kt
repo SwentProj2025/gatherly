@@ -11,7 +11,6 @@ import androidx.compose.ui.test.performClick
 import com.android.gatherly.GatherlyApp
 import com.android.gatherly.ui.SignIn.SignInScreenTestTags
 import com.android.gatherly.ui.focusTimer.FocusTimerScreenTestTags
-import com.android.gatherly.ui.homePage.HomePageScreenTestTags
 import com.android.gatherly.ui.overview.OverviewScreenTestTags
 import com.android.gatherly.ui.profile.ProfileScreenTestTags
 import com.android.gatherly.utils.GatherlyTest
@@ -81,7 +80,6 @@ class NavigationTest : GatherlyTest() {
     composeTestRule.checkOverviewScreenIsNotDisplayed()
   }
 
-
   /*
   @Test
   fun canLogOutFromHomePage() {
@@ -116,8 +114,6 @@ class NavigationTest : GatherlyTest() {
    }
 
   */
-
-
 
   /*
    @Test
@@ -231,10 +227,7 @@ class NavigationTest : GatherlyTest() {
         .assertTextContains("map", substring = true, ignoreCase = true)
   }
 
-  fun ComposeTestRule.AmIOnHomePage(){
+  fun ComposeTestRule.AmIOnHomePage() {
     onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE).assertTextContains(value = "Home")
   }
-
-
-
 }

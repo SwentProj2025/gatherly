@@ -14,7 +14,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
-import com.android.gatherly.ui.SignIn.SignInScreen
+import com.android.gatherly.ui.authentication.SignInScreen
 import com.android.gatherly.ui.events.EventsScreen
 import com.android.gatherly.ui.focusTimer.FocusTimerInitScreen
 import com.android.gatherly.ui.focusTimer.FocusTimerScreen
@@ -70,23 +70,25 @@ fun GatherlyApp(
   val navController = rememberNavController()
   val navigationActions = NavigationActions(navController)
   val startDestination =
-      if (FirebaseAuth.getInstance().currentUser == null) Screen.HomePage.name
+      if (FirebaseAuth.getInstance().currentUser == null) Screen.SignIn.name
       else Screen.HomePage.name
 
   NavHost(navController = navController, startDestination = startDestination) {
 
     // SIGNIN COMPOSABLE  ------------------------------
     navigation(
-        startDestination = Screen.Login.route,
-        route = Screen.Login.name,
+        startDestination = Screen.SignIn.route,
+        route = Screen.SignIn.name,
     ) {
-      composable(Screen.Login.route) {
+      composable(Screen.SignIn.route) {
+        /*SignInScreen(
+        credentialManager = credentialManager,
+        onSignedIn = { navigationActions.navigateTo(Screen.HomePage) })*/
         SignInScreen(
             credentialManager = credentialManager,
             onSignedIn = { navigationActions.navigateTo(Screen.HomePage) })
       }
     }
-
     // HOMEPAGE COMPOSABLE  ------------------------------
     navigation(
         startDestination = Screen.HomePage.route,
@@ -96,7 +98,7 @@ fun GatherlyApp(
         HomePageScreen(
             credentialManager = credentialManager,
             navigationActions = navigationActions,
-            onSignedOut = { navigationActions.navigateTo(Screen.Login) })
+            onSignedOut = { navigationActions.navigateTo(Screen.SignIn) })
       }
     }
 
@@ -109,7 +111,7 @@ fun GatherlyApp(
         OverviewScreen(
             credentialManager = credentialManager,
             navigationActions = navigationActions,
-            onSignedOut = { navigationActions.navigateTo(Screen.Login) })
+            onSignedOut = { navigationActions.navigateTo(Screen.SignIn) })
       }
 
       /*composable(Screen.OverviewToDo.route) {
@@ -154,7 +156,7 @@ fun GatherlyApp(
         MapScreen(
             navigationActions = navigationActions,
             credentialManager = credentialManager,
-            onSignedOut = { navigationActions.navigateTo(Screen.Login) })
+            onSignedOut = { navigationActions.navigateTo(Screen.SignIn) })
       }
     }
 
@@ -167,13 +169,13 @@ fun GatherlyApp(
         FocusTimerInitScreen(
             navigationActions = navigationActions,
             credentialManager = credentialManager,
-            onSignedOut = { navigationActions.navigateTo(Screen.Login) })
+            onSignedOut = { navigationActions.navigateTo(Screen.SignIn) })
       }
       composable(Screen.FocusTimerScreen.route) {
         FocusTimerScreen(
             navigationActions = navigationActions,
             credentialManager = credentialManager,
-            onSignedOut = { navigationActions.navigateTo(Screen.Login) })
+            onSignedOut = { navigationActions.navigateTo(Screen.SignIn) })
       }
     }
 
@@ -186,7 +188,7 @@ fun GatherlyApp(
         EventsScreen(
             navigationActions = navigationActions,
             credentialManager = credentialManager,
-            onSignedOut = { navigationActions.navigateTo(Screen.Login) })
+            onSignedOut = { navigationActions.navigateTo(Screen.SignIn) })
       }
     }
 
@@ -199,7 +201,7 @@ fun GatherlyApp(
         ProfileScreen(
             navigationActions = navigationActions,
             credentialManager = credentialManager,
-            onSignedOut = { navigationActions.navigateTo(Screen.Login) })
+            onSignedOut = { navigationActions.navigateTo(Screen.SignIn) })
       }
     }
 
@@ -212,7 +214,7 @@ fun GatherlyApp(
         SettingsScreen(
             navigationActions = navigationActions,
             credentialManager = credentialManager,
-            onSignedOut = { navigationActions.navigateTo(Screen.Login) })
+            onSignedOut = { navigationActions.navigateTo(Screen.SignIn) })
       }
     }
 
@@ -225,7 +227,7 @@ fun GatherlyApp(
         FriendsScreen(
             navigationActions = navigationActions,
             credentialManager = credentialManager,
-            onSignedOut = { navigationActions.navigateTo(Screen.Login) })
+            onSignedOut = { navigationActions.navigateTo(Screen.SignIn) })
       }
     }
   }

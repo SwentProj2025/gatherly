@@ -20,7 +20,7 @@ object SignInScreenTestTags {
 }
 
 @Composable
-fun SignInScreen(
+fun SignInScreenxx(
     signInViewModel: SignInViewModel = viewModel(),
     credentialManager: CredentialManager = CredentialManager.create(LocalContext.current),
     onSignedIn: () -> Unit = {},

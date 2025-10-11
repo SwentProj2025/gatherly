@@ -14,7 +14,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.ui.navigation.NavigationActions
-import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_HomePage_Profile
 

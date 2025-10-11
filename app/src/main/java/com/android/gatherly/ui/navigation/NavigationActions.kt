@@ -7,7 +7,9 @@ sealed class Screen(
     val name: String,
     val isTopLevelDestination: Boolean = false
 ) {
-  object Login : Screen(route = "login", name = "Authentication")
+  object Login : Screen(route = "login", name = "Login temp")
+
+  object SignIn : Screen(route = "sign_in", name = "Authentification")
 
   object HomePage : Screen(route = "home_page", name = "Home Page", isTopLevelDestination = true)
 
@@ -69,7 +71,7 @@ open class NavigationActions(
       //        launchSingleTop = true
       //      }
       //
-      if (screen !is Screen.Login) {
+      if (screen !is Screen.SignIn) {
         // Restore state when reselecting a previously selected item
         restoreState = true
       }
@@ -95,7 +97,6 @@ open class NavigationActions(
   }
 
   open fun navigateToSignIn() {
-    navController.popBackStack(Screen.Login.route, inclusive = false)
+    navController.popBackStack(Screen.SignIn.route, inclusive = false)
   }
-
 }
