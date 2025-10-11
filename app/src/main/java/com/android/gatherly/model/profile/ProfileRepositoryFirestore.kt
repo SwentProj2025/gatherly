@@ -2,7 +2,7 @@ package com.android.gatherly.model.profile
 
 class ProfileRepositoryFirestore : ProfileRepository {
 
-  override suspend fun getProfileByUid(username: String): Profile? {
+  override suspend fun getProfileByUid(uid: String): Profile? {
     TODO("Not yet implemented")
   }
 
@@ -14,11 +14,11 @@ class ProfileRepositoryFirestore : ProfileRepository {
     TODO("Not yet implemented")
   }
 
-  override suspend fun deleteProfile(username: String) {
+  override suspend fun deleteProfile(uid: String) {
     TODO("Not yet implemented")
   }
 
-  override suspend fun isUidRegistered(username: String): Boolean {
+  override suspend fun isUidRegistered(uid: String): Boolean {
     TODO("Not yet implemented")
   }
 }
