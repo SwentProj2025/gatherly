@@ -86,15 +86,15 @@ fun GatherlyTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable() () -> Unit,
 ) {
-    val colorScheme: ColorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
-    val view = LocalView.current
-    if (!view.isInEditMode) {
-        SideEffect {
-            val window = (view.context as Activity).window
-            window.statusBarColor = colorScheme.background.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
-        }
+  val colorScheme: ColorScheme = if (darkTheme) DarkColorScheme else LightColorScheme
+  val view = LocalView.current
+  if (!view.isInEditMode) {
+    SideEffect {
+      val window = (view.context as Activity).window
+      window.statusBarColor = colorScheme.background.toArgb()
+      WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
     }
+  }
 
-    MaterialTheme(colorScheme = colorScheme, content = content)
+  MaterialTheme(colorScheme = colorScheme, content = content)
 }
