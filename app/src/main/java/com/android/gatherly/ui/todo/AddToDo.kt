@@ -28,8 +28,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.android.gatherly.R
 
 // Portions of the code in this file are copy-pasted from the Bootcamp solution provided by the
 // SwEnt staff.
@@ -91,10 +93,12 @@ fun AddToDoScreen(
       // TODO: modify this part with the specific top bar implemented in the navigation menu.
       topBar = {
         TopAppBar(
-            title = { Text("Add To-Do") },
+            title = { Text(stringResource(R.string.todos_title_add_todo_screen)) },
             navigationIcon = {
               IconButton(onClick = { goBack() }) {
-                Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = stringResource(R.string.todos_back_button_desc))
               }
             },
             colors =
@@ -115,8 +119,8 @@ fun AddToDoScreen(
               OutlinedTextField(
                   value = todoUIState.title,
                   onValueChange = { addTodoViewModel.onTitleChanged(it) },
-                  label = { Text("Title") },
-                  placeholder = { Text("Task Title") },
+                  label = { Text(stringResource(R.string.todos_title_field_label)) },
+                  placeholder = { Text(stringResource(R.string.todos_title_field_placeholder)) },
                   isError = todoUIState.titleError != null,
                   supportingText = {
                     todoUIState.titleError?.let {
@@ -130,8 +134,8 @@ fun AddToDoScreen(
               OutlinedTextField(
                   value = todoUIState.description,
                   onValueChange = { addTodoViewModel.onDescriptionChanged(it) },
-                  label = { Text("Description") },
-                  placeholder = { Text("Describe the task") },
+                  label = { Text(stringResource(R.string.todos_description_field_label)) },
+                  placeholder = { Text(stringResource(R.string.todos_description_placeholder)) },
                   isError = todoUIState.descriptionError != null,
                   supportingText = {
                     todoUIState.descriptionError?.let {
@@ -147,8 +151,8 @@ fun AddToDoScreen(
               OutlinedTextField(
                   value = todoUIState.assignee,
                   onValueChange = { addTodoViewModel.onAssigneeChanged(it) },
-                  label = { Text("Assignee") },
-                  placeholder = { Text("Assign a person") },
+                  label = { Text(stringResource(R.string.todos_assignee_field_label)) },
+                  placeholder = { Text(stringResource(R.string.todos_assignee_placeholder)) },
                   isError = todoUIState.assigneeError != null,
                   supportingText = {
                     todoUIState.assigneeError?.let {
@@ -162,8 +166,8 @@ fun AddToDoScreen(
               OutlinedTextField(
                   value = todoUIState.location,
                   onValueChange = { addTodoViewModel.onLocationChanged(it) },
-                  label = { Text("Location") },
-                  placeholder = { Text("Enter an Address or Location") },
+                  label = { Text(stringResource(R.string.todos_location_field_label)) },
+                  placeholder = { Text(stringResource(R.string.todos_location_field_label)) },
                   modifier =
                       Modifier.fillMaxWidth().testTag(AddToDoScreenTestTags.INPUT_TODO_LOCATION),
               )
@@ -172,8 +176,8 @@ fun AddToDoScreen(
               OutlinedTextField(
                   value = todoUIState.dueDate,
                   onValueChange = { addTodoViewModel.onDateChanged(it) },
-                  label = { Text("Due date") },
-                  placeholder = { Text("10/10/2025") },
+                  label = { Text(stringResource(R.string.todos_date_field_label)) },
+                  placeholder = { Text(stringResource(R.string.todos_date_field_placeholder)) },
                   isError = todoUIState.dueDateError != null,
                   supportingText = {
                     todoUIState.dueDateError?.let {
@@ -186,8 +190,8 @@ fun AddToDoScreen(
               OutlinedTextField(
                   value = todoUIState.dueTime,
                   onValueChange = { addTodoViewModel.onTimeChanged(it) },
-                  label = { Text("Due time") },
-                  placeholder = { Text("14:00") },
+                  label = { Text(stringResource(R.string.todos_time_field_label)) },
+                  placeholder = { Text(stringResource(R.string.todos_time_field_placeholder)) },
                   isError = todoUIState.dueTimeError != null,
                   supportingText = {
                     todoUIState.dueTimeError?.let {
@@ -215,7 +219,9 @@ fun AddToDoScreen(
                           todoUIState.titleError == null &&
                           todoUIState.dueTimeError == null &&
                           todoUIState.locationError == null) {
-                    Text("Save", color = MaterialTheme.colorScheme.primary)
+                    Text(
+                        stringResource(R.string.todos_save_button_text),
+                        color = MaterialTheme.colorScheme.primary)
                   }
             }
       })
