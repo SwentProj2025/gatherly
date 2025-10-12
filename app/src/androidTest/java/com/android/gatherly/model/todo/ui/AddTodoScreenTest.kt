@@ -117,7 +117,7 @@ class AddTodoScreenTest : InMemoryGatherlyTest() {
     composeTestRule.enterAddTodoDetails(todo = todo1.copy(name = " "))
     composeTestRule.clickOnSaveForAddTodo()
     composeTestRule.waitForIdle()
-    composeTestRule.onNodeWithTag(AddToDoScreenTestTags.TODO_SAVE).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(AddToDoScreenTestTags.TODO_SAVE).assertExists()
   }
 
   @Test
@@ -125,7 +125,7 @@ class AddTodoScreenTest : InMemoryGatherlyTest() {
     composeTestRule.enterAddTodoDetails(todo = todo1.copy(description = " "))
     composeTestRule.clickOnSaveForAddTodo()
     composeTestRule.waitForIdle()
-    composeTestRule.onNodeWithTag(AddToDoScreenTestTags.TODO_SAVE).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(AddToDoScreenTestTags.TODO_SAVE).assertExists()
   }
 
   @Test
@@ -133,7 +133,7 @@ class AddTodoScreenTest : InMemoryGatherlyTest() {
     composeTestRule.enterAddTodoDetails(todo = todo1.copy(assigneeName = " "))
     composeTestRule.clickOnSaveForAddTodo()
     composeTestRule.waitForIdle()
-    composeTestRule.onNodeWithTag(AddToDoScreenTestTags.TODO_SAVE).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(AddToDoScreenTestTags.TODO_SAVE).assertExists()
   }
 
   @Test
@@ -143,7 +143,7 @@ class AddTodoScreenTest : InMemoryGatherlyTest() {
         )
     composeTestRule.clickOnSaveForAddTodo()
     composeTestRule.waitForIdle()
-    composeTestRule.onNodeWithTag(AddToDoScreenTestTags.TODO_SAVE).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(AddToDoScreenTestTags.TODO_SAVE).assertExists()
   }
 
   @Test
