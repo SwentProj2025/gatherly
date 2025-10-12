@@ -29,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.integerResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
@@ -149,7 +150,9 @@ fun AddToDoScreen(
                   modifier =
                       Modifier.fillMaxWidth()
                           .height(inputHeight)
-                          .testTag(AddToDoScreenTestTags.INPUT_TODO_DESCRIPTION))
+                          .testTag(AddToDoScreenTestTags.INPUT_TODO_DESCRIPTION),
+                  minLines = integerResource(R.integer.todo_description_min_lines),
+                  maxLines = integerResource(R.integer.todo_description_max_lines))
 
               // Assignee Input
               OutlinedTextField(
