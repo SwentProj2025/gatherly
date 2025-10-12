@@ -3,6 +3,7 @@ package com.android.gatherly.ui.todo
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.todo.ToDo
+import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.model.todo.ToDosRepositoryProvider
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -60,6 +61,15 @@ class OverviewViewModel(
         _uiState.value =
             _uiState.value.copy(todos = emptyList(), errorMsg = e.message, isLoading = false)
       }
+    }
+  }
+
+  /** Invoked when the user clicks on the checkbox, to mark the ToDo as completed or ongoing. */
+  fun onCheckboxChanged(uid: String, newStatus: ToDoStatus) {
+    viewModelScope.launch {
+      val updatedTodo = todoRepository.getTodo(uid).copy(status = newStatus)
+      todoRepository.editTodo(uid, updatedTodo)
+      refreshUIState()
     }
   }
 }
