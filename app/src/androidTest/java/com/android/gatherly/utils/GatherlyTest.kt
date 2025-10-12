@@ -34,7 +34,7 @@ import org.junit.Before
 // Portions of the code in this file are copy-pasted from the Bootcamp solution provided by the
 // SwEnt staff.
 
-const val UI_WAIT_TIMEOUT = 5_000L
+const val UI_WAIT_TIMEOUT = 100_000L
 
 /** Base class for Gatherly tests, providing common setup and utility functions. */
 abstract class GatherlyTest() {

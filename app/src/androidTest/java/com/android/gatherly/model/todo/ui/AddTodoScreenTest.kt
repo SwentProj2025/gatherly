@@ -116,6 +116,7 @@ class AddTodoScreenTest : InMemoryGatherlyTest() {
   fun savingWithInvalidTitleShouldDoNothing() = checkNoTodoWereAdded {
     composeTestRule.enterAddTodoDetails(todo = todo1.copy(name = " "))
     composeTestRule.clickOnSaveForAddTodo()
+    composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag(AddToDoScreenTestTags.TODO_SAVE).assertIsDisplayed()
   }
 
@@ -123,6 +124,7 @@ class AddTodoScreenTest : InMemoryGatherlyTest() {
   fun savingWithInvalidDescriptionShouldDoNothing() = checkNoTodoWereAdded {
     composeTestRule.enterAddTodoDetails(todo = todo1.copy(description = " "))
     composeTestRule.clickOnSaveForAddTodo()
+    composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag(AddToDoScreenTestTags.TODO_SAVE).assertIsDisplayed()
   }
 
@@ -130,6 +132,7 @@ class AddTodoScreenTest : InMemoryGatherlyTest() {
   fun savingWithInvalidAssigneeShouldDoNothing() = checkNoTodoWereAdded {
     composeTestRule.enterAddTodoDetails(todo = todo1.copy(assigneeName = " "))
     composeTestRule.clickOnSaveForAddTodo()
+    composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag(AddToDoScreenTestTags.TODO_SAVE).assertIsDisplayed()
   }
 
@@ -139,6 +142,7 @@ class AddTodoScreenTest : InMemoryGatherlyTest() {
         todo = todo1, date = "This is not a date" // Invalid date format
         )
     composeTestRule.clickOnSaveForAddTodo()
+    composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag(AddToDoScreenTestTags.TODO_SAVE).assertIsDisplayed()
   }
 
