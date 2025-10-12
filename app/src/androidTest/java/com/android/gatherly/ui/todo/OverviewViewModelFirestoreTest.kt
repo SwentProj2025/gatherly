@@ -154,4 +154,39 @@ class OverviewViewModelFirestoreTest : FirestoreGatherlyTest() {
     val updatedCount = viewModel.uiState.value.todos.size
     assertEquals(2, updatedCount)
   }
+
+  @OptIn(ExperimentalCoroutinesApi::class)
+  @Test
+  fun onCheckboxChanged_updatesStatusAndRefreshesUiState() = runTest {
+    // create and add a todo
+    val todo = makeTodo("Status Change Test")
+    repository.addTodo(todo)
+
+    // Initial load
+    viewModel.refreshUIState()
+    withTimeout(TIMEOUT) {
+      while (viewModel.uiState.value.isLoading) {
+        delay(DELAY)
+      }
+    }
+
+    val initial = viewModel.uiState.value.todos.first()
+    assertEquals(ToDoStatus.ONGOING, initial.status)
+
+    // update the todo's status
+    viewModel.onCheckboxChanged(todo.uid, ToDoStatus.ENDED)
+
+    // Wait for the UI to refresh and reflect the change
+    withTimeout(TIMEOUT) {
+      var updated = viewModel.uiState.value.todos.firstOrNull { it.uid == todo.uid }
+      while (updated == null || updated.status != ToDoStatus.ENDED) {
+        delay(DELAY)
+        updated = viewModel.uiState.value.todos.firstOrNull { it.uid == todo.uid }
+      }
+    }
+
+    val updatedTodo = viewModel.uiState.value.todos.first { it.uid == todo.uid }
+    assertEquals(
+        "Expected todo status to be updated to ENDED", ToDoStatus.ENDED, updatedTodo.status)
+  }
 }
