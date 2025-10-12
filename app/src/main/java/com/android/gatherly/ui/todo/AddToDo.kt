@@ -34,17 +34,40 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 // Portions of the code in this file are copy-pasted from the Bootcamp solution provided by the
 // SwEnt staff.
 
+/** Contains test tags used for UI testing on the Add To-Do screen. */
 object AddToDoScreenTestTags {
+  /** Tag for the To-Do title input field. */
   const val INPUT_TODO_TITLE = "inputTodoTitle"
+
+  /** Tag for the To-Do description input field. */
   const val INPUT_TODO_DESCRIPTION = "inputTodoDescription"
+
+  /** Tag for the To-Do assignee input field. */
   const val INPUT_TODO_ASSIGNEE = "inputTodoAssignee"
+
+  /** Tag for the To-Do location input field. */
   const val INPUT_TODO_LOCATION = "inputTodoLocation"
+
+  /** Tag for the To-Do due date input field. */
   const val INPUT_TODO_DATE = "inputTodoDate"
+
+  /** Tag for the To-Do due time input field. */
   const val INPUT_TODO_TIME = "inputTodoTime"
+
+  /** Tag for the Save button that submits the To-Do. */
   const val TODO_SAVE = "todoSave"
+
+  /** Tag for displaying error messages under text fields. */
   const val ERROR_MESSAGE = "errorMessage"
 }
 
+/**
+ * Displays the screen for creating and saving a new [ToDo].
+ *
+ * @param addTodoViewModel The [AddTodoViewModel] that provides the current ToDo state.
+ * @param onAdd Callback invoked after a To-Do has been successfully added.
+ * @param goBack Callback triggered when the back arrow in the top app bar is pressed.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddToDoScreen(
