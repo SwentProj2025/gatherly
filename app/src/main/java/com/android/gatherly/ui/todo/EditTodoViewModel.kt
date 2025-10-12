@@ -188,72 +188,63 @@ class EditTodoViewModel(
   /**
    * Updates the title field and validates that it is not blank.
    *
-   * @param newValue The new title entered by the user. If blank, a validation error is set.
+   * @param newTitle The new title entered by the user. If blank, a validation error is set.
    */
-  fun onTitleChanged(newValue: String) {
-    _uiState.value =
-        _uiState.value.copy(
-            title = newValue,
-            titleError = if (newValue.isBlank()) "Title cannot be empty" else null)
+  fun onTitleChanged(newTitle: String) {
+    val errMsg = if (newTitle.isBlank()) "Title cannot be empty" else null
+    _uiState.value = _uiState.value.copy(titleError = errMsg, title = newTitle)
   }
 
   /**
    * Updates the description field and validates that it is not blank.
    *
-   * @param newValue The new description entered by the user. If blank, a validation error is set.
+   * @param newDescription The new description entered by the user. If blank, a validation error is
+   *   set.
    */
-  fun onDescriptionChanged(newValue: String) {
-    _uiState.value =
-        _uiState.value.copy(
-            description = newValue,
-            descriptionError = if (newValue.isBlank()) "Description cannot be empty" else null)
+  fun onDescriptionChanged(newDescription: String) {
+    val errMsg = if (newDescription.isBlank()) "Description cannot be empty" else null
+    _uiState.value = _uiState.value.copy(descriptionError = errMsg, description = newDescription)
   }
 
   /**
    * Updates the assignee field and validates that it is not blank.
    *
-   * @param newValue The new assignee name entered by the user. If blank, a validation error is set.
+   * @param newAssignee The new assignee name entered by the user. If blank, a validation error is
+   *   set.
    */
-  fun onAssigneeChanged(newValue: String) {
-    _uiState.value =
-        _uiState.value.copy(
-            assignee = newValue,
-            assigneeError = if (newValue.isBlank()) "Assignee cannot be empty" else null)
+  fun onAssigneeChanged(newAssignee: String) {
+    val errMsg = if (newAssignee.isBlank()) "Assignee cannot be empty" else null
+    _uiState.value = _uiState.value.copy(assigneeError = errMsg, assignee = newAssignee)
   }
 
   /**
-   * Temporarily updates the location field.
+   * Updates the location field.
    *
-   * Currently stores it as a raw string until the Location class and repository are implemented.
-   *
-   * @param newValue The name or description of the location.
+   * @param newLocation The name or description of the location.
    */
-  fun onLocationChanged(newValue: String) {
-    _uiState.value = _uiState.value.copy(location = newValue)
+  fun onLocationChanged(newLocation: String) {
+    val errMsg = if (newLocation.isBlank()) "Location cannot be empty" else null
+    _uiState.value = _uiState.value.copy(locationError = errMsg, location = newLocation)
   }
 
   /**
    * Updates the due date field and validates the format.
    *
-   * @param newValue The new due date as a string (expected format: dd/MM/yyyy).
+   * @param newDate The new due date as a string (expected format: dd/MM/yyyy).
    */
-  fun onDateChanged(newValue: String) {
-    _uiState.value =
-        _uiState.value.copy(
-            dueDate = newValue,
-            dueDateError = if (!isValidDate(newValue)) "Invalid format (dd/MM/yyyy)" else null)
+  fun onDateChanged(newDate: String) {
+    val errMsg = if (!isValidDate(newDate)) "Invalid format (dd/MM/yyyy)" else null
+    _uiState.value = _uiState.value.copy(dueDateError = errMsg, dueDate = newDate)
   }
 
   /**
    * Updates the due time field and validates the format.
    *
-   * @param newValue The new due time as a string (expected format: HH:mm).
+   * @param newTime The new due time as a string (expected format: HH:mm).
    */
-  fun onTimeChanged(newValue: String) {
-    _uiState.value =
-        _uiState.value.copy(
-            dueTime = newValue,
-            dueTimeError = if (!isValidTime(newValue)) "Invalid time (HH:mm)" else null)
+  fun onTimeChanged(newTime: String) {
+    val errMsg = if (!isValidTime(newTime)) "Invalid time (HH:mm)" else null
+    _uiState.value = _uiState.value.copy(dueTimeError = errMsg, dueTime = newTime)
   }
 
   /**
@@ -265,13 +256,13 @@ class EditTodoViewModel(
   private fun isValidDate(date: String): Boolean {
     val regex = Regex("""\d{2}/\d{2}/\d{4}""")
     if (!regex.matches(date)) return false
-    return try {
+    try {
       val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
       sdf.isLenient = false
       sdf.parse(date)
-      true
-    } catch (e: Exception) {
-      false
+      return true
+    } catch (_: Exception) {
+      return false
     }
   }
 
@@ -282,16 +273,15 @@ class EditTodoViewModel(
    * @return `true` if the format and time are valid, `false` otherwise.
    */
   private fun isValidTime(time: String): Boolean {
-    if (time.isBlank()) return true // optional
     val regex = Regex("""\d{2}:\d{2}""")
     if (!regex.matches(time)) return false
-    return try {
+    try {
       val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
       sdf.isLenient = false
       sdf.parse(time)
-      true
-    } catch (e: Exception) {
-      false
+      return true
+    } catch (_: Exception) {
+      return false
     }
   }
 }
