@@ -134,7 +134,7 @@ class EditTodoViewModel(
           Timestamp(sdfTime.parse(state.dueTime)!!)
         } else null
 
-    val uid = Firebase.auth.currentUser?.uid ?: ""
+    val ownerId = Firebase.auth.currentUser?.uid ?: ""
 
     editTodoToRepository(
         todoID = id,
@@ -147,8 +147,8 @@ class EditTodoViewModel(
                 dueTime = time,
                 location = null,
                 status = state.status,
-                uid = uid,
-                ownerId = uid))
+                uid = id,
+                ownerId = ownerId))
     clearErrorMsg()
     return true
   }

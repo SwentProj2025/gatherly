@@ -125,6 +125,8 @@ class EditTodoViewModelFirestoreTest : FirestoreGatherlyTest() {
     assertEquals("Updated description", updated.description)
     assertEquals("Mary", updated.assigneeName)
     assertEquals(ToDoStatus.ONGOING, updated.status)
+    assertEquals(baseTodo.uid, updated.uid)
+    assertEquals(baseTodo.ownerId, updated.ownerId)
   }
 
   @Test
