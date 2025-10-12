@@ -26,7 +26,7 @@ import com.android.gatherly.ui.navigation.Screen
 import com.android.gatherly.ui.overview.OverviewScreen
 import com.android.gatherly.ui.profile.ProfileScreen
 import com.android.gatherly.ui.settings.SettingsScreen
-import com.android.gatherly.ui.theme.GatherlyAppTheme
+import com.android.gatherly.ui.theme.GatherlyTheme
 import com.google.firebase.auth.FirebaseAuth
 import okhttp3.OkHttpClient
 
@@ -49,7 +49,7 @@ class MainActivity : ComponentActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContent { GatherlyAppTheme { Surface(modifier = Modifier.fillMaxSize()) { GatherlyApp() } } }
+    setContent { GatherlyTheme { Surface(modifier = Modifier.fillMaxSize()) { GatherlyApp() } } }
   }
 }
 
