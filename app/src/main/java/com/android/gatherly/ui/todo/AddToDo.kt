@@ -28,8 +28,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
 
@@ -82,6 +82,10 @@ fun AddToDoScreen(
 
   val context = LocalContext.current
 
+  val screenPadding = dimensionResource(id = R.dimen.padding_screen)
+  val fieldSpacing = dimensionResource(id = R.dimen.spacing_between_fields)
+  val inputHeight = dimensionResource(id = R.dimen.input_height)
+
   LaunchedEffect(errorMsg) {
     if (errorMsg != null) {
       Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
@@ -113,8 +117,8 @@ fun AddToDoScreen(
       // TODO: add the bottom bar for navigation, once everything is merged.
       content = { paddingValues ->
         Column(
-            modifier = Modifier.fillMaxSize().padding(paddingValues).padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            modifier = Modifier.fillMaxSize().padding(paddingValues).padding(screenPadding),
+            verticalArrangement = Arrangement.spacedBy(fieldSpacing)) {
               // Title Input
               OutlinedTextField(
                   value = todoUIState.title,
@@ -144,7 +148,7 @@ fun AddToDoScreen(
                   },
                   modifier =
                       Modifier.fillMaxWidth()
-                          .height(100.dp)
+                          .height(inputHeight)
                           .testTag(AddToDoScreenTestTags.INPUT_TODO_DESCRIPTION))
 
               // Assignee Input
@@ -200,7 +204,7 @@ fun AddToDoScreen(
                   },
                   modifier = Modifier.fillMaxWidth().testTag(AddToDoScreenTestTags.INPUT_TODO_TIME))
 
-              Spacer(modifier = Modifier.height(8.dp))
+              Spacer(modifier = Modifier.height(fieldSpacing))
 
               // Save Button
               Button(
