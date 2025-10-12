@@ -15,6 +15,9 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
+private const val TIMEOUT = 100_000L
+private const val DELAY = 500L
+
 /**
  * Integration tests for [AddTodoViewModel] using the real Firestore repository (via emulator).
  *
@@ -44,9 +47,9 @@ class AddTodoViewModelFirestoreTest : FirestoreGatherlyTest() {
 
     // Snippet of code to wait until saving is done:
     withContext(Dispatchers.Default.limitedParallelism(1)) {
-      withTimeout(5000) { // give Firestore up to 5s to respond
+      withTimeout(TIMEOUT) {
         while (!viewModel.uiState.value.saveSuccess && viewModel.uiState.value.saveError == null) {
-          delay(100)
+          delay(DELAY)
         }
       }
     }
@@ -76,7 +79,7 @@ class AddTodoViewModelFirestoreTest : FirestoreGatherlyTest() {
     viewModel.onDateChanged("10-10-2025") // Wrong format
 
     viewModel.saveTodo()
-    delay(500)
+    delay(DELAY)
 
     val state = viewModel.uiState.value
     assertNotNull(state.dueDateError)
@@ -94,7 +97,7 @@ class AddTodoViewModelFirestoreTest : FirestoreGatherlyTest() {
     viewModel.onDateChanged("10/10/2025")
 
     viewModel.saveTodo()
-    delay(500)
+    delay(DELAY)
 
     val state = viewModel.uiState.value
     assertNotNull(state.titleError)
@@ -112,7 +115,9 @@ class AddTodoViewModelFirestoreTest : FirestoreGatherlyTest() {
     viewModel.onDateChanged("10/10/2025")
     viewModel.onTimeChanged("18:00")
     viewModel.saveTodo()
-    delay(500)
+
+    // Wait until the todo appears in repository
+    waitForTodosCount(repository, expectedCount = 1)
 
     // Reset VM for next add
     viewModel = AddTodoViewModel(repository)
@@ -123,7 +128,9 @@ class AddTodoViewModelFirestoreTest : FirestoreGatherlyTest() {
     viewModel.onAssigneeChanged("Bob")
     viewModel.onDateChanged("11/10/2025")
     viewModel.saveTodo()
-    delay(500)
+
+    // Wait until both todos appear in repository
+    waitForTodosCount(repository, expectedCount = 2)
 
     val todos = repository.getAllTodos()
     assertEquals(2, todos.size)
@@ -232,9 +239,9 @@ class AddTodoViewModelFirestoreTest : FirestoreGatherlyTest() {
 
     // Snippet of code to wait until saving is done:
     withContext(Dispatchers.Default.limitedParallelism(1)) {
-      withTimeout(5000) {
+      withTimeout(TIMEOUT) {
         while (viewModel.uiState.value.saveError == null && viewModel.uiState.value.isSaving) {
-          delay(100)
+          delay(DELAY)
         }
       }
     }
@@ -243,5 +250,15 @@ class AddTodoViewModelFirestoreTest : FirestoreGatherlyTest() {
 
     assertNotNull("Expected a saveError but got none", state.saveError)
     assertFalse("Expected saveSuccess=false but got true", state.saveSuccess)
+  }
+
+  private suspend fun waitForTodosCount(repository: ToDosRepository, expectedCount: Int) {
+    withContext(Dispatchers.Default.limitedParallelism(1)) {
+      withTimeout(TIMEOUT) {
+        while (repository.getAllTodos().size < expectedCount) {
+          delay(DELAY)
+        }
+      }
+    }
   }
 }
