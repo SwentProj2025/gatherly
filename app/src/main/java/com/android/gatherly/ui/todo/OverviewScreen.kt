@@ -97,6 +97,7 @@ fun OverviewScreen(
   val completedTodos = todos.filter { it.status == ToDoStatus.ENDED }
 
   Scaffold(
+      // TODO: modify this part with the specific top bar implemented in the navigation menu.
       topBar = {
         TopAppBar(
             title = { Text("Todo List") },
@@ -114,6 +115,7 @@ fun OverviewScreen(
                     actionIconContentColor = MaterialTheme.colorScheme.primary,
                 ))
       },
+      // TODO: add the bottom bar for navigation, once everything is merged.
       floatingActionButton = {
         FloatingActionButton(
             onClick = { onAddTodo() },
