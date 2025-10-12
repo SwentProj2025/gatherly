@@ -23,10 +23,10 @@ import com.android.gatherly.ui.homePage.HomePageScreen
 import com.android.gatherly.ui.map.MapScreen
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.Screen
-import com.android.gatherly.ui.overview.OverviewScreen
 import com.android.gatherly.ui.profile.ProfileScreen
 import com.android.gatherly.ui.settings.SettingsScreen
 import com.android.gatherly.ui.theme.GatherlyTheme
+import com.android.gatherly.ui.todo.OverviewScreen
 import com.google.firebase.auth.FirebaseAuth
 import okhttp3.OkHttpClient
 

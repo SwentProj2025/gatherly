@@ -9,7 +9,8 @@ import kotlinx.coroutines.flow.asStateFlow
 
 data class EventsUIState(val errorMsg: String? = null, val signedOut: Boolean = false)
 
-class EventsViewModel(private val eventsRepository: EventsRepository) : ViewModel() {
+class EventsViewModel() : ViewModel() {
+  //private val eventsRepository: EventsRepository ) : ViewModel() {    TODO enables it when finished the eventsScreen
   /* PLACEHOLDER */
   private val _uiState = MutableStateFlow(EventsUIState())
   val uiState: StateFlow<EventsUIState> = _uiState.asStateFlow()

@@ -31,6 +31,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -89,7 +90,7 @@ fun BottomNavigationMenu(
   NavigationBar(
       modifier =
           modifier.fillMaxWidth().height(60.dp).testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU),
-      containerColor = MaterialTheme.colorScheme.surface,
+      containerColor = MaterialTheme.colorScheme.onSurface,
       content = {
         bottomtabs.forEach { tab ->
           val isSelected = tab == selectedTab
@@ -110,6 +111,7 @@ fun BottomNavigationMenu(
                       .testTag(NavigationTestTags.getTabTestTag(tab)))
         }
       },
+
   )
 }
 
@@ -150,6 +152,14 @@ fun TopNavigationMenu(
       actions = { TopDropdownMenu(onTabSelected = onTabSelected, onSignedOut = onSignedOut) },
       modifier =
           modifier.fillMaxWidth().height(60.dp).testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
+      colors =
+          TopAppBarColors(
+              containerColor = MaterialTheme.colorScheme.onSurface,
+              scrolledContainerColor = MaterialTheme.colorScheme.background,
+              navigationIconContentColor = MaterialTheme.colorScheme.outline,
+              titleContentColor = MaterialTheme.colorScheme.outlineVariant,
+              actionIconContentColor = MaterialTheme.colorScheme.outline,
+          )
   )
 }
 /**
@@ -242,6 +252,15 @@ fun TopNavigationMenu_HomePage_Profile(
       actions = { TopDropdownMenu(onTabSelected = onTabSelected, onSignedOut = onSignedOut) },
       modifier =
           modifier.fillMaxWidth().height(60.dp).testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
+
+      colors =
+          TopAppBarColors(
+              containerColor = MaterialTheme.colorScheme.onSurface,
+              scrolledContainerColor = MaterialTheme.colorScheme.background,
+              navigationIconContentColor = MaterialTheme.colorScheme.outline,
+              titleContentColor = MaterialTheme.colorScheme.outlineVariant,
+              actionIconContentColor = MaterialTheme.colorScheme.outline,
+          )
   )
 }
 
@@ -297,5 +316,14 @@ fun TopNavigationMenu_Goback(
       },
       modifier =
           modifier.fillMaxWidth().height(60.dp).testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
-  )
+
+      colors =
+          TopAppBarColors(
+              containerColor = MaterialTheme.colorScheme.onSurface,
+              scrolledContainerColor = MaterialTheme.colorScheme.background,
+              navigationIconContentColor = MaterialTheme.colorScheme.outline,
+              titleContentColor = MaterialTheme.colorScheme.outlineVariant,
+              actionIconContentColor = MaterialTheme.colorScheme.outline,
+          )
+      )
 }

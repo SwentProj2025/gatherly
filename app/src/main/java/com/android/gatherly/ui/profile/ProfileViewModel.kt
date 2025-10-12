@@ -10,15 +10,16 @@ import java.time.LocalDate
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.flow.asStateFlow
 
 data class ProfileUIState(val errorMsg: String? = null, val signedOut: Boolean = false)
+
 data class ProfileState(
     val isLoading: Boolean = false,
     val profile: Profile? = null,
     val focusHoursPerDay: Map<LocalDate, Double> = emptyMap(),
     val focusPoints: Int = 0,
-    val error: String? = null
+    val error: String? = null,
+    val signedOut: Boolean = false
 )
 
 class ProfileViewModel(
@@ -26,11 +27,10 @@ class ProfileViewModel(
     // Will also need the focus sessions repository when it is available
 ) : ViewModel() {
 
-    /*private val _uiState = MutableStateFlow(ProfileUIState())
-    val uiState: StateFlow<ProfileUIState> = _uiState.asStateFlow()*/
+  /*private val _uiState = MutableStateFlow(ProfileUIState())
+  val uiState: StateFlow<ProfileUIState> = _uiState.asStateFlow()*/
 
-
-    private val _uiState = MutableStateFlow(ProfileState())
+  private val _uiState = MutableStateFlow(ProfileState())
   val uiState: StateFlow<ProfileState> = _uiState
 
   fun loadProfile(username: String) {

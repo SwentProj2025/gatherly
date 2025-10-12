@@ -13,14 +13,15 @@ import com.android.gatherly.ui.SignIn.SignInScreenTestTags
 import com.android.gatherly.ui.focusTimer.FocusTimerScreenTestTags
 import com.android.gatherly.ui.overview.OverviewScreenTestTags
 import com.android.gatherly.ui.profile.ProfileScreenTestTags
+import com.android.gatherly.utils.FirestoreGatherlyTest
 import com.android.gatherly.utils.GatherlyTest
 import junit.framework.TestCase.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
-class NavigationTest : GatherlyTest() {
-  @get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()
+class NavigationTest : FirestoreGatherlyTest() {
+  //@get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
   @Before
   override fun setUp() {

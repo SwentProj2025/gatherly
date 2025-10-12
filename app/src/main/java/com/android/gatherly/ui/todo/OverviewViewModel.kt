@@ -1,11 +1,15 @@
 package com.android.gatherly.ui.todo
 
+import androidx.credentials.ClearCredentialStateRequest
+import androidx.credentials.CredentialManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.model.todo.ToDosRepositoryProvider
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -70,6 +74,13 @@ class OverviewViewModel(
       val updatedTodo = todoRepository.getTodo(uid).copy(status = newStatus)
       todoRepository.editTodo(uid, updatedTodo)
       refreshUIState()
+    }
+  }
+
+  fun onSignedOut(credentialManager: CredentialManager): Unit{
+    viewModelScope.launch {
+      Firebase.auth.signOut()
+      credentialManager.clearCredentialState(ClearCredentialStateRequest())
     }
   }
 }
