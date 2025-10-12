@@ -67,6 +67,11 @@ class AddTodoViewModel(
     _uiState.value = _uiState.value.copy(saveError = null)
   }
 
+  /** Clears the save success flag in the UI state. */
+  fun clearSaveSuccess() {
+    _uiState.value = _uiState.value.copy(saveSuccess = false)
+  }
+
   // private var selectedLocation: Location? = null
   // private var searchJob: Job? = null
 

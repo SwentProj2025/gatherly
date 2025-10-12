@@ -209,12 +209,16 @@ fun AddToDoScreen(
 
               Spacer(modifier = Modifier.height(fieldSpacing))
 
+              // Observe save success
+              LaunchedEffect(todoUIState.saveSuccess) {
+                if (todoUIState.saveSuccess) {
+                  onAdd()
+                  addTodoViewModel.clearSaveSuccess()
+                }
+              }
               // Save Button
               Button(
-                  onClick = {
-                    addTodoViewModel.saveTodo()
-                    onAdd()
-                  },
+                  onClick = { addTodoViewModel.saveTodo() },
                   modifier = Modifier.fillMaxWidth().testTag(AddToDoScreenTestTags.TODO_SAVE),
                   colors =
                       ButtonDefaults.buttonColors(
