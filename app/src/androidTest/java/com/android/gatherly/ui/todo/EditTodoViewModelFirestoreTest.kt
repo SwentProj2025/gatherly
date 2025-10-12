@@ -6,6 +6,8 @@ import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.utils.FirestoreGatherlyTest
 import com.google.firebase.Timestamp
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.runTest
@@ -126,6 +128,9 @@ class EditTodoViewModelFirestoreTest : FirestoreGatherlyTest() {
     assertEquals("Mary", updated.assigneeName)
     assertEquals(ToDoStatus.ONGOING, updated.status)
     assertEquals(baseTodo.uid, updated.uid)
+
+    val expectedOwnerId = Firebase.auth.currentUser?.uid ?: "owner"
+    assertEquals(expectedOwnerId, updated.ownerId)
   }
 
   @Test
