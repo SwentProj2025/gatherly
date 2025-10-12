@@ -146,7 +146,11 @@ fun OverviewScreen(
                     ToDoItem(
                         todo = ongoingTodos[index],
                         onClick = { onSelectTodo(ongoingTodos[index]) },
-                        isChecked = false)
+                        isChecked = false,
+                        onCheckedChange = { checked ->
+                          val newStatus = if (checked) ToDoStatus.ENDED else ToDoStatus.ONGOING
+                          overviewViewModel.onCheckboxChanged(ongoingTodos[index].uid, newStatus)
+                        })
                   }
                 }
 
@@ -163,7 +167,11 @@ fun OverviewScreen(
                     ToDoItem(
                         todo = completedTodos[index],
                         onClick = { onSelectTodo(completedTodos[index]) },
-                        isChecked = true)
+                        isChecked = true,
+                        onCheckedChange = { checked ->
+                          val newStatus = if (checked) ToDoStatus.ENDED else ToDoStatus.ONGOING
+                          overviewViewModel.onCheckboxChanged(completedTodos[index].uid, newStatus)
+                        })
                   }
                 }
               }
@@ -183,9 +191,16 @@ fun OverviewScreen(
  * @param todo The [ToDo] item to display.
  * @param onClick A callback invoked when the user taps the ToDo card.
  * @param isChecked Whether the checkbox should appear checked (true for completed tasks).
+ * @param onCheckedChange A callback invoked when the user clicks on the checkbox state, to mark the
+ *   Todo as completed or ongoing.
  */
 @Composable
-fun ToDoItem(todo: ToDo, onClick: () -> Unit, isChecked: Boolean) {
+fun ToDoItem(
+    todo: ToDo,
+    onClick: () -> Unit,
+    isChecked: Boolean,
+    onCheckedChange: (Boolean) -> Unit
+) {
   Card(
       modifier =
           Modifier.clickable(onClick = onClick)
@@ -198,7 +213,7 @@ fun ToDoItem(todo: ToDo, onClick: () -> Unit, isChecked: Boolean) {
         ) {
           Checkbox(
               checked = isChecked,
-              onCheckedChange = null,
+              onCheckedChange = onCheckedChange,
               modifier =
                   Modifier.padding(end = 8.dp)
                       .testTag(OverviewScreenTestTags.getCheckboxTagForTodoItem(todo)))
