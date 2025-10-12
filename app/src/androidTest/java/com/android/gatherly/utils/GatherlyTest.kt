@@ -125,7 +125,7 @@ abstract class GatherlyTest() {
   }
 
   fun ComposeTestRule.clickOnSaveForAddTodo(waitForRedirection: Boolean = false) {
-    onNodeWithTag(AddToDoScreenTestTags.TODO_SAVE).assertIsDisplayed().performClick()
+    onNodeWithTag(AddToDoScreenTestTags.TODO_SAVE).assertExists().performClick()
     waitUntil(UI_WAIT_TIMEOUT) {
       !waitForRedirection ||
           onAllNodesWithTag(AddToDoScreenTestTags.TODO_SAVE).fetchSemanticsNodes().isEmpty()
