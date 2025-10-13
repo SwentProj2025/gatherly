@@ -21,4 +21,8 @@ class ProfileRepositoryFirestore : ProfileRepository {
   override suspend fun isUidRegistered(uid: String): Boolean {
     TODO("Not yet implemented")
   }
+
+  override suspend fun findProfilesByUidSubstring(uidSubstring: String): List<Profile> {
+    TODO("Not yet implemented")
+  }
 }
