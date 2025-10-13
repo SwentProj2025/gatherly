@@ -1,6 +1,7 @@
 package com.android.gatherly.ui.todo
 
 import android.icu.text.SimpleDateFormat
+import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -95,6 +96,7 @@ fun OverviewScreen(
 
   val uiState by overviewViewModel.uiState.collectAsState()
   val todos = uiState.todos
+  val context = LocalContext.current
 
   // Fetch todos when the screen is recomposed
   LaunchedEffect(Unit) { overviewViewModel.refreshUIState() }
@@ -102,25 +104,12 @@ fun OverviewScreen(
   val ongoingTodos = todos.filter { it.status == ToDoStatus.ONGOING }
   val completedTodos = todos.filter { it.status == ToDoStatus.ENDED }
 
-  /*Scaffold(
-  // TODO: modify this part with the specific top bar implemented in the navigation menu.
-  topBar = {
-    TopAppBar(
-        title = { Text("Todo List") },
-        navigationIcon = {
-          IconButton(onClick = { goHomePage() }) {
-            Icon(imageVector = Icons.Filled.Home, contentDescription = "Home")
-          }
-        },
-        colors =
-            TopAppBarColors(
-                containerColor = MaterialTheme.colorScheme.background,
-                scrolledContainerColor = MaterialTheme.colorScheme.background,
-                navigationIconContentColor = MaterialTheme.colorScheme.primary,
-                titleContentColor = MaterialTheme.colorScheme.primary,
-                actionIconContentColor = MaterialTheme.colorScheme.primary,
-            ))
-  },*/
+  LaunchedEffect(uiState.signedOut) {
+    if (uiState.signedOut) {
+      onSignedOut()
+      Toast.makeText(context, "Logout successful", Toast.LENGTH_SHORT).show()
+    }
+  }
 
   Scaffold(
       topBar = {

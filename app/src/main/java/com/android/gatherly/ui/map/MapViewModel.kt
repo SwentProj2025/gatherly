@@ -95,6 +95,7 @@ class MapViewModel(private val repository: ToDosRepository = ToDosRepositoryLoca
   /** Initiates sign-out */
   fun signOut(credentialManager: CredentialManager): Unit {
     viewModelScope.launch {
+      _uiState.value = _uiState.value.copy(onSignedOut = true)
       Firebase.auth.signOut()
       credentialManager.clearCredentialState(ClearCredentialStateRequest())
     }

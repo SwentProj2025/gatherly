@@ -20,6 +20,7 @@ class FocusTimerViewModel() : ViewModel() {
   /** Initiates sign-out */
   fun signOut(credentialManager: CredentialManager): Unit {
     viewModelScope.launch {
+      _uiState.value = _uiState.value.copy(signedOut = true)
       Firebase.auth.signOut()
       credentialManager.clearCredentialState(ClearCredentialStateRequest())
     }

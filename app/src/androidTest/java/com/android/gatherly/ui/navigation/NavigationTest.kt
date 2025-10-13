@@ -21,18 +21,15 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.setContent { GatherlyApp() }
   }
 
-  // LOGOUT PART : TODO: please someone test this
+  // LOGOUT PART :
 
-  /*
   @Test
   fun canLogOutFromHomePage() {
     composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.LOGOUT_TAB).performClick()
     composeTestRule.checkSignInScreenIsDisplayed()
   }
-   */
 
-  /*
   @Test
   fun canLogOutFromProfile() {
     composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
@@ -42,9 +39,7 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.onNodeWithTag(NavigationTestTags.LOGOUT_TAB).performClick()
     composeTestRule.checkSignInScreenIsDisplayed()
   }
-   */
 
-  /*
   @Test
   fun canLogOutFromTimer() {
     composeTestRule.navigateFromHomeToTimer()
@@ -52,9 +47,7 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.onNodeWithTag(NavigationTestTags.LOGOUT_TAB).performClick()
     composeTestRule.checkSignInScreenIsDisplayed()
   }
-   */
 
-  /*
   @Test
   fun canLogOutFromEvents() {
     composeTestRule.navigateFromHomeToEvents()
@@ -62,9 +55,7 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.onNodeWithTag(NavigationTestTags.LOGOUT_TAB).performClick()
     composeTestRule.checkSignInScreenIsDisplayed()
   }
-   */
 
-  /*
   @Test
   fun canLogOutFromMap() {
     composeTestRule.navigateFromHomeToMap()
@@ -72,9 +63,7 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.onNodeWithTag(NavigationTestTags.LOGOUT_TAB).performClick()
     composeTestRule.checkSignInScreenIsDisplayed()
   }
-   */
 
-  /*
   @Test
   fun canLogOutFromOverview() {
     composeTestRule.navigateFromHomeToOverview()
@@ -82,7 +71,6 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.onNodeWithTag(NavigationTestTags.LOGOUT_TAB).performClick()
     composeTestRule.checkSignInScreenIsDisplayed()
   }
-   */
 
   // HOME PAGE TESTS PART
 

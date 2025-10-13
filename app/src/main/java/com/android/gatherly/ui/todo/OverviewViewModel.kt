@@ -28,6 +28,7 @@ data class OverviewUIState(
     val todos: List<ToDo> = emptyList(),
     val errorMsg: String? = null,
     val isLoading: Boolean = false,
+    val signedOut: Boolean = false
 )
 
 /**
@@ -80,6 +81,7 @@ class OverviewViewModel(
   /** Initiates sign-out */
   fun onSignedOut(credentialManager: CredentialManager): Unit {
     viewModelScope.launch {
+      _uiState.value = _uiState.value.copy(signedOut = true)
       Firebase.auth.signOut()
       credentialManager.clearCredentialState(ClearCredentialStateRequest())
     }

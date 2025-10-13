@@ -46,7 +46,8 @@ open class FirestoreGatherlyTest {
     if (!FirebaseEmulator.isRunning) {
       error("Firebase emulator must be running! Use: firebase emulators:start")
     }
-    FirebaseEmulator.auth.signInAnonymously()
+    runTest { FirebaseEmulator.auth.signInAnonymously().await() }
+    // FirebaseEmulator.auth.signInAnonymously()
     repository = ToDosRepositoryFirestore(FirebaseEmulator.firestore)
     runTest { clearUserTodos() }
   }
