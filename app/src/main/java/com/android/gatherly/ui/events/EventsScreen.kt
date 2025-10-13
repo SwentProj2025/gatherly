@@ -6,6 +6,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EventsOverviewScreen(viewModel: EventsViewModel = viewModel()) {
+fun EventsScreen(viewModel: EventsViewModel = viewModel()) {
 
 }
