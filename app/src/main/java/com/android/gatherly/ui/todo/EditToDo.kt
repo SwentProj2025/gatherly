@@ -98,6 +98,15 @@ fun EditToDoScreen(
   val buttonSpacing = dimensionResource(id = R.dimen.spacing_between_buttons)
   val inputHeight = dimensionResource(id = R.dimen.input_height)
 
+  val appBarColors =
+      TopAppBarColors(
+          containerColor = MaterialTheme.colorScheme.background,
+          scrolledContainerColor = MaterialTheme.colorScheme.background,
+          navigationIconContentColor = MaterialTheme.colorScheme.primary,
+          titleContentColor = MaterialTheme.colorScheme.primary,
+          actionIconContentColor = MaterialTheme.colorScheme.primary,
+      )
+
   LaunchedEffect(errorMsg) {
     if (errorMsg != null) {
       Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
@@ -117,19 +126,12 @@ fun EditToDoScreen(
                     contentDescription = stringResource(R.string.todos_back_button_desc))
               }
             },
-            colors =
-                TopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    scrolledContainerColor = MaterialTheme.colorScheme.background,
-                    navigationIconContentColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.primary,
-                    actionIconContentColor = MaterialTheme.colorScheme.primary,
-                ))
+            colors = appBarColors)
       },
-      // TODO: add the bottom bar for navigation, once everything is merged.
-      content = { paddingValues ->
+      // TODO: add the bottom bar in EditTodoScreen for navigation, once everything is merged.
+      content = { paddingVal ->
         Column(
-            modifier = Modifier.fillMaxSize().padding(paddingValues).padding(screenPadding),
+            modifier = Modifier.fillMaxSize().padding(paddingVal).padding(screenPadding),
             verticalArrangement = Arrangement.spacedBy(fieldSpacing)) {
               // Title Input
               OutlinedTextField(
