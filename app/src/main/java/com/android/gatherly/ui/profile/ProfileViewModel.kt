@@ -14,8 +14,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-data class ProfileUIState(val errorMsg: String? = null, val signedOut: Boolean = false)
-
 data class ProfileState(
     val isLoading: Boolean = false,
     val profile: Profile? = null,
@@ -29,10 +27,6 @@ class ProfileViewModel(
     private val repository: ProfileRepository = ProfileRepositoryFirestore()
     // Will also need the focus sessions repository when it is available
 ) : ViewModel() {
-
-  /*private val _uiState = MutableStateFlow(ProfileUIState())
-  val uiState: StateFlow<ProfileUIState> = _uiState.asStateFlow()*/
-
   private val _uiState = MutableStateFlow(ProfileState())
   val uiState: StateFlow<ProfileState> = _uiState
 
@@ -50,10 +44,11 @@ class ProfileViewModel(
     }
   }
 
-    fun signOut(credentialManager: CredentialManager): Unit {
-        viewModelScope.launch {
-            Firebase.auth.signOut()
-            credentialManager.clearCredentialState(ClearCredentialStateRequest())
-        }
+  /** Initiates sign-out */
+  fun signOut(credentialManager: CredentialManager): Unit {
+    viewModelScope.launch {
+      Firebase.auth.signOut()
+      credentialManager.clearCredentialState(ClearCredentialStateRequest())
     }
+  }
 }

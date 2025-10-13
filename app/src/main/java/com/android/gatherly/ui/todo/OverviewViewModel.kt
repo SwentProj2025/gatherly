@@ -77,7 +77,8 @@ class OverviewViewModel(
     }
   }
 
-  fun onSignedOut(credentialManager: CredentialManager): Unit{
+  /** Initiates sign-out */
+  fun onSignedOut(credentialManager: CredentialManager): Unit {
     viewModelScope.launch {
       Firebase.auth.signOut()
       credentialManager.clearCredentialState(ClearCredentialStateRequest())

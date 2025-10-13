@@ -1,34 +1,90 @@
 package com.android.gatherly.ui.navigation
 
-import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.ComposeTestRule
-import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import com.android.gatherly.GatherlyApp
-import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.ui.authentication.SignInScreenTestTags
-import com.android.gatherly.ui.focusTimer.FocusTimerScreenTestTags
-import com.android.gatherly.ui.profile.ProfileScreenTestTags
-import com.android.gatherly.ui.todo.OverviewScreenTestTags
 import com.android.gatherly.utils.FirestoreGatherlyTest
-import com.android.gatherly.utils.GatherlyTest
-import junit.framework.TestCase.assertEquals
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
 
 class NavigationTest : FirestoreGatherlyTest() {
-  //@get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()
+  // @get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
   @Before
   override fun setUp() {
     super.setUp()
     composeTestRule.setContent { GatherlyApp() }
   }
+
+  // LOGOUT PART : TODO: please someone test this
+
+  /*
+  @Test
+  fun canLogOutFromHomePage() {
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.LOGOUT_TAB).performClick()
+    composeTestRule.checkSignInScreenIsDisplayed()
+  }
+   */
+
+  /*
+  @Test
+  fun canLogOutFromProfile() {
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
+    composeTestRule.checkProfileScreenIsDisplayed()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.LOGOUT_TAB).performClick()
+    composeTestRule.checkSignInScreenIsDisplayed()
+  }
+   */
+
+  /*
+  @Test
+  fun canLogOutFromTimer() {
+    composeTestRule.navigateFromHomeToTimer()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.LOGOUT_TAB).performClick()
+    composeTestRule.checkSignInScreenIsDisplayed()
+  }
+   */
+
+  /*
+  @Test
+  fun canLogOutFromEvents() {
+    composeTestRule.navigateFromHomeToEvents()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.LOGOUT_TAB).performClick()
+    composeTestRule.checkSignInScreenIsDisplayed()
+  }
+   */
+
+  /*
+  @Test
+  fun canLogOutFromMap() {
+    composeTestRule.navigateFromHomeToMap()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.LOGOUT_TAB).performClick()
+    composeTestRule.checkSignInScreenIsDisplayed()
+  }
+   */
+
+  /*
+  @Test
+  fun canLogOutFromOverview() {
+    composeTestRule.navigateFromHomeToOverview()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.LOGOUT_TAB).performClick()
+    composeTestRule.checkSignInScreenIsDisplayed()
+  }
+   */
+
+  // HOME PAGE TESTS PART
 
   @Test
   fun NavigationBarAreCorrectlySetOnHome() {
@@ -50,8 +106,8 @@ class NavigationTest : FirestoreGatherlyTest() {
   fun topNavigationIsCorrectlySetForHomePage() {
     composeTestRule.onNodeWithTag(NavigationTestTags.TOP_NAVIGATION_MENU).assertIsDisplayed()
     composeTestRule
-      .onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
-      .assertTextContains(value = "Home")
+        .onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
+        .assertTextContains(value = "Home")
     composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).assertIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.HOMEPAGE_TAB).assertIsNotDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsNotDisplayed()
@@ -80,16 +136,6 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.checkSettingsScreenIsDisplayed()
   }
 
-  /*
-  @Test
-  fun canLogOutFromHomePage() {
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
-    composeTestRule.onNodeWithTag(NavigationTestTags.LOGOUT_TAB).performClick()
-    composeTestRule.checkSignInScreenIsDisplayed()
-  }
-   */
-
-
   @Test
   fun NavigationBarIsCorrectlySetForProfile() {
     composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
@@ -110,7 +156,6 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.onNodeWithTag(NavigationTestTags.SETTINGS_TAB).assertIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.LOGOUT_TAB).assertIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).assertIsNotDisplayed()
-
   }
 
   @Test
@@ -122,18 +167,6 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.onNodeWithTag(NavigationTestTags.SETTINGS_TAB).performClick()
     composeTestRule.checkSettingsScreenIsDisplayed()
   }
-
-  /*
-  @Test
-  fun canLogOutFromProfile() {
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
-    composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
-    composeTestRule.checkProfileScreenIsDisplayed()
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
-    composeTestRule.onNodeWithTag(NavigationTestTags.LOGOUT_TAB).performClick()
-    composeTestRule.checkSignInScreenIsDisplayed()
-  }
-   */
 
   @Test
   fun NavigateFromProfileToTimer() {
@@ -184,18 +217,18 @@ class NavigationTest : FirestoreGatherlyTest() {
    */
 
   /*
- TODO : Enable this test after implementing Profile screen
+   TODO : Enable this test after implementing Profile screen
 
-@Test
-fun NavigateFromProfileToFriends(){
- composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
- composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
- composeTestRule.checkProfileScreenIsDisplayed()
- composeTestRule.onNodeWithTag(ProfileTestTags.FRIENDS_TAB).performClick()
- composeTestRule.checkFriendsScreenIsDisplayed()
-}
+  @Test
+  fun NavigateFromProfileToFriends(){
+   composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+   composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
+   composeTestRule.checkProfileScreenIsDisplayed()
+   composeTestRule.onNodeWithTag(ProfileTestTags.FRIENDS_TAB).performClick()
+   composeTestRule.checkFriendsScreenIsDisplayed()
+  }
 
- */
+   */
 
   /*
     TODO : Enable this test after implementing Profile screen
@@ -207,7 +240,6 @@ fun NavigateFromProfileToFriends(){
     pressBack(shouldFinish = false)
     composeTestRule.checkProfileScreenIsDisplayed()
   }*/
-
 
   // TIMER PART
 
@@ -236,11 +268,10 @@ fun NavigateFromProfileToFriends(){
     composeTestRule.onNodeWithTag(NavigationTestTags.SETTINGS_TAB).assertIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.LOGOUT_TAB).assertIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).assertIsDisplayed()
-
   }
 
   @Test
-  fun NavigateFromTimerToHomePage(){
+  fun NavigateFromTimerToHomePage() {
     composeTestRule.navigateFromHomeToTimer()
     composeTestRule.onNodeWithTag(NavigationTestTags.HOMEPAGE_TAB).performClick()
     composeTestRule.checkHomeScreenIsDisplayed()
@@ -262,16 +293,6 @@ fun NavigateFromProfileToFriends(){
     composeTestRule.checkProfileScreenIsDisplayed()
   }
 
-  /*
-  @Test
-  fun canLogOutFromTimer() {
-    composeTestRule.navigateFromHomeToTimer()
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
-    composeTestRule.onNodeWithTag(NavigationTestTags.LOGOUT_TAB).performClick()
-    composeTestRule.checkSignInScreenIsDisplayed()
-  }
-   */
-
   @Test
   fun NavigateFromTimerToOverview() {
     composeTestRule.navigateFromHomeToTimer()
@@ -292,7 +313,6 @@ fun NavigateFromProfileToFriends(){
     composeTestRule.onNodeWithTag(NavigationTestTags.MAP_TAB).performClick()
     composeTestRule.checkMapScreenIsDisplayed()
   }
-
 
   // EVENTS PART ( without add event or edit event )
 
@@ -321,11 +341,10 @@ fun NavigateFromProfileToFriends(){
     composeTestRule.onNodeWithTag(NavigationTestTags.SETTINGS_TAB).assertIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.LOGOUT_TAB).assertIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).assertIsDisplayed()
-
   }
 
   @Test
-  fun NavigateFromEventsToHomePage(){
+  fun NavigateFromEventsToHomePage() {
     composeTestRule.navigateFromHomeToEvents()
     composeTestRule.onNodeWithTag(NavigationTestTags.HOMEPAGE_TAB).performClick()
     composeTestRule.checkHomeScreenIsDisplayed()
@@ -347,16 +366,6 @@ fun NavigateFromProfileToFriends(){
     composeTestRule.checkProfileScreenIsDisplayed()
   }
 
-  /*
-  @Test
-  fun canLogOutFromEvents() {
-    composeTestRule.navigateFromHomeToEvents()
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
-    composeTestRule.onNodeWithTag(NavigationTestTags.LOGOUT_TAB).performClick()
-    composeTestRule.checkSignInScreenIsDisplayed()
-  }
-   */
-
   @Test
   fun NavigateFromEventsToOverview() {
     composeTestRule.navigateFromHomeToEvents()
@@ -377,7 +386,6 @@ fun NavigateFromProfileToFriends(){
     composeTestRule.onNodeWithTag(NavigationTestTags.MAP_TAB).performClick()
     composeTestRule.checkMapScreenIsDisplayed()
   }
-
 
   // MAP PART
 
@@ -406,11 +414,10 @@ fun NavigateFromProfileToFriends(){
     composeTestRule.onNodeWithTag(NavigationTestTags.SETTINGS_TAB).assertIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.LOGOUT_TAB).assertIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).assertIsDisplayed()
-
   }
 
   @Test
-  fun NavigateFromMapToHomePage(){
+  fun NavigateFromMapToHomePage() {
     composeTestRule.navigateFromHomeToMap()
     composeTestRule.onNodeWithTag(NavigationTestTags.HOMEPAGE_TAB).performClick()
     composeTestRule.checkHomeScreenIsDisplayed()
@@ -431,16 +438,6 @@ fun NavigateFromProfileToFriends(){
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
     composeTestRule.checkProfileScreenIsDisplayed()
   }
-
-  /*
-  @Test
-  fun canLogOutFromMap() {
-    composeTestRule.navigateFromHomeToMap()
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
-    composeTestRule.onNodeWithTag(NavigationTestTags.LOGOUT_TAB).performClick()
-    composeTestRule.checkSignInScreenIsDisplayed()
-  }
-   */
 
   @Test
   fun NavigateFromMapToOverview() {
@@ -471,7 +468,6 @@ fun NavigateFromProfileToFriends(){
     checkOverviewScreenIsDisplayed()
   }
 
-
   @Test
   fun NavigationBarIsCorrectlySetForOverview() {
     composeTestRule.navigateFromHomeToOverview()
@@ -492,7 +488,6 @@ fun NavigateFromProfileToFriends(){
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).assertIsDisplayed()
   }
 
-
   @Test
   fun NavigateFromOverviewToSettings() {
     composeTestRule.navigateFromHomeToOverview()
@@ -508,16 +503,6 @@ fun NavigateFromProfileToFriends(){
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
     composeTestRule.checkProfileScreenIsDisplayed()
   }
-
-  /*
-  @Test
-  fun canLogOutFromOverview() {
-    composeTestRule.navigateFromHomeToOverview()
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
-    composeTestRule.onNodeWithTag(NavigationTestTags.LOGOUT_TAB).performClick()
-    composeTestRule.checkSignInScreenIsDisplayed()
-  }
-   */
 
   @Test
   fun NavigateFromOverviewToTimer() {
@@ -542,135 +527,130 @@ fun NavigateFromProfileToFriends(){
 
   /*
 
-  TODO : Enable this tests when the AddToDo screen will be implemented :)
-  @Test
-  fun canNavigateFromOverviewToAddToDo() {
-    composeTestRule.navigateFromHomeToOverview()
-    composeTestRule.onNodeWithTag(OverviewScreenTestTags.CREATE_TODO_BUTTON).performClick()
-    composeTestRule.checkAddTodoScreenIsDisplayed()
-  }
+    TODO : Enable this tests when the AddToDo screen will be implemented :)
+    @Test
+    fun canNavigateFromOverviewToAddToDo() {
+      composeTestRule.navigateFromHomeToOverview()
+      composeTestRule.onNodeWithTag(OverviewScreenTestTags.CREATE_TODO_BUTTON).performClick()
+      composeTestRule.checkAddTodoScreenIsDisplayed()
+    }
 
 
-  @Test
-  fun NavigationBarIsNotDisplayedOnAddToDoScreen() {
-    composeTestRule.navigateFromHomeToOverview()
-    composeTestRule.onNodeWithTag(OverviewScreenTestTags.CREATE_TODO_BUTTON).performClick()
-    composeTestRule.checkAddTodoScreenIsDisplayed()
-    composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsNotDisplayed()
-    composeTestRule.onNodeWithTag(NavigationTestTags.HOMEPAGE_TAB).assertIsNotDisplayed()
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).assertIsNotDisplayed()
-  }
-*/
+    @Test
+    fun NavigationBarIsNotDisplayedOnAddToDoScreen() {
+      composeTestRule.navigateFromHomeToOverview()
+      composeTestRule.onNodeWithTag(OverviewScreenTestTags.CREATE_TODO_BUTTON).performClick()
+      composeTestRule.checkAddTodoScreenIsDisplayed()
+      composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsNotDisplayed()
+      composeTestRule.onNodeWithTag(NavigationTestTags.HOMEPAGE_TAB).assertIsNotDisplayed()
+      composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).assertIsNotDisplayed()
+    }
+  */
   /*
-  @Test
-  fun canNavigateFromOverviewToEditToDo() {
-    composeTestRule.navigateToEditToDoScreen(firstTodo)
-    composeTestRule.checkEditToDoScreenIsDisplayed()
-    composeTestRule.checkOverviewScreenIsNotDisplayed()
-  }
+    @Test
+    fun canNavigateFromOverviewToEditToDo() {
+      composeTestRule.navigateToEditToDoScreen(firstTodo)
+      composeTestRule.checkEditToDoScreenIsDisplayed()
+      composeTestRule.checkOverviewScreenIsNotDisplayed()
+    }
 
-  @Test
-  fun addTodo_saveButtonNavigatesToOverviewToDoIfInputIsValid() {
-    composeTestRule.navigateToAddToDoScreen()
-    composeTestRule.enterAddTodoDetails(todo = validTodo)
-    composeTestRule.clickOnSaveForAddTodo(waitForRedirection = true)
-    composeTestRule.checkOverviewScreenIsDisplayed()
-  }
+    @Test
+    fun addTodo_saveButtonNavigatesToOverviewToDoIfInputIsValid() {
+      composeTestRule.navigateToAddToDoScreen()
+      composeTestRule.enterAddTodoDetails(todo = validTodo)
+      composeTestRule.clickOnSaveForAddTodo(waitForRedirection = true)
+      composeTestRule.checkOverviewScreenIsDisplayed()
+    }
 
-  @Test
-  fun editTodo_saveButtonNavigatesToOverviewToDoIfInputIsValid() {
-    composeTestRule.navigateToEditToDoScreen(firstTodo)
-    composeTestRule.clickOnSaveForEditTodo(waitForRedirection = true)
-    composeTestRule.checkOverviewScreenIsDisplayed()
-  }
+    @Test
+    fun editTodo_saveButtonNavigatesToOverviewToDoIfInputIsValid() {
+      composeTestRule.navigateToEditToDoScreen(firstTodo)
+      composeTestRule.clickOnSaveForEditTodo(waitForRedirection = true)
+      composeTestRule.checkOverviewScreenIsDisplayed()
+    }
 
-  @Test
-  fun topAppTitleIsCorrectOnEditToDoScreen() {
-    composeTestRule.checkOverviewScreenIsDisplayed()
-    composeTestRule.navigateToEditToDoScreen(firstTodo)
-    composeTestRule.checkEditToDoScreenIsDisplayed()
-  }
+    @Test
+    fun topAppTitleIsCorrectOnEditToDoScreen() {
+      composeTestRule.checkOverviewScreenIsDisplayed()
+      composeTestRule.navigateToEditToDoScreen(firstTodo)
+      composeTestRule.checkEditToDoScreenIsDisplayed()
+    }
 
-  @Test
-  fun bottomBarIsNotDisplayedOnEditToDoScreen() {
-    composeTestRule.checkOverviewScreenIsDisplayed()
-    composeTestRule.clickOnTodoItem(firstTodo)
-    composeTestRule.checkEditToDoScreenIsDisplayed()
-    composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsNotDisplayed()
+    @Test
+    fun bottomBarIsNotDisplayedOnEditToDoScreen() {
+      composeTestRule.checkOverviewScreenIsDisplayed()
+      composeTestRule.clickOnTodoItem(firstTodo)
+      composeTestRule.checkEditToDoScreenIsDisplayed()
+      composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsNotDisplayed()
 
+    }
   }
-}
+     */
+
+  /*
+  fun ComposeTestRule.navigateToEditToDoScreen(editedToDo: ToDo) {
+    clickOnTodoItem(editedToDo)
+  }
    */
 
-  /*
-fun ComposeTestRule.navigateToEditToDoScreen(editedToDo: ToDo) {
-  clickOnTodoItem(editedToDo)
-}
- */
-
-
-///////////////   utils  ///////////////////////////
+  ///////////////   utils  ///////////////////////////
 
   fun ComposeTestRule.checkOverviewScreenIsDisplayed() {
     onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
-      .assertTextContains("To-Do", substring = true, ignoreCase = true)
+        .assertTextContains("To-Do", substring = true, ignoreCase = true)
   }
 
   fun ComposeTestRule.checkProfileScreenIsDisplayed() {
     onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
-      .assertTextContains("Your profile", substring = true, ignoreCase = true)
+        .assertTextContains("Your profile", substring = true, ignoreCase = true)
   }
 
   fun ComposeTestRule.checkSettingsScreenIsDisplayed() {
     onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
-      .assertTextContains("Settings", substring = true, ignoreCase = true)
+        .assertTextContains("Settings", substring = true, ignoreCase = true)
   }
 
   fun ComposeTestRule.checkTimerScreenIsDisplayed() {
     onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
-      .assertTextContains("Timer", substring = true, ignoreCase = true)
+        .assertTextContains("Timer", substring = true, ignoreCase = true)
   }
 
   fun ComposeTestRule.checkEventsScreenIsDisplayed() {
     onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
-      .assertTextContains("Events", substring = true, ignoreCase = true)
+        .assertTextContains("Events", substring = true, ignoreCase = true)
   }
 
   fun ComposeTestRule.checkMapScreenIsDisplayed() {
     onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
-      .assertTextContains("Map", substring = true, ignoreCase = true)
+        .assertTextContains("Map", substring = true, ignoreCase = true)
   }
 
   fun ComposeTestRule.checkHomeScreenIsDisplayed() {
     onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
-      .assertTextContains("Home", substring = true, ignoreCase = true)
+        .assertTextContains("Home", substring = true, ignoreCase = true)
   }
 
   fun ComposeTestRule.checkSignInScreenIsDisplayed() {
     onNodeWithTag(SignInScreenTestTags.WELCOME_TITLE)
-      .assertIsDisplayed()
-      .assertTextContains("Welcome to Gatherly,", substring = true, ignoreCase = true)
+        .assertIsDisplayed()
+        .assertTextContains("Welcome to Gatherly,", substring = true, ignoreCase = true)
   }
 
   fun ComposeTestRule.checkFriendsScreenIsDisplayed() {
     onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
-      .assertTextContains("Friends", substring = true, ignoreCase = true)
+        .assertTextContains("Friends", substring = true, ignoreCase = true)
   }
 
   fun ComposeTestRule.checkAddTodoScreenIsDisplayed() {
     onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
-      .assertTextContains("Add To-Do", substring = true, ignoreCase = true)
+        .assertTextContains("Add To-Do", substring = true, ignoreCase = true)
   }
 
   fun ComposeTestRule.checkEditTodoScreenIsDisplayed() {
     onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
-      .assertTextContains("Edit To-Do", substring = true, ignoreCase = true)
+        .assertTextContains("Edit To-Do", substring = true, ignoreCase = true)
   }
 }
-
-
-
-
 
 /*
 private fun pressBack(shouldFinish: Boolean) {
@@ -682,5 +662,4 @@ private fun pressBack(shouldFinish: Boolean) {
 }
  */
 
-/////////////not for now  ////////////////////////
-
+///////////// not for now  ////////////////////////

@@ -10,18 +10,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -95,7 +91,7 @@ fun OverviewScreen(
     onSignedOut: () -> Unit = {},
     navigationActions: NavigationActions? = null,
     credentialManager: CredentialManager = CredentialManager.create(LocalContext.current)
-    ) {
+) {
 
   val uiState by overviewViewModel.uiState.collectAsState()
   val todos = uiState.todos
@@ -107,111 +103,106 @@ fun OverviewScreen(
   val completedTodos = todos.filter { it.status == ToDoStatus.ENDED }
 
   /*Scaffold(
-      // TODO: modify this part with the specific top bar implemented in the navigation menu.
+  // TODO: modify this part with the specific top bar implemented in the navigation menu.
+  topBar = {
+    TopAppBar(
+        title = { Text("Todo List") },
+        navigationIcon = {
+          IconButton(onClick = { goHomePage() }) {
+            Icon(imageVector = Icons.Filled.Home, contentDescription = "Home")
+          }
+        },
+        colors =
+            TopAppBarColors(
+                containerColor = MaterialTheme.colorScheme.background,
+                scrolledContainerColor = MaterialTheme.colorScheme.background,
+                navigationIconContentColor = MaterialTheme.colorScheme.primary,
+                titleContentColor = MaterialTheme.colorScheme.primary,
+                actionIconContentColor = MaterialTheme.colorScheme.primary,
+            ))
+  },*/
+
+  Scaffold(
       topBar = {
-        TopAppBar(
-            title = { Text("Todo List") },
-            navigationIcon = {
-              IconButton(onClick = { goHomePage() }) {
-                Icon(imageVector = Icons.Filled.Home, contentDescription = "Home")
-              }
-            },
-            colors =
-                TopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    scrolledContainerColor = MaterialTheme.colorScheme.background,
-                    navigationIconContentColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.primary,
-                    actionIconContentColor = MaterialTheme.colorScheme.primary,
-                ))
-      },*/
-
-
-
-    Scaffold(
-        topBar = {
-            TopNavigationMenu(
-                selectedTab = Tab.Overview,
-                onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
-                modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
-                onSignedOut = { overviewViewModel.onSignedOut(credentialManager) })
-        },
-        bottomBar = {
-            BottomNavigationMenu(
-                selectedTab = Tab.Overview,
-                onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
-                modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU))
-        },
-
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { onAddTodo() },
-                modifier = Modifier.testTag(OverviewScreenTestTags.CREATE_TODO_BUTTON),
-                containerColor = MaterialTheme.colorScheme.secondary,
-                contentColor = MaterialTheme.colorScheme.primary) {
-
-                Icon(imageVector = Icons.Default.Add, contentDescription = "Add")
-            }},
-
-        content = { pd ->
-            if (todos.isNotEmpty()) {
-                LazyColumn(
-                    contentPadding = PaddingValues(vertical = 8.dp),
-                    modifier =
-                        Modifier.fillMaxWidth()
-                            .padding(horizontal = 16.dp)
-                            .padding(pd)
-                            .testTag(OverviewScreenTestTags.TODO_LIST)) {
-
-                    // ONGOING SECTION
-                    if (ongoingTodos.isNotEmpty()) {
-                        item {
-                            Text(
-                            text = "Ongoing",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(vertical = 8.dp))
-                        }
-                        items(ongoingTodos.size) { index ->
-                            ToDoItem(
-                                todo = ongoingTodos[index],
-                                onClick = { onSelectTodo(ongoingTodos[index]) },
-                                isChecked = false,
-                                onCheckedChange = { checked ->
-                                    val newStatus = if (checked) ToDoStatus.ENDED else ToDoStatus.ONGOING
-                                    overviewViewModel.onCheckboxChanged(ongoingTodos[index].uid, newStatus)
-                                })
-                        }
-                    }
-
-                    // COMPLETED SECTION
-                    if (completedTodos.isNotEmpty()) {
-                        item {
-                            Text(
-                                text = "Completed",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(vertical = 8.dp))
-                        }
-                        items(completedTodos.size) { index ->
-                            ToDoItem(
-                                todo = completedTodos[index],
-                                onClick = { onSelectTodo(completedTodos[index]) },
-                                isChecked = true,
-                                onCheckedChange = { checked ->
-                                    val newStatus = if (checked) ToDoStatus.ENDED else ToDoStatus.ONGOING
-                                    overviewViewModel.onCheckboxChanged(completedTodos[index].uid, newStatus)
-                                })
-                        }
-                    }
-                }
-            } else {
-                Text(
-                    modifier = Modifier.padding(pd).testTag(OverviewScreenTestTags.EMPTY_TODO_LIST_MSG),
-                    text = "You have no ToDo yet.")
+        TopNavigationMenu(
+            selectedTab = Tab.Overview,
+            onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
+            modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
+            onSignedOut = { overviewViewModel.onSignedOut(credentialManager) })
+      },
+      bottomBar = {
+        BottomNavigationMenu(
+            selectedTab = Tab.Overview,
+            onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
+            modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU))
+      },
+      floatingActionButton = {
+        FloatingActionButton(
+            onClick = { onAddTodo() },
+            modifier = Modifier.testTag(OverviewScreenTestTags.CREATE_TODO_BUTTON),
+            containerColor = MaterialTheme.colorScheme.secondary,
+            contentColor = MaterialTheme.colorScheme.primary) {
+              Icon(imageVector = Icons.Default.Add, contentDescription = "Add")
             }
+      },
+      content = { pd ->
+        if (todos.isNotEmpty()) {
+          LazyColumn(
+              contentPadding = PaddingValues(vertical = 8.dp),
+              modifier =
+                  Modifier.fillMaxWidth()
+                      .padding(horizontal = 16.dp)
+                      .padding(pd)
+                      .testTag(OverviewScreenTestTags.TODO_LIST)) {
+
+                // ONGOING SECTION
+                if (ongoingTodos.isNotEmpty()) {
+                  item {
+                    Text(
+                        text = "Ongoing",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(vertical = 8.dp))
+                  }
+                  items(ongoingTodos.size) { index ->
+                    ToDoItem(
+                        todo = ongoingTodos[index],
+                        onClick = { onSelectTodo(ongoingTodos[index]) },
+                        isChecked = false,
+                        onCheckedChange = { checked ->
+                          val newStatus = if (checked) ToDoStatus.ENDED else ToDoStatus.ONGOING
+                          overviewViewModel.onCheckboxChanged(ongoingTodos[index].uid, newStatus)
+                        })
+                  }
+                }
+
+                // COMPLETED SECTION
+                if (completedTodos.isNotEmpty()) {
+                  item {
+                    Text(
+                        text = "Completed",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(vertical = 8.dp))
+                  }
+                  items(completedTodos.size) { index ->
+                    ToDoItem(
+                        todo = completedTodos[index],
+                        onClick = { onSelectTodo(completedTodos[index]) },
+                        isChecked = true,
+                        onCheckedChange = { checked ->
+                          val newStatus = if (checked) ToDoStatus.ENDED else ToDoStatus.ONGOING
+                          overviewViewModel.onCheckboxChanged(completedTodos[index].uid, newStatus)
+                        })
+                  }
+                }
+              }
+        } else {
+          Text(
+              modifier = Modifier.padding(pd).testTag(OverviewScreenTestTags.EMPTY_TODO_LIST_MSG),
+              text = "You have no ToDo yet.")
         }
-    )
+      })
 }
 
 // A portion of the code in the ToDoItem composable was generated by an LLM.

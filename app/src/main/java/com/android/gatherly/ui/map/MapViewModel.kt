@@ -92,24 +92,11 @@ class MapViewModel(private val repository: ToDosRepository = ToDosRepositoryLoca
   }
   */
 
-  /*fun signOut(credentialManager: CredentialManager): Unit {
-      viewModelScope.launch {
-          authRepository
-              .signOut()
-              .fold(
-                  onSuccess = { _uiState.update { it.copy(signedOut = true) } },
-                  onFailure = { throwable ->
-                      _uiState.update { it.copy(errorMsg = throwable.localizedMessage) }
-                  })
-          credentialManager.clearCredentialState(ClearCredentialStateRequest())
-      }
-  }
-   */
-
-    fun signOut(credentialManager: CredentialManager): Unit {
-        viewModelScope.launch {
-            Firebase.auth.signOut()
-            credentialManager.clearCredentialState(ClearCredentialStateRequest())
-        }
+  /** Initiates sign-out */
+  fun signOut(credentialManager: CredentialManager): Unit {
+    viewModelScope.launch {
+      Firebase.auth.signOut()
+      credentialManager.clearCredentialState(ClearCredentialStateRequest())
     }
+  }
 }

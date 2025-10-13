@@ -2,6 +2,8 @@ package com.android.gatherly
 
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,7 +12,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.credentials.CredentialManager
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
@@ -28,7 +29,7 @@ import com.android.gatherly.ui.profile.ProfileScreen
 import com.android.gatherly.ui.settings.SettingsScreen
 import com.android.gatherly.ui.theme.GatherlyTheme
 import com.android.gatherly.ui.todo.AddToDoScreen
-import com.android.gatherly.ui.todo.AddTodoViewModel
+import com.android.gatherly.ui.todo.EditToDoScreen
 import com.android.gatherly.ui.todo.OverviewScreen
 import com.google.firebase.auth.FirebaseAuth
 import okhttp3.OkHttpClient
@@ -115,37 +116,32 @@ fun GatherlyApp(
             credentialManager = credentialManager,
             navigationActions = navigationActions,
             onSignedOut = { navigationActions.navigateTo(Screen.SignIn) },
-            onAddTodo = {navigationActions.navigateTo(Screen.AddToDo)},
-            onSelectTodo = { navigationActions.navigateTo(Screen.EditToDo(it.uid))}
-        )
+            onAddTodo = { navigationActions.navigateTo(Screen.AddToDo) },
+            onSelectTodo = { navigationActions.navigateTo(Screen.EditToDo(it.uid)) })
       }
-        composable(Screen.AddToDo.route) {
-            AddToDoScreen(
-                onAdd = {navigationActions.navigateTo(Screen.OverviewToDo)},
-                goBack = {navigationActions.goBack()}
+      composable(Screen.AddToDo.route) {
+        AddToDoScreen(
+            onAdd = { navigationActions.navigateTo(Screen.OverviewToDo) },
+            goBack = { navigationActions.goBack() })
+      }
 
-            )
-        }
-
-      /*
       composable(Screen.EditToDo.route) { navBackStackEntry ->
-          // Get the Todo UID from the arguments
-          val uid = navBackStackEntry.arguments?.getString("uid")
+        // Get the Todo UID from the arguments
+        val uid = navBackStackEntry.arguments?.getString("uid")
 
-          // Create the EditToDoScreen with the Todo UID
-          uid?.let {
-              EditToDoScreen(
-                  onDone = { navigationActions.navigateTo(Screen.OverviewToDo) },
-                  todoUid = it,
-                  onGoBack = { navigationActions.goBack() })
-          }
-              ?: run {
-                  Log.e("EditToDoScreen", "ToDo UID is null")
-                  Toast.makeText(context, "ToDo UID is null", Toast.LENGTH_SHORT).show()
-              }
+        // Create the EditToDoScreen with the Todo UID
+        uid?.let {
+          EditToDoScreen(
+              onSave = { navigationActions.navigateTo(Screen.OverviewToDo) },
+              todoUid = it,
+              goBack = { navigationActions.goBack() },
+              onDelete = { navigationActions.navigateTo(Screen.OverviewToDo) })
+        }
+            ?: run {
+              Log.e("EditToDoScreen", "ToDo UID is null")
+              Toast.makeText(context, "ToDo UID is null", Toast.LENGTH_SHORT).show()
+            }
       }
-
-       */
     }
 
     // MAP COMPOSABLE  ------------------------------
@@ -226,9 +222,7 @@ fun GatherlyApp(
     ) {
       composable(Screen.FriendsScreen.route) {
         FriendsScreen(
-            navigationActions = navigationActions,
-            credentialManager = credentialManager,
-            onSignedOut = { navigationActions.navigateTo(Screen.SignIn) })
+            credentialManager = credentialManager, goBack = { navigationActions.goBack() })
       }
     }
   }

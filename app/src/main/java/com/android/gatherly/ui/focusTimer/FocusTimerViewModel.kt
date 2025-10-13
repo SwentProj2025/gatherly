@@ -13,26 +13,11 @@ import kotlinx.coroutines.launch
 
 data class FocusTimerUIState(val errorMsg: String? = null, val signedOut: Boolean = false)
 
-class FocusTimerViewModel(
-    // private val authRepository: AuthRepository = AuthRepositoryFirebase(),
-) : ViewModel() {
+class FocusTimerViewModel() : ViewModel() {
   private val _uiState = MutableStateFlow(FocusTimerUIState())
   val uiState: StateFlow<FocusTimerUIState> = _uiState.asStateFlow()
 
-  /*fun signOut(credentialManager: CredentialManager): Unit {
-      viewModelScope.launch {
-          authRepository
-              .signOut()
-              .fold(
-                  onSuccess = { _uiState.update { it.copy(signedOut = true) } },
-                  onFailure = { throwable ->
-                      _uiState.update { it.copy(errorMsg = throwable.localizedMessage) }
-                  })
-          credentialManager.clearCredentialState(ClearCredentialStateRequest())
-      }
-  }
-   */
-
+  /** Initiates sign-out */
   fun signOut(credentialManager: CredentialManager): Unit {
     viewModelScope.launch {
       Firebase.auth.signOut()

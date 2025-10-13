@@ -48,29 +48,27 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 
 sealed class Tab(val name: String, val icon: ImageVector, val destination: Screen) {
-    object Timer : Tab("Timer", Icons.Outlined.Schedule, Screen.FocusTimerInitScreen)
+  object Timer : Tab("Timer", Icons.Outlined.Schedule, Screen.FocusTimerInitScreen)
 
-    object Overview : Tab("To-Do", Icons.Outlined.FormatListBulleted, Screen.OverviewToDo)
+  object Overview : Tab("To-Do", Icons.Outlined.FormatListBulleted, Screen.OverviewToDo)
 
-    object Events : Tab("Events", Icons.Outlined.Group, Screen.EventsScreen)
+  object Events : Tab("Events", Icons.Outlined.Group, Screen.EventsScreen)
 
-    object Map : Tab("Map", Icons.Outlined.Place, Screen.Map)
+  object Map : Tab("Map", Icons.Outlined.Place, Screen.Map)
 
-    object HomePage : Tab("Home", Icons.Outlined.Home, Screen.HomePage)
+  object HomePage : Tab("Home", Icons.Outlined.Home, Screen.HomePage)
 
-    object Profile : Tab("Your profile", Icons.Outlined.AccountCircle, Screen.ProfileScreen)
+  object Profile : Tab("Your profile", Icons.Outlined.AccountCircle, Screen.ProfileScreen)
 
-    object Settings : Tab("Settings", Icons.Outlined.Settings, Screen.SettingsScreen)
+  object Settings : Tab("Settings", Icons.Outlined.Settings, Screen.SettingsScreen)
 
-    object SignOut : Tab("Sign In", Icons.Outlined.Person, Screen.SignIn)
+  object SignOut : Tab("Sign In", Icons.Outlined.Person, Screen.SignIn)
 
-    object Friends : Tab("Friends", Icons.Outlined.Diversity1, Screen.FriendsScreen)
+  object Friends : Tab("Friends", Icons.Outlined.Diversity1, Screen.FriendsScreen)
 
+  object AddTodo : Tab("Add To-Do", Icons.Outlined.Add, Screen.FriendsScreen)
 
-    object AddTodo : Tab("Add To-Do", Icons.Outlined.Add, Screen.FriendsScreen)
-
-    object EditTodo : Tab("Edit To-Do", Icons.Outlined.Edit, Screen.FriendsScreen)
-
+  object EditTodo : Tab("Edit To-Do", Icons.Outlined.Edit, Screen.FriendsScreen)
 }
 
 private val bottomtabs =
@@ -80,7 +78,6 @@ private val bottomtabs =
         Tab.Events,
         Tab.Map,
     )
-
 
 // PART 1: Navigation Bar
 /**
@@ -121,7 +118,6 @@ fun BottomNavigationMenu(
                       .testTag(NavigationTestTags.getTabTestTag(tab)))
         }
       },
-
   )
 }
 
@@ -157,8 +153,8 @@ fun TopNavigationMenu(
       },
       navigationIcon = {
         IconButton(
-            onClick = { onTabSelected(Tab.HomePage) }, modifier = Modifier.testTag(
-                NavigationTestTags.HOMEPAGE_TAB)) {
+            onClick = { onTabSelected(Tab.HomePage) },
+            modifier = Modifier.testTag(NavigationTestTags.HOMEPAGE_TAB)) {
               Icon(imageVector = Tab.HomePage.icon, contentDescription = "Home")
             }
       },
@@ -172,13 +168,12 @@ fun TopNavigationMenu(
               navigationIconContentColor = MaterialTheme.colorScheme.outline,
               titleContentColor = MaterialTheme.colorScheme.outlineVariant,
               actionIconContentColor = MaterialTheme.colorScheme.outline,
-          )
-  )
+          ))
 }
 
 /**
- * A top navigation menu with a centered title, a home button on the left, and a specific dropdown menu on
- * the right, used only for the settings screen.
+ * A top navigation menu with a centered title, a home button on the left, and a specific dropdown
+ * menu on the right, used only for the settings screen.
  *
  * @param selectedTab The currently selected tab.
  * @param onTabSelected A callback function that is invoked when a tab is selected. It takes a [Tab]
@@ -195,39 +190,40 @@ fun TopNavigationMenuSettings(
     modifier: Modifier = Modifier,
     onSignedOut: () -> Unit = {}
 ) {
-    TopAppBar(
-        title = {
-            Box(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    text = selectedTab.name,
-                    modifier = Modifier.align(Alignment.Center).testTag(NavigationTestTags.TOP_BAR_TITLE),
-                    textAlign = TextAlign.Center)
+  TopAppBar(
+      title = {
+        Box(modifier = Modifier.fillMaxWidth()) {
+          Text(
+              text = selectedTab.name,
+              modifier = Modifier.align(Alignment.Center).testTag(NavigationTestTags.TOP_BAR_TITLE),
+              textAlign = TextAlign.Center)
+        }
+      },
+      navigationIcon = {
+        IconButton(
+            onClick = { onTabSelected(Tab.HomePage) },
+            modifier = Modifier.testTag(NavigationTestTags.HOMEPAGE_TAB)) {
+              Icon(imageVector = Tab.HomePage.icon, contentDescription = "Home")
             }
-        },
-        navigationIcon = {
-            IconButton(
-                onClick = { onTabSelected(Tab.HomePage) }, modifier = Modifier.testTag(NavigationTestTags.HOMEPAGE_TAB)) {
-                Icon(imageVector = Tab.HomePage.icon, contentDescription = "Home")
-            }
-        },
-        actions = { TopDropdownMenuForSettings(onTabSelected = onTabSelected, onSignedOut = onSignedOut) },
-        modifier =
-            modifier.fillMaxWidth().height(60.dp).testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
-        colors =
-            TopAppBarColors(
-                containerColor = MaterialTheme.colorScheme.onSurface,
-                scrolledContainerColor = MaterialTheme.colorScheme.background,
-                navigationIconContentColor = MaterialTheme.colorScheme.outline,
-                titleContentColor = MaterialTheme.colorScheme.outlineVariant,
-                actionIconContentColor = MaterialTheme.colorScheme.outline,
-            )
-    )
+      },
+      actions = {
+        TopDropdownMenuForSettings(onTabSelected = onTabSelected, onSignedOut = onSignedOut)
+      },
+      modifier =
+          modifier.fillMaxWidth().height(60.dp).testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
+      colors =
+          TopAppBarColors(
+              containerColor = MaterialTheme.colorScheme.onSurface,
+              scrolledContainerColor = MaterialTheme.colorScheme.background,
+              navigationIconContentColor = MaterialTheme.colorScheme.outline,
+              titleContentColor = MaterialTheme.colorScheme.outlineVariant,
+              actionIconContentColor = MaterialTheme.colorScheme.outline,
+          ))
 }
 
-
 /**
- * A top navigation menu with a title, and a specific dropdown menu on
- * the right, used only for the home page screen.
+ * A top navigation menu with a title, and a specific dropdown menu on the right, used only for the
+ * home page screen.
  *
  * @param selectedTab The currently selected tab.
  * @param onTabSelected A callback function that is invoked when a tab is selected. It takes a [Tab]
@@ -244,33 +240,31 @@ fun TopNavigationMenu_HomePage(
     modifier: Modifier = Modifier,
     onSignedOut: () -> Unit = {}
 ) {
-    TopAppBar(
-        title = {
-            Box(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    text = selectedTab.name,
-                    modifier = Modifier.align(Alignment.Center).testTag(NavigationTestTags.TOP_BAR_TITLE),
-                    textAlign = TextAlign.Center)
-            }
-        },
-        actions = { TopDropdownMenu(onTabSelected = onTabSelected, onSignedOut = onSignedOut) },
-        modifier =
-            modifier.fillMaxWidth().height(60.dp).testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
-
-        colors =
-            TopAppBarColors(
-                containerColor = MaterialTheme.colorScheme.onSurface,
-                scrolledContainerColor = MaterialTheme.colorScheme.background,
-                navigationIconContentColor = MaterialTheme.colorScheme.outline,
-                titleContentColor = MaterialTheme.colorScheme.outlineVariant,
-                actionIconContentColor = MaterialTheme.colorScheme.outline,
-            )
-    )
+  TopAppBar(
+      title = {
+        Box(modifier = Modifier.fillMaxWidth()) {
+          Text(
+              text = selectedTab.name,
+              modifier = Modifier.align(Alignment.Center).testTag(NavigationTestTags.TOP_BAR_TITLE),
+              textAlign = TextAlign.Center)
+        }
+      },
+      actions = { TopDropdownMenu(onTabSelected = onTabSelected, onSignedOut = onSignedOut) },
+      modifier =
+          modifier.fillMaxWidth().height(60.dp).testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
+      colors =
+          TopAppBarColors(
+              containerColor = MaterialTheme.colorScheme.onSurface,
+              scrolledContainerColor = MaterialTheme.colorScheme.background,
+              navigationIconContentColor = MaterialTheme.colorScheme.outline,
+              titleContentColor = MaterialTheme.colorScheme.outlineVariant,
+              actionIconContentColor = MaterialTheme.colorScheme.outline,
+          ))
 }
 
 /**
- * A top navigation menu with the title and a specific dropdown menu on the right,
- *  used only for the profile screen.
+ * A top navigation menu with the title and a specific dropdown menu on the right, used only for the
+ * profile screen.
  *
  * @param selectedTab The currently selected tab.
  * @param onTabSelected A callback function that is invoked when a tab is selected. It takes a [Tab]
@@ -287,33 +281,76 @@ fun TopNavigationMenu_Profile(
     modifier: Modifier = Modifier,
     onSignedOut: () -> Unit = {}
 ) {
-    TopAppBar(
-        title = {
-            Box(modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    text = selectedTab.name,
-                    modifier = Modifier.align(Alignment.Center).testTag(NavigationTestTags.TOP_BAR_TITLE),
-                    textAlign = TextAlign.Center)
-            }
-        },
-        actions = { TopDropdownMenuForProfile(onTabSelected = onTabSelected, onSignedOut = onSignedOut) },
-        modifier =
-            modifier.fillMaxWidth().height(60.dp).testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
+  TopAppBar(
+      title = {
+        Box(modifier = Modifier.fillMaxWidth()) {
+          Text(
+              text = selectedTab.name,
+              modifier = Modifier.align(Alignment.Center).testTag(NavigationTestTags.TOP_BAR_TITLE),
+              textAlign = TextAlign.Center)
+        }
+      },
+      actions = {
+        TopDropdownMenuForProfile(onTabSelected = onTabSelected, onSignedOut = onSignedOut)
+      },
+      modifier =
+          modifier.fillMaxWidth().height(60.dp).testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
+      colors =
+          TopAppBarColors(
+              containerColor = MaterialTheme.colorScheme.onSurface,
+              scrolledContainerColor = MaterialTheme.colorScheme.background,
+              navigationIconContentColor = MaterialTheme.colorScheme.outline,
+              titleContentColor = MaterialTheme.colorScheme.outlineVariant,
+              actionIconContentColor = MaterialTheme.colorScheme.outline,
+          ))
+}
 
-        colors =
-            TopAppBarColors(
-                containerColor = MaterialTheme.colorScheme.onSurface,
-                scrolledContainerColor = MaterialTheme.colorScheme.background,
-                navigationIconContentColor = MaterialTheme.colorScheme.outline,
-                titleContentColor = MaterialTheme.colorScheme.outlineVariant,
-                actionIconContentColor = MaterialTheme.colorScheme.outline,
-            )
-    )
+/**
+ * A top navigation menu with the title and a go back button
+ *
+ * @param selectedTab The currently selected tab.
+ * @param onTabSelected A callback function that is invoked when a tab is selected. It takes a [Tab]
+ *   as a parameter.
+ * @param modifier A [Modifier] for this component. Default is [Modifier].
+ * @param onSignedOut A callback function that is invoked when the user chooses to sign out. Default
+ *   is an empty function.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TopNavigationMenu_Goback(
+    selectedTab: Tab,
+    modifier: Modifier = Modifier,
+    goBack: () -> Unit = {}
+) {
+  TopAppBar(
+      title = {
+        Text(
+            text = selectedTab.name,
+            modifier = Modifier.fillMaxWidth().testTag(NavigationTestTags.TOP_BAR_TITLE),
+            textAlign = TextAlign.Center)
+      },
+      navigationIcon = {
+        IconButton(
+            onClick = { goBack() },
+            modifier = Modifier.testTag(NavigationTestTags.GO_BACK_BUTTON)) {
+              Icon(
+                  imageVector = Icons.Outlined.ArrowBack,
+                  contentDescription = "Go back to previous screen")
+            }
+      },
+      modifier =
+          modifier.fillMaxWidth().height(60.dp).testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
+      colors =
+          TopAppBarColors(
+              containerColor = MaterialTheme.colorScheme.onSurface,
+              scrolledContainerColor = MaterialTheme.colorScheme.background,
+              navigationIconContentColor = MaterialTheme.colorScheme.outline,
+              titleContentColor = MaterialTheme.colorScheme.outlineVariant,
+              actionIconContentColor = MaterialTheme.colorScheme.outline,
+          ))
 }
 
 ////// PART3 :  Dropdown Menu functions
-
-
 
 /**
  * A top dropdown menu with options for Profile, Settings, and Logout.
@@ -362,7 +399,6 @@ fun TopDropdownMenu(onTabSelected: (Tab) -> Unit, onSignedOut: () -> Unit = {}) 
   }
 }
 
-
 /**
  * A top dropdown menu with options for Profile, and Logout. Used only for the settings screen
  *
@@ -373,34 +409,33 @@ fun TopDropdownMenu(onTabSelected: (Tab) -> Unit, onSignedOut: () -> Unit = {}) 
  */
 @Composable
 fun TopDropdownMenuForSettings(onTabSelected: (Tab) -> Unit, onSignedOut: () -> Unit = {}) {
-    var expanded by remember { mutableStateOf(false) }
+  var expanded by remember { mutableStateOf(false) }
 
-    Box {
-        IconButton(
-            onClick = { expanded = !expanded },
-            modifier = Modifier.testTag(NavigationTestTags.DROPMENU)) {
-            Icon(Icons.Outlined.Person, contentDescription = "Options")
+  Box {
+    IconButton(
+        onClick = { expanded = !expanded },
+        modifier = Modifier.testTag(NavigationTestTags.DROPMENU)) {
+          Icon(Icons.Outlined.Person, contentDescription = "Options")
         }
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            // Profile section
-            DropdownMenuItem(
-                text = { Text("Profile") },
-                leadingIcon = {
-                    Icon(imageVector = Tab.Profile.icon, contentDescription = Tab.Profile.name)
-                },
-                onClick = { onTabSelected(Tab.Profile) },
-                modifier = Modifier.testTag(NavigationTestTags.PROFILE_TAB))
+    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+      // Profile section
+      DropdownMenuItem(
+          text = { Text("Profile") },
+          leadingIcon = {
+            Icon(imageVector = Tab.Profile.icon, contentDescription = Tab.Profile.name)
+          },
+          onClick = { onTabSelected(Tab.Profile) },
+          modifier = Modifier.testTag(NavigationTestTags.PROFILE_TAB))
 
-            // Logout section
-            DropdownMenuItem(
-                text = { Text("Log out") },
-                leadingIcon = { Icon(Icons.Outlined.Logout, contentDescription = null) },
-                onClick = { onSignedOut() },
-                modifier = Modifier.testTag(NavigationTestTags.LOGOUT_TAB))
-        }
+      // Logout section
+      DropdownMenuItem(
+          text = { Text("Log out") },
+          leadingIcon = { Icon(Icons.Outlined.Logout, contentDescription = null) },
+          onClick = { onSignedOut() },
+          modifier = Modifier.testTag(NavigationTestTags.LOGOUT_TAB))
     }
+  }
 }
-
 
 /**
  * A top dropdown menu with options for Settings, and Logout. Used only for the profile screen
@@ -412,122 +447,30 @@ fun TopDropdownMenuForSettings(onTabSelected: (Tab) -> Unit, onSignedOut: () -> 
  */
 @Composable
 fun TopDropdownMenuForProfile(onTabSelected: (Tab) -> Unit, onSignedOut: () -> Unit = {}) {
-    var expanded by remember { mutableStateOf(false) }
+  var expanded by remember { mutableStateOf(false) }
 
-    Box {
-        IconButton(
-            onClick = { expanded = !expanded },
-            modifier = Modifier.testTag(NavigationTestTags.DROPMENU)) {
-            Icon(Icons.Outlined.Settings, contentDescription = "Options")
+  Box {
+    IconButton(
+        onClick = { expanded = !expanded },
+        modifier = Modifier.testTag(NavigationTestTags.DROPMENU)) {
+          Icon(Icons.Outlined.Settings, contentDescription = "Options")
         }
-        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            // Settings section
-            DropdownMenuItem(
-                text = { Text("Settings") },
-                leadingIcon = {
-                    Icon(imageVector = Tab.Settings.icon, contentDescription = Tab.Settings.name)
-                },
-                onClick = { onTabSelected(Tab.Settings) },
-                modifier = Modifier.testTag(NavigationTestTags.SETTINGS_TAB))
+    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+      // Settings section
+      DropdownMenuItem(
+          text = { Text("Settings") },
+          leadingIcon = {
+            Icon(imageVector = Tab.Settings.icon, contentDescription = Tab.Settings.name)
+          },
+          onClick = { onTabSelected(Tab.Settings) },
+          modifier = Modifier.testTag(NavigationTestTags.SETTINGS_TAB))
 
-            // Logout section
-            DropdownMenuItem(
-                text = { Text("Log out") },
-                leadingIcon = { Icon(Icons.Outlined.Logout, contentDescription = null) },
-                onClick = { onSignedOut() },
-                modifier = Modifier.testTag(NavigationTestTags.LOGOUT_TAB))
-        }
+      // Logout section
+      DropdownMenuItem(
+          text = { Text("Log out") },
+          leadingIcon = { Icon(Icons.Outlined.Logout, contentDescription = null) },
+          onClick = { onSignedOut() },
+          modifier = Modifier.testTag(NavigationTestTags.LOGOUT_TAB))
     }
-}
-
-
-
-/*
-
-// TODO How to call them in Tab.NAME ?
-
-Scaffold(
-topBar = TopNavigationMenu(
-        selectedTab = Tab.NAME,
-        onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
-        modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU)),
-        onSignedOut = { navigationActions.navigateTo(Screen.Login)
-) {
-
-
-
-
-bottomBar = {
-    BottomNavigationMenu(
-        selectedTab = Tab.NAME,
-        onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
-        modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU))}
-},
-content = ...
-*/
-
-
-
-/*
-
-// TODO How to call it in HomeScreen and ProfileScreen?
-
-Scaffold(
-topBar = TopNavigationMenu_HomePage_Profile(
-        selectedTab = Tab.HomePage,
-        onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
-        modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU)),
-        onSignedOut = { navigationActions.navigateTo(Screen.Login)
-
-) {
-
-
-
-
-bottomBar = {
-    BottomNavigationMenu(
-        selectedTab = Tab.NAME,
-        onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
-        modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU))
-},
-content = ...
-*/
-
-// TODO Friends screen with only a goback in profile
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun TopNavigationMenu_Goback(
-    selectedTab: Tab,
-    onTabSelected: (Tab) -> Unit,
-    modifier: Modifier = Modifier,
-    goBack: () -> Unit = {}
-) {
-  TopAppBar(
-      title = {
-        Text(
-            text = selectedTab.name,
-            modifier = Modifier.fillMaxWidth().testTag(NavigationTestTags.TOP_BAR_TITLE),
-            textAlign = TextAlign.Center)
-      },
-      navigationIcon = {
-        IconButton(
-            onClick = { goBack() },
-            modifier = Modifier.testTag(NavigationTestTags.GO_BACK_BUTTON)) {
-              Icon(
-                  imageVector = Icons.Outlined.ArrowBack, contentDescription = "Go back to Profile")
-            }
-      },
-      modifier =
-          modifier.fillMaxWidth().height(60.dp).testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
-
-      colors =
-          TopAppBarColors(
-              containerColor = MaterialTheme.colorScheme.onSurface,
-              scrolledContainerColor = MaterialTheme.colorScheme.background,
-              navigationIconContentColor = MaterialTheme.colorScheme.outline,
-              titleContentColor = MaterialTheme.colorScheme.outlineVariant,
-              actionIconContentColor = MaterialTheme.colorScheme.outline,
-          )
-      )
+  }
 }

@@ -1,6 +1,5 @@
 package com.android.gatherly.ui.authentication
 
-import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -46,7 +45,7 @@ fun SignInScreen(
 
   val context = LocalContext.current
   val isSignedIn by authViewModel.uiState.collectAsState()
-    /* UPDATE 13/10
+  /* UPDATE 13/10
   val isSignedIn by authViewModel.uiState
 
      */
@@ -58,7 +57,7 @@ fun SignInScreen(
     }
   }
 
-    /* UPDATE 13/10
+  /* UPDATE 13/10
      LaunchedEffect(authViewModel.uiState) {
     if (isSignedIn) {
       onSignedIn()
@@ -66,7 +65,7 @@ fun SignInScreen(
   }
      */
 
-    /*LaunchedEffect(isSignedIn) {
+  /*LaunchedEffect(isSignedIn) {
     Log.e("signinscreen", "Is lauchedeffect")
 
     if (isSignedIn.isAnonym) {

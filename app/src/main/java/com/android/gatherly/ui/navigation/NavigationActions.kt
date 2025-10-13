@@ -7,7 +7,6 @@ sealed class Screen(
     val name: String,
     val isTopLevelDestination: Boolean = false
 ) {
-  object Login : Screen(route = "login", name = "Login temp")
 
   object SignIn : Screen(route = "sign_in", name = "Authentification")
 
@@ -58,19 +57,6 @@ open class NavigationActions(
         launchSingleTop = true
         popUpTo(screen.route) { inclusive = true }
       }
-      //      restoreState = true
-      //      restoreState = true
-      //      if (screen.isTopLevelDestination) {
-      //        // Pop up to the start destination of the graph to
-      //        // avoid building up a large stack of destinations
-      //        popUpTo(navController.graph.findStartDestination().id) {
-      //          saveState = true
-      //          inclusive = true
-      //        }
-      //        // Avoid multiple copies of the same destination when reselecting same item
-      //        launchSingleTop = true
-      //      }
-      //
       if (screen !is Screen.SignIn) {
         // Restore state when reselecting a previously selected item
         restoreState = true
@@ -90,13 +76,5 @@ open class NavigationActions(
    */
   open fun currentRoute(): String {
     return navController.currentDestination?.route ?: ""
-  }
-
-  open fun navigateToHome() {
-    navController.popBackStack(Screen.HomePage.route, inclusive = false)
-  }
-
-  open fun navigateToSignIn() {
-    navController.popBackStack(Screen.SignIn.route, inclusive = false)
   }
 }

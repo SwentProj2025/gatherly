@@ -92,7 +92,7 @@ abstract class GatherlyTest() {
     }
   }
 
-      /*abstract class GatherlyTest {
+  /*abstract class GatherlyTest {
   @Before
   open fun setUp() {
     /*ToDosRepositoryProvider.repository = createInitializedRepository()

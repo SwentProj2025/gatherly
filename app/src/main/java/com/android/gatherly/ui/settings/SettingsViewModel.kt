@@ -20,20 +20,7 @@ class SettingsViewModel(
   private val _uiState = MutableStateFlow(SettingsUIState())
   val uiState: StateFlow<SettingsUIState> = _uiState.asStateFlow()
 
-  /*fun signOut(credentialManager: CredentialManager): Unit {
-      viewModelScope.launch {
-          authRepository
-              .signOut()
-              .fold(
-                  onSuccess = { _uiState.update { it.copy(signedOut = true) } },
-                  onFailure = { throwable ->
-                      _uiState.update { it.copy(errorMsg = throwable.localizedMessage) }
-                  })
-          credentialManager.clearCredentialState(ClearCredentialStateRequest())
-      }
-  }
-   */
-
+  /** Initiates sign-out */
   fun signOut(credentialManager: CredentialManager): Unit {
     viewModelScope.launch {
       Firebase.auth.signOut()
