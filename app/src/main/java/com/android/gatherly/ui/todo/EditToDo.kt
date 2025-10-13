@@ -96,7 +96,6 @@ fun EditToDoScreen(
   val screenPadding = dimensionResource(id = R.dimen.padding_screen)
   val fieldSpacing = dimensionResource(id = R.dimen.spacing_between_fields)
   val buttonSpacing = dimensionResource(id = R.dimen.spacing_between_buttons)
-  val inputHeight = dimensionResource(id = R.dimen.input_height)
 
   val appBarColors =
       TopAppBarColors(
@@ -162,7 +161,6 @@ fun EditToDoScreen(
                   },
                   modifier =
                       Modifier.fillMaxWidth()
-                          .height(inputHeight)
                           .testTag(EditToDoScreenTestTags.INPUT_TODO_DESCRIPTION),
                   minLines = integerResource(R.integer.todo_description_min_lines),
                   maxLines = integerResource(R.integer.todo_description_max_lines))
