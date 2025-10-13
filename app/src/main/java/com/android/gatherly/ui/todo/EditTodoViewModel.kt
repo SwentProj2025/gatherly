@@ -37,6 +37,7 @@ data class EditTodoUIState(
     val locationError: String? = null,
     val dueDateError: String? = null,
     val dueTimeError: String? = null,
+    val isSaving: Boolean = false,
     val saveSuccess: Boolean = false,
     val deleteSuccess: Boolean = false,
 )
@@ -174,6 +175,7 @@ class EditTodoViewModel(
   private fun editTodoToRepository(todoID: String, todo: ToDo) {
 
     viewModelScope.launch {
+      _uiState.value = _uiState.value.copy(isSaving = true, errorMsg = null)
       try {
         todoRepository.editTodo(todoID = todoID, newValue = todo)
       } catch (e: Exception) {
