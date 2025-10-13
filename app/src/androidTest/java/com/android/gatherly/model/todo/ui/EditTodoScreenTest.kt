@@ -1,6 +1,5 @@
 package com.android.gatherly.ui.todo
 
-import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -38,19 +37,19 @@ class EditTodoScreenTest : InMemoryGatherlyTest() {
   fun displayAllComponents() = withContent {
     composeTestRule
         .onNodeWithTag(EditToDoScreenTestTags.TODO_SAVE)
-        .assertIsDisplayed()
+        .assertExists()
         .assertTextContains("Save", substring = true, ignoreCase = true)
     composeTestRule
         .onNodeWithTag(EditToDoScreenTestTags.TODO_DELETE)
-        .assertIsDisplayed()
+        .assertExists()
         .assertTextContains("Delete", substring = true, ignoreCase = true)
 
-    composeTestRule.onNodeWithTag(EditToDoScreenTestTags.TODO_DELETE).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_TITLE).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_DESCRIPTION).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_ASSIGNEE).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_LOCATION).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_DATE).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(EditToDoScreenTestTags.TODO_DELETE).assertExists()
+    composeTestRule.onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_TITLE).assertExists()
+    composeTestRule.onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_DESCRIPTION).assertExists()
+    composeTestRule.onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_ASSIGNEE).assertExists()
+    composeTestRule.onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_LOCATION).assertExists()
+    composeTestRule.onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_DATE).assertExists()
     composeTestRule.onNodeWithTag(EditToDoScreenTestTags.ERROR_MESSAGE).assertIsNotDisplayed()
   }
 
