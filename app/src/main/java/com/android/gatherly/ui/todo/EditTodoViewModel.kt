@@ -37,6 +37,8 @@ data class EditTodoUIState(
     val locationError: String? = null,
     val dueDateError: String? = null,
     val dueTimeError: String? = null,
+    val saveSuccess: Boolean = false,
+    val deleteSuccess: Boolean = false,
 )
 
 /**
@@ -60,6 +62,16 @@ class EditTodoViewModel(
   /** Clears the error message in the UI state. */
   fun clearErrorMsg() {
     _uiState.value = _uiState.value.copy(errorMsg = null)
+  }
+
+  /** Clears the save success flag in the UI state. */
+  fun clearSaveSuccess() {
+    _uiState.value = _uiState.value.copy(saveSuccess = false)
+  }
+
+  /** Clears the delete success flag in the UI state. */
+  fun clearDeleteSuccess() {
+    _uiState.value = _uiState.value.copy(deleteSuccess = false)
   }
 
   /** Sets an error message in the UI state. */
