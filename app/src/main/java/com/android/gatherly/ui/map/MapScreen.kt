@@ -80,7 +80,7 @@ fun MapScreen(
             selectedTab = Tab.Map,
             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
             modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
-            onSignedOut = { viewModel.onSignedOut(credentialManager) })
+            onSignedOut = { viewModel.signOut(credentialManager) })
       },
       bottomBar = {
         BottomNavigationMenu(

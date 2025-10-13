@@ -19,7 +19,7 @@ import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu
 
-object OverviewScreenTestTags {
+object OverviewScreenTestTagsxx {
   const val OverviewText = "createTodoFab"
 }
 
@@ -58,6 +58,6 @@ fun OverviewScreenxx(
       content = { padding ->
         Text(
             text = "OVERVIEW",
-            modifier = Modifier.padding(padding).testTag(OverviewScreenTestTags.OverviewText))
+            modifier = Modifier.padding(padding).testTag(OverviewScreenTestTagsxx.OverviewText))
       })
 }

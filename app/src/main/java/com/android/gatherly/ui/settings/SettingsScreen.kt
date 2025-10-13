@@ -16,7 +16,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
-import com.android.gatherly.ui.navigation.TopNavigationMenu
+import com.android.gatherly.ui.navigation.TopNavigationMenuSettings
 
 object SettingsScreenTestTags {}
 
@@ -39,7 +39,7 @@ fun SettingsScreen(
 
   Scaffold(
       topBar = {
-        TopNavigationMenu(
+        TopNavigationMenuSettings(
             selectedTab = Tab.Settings,
             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
             modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),

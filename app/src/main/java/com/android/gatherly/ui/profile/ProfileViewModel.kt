@@ -1,11 +1,14 @@
 package com.android.gatherly.ui.profile
 
+import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import java.time.LocalDate
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -47,5 +50,10 @@ class ProfileViewModel(
     }
   }
 
-  fun signOut(credentialManager: CredentialManager): Unit {}
+    fun signOut(credentialManager: CredentialManager): Unit {
+        viewModelScope.launch {
+            Firebase.auth.signOut()
+            credentialManager.clearCredentialState(ClearCredentialStateRequest())
+        }
+    }
 }

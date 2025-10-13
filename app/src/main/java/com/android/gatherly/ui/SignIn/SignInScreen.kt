@@ -15,7 +15,7 @@ import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.ui.navigation.NavigationActions
 
-object SignInScreenTestTags {
+object SignInScreenTestTagsxx {
   const val SignInText = "SignIN"
 }
 
@@ -41,6 +41,6 @@ fun SignInScreenxx(
       content = { padding ->
         Text(
             text = "SignIN page",
-            modifier = Modifier.padding(padding).testTag(SignInScreenTestTags.SignInText))
+            modifier = Modifier.padding(padding).testTag(SignInScreenTestTagsxx.SignInText))
       })
 }

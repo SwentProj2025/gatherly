@@ -15,7 +15,7 @@ import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.Tab
-import com.android.gatherly.ui.navigation.TopNavigationMenu_HomePage_Profile
+import com.android.gatherly.ui.navigation.TopNavigationMenu_HomePage
 
 object HomePageScreenTestTags {
   const val HOMETEXT = "Homepage"
@@ -40,7 +40,7 @@ fun HomePageScreen(
 
   Scaffold(
       topBar = {
-        TopNavigationMenu_HomePage_Profile(
+        TopNavigationMenu_HomePage(
             selectedTab = Tab.HomePage,
             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
             onSignedOut = { homePageViewModel.signOut(credentialManager) })

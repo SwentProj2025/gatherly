@@ -17,7 +17,7 @@ import com.android.gatherly.ui.navigation.BottomNavigationMenu
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
-import com.android.gatherly.ui.navigation.TopNavigationMenu_HomePage_Profile
+import com.android.gatherly.ui.navigation.TopNavigationMenu_Profile
 
 object ProfileScreenTestTags {
   const val ProfileText = "profile"
@@ -42,7 +42,7 @@ fun ProfileScreen(
 
   Scaffold(
       topBar = {
-        TopNavigationMenu_HomePage_Profile(
+        TopNavigationMenu_Profile(
             selectedTab = Tab.Profile,
             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
             modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
