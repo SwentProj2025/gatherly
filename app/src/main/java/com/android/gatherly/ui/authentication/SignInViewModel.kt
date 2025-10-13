@@ -2,6 +2,7 @@ package com.android.gatherly.ui.authentication
 
 import android.content.Context
 import android.util.Log
+import androidx.compose.runtime.mutableStateOf
 import androidx.credentials.Credential
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
@@ -47,6 +48,10 @@ data class AuthUIState(val isAnonym: Boolean = false, val isGoogle: Boolean = fa
 class SignInViewModel : ViewModel() {
   // UI State containing the user sign in status
   private val _uiState = MutableStateFlow<Boolean>(false)
+    /* UPDATE : 13/10
+      var uiState = mutableStateOf(false)
+        private set
+     */
 
   // Read-only UI State presented to the UI
   val uiState: StateFlow<Boolean>

@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.credentials.CredentialManager
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
@@ -26,6 +27,8 @@ import com.android.gatherly.ui.navigation.Screen
 import com.android.gatherly.ui.profile.ProfileScreen
 import com.android.gatherly.ui.settings.SettingsScreen
 import com.android.gatherly.ui.theme.GatherlyTheme
+import com.android.gatherly.ui.todo.AddToDoScreen
+import com.android.gatherly.ui.todo.AddTodoViewModel
 import com.android.gatherly.ui.todo.OverviewScreen
 import com.google.firebase.auth.FirebaseAuth
 import okhttp3.OkHttpClient
@@ -111,22 +114,20 @@ fun GatherlyApp(
         OverviewScreen(
             credentialManager = credentialManager,
             navigationActions = navigationActions,
-            onSignedOut = { navigationActions.navigateTo(Screen.SignIn) })
+            onSignedOut = { navigationActions.navigateTo(Screen.SignIn) },
+            onAddTodo = {navigationActions.navigateTo(Screen.AddToDo)},
+            onSelectTodo = { navigationActions.navigateTo(Screen.EditToDo(it.uid))}
+        )
       }
+        composable(Screen.AddToDo.route) {
+            AddToDoScreen(
+                onAdd = {navigationActions.navigateTo(Screen.OverviewToDo)},
+                goBack = {navigationActions.goBack()}
 
-      /*composable(Screen.OverviewToDo.route) {
-          OverviewScreen(
-              onSelectTodo = { navigationActions.navigateTo(Screen.EditToDo(it.uid)) },
-              onAddTodo = { navigationActions.navigateTo(Screen.AddToDo) },
-              onSignedOut = { navigationActions.navigateTo(Screen.Login) },
-              navigationActions = navigationActions,
-              credentialManager = credentialManager)
-      }
-      composable(Screen.AddToDo.route) {
-          AddTodoScreen(
-              onDone = { navigationActions.navigateTo(Screen.OverviewToDo) },
-              onGoBack = { navigationActions.goBack() })
-      }
+            )
+        }
+
+      /*
       composable(Screen.EditToDo.route) { navBackStackEntry ->
           // Get the Todo UID from the arguments
           val uid = navBackStackEntry.arguments?.getString("uid")

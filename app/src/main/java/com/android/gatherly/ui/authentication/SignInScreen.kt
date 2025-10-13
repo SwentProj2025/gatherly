@@ -46,6 +46,10 @@ fun SignInScreen(
 
   val context = LocalContext.current
   val isSignedIn by authViewModel.uiState.collectAsState()
+    /* UPDATE 13/10
+  val isSignedIn by authViewModel.uiState
+
+     */
 
   // Navigate to home page screen on successful login
   LaunchedEffect(isSignedIn) {
@@ -53,6 +57,14 @@ fun SignInScreen(
       onSignedIn()
     }
   }
+
+    /* UPDATE 13/10
+     LaunchedEffect(authViewModel.uiState) {
+    if (isSignedIn) {
+      onSignedIn()
+    }
+  }
+     */
 
     /*LaunchedEffect(isSignedIn) {
     Log.e("signinscreen", "Is lauchedeffect")
