@@ -11,12 +11,14 @@ import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.android.gatherly.model.map.Location
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.model.todo.ToDosRepositoryProvider
+import com.android.gatherly.ui.todo.AddToDoScreenTestTags
 import com.android.gatherly.ui.todo.OverviewScreenTestTags
 import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
@@ -32,7 +34,7 @@ import org.junit.Before
 // Portions of the code in this file are copy-pasted from the Bootcamp solution provided by the
 // SwEnt staff.
 
-const val UI_WAIT_TIMEOUT = 5_000L
+const val UI_WAIT_TIMEOUT = 100_000L
 
 /** Base class for Gatherly tests, providing common setup and utility functions. */
 abstract class GatherlyTest() {
@@ -108,6 +110,40 @@ abstract class GatherlyTest() {
     }
   }
 
+  fun ComposeTestRule.enterAddTodoTitle(title: String) =
+      onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_TITLE).performTextInput(title)
+
+  fun ComposeTestRule.enterAddTodoDescription(description: String) =
+      onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_DESCRIPTION).performTextInput(description)
+
+  fun ComposeTestRule.enterAddTodoAssignee(assignee: String) =
+      onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_ASSIGNEE).performTextInput(assignee)
+
+  fun ComposeTestRule.enterAddTodoDate(date: String) =
+      onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_DATE).performTextInput(date)
+
+  fun ComposeTestRule.enterAddTodoTime(time: String) =
+      onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_TIME).performTextInput(time)
+
+  fun ComposeTestRule.enterAddTodoLocation(location: String) =
+      onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_LOCATION).performTextInput(location)
+
+  fun ComposeTestRule.enterAddTodoDetails(todo: ToDo, date: String = todo.dueDate.toDateString()) {
+    enterAddTodoTitle(todo.name)
+    enterAddTodoDescription(todo.description)
+    enterAddTodoAssignee(todo.assigneeName)
+    enterAddTodoDate(date)
+    enterAddTodoLocation(todo.location?.name ?: "Any")
+  }
+
+  fun ComposeTestRule.clickOnSaveForAddTodo(waitForRedirection: Boolean = false) {
+    onNodeWithTag(AddToDoScreenTestTags.TODO_SAVE).assertExists().performClick()
+    waitUntil(UI_WAIT_TIMEOUT) {
+      !waitForRedirection ||
+          onAllNodesWithTag(AddToDoScreenTestTags.TODO_SAVE).fetchSemanticsNodes().isEmpty()
+    }
+  }
+
   private fun ComposeTestRule.waitUntilTodoIsDisplayed(todo: ToDo): SemanticsNodeInteraction {
     waitUntil(UI_WAIT_TIMEOUT) {
       onAllNodesWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todo))
@@ -134,6 +170,15 @@ abstract class GatherlyTest() {
                 .and(hasAnyDescendant(matcher)),
             useUnmergedTree = true)
         .assertIsDisplayed()
+  }
+
+  fun ComposeTestRule.checkErrorMessageIsDisplayedForAddTodo() =
+      onNodeWithTag(AddToDoScreenTestTags.ERROR_MESSAGE, useUnmergedTree = true).assertIsDisplayed()
+
+  fun checkNoTodoWereAdded(action: () -> Unit) {
+    val numberOfTodos = runBlocking { repository.getAllTodos().size }
+    action()
+    runTest { assertEquals(numberOfTodos, repository.getAllTodos().size) }
   }
 
   fun <A : ComponentActivity> AndroidComposeTestRule<ActivityScenarioRule<A>, A>

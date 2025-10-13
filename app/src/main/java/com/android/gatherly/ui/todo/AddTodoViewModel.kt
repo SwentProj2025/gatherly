@@ -32,6 +32,7 @@ data class AddTodoUiState(
     val assigneeError: String? = null,
     val dueDateError: String? = null,
     val dueTimeError: String? = null,
+    val locationError: String? = null,
     val isSaving: Boolean = false,
     val saveError: String? = null,
     val saveSuccess: Boolean = false,
@@ -60,6 +61,16 @@ class AddTodoViewModel(
 
   /** Public immutable access to the Add ToDo UI state. */
   val uiState: StateFlow<AddTodoUiState> = _uiState.asStateFlow()
+
+  /** Clears the error message in the UI state. */
+  fun clearErrorMsg() {
+    _uiState.value = _uiState.value.copy(saveError = null)
+  }
+
+  /** Clears the save success flag in the UI state. */
+  fun clearSaveSuccess() {
+    _uiState.value = _uiState.value.copy(saveSuccess = false)
+  }
 
   // private var selectedLocation: Location? = null
   // private var searchJob: Job? = null
@@ -108,7 +119,10 @@ class AddTodoViewModel(
    * @param newValue The name or description of the location.
    */
   fun onLocationChanged(newValue: String) {
-    _uiState.value = _uiState.value.copy(location = newValue)
+    _uiState.value =
+        _uiState.value.copy(
+            location = newValue,
+            locationError = if (newValue.isBlank()) "Location cannot be empty" else null)
   }
 
   /**
@@ -222,6 +236,8 @@ class AddTodoViewModel(
                 if (_uiState.value.description.isBlank()) "Description cannot be empty" else null,
             assigneeError =
                 if (_uiState.value.assignee.isBlank()) "Assignee cannot be empty" else null,
+            locationError =
+                if (_uiState.value.location.isBlank()) "Location cannot be empty" else null,
             dueDateError =
                 if (!isValidDate(_uiState.value.dueDate)) "Invalid format (dd/MM/yyyy)" else null,
             dueTimeError =
