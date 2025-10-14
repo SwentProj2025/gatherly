@@ -29,7 +29,7 @@ object FakeJwtGenerator {
     val payload =
         JSONObject(
             mapOf(
-                "sub" to counter.toString(),
+                "sub" to email.hashCode().toString(), // was counter.toString()
                 "email" to email,
                 "name" to name,
                 "picture" to "http://example.com/avatar.png"))
