@@ -13,6 +13,7 @@ import com.android.gatherly.model.map.Location
 import com.android.gatherly.model.map.NominatimLocationRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
+import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.launch
 import java.text.ParseException
@@ -26,8 +27,9 @@ data class EditEventsUIState(
     val date : String = "",
     val startTime : String = "",
     val endTime : String = "",
+    val participant : String = "",
     val participants : List<Profile> = emptyList(),
-    val suggestedProfile : Profile? = null,
+    val suggestedProfiles : List<Profile> = emptyList(),
     val suggestedLocations : List<Location> = emptyList(),
     val nameError : Boolean = false,
     val descriptionError : Boolean = false,
@@ -41,7 +43,7 @@ data class EditEventsUIState(
 
 @SuppressLint("SimpleDateFormat")
 class EditEventsViewModel(
-    val profileRepository: ProfileRepository,
+    val profileRepository: ProfileRepository = ProfileRepositoryFirestore(),
     val eventsRepository: EventsRepository,
     val client: NominatimLocationRepository// = NominatimLocationRepository(HttpClientProvider.client)
 ) : ViewModel() {
@@ -52,7 +54,7 @@ class EditEventsViewModel(
     private val dateFormat = SimpleDateFormat("dd/MM/yyyy")
     private val timeFormat = SimpleDateFormat("HH:mm")
 
-    private var searchedProfile : Profile? = null
+    private var searchedProfiles : List<Profile> = emptyList()
     private lateinit var eventId : String
     private lateinit var creatorId : String
 
@@ -73,7 +75,7 @@ class EditEventsViewModel(
                 date = dateFormat.format(event.date.toDate()),
                 startTime = timeFormat.format(event.startTime.toDate()),
                 endTime = timeFormat.format(event.endTime.toDate()),
-                participants = event.participants.map { profileRepository.getProfileByUid(it) }
+                participants = event.participants.map { profileRepository.getProfileByUid(it)!! }
             )
             eventId = event.id
             creatorId = event.creatorId
@@ -130,11 +132,15 @@ class EditEventsViewModel(
         uiState = uiState.copy(endTime = updatedEndTime, endTimeError = endTimeError)
     }
 
+    fun updateParticipant(updatedParticipant : String) {
+        uiState = uiState.copy(participant = updatedParticipant)
+    }
+
     fun deleteParticipant(participant : String) {
         val index = uiState.participants.find {it.uid == participant}
         uiState = if (index == null) {
             uiState.copy(displayToast = true, toastString = "Cannot delete this participant, as they are not participating")
-        } else if (participant == "ownerID") {
+        } else if (participant == creatorId) {
             uiState.copy(displayToast = true, toastString = "Cannot delete the owner")
         } else {
             uiState.copy(participants = uiState.participants.filter {it.uid == participant})
@@ -143,17 +149,13 @@ class EditEventsViewModel(
 
     fun addParticipant(participant : String) {
         searchProfileByString(participant)
-        uiState = if (searchedProfile != null) {
-            uiState.copy(participants = uiState.participants + searchedProfile!!)
-        } else {
-            uiState.copy(displayToast = true, toastString = "Cannot find profile")
-        }
+        uiState.copy(participant = uiState.participant + searchedProfiles)
     }
 
     fun searchProfileByString(participant : String) {
         viewModelScope.launch {
-            val foundProfile = profileRepository.getProfileByUid(participant)
-            searchedProfile = foundProfile
+            val profilesList = profileRepository.findProfilesByUidSubstring(participant)
+            searchedProfiles = profilesList
         }
     }
 
@@ -167,11 +169,20 @@ class EditEventsViewModel(
     fun saveEvent() {
         if (!uiState.nameError && !uiState.descriptionError && !uiState.creatorNameError
             && !uiState.dateError && !uiState.startTimeError && !uiState.endTimeError) {
-            val date = dateFormat.parse(uiState.date) ?: throw IllegalArgumentException()
+            val date = dateFormat.parse(uiState.date) ?: run {
+                uiState.copy(displayToast = true, toastString = "Cannot parse event date")
+                return
+            }
             val timestampDate = Timestamp(date)
-            val startTime = timeFormat.parse(uiState.date) ?: throw IllegalArgumentException()
+            val startTime = timeFormat.parse(uiState.startTime) ?: run {
+                uiState.copy(displayToast = true, toastString = "Cannot parse event start time")
+                return
+            }
             val timestampStartTime = Timestamp(startTime)
-            val endTime = timeFormat.parse(uiState.date) ?: throw IllegalArgumentException()
+            val endTime = timeFormat.parse(uiState.endTime) ?: run {
+                uiState.copy(displayToast = true, toastString = "Cannot parse event end time")
+                return
+            }
             val timestampEndTime = Timestamp(endTime)
 
             val event = Event(
