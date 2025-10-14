@@ -49,6 +49,7 @@ open class FirestoreGatherlyTest {
   @After
   open fun tearDown() {
     runTest { clearUserTodos() }
+    FirebaseEmulator.clearAuthEmulator()
     FirebaseEmulator.clearFirestoreEmulator()
   }
 

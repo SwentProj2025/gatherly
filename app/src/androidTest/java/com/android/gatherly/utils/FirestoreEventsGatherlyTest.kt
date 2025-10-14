@@ -55,6 +55,11 @@ open class FirestoreEventsGatherlyTest {
       error("Firebase emulator must be running! Use: firebase emulators:start")
     }
 
+    // Clear any existing users and data
+    FirebaseEmulator.auth.signOut()
+    FirebaseEmulator.clearAuthEmulator()
+    FirebaseEmulator.clearFirestoreEmulator()
+
     // Seed users in emulator
     FirebaseEmulator.createGoogleUser(user1Token)
     FirebaseEmulator.createGoogleUser(user2Token)
@@ -77,7 +82,9 @@ open class FirestoreEventsGatherlyTest {
   @After
   open fun tearDown() = runTest {
     clearAllEvents()
+    Log.d("EventsTest", "Users before clear: ${FirebaseEmulator.users}")
     FirebaseEmulator.clearAuthEmulator()
+    Log.d("EventsTest", "Users after clear: ${FirebaseEmulator.users}")
     FirebaseEmulator.clearFirestoreEmulator()
   }
 
