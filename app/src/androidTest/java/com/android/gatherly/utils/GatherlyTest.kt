@@ -11,6 +11,7 @@ import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.android.gatherly.model.map.Location
@@ -19,6 +20,7 @@ import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.model.todo.ToDosRepositoryProvider
 import com.android.gatherly.ui.todo.AddToDoScreenTestTags
+import com.android.gatherly.ui.todo.EditToDoScreenTestTags
 import com.android.gatherly.ui.todo.OverviewScreenTestTags
 import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
@@ -97,6 +99,40 @@ abstract class GatherlyTest() {
       FirebaseEmulator.clearAuthEmulator()
     }
   }
+
+  fun ComposeTestRule.enterEditTodoTitle(title: String) {
+    onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_TITLE).performTextClearance()
+    onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_TITLE).performTextInput(title)
+  }
+
+  fun ComposeTestRule.enterEditTodoDescription(description: String) {
+    onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_DESCRIPTION).performTextClearance()
+    onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_DESCRIPTION).performTextInput(description)
+  }
+
+  fun ComposeTestRule.enterEditTodoAssignee(assignee: String) {
+    onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_ASSIGNEE).performTextClearance()
+    onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_ASSIGNEE).performTextInput(assignee)
+  }
+
+  fun ComposeTestRule.enterEditTodoDate(date: String) {
+    onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_DATE).performTextClearance()
+    onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_DATE).performTextInput(date)
+  }
+
+  fun ComposeTestRule.enterEditTodoTime(time: String) {
+    onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_TIME).performTextClearance()
+    onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_TIME).performTextInput(time)
+  }
+
+  fun ComposeTestRule.enterEditTodoLocation(location: String) {
+    onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_LOCATION).performTextClearance()
+    onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_LOCATION).performTextInput(location)
+  }
+
+  fun ComposeTestRule.checkErrorMessageIsDisplayedForEditTodo() =
+      onNodeWithTag(EditToDoScreenTestTags.ERROR_MESSAGE, useUnmergedTree = true)
+          .assertIsDisplayed()
 
   fun ComposeTestRule.enterAddTodoTitle(title: String) =
       onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_TITLE).performTextInput(title)

@@ -2,8 +2,9 @@
     <string name="app_name">gatherly</string>
     <string name="title_activity_main">MainActivity</string>
     <string name="title_activity_second">SecondActivity</string>
-    <!-- Add To-Do Page. -->
+    <!-- To-Do Pages. -->
     <string name="todos_title_add_todo_screen">Add To-Do</string>
+    <string name="todos_title_edit_todo_screen">Edit To-Do</string>
     <string name="todos_title_field_label">Title</string>
     <string name="todos_title_field_placeholder">Task Title</string>
     <string name="todos_description_field_label">Description</string>
