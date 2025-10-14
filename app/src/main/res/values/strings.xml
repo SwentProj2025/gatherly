@@ -2,5 +2,23 @@
     <string name="app_name">gatherly</string>
     <string name="title_activity_main">MainActivity</string>
     <string name="title_activity_second">SecondActivity</string>
+    <!-- To-Do Pages. -->
+    <string name="todos_title_add_todo_screen">Add To-Do</string>
+    <string name="todos_title_edit_todo_screen">Edit To-Do</string>
+    <string name="todos_title_field_label">Title</string>
+    <string name="todos_title_field_placeholder">Task Title</string>
+    <string name="todos_description_field_label">Description</string>
+    <string name="todos_description_placeholder">Describe the task</string>
+    <string name="todos_assignee_field_label">Assignee</string>
+    <string name="todos_assignee_placeholder">Assign a person</string>
+    <string name="todos_location_field_label">Location</string>
+    <string name="todos_location_field_placeholder">Enter an Address or Location</string>
+    <string name="todos_date_field_label">Due Date</string>
+    <string name="todos_date_field_placeholder">10/10/2025</string>
+    <string name="todos_time_field_label">Due Time</string>
+    <string name="todos_time_field_placeholder">14:00</string>
+    <string name="todos_save_button_text">Save</string>
+    <string name="todos_back_button_desc">Back</string>
+    <string name="todos_delete_button_text">Delete</string>
     <string name="web_client_id">854490974901-rc0seqlo7nbm1net10ujpte2ckkrsgn2.apps.googleusercontent.com</string>
 </resources>
