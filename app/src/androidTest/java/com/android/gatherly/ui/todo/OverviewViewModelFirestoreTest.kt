@@ -68,6 +68,7 @@ class OverviewViewModelFirestoreTest : FirestoreGatherlyTest() {
     withTimeout(TIMEOUT) {
       while (viewModel.uiState.value.todos.size != 2) {
         viewModel.refreshUIState()
+        delay(200)
       }
     }
     // Trigger reload
@@ -124,6 +125,7 @@ class OverviewViewModelFirestoreTest : FirestoreGatherlyTest() {
     withTimeout(TIMEOUT) {
       while (viewModel.uiState.value.todos.size != 1) {
         viewModel.refreshUIState()
+        delay(200)
       }
     }
 
@@ -141,6 +143,7 @@ class OverviewViewModelFirestoreTest : FirestoreGatherlyTest() {
     withTimeout(TIMEOUT) {
       while (viewModel.uiState.value.todos.size != 2) {
         viewModel.refreshUIState()
+        delay(200)
       }
     }
 
@@ -162,6 +165,7 @@ class OverviewViewModelFirestoreTest : FirestoreGatherlyTest() {
     withTimeout(TIMEOUT) {
       while (viewModel.uiState.value.todos.size != 1) {
         viewModel.refreshUIState()
+        delay(200)
       }
     }
 
