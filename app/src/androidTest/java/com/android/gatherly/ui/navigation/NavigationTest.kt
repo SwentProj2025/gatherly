@@ -1,19 +1,22 @@
 package com.android.gatherly.ui.navigation
 
+import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.ComposeTestRule
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import com.android.gatherly.GatherlyApp
 import com.android.gatherly.ui.authentication.SignInScreenTestTags
 import com.android.gatherly.utils.FirestoreGatherlyTest
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 
 class NavigationTest : FirestoreGatherlyTest() {
-  // @get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()
+  @get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
   @Before
   override fun setUp() {

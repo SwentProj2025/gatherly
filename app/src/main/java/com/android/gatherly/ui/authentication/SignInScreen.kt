@@ -45,10 +45,6 @@ fun SignInScreen(
 
   val context = LocalContext.current
   val isSignedIn by authViewModel.uiState.collectAsState()
-  /* UPDATE 13/10
-  val isSignedIn by authViewModel.uiState
-
-     */
 
   // Navigate to home page screen on successful login
   LaunchedEffect(isSignedIn) {
@@ -56,50 +52,6 @@ fun SignInScreen(
       onSignedIn()
     }
   }
-
-  /* UPDATE 13/10
-     LaunchedEffect(authViewModel.uiState) {
-    if (isSignedIn) {
-      onSignedIn()
-    }
-  }
-     */
-
-  /*LaunchedEffect(isSignedIn) {
-    Log.e("signinscreen", "Is lauchedeffect")
-
-    if (isSignedIn.isAnonym) {
-      onSignedIn()
-    }
-  }
-
-     */
-  /*
-    LaunchedEffect(isSignedIn.errorMsg) {
-        isSignedIn.errorMsg?.let {
-            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
-            authViewModel.clearErrorMsg()
-        }
-    }
-    LaunchedEffect(isSignedIn.user) {
-        isSignedIn.user?.let {
-            onSignedIn()
-        }
-    }
-
-  LaunchedEffect(isSignedIn.user, isSignedIn.errorMsg, isSignedIn.isLoading) {
-    // Navigate when user is authenticated
-    if (isSignedIn.user != null && !isSignedIn.isLoading) {
-      onSignedIn()
-    }
-
-    // Show error message if any
-    isSignedIn.errorMsg?.let { error ->
-      Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
-      authViewModel.clearErrorMsg()
-    }
-  }
-    */
 
   Scaffold(
       containerColor = DarkBackground,
@@ -132,21 +84,6 @@ fun SignInScreen(
                               text = "Continue without account",
                               onSignInClick = { authViewModel.signInAnonymously() },
                               modifier = Modifier.testTag(SignInScreenTestTags.ANONYMOUS_BUTTON))
-                          Button(
-                              onClick = { onSignedIn() },
-                              modifier =
-                                  Modifier.fillMaxWidth()
-                                      .height(56.dp)
-                                      .testTag("tempHomepageButton"),
-                              colors =
-                                  ButtonDefaults.buttonColors(
-                                      containerColor = Color.Green, contentColor = Color.White),
-                              shape = RoundedCornerShape(12.dp)) {
-                                Text(
-                                    text = "TEMPORAIRE",
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Bold)
-                              }
                         }
                   }
 
