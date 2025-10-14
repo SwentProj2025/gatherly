@@ -1,12 +1,17 @@
 package com.android.gatherly.model.profile
+
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
-class ProfileRepositoryProvider {
+/**
+ * Provides a single instance of the repository in the app. `repository` is mutable for testing
+ * purposes.
+ */
+object ProfileRepositoryProvider {
 
-    private val _repository: ProfileRepository by lazy {
-        ProfileRepositoryFirestore(Firebase.firestore)
-    }
+  private val _repository: ProfileRepository by lazy {
+    ProfileRepositoryFirestore(Firebase.firestore)
+  }
 
-    var repository: ProfileRepository = _repository
+  var repository: ProfileRepository = _repository
 }
