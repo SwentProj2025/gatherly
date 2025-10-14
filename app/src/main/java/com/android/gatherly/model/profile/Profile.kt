@@ -5,6 +5,7 @@ import com.google.firebase.Timestamp
 /** Represents a single [Profile] item within the app. */
 data class Profile(
     val uid: String = "",
+    val username: String = "",
     val name: String = "",
     val focusSessionIds: List<String> = emptyList(),
     val eventIds: List<String> = emptyList(),
@@ -13,5 +14,5 @@ data class Profile(
     val school: String = "",
     val schoolYear: String = "",
     val birthday: Timestamp? = null,
-    val profilePicture: String = ""
+    val profilePicture: String? = ""
 )
