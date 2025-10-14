@@ -1,6 +1,8 @@
 package com.android.gatherly.model.profile
 
-class ProfileRepositoryFirestore : ProfileRepository {
+import com.google.firebase.firestore.FirebaseFirestore
+
+class ProfileRepositoryFirestore(private val db: FirebaseFirestore) : ProfileRepository {
 
   override suspend fun getProfileByUid(uid: String): Profile? {
     TODO("Not yet implemented")
