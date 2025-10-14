@@ -10,4 +10,6 @@ interface ProfileRepository {
   suspend fun deleteProfile(uid: String)
 
   suspend fun isUidRegistered(uid: String): Boolean
+
+  suspend fun findProfilesByUidSubstring(uidSubstring: String): List<Profile>
 }
