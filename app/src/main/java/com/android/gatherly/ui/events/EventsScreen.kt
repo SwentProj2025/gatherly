@@ -20,13 +20,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -39,9 +35,7 @@ import androidx.compose.ui.unit.sp
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.model.event.Event
-import com.android.gatherly.ui.todo.OverviewScreenTestTags
 import com.google.firebase.auth.FirebaseAuth
-import kotlinx.coroutines.flow.MutableStateFlow
 import java.util.Locale
 import kotlin.Boolean
 import com.android.gatherly.ui.navigation.BottomNavigationMenu
@@ -64,7 +58,7 @@ object EventsScreenTestTags {
 
     const val CREATE_EVENT_BUTTON = "CreateANewEvent"
 
-    const val CANCEL_EVENT_BUTTON = "CancelEvent"
+    const val EDIT_EVENT_BUTTON = "EditEvent"
 
     const val GOBACK_EVENT_BUTTON = "GoBackOverview"
 
@@ -608,10 +602,10 @@ fun MyOwnEventsPopUp(
                         cancelYourEvent()
                         shouldShowDialog.value = false
                     },
-                    modifier = Modifier.testTag(EventsScreenTestTags.CANCEL_EVENT_BUTTON)
+                    modifier = Modifier.testTag(EventsScreenTestTags.EDIT_EVENT_BUTTON)
                 ) {
                     Text(
-                        text = "Cancel the event",
+                        text = "Edit the event",
                         color = Color.White
                     )
                 }

@@ -7,13 +7,11 @@ import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.hasAnyDescendant
 import androidx.compose.ui.test.hasTestTag
-import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.map.Location
@@ -24,16 +22,10 @@ import com.android.gatherly.utils.UI_WAIT_TIMEOUT
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.auth
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import java.text.SimpleDateFormat
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.LocalTime
 import java.util.Calendar
 import java.util.NoSuchElementException
 import kotlin.collections.forEach
@@ -238,7 +230,7 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest()   {
         setContent(withInitialEvents = eventList)
         composeTestRule.clickEventItem(eventY)
         composeTestRule.onNodeWithTag(EventsScreenTestTags.EVENT_POPUP).assertIsDisplayed()
-        composeTestRule.onNodeWithTag(EventsScreenTestTags.CANCEL_EVENT_BUTTON).assertIsDisplayed()
+        composeTestRule.onNodeWithTag(EventsScreenTestTags.EDIT_EVENT_BUTTON).assertIsDisplayed()
         composeTestRule.onNodeWithTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON)
             .assertIsDisplayed()
             .performClick()
@@ -246,19 +238,18 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest()   {
     }
 
     @Test
-    fun CanCancelYourOwnEvent() {
+    fun CanEditYourOwnEvent() {
         val eventList = listOf(eventY, eventU, eventB)
         setContent(withInitialEvents = eventList)
         composeTestRule.onNodeWithTag(EventsScreenTestTags.EMPTY_BROWSER_LIST_MSG).assertIsDisplayed()
         composeTestRule.clickEventItem(eventY)
         composeTestRule.onNodeWithTag(EventsScreenTestTags.EVENT_POPUP).assertIsDisplayed()
         composeTestRule.onNodeWithTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON).assertIsDisplayed()
-        composeTestRule.onNodeWithTag(EventsScreenTestTags.CANCEL_EVENT_BUTTON)
+        composeTestRule.onNodeWithTag(EventsScreenTestTags.EDIT_EVENT_BUTTON)
             .assertIsDisplayed()
             .performClick()
-        composeTestRule.onNodeWithTag(EventsScreenTestTags.EVENT_POPUP).assertIsNotDisplayed()
-        composeTestRule.onNodeWithTag(EventsScreenTestTags.EMPTY_OUREVENTS_LIST_MSG).assertIsDisplayed()
-    }
+        //TODO: composeTestRule.checkIsEditEventIsDisplay()
+        }
 
     @Test
     fun ClickOnCreateEventButtonNavigateToAddEventScreen() {
