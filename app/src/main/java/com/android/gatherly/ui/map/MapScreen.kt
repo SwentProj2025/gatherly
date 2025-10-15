@@ -12,11 +12,20 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.createBitmap
+import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.android.gatherly.ui.navigation.BottomNavigationMenu
+import com.android.gatherly.ui.navigation.HandleSignedOutState
+import com.android.gatherly.ui.navigation.NavigationActions
+import com.android.gatherly.ui.navigation.NavigationTestTags
+import com.android.gatherly.ui.navigation.Tab
+import com.android.gatherly.ui.navigation.TopNavigationMenu
 import com.google.android.gms.maps.model.*
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.CameraPosition
@@ -32,6 +41,12 @@ import java.util.Locale
 // SwEnt staff.
 // The icons were created with the help of an LLM (ChatGPT).
 
+object MapScreenTestTags {
+  const val MapText = "MAP"
+}
+
+data class MapUIState(val errorMsg: String? = null, val onSignedOut: Boolean = false)
+
 /**
  * A composable screen displaying ToDos as interactive markers on a Google Map.
  *
@@ -40,11 +55,30 @@ import java.util.Locale
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MapScreen(viewModel: MapViewModel = viewModel()) {
+fun MapScreen(
+    viewModel: MapViewModel = viewModel(),
+    credentialManager: CredentialManager = CredentialManager.create(LocalContext.current),
+    onSignedOut: () -> Unit = {},
+    navigationActions: NavigationActions? = null,
+) {
 
   val uiState by viewModel.uiState.collectAsState()
+  HandleSignedOutState(uiState.onSignedOut, onSignedOut)
 
   Scaffold(
+      topBar = {
+        TopNavigationMenu(
+            selectedTab = Tab.Map,
+            onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
+            modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
+            onSignedOut = { viewModel.signOut(credentialManager) })
+      },
+      bottomBar = {
+        BottomNavigationMenu(
+            selectedTab = Tab.Map,
+            onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
+            modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU))
+      },
       content = { pd ->
         // Camera position state, using the first ToDo location if available
         val cameraPositionState = rememberCameraPositionState {

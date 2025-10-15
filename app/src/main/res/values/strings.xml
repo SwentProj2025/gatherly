@@ -1,7 +1,6 @@
 <resources>
     <string name="app_name">gatherly</string>
     <string name="title_activity_main">MainActivity</string>
-    <string name="title_activity_second">SecondActivity</string>
     <!-- To-Do Pages. -->
     <string name="todos_title_add_todo_screen">Add To-Do</string>
     <string name="todos_title_edit_todo_screen">Edit To-Do</string>
@@ -22,4 +21,22 @@
     <string name="todos_delete_button_text">Delete</string>
     <!-- Sign In Page. -->
     <string name="web_client_id">854490974901-rc0seqlo7nbm1net10ujpte2ckkrsgn2.apps.googleusercontent.com</string>
+
+    <!-- Navigation -->
+    <string name="logOut_message">Logout successful</string>
+    <string name="dropDown_title">Options</string>
+    <string name="timer_title"> Timer</string>
+    <string name="todo_title"> To-Do</string>
+    <string name="goBack_title"> Go back to previous screen</string>
+    <string name="events_title"> Events</string>
+    <string name="map_title">Map</string>
+    <string name="home_title">Home</string>
+    <string name="profile_title"> Your profile</string>
+    <string name="settings_title">Settings</string>
+    <string name="signOut_title">Sign Out</string>
+    <string name="friends_title">Friends</string>
+    <string name="addtodo_title"> Add To-Do</string>
+    <string name="edittodo_title">Edit To-Do</string>
+
+
 </resources>
