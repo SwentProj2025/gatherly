@@ -1,7 +1,6 @@
 package com.android.gatherly.ui.todo
 
 import android.icu.text.SimpleDateFormat
-import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -34,6 +33,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.ui.navigation.BottomNavigationMenu
+import com.android.gatherly.ui.navigation.HandleSignedOutState
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
@@ -96,7 +96,6 @@ fun OverviewScreen(
 
   val uiState by overviewViewModel.uiState.collectAsState()
   val todos = uiState.todos
-  val context = LocalContext.current
 
   // Fetch todos when the screen is recomposed
   LaunchedEffect(Unit) { overviewViewModel.refreshUIState() }
@@ -104,12 +103,7 @@ fun OverviewScreen(
   val ongoingTodos = todos.filter { it.status == ToDoStatus.ONGOING }
   val completedTodos = todos.filter { it.status == ToDoStatus.ENDED }
 
-  LaunchedEffect(uiState.signedOut) {
-    if (uiState.signedOut) {
-      onSignedOut()
-      Toast.makeText(context, "Logout successful", Toast.LENGTH_SHORT).show()
-    }
-  }
+  HandleSignedOutState(uiState.signedOut, onSignedOut)
 
   Scaffold(
       topBar = {

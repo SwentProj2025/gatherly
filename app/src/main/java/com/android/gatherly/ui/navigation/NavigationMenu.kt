@@ -1,5 +1,6 @@
 package com.android.gatherly.ui.navigation
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -32,6 +33,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -40,32 +42,40 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.android.gatherly.R
 
 sealed class Tab(val name: String, val icon: ImageVector, val destination: Screen) {
-  object Timer : Tab("Timer", Icons.Outlined.Schedule, Screen.FocusTimerInitScreen)
+  object Timer :
+      Tab(R.string.timer_title.toString(), Icons.Outlined.Schedule, Screen.FocusTimerScreen)
 
-  object Overview : Tab("To-Do", Icons.Outlined.FormatListBulleted, Screen.OverviewToDo)
+  object Overview :
+      Tab(R.string.todo_title.toString(), Icons.Outlined.FormatListBulleted, Screen.OverviewToDo)
 
-  object Events : Tab("Events", Icons.Outlined.Group, Screen.EventsScreen)
+  object Events : Tab(R.string.events_title.toString(), Icons.Outlined.Group, Screen.EventsScreen)
 
-  object Map : Tab("Map", Icons.Outlined.Place, Screen.Map)
+  object Map : Tab(R.string.map_title.toString(), Icons.Outlined.Place, Screen.Map)
 
-  object HomePage : Tab("Home", Icons.Outlined.Home, Screen.HomePage)
+  object HomePage : Tab(R.string.home_title.toString(), Icons.Outlined.Home, Screen.HomePage)
 
-  object Profile : Tab("Your profile", Icons.Outlined.AccountCircle, Screen.ProfileScreen)
+  object Profile :
+      Tab(R.string.profile_title.toString(), Icons.Outlined.AccountCircle, Screen.ProfileScreen)
 
-  object Settings : Tab("Settings", Icons.Outlined.Settings, Screen.SettingsScreen)
+  object Settings :
+      Tab(R.string.settings_title.toString(), Icons.Outlined.Settings, Screen.SettingsScreen)
 
-  object SignOut : Tab("Sign In", Icons.Outlined.Person, Screen.SignIn)
+  object SignOut : Tab(R.string.signOut_title.toString(), Icons.Outlined.Person, Screen.SignIn)
 
-  object Friends : Tab("Friends", Icons.Outlined.Diversity1, Screen.FriendsScreen)
+  object Friends :
+      Tab(R.string.friends_title.toString(), Icons.Outlined.Diversity1, Screen.FriendsScreen)
 
-  object AddTodo : Tab("Add To-Do", Icons.Outlined.Add, Screen.FriendsScreen)
+  object AddTodo : Tab(R.string.addtodo_title.toString(), Icons.Outlined.Add, Screen.FriendsScreen)
 
-  object EditTodo : Tab("Edit To-Do", Icons.Outlined.Edit, Screen.FriendsScreen)
+  object EditTodo :
+      Tab(R.string.edittodo_title.toString(), Icons.Outlined.Edit, Screen.FriendsScreen)
 }
 
 private val bottomtabs =
@@ -152,20 +162,13 @@ fun TopNavigationMenu(
         IconButton(
             onClick = { onTabSelected(Tab.HomePage) },
             modifier = Modifier.testTag(NavigationTestTags.HOMEPAGE_TAB)) {
-              Icon(imageVector = Tab.HomePage.icon, contentDescription = "Home")
+              Icon(imageVector = Tab.HomePage.icon, contentDescription = Tab.HomePage.name)
             }
       },
       actions = { TopDropdownMenu(onTabSelected = onTabSelected, onSignedOut = onSignedOut) },
       modifier =
           modifier.fillMaxWidth().height(60.dp).testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
-      colors =
-          TopAppBarColors(
-              containerColor = MaterialTheme.colorScheme.onSurface,
-              scrolledContainerColor = MaterialTheme.colorScheme.background,
-              navigationIconContentColor = MaterialTheme.colorScheme.outline,
-              titleContentColor = MaterialTheme.colorScheme.outlineVariant,
-              actionIconContentColor = MaterialTheme.colorScheme.outline,
-          ))
+      colors = topAppColor())
 }
 
 /**
@@ -200,7 +203,7 @@ fun TopNavigationMenuSettings(
         IconButton(
             onClick = { onTabSelected(Tab.HomePage) },
             modifier = Modifier.testTag(NavigationTestTags.HOMEPAGE_TAB)) {
-              Icon(imageVector = Tab.HomePage.icon, contentDescription = "Home")
+              Icon(imageVector = Tab.HomePage.icon, contentDescription = Tab.HomePage.name)
             }
       },
       actions = {
@@ -208,14 +211,7 @@ fun TopNavigationMenuSettings(
       },
       modifier =
           modifier.fillMaxWidth().height(60.dp).testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
-      colors =
-          TopAppBarColors(
-              containerColor = MaterialTheme.colorScheme.onSurface,
-              scrolledContainerColor = MaterialTheme.colorScheme.background,
-              navigationIconContentColor = MaterialTheme.colorScheme.outline,
-              titleContentColor = MaterialTheme.colorScheme.outlineVariant,
-              actionIconContentColor = MaterialTheme.colorScheme.outline,
-          ))
+      colors = topAppColor())
 }
 
 /**
@@ -249,14 +245,7 @@ fun TopNavigationMenu_HomePage(
       actions = { TopDropdownMenu(onTabSelected = onTabSelected, onSignedOut = onSignedOut) },
       modifier =
           modifier.fillMaxWidth().height(60.dp).testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
-      colors =
-          TopAppBarColors(
-              containerColor = MaterialTheme.colorScheme.onSurface,
-              scrolledContainerColor = MaterialTheme.colorScheme.background,
-              navigationIconContentColor = MaterialTheme.colorScheme.outline,
-              titleContentColor = MaterialTheme.colorScheme.outlineVariant,
-              actionIconContentColor = MaterialTheme.colorScheme.outline,
-          ))
+      colors = topAppColor())
 }
 
 /**
@@ -292,14 +281,7 @@ fun TopNavigationMenu_Profile(
       },
       modifier =
           modifier.fillMaxWidth().height(60.dp).testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
-      colors =
-          TopAppBarColors(
-              containerColor = MaterialTheme.colorScheme.onSurface,
-              scrolledContainerColor = MaterialTheme.colorScheme.background,
-              navigationIconContentColor = MaterialTheme.colorScheme.outline,
-              titleContentColor = MaterialTheme.colorScheme.outlineVariant,
-              actionIconContentColor = MaterialTheme.colorScheme.outline,
-          ))
+      colors = topAppColor())
 }
 
 /**
@@ -332,19 +314,12 @@ fun TopNavigationMenu_Goback(
             modifier = Modifier.testTag(NavigationTestTags.GO_BACK_BUTTON)) {
               Icon(
                   imageVector = Icons.Outlined.ArrowBack,
-                  contentDescription = "Go back to previous screen")
+                  contentDescription = R.string.goBack_title.toString())
             }
       },
       modifier =
           modifier.fillMaxWidth().height(60.dp).testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
-      colors =
-          TopAppBarColors(
-              containerColor = MaterialTheme.colorScheme.onSurface,
-              scrolledContainerColor = MaterialTheme.colorScheme.background,
-              navigationIconContentColor = MaterialTheme.colorScheme.outline,
-              titleContentColor = MaterialTheme.colorScheme.outlineVariant,
-              actionIconContentColor = MaterialTheme.colorScheme.outline,
-          ))
+      colors = topAppColor())
 }
 
 ////// PART3 :  Dropdown Menu functions
@@ -365,12 +340,12 @@ fun TopDropdownMenu(onTabSelected: (Tab) -> Unit, onSignedOut: () -> Unit = {}) 
     IconButton(
         onClick = { expanded = !expanded },
         modifier = Modifier.testTag(NavigationTestTags.DROPMENU)) {
-          Icon(Icons.Outlined.MoreVert, contentDescription = "Options")
+          Icon(Icons.Outlined.MoreVert, contentDescription = R.string.dropDown_title.toString())
         }
     DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
       // Profile section
       DropdownMenuItem(
-          text = { Text("Profile") },
+          text = { Text(Tab.Profile.name) },
           leadingIcon = {
             Icon(imageVector = Tab.Profile.icon, contentDescription = Tab.Profile.name)
           },
@@ -379,7 +354,7 @@ fun TopDropdownMenu(onTabSelected: (Tab) -> Unit, onSignedOut: () -> Unit = {}) 
 
       // Settings section
       DropdownMenuItem(
-          text = { Text("Settings") },
+          text = { Text(Tab.Settings.name) },
           leadingIcon = {
             Icon(imageVector = Tab.Settings.icon, contentDescription = Tab.Settings.name)
           },
@@ -388,7 +363,7 @@ fun TopDropdownMenu(onTabSelected: (Tab) -> Unit, onSignedOut: () -> Unit = {}) 
 
       // Logout section
       DropdownMenuItem(
-          text = { Text("Log out") },
+          text = { Text(Tab.SignOut.name) },
           leadingIcon = { Icon(Icons.Outlined.Logout, contentDescription = null) },
           onClick = { onSignedOut() },
           modifier = Modifier.testTag(NavigationTestTags.LOGOUT_TAB))
@@ -412,12 +387,12 @@ fun TopDropdownMenuForSettings(onTabSelected: (Tab) -> Unit, onSignedOut: () -> 
     IconButton(
         onClick = { expanded = !expanded },
         modifier = Modifier.testTag(NavigationTestTags.DROPMENU)) {
-          Icon(Icons.Outlined.Person, contentDescription = "Options")
+          Icon(Icons.Outlined.Person, contentDescription = R.string.dropDown_title.toString())
         }
     DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
       // Profile section
       DropdownMenuItem(
-          text = { Text("Profile") },
+          text = { Text(Tab.Profile.name) },
           leadingIcon = {
             Icon(imageVector = Tab.Profile.icon, contentDescription = Tab.Profile.name)
           },
@@ -426,7 +401,7 @@ fun TopDropdownMenuForSettings(onTabSelected: (Tab) -> Unit, onSignedOut: () -> 
 
       // Logout section
       DropdownMenuItem(
-          text = { Text("Log out") },
+          text = { Text(Tab.SignOut.name) },
           leadingIcon = { Icon(Icons.Outlined.Logout, contentDescription = null) },
           onClick = { onSignedOut() },
           modifier = Modifier.testTag(NavigationTestTags.LOGOUT_TAB))
@@ -450,12 +425,12 @@ fun TopDropdownMenuForProfile(onTabSelected: (Tab) -> Unit, onSignedOut: () -> U
     IconButton(
         onClick = { expanded = !expanded },
         modifier = Modifier.testTag(NavigationTestTags.DROPMENU)) {
-          Icon(Icons.Outlined.Settings, contentDescription = "Options")
+          Icon(Icons.Outlined.Settings, contentDescription = R.string.dropDown_title.toString())
         }
     DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
       // Settings section
       DropdownMenuItem(
-          text = { Text("Settings") },
+          text = { Text(Tab.Settings.name) },
           leadingIcon = {
             Icon(imageVector = Tab.Settings.icon, contentDescription = Tab.Settings.name)
           },
@@ -464,10 +439,36 @@ fun TopDropdownMenuForProfile(onTabSelected: (Tab) -> Unit, onSignedOut: () -> U
 
       // Logout section
       DropdownMenuItem(
-          text = { Text("Log out") },
+          text = { Text(Tab.SignOut.name) },
           leadingIcon = { Icon(Icons.Outlined.Logout, contentDescription = null) },
           onClick = { onSignedOut() },
           modifier = Modifier.testTag(NavigationTestTags.LOGOUT_TAB))
     }
   }
+}
+
+/** Helper function : Initiates sign-out */
+@Composable
+fun HandleSignedOutState(signedOut: Boolean, onSignedOut: () -> Unit) {
+  val context = LocalContext.current
+
+  LaunchedEffect(signedOut) {
+    if (signedOut) {
+      onSignedOut()
+      Toast.makeText(context, context.getString(R.string.logOut_message), Toast.LENGTH_SHORT).show()
+    }
+  }
+}
+
+/** Helper function : To simplificate the calling to the theme color of the top app bar */
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+fun topAppColor(): TopAppBarColors {
+  return TopAppBarColors(
+      containerColor = MaterialTheme.colorScheme.onSurface,
+      scrolledContainerColor = MaterialTheme.colorScheme.background,
+      navigationIconContentColor = MaterialTheme.colorScheme.outline,
+      titleContentColor = MaterialTheme.colorScheme.outlineVariant,
+      actionIconContentColor = MaterialTheme.colorScheme.outline,
+  )
 }

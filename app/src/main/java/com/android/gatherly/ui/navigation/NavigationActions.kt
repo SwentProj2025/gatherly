@@ -25,9 +25,6 @@ sealed class Screen(
     }
   }
 
-  object FocusTimerInitScreen :
-      Screen(route = "focus_timer_init_screen", name = "Initiate Focus Timer")
-
   object FocusTimerScreen : Screen(route = "focus_timer_screen", name = "Focus Timer")
 
   object EventsScreen : Screen(route = "events_screen", name = "Your events")

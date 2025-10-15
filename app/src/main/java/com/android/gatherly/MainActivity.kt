@@ -31,22 +31,8 @@ import com.android.gatherly.ui.todo.AddToDoScreen
 import com.android.gatherly.ui.todo.EditToDoScreen
 import com.android.gatherly.ui.todo.OverviewScreen
 import com.google.firebase.auth.FirebaseAuth
-import okhttp3.OkHttpClient
-
-/**
- * *B3 only*:
- *
- * Provide an OkHttpClient client for network requests.
- *
- * Property `client` is mutable for testing purposes.
- */
-object HttpClientProvider {
-  var client: OkHttpClient = OkHttpClient()
-}
 
 class MainActivity : ComponentActivity() {
-
-  private lateinit var auth: FirebaseAuth
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -153,8 +139,8 @@ fun GatherlyApp(
 
     // TIMER COMPOSABLE  ------------------------------
     navigation(
-        startDestination = Screen.FocusTimerInitScreen.route,
-        route = Screen.FocusTimerInitScreen.name,
+        startDestination = Screen.FocusTimerScreen.route,
+        route = Screen.FocusTimerScreen.name,
     ) {
       composable(Screen.FocusTimerScreen.route) {
         FocusTimerScreen(
