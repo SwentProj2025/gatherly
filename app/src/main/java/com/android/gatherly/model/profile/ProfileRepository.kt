@@ -11,5 +11,17 @@ interface ProfileRepository {
 
   suspend fun isUidRegistered(uid: String): Boolean
 
-  suspend fun findProfilesByUidSubstring(uidSubstring: String): List<Profile>
+  suspend fun searchProfilesByNamePrefix(prefix: String): List<Profile>
+
+  suspend fun isUsernameAvailable(username: String): Boolean
+
+  suspend fun registerUsername(uid: String, username: String):Boolean
+
+  suspend fun updateUsername(uid: String, oldUsername: String?, newUsername: String): Boolean
+
+  suspend fun getProfileByUsername(username: String): Profile?
+
+  suspend fun searchProfilesByUsernamePrefix(prefix: String, limit: Int = 10): List<Profile>
+
+  suspend fun ensureProfileExists(uid: String, defaultPhotoUrl: String): Boolean
 }
