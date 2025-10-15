@@ -170,7 +170,7 @@ class TimerViewModel(
   /** Pauses the timer if it is currently running. */
   fun pauseTimer() {
     val state = _uiState.value
-    if (!state.isStarted || !state.isPaused) return
+    if (!state.isStarted || state.isPaused) return
 
     val now = Timestamp.now()
     val sinceStart = startedAt?.let { difference(it, now) } ?: Duration.ZERO
@@ -255,12 +255,12 @@ class TimerViewModel(
    *
    * @param msg The error message to be displayed
    */
-  private fun setError(msg: String) {
+  fun setError(msg: String) {
     _uiState.value = _uiState.value.copy(errorMsg = msg)
   }
 
   /** Clears any existing error message in the UI state. */
-  private fun clearError() {
+  fun clearError() {
     _uiState.value = _uiState.value.copy(errorMsg = null)
   }
 

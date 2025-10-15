@@ -248,4 +248,65 @@ class TimerViewModelTest : FirestoreGatherlyTest() {
 
     assertEquals(null, finalUiState.linkedTodo)
   }
+
+  /** Check that an error message can be cleared correctly. */
+  @Test
+  fun can_clear_message() = runTest {
+    viewModel.setError("Test error message")
+    viewModel.clearError()
+    val finalUiState = viewModel.uiState.value
+
+    assertEquals(null, finalUiState.errorMsg)
+  }
+
+  /** Check that the timer can be ended correctly. */
+  @Test
+  fun can_end_timer() = runTest {
+    val hours = "00"
+    val minutes = "00"
+    val seconds = "05"
+
+    viewModel.setHours(hours)
+    viewModel.setMinutes(minutes)
+    viewModel.setSeconds(seconds)
+
+    viewModel.startTimer()
+    viewModel.endTimer()
+
+    withContext(Dispatchers.Default.limitedParallelism(1)) { delay(1000L) }
+
+    val finalState = viewModel.uiState.value
+
+    assertEquals("00", finalState.hours)
+    assertEquals("00", finalState.minutes)
+    assertEquals("00", finalState.seconds)
+    assertFalse(finalState.isPaused)
+    assertFalse(finalState.isStarted)
+  }
+
+  /** Check that the timer can be paused correctly. */
+  @Test
+  fun can_pause_timer() = runTest {
+    val hours = "00"
+    val minutes = "00"
+    val seconds = "05"
+
+    viewModel.setHours(hours)
+    viewModel.setMinutes(minutes)
+    viewModel.setSeconds(seconds)
+
+    viewModel.startTimer()
+
+    withContext(Dispatchers.Default.limitedParallelism(1)) { delay(1000L) }
+
+    viewModel.pauseTimer()
+
+    val finalState = viewModel.uiState.value
+
+    assertEquals("00", finalState.hours)
+    assertEquals("00", finalState.minutes)
+    assertEquals("04", finalState.seconds)
+    assertTrue(finalState.isPaused)
+    assertTrue(finalState.isStarted)
+  }
 }
