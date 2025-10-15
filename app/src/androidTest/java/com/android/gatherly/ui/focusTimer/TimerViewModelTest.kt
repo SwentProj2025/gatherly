@@ -177,4 +177,75 @@ class TimerViewModelTest : FirestoreGatherlyTest() {
     assertTrue("Sample Todo 1" in names)
     assertTrue("Sample Todo 2" in names)
   }
+
+  /** Check that the timer cannot be started with invalid hours digit input. */
+  @Test
+  fun impossible_hours() = runTest {
+    val hours = "26"
+    val minutes = "00"
+    val seconds = "00"
+
+    viewModel.setHours(hours)
+    viewModel.setMinutes(minutes)
+    viewModel.setSeconds(seconds)
+
+    val finalState = viewModel.uiState.value
+
+    assertEquals("Invalid hour : Use numbers like 0–23 hours", finalState.errorMsg)
+  }
+
+  /** Check that the timer cannot be started with invalid minutes digit input. */
+  @Test
+  fun impossible_minutes() = runTest {
+    val hours = "00"
+    val minutes = "78"
+    val seconds = "00"
+
+    viewModel.setHours(hours)
+    viewModel.setMinutes(minutes)
+    viewModel.setSeconds(seconds)
+
+    val finalState = viewModel.uiState.value
+
+    assertEquals("Invalid minutes : Use numbers like 0–59 minutes", finalState.errorMsg)
+  }
+
+  /** Check that the timer cannot be started with invalid seconds digit input. */
+  @Test
+  fun impossible_seconds() = runTest {
+    val hours = "00"
+    val minutes = "00"
+    val seconds = "98"
+
+    viewModel.setHours(hours)
+    viewModel.setMinutes(minutes)
+    viewModel.setSeconds(seconds)
+
+    val finalState = viewModel.uiState.value
+
+    assertEquals("Invalid seconds : Use numbers like 0–59 seconds", finalState.errorMsg)
+  }
+
+  /** Check that a ToDo can be linked to the timer session correctly. */
+  @Test
+  fun can_link_todo() = runTest {
+    val todo1 = makeTodo("Sample Todo 1")
+
+    viewModel.linkToDo(todo1)
+
+    val finalUiState = viewModel.uiState.value
+
+    assertEquals(todo1, finalUiState.linkedTodo)
+  }
+
+  /** Check that a ToDo can be unlinked to the timer session correctly. */
+  @Test
+  fun can_unlink_todo() = runTest {
+    val todo1 = makeTodo("Sample Todo 1")
+    viewModel.linkToDo(todo1)
+    viewModel.linkToDo(todo1)
+    val finalUiState = viewModel.uiState.value
+
+    assertEquals(null, finalUiState.linkedTodo)
+  }
 }
