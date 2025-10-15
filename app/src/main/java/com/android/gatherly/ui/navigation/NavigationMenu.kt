@@ -49,33 +49,27 @@ import androidx.compose.ui.unit.dp
 import com.android.gatherly.R
 
 sealed class Tab(val name: String, val icon: ImageVector, val destination: Screen) {
-  object Timer :
-      Tab(R.string.timer_title.toString(), Icons.Outlined.Schedule, Screen.FocusTimerScreen)
+  object Timer : Tab("Timer", Icons.Outlined.Schedule, Screen.FocusTimerScreen)
 
-  object Overview :
-      Tab(R.string.todo_title.toString(), Icons.Outlined.FormatListBulleted, Screen.OverviewToDo)
+  object Overview : Tab("To-Do", Icons.Outlined.FormatListBulleted, Screen.OverviewToDo)
 
-  object Events : Tab(R.string.events_title.toString(), Icons.Outlined.Group, Screen.EventsScreen)
+  object Events : Tab("Events", Icons.Outlined.Group, Screen.EventsScreen)
 
-  object Map : Tab(R.string.map_title.toString(), Icons.Outlined.Place, Screen.Map)
+  object Map : Tab("Map", Icons.Outlined.Place, Screen.Map)
 
-  object HomePage : Tab(R.string.home_title.toString(), Icons.Outlined.Home, Screen.HomePage)
+  object HomePage : Tab("Home", Icons.Outlined.Home, Screen.HomePage)
 
-  object Profile :
-      Tab(R.string.profile_title.toString(), Icons.Outlined.AccountCircle, Screen.ProfileScreen)
+  object Profile : Tab("Your profile", Icons.Outlined.AccountCircle, Screen.ProfileScreen)
 
-  object Settings :
-      Tab(R.string.settings_title.toString(), Icons.Outlined.Settings, Screen.SettingsScreen)
+  object Settings : Tab("Settings", Icons.Outlined.Settings, Screen.SettingsScreen)
 
-  object SignOut : Tab(R.string.signOut_title.toString(), Icons.Outlined.Person, Screen.SignIn)
+  object SignOut : Tab("Sign Out", Icons.Outlined.Person, Screen.SignIn)
 
-  object Friends :
-      Tab(R.string.friends_title.toString(), Icons.Outlined.Diversity1, Screen.FriendsScreen)
+  object Friends : Tab("Friends", Icons.Outlined.Diversity1, Screen.FriendsScreen)
 
-  object AddTodo : Tab(R.string.addtodo_title.toString(), Icons.Outlined.Add, Screen.FriendsScreen)
+  object AddTodo : Tab("Add To-Do", Icons.Outlined.Add, Screen.FriendsScreen)
 
-  object EditTodo :
-      Tab(R.string.edittodo_title.toString(), Icons.Outlined.Edit, Screen.FriendsScreen)
+  object EditTodo : Tab("Edit To-Do", Icons.Outlined.Edit, Screen.FriendsScreen)
 }
 
 private val bottomtabs =
@@ -314,7 +308,7 @@ fun TopNavigationMenu_Goback(
             modifier = Modifier.testTag(NavigationTestTags.GO_BACK_BUTTON)) {
               Icon(
                   imageVector = Icons.Outlined.ArrowBack,
-                  contentDescription = R.string.goBack_title.toString())
+                  contentDescription = "Go back to previous screen")
             }
       },
       modifier =
@@ -340,7 +334,7 @@ fun TopDropdownMenu(onTabSelected: (Tab) -> Unit, onSignedOut: () -> Unit = {}) 
     IconButton(
         onClick = { expanded = !expanded },
         modifier = Modifier.testTag(NavigationTestTags.DROPMENU)) {
-          Icon(Icons.Outlined.MoreVert, contentDescription = R.string.dropDown_title.toString())
+          Icon(Icons.Outlined.MoreVert, contentDescription = "Options")
         }
     DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
       // Profile section
@@ -387,7 +381,7 @@ fun TopDropdownMenuForSettings(onTabSelected: (Tab) -> Unit, onSignedOut: () -> 
     IconButton(
         onClick = { expanded = !expanded },
         modifier = Modifier.testTag(NavigationTestTags.DROPMENU)) {
-          Icon(Icons.Outlined.Person, contentDescription = R.string.dropDown_title.toString())
+          Icon(Icons.Outlined.Person, contentDescription = "Options")
         }
     DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
       // Profile section
@@ -425,7 +419,7 @@ fun TopDropdownMenuForProfile(onTabSelected: (Tab) -> Unit, onSignedOut: () -> U
     IconButton(
         onClick = { expanded = !expanded },
         modifier = Modifier.testTag(NavigationTestTags.DROPMENU)) {
-          Icon(Icons.Outlined.Settings, contentDescription = R.string.dropDown_title.toString())
+          Icon(Icons.Outlined.Settings, contentDescription = "Options")
         }
     DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
       // Settings section
