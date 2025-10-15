@@ -18,7 +18,6 @@ import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.android.gatherly.ui.authentication.SignInScreen
 import com.android.gatherly.ui.events.EventsScreen
-import com.android.gatherly.ui.focusTimer.FocusTimerInitScreen
 import com.android.gatherly.ui.focusTimer.FocusTimerScreen
 import com.android.gatherly.ui.friends.FriendsScreen
 import com.android.gatherly.ui.homePage.HomePageScreen
