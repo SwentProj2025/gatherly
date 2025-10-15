@@ -9,7 +9,9 @@ class ProfileLocalRepository : ProfileRepository {
   }
 
   override suspend fun addProfile(profile: Profile) {
-    profiles += profile
+    if (!profiles.any { it.uid == profile.uid }) {
+      profiles += profile
+    }
   }
 
   override suspend fun updateProfile(profile: Profile) {
@@ -22,7 +24,7 @@ class ProfileLocalRepository : ProfileRepository {
   }
 
   override suspend fun deleteProfile(uid: String) {
-    profiles.filter { it.uid != uid }
+    profiles.removeAll { it.uid != uid }
   }
 
   override suspend fun isUidRegistered(uid: String): Boolean {
