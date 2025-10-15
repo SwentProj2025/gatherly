@@ -9,6 +9,7 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import com.android.gatherly.GatherlyApp
+import com.android.gatherly.R
 import com.android.gatherly.ui.authentication.SignInScreenTestTags
 import com.android.gatherly.utils.FirestoreGatherlyTest
 import org.junit.Before
@@ -118,7 +119,7 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.onNodeWithTag(NavigationTestTags.TOP_NAVIGATION_MENU).assertIsDisplayed()
     composeTestRule
         .onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
-        .assertTextContains(value = "Home")
+        .assertTextContains(value = R.string.home_title.toString())
     composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).assertIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.HOMEPAGE_TAB).assertIsNotDisplayed()
   }
@@ -665,7 +666,7 @@ class NavigationTest : FirestoreGatherlyTest() {
    */
   fun ComposeTestRule.checkOverviewScreenIsDisplayed() {
     onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
-        .assertTextContains("To-Do", substring = true, ignoreCase = true)
+        .assertTextContains(R.string.todo_title.toString(), substring = true, ignoreCase = true)
   }
 
   /**
@@ -674,7 +675,7 @@ class NavigationTest : FirestoreGatherlyTest() {
    */
   fun ComposeTestRule.checkProfileScreenIsDisplayed() {
     onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
-        .assertTextContains("Your profile", substring = true, ignoreCase = true)
+        .assertTextContains(R.string.profile_title.toString(), substring = true, ignoreCase = true)
   }
 
   /**
@@ -683,7 +684,7 @@ class NavigationTest : FirestoreGatherlyTest() {
    */
   fun ComposeTestRule.checkSettingsScreenIsDisplayed() {
     onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
-        .assertTextContains("Settings", substring = true, ignoreCase = true)
+        .assertTextContains(R.string.settings_title.toString(), substring = true, ignoreCase = true)
   }
 
   /**
@@ -692,7 +693,7 @@ class NavigationTest : FirestoreGatherlyTest() {
    */
   fun ComposeTestRule.checkTimerScreenIsDisplayed() {
     onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
-        .assertTextContains("Timer", substring = true, ignoreCase = true)
+        .assertTextContains(R.string.timer_title.toString(), substring = true, ignoreCase = true)
   }
 
   /**
@@ -701,7 +702,7 @@ class NavigationTest : FirestoreGatherlyTest() {
    */
   fun ComposeTestRule.checkEventsScreenIsDisplayed() {
     onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
-        .assertTextContains("Events", substring = true, ignoreCase = true)
+        .assertTextContains(R.string.events_title.toString(), substring = true, ignoreCase = true)
   }
 
   /**
@@ -709,7 +710,7 @@ class NavigationTest : FirestoreGatherlyTest() {
    */
   fun ComposeTestRule.checkMapScreenIsDisplayed() {
     onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
-        .assertTextContains("Map", substring = true, ignoreCase = true)
+        .assertTextContains(R.string.map_title.toString(), substring = true, ignoreCase = true)
   }
 
   /**
@@ -718,7 +719,7 @@ class NavigationTest : FirestoreGatherlyTest() {
    */
   fun ComposeTestRule.checkHomeScreenIsDisplayed() {
     onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
-        .assertTextContains("Home", substring = true, ignoreCase = true)
+        .assertTextContains(R.string.home_title.toString(), substring = true, ignoreCase = true)
   }
 
   /**
