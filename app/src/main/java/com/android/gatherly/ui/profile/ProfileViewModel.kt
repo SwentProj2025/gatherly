@@ -1,10 +1,14 @@
 package com.android.gatherly.ui.profile
 
+import androidx.credentials.ClearCredentialStateRequest
+import androidx.credentials.CredentialManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryProvider
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import java.time.LocalDate
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -15,7 +19,8 @@ data class ProfileState(
     val profile: Profile? = null,
     val focusHoursPerDay: Map<LocalDate, Double> = emptyMap(),
     val focusPoints: Int = 0,
-    val error: String? = null
+    val error: String? = null,
+    val signedOut: Boolean = false
 )
 
 class ProfileViewModel(
@@ -37,6 +42,15 @@ class ProfileViewModel(
               profile = profile,
               focusHoursPerDay = focusHoursPerDay,
               focusPoints = focusPoints)
+    }
+  }
+
+  /** Initiates sign-out */
+  fun signOut(credentialManager: CredentialManager): Unit {
+    viewModelScope.launch {
+      _uiState.value = _uiState.value.copy(signedOut = true)
+      Firebase.auth.signOut()
+      credentialManager.clearCredentialState(ClearCredentialStateRequest())
     }
   }
 }

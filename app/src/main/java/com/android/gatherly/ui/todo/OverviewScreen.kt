@@ -10,30 +10,34 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
+import com.android.gatherly.ui.navigation.BottomNavigationMenu
+import com.android.gatherly.ui.navigation.HandleSignedOutState
+import com.android.gatherly.ui.navigation.NavigationActions
+import com.android.gatherly.ui.navigation.NavigationTestTags
+import com.android.gatherly.ui.navigation.Tab
+import com.android.gatherly.ui.navigation.TopNavigationMenu
 import java.util.Locale
 
 // Portions of the code in this file are copy-pasted from the Bootcamp solution provided by the
@@ -85,6 +89,9 @@ fun OverviewScreen(
     onAddTodo: () -> Unit = {},
     onSelectTodo: (ToDo) -> Unit = {},
     goHomePage: () -> Unit = {},
+    onSignedOut: () -> Unit = {},
+    navigationActions: NavigationActions? = null,
+    credentialManager: CredentialManager = CredentialManager.create(LocalContext.current)
 ) {
 
   val uiState by overviewViewModel.uiState.collectAsState()
@@ -96,26 +103,22 @@ fun OverviewScreen(
   val ongoingTodos = todos.filter { it.status == ToDoStatus.ONGOING }
   val completedTodos = todos.filter { it.status == ToDoStatus.ENDED }
 
+  HandleSignedOutState(uiState.signedOut, onSignedOut)
+
   Scaffold(
-      // TODO: modify this part with the specific top bar implemented in the navigation menu.
       topBar = {
-        TopAppBar(
-            title = { Text("Todo List") },
-            navigationIcon = {
-              IconButton(onClick = { goHomePage() }) {
-                Icon(imageVector = Icons.Filled.Home, contentDescription = "Home")
-              }
-            },
-            colors =
-                TopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    scrolledContainerColor = MaterialTheme.colorScheme.background,
-                    navigationIconContentColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.primary,
-                    actionIconContentColor = MaterialTheme.colorScheme.primary,
-                ))
+        TopNavigationMenu(
+            selectedTab = Tab.Overview,
+            onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
+            modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
+            onSignedOut = { overviewViewModel.onSignedOut(credentialManager) })
       },
-      // TODO: add the bottom bar for navigation, once everything is merged.
+      bottomBar = {
+        BottomNavigationMenu(
+            selectedTab = Tab.Overview,
+            onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
+            modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU))
+      },
       floatingActionButton = {
         FloatingActionButton(
             onClick = { onAddTodo() },

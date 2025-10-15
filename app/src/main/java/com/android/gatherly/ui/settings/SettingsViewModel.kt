@@ -1,6 +1,10 @@
 package com.android.gatherly.ui.settings
 
 import android.util.Log
+import androidx.credentials.ClearCredentialStateRequest
+import androidx.credentials.CredentialManager
+import androidx.credentials.ClearCredentialStateRequest
+import androidx.credentials.CredentialManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.profile.Profile
@@ -18,6 +22,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 data class SettingsUiState(
+    val signedOut: Boolean = false,
     val name: String = "",
     val school: String = "",
     val schoolYear: String = "",
@@ -49,6 +54,14 @@ class SettingsViewModel(
   private val _uiState = MutableStateFlow(SettingsUiState())
   val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
+  /** Initiates sign-out */
+  fun signOut(credentialManager: CredentialManager): Unit {
+    viewModelScope.launch {
+      _uiState.value = _uiState.value.copy(signedOut = true)
+      Firebase.auth.signOut()
+      credentialManager.clearCredentialState(ClearCredentialStateRequest())
+    }
+  }
   /** Clears the error message in the UI state. */
   // todo check errorMsg
   fun clearErrorMsg() {

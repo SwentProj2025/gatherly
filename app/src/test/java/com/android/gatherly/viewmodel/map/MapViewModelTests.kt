@@ -1,8 +1,9 @@
-package com.android.gatherly.viewmodel
+package com.android.gatherly.viewmodel.map
 
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.ui.map.MapViewModel
+import com.android.gatherly.viewmodel.FakeToDosRepositoryLocal
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
