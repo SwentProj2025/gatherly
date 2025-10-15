@@ -1,10 +1,14 @@
 package com.android.gatherly.ui.events
 
+import androidx.credentials.ClearCredentialStateRequest
+import androidx.credentials.CredentialManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsRepository
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,7 +27,9 @@ data class UIState(
     val participatedEventList: List<Event> = emptyList(),
     val createdEventList: List<Event> = emptyList(),
     val globalEventList: List<Event> =
-        emptyList() // Events neither created by nor participated in by current user
+        emptyList(), // Events neither created by nor participated in by current user
+    val signedOut: Boolean = false,
+    val errorMsg: String? = null
 )
 /**
  * Function that retrieves "drawable" events, i.e. those which are not past, and have a valid
@@ -131,5 +137,18 @@ class EventsViewModel(private val repository: EventsRepository, val currentUserI
       refreshEvents(currentUserId)
     }
     _editEventRequest.value = null
+  }
+
+  /**
+   * Handles user sign-out by clearing credentials and updating the UI state.
+   *
+   * @param credentialManager the CredentialManager to clear credentials
+   */
+  fun signOut(credentialManager: CredentialManager): Unit {
+    viewModelScope.launch {
+      _uiState.value = _uiState.value.copy(signedOut = true)
+      Firebase.auth.signOut()
+      credentialManager.clearCredentialState(ClearCredentialStateRequest())
+    }
   }
 }
