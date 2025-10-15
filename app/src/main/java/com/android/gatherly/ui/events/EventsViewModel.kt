@@ -44,11 +44,22 @@ private fun getDrawableEvents(events: List<Event>): List<Event> {
 class EventsViewModel(private val repository: EventsRepository, val currentUserId: String) :
     ViewModel() {
   private val _uiState: MutableStateFlow<UIState> = MutableStateFlow(UIState())
+
+  /**
+   * StateFlow exposing the current UI state, including all event lists categorized by user
+   * relationship.
+   */
   val uiState: StateFlow<UIState> = _uiState.asStateFlow()
 
   private val _editEventRequest = MutableStateFlow<Event?>(null)
+
+  /** StateFlow exposing the event currently being edited, or null if no edit is in progress. */
   val editEventRequest: StateFlow<Event?> = _editEventRequest.asStateFlow()
 
+  /**
+   * Initializes the ViewModel by loading all events for the current user. Events are automatically
+   * categorized into created, participated, and global lists.
+   */
   init {
     viewModelScope.launch { refreshEvents(currentUserId) }
   }

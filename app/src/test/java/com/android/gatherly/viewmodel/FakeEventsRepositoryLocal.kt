@@ -4,6 +4,13 @@ import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.event.EventsRepository
 import java.lang.Exception
 
+/**
+ * In-memory fake implementation of [EventsRepository] for testing purposes.
+ *
+ * This implementation stores events in a mutable list and uses a simple counter for generating
+ * unique IDs. All data is lost when the instance is destroyed, making it suitable for isolated unit
+ * tests that don't require persistence.
+ */
 class FakeEventsRepositoryLocal : EventsRepository {
   private var events = mutableListOf<Event>()
   private var counter = 0
