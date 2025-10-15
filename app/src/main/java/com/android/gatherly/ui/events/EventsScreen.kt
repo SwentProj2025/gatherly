@@ -38,11 +38,16 @@ import com.android.gatherly.model.event.Event
 import com.google.firebase.auth.FirebaseAuth
 import java.util.Locale
 import kotlin.Boolean
+import com.android.gatherly.model.event.EventsRepositoryFirestore
 import com.android.gatherly.ui.navigation.BottomNavigationMenu
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu
+import com.android.gatherly.utils.GenericViewModelFactory
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 
 object EventsScreenTestTags {
 
@@ -96,12 +101,19 @@ object EventsScreenTestTags {
 
 @Composable
 fun EventsScreen(
-    eventsViewModel: EventsViewModel = viewModel(),
     credentialManager: CredentialManager = CredentialManager.create(LocalContext.current),
     onSignedOut: () -> Unit = {},
     addYourNewEvent: () -> Unit = {},
     navigateToEditEvent: (Event) -> Unit = {},
     navigationActions: NavigationActions? = null,
+    eventsViewModel: EventsViewModel =
+        viewModel(
+            factory =
+                GenericViewModelFactory<EventsViewModel> {
+                  EventsViewModel(
+                      EventsRepositoryFirestore(Firebase.firestore),
+                      currentUserId = Firebase.auth.currentUser?.uid ?: "")
+                }),
 ) {
 /* TODO
     val context = LocalContext.current
