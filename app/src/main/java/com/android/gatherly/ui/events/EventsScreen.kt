@@ -44,15 +44,11 @@ import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.flow.MutableStateFlow
 import java.util.Locale
 import kotlin.Boolean
-
-/*
 import com.android.gatherly.ui.navigation.BottomNavigationMenu
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu
-
- */
 
 object EventsScreenTestTags {
 
@@ -111,7 +107,7 @@ fun EventsScreen(
     onSignedOut: () -> Unit = {},
     addYourNewEvent: () -> Unit = {},
     navigateToEditEvent: (Event) -> Unit = {},
-    //navigationActions: NavigationActions? = null,
+    navigationActions: NavigationActions? = null,
 ) {
 /* TODO
     val context = LocalContext.current
@@ -148,21 +144,20 @@ fun EventsScreen(
         }
     }*/
 
-    Scaffold(
-        /* TODO
-        topBar = {
-            TopNavigationMenu(
-                selectedTab = Tab.Events,
-                onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
-                modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
-                onSignedOut = { eventsViewModel.signOut(credentialManager) })
-        },
-        bottomBar = {
-            BottomNavigationMenu(
-                selectedTab = Tab.Events,
-                onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
-                modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU))
-        },*/
+  Scaffold(
+      topBar = {
+        TopNavigationMenu(
+            selectedTab = Tab.Events,
+            onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
+            modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
+            onSignedOut = { eventsViewModel.signOut(credentialManager) })
+      },
+      bottomBar = {
+        BottomNavigationMenu(
+            selectedTab = Tab.Events,
+            onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
+            modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU))
+      },
 
         content = { padding ->
             if (listEvents.isNotEmpty()) {
