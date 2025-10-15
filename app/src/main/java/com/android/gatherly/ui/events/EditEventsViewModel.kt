@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.res.dimensionResource
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.event.Event
@@ -14,59 +13,96 @@ import com.android.gatherly.model.map.Location
 import com.android.gatherly.model.map.NominatimLocationRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
-import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.launch
+import okhttp3.OkHttpClient
 import java.text.ParseException
 import java.text.SimpleDateFormat
 
 data class EditEventsUIState(
+    // the event title
     val name : String = "",
+    // the event description
     val description : String = "",
+    // the event creators name
     val creatorName : String = "",
+    // the event location
     val location : String = "",
+    // the event date
     val date : String = "",
+    // the event start time
     val startTime : String = "",
+    // the event end time
     val endTime : String = "",
+    // the event participant search string
     val participant : String = "",
+    // list of event participants
     val participants : List<Profile> = emptyList(),
+    // list of suggested profiles given the search string
     val suggestedProfiles : List<Profile> = emptyList(),
+    // list of suggested locations given the search string
     val suggestedLocations : List<Location> = emptyList(),
+    // if there is an error in the name
     val nameError : Boolean = false,
+    // if there is an error in the description
     val descriptionError : Boolean = false,
+    // if there is an error in the creators name
     val creatorNameError : Boolean = false,
+    // if there is an error in the date
     val dateError : Boolean = false,
+    // if there is an error in the start time
     val startTimeError : Boolean = false,
+    // if there is an error in the end time
     val endTimeError : Boolean = false,
+    // if the UI should display a toast
     val displayToast : Boolean = false,
-    val toastString : String? = null
+    // the string the toast should display
+    val toastString : String? = null,
+    // when the event is edited or deleted, return to event overview
+    val backToOverview : Boolean = false
 )
 
-//TODO change everything name to title
+// create a HTTP Client for Nominatim
+private var client: OkHttpClient =
+    OkHttpClient.Builder()
+        .addInterceptor { chain ->
+            val request =
+                chain
+                    .request()
+                    .newBuilder()
+                    .header("User-Agent", "BootcampApp (croissant.kerjan@gmail.com)")
+                    .build()
+            chain.proceed(request)
+        }
+        .build()
 
 @SuppressLint("SimpleDateFormat")
 class EditEventsViewModel(
-    private val profileRepository: ProfileRepository = ProfileRepositoryFirestore(),
+    private val profileRepository: ProfileRepository,
     private val eventsRepository: EventsRepository,
-    private val client: NominatimLocationRepository// = NominatimLocationRepository(HttpClientProvider.client)
+    private val nominatimClient: NominatimLocationRepository = NominatimLocationRepository(client)
 ) : ViewModel() {
 
+    // State with a private set
     var uiState by mutableStateOf<EditEventsUIState>(EditEventsUIState())
         private set
 
+    // Formats used for date and time parsing
     private val dateFormat = SimpleDateFormat("dd/MM/yyyy")
     private val timeFormat = SimpleDateFormat("HH:mm")
 
-    private var searchedProfiles : List<Profile> = emptyList()
+    // Event id and Creator id needed for saving the edited event
     private lateinit var eventId : String
     private lateinit var creatorId : String
 
+    /*----------------------------------Initialize------------------------------------------------*/
     init {
         // The string formatter should use strictly the format wanted
         dateFormat.isLenient = false
         timeFormat.isLenient = false
     }
 
+    // Sets the values of the event to edit given an event id
     fun setEventValues(givenEventId : String) {
         viewModelScope.launch {
             val event = eventsRepository.getEvent(givenEventId)
@@ -85,26 +121,49 @@ class EditEventsViewModel(
         }
     }
 
+    // Clears the error message once the toast is done displaying
     fun clearErrorMsg() {
         uiState = uiState.copy(displayToast = false, toastString = null)
     }
 
+    /*----------------------------------Update strings--------------------------------------------*/
+
+    /**
+     * Updates the event name
+     * @param updatedName the string with which to update
+     */
     fun updateName(updatedName : String) {
         uiState = uiState.copy(name = updatedName, nameError = updatedName.isBlank())
     }
 
+    /**
+     * Updates the event description
+     * @param updatedDescription the string with which to update
+     */
     fun updateDescription(updatedDescription : String) {
         uiState = uiState.copy(description = updatedDescription, descriptionError = updatedDescription.isBlank())
     }
 
+    /**
+     * Updates the event creator name
+     * @param updatedCreatorName the string with which to update
+     */
     fun updateCreatorName(updatedCreatorName : String) {
         uiState = uiState.copy(creatorName = updatedCreatorName, creatorNameError = updatedCreatorName.isBlank())
     }
 
+    /**
+     * Updates the event location
+     * @param updatedLocation the string with which to update
+     */
     fun updateLocation(updatedLocation : String) {
         uiState = uiState.copy(location = updatedLocation)
     }
 
+    /**
+     * Updates the event date
+     * @param updatedDate the string with which to update
+     */
     fun updateDate(updatedDate : String) {
         val dateError = try {
             dateFormat.parse(updatedDate)
@@ -112,9 +171,13 @@ class EditEventsViewModel(
         } catch (_: ParseException) {
             false
         }
-        uiState = uiState.copy(date = updatedDate, dateError = dateError)
+        uiState = uiState.copy(date = updatedDate, dateError = !dateError)
     }
 
+    /**
+     * Updates the event start time
+     * @param updatedStartTime the string with which to update
+     */
     fun updateStartTime(updatedStartTime : String) {
         val startTimeError = try {
             timeFormat.parse(updatedStartTime)
@@ -122,9 +185,13 @@ class EditEventsViewModel(
         } catch (_: ParseException) {
             false
         }
-        uiState = uiState.copy(startTime = updatedStartTime, startTimeError = startTimeError)
+        uiState = uiState.copy(startTime = updatedStartTime, startTimeError = !startTimeError)
     }
 
+    /**
+     * Updates the event end time
+     * @param updatedEndTime the string with which to update
+     */
     fun updateEndTime(updatedEndTime : String) {
         val endTimeError = try {
             timeFormat.parse(updatedEndTime)
@@ -132,13 +199,22 @@ class EditEventsViewModel(
         } catch (_: ParseException) {
             false
         }
-        uiState = uiState.copy(endTime = updatedEndTime, endTimeError = endTimeError)
+        uiState = uiState.copy(endTime = updatedEndTime, endTimeError = !endTimeError)
     }
 
+    /**
+     * Updates the event participant string
+     * @param updatedParticipant the string with which to update
+     */
     fun updateParticipant(updatedParticipant : String) {
         uiState = uiState.copy(participant = updatedParticipant)
     }
 
+    /*----------------------------------Participants----------------------------------------------*/
+    /**
+     * Deletes a participant
+     * @param participant the id of the participant to remove
+     */
     fun deleteParticipant(participant : String) {
         val index = uiState.participants.find {it.uid == participant}
         uiState = if (index == null) {
@@ -146,49 +222,89 @@ class EditEventsViewModel(
         } else if (participant == creatorId) {
             uiState.copy(displayToast = true, toastString = "Cannot delete the owner")
         } else {
-            uiState.copy(participants = uiState.participants.filter {it.uid == participant})
+            uiState.copy(participants = uiState.participants.filter {it.uid != participant})
         }
     }
 
-    fun addParticipant(participant : String) {
-        searchProfileByString(participant)
-        uiState.copy(participant = uiState.participant + searchedProfiles)
+    /**
+     * Adds a participant
+     * @param participant the profile of the participant to add
+     */
+    fun addParticipant(participant : Profile) {
+        if (uiState.participants.any { it == participant }) {
+            uiState = uiState.copy(displayToast = true, toastString = "Cannot add a participant that is already added")
+        }
+        uiState = uiState.copy(participants = uiState.participants + participant)
     }
 
-    fun searchProfileByString(participant : String) {
+    /*----------------------------------Helpers---------------------------------------------------*/
+    /**
+     * Given a string, search profiles that have it as a substring in their name
+     * @param string the substring with which to search
+     */
+    fun searchProfileByString(string : String) {
         viewModelScope.launch {
-            val profilesList = profileRepository.findProfilesByUidSubstring(participant)
-            searchedProfiles = profilesList
+            val profilesList = profileRepository.findProfilesByUidSubstring(string)
+            println("profiles list" + profilesList.size)
+            uiState = uiState.copy(suggestedProfiles = profilesList)
         }
     }
 
+    /**
+     * Given a string, search locations with Nominatim
+     * @param location the substring with which to search
+     */
     fun searchLocationByString(location : String) {
         viewModelScope.launch {
-            val list = client.search(location)
+            val list = nominatimClient.search(location)
             uiState = uiState.copy(suggestedLocations = list)
         }
     }
 
+    /**
+     * Checks that all entries are correctly set
+     */
+    private fun checkAllEntries() {
+        updateName(uiState.name)
+        updateDescription(uiState.description)
+        updateCreatorName(uiState.creatorName)
+        updateDate(uiState.date)
+        updateStartTime(uiState.startTime)
+        updateEndTime(uiState.endTime)
+    }
+
+    /*----------------------------------Repository calls------------------------------------------*/
+
+    /**
+     * Save the event as modified in the events repository
+     */
     fun saveEvent() {
         checkAllEntries()
         if (!uiState.nameError && !uiState.descriptionError && !uiState.creatorNameError
             && !uiState.dateError && !uiState.startTimeError && !uiState.endTimeError) {
+
+            // Parse date
             val date = dateFormat.parse(uiState.date) ?: run {
                 uiState.copy(displayToast = true, toastString = "Cannot parse event date")
                 return
             }
             val timestampDate = Timestamp(date)
+
+            // Parse start time
             val startTime = timeFormat.parse(uiState.startTime) ?: run {
                 uiState.copy(displayToast = true, toastString = "Cannot parse event start time")
                 return
             }
             val timestampStartTime = Timestamp(startTime)
+
+            // Parse end time
             val endTime = timeFormat.parse(uiState.endTime) ?: run {
                 uiState.copy(displayToast = true, toastString = "Cannot parse event end time")
                 return
             }
             val timestampEndTime = Timestamp(endTime)
 
+            // Create new event
             val event = Event(
                 id = eventId,
                 title = uiState.name,
@@ -205,28 +321,26 @@ class EditEventsViewModel(
 
             uiState = uiState.copy(displayToast = true, toastString = "Saving...")
 
-
+            // Save in event repository
             viewModelScope.launch {
                 eventsRepository.editEvent(eventId, event)
                 uiState = uiState.copy(displayToast = true, toastString = "Saved")
             }
+
+            uiState = uiState.copy(backToOverview = true)
         } else {
             uiState = uiState.copy(displayToast = true, toastString = "Failed to save :(")
         }
     }
 
+    /**
+     * Deletes the event from the events repository
+     */
     fun deleteEvent() {
+        // Call event repository
         viewModelScope.launch {
             eventsRepository.deleteEvent(eventId)
         }
-    }
-
-    private fun checkAllEntries() {
-        updateName(uiState.name)
-        updateDescription(uiState.description)
-        updateCreatorName(uiState.creatorName)
-        updateDate(uiState.date)
-        updateStartTime(uiState.startTime)
-        updateEndTime(uiState.endTime)
+        uiState = uiState.copy(backToOverview = true)
     }
 }
