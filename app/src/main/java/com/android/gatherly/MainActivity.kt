@@ -157,12 +157,6 @@ fun GatherlyApp(
         startDestination = Screen.FocusTimerInitScreen.route,
         route = Screen.FocusTimerInitScreen.name,
     ) {
-      composable(Screen.FocusTimerInitScreen.route) {
-        FocusTimerInitScreen(
-            navigationActions = navigationActions,
-            credentialManager = credentialManager,
-            onSignedOut = { navigationActions.navigateTo(Screen.SignIn) })
-      }
       composable(Screen.FocusTimerScreen.route) {
         FocusTimerScreen(
             navigationActions = navigationActions,

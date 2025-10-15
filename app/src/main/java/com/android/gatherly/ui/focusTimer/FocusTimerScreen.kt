@@ -57,7 +57,7 @@ fun FocusTimerScreen(
       },
       content = { padding ->
         Text(
-            text = "Focus timer running",
+            text = "Focus timer",
             modifier = Modifier.padding(padding).testTag(FocusTimerScreenTestTags.TIMERTEXT))
       })
 }
