@@ -56,7 +56,6 @@ data class MapUIState(val errorMsg: String? = null, val onSignedOut: Boolean = f
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-// fun MapScreen(viewModel: MapViewModel = viewModel()) {
 fun MapScreen(
     viewModel: MapViewModel = viewModel(),
     credentialManager: CredentialManager = CredentialManager.create(LocalContext.current),
@@ -88,12 +87,6 @@ fun MapScreen(
             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
             modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU))
       },
-
-      /*content = { padding ->
-        Text(text = "MAP", modifier = Modifier.padding(padding).testTag(MapScreenTestTags.MapText))
-      })
-       */
-
       content = { pd ->
         // Camera position state, using the first ToDo location if available
         val cameraPositionState = rememberCameraPositionState {

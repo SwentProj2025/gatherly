@@ -52,7 +52,6 @@ class SignInViewModel : ViewModel() {
         Firebase.auth
             .signInWithCredential(firebaseCredential)
             .addOnSuccessListener {
-              // _uiState.update { it.copy(isGoogle = true) }
               Log.d("Firebase authentication with Google", "Successful authentication")
               _uiState.value = true
             }

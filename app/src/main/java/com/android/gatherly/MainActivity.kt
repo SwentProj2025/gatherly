@@ -48,8 +48,6 @@ object HttpClientProvider {
 class MainActivity : ComponentActivity() {
 
   private lateinit var auth: FirebaseAuth
-  // private lateinit var authRepository: AuthRepository    todo : change the name with signIn
-  // repository
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
@@ -85,9 +83,6 @@ fun GatherlyApp(
         route = Screen.SignIn.name,
     ) {
       composable(Screen.SignIn.route) {
-        /*SignInScreen(
-        credentialManager = credentialManager,
-        onSignedIn = { navigationActions.navigateTo(Screen.HomePage) })*/
         SignInScreen(
             credentialManager = credentialManager,
             onSignedIn = { navigationActions.navigateTo(Screen.HomePage) })

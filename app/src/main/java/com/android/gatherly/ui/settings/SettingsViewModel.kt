@@ -13,9 +13,7 @@ import kotlinx.coroutines.launch
 
 data class SettingsUIState(val errorMsg: String? = null, val signedOut: Boolean = false)
 
-class SettingsViewModel(
-    // private val authRepository: AuthRepository = AuthRepositoryFirebase(),
-) : ViewModel() {
+class SettingsViewModel() : ViewModel() {
 
   private val _uiState = MutableStateFlow(SettingsUIState())
   val uiState: StateFlow<SettingsUIState> = _uiState.asStateFlow()

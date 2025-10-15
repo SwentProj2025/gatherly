@@ -1,7 +1,6 @@
 package com.android.gatherly.ui.authentication
 
 import android.content.Context
-import android.util.Log
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -84,7 +83,6 @@ class SignInScreenTest : FirestoreGatherlyTest() {
     assert(signInViewModel.uiState.value) { "ViewModel did not report signed in" }
     val currentUser = FirebaseEmulator.auth.currentUser
     assert(currentUser != null) { "FirebaseEmulator has no signed-in user" }
-    Log.e("user mail", currentUser!!.email.toString())
     assert(currentUser!!.email == "signinscreentest@signinscreen.com") {
       "Signed-in user's email does not match expected"
     }

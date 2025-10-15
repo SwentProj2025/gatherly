@@ -101,16 +101,15 @@ class NavigationTest : FirestoreGatherlyTest() {
         .assertTextContains(value = "Home")
     composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).assertIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.HOMEPAGE_TAB).assertIsNotDisplayed()
-    composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsNotDisplayed()
   }
 
   @Test
-  fun bottomNavigationIsNotDisplayedForHomePage() {
-    composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsNotDisplayed()
-    composeTestRule.onNodeWithTag(NavigationTestTags.MAP_TAB).assertIsNotDisplayed()
-    composeTestRule.onNodeWithTag(NavigationTestTags.TIMER_TAB).assertIsNotDisplayed()
-    composeTestRule.onNodeWithTag(NavigationTestTags.OVERVIEW_TAB).assertIsNotDisplayed()
-    composeTestRule.onNodeWithTag(NavigationTestTags.EVENTS_TAB).assertIsNotDisplayed()
+  fun bottomNavigationIsDisplayedForHomePage() {
+    composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(NavigationTestTags.MAP_TAB).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(NavigationTestTags.TIMER_TAB).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(NavigationTestTags.OVERVIEW_TAB).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(NavigationTestTags.EVENTS_TAB).assertIsDisplayed()
   }
 
   @Test

@@ -92,18 +92,6 @@ abstract class GatherlyTest() {
     }
   }
 
-  /*abstract class GatherlyTest {
-  @Before
-  open fun setUp() {
-    /*ToDosRepositoryProvider.repository = createInitializedRepository()
-    HttpClientProvider.client = initializeHTTPClient()
-    if (shouldSignInAnounymously) {
-        runTest { FirebaseEmulator.auth.signInAnonymously().await() }
-    }*/
-    runTest { FirebaseEmulator.auth.signInAnonymously().await() }
-  }
-       */
-
   @After
   open fun tearDown() {
     if (FirebaseEmulator.isRunning) {

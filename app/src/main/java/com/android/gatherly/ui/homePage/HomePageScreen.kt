@@ -13,7 +13,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.android.gatherly.ui.navigation.BottomNavigationMenu
 import com.android.gatherly.ui.navigation.NavigationActions
+import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_HomePage
 
@@ -45,18 +47,15 @@ fun HomePageScreen(
             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
             onSignedOut = { homePageViewModel.signOut(credentialManager) })
       },
-
-      /*bottomBar = {
-         BottomNavigationMenu(
-             selectedTab = Tab.HomePage,
-             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
-             modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU)
-         )},
-
-      */
+      bottomBar = {
+        BottomNavigationMenu(
+            selectedTab = Tab.HomePage,
+            onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
+            modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU))
+      },
       content = { padding ->
         Text(
-            text = "Home page",
+            text = "Welcome to gatherly application ! ",
             modifier = Modifier.padding(padding).testTag(HomePageScreenTestTags.HOMETEXT))
       })
 }

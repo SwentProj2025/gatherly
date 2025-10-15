@@ -45,14 +45,5 @@ fun SettingsScreen(
             modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
             onSignedOut = { settingsViewModel.signOut(credentialManager) })
       },
-
-      /*bottomBar = {
-         BottomNavigationMenu(
-             selectedTab = Tab.HomePage,
-             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
-             modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU)
-         )},
-
-      */
       content = { padding -> Text(text = "Settings", modifier = Modifier.padding(padding)) })
 }
