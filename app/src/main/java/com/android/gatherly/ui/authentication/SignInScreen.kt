@@ -46,7 +46,7 @@ fun SignInScreen(
   val context = LocalContext.current
   val isSignedIn by authViewModel.uiState.collectAsState()
 
-  // Navigate to overview screen on successful login
+  // Navigate to home page screen on successful login
   LaunchedEffect(isSignedIn) {
     if (isSignedIn) {
       onSignedIn()
