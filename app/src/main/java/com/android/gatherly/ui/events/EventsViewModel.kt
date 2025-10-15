@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 /**
- * UI state for the Events ViewModel.
+ * UI state for the Events ViewModel
  *
  * @param fullEventList list of events
  * @param participatedEventList list of events the current user is participating in
