@@ -276,7 +276,7 @@ fun EventsScreen(
                     if (myOwnEvents.isNotEmpty()) {
                         items(myOwnEvents.size) { index ->
                             MyOwnEventsItem(
-                                event = browserEvents[index],
+                                event = myOwnEvents[index],
                                 onClick = {
                                     isPopupOn.value = true
                                 }

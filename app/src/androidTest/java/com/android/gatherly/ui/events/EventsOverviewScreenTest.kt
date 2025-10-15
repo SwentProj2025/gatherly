@@ -4,6 +4,7 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
+import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.hasAnyDescendant
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
@@ -16,6 +17,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.map.Location
+import com.android.gatherly.ui.navigation.NavigationTestTags
+import com.android.gatherly.utils.FirestoreEventsGatherlyTest
 import com.android.gatherly.utils.GatherlyTest.Companion.fromDate
 import com.android.gatherly.utils.UI_WAIT_TIMEOUT
 import com.google.firebase.Firebase
@@ -35,7 +38,7 @@ import java.util.Calendar
 import java.util.NoSuchElementException
 import kotlin.collections.forEach
 
-/*
+
 class EventsOverviewScreenTest : FirestoreEventsGatherlyTest()   {
 
     @get:Rule val composeTestRule = createComposeRule()
@@ -146,13 +149,15 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest()   {
     fun EventItemDisplaysStartDate() {
         val eventList = listOf(eventB, eventY, eventU)
         setContent(withInitialEvents = eventList)
-        composeTestRule.onEventItem(eventB, hasTestTag(EventsScreenTestTags.EVENT_TITLE))
-        composeTestRule.onEventItem(eventY, hasTestTag(EventsScreenTestTags.EVENT_TITLE))
-        composeTestRule.onEventItem(eventU, hasTestTag(EventsScreenTestTags.EVENT_TITLE))
+        composeTestRule.onEventItem(eventB, hasTestTag(EventsScreenTestTags.EVENT_DATE))
+        composeTestRule.onEventItem(eventY, hasTestTag(EventsScreenTestTags.EVENT_DATE))
+        composeTestRule.onEventItem(eventU, hasTestTag(EventsScreenTestTags.EVENT_DATE))
     }
 
 
+
     fun ComposeTestRule.onEventItem(event: Event, matcher: SemanticsMatcher) {
+        val eventNode = this.waitUntilEventIsDisplayed(event)
         onNode(
             hasTestTag(EventsScreenTestTags.getTestTagForEventItem(event))
                 .and(hasAnyDescendant(matcher)),
@@ -284,4 +289,3 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest()   {
         onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(event)).assertIsDisplayed()
 
 }
-*/
