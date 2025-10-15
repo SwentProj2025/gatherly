@@ -8,19 +8,13 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -33,6 +27,9 @@ import androidx.compose.ui.res.integerResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
+import com.android.gatherly.ui.navigation.NavigationTestTags
+import com.android.gatherly.ui.navigation.Tab
+import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
 
 // Portions of the code in this file are copy-pasted from the Bootcamp solution provided by the
 // SwEnt staff.
@@ -95,27 +92,12 @@ fun AddToDoScreen(
   }
 
   Scaffold(
-      // TODO: modify this part with the specific top bar implemented in the navigation menu.
       topBar = {
-        TopAppBar(
-            title = { Text(stringResource(R.string.todos_title_add_todo_screen)) },
-            navigationIcon = {
-              IconButton(onClick = { goBack() }) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                    contentDescription = stringResource(R.string.todos_back_button_desc))
-              }
-            },
-            colors =
-                TopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.background,
-                    scrolledContainerColor = MaterialTheme.colorScheme.background,
-                    navigationIconContentColor = MaterialTheme.colorScheme.primary,
-                    titleContentColor = MaterialTheme.colorScheme.primary,
-                    actionIconContentColor = MaterialTheme.colorScheme.primary,
-                ))
+        TopNavigationMenu_Goback(
+            selectedTab = Tab.AddTodo,
+            modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
+            goBack = goBack)
       },
-      // TODO: add the bottom bar for navigation, once everything is merged.
       content = { paddingValues ->
         Column(
             modifier = Modifier.fillMaxSize().padding(paddingValues).padding(screenPadding),
