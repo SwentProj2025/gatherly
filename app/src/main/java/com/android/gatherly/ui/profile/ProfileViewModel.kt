@@ -6,10 +6,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
-import com.android.gatherly.model.profile.ProfileRepositoryFirestore
+import com.android.gatherly.model.profile.ProfileRepositoryProvider
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
-import com.android.gatherly.model.profile.ProfileRepositoryProvider
 import java.time.LocalDate
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
