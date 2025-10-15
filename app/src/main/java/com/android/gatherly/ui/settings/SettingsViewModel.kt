@@ -1,4 +1,4 @@
-package com.android.gatherly.ui.events
+package com.android.gatherly.ui.settings
 
 import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
@@ -11,12 +11,12 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-data class EventsUIState(val errorMsg: String? = null, val signedOut: Boolean = false)
+data class SettingsUIState(val errorMsg: String? = null, val signedOut: Boolean = false)
 
-class EventsViewModel() : ViewModel() {
-  /* PLACEHOLDER */
-  private val _uiState = MutableStateFlow(EventsUIState())
-  val uiState: StateFlow<EventsUIState> = _uiState.asStateFlow()
+class SettingsViewModel() : ViewModel() {
+
+  private val _uiState = MutableStateFlow(SettingsUIState())
+  val uiState: StateFlow<SettingsUIState> = _uiState.asStateFlow()
 
   /** Initiates sign-out */
   fun signOut(credentialManager: CredentialManager): Unit {
