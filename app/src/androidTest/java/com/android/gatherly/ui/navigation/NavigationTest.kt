@@ -26,6 +26,10 @@ class NavigationTest : FirestoreGatherlyTest() {
 
   // LOGOUT PART :
 
+  /**
+   * Test: Verifies that the user can sign out from the home page screen using the logout button in
+   * the drop-down menu of the top app bar.
+   */
   @Test
   fun canLogOutFromHomePage() {
     composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
@@ -33,6 +37,10 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.checkSignInScreenIsDisplayed()
   }
 
+  /**
+   * Test: Verifies that the user can sign out from the profile screen using the logout button in
+   * the drop-down menu of the top app bar.
+   */
   @Test
   fun canLogOutFromProfile() {
     composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
@@ -43,6 +51,10 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.checkSignInScreenIsDisplayed()
   }
 
+  /**
+   * Test: Verifies that the user can sign out from the focus timer screen using the logout button
+   * in the drop-down menu of the top app bar.
+   */
   @Test
   fun canLogOutFromTimer() {
     composeTestRule.navigateFromHomeToTimer()
@@ -51,6 +63,10 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.checkSignInScreenIsDisplayed()
   }
 
+  /**
+   * Test: Verifies that the user can sign out from the events overview screen using the logout
+   * button in the drop-down menu of the top app bar.
+   */
   @Test
   fun canLogOutFromEvents() {
     composeTestRule.navigateFromHomeToEvents()
@@ -59,6 +75,10 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.checkSignInScreenIsDisplayed()
   }
 
+  /**
+   * Test: Verifies that the user can sign out from the map screen using the logout button in the
+   * drop-down menu of the top app bar.
+   */
   @Test
   fun canLogOutFromMap() {
     composeTestRule.navigateFromHomeToMap()
@@ -67,6 +87,10 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.checkSignInScreenIsDisplayed()
   }
 
+  /**
+   * Test: Verifies that the user can sign out from the Todo overview screen using the logout button
+   * in the drop-down menu of the top app bar.
+   */
   @Test
   fun canLogOutFromOverview() {
     composeTestRule.navigateFromHomeToOverview()
@@ -77,12 +101,7 @@ class NavigationTest : FirestoreGatherlyTest() {
 
   // HOME PAGE TESTS PART
 
-  @Test
-  fun NavigationBarAreCorrectlySetOnHome() {
-    composeTestRule.onNodeWithTag(NavigationTestTags.TOP_NAVIGATION_MENU).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).assertIsDisplayed()
-  }
-
+  /** Test: Verifies that clicking the drop-down menu button correctly displays all tabs. */
   @Test
   fun testTagsDropMenuAreCorrectlySet() {
     composeTestRule.onNodeWithTag(NavigationTestTags.TOP_NAVIGATION_MENU).assertIsDisplayed()
@@ -93,6 +112,7 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).assertIsDisplayed()
   }
 
+  /** Test: Verifies if the Top Navigation Bar is correctly displayed in the home page screen */
   @Test
   fun topNavigationIsCorrectlySetForHomePage() {
     composeTestRule.onNodeWithTag(NavigationTestTags.TOP_NAVIGATION_MENU).assertIsDisplayed()
@@ -103,6 +123,7 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.onNodeWithTag(NavigationTestTags.HOMEPAGE_TAB).assertIsNotDisplayed()
   }
 
+  /** Test: Verifies if the Bottom Navigation Bar is correctly on the home page screen */
   @Test
   fun bottomNavigationIsDisplayedForHomePage() {
     composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsDisplayed()
@@ -112,6 +133,10 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.onNodeWithTag(NavigationTestTags.EVENTS_TAB).assertIsDisplayed()
   }
 
+  /**
+   * Navigation Test: Verifies that when the user is on the home page, they can navigate to the
+   * profile screen.
+   */
   @Test
   fun canNavigateToProfileFromHomePage() {
     composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
@@ -119,6 +144,10 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.checkProfileScreenIsDisplayed()
   }
 
+  /**
+   * Navigation Test: Verifies that when the user is on the home page, they can navigate to the
+   * settings screen.
+   */
   @Test
   fun canNavigateToSettingsFromHomePage() {
     composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
@@ -126,6 +155,12 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.checkSettingsScreenIsDisplayed()
   }
 
+  // PROFILE PART
+
+  /**
+   * Test: Verifies if the Top Navigation Bar and the Bottom Navigation Bar is correctly displayed
+   * on the profile screen
+   */
   @Test
   fun NavigationBarIsCorrectlySetForProfile() {
     composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
@@ -148,6 +183,10 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).assertIsNotDisplayed()
   }
 
+  /**
+   * Navigation Test: Verifies that when the user is on the profile screen, they can navigate to the
+   * settings screen.
+   */
   @Test
   fun NavigateFromProfileToSettings() {
     composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
@@ -158,6 +197,10 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.checkSettingsScreenIsDisplayed()
   }
 
+  /**
+   * Navigation Test: Verifies that when the user is on the profile screen, they can navigate to the
+   * settings screen.
+   */
   @Test
   fun NavigateFromProfileToTimer() {
     composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
@@ -167,6 +210,10 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.checkTimerScreenIsDisplayed()
   }
 
+  /**
+   * Navigation Test: Verifies that when the user is on the profile screen, they can navigate to the
+   * todo overview screen.
+   */
   @Test
   fun NavigateFromProfileToOverview() {
     composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
@@ -176,6 +223,10 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.checkOverviewScreenIsDisplayed()
   }
 
+  /**
+   * Navigation Test: Verifies that when the user is on the profile screen, they can navigate to the
+   * events screen.
+   */
   @Test
   fun NavigateFromProfileToEvents() {
     composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
@@ -185,6 +236,10 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.checkEventsScreenIsDisplayed()
   }
 
+  /**
+   * Navigation Test: Verifies that when the user is on the profile screen, they can navigate to the
+   * map screen.
+   */
   @Test
   fun NavigateFromProfileToMap() {
     composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
@@ -194,52 +249,22 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.checkMapScreenIsDisplayed()
   }
 
-  /*
-    TODO : Enable this test after implementing Profile screen
-  @Test
-  fun NavigateFromProfileToFriends(){
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
-    composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
-    composeTestRule.checkProfileScreenIsDisplayed()
-    composeTestRule.onNodeWithTag(ProfileTestTags.FRIENDS_TAB).performClick()
-    composeTestRule.checkFriendsInScreenIsDisplayed()
-  }
-   */
-
-  /*
-   TODO : Enable this test after implementing Profile screen
-
-  @Test
-  fun NavigateFromProfileToFriends(){
-   composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
-   composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
-   composeTestRule.checkProfileScreenIsDisplayed()
-   composeTestRule.onNodeWithTag(ProfileTestTags.FRIENDS_TAB).performClick()
-   composeTestRule.checkFriendsScreenIsDisplayed()
-  }
-
-   */
-
-  /*
-    TODO : Enable this test after implementing Profile screen
-    @Test
-  fun canNavigateBackToProfileFromFriendsUsingSystemBack() {
-    composeTestRule.onNodeWithTag(ProfileScreenTestTags.friendsbutton).performClick()
-    composeTestRule.checkFriendsScreenIsDisplayed()
-    composeTestRule.checkProfileScreenIsNotDisplayed()
-    pressBack(shouldFinish = false)
-    composeTestRule.checkProfileScreenIsDisplayed()
-  }*/
-
   // TIMER PART
 
+  /**
+   * Helper function that simplifies navigation from the home page to the timer screen, avoiding
+   * repetitive performClick calls.
+   */
   fun ComposeTestRule.navigateFromHomeToTimer() {
     composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.TIMER_TAB).performClick()
     composeTestRule.checkTimerScreenIsDisplayed()
   }
-
+  /**
+   * Test: Verifies if the Top Navigation Bar and the Bottom Navigation Bar is correctly displayed
+   * on the timer screen
+   */
   @Test
   fun NavigationBarIsCorrectlySetForTimer() {
     composeTestRule.navigateFromHomeToTimer()
@@ -260,6 +285,10 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).assertIsDisplayed()
   }
 
+  /**
+   * Navigation Test: Verifies that when the user is on the focus timer screen, they can navigate to
+   * the home page screen.
+   */
   @Test
   fun NavigateFromTimerToHomePage() {
     composeTestRule.navigateFromHomeToTimer()
@@ -267,6 +296,10 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.checkHomeScreenIsDisplayed()
   }
 
+  /**
+   * Navigation Test: Verifies that when the user is on the focus timer screen, they can navigate to
+   * the settings screen.
+   */
   @Test
   fun NavigateFromTimerToSettings() {
     composeTestRule.navigateFromHomeToTimer()
@@ -275,6 +308,10 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.checkSettingsScreenIsDisplayed()
   }
 
+  /**
+   * Navigation Test: Verifies that when the user is on the focus timer screen, they can navigate to
+   * the profile screen.
+   */
   @Test
   fun NavigateFromTimerToProfile() {
     composeTestRule.navigateFromHomeToTimer()
@@ -283,6 +320,10 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.checkProfileScreenIsDisplayed()
   }
 
+  /**
+   * Navigation Test: Verifies that when the user is on the focus timer screen, they can navigate to
+   * the todo overview screen.
+   */
   @Test
   fun NavigateFromTimerToOverview() {
     composeTestRule.navigateFromHomeToTimer()
@@ -290,6 +331,10 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.checkOverviewScreenIsDisplayed()
   }
 
+  /**
+   * Navigation Test: Verifies that when the user is on the focus timer screen, they can navigate to
+   * the events screen.
+   */
   @Test
   fun NavigateFromTimerToEvents() {
     composeTestRule.navigateFromHomeToTimer()
@@ -297,6 +342,10 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.checkEventsScreenIsDisplayed()
   }
 
+  /**
+   * Navigation Test: Verifies that when the user is on the focus timer screen, they can navigate to
+   * the map screen.
+   */
   @Test
   fun NavigateFromTimerToMap() {
     composeTestRule.navigateFromHomeToTimer()
@@ -304,8 +353,12 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.checkMapScreenIsDisplayed()
   }
 
-  // EVENTS PART ( without add event or edit event )
+  // EVENTS PART
 
+  /**
+   * Helper function that simplifies navigation from the home page to the events screen, avoiding
+   * repetitive performClick calls.
+   */
   fun ComposeTestRule.navigateFromHomeToEvents() {
     composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
@@ -313,6 +366,10 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.checkEventsScreenIsDisplayed()
   }
 
+  /**
+   * Test: Verifies if the Top Navigation Bar and the Bottom Navigation Bar is correctly displayed
+   * on the events screen
+   */
   @Test
   fun NavigationBarIsCorrectlySetForEvents() {
     composeTestRule.navigateFromHomeToEvents()
@@ -333,6 +390,10 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).assertIsDisplayed()
   }
 
+  /**
+   * Navigation Test: Verifies that when the user is on the events screen, they can navigate to the
+   * home page screen.
+   */
   @Test
   fun NavigateFromEventsToHomePage() {
     composeTestRule.navigateFromHomeToEvents()
@@ -340,6 +401,10 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.checkHomeScreenIsDisplayed()
   }
 
+  /**
+   * Navigation Test: Verifies that when the user is on the events screen, they can navigate to the
+   * settings screen.
+   */
   @Test
   fun NavigateFromEventsToSettings() {
     composeTestRule.navigateFromHomeToEvents()
@@ -348,6 +413,10 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.checkSettingsScreenIsDisplayed()
   }
 
+  /**
+   * Navigation Test: Verifies that when the user is on the events screen, they can navigate to the
+   * profile screen.
+   */
   @Test
   fun NavigateFromEventsToProfile() {
     composeTestRule.navigateFromHomeToEvents()
@@ -356,6 +425,10 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.checkProfileScreenIsDisplayed()
   }
 
+  /**
+   * Navigation Test: Verifies that when the user is on the events screen, they can navigate to the
+   * todo overview screen.
+   */
   @Test
   fun NavigateFromEventsToOverview() {
     composeTestRule.navigateFromHomeToEvents()
@@ -363,6 +436,10 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.checkOverviewScreenIsDisplayed()
   }
 
+  /**
+   * Navigation Test: Verifies that when the user is on the events screen, they can navigate to the
+   * focus timer screen.
+   */
   @Test
   fun NavigateFromEventsToTimer() {
     composeTestRule.navigateFromHomeToEvents()
@@ -370,6 +447,10 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.checkTimerScreenIsDisplayed()
   }
 
+  /**
+   * Navigation Test: Verifies that when the user is on the events screen, they can navigate to the
+   * map screen.
+   */
   @Test
   fun NavigateFromEventsToMap() {
     composeTestRule.navigateFromHomeToEvents()
@@ -379,6 +460,10 @@ class NavigationTest : FirestoreGatherlyTest() {
 
   // MAP PART
 
+  /**
+   * Helper function that simplifies navigation from the home page to the map screen, avoiding
+   * repetitive performClick calls.
+   */
   fun ComposeTestRule.navigateFromHomeToMap() {
     composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
@@ -386,6 +471,10 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.checkMapScreenIsDisplayed()
   }
 
+  /**
+   * Test: Verifies if the Top Navigation Bar and the Bottom Navigation Bar is correctly displayed
+   * on the map screen
+   */
   @Test
   fun NavigationBarIsCorrectlySetForMap() {
     composeTestRule.navigateFromHomeToMap()
@@ -406,6 +495,10 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).assertIsDisplayed()
   }
 
+  /**
+   * Navigation Test: Verifies that when the user is on the map screen, they can navigate to the
+   * home page screen.
+   */
   @Test
   fun NavigateFromMapToHomePage() {
     composeTestRule.navigateFromHomeToMap()
@@ -413,6 +506,10 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.checkHomeScreenIsDisplayed()
   }
 
+  /**
+   * Navigation Test: Verifies that when the user is on the map screen, they can navigate to the
+   * settings screen.
+   */
   @Test
   fun NavigateFromMapToSettings() {
     composeTestRule.navigateFromHomeToMap()
@@ -421,6 +518,10 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.checkSettingsScreenIsDisplayed()
   }
 
+  /**
+   * Navigation Test: Verifies that when the user is on the map screen, they can navigate to the
+   * profile screen.
+   */
   @Test
   fun NavigateFromMapToProfile() {
     composeTestRule.navigateFromHomeToMap()
@@ -429,6 +530,10 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.checkProfileScreenIsDisplayed()
   }
 
+  /**
+   * Navigation Test: Verifies that when the user is on the map screen, they can navigate to the
+   * todo overview screen.
+   */
   @Test
   fun NavigateFromMapToOverview() {
     composeTestRule.navigateFromHomeToMap()
@@ -436,6 +541,10 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.checkOverviewScreenIsDisplayed()
   }
 
+  /**
+   * Navigation Test: Verifies that when the user is on the map screen, they can navigate to the
+   * focus timer screen.
+   */
   @Test
   fun NavigateFromMapToTimer() {
     composeTestRule.navigateFromHomeToMap()
@@ -443,6 +552,10 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.checkTimerScreenIsDisplayed()
   }
 
+  /**
+   * Navigation Test: Verifies that when the user is on the map screen, they can navigate to the
+   * events screen.
+   */
   @Test
   fun NavigateFromMapToEvents() {
     composeTestRule.navigateFromHomeToMap()
@@ -450,7 +563,12 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.checkEventsScreenIsDisplayed()
   }
 
-  // OVERVIEW PART with AddToDo (without EditToDo)
+  // OVERVIEW PART with AddToDo
+
+  /**
+   * Helper function that simplifies navigation from the home page to the todo overview screen,
+   * avoiding repetitive performClick calls.
+   */
   fun ComposeTestRule.navigateFromHomeToOverview() {
     onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
     onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
@@ -458,6 +576,10 @@ class NavigationTest : FirestoreGatherlyTest() {
     checkOverviewScreenIsDisplayed()
   }
 
+  /**
+   * Test: Verifies if the Top Navigation Bar and the Bottom Navigation Bar is correctly displayed
+   * on the map screen
+   */
   @Test
   fun NavigationBarIsCorrectlySetForOverview() {
     composeTestRule.navigateFromHomeToOverview()
@@ -478,6 +600,10 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).assertIsDisplayed()
   }
 
+  /**
+   * Navigation Test: Verifies that when the user is on the todo overview screen, they can navigate
+   * to the settings screen.
+   */
   @Test
   fun NavigateFromOverviewToSettings() {
     composeTestRule.navigateFromHomeToOverview()
@@ -486,6 +612,10 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.checkSettingsScreenIsDisplayed()
   }
 
+  /**
+   * Navigation Test: Verifies that when the user is on the todo overview screen, they can navigate
+   * to the profile screen.
+   */
   @Test
   fun NavigateFromOverviewToProfile() {
     composeTestRule.navigateFromHomeToOverview()
@@ -494,6 +624,10 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.checkProfileScreenIsDisplayed()
   }
 
+  /**
+   * Navigation Test: Verifies that when the user is on the todo overview screen, they can navigate
+   * to the focus timer screen.
+   */
   @Test
   fun NavigateFromOverviewToTimer() {
     composeTestRule.navigateFromHomeToOverview()
@@ -501,6 +635,10 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.checkTimerScreenIsDisplayed()
   }
 
+  /**
+   * Navigation Test: Verifies that when the user is on the todo overview screen, they can navigate
+   * to the events screen.
+   */
   @Test
   fun NavigateFromOverviewToEvents() {
     composeTestRule.navigateFromHomeToOverview()
@@ -508,6 +646,10 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.checkEventsScreenIsDisplayed()
   }
 
+  /**
+   * Navigation Test: Verifies that when the user is on the todo overview screen, they can navigate
+   * to the map screen.
+   */
   @Test
   fun NavigateFromOverviewToMap() {
     composeTestRule.navigateFromHomeToOverview()
@@ -515,141 +657,77 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.checkMapScreenIsDisplayed()
   }
 
-  /*
-
-    TODO : Enable this tests when the AddToDo screen will be implemented :)
-    @Test
-    fun canNavigateFromOverviewToAddToDo() {
-      composeTestRule.navigateFromHomeToOverview()
-      composeTestRule.onNodeWithTag(OverviewScreenTestTags.CREATE_TODO_BUTTON).performClick()
-      composeTestRule.checkAddTodoScreenIsDisplayed()
-    }
-
-
-    @Test
-    fun NavigationBarIsNotDisplayedOnAddToDoScreen() {
-      composeTestRule.navigateFromHomeToOverview()
-      composeTestRule.onNodeWithTag(OverviewScreenTestTags.CREATE_TODO_BUTTON).performClick()
-      composeTestRule.checkAddTodoScreenIsDisplayed()
-      composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsNotDisplayed()
-      composeTestRule.onNodeWithTag(NavigationTestTags.HOMEPAGE_TAB).assertIsNotDisplayed()
-      composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).assertIsNotDisplayed()
-    }
-  */
-  /*
-    @Test
-    fun canNavigateFromOverviewToEditToDo() {
-      composeTestRule.navigateToEditToDoScreen(firstTodo)
-      composeTestRule.checkEditToDoScreenIsDisplayed()
-      composeTestRule.checkOverviewScreenIsNotDisplayed()
-    }
-
-    @Test
-    fun addTodo_saveButtonNavigatesToOverviewToDoIfInputIsValid() {
-      composeTestRule.navigateToAddToDoScreen()
-      composeTestRule.enterAddTodoDetails(todo = validTodo)
-      composeTestRule.clickOnSaveForAddTodo(waitForRedirection = true)
-      composeTestRule.checkOverviewScreenIsDisplayed()
-    }
-
-    @Test
-    fun editTodo_saveButtonNavigatesToOverviewToDoIfInputIsValid() {
-      composeTestRule.navigateToEditToDoScreen(firstTodo)
-      composeTestRule.clickOnSaveForEditTodo(waitForRedirection = true)
-      composeTestRule.checkOverviewScreenIsDisplayed()
-    }
-
-    @Test
-    fun topAppTitleIsCorrectOnEditToDoScreen() {
-      composeTestRule.checkOverviewScreenIsDisplayed()
-      composeTestRule.navigateToEditToDoScreen(firstTodo)
-      composeTestRule.checkEditToDoScreenIsDisplayed()
-    }
-
-    @Test
-    fun bottomBarIsNotDisplayedOnEditToDoScreen() {
-      composeTestRule.checkOverviewScreenIsDisplayed()
-      composeTestRule.clickOnTodoItem(firstTodo)
-      composeTestRule.checkEditToDoScreenIsDisplayed()
-      composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsNotDisplayed()
-
-    }
-  }
-     */
-
-  /*
-  fun ComposeTestRule.navigateToEditToDoScreen(editedToDo: ToDo) {
-    clickOnTodoItem(editedToDo)
-  }
-   */
-
   ///////////////   utils  ///////////////////////////
 
+  /**
+   * Helper function to use when we want to check if the current screen displaying is the todo
+   * overview screen
+   */
   fun ComposeTestRule.checkOverviewScreenIsDisplayed() {
     onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
         .assertTextContains("To-Do", substring = true, ignoreCase = true)
   }
 
+  /**
+   * Helper function to use when we want to check if the current screen displaying is the profile
+   * screen
+   */
   fun ComposeTestRule.checkProfileScreenIsDisplayed() {
     onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
         .assertTextContains("Your profile", substring = true, ignoreCase = true)
   }
 
+  /**
+   * Helper function to use when we want to check if the current screen displaying is the settings
+   * screen
+   */
   fun ComposeTestRule.checkSettingsScreenIsDisplayed() {
     onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
         .assertTextContains("Settings", substring = true, ignoreCase = true)
   }
 
+  /**
+   * Helper function to use when we want to check if the current screen displaying is the focus
+   * timer screen
+   */
   fun ComposeTestRule.checkTimerScreenIsDisplayed() {
     onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
         .assertTextContains("Timer", substring = true, ignoreCase = true)
   }
 
+  /**
+   * Helper function to use when we want to check if the current screen displaying is the events
+   * screen
+   */
   fun ComposeTestRule.checkEventsScreenIsDisplayed() {
     onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
         .assertTextContains("Events", substring = true, ignoreCase = true)
   }
 
+  /**
+   * Helper function to use when we want to check if the current screen displaying is the map screen
+   */
   fun ComposeTestRule.checkMapScreenIsDisplayed() {
     onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
         .assertTextContains("Map", substring = true, ignoreCase = true)
   }
 
+  /**
+   * Helper function to use when we want to check if the current screen displaying is the home page
+   * screen
+   */
   fun ComposeTestRule.checkHomeScreenIsDisplayed() {
     onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
         .assertTextContains("Home", substring = true, ignoreCase = true)
   }
 
+  /**
+   * Helper function to use when we want to check if the current screen displaying is the signIn
+   * screen
+   */
   fun ComposeTestRule.checkSignInScreenIsDisplayed() {
     onNodeWithTag(SignInScreenTestTags.WELCOME_TITLE)
         .assertIsDisplayed()
         .assertTextContains("Welcome to Gatherly,", substring = true, ignoreCase = true)
   }
-
-  fun ComposeTestRule.checkFriendsScreenIsDisplayed() {
-    onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
-        .assertTextContains("Friends", substring = true, ignoreCase = true)
-  }
-
-  fun ComposeTestRule.checkAddTodoScreenIsDisplayed() {
-    onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
-        .assertTextContains("Add To-Do", substring = true, ignoreCase = true)
-  }
-
-  fun ComposeTestRule.checkEditTodoScreenIsDisplayed() {
-    onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
-        .assertTextContains("Edit To-Do", substring = true, ignoreCase = true)
-  }
 }
-
-/*
-private fun pressBack(shouldFinish: Boolean) {
- composeTestRule.activityRule.scenario.onActivity { activity ->
-   activity.onBackPressedDispatcher.onBackPressed()
- }
- composeTestRule.waitUntil { composeTestRule.activity.isFinishing == shouldFinish }
- assertEquals(shouldFinish, composeTestRule.activity.isFinishing)
-}
- */
-
-///////////// not for now  ////////////////////////
