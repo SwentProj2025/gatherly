@@ -116,7 +116,7 @@ fun EditToDoScreen(
   Scaffold(
       topBar = {
         TopNavigationMenu_Goback(
-            selectedTab = Tab.AddTodo,
+            selectedTab = Tab.EditTodo,
             modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
             goBack = goBack)
       },

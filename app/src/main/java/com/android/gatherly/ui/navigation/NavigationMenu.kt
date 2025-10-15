@@ -67,9 +67,9 @@ sealed class Tab(val name: String, val icon: ImageVector, val destination: Scree
 
   object Friends : Tab("Friends", Icons.Outlined.Diversity1, Screen.FriendsScreen)
 
-  object AddTodo : Tab("Add To-Do", Icons.Outlined.Add, Screen.FriendsScreen)
+  object AddTodo : Tab("Add To-Do", Icons.Outlined.Add, Screen.AddToDo)
 
-  object EditTodo : Tab("Edit To-Do", Icons.Outlined.Edit, Screen.FriendsScreen)
+  object EditTodo : Tab("Edit To-Do", Icons.Outlined.Edit, Screen.AddToDo)
 }
 
 private val bottomtabs =
