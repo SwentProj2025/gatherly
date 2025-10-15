@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
-import com.android.gatherly.model.profile.ProfileRepositoryFirestore
+import com.android.gatherly.model.profile.ProfileRepositoryProvider
 import java.time.LocalDate
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,7 +19,7 @@ data class ProfileState(
 )
 
 class ProfileViewModel(
-    private val repository: ProfileRepository = ProfileRepositoryFirestore()
+    private val repository: ProfileRepository = ProfileRepositoryProvider.repository
     // Will also need the focus sessions repository when it is available
 ) : ViewModel() {
 

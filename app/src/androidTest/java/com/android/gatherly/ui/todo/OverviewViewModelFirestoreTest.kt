@@ -65,6 +65,14 @@ class OverviewViewModelFirestoreTest : FirestoreGatherlyTest() {
     repository.addTodo(todo1)
     repository.addTodo(todo2)
 
+    withContext(Dispatchers.Default.limitedParallelism(1)) {
+      withTimeout(TIMEOUT) {
+        while (viewModel.uiState.value.todos.size != 2) {
+          viewModel.refreshUIState()
+          delay(200)
+        }
+      }
+    }
     // Trigger reload
     viewModel.refreshUIState()
 
@@ -112,9 +120,20 @@ class OverviewViewModelFirestoreTest : FirestoreGatherlyTest() {
   }
 
   @Test
+  @OptIn(ExperimentalCoroutinesApi::class)
   fun refreshUiState_triggersReloadSuccessfully() = runTest {
     val todo1 = makeTodo("Initial Todo")
     repository.addTodo(todo1)
+
+    withContext(Dispatchers.Default.limitedParallelism(1)) {
+      withTimeout(TIMEOUT) {
+        while (viewModel.uiState.value.todos.size != 1) {
+          viewModel.refreshUIState()
+          delay(200)
+        }
+      }
+    }
+
     viewModel.refreshUIState()
 
     waitUntilLoaded(viewModel)
@@ -125,6 +144,16 @@ class OverviewViewModelFirestoreTest : FirestoreGatherlyTest() {
     // Add another todo and refresh again
     val todo2 = makeTodo("Another Todo")
     repository.addTodo(todo2)
+
+    withContext(Dispatchers.Default.limitedParallelism(1)) {
+      withTimeout(TIMEOUT) {
+        while (viewModel.uiState.value.todos.size != 2) {
+          viewModel.refreshUIState()
+          delay(200)
+        }
+      }
+    }
+
     viewModel.refreshUIState()
 
     waitUntilLoaded(viewModel)
@@ -139,6 +168,15 @@ class OverviewViewModelFirestoreTest : FirestoreGatherlyTest() {
     // create and add a todo
     val todo = makeTodo("Status Change Test")
     repository.addTodo(todo)
+
+    withContext(Dispatchers.Default.limitedParallelism(1)) {
+      withTimeout(TIMEOUT) {
+        while (viewModel.uiState.value.todos.size != 1) {
+          viewModel.refreshUIState()
+          delay(200)
+        }
+      }
+    }
 
     // Initial load
     viewModel.refreshUIState()
