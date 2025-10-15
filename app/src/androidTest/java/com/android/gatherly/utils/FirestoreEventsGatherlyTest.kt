@@ -121,9 +121,7 @@ open class FirestoreEventsGatherlyTest {
   @After
   open fun tearDown() = runTest {
     clearAllEvents()
-    Log.d("EventsTest", "Users before clear: ${FirebaseEmulator.users}")
     FirebaseEmulator.clearAuthEmulator()
-    Log.d("EventsTest", "Users after clear: ${FirebaseEmulator.users}")
     FirebaseEmulator.clearFirestoreEmulator()
   }
 
