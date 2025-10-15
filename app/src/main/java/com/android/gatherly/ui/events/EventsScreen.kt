@@ -33,6 +33,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.credentials.CredentialManager
@@ -54,7 +55,43 @@ import com.android.gatherly.ui.navigation.TopNavigationMenu
  */
 
 object EventsScreenTestTags {
+
     const val EVENT_POPUP = "EventPopUp"
+
+    const val ALL_LISTS = "EventsLists"
+
+    const val BROWSER_EVENTS_LIST = "BrowserEvents"
+
+    const val UPCOMING_EVENTS_LIST = "UpcomingEvents"
+
+    const val MY_EVENTS_LIST = "MyOwnEvents"
+
+    const val CREATE_EVENT_BUTTON = "CreateANewEvent"
+
+    const val CANCEL_EVENT_BUTTON = "CancelEvent"
+
+    const val GOBACK_EVENT_BUTTON = "GoBackOverview"
+
+    const val PARTICIPATE_BUTTON = "Participate"
+
+    const val UNREGISTER_BUTTON = "Unregister"
+
+    const val EMPTY_BROWSER_LIST_MSG = "EmptyBrowserEvents"
+
+    const val EMPTY_UPCOMING_LIST_MSG = "EmptyUpcomingEvents"
+
+    const val EMPTY_OUREVENTS_LIST_MSG = "EmptyOurEvents"
+
+    const val BROWSE_TITLE = "TitleBrowserEvents"
+
+    const val UPCOMING_TITLE = "TitleUpcomingEvents"
+
+    const val YOUR_EVENTS_TITLE = "TitleYourEvents"
+
+    const val EVENT_DATE = "EventDate"
+
+    const val EVENT_TITLE = "EventTitle"
+
 
 
 
@@ -76,29 +113,35 @@ fun EventsScreen(
     navigateToEditEvent: (Event) -> Unit = {},
     //navigationActions: NavigationActions? = null,
 ) {
-
+/* TODO
     val context = LocalContext.current
     val uiState by eventsViewModel.uiState.collectAsState()
     val listEvents = uiState.fullEventList
     val browserEvents = uiState.globalEventList
     val upcomingEvents = uiState.participatedEventList
     val myOwnEvents = uiState.createdEventList
-    /*
+
+ */
+    val listEvents = emptyList<Event>()
     val browserEvents = emptyList<Event>()
     val upcomingEvents = emptyList<Event>()
     val myOwnEvents = emptyList<Event>()
-     */
+
 
     val currentUser = FirebaseAuth.getInstance().currentUser
     val currentUserId = currentUser?.uid
+    /* TODO
     LaunchedEffect(Unit) {
         eventsViewModel.refreshEvents(currentUserId.toString())
     }
 
+     */
+
     val isPopupOn = remember { mutableStateOf(false) }
 
 
-    /*LaunchedEffect(uiState.signedOut) {
+    /* TODO
+    LaunchedEffect(uiState.signedOut) {
         if (uiState.signedOut) {
             onSignedOut()
             Toast.makeText(context, "Logout successful", Toast.LENGTH_SHORT).show()
@@ -106,7 +149,7 @@ fun EventsScreen(
     }*/
 
     Scaffold(
-        /*
+        /* TODO
         topBar = {
             TopNavigationMenu(
                 selectedTab = Tab.Events,
@@ -130,17 +173,19 @@ fun EventsScreen(
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp)
                             .padding(padding)
-                            .testTag(OverviewScreenTestTags.TODO_LIST)) {
+                            .testTag(EventsScreenTestTags.ALL_LISTS)) {
 
                     // BROWSE EVENTS
+                    item {
+                        Text(
+                            text = "Browse Events",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                                .testTag(EventsScreenTestTags.BROWSE_TITLE))
+                    }
+
                     if (browserEvents.isNotEmpty()) {
-                        item {
-                            Text(
-                                text = "Browse Events",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(vertical = 8.dp))
-                        }
                         items(browserEvents.size) { index ->
                             BrowserEventsItem(
                                 event = browserEvents[index],
@@ -148,32 +193,46 @@ fun EventsScreen(
                                     isPopupOn.value = true
                                 }
                             )
-
-                            if (isPopupOn.value){
+                            if (isPopupOn.value) {
                                 BrowserEventsPopUp(
                                     event = browserEvents[index],
                                     shouldShowDialog = isPopupOn,
-                                    participate = {
+                                    participate = {} /* TODO {
                                         eventsViewModel.onParticipate(
                                             browserEvents[index].id,
                                             currentUserId = currentUserId.toString()
                                         )
-                                    }
+                                    } */
+
                                 )
                             }
 
                         }
+                    } else {
+                        item {
+                            Text(
+                                "No events coming",
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(8.dp)
+                                    .testTag(EventsScreenTestTags.EMPTY_BROWSER_LIST_MSG)
+                                ,
+                                textAlign = TextAlign.Center
+                            )
+                        }
                     }
 
                     // MY UPCOMING EVENTS
+                    item {
+                        Text(
+                            text = "My Upcoming Events",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(vertical = 8.dp).testTag(
+                                EventsScreenTestTags.UPCOMING_TITLE))
+                    }
+
                     if (upcomingEvents.isNotEmpty()) {
-                        item {
-                            Text(
-                                text = "My Upcoming Events",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(vertical = 8.dp))
-                        }
                         items(upcomingEvents.size) { index ->
                             UpcomingEventsItem(
                                 event = upcomingEvents[index],
@@ -184,29 +243,42 @@ fun EventsScreen(
 
                             if (isPopupOn.value) {
                                 UpComingEventsPopUp(
-                                    event = myOwnEvents[index],
+                                    event = upcomingEvents[index],
                                     shouldShowDialog = isPopupOn,
-                                    unparticipate = {
+                                    unparticipate = {} /* TODO{
                                         eventsViewModel.onUnregister(
-                                            eventId = myOwnEvents[index].id,
+                                            eventId = upcomingEvents[index].id,
                                             currentUserId = currentUserId.toString()
                                         )
-                                    }
+                                    } */
                                 )
                             }
+                        }
+                    } else {
+                        item {
+                            Text(
+                                "You are not register to any upcoming events",
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(8.dp)
+                                    .testTag(EventsScreenTestTags.EMPTY_UPCOMING_LIST_MSG),
+                                textAlign = TextAlign.Center
+                            )
                         }
                     }
 
                     // MY OWN EVENTS
+                    item {
+                        Text(
+                            text = "My Own Events",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(vertical = 8.dp).testTag(
+                                EventsScreenTestTags.YOUR_EVENTS_TITLE)
+                        )
+                    }
+
                     if (myOwnEvents.isNotEmpty()) {
-                        item {
-                            Text(
-                                text = "My Own Events",
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(vertical = 8.dp)
-                            )
-                        }
                         items(myOwnEvents.size) { index ->
                             MyOwnEventsItem(
                                 event = browserEvents[index],
@@ -224,6 +296,17 @@ fun EventsScreen(
                             }
 
                         }
+                    } else {
+                        item {
+                            Text(
+                                "You did not create any events",
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(8.dp)
+                                    .testTag(EventsScreenTestTags.EMPTY_OUREVENTS_LIST_MSG),
+                                textAlign = TextAlign.Center
+                            )
+                        }
                     }
 
                     item {
@@ -232,7 +315,9 @@ fun EventsScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(50.dp)
-                                .padding(vertical = 12.dp),
+                                .padding(vertical = 12.dp)
+                                .testTag(EventsScreenTestTags.CREATE_EVENT_BUTTON)
+                            ,
                             shape = RoundedCornerShape(12.dp),
                             colors = buttonColors(containerColor = Color(0xFF9ADCE5))
                         ) {
@@ -283,13 +368,15 @@ fun BrowserEventsItem(
                     text = event.title,
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Medium)
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.testTag(EventsScreenTestTags.EVENT_TITLE))
                 Text(
                     text =
                         SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
                             .format(event.date.toDate()),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.testTag(EventsScreenTestTags.EVENT_DATE)
                     )
             }
         }
@@ -327,13 +414,15 @@ fun UpcomingEventsItem(
                     text = event.title,
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Medium)
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.testTag(EventsScreenTestTags.EVENT_TITLE))
                 Text(
                     text =
                         SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
                             .format(event.date.toDate()),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.testTag(EventsScreenTestTags.EVENT_DATE)
                 )
             }
         }
@@ -360,7 +449,8 @@ fun UpComingEventsPopUp(
                 Button(
                     onClick = {
                         shouldShowDialog.value = false
-                    }
+                    },
+                    modifier = Modifier.testTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON)
                 ) {
                     Text(
                         text = "go Back",
@@ -376,7 +466,8 @@ fun UpComingEventsPopUp(
                     onClick = {
                         unparticipate()
                         shouldShowDialog.value = false
-                    }
+                    },
+                    modifier = Modifier.testTag(EventsScreenTestTags.UNREGISTER_BUTTON)
                 ) {
                     Text(
                         text = "Unregister",
@@ -408,7 +499,8 @@ fun BrowserEventsPopUp(
                 Button(
                     onClick = {
                         shouldShowDialog.value = false
-                    }
+                    },
+                    modifier = Modifier.testTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON)
                 ) {
                     Text(
                         text = "go Back",
@@ -424,7 +516,8 @@ fun BrowserEventsPopUp(
                     onClick = {
                         participate()
                         shouldShowDialog.value = false
-                    }
+                    },
+                    modifier = Modifier.testTag(EventsScreenTestTags.PARTICIPATE_BUTTON)
                 ) {
                     Text(
                         text = "Participate",
@@ -467,13 +560,15 @@ fun MyOwnEventsItem(
                     text = event.title,
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Medium)
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.testTag(EventsScreenTestTags.EVENT_TITLE))
                 Text(
                     text =
                         SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
                             .format(event.date.toDate()),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.testTag(EventsScreenTestTags.EVENT_DATE)
                 )
             }
         }
@@ -500,7 +595,8 @@ fun MyOwnEventsPopUp(
                 Button(
                     onClick = {
                         shouldShowDialog.value = false
-                    }
+                    },
+                    modifier = Modifier.testTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON)
                 ) {
                     Text(
                         text = "go Back",
@@ -516,7 +612,8 @@ fun MyOwnEventsPopUp(
                     onClick = {
                         cancelYourEvent()
                         shouldShowDialog.value = false
-                    }
+                    },
+                    modifier = Modifier.testTag(EventsScreenTestTags.CANCEL_EVENT_BUTTON)
                 ) {
                     Text(
                         text = "Cancel the event",
@@ -527,15 +624,4 @@ fun MyOwnEventsPopUp(
 
     )
 }
-
-
-
-
-
-/*
-- "Browse events" register button -> makes the event go into
-- "My upcoming events" (and conversely)
-- "My organised events": create button to add a new one + edit (on the right) for existing ones
- When clicking on an event, displays a popup listing all the data class's information
- */
 
