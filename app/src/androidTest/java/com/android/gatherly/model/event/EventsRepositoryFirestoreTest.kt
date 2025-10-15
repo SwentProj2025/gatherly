@@ -18,6 +18,7 @@ import org.junit.Test
  */
 class EventsRepositoryFirestoreTest : FirestoreEventsGatherlyTest() {
 
+  /** Verifies that events can be added and retrieved from the repository. */
   @Test
   fun add_and_getAll_works() = runTest {
     repository.addEvent(event1)
@@ -29,6 +30,7 @@ class EventsRepositoryFirestoreTest : FirestoreEventsGatherlyTest() {
     assertTrue(events.any { it.title == "Conference" })
   }
 
+  /** Verifies that getEvent returns the exact event with all fields intact. */
   @Test
   fun getEvent_returns_exact_event() = runTest {
     repository.addEvent(event1)
@@ -40,6 +42,7 @@ class EventsRepositoryFirestoreTest : FirestoreEventsGatherlyTest() {
     assertEquals(event1.status, retrieved.status)
   }
 
+  /** Verifies that getEvent throws NoSuchElementException when the event doesn't exist. */
   @Test
   fun getEvent_throws_when_not_found() = runTest {
     try {
@@ -50,6 +53,7 @@ class EventsRepositoryFirestoreTest : FirestoreEventsGatherlyTest() {
     }
   }
 
+  /** Verifies that events with location data are stored and retrieved correctly. */
   @Test
   fun addEvent_with_location_stores_correctly() = runTest {
     val eventWithLocation = event1.copy(id = "x1", location = Location(46.52, 6.57, "EPFL"))
@@ -62,6 +66,7 @@ class EventsRepositoryFirestoreTest : FirestoreEventsGatherlyTest() {
     assertEquals(6.57, fetched.location?.longitude ?: 0.0, 0.0001)
   }
 
+  /** Verifies that date, start time, and end time timestamps are persisted correctly. */
   @Test
   fun addEvent_stores_all_timestamps_correctly() = runTest {
     val date = Timestamp(1700000000, 0)
@@ -79,6 +84,7 @@ class EventsRepositoryFirestoreTest : FirestoreEventsGatherlyTest() {
     assertEquals(endTime, fetched.endTime)
   }
 
+  /** Verifies that editEvent successfully updates an existing event's fields. */
   @Test
   fun editEvent_updates_existing_event() = runTest {
     repository.addEvent(event1)
@@ -96,6 +102,7 @@ class EventsRepositoryFirestoreTest : FirestoreEventsGatherlyTest() {
     assertEquals(EventStatus.ONGOING, fetched.status)
   }
 
+  /** Verifies that editEvent throws SecurityException when a non-creator tries to edit. */
   @Test
   fun editEvent_throws_security_exception_when_not_creator() = runTest {
     // Add event as user1
@@ -112,6 +119,7 @@ class EventsRepositoryFirestoreTest : FirestoreEventsGatherlyTest() {
     }
   }
 
+  /** Verifies that deleteEvent removes the event from the repository. */
   @Test
   fun deleteEvent_removes_it() = runTest {
     repository.addEvent(event1)
@@ -124,6 +132,7 @@ class EventsRepositoryFirestoreTest : FirestoreEventsGatherlyTest() {
     assertEquals(event2.id, events.first().id)
   }
 
+  /** Verifies that deleteEvent throws SecurityException when a non-creator tries to delete. */
   @Test
   fun deleteEvent_throws_security_exception_when_not_creator() = runTest {
     // Add event as user1
@@ -140,6 +149,7 @@ class EventsRepositoryFirestoreTest : FirestoreEventsGatherlyTest() {
     }
   }
 
+  /** Verifies that addParticipant successfully adds a user to the event's participant list. */
   @Test
   fun addParticipant_adds_user_to_list() = runTest {
     repository.addEvent(event1)
@@ -151,6 +161,7 @@ class EventsRepositoryFirestoreTest : FirestoreEventsGatherlyTest() {
     assertEquals(1, fetched.participants.size)
   }
 
+  /** Verifies that multiple users can be added as participants to the same event. */
   @Test
   fun addParticipant_multiple_users() = runTest {
     repository.addEvent(event1)
@@ -164,6 +175,7 @@ class EventsRepositoryFirestoreTest : FirestoreEventsGatherlyTest() {
     assertTrue(fetched.participants.contains(user2Id))
   }
 
+  /** Verifies that removeParticipant removes a user from the event's participant list. */
   @Test
   fun removeParticipant_removes_user_from_list() = runTest {
     val eventWithParticipants = event1.copy(participants = listOf(user1Id, user2Id))
@@ -177,6 +189,7 @@ class EventsRepositoryFirestoreTest : FirestoreEventsGatherlyTest() {
     assertEquals(1, fetched.participants.size)
   }
 
+  /** Verifies that getNewId returns unique, non-empty identifiers. */
   @Test
   fun getNewId_returns_unique_values() {
     val id1 = repository.getNewId()

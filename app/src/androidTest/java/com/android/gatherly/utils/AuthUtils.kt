@@ -15,15 +15,37 @@ import io.mockk.mockk
 import io.mockk.mockkObject
 import org.json.JSONObject
 
+/**
+ * Utility object for generating fake JWT tokens for testing purposes.
+ *
+ * This generator creates properly formatted but unsigned JWT tokens that can be used in test
+ * environments where actual Google authentication is not available or desired.
+ */
 object FakeJwtGenerator {
   private var _counter = 0
   private val counter
     get() = _counter++
 
+  /**
+   * Encodes a byte array to a Base64 URL-safe string without padding.
+   *
+   * @param input The byte array to encode
+   * @return A Base64 URL-safe encoded string suitable for JWT components
+   */
   private fun base64UrlEncode(input: ByteArray): String {
     return Base64.encodeToString(input, Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP)
   }
 
+  /**
+   * Creates a fake Google ID token with the specified user information.
+   *
+   * The generated token follows the JWT format (header.payload.signature) but uses a dummy
+   * signature since validation is not required in test environments.
+   *
+   * @param name The display name for the fake user
+   * @param email The email address for the fake user
+   * @return A formatted JWT string containing the user's information
+   */
   fun createFakeGoogleIdToken(name: String, email: String): String {
     val header = JSONObject(mapOf("alg" to "none"))
     val payload =
@@ -44,11 +66,27 @@ object FakeJwtGenerator {
   }
 }
 
+/**
+ * A mock implementation of CredentialManager for testing authentication flows.
+ *
+ * This class creates a fake CredentialManager that returns predefined credentials without requiring
+ * actual Google Sign-In infrastructure, enabling isolated unit tests.
+ *
+ * @property context The Android context (unused but required for delegation)
+ */
 class FakeCredentialManager private constructor(private val context: Context) :
     CredentialManager by CredentialManager.create(context) {
   companion object {
-    // Creates a mock CredentialManager that always returns a CustomCredential
-    // containing the given fakeUserIdToken when getCredential() is called.
+    /**
+     * Creates a mock CredentialManager that returns a fake Google ID token credential.
+     *
+     * This factory method sets up all necessary mocks using MockK to simulate the credential
+     * retrieval flow. When `getCredential()` is called on the returned CredentialManager, it will
+     * always return a CustomCredential containing the provided fake token.
+     *
+     * @param fakeUserIdToken The fake JWT token to be returned by the mock credential manager
+     * @return A mocked CredentialManager configured to return the specified fake credential
+     */
     fun create(fakeUserIdToken: String): CredentialManager {
       mockkObject(GoogleIdTokenCredential)
       val googleIdTokenCredential = mockk<GoogleIdTokenCredential>()
