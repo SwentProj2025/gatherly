@@ -21,16 +21,29 @@ import org.junit.Before
  */
 open class FirestoreEventsGatherlyTest {
 
+  /**
+   * The EventsRepository instance backed by the Firestore emulator. Initialized during setUp() and
+   * used for testing repository operations.
+   */
   protected lateinit var repository: EventsRepository
 
   // Create fake tokens for different users
   protected val user1Token = FakeJwtGenerator.createFakeGoogleIdToken("Alice", "alice@test.com")
   protected val user2Token = FakeJwtGenerator.createFakeGoogleIdToken("Bob", "bob@test.com")
 
+  /**
+   * The unique identifier for user1 (Alice) in the Firebase Auth emulator. Set dynamically during
+   * setUp() after authentication.
+   */
   protected lateinit var user1Id: String
+
+  /**
+   * The unique identifier for user2 (Bob) in the Firebase Auth emulator. Set dynamically during
+   * setUp() after authentication.
+   */
   protected lateinit var user2Id: String
 
-  // Sample events used in tests
+  /** Sample event used as a template in tests. Created by Alice. */
   protected val event1 =
       Event(
           id = "1",
@@ -45,10 +58,26 @@ open class FirestoreEventsGatherlyTest {
           participants = emptyList(),
           status = EventStatus.UPCOMING)
 
+  /** Sample event variation - conference event */
   protected val event2 =
       event1.copy(id = "2", title = "Conference", description = "Tech conference")
+
+  /** Sample event variation - workshop event */
   protected val event3 = event1.copy(id = "3", title = "Workshop", description = "Kotlin workshop")
 
+  /**
+   * Sets up the test environment before each test.
+   *
+   * This method performs the following steps:
+   * 1. Verifies the Firebase emulator is running
+   * 2. Clears all existing authentication and Firestore data
+   * 3. Seeds two test users (Alice and Bob) in the Auth emulator
+   * 4. Signs in as user1 (Alice) by default and captures both user IDs
+   * 5. Initializes the EventsRepository with the emulator Firestore instance
+   * 6. Clears any existing events from Firestore
+   *
+   * @throws IllegalStateException if the Firebase emulator is not running
+   */
   @Before
   open fun setUp() = runTest {
     if (!FirebaseEmulator.isRunning) {
@@ -79,6 +108,16 @@ open class FirestoreEventsGatherlyTest {
     clearAllEvents()
   }
 
+  /**
+   * Cleans up the test environment after each test.
+   *
+   * This method:
+   * 1. Removes all events from Firestore
+   * 2. Clears all users from the Auth emulator
+   * 3. Clears all data from the Firestore emulator
+   *
+   * Logs are included for debugging purposes to track user cleanup.
+   */
   @After
   open fun tearDown() = runTest {
     clearAllEvents()
