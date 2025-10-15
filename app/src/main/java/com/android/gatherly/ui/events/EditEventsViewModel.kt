@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.dimensionResource
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.event.Event
@@ -41,11 +42,13 @@ data class EditEventsUIState(
     val toastString : String? = null
 )
 
+//TODO change everything name to title
+
 @SuppressLint("SimpleDateFormat")
 class EditEventsViewModel(
-    val profileRepository: ProfileRepository = ProfileRepositoryFirestore(),
-    val eventsRepository: EventsRepository,
-    val client: NominatimLocationRepository// = NominatimLocationRepository(HttpClientProvider.client)
+    private val profileRepository: ProfileRepository = ProfileRepositoryFirestore(),
+    private val eventsRepository: EventsRepository,
+    private val client: NominatimLocationRepository// = NominatimLocationRepository(HttpClientProvider.client)
 ) : ViewModel() {
 
     var uiState by mutableStateOf<EditEventsUIState>(EditEventsUIState())
@@ -167,6 +170,7 @@ class EditEventsViewModel(
     }
 
     fun saveEvent() {
+        checkAllEntries()
         if (!uiState.nameError && !uiState.descriptionError && !uiState.creatorNameError
             && !uiState.dateError && !uiState.startTimeError && !uiState.endTimeError) {
             val date = dateFormat.parse(uiState.date) ?: run {
@@ -215,5 +219,14 @@ class EditEventsViewModel(
         viewModelScope.launch {
             eventsRepository.deleteEvent(eventId)
         }
+    }
+
+    private fun checkAllEntries() {
+        updateName(uiState.name)
+        updateDescription(uiState.description)
+        updateCreatorName(uiState.creatorName)
+        updateDate(uiState.date)
+        updateStartTime(uiState.startTime)
+        updateEndTime(uiState.endTime)
     }
 }
