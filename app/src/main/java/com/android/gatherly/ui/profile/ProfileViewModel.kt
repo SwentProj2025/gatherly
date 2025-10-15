@@ -9,6 +9,7 @@ import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+import com.android.gatherly.model.profile.ProfileRepositoryProvider
 import java.time.LocalDate
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -24,9 +25,10 @@ data class ProfileState(
 )
 
 class ProfileViewModel(
-    private val repository: ProfileRepository = ProfileRepositoryFirestore()
+    private val repository: ProfileRepository = ProfileRepositoryProvider.repository
     // Will also need the focus sessions repository when it is available
 ) : ViewModel() {
+
   private val _uiState = MutableStateFlow(ProfileState())
   val uiState: StateFlow<ProfileState> = _uiState
 
