@@ -1,4 +1,4 @@
-package com.android.gatherly.viewmodel
+package com.android.gatherly.viewmodel.map
 
 import com.android.gatherly.model.map.Location
 import com.android.gatherly.model.todo.ToDo

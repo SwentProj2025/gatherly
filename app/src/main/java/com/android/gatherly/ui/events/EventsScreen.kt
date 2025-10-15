@@ -11,12 +11,17 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.android.gatherly.model.event.EventsRepositoryFirestore
 import com.android.gatherly.ui.navigation.BottomNavigationMenu
 import com.android.gatherly.ui.navigation.HandleSignedOutState
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu
+import com.android.gatherly.utils.GenericViewModelFactory
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 
 object EventsScreenTestTags {
   const val EVENTSTEXT = "EVENTS"
@@ -24,10 +29,17 @@ object EventsScreenTestTags {
 
 @Composable
 fun EventsScreen(
-    eventsViewModel: EventsViewModel = viewModel(),
     credentialManager: CredentialManager = CredentialManager.create(LocalContext.current),
     onSignedOut: () -> Unit = {},
     navigationActions: NavigationActions? = null,
+    eventsViewModel: EventsViewModel =
+        viewModel(
+            factory =
+                GenericViewModelFactory<EventsViewModel> {
+                  EventsViewModel(
+                      EventsRepositoryFirestore(Firebase.firestore),
+                      currentUserId = Firebase.auth.currentUser?.uid ?: "")
+                }),
 ) {
 
   val uiState by eventsViewModel.uiState.collectAsState()
