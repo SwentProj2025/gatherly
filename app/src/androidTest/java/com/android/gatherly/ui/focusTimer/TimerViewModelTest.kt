@@ -309,4 +309,52 @@ class TimerViewModelTest : FirestoreGatherlyTest() {
     assertTrue(finalState.isPaused)
     assertTrue(finalState.isStarted)
   }
+
+  /** Check that the hours set function works correctly when given valid input. */
+  @Test
+  fun right_value_set_hours() = runTest {
+    val hours = "00"
+    val minutes = "00"
+    val seconds = "00"
+
+    viewModel.setHours("05")
+    viewModel.setMinutes(minutes)
+    viewModel.setSeconds(seconds)
+
+    val finalState = viewModel.uiState.value
+
+    assertEquals("05", finalState.hours)
+  }
+
+  /** Check that the minutes set function works correctly when given valid input. */
+  @Test
+  fun right_value_set_minutes() = runTest {
+    val hours = "00"
+    val minutes = "00"
+    val seconds = "00"
+
+    viewModel.setHours(hours)
+    viewModel.setMinutes("05")
+    viewModel.setSeconds(seconds)
+
+    val finalState = viewModel.uiState.value
+
+    assertEquals("05", finalState.minutes)
+  }
+
+  /** Check that the seconds set function works correctly when given valid input. */
+  @Test
+  fun right_value_set_seconds() = runTest {
+    val hours = "00"
+    val minutes = "00"
+    val seconds = "00"
+
+    viewModel.setHours(hours)
+    viewModel.setMinutes(minutes)
+    viewModel.setSeconds("05")
+
+    val finalState = viewModel.uiState.value
+
+    assertEquals("05", finalState.seconds)
+  }
 }

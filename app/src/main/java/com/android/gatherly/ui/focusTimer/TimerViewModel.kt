@@ -298,4 +298,10 @@ class TimerViewModel(
             minutes = m.toString().padStart(2, '0'),
             seconds = s.toString().padStart(2, '0'))
   }
+
+  /** Cleans up resources when the ViewModel is cleared. */
+  override fun onCleared() {
+    cancelTicking()
+    super.onCleared()
+  }
 }
