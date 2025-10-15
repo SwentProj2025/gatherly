@@ -15,12 +15,21 @@ import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.Companion.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
 import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.auth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
+/**
+ * Represents the UI state for authentication.
+ *
+ * @property isLoading Whether an authentication operation is in progress.
+ * @property user The currently signed-in [FirebaseUser], or null if not signed in.
+ * @property errorMsg An error message to display, or null if there is no error.
+ * @property signedOut True if a sign-out operation has completed.
+ */
 class SignInViewModel : ViewModel() {
   // UI State containing the user sign in status
   private val _uiState = MutableStateFlow<Boolean>(false)
