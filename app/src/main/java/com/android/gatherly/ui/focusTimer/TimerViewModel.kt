@@ -269,7 +269,7 @@ class TimerViewModel(
    *
    * @param todo The ToDo item to link or unlink
    */
-  private fun linkToDo(todo: ToDo?) {
+  fun linkToDo(todo: ToDo?) {
     if (todo == _uiState.value.linkedTodo) {
       _uiState.value = _uiState.value.copy(linkedTodo = null)
       return
