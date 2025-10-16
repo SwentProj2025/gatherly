@@ -11,6 +11,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -207,6 +208,10 @@ fun ToDoItem(
     onCheckedChange: (Boolean) -> Unit
 ) {
   Card(
+      colors =
+          CardDefaults.cardColors(
+              containerColor = MaterialTheme.colorScheme.onSurface,
+              contentColor = MaterialTheme.colorScheme.primary),
       modifier =
           Modifier.clickable(onClick = onClick)
               .testTag(OverviewScreenTestTags.getTestTagForTodoItem(todo))
