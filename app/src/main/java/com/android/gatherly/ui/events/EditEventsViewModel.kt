@@ -255,6 +255,7 @@ class EditEventsViewModel(
       uiState =
           uiState.copy(
               displayToast = true, toastString = "Cannot add a participant that is already added")
+      return
     }
     uiState = uiState.copy(participants = uiState.participants + participant)
   }
@@ -311,7 +312,7 @@ class EditEventsViewModel(
       val date =
           dateFormat.parse(uiState.date)
               ?: run {
-                uiState.copy(displayToast = true, toastString = "Cannot parse event date")
+                uiState = uiState.copy(displayToast = true, toastString = "Cannot parse event date")
                 return
               }
       val timestampDate = Timestamp(date)
@@ -320,7 +321,8 @@ class EditEventsViewModel(
       val startTime =
           timeFormat.parse(uiState.startTime)
               ?: run {
-                uiState.copy(displayToast = true, toastString = "Cannot parse event start time")
+                uiState =
+                    uiState.copy(displayToast = true, toastString = "Cannot parse event start time")
                 return
               }
       val timestampStartTime = Timestamp(startTime)
@@ -329,7 +331,8 @@ class EditEventsViewModel(
       val endTime =
           timeFormat.parse(uiState.endTime)
               ?: run {
-                uiState.copy(displayToast = true, toastString = "Cannot parse event end time")
+                uiState =
+                    uiState.copy(displayToast = true, toastString = "Cannot parse event end time")
                 return
               }
       val timestampEndTime = Timestamp(endTime)

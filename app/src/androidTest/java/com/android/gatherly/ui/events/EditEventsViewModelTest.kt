@@ -13,8 +13,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -49,6 +51,11 @@ class EditEventsViewModelTest {
 
     // set the event to edit
     editEventsViewModel.setEventValues(event.id)
+  }
+
+  @After
+  fun tearDown() {
+    Dispatchers.resetMain()
   }
 
   /*----------------------------------------Profiles--------------------------------------------*/
