@@ -36,4 +36,14 @@
     <string name="timer_pause">Pause</string>
     <string name="timer_resume">Resume</string>
     <string name="timer_stop">Stop</string>
+
+    <!-- Settings Page -->
+    <string name="settings_edit_photo">Edit Photo</string>
+    <string name="settings_save">Save</string>
+    <string name="settings_profile_picture_description">Profile Picture</string>
+    <string name="settings_default_username">\@defaultuser</string>
+    <string name="settings_label_name">Name :</string>
+    <string name="settings_label_birthday">Birthday date:</string>
+    <string name="settings_label_school">School :</string>
+    <string name="settings_label_school_year">School year :</string>
 </resources>
