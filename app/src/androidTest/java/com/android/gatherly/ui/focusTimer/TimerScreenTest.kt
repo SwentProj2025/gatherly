@@ -28,6 +28,8 @@ class TimerScreenTest : FirestoreGatherlyTest() {
   override fun setUp() {
 
     super.setUp()
+
+    // Add a todo in the repository to test linking
     runBlocking {
       println("start run test")
       repository.addTodo(todo1)
@@ -36,108 +38,151 @@ class TimerScreenTest : FirestoreGatherlyTest() {
     composeTestRule.setContent { TimerScreen(timerViewModel = TimerViewModel(repository)) }
   }
 
+  // Can enter a valid number of hours in the corresponding field
   @Test
   fun canWriteHours() {
     composeTestRule.assertScreenDisplaysTimerNotStarted()
-    println("display asserted")
+
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.HOURS_TEXT).performTextClearance()
-    println("text cleared")
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.HOURS_TEXT).performTextInput("10")
-    println("10 written")
+
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.HOURS_TEXT).assertTextContains("10")
-    println("assert 10 in text")
   }
 
+  // Can enter a valid number of minutes in the corresponding field
   @Test
   fun canWriteMinutes() {
     composeTestRule.assertScreenDisplaysTimerNotStarted()
+
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.MINUTES_TEXT).performTextClearance()
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.MINUTES_TEXT).performTextInput("10")
+
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.MINUTES_TEXT).assertTextContains("10")
   }
 
+  // Can enter a valid number of seconds in the corresponding field
   @Test
   fun canWriteSeconds() {
     composeTestRule.assertScreenDisplaysTimerNotStarted()
+
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.SECONDS_TEXT).performTextClearance()
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.SECONDS_TEXT).performTextInput("10")
+
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.SECONDS_TEXT).assertTextContains("10")
   }
 
+  // Starting the timer changes the screen
   @Test
   fun canStartTimer() {
     composeTestRule.assertScreenDisplaysTimerNotStarted()
+
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.HOURS_TEXT).performTextClearance()
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.HOURS_TEXT).performTextInput("10")
+
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.START_BUTTON).performClick()
+
     composeTestRule.assertScreenDisplaysTimerStartedRunning()
   }
 
+  // Resetting the timer puts all fields to 00
   @Test
   fun canResetTimer() {
     composeTestRule.assertScreenDisplaysTimerNotStarted()
+
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.HOURS_TEXT).performTextClearance()
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.HOURS_TEXT).performTextInput("10")
+
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.MINUTES_TEXT).performTextClearance()
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.MINUTES_TEXT).performTextInput("10")
+
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.SECONDS_TEXT).performTextClearance()
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.SECONDS_TEXT).performTextInput("10")
+
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.RESET_BUTTON).performClick()
+
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.HOURS_TEXT).assertTextContains("00")
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.MINUTES_TEXT).assertTextContains("00")
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.SECONDS_TEXT).assertTextContains("00")
   }
 
+  // Pausing the timer updates correctly the pause/resume button
   @Test
   fun canPauseTimer() {
     composeTestRule.assertScreenDisplaysTimerNotStarted()
+
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.HOURS_TEXT).performTextClearance()
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.HOURS_TEXT).performTextInput("10")
+
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.START_BUTTON).performClick()
+
     composeTestRule.assertScreenDisplaysTimerStartedRunning()
+
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.PAUSE_BUTTON).performClick()
+
     composeTestRule.assertScreenDisplaysTimerStartedPaused()
   }
 
+  // Resuming the timer updates correctly the pause/resume button
   @Test
   fun canResumeTimer() {
     composeTestRule.assertScreenDisplaysTimerNotStarted()
+
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.HOURS_TEXT).performTextClearance()
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.HOURS_TEXT).performTextInput("10")
+
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.START_BUTTON).performClick()
+
     composeTestRule.assertScreenDisplaysTimerStartedRunning()
+
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.PAUSE_BUTTON).performClick()
+
     composeTestRule.assertScreenDisplaysTimerStartedPaused()
+
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.RESUME_BUTTON).performClick()
+
     composeTestRule.assertScreenDisplaysTimerStartedRunning()
   }
 
+  // Stopping the timer displays the editing time screen
   @Test
   fun canStopTimer() {
     composeTestRule.assertScreenDisplaysTimerNotStarted()
+
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.HOURS_TEXT).performTextClearance()
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.HOURS_TEXT).performTextInput("10")
+
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.START_BUTTON).performClick()
+
     composeTestRule.assertScreenDisplaysTimerStartedRunning()
+
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.STOP_BUTTON).performClick()
+
     composeTestRule.assertScreenDisplaysTimerNotStarted()
   }
 
+  // Linking a todo displys it when the timer starts
   @Test
   fun canLinkToDo() {
     composeTestRule.assertScreenDisplaysTimerNotStarted()
+
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.TODO_TO_CHOOSE).assertIsDisplayed()
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.TODO_TO_CHOOSE).performClick()
+
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.HOURS_TEXT).performTextClearance()
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.HOURS_TEXT).performTextInput("10")
+
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.START_BUTTON).performClick()
+
     composeTestRule.assertScreenDisplaysTimerStartedRunning()
+
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.LINKED_TODO).assertIsDisplayed()
+
     composeTestRule
         .onNodeWithTag(FocusTimerScreenTestTags.LINKED_TODO)
         .assertTextContains(todo1.name, substring = true)
   }
 
+  // Helper function to check all test tags on the editing timer time screen
   fun ComposeTestRule.assertScreenDisplaysTimerNotStarted() {
     onNodeWithTag(FocusTimerScreenTestTags.HOURS_TEXT).assertIsDisplayed()
     onNodeWithTag(FocusTimerScreenTestTags.MINUTES_TEXT).assertIsDisplayed()
@@ -146,6 +191,7 @@ class TimerScreenTest : FirestoreGatherlyTest() {
     onNodeWithTag(FocusTimerScreenTestTags.RESET_BUTTON).assertIsDisplayed()
   }
 
+  // Helper function to check all test tags on the running timer screen
   fun ComposeTestRule.assertScreenDisplaysTimerStartedRunning() {
     onNodeWithTag(FocusTimerScreenTestTags.TIMER_CIRCLE).assertIsDisplayed()
     onNodeWithTag(FocusTimerScreenTestTags.TIMER_TIME).assertIsDisplayed()
@@ -153,6 +199,7 @@ class TimerScreenTest : FirestoreGatherlyTest() {
     onNodeWithTag(FocusTimerScreenTestTags.STOP_BUTTON).assertIsDisplayed()
   }
 
+  // Helper function to check all test tags on the paused timer screen
   fun ComposeTestRule.assertScreenDisplaysTimerStartedPaused() {
     onNodeWithTag(FocusTimerScreenTestTags.TIMER_CIRCLE).assertIsDisplayed()
     onNodeWithTag(FocusTimerScreenTestTags.TIMER_TIME).assertIsDisplayed()

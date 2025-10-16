@@ -83,8 +83,10 @@ fun TimerScreen(
 
   val uiState by timerViewModel.uiState.collectAsState()
 
+  // If the user signs out, call onSignedOut()
   HandleSignedOutState(uiState.signedOut, onSignedOut)
 
+  // Scaffold to have top bar and bottom bar
   Scaffold(
       topBar = {
         TopNavigationMenu(
@@ -107,9 +109,11 @@ fun TimerScreen(
 @Composable
 fun TimerScreenContent(timerViewModel: TimerViewModel) {
 
+  // Collect the uiState, and the context for Toasts
   val uiState by timerViewModel.uiState.collectAsState()
   val context = LocalContext.current
 
+  // Launched effect to display a toast upon error
   LaunchedEffect(uiState.errorMsg) {
     if (uiState.errorMsg != null) {
       Toast.makeText(context, uiState.errorMsg, Toast.LENGTH_SHORT).show()
@@ -117,32 +121,42 @@ fun TimerScreenContent(timerViewModel: TimerViewModel) {
     }
   }
 
+  // Configuration is needed to get the screen width
   val configuration = LocalConfiguration.current
   val corner = 12.dp
 
-  Box(modifier = Modifier.fillMaxSize()) {}
+  // If the timer didn't start, display the first view (editing timer time)
   if (!uiState.isStarted) {
+
+    // Define weights of different components in the screen
     val timeWeight = 3f
     val buttonsWeight = 1f
     val todosWeight = 2f
 
+    // Column of all 3 components
     Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+      // The three time textFields and texts (hours, minutes, seconds)
       Row(
           horizontalArrangement = Arrangement.SpaceEvenly,
           modifier = Modifier.fillMaxWidth().weight(timeWeight),
           verticalAlignment = Alignment.Bottom) {
+            // The hours time textField and text
             TimerTime(
                 uiState.hours,
                 { timerViewModel.setHours(it) },
                 stringResource(R.string.timer_hours),
                 corner,
                 FocusTimerScreenTestTags.HOURS_TEXT)
+
+            // The minutes time textField and text
             TimerTime(
                 uiState.minutes,
                 { timerViewModel.setMinutes(it) },
                 stringResource(R.string.timer_minutes),
                 corner,
                 FocusTimerScreenTestTags.MINUTES_TEXT)
+
+            // The seconds time textField and text
             TimerTime(
                 uiState.seconds,
                 { timerViewModel.setSeconds(it) },
@@ -150,9 +164,13 @@ fun TimerScreenContent(timerViewModel: TimerViewModel) {
                 corner,
                 FocusTimerScreenTestTags.SECONDS_TEXT)
           }
+
+      // The start and reset timer buttons
       Row(
           horizontalArrangement = Arrangement.SpaceEvenly,
           modifier = Modifier.fillMaxWidth().weight(buttonsWeight)) {
+
+            // Start button
             TimerButton(
                 { timerViewModel.startTimer() },
                 MaterialTheme.colorScheme.secondary,
@@ -160,6 +178,8 @@ fun TimerScreenContent(timerViewModel: TimerViewModel) {
                 stringResource(R.string.timer_start),
                 corner,
                 FocusTimerScreenTestTags.START_BUTTON)
+
+            // Reset button
             TimerButton(
                 { timerViewModel.resetTimerTime() },
                 MaterialTheme.colorScheme.surfaceVariant,
@@ -168,12 +188,14 @@ fun TimerScreenContent(timerViewModel: TimerViewModel) {
                 corner,
                 FocusTimerScreenTestTags.RESET_BUTTON)
           }
-      // Todos to link
+
+      // Todos to link, in a lazy column to enable scrolling
       LazyColumn(modifier = Modifier.fillMaxSize().weight(todosWeight)) {
         val padding = 6.dp
         val todoHeight = 60.dp
         val horizontalThickness = 0.5.dp
 
+        // Title text for linking todos
         item {
           Text(
               text = stringResource(R.string.timer_todos_linking),
@@ -182,18 +204,24 @@ fun TimerScreenContent(timerViewModel: TimerViewModel) {
               style = MaterialTheme.typography.titleLarge,
               modifier = Modifier.padding(padding))
         }
+
+        // Todos lazily displayed
         for (todo in uiState.allTodos) {
           item {
+            // Divider for aesthetics
             HorizontalDivider(
                 thickness = horizontalThickness, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
+            // The card for each todo
             Card(
                 colors =
                     if (todo == uiState.linkedTodo) {
+                      // Highlight the linked todo with different colors
                       CardDefaults.cardColors(
                           containerColor = MaterialTheme.colorScheme.secondary,
                           contentColor = MaterialTheme.colorScheme.onSecondary)
                     } else {
+                      // Normal colors for unlinked todos
                       CardDefaults.cardColors(
                           containerColor = MaterialTheme.colorScheme.background,
                           contentColor = MaterialTheme.colorScheme.onBackground)
@@ -216,20 +244,22 @@ fun TimerScreenContent(timerViewModel: TimerViewModel) {
     }
   }
 
-  // Second view, timer is running or paused
+  // Second view, if timer is running or paused
   if (uiState.isStarted) {
+    // Define the weights of the components
     val todoWeight = 1f
     val timerWeight = 2f
     val buttonsWeight = 1f
 
     Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-      // Linked todo
       Box(modifier = Modifier.weight(todoWeight), contentAlignment = Alignment.BottomCenter) {
         val todoRatio = 2.0 / 3.0
 
+        // If a todo is linked, display it
         if (uiState.linkedTodo != null) {
           Text(
               text =
+                  // Build a string with only the title of the todo to in bold
                   buildAnnotatedString {
                     append(stringResource(R.string.timer_linked_todo))
                     withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
@@ -244,7 +274,7 @@ fun TimerScreenContent(timerViewModel: TimerViewModel) {
         }
       }
 
-      // Timer
+      // Timer circle and test
       Box(modifier = Modifier.weight(timerWeight), contentAlignment = Alignment.Center) {
         val progressRatio = 6.0 / 7.0
         val progressWidth = 15.dp
@@ -281,6 +311,8 @@ fun TimerScreenContent(timerViewModel: TimerViewModel) {
           horizontalArrangement = Arrangement.SpaceEvenly,
           modifier = Modifier.fillMaxWidth().weight(buttonsWeight)) {
             if (!uiState.isPaused) {
+
+              // Pause button
               TimerButton(
                   { timerViewModel.pauseTimer() },
                   MaterialTheme.colorScheme.secondary,
@@ -289,6 +321,8 @@ fun TimerScreenContent(timerViewModel: TimerViewModel) {
                   corner,
                   FocusTimerScreenTestTags.PAUSE_BUTTON)
             } else {
+
+              // Resume button
               TimerButton(
                   { timerViewModel.startTimer() },
                   MaterialTheme.colorScheme.secondary,
@@ -297,6 +331,8 @@ fun TimerScreenContent(timerViewModel: TimerViewModel) {
                   corner,
                   FocusTimerScreenTestTags.RESUME_BUTTON)
             }
+
+            // Stop timer button
             TimerButton(
                 { timerViewModel.endTimer() },
                 MaterialTheme.colorScheme.surfaceVariant,
@@ -309,6 +345,15 @@ fun TimerScreenContent(timerViewModel: TimerViewModel) {
   }
 }
 
+/**
+ * Helper function to display buttons on the screen
+ * @param onClick to call when button is clicked
+ * @param containerColor color of the button
+ * @param contentColor color of the button text
+ * @param text text to display
+ * @param corner the corner rounding of the buttons
+ * @param testTag test tag to attach to the button
+ */
 @Composable
 fun TimerButton(
     onClick: () -> Unit,
@@ -319,6 +364,7 @@ fun TimerButton(
     testTag: String
 ) {
 
+  // Configuration needed to get the width, and ratio to use later
   val configuration = LocalConfiguration.current
   val buttonRatio = 3.0 / 7.0
 
@@ -332,6 +378,14 @@ fun TimerButton(
       }
 }
 
+/**
+ * Helper function for the editing time text fields
+ * @param time the text to display
+ * @param onValueChange to call when the value of the text field changes
+ * @param text the text to display under the text field
+ * @param corner the corner rounding of the text field
+ * @param testTag the test tag to attach to the text field
+ */
 @Composable
 fun TimerTime(
     time: String,
@@ -340,11 +394,14 @@ fun TimerTime(
     corner: Dp,
     testTag: String
 ) {
+
+  // Configuration needed to get the width, and ratio to use later and font size
   val configuration = LocalConfiguration.current
   val timeRatio = 1.0 / 4.0
   val timeFontSize = 25.sp
 
   Column(modifier = Modifier.width((configuration.screenWidthDp * timeRatio).dp)) {
+    // Text field displaying the chosen hours, minutes or seconds
     TextField(
         value = time,
         onValueChange = onValueChange,
@@ -364,6 +421,7 @@ fun TimerTime(
                 unfocusedIndicatorColor = Color.Transparent),
         maxLines = 1,
         modifier = Modifier.fillMaxWidth().testTag(testTag))
+    // Text displayed under the text field
     Text(
         text = text,
         textAlign = TextAlign.Center,
@@ -372,6 +430,7 @@ fun TimerTime(
   }
 }
 
+// Helper function to preview the timer screen
 @Preview
 @Composable
 fun TimerScreenPreview() {
