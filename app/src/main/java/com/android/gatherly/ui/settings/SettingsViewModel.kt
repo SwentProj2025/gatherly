@@ -19,7 +19,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-// Portions of the code in this file is adapted from the bootcamp solution provided by Swent staff
+// Portions of the code in this file are adapted from the bootcamp solution provided by Swent staff
 
 /**
  * UI state for the Settings screen. This state holds the data needed to display and edit a Profile
@@ -117,11 +117,12 @@ class SettingsViewModel(
     }
     val birthdayDate = DateParser.parse(state.birthday)
 
-    val originalP = originalProfile
-    if (originalP == null) {
-      setErrorMsg("Error, original profile not loaded")
-      return false
-    }
+    val originalP =
+        originalProfile
+            ?: run {
+              setErrorMsg("Error, original profile not loaded")
+              return false
+            }
     val updatedProfile =
         originalP.copy(
             uid = id,

@@ -2,7 +2,15 @@ package com.android.gatherly.viewmodel.settings
 
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
+import com.android.gatherly.ui.settings.SettingsViewModel
 
+/**
+ * An in-memory implementation of [ProfileRepository] for use in unit tests.
+ *
+ * This class stores profiles in a mutable map and allows adding, retrieving, updating, and removing
+ * profiles without accessing any real database or network. Useful for testing [SettingsViewModel]
+ * or other components that depend on [ProfileRepository].
+ */
 class ProfileRepositoryLocalForTests : ProfileRepository {
   private val profiles = mutableMapOf<String, Profile>()
 
