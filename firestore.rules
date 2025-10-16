@@ -40,5 +40,29 @@ service cloud.firestore {
                         && request.resource.data.ownerId == request.auth.uid;
         }
 
+    // --- EVENTS ---
+        match /events/{eventId} {
+          // Anyone authenticated can read events
+          allow read: if request.auth != null;
+
+          // Only authenticated users can create events,
+          // and the event's creatorId must match their UID
+          allow create: if request.auth != null
+                        && request.resource.data.creatorId == request.auth.uid;
+
+          // Only the creator can delete their own event
+          allow delete: if request.auth != null
+                        && resource.data.creatorId == request.auth.uid;
+
+          // Anyone can update participants,
+          // but only the creator can update other event fields
+          allow update: if request.auth != null
+                        && (
+                             request.resource.data.diff(resource.data).keys().hasOnly(["participants"])
+                             || resource.data.creatorId == request.auth.uid
+                           );
+        }
+
+
   }
 }
