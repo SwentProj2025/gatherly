@@ -18,7 +18,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
 
   @Test
   fun initProfileIfMissing_createsProfileWhenAbsent() = runTest {
-    val uid = com.android.gatherly.utils.FirebaseEmulator.auth.currentUser!!.uid
+    val uid = FirebaseEmulator.auth.currentUser!!.uid
 
     val created = repository.initProfileIfMissing(uid, defaultPhotoUrl = "default.png")
 
@@ -32,7 +32,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
 
   @Test
   fun initProfileIfMissing_returnsFalseWhenAlreadyExists() = runTest {
-    val uid = com.android.gatherly.utils.FirebaseEmulator.auth.currentUser!!.uid
+    val uid = FirebaseEmulator.auth.currentUser!!.uid
 
     repository.initProfileIfMissing(uid, "photo1.png")
     val result = repository.initProfileIfMissing(uid, "photo2.png")
@@ -44,7 +44,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
 
   @Test
   fun updateProfile_updatesExistingProfile() = runTest {
-    val uid = com.android.gatherly.utils.FirebaseEmulator.auth.currentUser!!.uid
+    val uid = FirebaseEmulator.auth.currentUser!!.uid
     repository.initProfileIfMissing(uid, "pic1.png")
 
     val updated =
@@ -65,7 +65,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
 
   @Test
   fun deleteProfile_removesItFromDatabase() = runTest {
-    val uid = com.android.gatherly.utils.FirebaseEmulator.auth.currentUser!!.uid
+    val uid = FirebaseEmulator.auth.currentUser!!.uid
     repository.initProfileIfMissing(uid, "p.png")
 
     assertTrue(repository.isUidRegistered(uid))
@@ -75,7 +75,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
 
   @Test
   fun isUidRegistered_returnsTrueOnlyIfExists() = runTest {
-    val uid = com.android.gatherly.utils.FirebaseEmulator.auth.currentUser!!.uid
+    val uid = FirebaseEmulator.auth.currentUser!!.uid
     assertFalse(repository.isUidRegistered(uid))
 
     repository.initProfileIfMissing(uid, "pic.png")
@@ -84,8 +84,8 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
 
   @Test
   fun searchProfilesByNamePrefix_returnsMatchingProfiles() = runTest {
-    val auth = com.android.gatherly.utils.FirebaseEmulator.auth
-    val firestore = com.android.gatherly.utils.FirebaseEmulator.firestore
+    val auth = FirebaseEmulator.auth
+    val firestore = FirebaseEmulator.firestore
 
     // --- USER A ---
     auth.signInAnonymously().await()
@@ -111,7 +111,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
 
   @Test
   fun registerUsername_failsIfProfileDoesNotExist() = runTest {
-    val uid = com.android.gatherly.utils.FirebaseEmulator.auth.currentUser!!.uid
+    val uid = FirebaseEmulator.auth.currentUser!!.uid
     try {
       repository.registerUsername(uid, "newuser")
       fail("Expected IllegalStateException because profile does not exist yet")
@@ -144,7 +144,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
 
   @Test
   fun updateUsername_replacesOldUsername() = runTest {
-    val uid = com.android.gatherly.utils.FirebaseEmulator.auth.currentUser!!.uid
+    val uid = FirebaseEmulator.auth.currentUser!!.uid
     repository.initProfileIfMissing(uid, "pic.png")
     repository.registerUsername(uid, "oldname")
 
@@ -157,7 +157,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
 
   @Test
   fun getProfileByUsername_returnsCorrectProfile() = runTest {
-    val uid = com.android.gatherly.utils.FirebaseEmulator.auth.currentUser!!.uid
+    val uid = FirebaseEmulator.auth.currentUser!!.uid
     repository.initProfileIfMissing(uid, "photo.png")
     repository.registerUsername(uid, "charlie")
 
@@ -168,8 +168,8 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
 
   @Test
   fun userCannotEditAnotherUserProfile_dueToRules() = runTest {
-    val auth = com.android.gatherly.utils.FirebaseEmulator.auth
-    val firestore = com.android.gatherly.utils.FirebaseEmulator.firestore
+    val auth = FirebaseEmulator.auth
+    val firestore = FirebaseEmulator.firestore
 
     // User A creates a profile
     auth.signInAnonymously().await()
@@ -195,8 +195,8 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
 
   @Test
   fun userCanReadOtherUserProfile_whenAuthenticated() = runTest {
-    val auth = com.android.gatherly.utils.FirebaseEmulator.auth
-    val firestore = com.android.gatherly.utils.FirebaseEmulator.firestore
+    val auth = FirebaseEmulator.auth
+    val firestore = FirebaseEmulator.firestore
 
     // User A
     auth.signInAnonymously().await()
@@ -212,4 +212,22 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     val fetched = repoB.getProfileByUid(userAUid)
     assertNotNull(fetched)
   }
+
+  @Test
+  fun isUsernameAvailable_behavesCorrectly() = runTest {
+    val uid = FirebaseEmulator.auth.currentUser!!.uid
+    repository.initProfileIfMissing(uid, "photo.png")
+
+    // Valid and available username
+    assertTrue(repository.isUsernameAvailable("validname"))
+
+    // Invalid username pattern
+    assertFalse(repository.isUsernameAvailable("a!")) // invalid due to punctuation
+    assertFalse(repository.isUsernameAvailable("ab")) // invalid due to length < 3
+
+    // Already taken username
+    repository.registerUsername(uid, "takenuser")
+    assertFalse(repository.isUsernameAvailable("takenuser"))
+  }
+
 }
