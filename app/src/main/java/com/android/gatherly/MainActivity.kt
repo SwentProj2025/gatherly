@@ -18,7 +18,7 @@ import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.android.gatherly.ui.authentication.SignInScreen
 import com.android.gatherly.ui.events.EventsScreen
-import com.android.gatherly.ui.focusTimer.FocusTimerScreen
+import com.android.gatherly.ui.focusTimer.TimerScreen
 import com.android.gatherly.ui.friends.FriendsScreen
 import com.android.gatherly.ui.homePage.HomePageScreen
 import com.android.gatherly.ui.map.MapScreen
@@ -143,7 +143,7 @@ fun GatherlyApp(
         route = Screen.FocusTimerScreen.name,
     ) {
       composable(Screen.FocusTimerScreen.route) {
-        FocusTimerScreen(
+        TimerScreen(
             navigationActions = navigationActions,
             credentialManager = credentialManager,
             onSignedOut = { navigationActions.navigateTo(Screen.SignIn) })

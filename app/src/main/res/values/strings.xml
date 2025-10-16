@@ -19,10 +19,21 @@
     <string name="todos_save_button_text">Save</string>
     <string name="todos_back_button_desc">Back</string>
     <string name="todos_delete_button_text">Delete</string>
+    <!-- Sign In Page. -->
     <string name="web_client_id">854490974901-rc0seqlo7nbm1net10ujpte2ckkrsgn2.apps.googleusercontent.com</string>
 
     <!-- Navigation -->
     <string name="logOut_message">Logout successful</string>
 
 
+    <string name="timer_hours">Hours</string>
+    <string name="timer_minutes">Minutes</string>
+    <string name="timer_seconds">Seconds</string>
+    <string name="timer_start">Start</string>
+    <string name="timer_reset">Reset</string>
+    <string name="timer_todos_linking">What are you working on?</string>
+    <string name="timer_linked_todo">Working on : </string>
+    <string name="timer_pause">Pause</string>
+    <string name="timer_resume">Resume</string>
+    <string name="timer_stop">Stop</string>
 </resources>
