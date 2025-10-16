@@ -87,14 +87,14 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     val auth = FirebaseEmulator.auth
     val firestore = FirebaseEmulator.firestore
 
-    // --- USER A ---
+    // USER A
     auth.signInAnonymously().await()
     val userAUid = auth.currentUser!!.uid
     val repoA = ProfileRepositoryFirestore(firestore)
     repoA.initProfileIfMissing(userAUid, "defaultA.png")
     repoA.updateProfile(Profile(uid = userAUid, name = "Alice", profilePicture = "a.png"))
 
-    // --- USER B ---
+    // USER B
     auth.signOut()
     auth.signInAnonymously().await()
     val userBUid = auth.currentUser!!.uid
@@ -102,7 +102,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     repoB.initProfileIfMissing(userBUid, "defaultB.png")
     repoB.updateProfile(Profile(uid = userBUid, name = "Alex", profilePicture = "b.png"))
 
-    // --- SEARCH (performed by User B for simplicity) ---
+    // SEARCH (performed by User B)
     val result = repoB.searchProfilesByNamePrefix("Al")
 
     assertTrue(result.isNotEmpty())
@@ -124,17 +124,10 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   fun registerUsername_updatesProfileWhenProfileExists() = runTest {
     val uid = FirebaseEmulator.auth.currentUser!!.uid
     val created = repository.initProfileIfMissing(uid, "pic.png")
-    println("initProfileIfMissing result: $created")
     val snap = FirebaseEmulator.firestore.collection("profiles").document(uid).get().await()
-    println("Firestore raw document exists? ${snap.exists()}")
-    println("Raw Firestore data: ${snap.data}")
     delay(500)
-    println("getProfileByUidResults: ${repository.getProfileByUid(uid)}")
-    println("getprofilebyuid returns null ?: ${repository.getProfileByUid(uid) == null}")
 
-    println("🔹 Calling registerUsername() now...")
     val success = repository.registerUsername(uid, "alice")
-    println("registerUsername() returned: $success")
     assertTrue(success)
 
     val profile = repository.getProfileByUid(uid)
@@ -183,7 +176,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     val userBUid = auth.currentUser!!.uid
     val repoB = ProfileRepositoryFirestore(firestore)
 
-    // Attempt to edit Alice's profile → should fail
+    // Attempt to edit Alice's profile should fail
     val unauthorized = Profile(uid = userAUid, name = "Hacked Alice", profilePicture = "evil.png")
     try {
       repoB.updateProfile(unauthorized)
