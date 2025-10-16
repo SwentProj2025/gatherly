@@ -10,7 +10,7 @@ class ToDosRepositoryLocalMapTest : ToDosRepository {
   private val todos =
       mutableListOf(
           ToDo(
-              uid = getNewUid(),
+              uid = "1",
               name = "Buy groceries",
               description = "Milk, Bread, Eggs, Butter",
               assigneeName = "Alice",
@@ -20,7 +20,7 @@ class ToDosRepositoryLocalMapTest : ToDosRepository {
               status = ToDoStatus.ONGOING,
               ownerId = "user1"),
           ToDo(
-              uid = getNewUid(),
+              uid = "2",
               name = "Finish swent",
               description = "FInish map ui",
               assigneeName = "Colombe",
