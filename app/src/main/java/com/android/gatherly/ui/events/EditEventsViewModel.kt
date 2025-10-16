@@ -268,7 +268,7 @@ class EditEventsViewModel(
    */
   fun searchProfileByString(string: String) {
     viewModelScope.launch {
-      val profilesList = profileRepository.findProfilesByUidSubstring(string)
+      val profilesList = profileRepository.searchProfilesByNamePrefix(string)
       println("profiles list" + profilesList.size)
       uiState = uiState.copy(suggestedProfiles = profilesList)
     }
