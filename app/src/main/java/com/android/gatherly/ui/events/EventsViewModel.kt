@@ -77,49 +77,21 @@ class EventsViewModel(private val repository: EventsRepository, val currentUserI
    *
    * @param currentUserId the ID of the current user
    */
-
-
-   fun refreshEvents(currentUserId: String) {
-       Log.e("EventsViewModel", "refreshEvents: currentUserId=$currentUserId")
-
-
-      viewModelScope.launch {
-          val events = repository.getAllEvents()
-          _uiState.value =
-              _uiState.value.copy(
-                  fullEventList = events,
-                  participatedEventList =
-                      events.filter {
-                          it.participants.contains(currentUserId) && it.creatorId != currentUserId
-                      },
-                  createdEventList = events.filter { it.creatorId == currentUserId },
-                  globalEventList =
-                      events.filter {
-                          it.creatorId != currentUserId && !it.participants.contains(currentUserId)
-                      })
-      }
-      Log.e("EventsViewModel", "refreshEvents: participatedEventList=${_uiState.value.participatedEventList}")
-      Log.e("EventsViewModel", "refreshEvents: browser =${_uiState.value.globalEventList}")
-
+   suspend fun refreshEvents(currentUserId: String) {
+      val events = repository.getAllEvents()
+      _uiState.value =
+          _uiState.value.copy(
+              fullEventList = events,
+              participatedEventList =
+                  events.filter {
+                      it.participants.contains(currentUserId) && it.creatorId != currentUserId
+                  },
+              createdEventList = events.filter { it.creatorId == currentUserId },
+              globalEventList =
+                  events.filter {
+                      it.creatorId != currentUserId && !it.participants.contains(currentUserId)
+                  })
   }
-/*
-    suspend fun refreshEvents(currentUserId: String) {
-        Log.e("EventsViewModel", "refreshEvents: currentUserId=$currentUserId")
-
-        val events = repository.getAllEvents()
-        _uiState.value = _uiState.value.copy(
-            fullEventList = events,
-            participatedEventList = events.filter {
-                it.participants.contains(currentUserId) && it.creatorId != currentUserId
-            },
-            createdEventList = events.filter { it.creatorId == currentUserId },
-            globalEventList = events.filter {
-                it.creatorId != currentUserId && !it.participants.contains(currentUserId)
-            }
-        )
-    }
-
- */
 
 
     /**
@@ -128,32 +100,12 @@ class EventsViewModel(private val repository: EventsRepository, val currentUserI
    * @param eventId the ID of the event to participate in
    * @param currentUserId the ID of the current user
    */
-
-  suspend fun onParticipate(eventId: String, currentUserId: String) {
-
-      Log.e("EventsViewModel", "onParticipate: eventId=$eventId, currentUserId=$currentUserId")
-    viewModelScope.launch {
-        Log.e("EventsViewModel", "onParticipate: before addParticipant")
-      repository.addParticipant(eventId, currentUserId)
-        Log.e("EventsViewModel", "onParticipate: helpppppppppppppppppppp")
-        kotlinx.coroutines.delay(50000L)
-        Log.e("EventsViewModel", "onParticipate: after addParticipant")
-      refreshEvents(currentUserId)
-    }
+   fun onParticipate(eventId: String, currentUserId: String) {
+       viewModelScope.launch {
+           repository.addParticipant(eventId, currentUserId)
+           refreshEvents(currentUserId)
+       }
   }
-
-     /*
-    fun onParticipate(eventId: String, currentUserId: String) {
-        viewModelScope.launch {
-            repository.addParticipant(eventId, currentUserId)
-            delay(500000)
-            refreshEvents(currentUserId)
-        }
-    }
-
-      */
-
-
 
     /**
    * Handles user unregistration from an event.

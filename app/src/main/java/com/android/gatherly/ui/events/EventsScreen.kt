@@ -69,12 +69,6 @@ object EventsScreenTestTags {
 
     const val ALL_LISTS = "EventsLists"
 
-    const val BROWSER_EVENTS_LIST = "BrowserEvents"
-
-    const val UPCOMING_EVENTS_LIST = "UpcomingEvents"
-
-    const val MY_EVENTS_LIST = "MyOwnEvents"
-
     const val CREATE_EVENT_BUTTON = "CreateANewEvent"
 
     const val EDIT_EVENT_BUTTON = "EditEvent"
@@ -101,8 +95,9 @@ object EventsScreenTestTags {
 
     const val EVENT_TITLE = "EventTitle"
 
+    const val POPUP_DESCRIPTION = "EventDescription"
 
-
+    const val POPUP_TITLE = "EventTitle"
 
     /**
      * Returns a unique test tag for the card or container representing a given [Event] item.
@@ -113,6 +108,22 @@ object EventsScreenTestTags {
     fun getTestTagForEventItem(event: Event): String = "eventItem${event.id}"
 }
 
+/**
+ * The Events screen displays a list of events categorized into three sections:
+ * - Browse Events: Events neither created by nor participated in by the current user.
+ * - My Upcoming Events: Events the current user is participating in.
+ * - My Own Events: Events created by the current user.
+ *
+ * Each section allows interaction with the events, such as participating, unregistering,
+ * or editing events. The screen also includes navigation menus and a button to create new events.
+ *
+ * @param credentialManager Manages user credentials for sign-in/sign-out operations.
+ * @param onSignedOut Callback invoked when the user signs out.
+ * @param addYourNewEvent Callback to navigate to the event creation screen.
+ * @param navigateToEditEvent Callback to navigate to the event editing screen with the selected event
+ * @param navigationActions Handles navigation between different tabs/screens.
+ * @param eventsViewModel The ViewModel managing the state and logic for the Events screen.
+ */
 @Composable
 fun EventsScreen(
     credentialManager: CredentialManager = CredentialManager.create(LocalContext.current),
@@ -133,19 +144,14 @@ fun EventsScreen(
     val currentUserIdFromVM = eventsViewModel.currentUserId
     val coroutineScope = rememberCoroutineScope()
 
-
-    val context = LocalContext.current
     val uiState by eventsViewModel.uiState.collectAsState()
-    val listEvents = uiState.fullEventList
     val browserEvents = uiState.globalEventList
     val upcomingEvents = uiState.participatedEventList
     val myOwnEvents = uiState.createdEventList
-    Log.e("EventsScreen", "myOwnEvents size: ${myOwnEvents.size}")
 
     val isPopupOn = remember { mutableStateOf(false) }
 
     LaunchedEffect(uiState) {
-        Log.e("EventsScreen", "LaunchedEffect: uiState changed")
         eventsViewModel.refreshEvents(currentUserIdFromVM)
     }
 
@@ -176,10 +182,10 @@ fun EventsScreen(
                             .padding(padding)
                             .testTag(EventsScreenTestTags.ALL_LISTS)) {
 
-                    // BROWSE EVENTS
+                    // --  BROWSE EVENTS LIST --
                     item {
                         Text(
-                            text = "Browse Events",
+                            text = stringResource(R.string.browseEvents_list_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(vertical = 8.dp)
@@ -198,25 +204,20 @@ fun EventsScreen(
                                 BrowserEventsPopUp(
                                     event = browserEvents[index],
                                     shouldShowDialog = isPopupOn,
-                                    participate =
-
-                                        {coroutineScope.launch {
-                                            eventsViewModel.onParticipate(
-                                                browserEvents[index].id,
+                                    participate = {
+                                        eventsViewModel.onParticipate(
+                                                eventId = browserEvents[index].id,
                                                 currentUserId = eventsViewModel.currentUserId
-                                            )
-                                            kotlinx.coroutines.delay(6000L)
-
-                                        }
+                                        )
                                     }
                                 )
                             }
-
                         }
-                    } else {
+
+                    } else {  // When there is no events in the browser list
                         item {
                             Text(
-                                "No events coming",
+                                stringResource(R.string.browseEvents_emptylist_msg),
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(8.dp)
@@ -227,10 +228,10 @@ fun EventsScreen(
                         }
                     }
 
-                    // MY UPCOMING EVENTS
+                    // -- MY UPCOMING EVENTS LIST --
                     item {
                         Text(
-                            text = "My Upcoming Events",
+                            text = stringResource(R.string.upcomingEvents_list_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(vertical = 8.dp).testTag(
@@ -259,10 +260,11 @@ fun EventsScreen(
                                 )
                             }
                         }
-                    } else {
+
+                    } else { // When there is no events in the upcoming list
                         item {
                             Text(
-                                "You are not register to any upcoming events",
+                                stringResource(R.string.upcomingEvents_emptylist_msg),
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(8.dp)
@@ -275,7 +277,7 @@ fun EventsScreen(
                     // MY OWN EVENTS
                     item {
                         Text(
-                            text = "My Own Events",
+                            text = stringResource(R.string.userEvents_list_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(vertical = 8.dp).testTag(
@@ -304,7 +306,7 @@ fun EventsScreen(
                     } else {
                         item {
                             Text(
-                                "You did not create any events",
+                                stringResource(R.string.userEvents_emptylist_msg),
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .padding(8.dp)
@@ -327,7 +329,7 @@ fun EventsScreen(
                             colors = buttonColors(containerColor = Color(0xFF9ADCE5))
                         ) {
                             Text(
-                                text = "Create an event",
+                                text = stringResource(R.string.create_event_button_title),
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Medium,
                                 color = Color.White
@@ -443,8 +445,14 @@ fun UpComingEventsPopUp(
     unparticipate: () -> Unit
 ) {
     AlertDialog(
-        title = { event.title },
-        text = { event.description },
+        title = { Text(
+            text = event.title,
+            modifier = Modifier.testTag(EventsScreenTestTags.POPUP_TITLE)
+        ) },
+        text = { Text(
+            text = event.description,
+            modifier = Modifier.testTag(EventsScreenTestTags.POPUP_DESCRIPTION)
+        ) },
         icon = { Icons.Outlined.Celebration },
         modifier = Modifier.testTag(EventsScreenTestTags.EVENT_POPUP),
         dismissButton =
@@ -493,8 +501,14 @@ fun BrowserEventsPopUp(
     participate: () -> Unit
 ) {
     AlertDialog(
-        title = { event.title },
-        text = { event.description },
+        title = { Text(
+            text = event.title,
+            modifier = Modifier.testTag(EventsScreenTestTags.POPUP_TITLE)
+        ) },
+        text = {Text(
+            text = event.description,
+            modifier = Modifier.testTag(EventsScreenTestTags.POPUP_DESCRIPTION)
+        ) },
         icon = { Icons.Outlined.Celebration },
         modifier = Modifier.testTag(EventsScreenTestTags.EVENT_POPUP),
         dismissButton =
@@ -589,8 +603,14 @@ fun MyOwnEventsPopUp(
     cancelYourEvent: () -> Unit
 ) {
     AlertDialog(
-        title = { event.title },
-        text = { event.description },
+        title = { Text(
+            text = event.title,
+            modifier = Modifier.testTag(EventsScreenTestTags.POPUP_TITLE)
+        ) },
+        text = { Text(
+            text = event.description,
+            modifier = Modifier.testTag(EventsScreenTestTags.POPUP_DESCRIPTION)
+        ) },
         icon = { Icons.Outlined.Celebration },
         modifier = Modifier.testTag(EventsScreenTestTags.EVENT_POPUP),
         dismissButton =
