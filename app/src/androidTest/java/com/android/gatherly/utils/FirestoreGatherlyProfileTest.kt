@@ -1,6 +1,5 @@
 package com.android.gatherly.utils
 
-import android.util.Log
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
@@ -57,7 +56,5 @@ open class FirestoreGatherlyProfileTest {
     val batch = firestore.batch()
     usernames.documents.forEach { batch.delete(it.reference) }
     batch.commit().await()
-
-    Log.d("FirestoreGatherlyProfileTest", "Cleared data for user ${user.uid}")
   }
 }
