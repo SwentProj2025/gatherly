@@ -44,16 +44,7 @@ import java.util.Locale
 
 object MapScreenTestTags {
   const val GOOGLE_MAP_SCREEN = "mapScreen"
-  const val TODO1 = "todoMarker_1"
-  const val TODO1_EXPANDED = "todoMarkerExpanded_1"
-  const val TODO2 = "todoMarker_2"
-  const val TODO2_EXPANDED = "todoMarkerExpanded_2"
-
-  const val TOP_BAR_TITLE = "topBarTitle"
-  const val BOTTOM_NAVIGATION_MENU = "bottomNavigationMenu"
-
   fun getTestTagForTodoMarker(todoId: String): String = "todoMarker_$todoId"
-
   fun getTestTagForTodoMarkerExpanded(todoId: String): String = "todoMarkerExpanded_$todoId"
 }
 
