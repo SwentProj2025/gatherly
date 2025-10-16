@@ -34,7 +34,24 @@ class ProfileRepositoryLocalForTests : ProfileRepository {
     return profiles.containsKey(uid)
   }
 
-  override suspend fun findProfilesByUidSubstring(uidSubstring: String): List<Profile> {
-    return profiles.values.filter { it.uid.contains(uidSubstring) }
+  override suspend fun searchProfilesByNamePrefix(prefix: String): List<Profile> {
+    return profiles.values.filter { it.uid.contains(prefix) }
   }
+
+  override suspend fun isUsernameAvailable(username: String): Boolean = true
+
+  override suspend fun registerUsername(uid: String, username: String): Boolean = true
+
+  override suspend fun updateUsername(
+    uid: String,
+    oldUsername: String?,
+    newUsername: String
+  ): Boolean = true
+
+  override suspend fun getProfileByUsername(username: String): Profile? = null
+
+  override suspend fun searchProfilesByUsernamePrefix(prefix: String, limit: Int): List<Profile> =
+    emptyList()
+
+  override suspend fun initProfileIfMissing(uid: String, defaultPhotoUrl: String): Boolean = true
 }
