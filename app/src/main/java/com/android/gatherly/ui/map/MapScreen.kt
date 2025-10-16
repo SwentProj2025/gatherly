@@ -3,6 +3,7 @@ package com.android.gatherly.ui.map
 import android.graphics.*
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -42,10 +43,12 @@ import java.util.Locale
 // The icons were created with the help of an LLM (ChatGPT).
 
 object MapScreenTestTags {
-  const val MapText = "MAP"
-}
+  const val GOOGLE_MAP_SCREEN = "mapScreen"
 
-data class MapUIState(val errorMsg: String? = null, val onSignedOut: Boolean = false)
+  fun getTestTagForTodoMarker(todoId: String): String = "todoMarker_$todoId"
+
+  fun getTestTagForTodoMarkerExpanded(todoId: String): String = "todoMarkerExpanded_$todoId"
+}
 
 /**
  * A composable screen displaying ToDos as interactive markers on a Google Map.
@@ -85,11 +88,16 @@ fun MapScreen(
           position = CameraPosition.fromLatLngZoom(uiState.cameraPos, 10f)
         }
         GoogleMap(
-            modifier = Modifier.fillMaxSize().padding(pd),
+            modifier =
+                Modifier.fillMaxSize().padding(pd).testTag(MapScreenTestTags.GOOGLE_MAP_SCREEN),
             cameraPositionState = cameraPositionState) {
               uiState.todoList.forEach { todo ->
                 val loc = todo.location ?: return@forEach
                 val isExpanded = uiState.expandedTodoId == todo.uid
+
+                val markerTestTag =
+                    if (isExpanded) MapScreenTestTags.getTestTagForTodoMarkerExpanded(todo.uid)
+                    else MapScreenTestTags.getTestTagForTodoMarker(todo.uid)
 
                 val formattedDate =
                     remember(todo.dueDate) {
