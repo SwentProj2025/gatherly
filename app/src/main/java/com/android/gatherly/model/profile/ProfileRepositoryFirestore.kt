@@ -32,15 +32,6 @@ class ProfileRepositoryFirestore(private val db: FirebaseFirestore) : ProfileRep
   }
 
   /**
-   * Creates or replaces a [Profile] document for the specified [Profile].
-   *
-   * @param profile The [Profile] object to add or overwrite.
-   */
-  override suspend fun addProfile(profile: Profile) {
-    profilesCollection.document(profile.uid).set(profileToMap(profile)).await()
-  }
-
-  /**
    * Updates an existing [Profile] document.
    *
    * @param profile The [Profile] object containing updated data.
@@ -113,24 +104,25 @@ class ProfileRepositoryFirestore(private val db: FirebaseFirestore) : ProfileRep
    * @return true if registration succeeded, false if invalid or taken.
    */
   override suspend fun registerUsername(uid: String, username: String): Boolean {
-    val username = Username.normalize(username)
-    if (!(Username.isValid(username))) {
-      return false
-    }
+    val normalized = Username.normalize(username)
+    if (!Username.isValid(normalized)) return false
+
     return db.runTransaction { tx ->
-          val usernameDoc = usernamesCollection.document(username)
-          if (tx.get(usernameDoc).exists()) {
-            return@runTransaction false
-          }
-
-          tx.set(usernameDoc, mapOf("uid" to uid))
-
+          val usernameDoc = usernamesCollection.document(normalized)
           val profileDoc = profilesCollection.document(uid)
-          if (tx.get(profileDoc).exists()) {
-            tx.update(profileDoc, "username", username)
-          } else {
-            tx.set(profileDoc, profileToMap(Profile(uid = uid, username = username)))
-          }
+
+          // Read both docs first
+          val usernameSnap = tx.get(usernameDoc)
+          val profileSnap = tx.get(profileDoc)
+
+          // Validate both before writing
+          if (usernameSnap.exists()) return@runTransaction false
+          if (!profileSnap.exists())
+              throw IllegalStateException("Cannot register username before profile creation")
+
+          // Perform writes only after reads
+          tx.set(usernameDoc, mapOf("uid" to uid))
+          tx.update(profileDoc, "username", normalized)
           true
         }
         .await()
@@ -196,7 +188,7 @@ class ProfileRepositoryFirestore(private val db: FirebaseFirestore) : ProfileRep
         profilesCollection
             .orderBy("username")
             .startAt(prefix)
-            .endAt(prefix + '\uf8ff') // Found this on internet, have no idea if it is good.
+            .endAt(prefix + '\uf8ff')
             .get()
             .await()
     return snap.documents.mapNotNull { snapshotToProfile(it) }
@@ -205,13 +197,14 @@ class ProfileRepositoryFirestore(private val db: FirebaseFirestore) : ProfileRep
   /**
    * Ensures a [Profile] document exists for the given [uid]. Creates one with a defaultPhotoUrl and
    * an empty username if missing. This expects that if it was missing the user is then prompted to
-   * update his username.
+   * update the mandatory fields. This is the function that will init a [Profile] if it is the first
+   * time the user signs in.
    *
    * @param uid The user ID.
    * @param defaultPhotoUrl The default photo URL to assign if a [Profile] is created.
    * @return true if a new [Profile] was created, false if it already existed.
    */
-  override suspend fun ensureProfileExists(uid: String, defaultPhotoUrl: String): Boolean {
+  override suspend fun initProfileIfMissing(uid: String, defaultPhotoUrl: String): Boolean {
     val doc = profilesCollection.document(uid)
     val snap = doc.get().await()
     if (snap.exists()) {
@@ -232,6 +225,7 @@ class ProfileRepositoryFirestore(private val db: FirebaseFirestore) : ProfileRep
   private fun snapshotToProfile(doc: DocumentSnapshot): Profile? {
     val uid = doc.getString("uid") ?: return null
     val name = doc.getString("name") ?: ""
+    val username = doc.getString("username") ?: ""
     val focusSessionIds = doc.get("focusSessions") as? List<String> ?: emptyList()
     val eventIds = doc.get("events") as? List<String> ?: emptyList()
     val groupIds = doc.get("groups") as? List<String> ?: emptyList()
@@ -244,6 +238,7 @@ class ProfileRepositoryFirestore(private val db: FirebaseFirestore) : ProfileRep
     return Profile(
         uid = uid,
         name = name,
+        username = username,
         focusSessionIds = focusSessionIds,
         eventIds = eventIds,
         groupIds = groupIds,
@@ -264,6 +259,7 @@ class ProfileRepositoryFirestore(private val db: FirebaseFirestore) : ProfileRep
     return mapOf(
         "uid" to profile.uid,
         "name" to profile.name,
+        "username" to profile.username,
         "focusSessionIds" to profile.focusSessionIds,
         "eventIds" to profile.eventIds,
         "groupIds" to profile.groupIds,

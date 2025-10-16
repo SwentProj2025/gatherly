@@ -18,13 +18,6 @@ interface ProfileRepository {
   suspend fun getProfileByUid(uid: String): Profile?
 
   /**
-   * Adds a new [Profile] or overwrites an existing one.
-   *
-   * @param profile The [Profile] object to insert or replace.
-   */
-  suspend fun addProfile(profile: Profile)
-
-  /**
    * Updates an existing [Profile].
    *
    * @param profile The [Profile] object with updated fields.
@@ -107,5 +100,5 @@ interface ProfileRepository {
    * @param defaultPhotoUrl The default photo URL to assign if a [Profile] is created.
    * @return true if a new [Profile] was created, false if it already existed.
    */
-  suspend fun ensureProfileExists(uid: String, defaultPhotoUrl: String): Boolean
+  suspend fun initProfileIfMissing(uid: String, defaultPhotoUrl: String): Boolean
 }
