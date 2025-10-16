@@ -14,5 +14,5 @@ data class Profile(
     val school: String = "",
     val schoolYear: String = "",
     val birthday: Timestamp? = null,
-    val profilePicture: String? = ""
+    val profilePicture: String = ""
 )
