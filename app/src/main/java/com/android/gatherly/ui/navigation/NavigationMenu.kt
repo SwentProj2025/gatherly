@@ -55,8 +55,10 @@ sealed class Tab(val name: String, val icon: ImageVector, val destination: Scree
   object Overview : Tab("To-Do", Icons.Outlined.FormatListBulleted, Screen.OverviewToDo)
 
   object Events : Tab("Events", Icons.Outlined.Group, Screen.EventsScreen)
-    object EditEvent : Tab("Edit Event", Icons.Outlined.Edit, Screen.EditeventScreen)
-    object AddEvent : Tab("Add Event", Icons.Outlined.Add, Screen.AddEventScreen)
+
+  object EditEvent : Tab("Edit Event", Icons.Outlined.Edit, Screen.EditeventScreen)
+
+  object AddEvent : Tab("Add Event", Icons.Outlined.Add, Screen.AddEventScreen)
 
   object Map : Tab("Map", Icons.Outlined.Place, Screen.Map)
 
@@ -72,7 +74,7 @@ sealed class Tab(val name: String, val icon: ImageVector, val destination: Scree
 
   object AddTodo : Tab("Add To-Do", Icons.Outlined.Add, Screen.AddToDo)
 
-  object EditTodo : Tab("Edit To-Do", Icons.Outlined.Edit, Screen.EditTodo)
+  object EditTodo : Tab("Edit To-Do", Icons.Outlined.Edit, Screen.Task)
 }
 
 private val bottomtabs =

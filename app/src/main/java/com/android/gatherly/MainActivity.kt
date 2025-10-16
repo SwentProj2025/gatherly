@@ -63,7 +63,7 @@ fun GatherlyApp(
   val navController = rememberNavController()
   val navigationActions = NavigationActions(navController)
   val startDestination =
-      if (FirebaseAuth.getInstance().currentUser == null) Screen.SignIn.name
+      if (FirebaseAuth.getInstance().currentUser == null) Screen.HomePage.name
       else Screen.HomePage.name
 
   NavHost(navController = navController, startDestination = startDestination) {
@@ -167,17 +167,13 @@ fun GatherlyApp(
             credentialManager = credentialManager,
             onSignedOut = { navigationActions.navigateTo(Screen.SignIn) },
             addYourNewEvent = { navigationActions.navigateTo(Screen.AddEventScreen) },
-            navigateToEditEvent = { event -> navigationActions.navigateTo(Screen.EditEvent(event.id))}
-        )
-
+            navigateToEditEvent = { event ->
+              navigationActions.navigateTo(Screen.EditEvent(event.id))
+            })
       }
-        composable(Screen.AddEventScreen.route) {
-            AddEventScreen()
-        }
+      composable(Screen.AddEventScreen.route) { AddEventScreen() }
 
-        composable(Screen.EditEvent.route) { navBackStackEntry ->
-            EditEventScreen()
-        }
+      composable(Screen.EditEvent.route) { navBackStackEntry -> EditEventScreen() }
     }
 
     // PROFILE COMPOSABLE  ------------------------------

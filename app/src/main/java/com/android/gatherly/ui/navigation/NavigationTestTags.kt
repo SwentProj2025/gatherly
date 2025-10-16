@@ -25,7 +25,7 @@ object NavigationTestTags {
   const val TOP_BAR_TITLE = "TopBarTitle"
 
   const val ADDEVENT_TAB = "AddEventTab"
-    const val EDITEVENT_TAB = "EditEventTab"
+  const val EDITEVENT_TAB = "EditEventTab"
 
   fun getTabTestTag(tab: Tab): String =
       when (tab) {

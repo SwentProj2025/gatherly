@@ -1,6 +1,5 @@
 package com.android.gatherly.ui.events
 
-import android.util.Log
 import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.ViewModel
@@ -10,7 +9,6 @@ import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsRepository
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -77,37 +75,36 @@ class EventsViewModel(private val repository: EventsRepository, val currentUserI
    *
    * @param currentUserId the ID of the current user
    */
-   suspend fun refreshEvents(currentUserId: String) {
-      val events = repository.getAllEvents()
-      _uiState.value =
-          _uiState.value.copy(
-              fullEventList = events,
-              participatedEventList =
-                  events.filter {
-                      it.participants.contains(currentUserId) && it.creatorId != currentUserId
-                  },
-              createdEventList = events.filter { it.creatorId == currentUserId },
-              globalEventList =
-                  events.filter {
-                      it.creatorId != currentUserId && !it.participants.contains(currentUserId)
-                  })
+  suspend fun refreshEvents(currentUserId: String) {
+    val events = repository.getAllEvents()
+    _uiState.value =
+        _uiState.value.copy(
+            fullEventList = events,
+            participatedEventList =
+                events.filter {
+                  it.participants.contains(currentUserId) && it.creatorId != currentUserId
+                },
+            createdEventList = events.filter { it.creatorId == currentUserId },
+            globalEventList =
+                events.filter {
+                  it.creatorId != currentUserId && !it.participants.contains(currentUserId)
+                })
   }
 
-
-    /**
+  /**
    * Handles user participation in an event.
    *
    * @param eventId the ID of the event to participate in
    * @param currentUserId the ID of the current user
    */
-   fun onParticipate(eventId: String, currentUserId: String) {
-       viewModelScope.launch {
-           repository.addParticipant(eventId, currentUserId)
-           refreshEvents(currentUserId)
-       }
+  fun onParticipate(eventId: String, currentUserId: String) {
+    viewModelScope.launch {
+      repository.addParticipant(eventId, currentUserId)
+      refreshEvents(currentUserId)
+    }
   }
 
-    /**
+  /**
    * Handles user unregistration from an event.
    *
    * @param eventId the ID of the event to unregister from
