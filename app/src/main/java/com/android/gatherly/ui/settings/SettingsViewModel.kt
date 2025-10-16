@@ -3,8 +3,6 @@ package com.android.gatherly.ui.settings
 import android.util.Log
 import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
-import androidx.credentials.ClearCredentialStateRequest
-import androidx.credentials.CredentialManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.profile.Profile
@@ -21,6 +19,16 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+// Portions of the code in this file is adapted from the bootcamp solution provided by Swent staff
+
+/**
+ * UI state for the Settings screen. This state holds the data needed to display and edit a Profile
+ *
+ * @property isValid Returns true if all mandatory fields are valid.
+ *     - Currently, only [name] is mandatory, birthday needs proper format if not empty.
+ *     - Optional fields ([school], [schoolYear], [profilePictureUrl], [birthday]) do not block
+ *       saving even if they are empty.
+ */
 data class SettingsUiState(
     val signedOut: Boolean = false,
     val name: String = "",
@@ -30,19 +38,10 @@ data class SettingsUiState(
     val birthday: String = "",
     val errorMsg: String? = null,
     val invalidNameMsg: String? = null,
-    val invalidSchoolMsg: String? = null,
-    val invalidSchoolYearMsg: String? = null,
-    val invalidPhotoUrlMsg: String? = null,
     val invalidBirthdayMsg: String? = null,
 ) {
   val isValid: Boolean
-    get() =
-        invalidNameMsg == null &&
-            invalidSchoolMsg == null &&
-            invalidBirthdayMsg == null &&
-            invalidSchoolYearMsg == null &&
-            invalidPhotoUrlMsg == null &&
-            name.isNotEmpty() // todo quick something else ?
+    get() = invalidNameMsg == null && invalidBirthdayMsg == null && name.isNotEmpty()
 }
 /**
  * ViewModel for the Settings screen. This ViewModel manages the state of input fields for the
@@ -54,6 +53,8 @@ class SettingsViewModel(
   private val _uiState = MutableStateFlow(SettingsUiState())
   val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
+  private var originalProfile: Profile? = null
+
   /** Initiates sign-out */
   fun signOut(credentialManager: CredentialManager): Unit {
     viewModelScope.launch {
@@ -63,7 +64,6 @@ class SettingsViewModel(
     }
   }
   /** Clears the error message in the UI state. */
-  // todo check errorMsg
   fun clearErrorMsg() {
     _uiState.value = _uiState.value.copy(errorMsg = null)
   }
@@ -81,28 +81,24 @@ class SettingsViewModel(
   fun loadProfile(profileUID: String) {
     viewModelScope.launch {
       try {
-        val profile = repository.getProfileByUid(profileUID)
-        if (profile == null) { // todo verify this
-          setErrorMsg("Profile not found")
-          return@launch
-        } else {
-          _uiState.value =
-              SettingsUiState(
-                  name = profile.name,
-                  school = profile.school,
-                  schoolYear = profile.schoolYear,
-                  profilePictureUrl = profile.profilePicture,
-                  birthday =
-                      profile.birthday.let {
-                        val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-                        return@let if (profile.birthday != null)
-                            dateFormat.format(profile.birthday.toDate())
-                        else ""
-                      },
-              )
-        }
+        val profile =
+            repository.getProfileByUid(profileUID) ?: Profile(uid = profileUID, name = profileUID)
+        originalProfile = profile
+        _uiState.value =
+            SettingsUiState(
+                name = profile.name,
+                school = profile.school,
+                schoolYear = profile.schoolYear,
+                profilePictureUrl = profile.profilePicture,
+                birthday =
+                    profile.birthday.let {
+                      val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                      return@let if (profile.birthday != null)
+                          dateFormat.format(profile.birthday.toDate())
+                      else ""
+                    })
       } catch (e: Exception) {
-        Log.e("SettingsViewModel", "Error loading ToDo by ID: $profileUID", e)
+        Log.e("SettingsViewModel", "Error loading Profile by uid: $profileUID", e)
         setErrorMsg("Failed to load Profile: ${e.message}")
       }
     }
@@ -121,19 +117,20 @@ class SettingsViewModel(
     }
     val birthdayDate = DateParser.parse(state.birthday)
 
-    val uid =
-        Firebase.auth.currentUser?.uid
-            ?: "No user is currently logged in." // TOdo handle anonymous user + how are profile and
-    // ID linked ?
-
-    updateProfileInRepository(
-        Profile(
+    val originalP = originalProfile
+    if (originalP == null) {
+      setErrorMsg("Error, original profile not loaded")
+      return false
+    }
+    val updatedProfile =
+        originalP.copy(
             uid = id,
             name = state.name,
             school = state.school,
             schoolYear = state.schoolYear,
             profilePicture = state.profilePictureUrl,
-            birthday = if (birthdayDate == null) null else Timestamp(birthdayDate)))
+            birthday = if (birthdayDate == null) null else Timestamp(birthdayDate))
+    updateProfileInRepository(updatedProfile)
     clearErrorMsg()
     return true
   }
@@ -162,28 +159,24 @@ class SettingsViewModel(
   }
 
   fun editSchool(newSchool: String) {
-    _uiState.value =
-        _uiState.value.copy(
-            school = newSchool,
-            invalidSchoolMsg = if (newSchool.isBlank()) "Name cannot be empty" else null)
+    _uiState.value = _uiState.value.copy(school = newSchool)
   }
 
   fun editSchoolYear(newSchoolYear: String) {
-    _uiState.value =
-        _uiState.value.copy(
-            schoolYear = newSchoolYear,
-            invalidSchoolYearMsg =
-                if (newSchoolYear.isBlank()) "School year cannot be empty" else null)
+    _uiState.value = _uiState.value.copy(schoolYear = newSchoolYear)
   }
 
-  fun editPhoto(newPhotoUrl: String) {} // TOdo get Photo url viewModel or UI ?
+  fun editPhoto(newPhotoUrl: String) {
+    _uiState.value = _uiState.value.copy(profilePictureUrl = newPhotoUrl)
+  }
 
   fun editBirthday(newBirthday: String) {
     _uiState.value =
         _uiState.value.copy(
             birthday = newBirthday,
             invalidBirthdayMsg =
-                if (DateParser.parse(newBirthday) == null) "Date is not valid (format: dd/mm/yyyy)"
+                if (newBirthday.isNotBlank() && DateParser.parse(newBirthday) == null)
+                    "Date is not valid (format: dd/mm/yyyy)"
                 else null)
   }
 }
