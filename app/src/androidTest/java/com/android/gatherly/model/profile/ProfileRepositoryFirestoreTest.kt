@@ -229,5 +229,4 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     repository.registerUsername(uid, "takenuser")
     assertFalse(repository.isUsernameAvailable("takenuser"))
   }
-
 }
