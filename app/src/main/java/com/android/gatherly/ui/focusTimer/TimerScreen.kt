@@ -347,6 +347,7 @@ fun TimerScreenContent(timerViewModel: TimerViewModel) {
 
 /**
  * Helper function to display buttons on the screen
+ *
  * @param onClick to call when button is clicked
  * @param containerColor color of the button
  * @param contentColor color of the button text
@@ -380,6 +381,7 @@ fun TimerButton(
 
 /**
  * Helper function for the editing time text fields
+ *
  * @param time the text to display
  * @param onValueChange to call when the value of the text field changes
  * @param text the text to display under the text field
