@@ -90,8 +90,10 @@ class TimerViewModel(
    * @param hours The hours input as a string
    */
   fun setHours(hours: String) {
-    val h = hours.toIntOrNull() ?: return setError("Invalid hour : Use numbers like 0–23 hours")
-    if (h !in 0..23) return setError("Invalid hour : Use numbers like 0–23 hours")
+    if (!hours.isEmpty()) {
+      val h = hours.toIntOrNull() ?: return setError("Invalid hour : Use numbers like 0–23 hours")
+      if (h !in 0..23) return setError("Invalid hour : Use numbers like 0–23 hours")
+    }
     _uiState.value = _uiState.value.copy(hours = hours)
   }
 
@@ -101,9 +103,12 @@ class TimerViewModel(
    * @param minutes The minutes input as a string
    */
   fun setMinutes(minutes: String) {
-    val m =
-        minutes.toIntOrNull() ?: return setError("Invalid minutes : Use numbers like 0–59 minutes")
-    if (m !in 0..59) return setError("Invalid minutes : Use numbers like 0–59 minutes")
+    if (!minutes.isEmpty()) {
+      val m =
+          minutes.toIntOrNull()
+              ?: return setError("Invalid minutes : Use numbers like 0–59 minutes")
+      if (m !in 0..59) return setError("Invalid minutes : Use numbers like 0–59 minutes")
+    }
     _uiState.value = _uiState.value.copy(minutes = minutes)
   }
 
@@ -113,9 +118,12 @@ class TimerViewModel(
    * @param seconds The seconds input as a string
    */
   fun setSeconds(seconds: String) {
-    val s =
-        seconds.toIntOrNull() ?: return setError("Invalid seconds : Use numbers like 0–59 seconds")
-    if (s !in 0..59) return setError("Invalid seconds : Use numbers like 0–59 seconds")
+    if (!seconds.isEmpty()) {
+      val s =
+          seconds.toIntOrNull()
+              ?: return setError("Invalid seconds : Use numbers like 0–59 seconds")
+      if (s !in 0..59) return setError("Invalid seconds : Use numbers like 0–59 seconds")
+    }
     _uiState.value = _uiState.value.copy(seconds = seconds)
   }
   // ---------------------------------------------------------------------------------------
