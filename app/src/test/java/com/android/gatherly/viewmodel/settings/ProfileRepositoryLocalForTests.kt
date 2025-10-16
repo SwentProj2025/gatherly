@@ -43,15 +43,15 @@ class ProfileRepositoryLocalForTests : ProfileRepository {
   override suspend fun registerUsername(uid: String, username: String): Boolean = true
 
   override suspend fun updateUsername(
-    uid: String,
-    oldUsername: String?,
-    newUsername: String
+      uid: String,
+      oldUsername: String?,
+      newUsername: String
   ): Boolean = true
 
   override suspend fun getProfileByUsername(username: String): Profile? = null
 
   override suspend fun searchProfilesByUsernamePrefix(prefix: String, limit: Int): List<Profile> =
-    emptyList()
+      emptyList()
 
   override suspend fun initProfileIfMissing(uid: String, defaultPhotoUrl: String): Boolean = true
 }
