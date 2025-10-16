@@ -63,7 +63,7 @@ fun GatherlyApp(
   val navController = rememberNavController()
   val navigationActions = NavigationActions(navController)
   val startDestination =
-      if (FirebaseAuth.getInstance().currentUser == null) Screen.HomePage.name
+      if (FirebaseAuth.getInstance().currentUser == null) Screen.SignIn.name
       else Screen.HomePage.name
 
   NavHost(navController = navController, startDestination = startDestination) {

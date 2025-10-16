@@ -55,7 +55,6 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import java.util.Locale
-import kotlin.Boolean
 
 object EventsScreenTestTags {
 
@@ -97,7 +96,7 @@ object EventsScreenTestTags {
    * Returns a unique test tag for the card or container representing a given [Event] item.
    *
    * @param event The [Event] item whose test tag will be generated.
-   * @return A string uniquely identifying the ToDo item in the UI.
+   * @return A string uniquely identifying the Event item in the UI.
    */
   fun getTestTagForEventItem(event: Event): String = "eventItem${event.id}"
 }
