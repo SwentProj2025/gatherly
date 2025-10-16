@@ -37,15 +37,12 @@ class SettingsViewModelTest {
 
   @Test
   fun loadProfile_LoadsExistingProfileIntoUiState() = runTest {
-    // Arrange
     val profile = Profile(uid = "u1", name = "Alice", school = "Harvard", schoolYear = "3")
     repo.addProfile(profile)
 
-    // Act
     viewModel.loadProfile("u1")
     advanceUntilIdle()
 
-    // Assert
     val state = viewModel.uiState.value
     assertEquals("Alice", state.name)
     assertEquals("Harvard", state.school)
@@ -56,11 +53,9 @@ class SettingsViewModelTest {
 
   @Test
   fun loadProfile_WhenMissing_CreatesDefaultProfile() = runTest {
-    // Act
     viewModel.loadProfile("new_user")
     advanceUntilIdle()
 
-    // Assert
     val state = viewModel.uiState.value
     assertEquals("new_user", state.name)
     assertTrue(state.isValid)
@@ -69,11 +64,9 @@ class SettingsViewModelTest {
 
   @Test
   fun editName_WithBlankName_SetsInvalidMessage() = runTest {
-    // Act
     viewModel.editName("")
     advanceUntilIdle()
 
-    // Assert
     val state = viewModel.uiState.value
     assertEquals("Name cannot be empty", state.invalidNameMsg)
     assertFalse(state.isValid)
@@ -81,11 +74,9 @@ class SettingsViewModelTest {
 
   @Test
   fun editBirthday_WithInvalidDate_SetsErrorMessage() = runTest {
-    // Act
     viewModel.editBirthday("99/99/9999")
     advanceUntilIdle()
 
-    // Assert
     val state = viewModel.uiState.value
     assertEquals("Date is not valid (format: dd/mm/yyyy)", state.invalidBirthdayMsg)
     assertFalse(state.isValid)
@@ -93,12 +84,10 @@ class SettingsViewModelTest {
 
   @Test
   fun editBirthday_WithValidDate_ClearsErrorMessage() = runTest {
-    // Act
     viewModel.editName("Alice")
     viewModel.editBirthday("10/12/2024")
     advanceUntilIdle()
 
-    // Assert
     val state = viewModel.uiState.value
     assertNull(state.invalidBirthdayMsg)
     assertTrue(state.isValid)
@@ -106,7 +95,6 @@ class SettingsViewModelTest {
 
   @Test
   fun updateProfile_WithValidData_ReturnsTrueAndUpdatesRepo() = runTest {
-    // Arrange
     val profile = Profile(uid = "u1", name = "Alice")
     repo.addProfile(profile)
     viewModel.loadProfile("u1")
@@ -114,11 +102,9 @@ class SettingsViewModelTest {
 
     viewModel.editName("Bob")
 
-    // Act
     val result = viewModel.updateProfile("u1")
     advanceUntilIdle()
 
-    // Assert
     assertTrue(result)
     val updated = repo.getProfileByUid("u1")
     assertEquals("Bob", updated?.name)
@@ -127,14 +113,11 @@ class SettingsViewModelTest {
 
   @Test
   fun updateProfile_WhenInvalid_ReturnsFalseAndSetsErrorMsg() = runTest {
-    // Arrange
     viewModel.editName("") // Invalid name
 
-    // Act
     val result = viewModel.updateProfile("some_id")
     advanceUntilIdle()
 
-    // Assert
     assertFalse(result)
     assertEquals("At least one field is not valid", viewModel.uiState.value.errorMsg)
   }
