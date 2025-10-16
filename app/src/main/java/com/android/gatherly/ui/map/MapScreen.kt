@@ -1,8 +1,6 @@
 package com.android.gatherly.ui.map
 
 import android.graphics.*
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -45,18 +43,18 @@ import java.util.Locale
 // The icons were created with the help of an LLM (ChatGPT).
 
 object MapScreenTestTags {
-    const val GOOGLE_MAP_SCREEN = "mapScreen"
-    const val TODO1 = "todoMarker_1"
-    const val TODO1_EXPANDED = "todoMarkerExpanded_1"
-    const val TODO2 = "todoMarker_2"
-    const val TODO2_EXPANDED = "todoMarkerExpanded_2"
+  const val GOOGLE_MAP_SCREEN = "mapScreen"
+  const val TODO1 = "todoMarker_1"
+  const val TODO1_EXPANDED = "todoMarkerExpanded_1"
+  const val TODO2 = "todoMarker_2"
+  const val TODO2_EXPANDED = "todoMarkerExpanded_2"
 
-    const val TOP_BAR_TITLE = "topBarTitle"
-    const val BOTTOM_NAVIGATION_MENU = "bottomNavigationMenu"
+  const val TOP_BAR_TITLE = "topBarTitle"
+  const val BOTTOM_NAVIGATION_MENU = "bottomNavigationMenu"
 
-    fun getTestTagForTodoMarker(todoId: String): String = "todoMarker_$todoId"
+  fun getTestTagForTodoMarker(todoId: String): String = "todoMarker_$todoId"
 
-    fun getTestTagForTodoMarkerExpanded(todoId: String): String = "todoMarkerExpanded_$todoId"
+  fun getTestTagForTodoMarkerExpanded(todoId: String): String = "todoMarkerExpanded_$todoId"
 }
 
 /**
@@ -97,16 +95,16 @@ fun MapScreen(
           position = CameraPosition.fromLatLngZoom(uiState.cameraPos, 10f)
         }
         GoogleMap(
-            modifier = Modifier.fillMaxSize().padding(pd).testTag(MapScreenTestTags.GOOGLE_MAP_SCREEN),
+            modifier =
+                Modifier.fillMaxSize().padding(pd).testTag(MapScreenTestTags.GOOGLE_MAP_SCREEN),
             cameraPositionState = cameraPositionState) {
               uiState.todoList.forEach { todo ->
                 val loc = todo.location ?: return@forEach
                 val isExpanded = uiState.expandedTodoId == todo.uid
 
-                  val markerTestTag =
-                      if (isExpanded)
-                          MapScreenTestTags.getTestTagForTodoMarkerExpanded(todo.uid)
-                      else MapScreenTestTags.getTestTagForTodoMarker(todo.uid)
+                val markerTestTag =
+                    if (isExpanded) MapScreenTestTags.getTestTagForTodoMarkerExpanded(todo.uid)
+                    else MapScreenTestTags.getTestTagForTodoMarker(todo.uid)
 
                 val formattedDate =
                     remember(todo.dueDate) {
@@ -133,7 +131,6 @@ fun MapScreen(
                       else viewModel.onTodoMarkerTapped(todo.uid)
                       true
                     })
-
               }
             }
       })
