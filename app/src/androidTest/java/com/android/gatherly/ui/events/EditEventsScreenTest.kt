@@ -3,8 +3,10 @@ package com.android.gatherly.ui.events
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
+import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.event.EventStatus
@@ -126,6 +128,22 @@ class EditEventsScreenTest : InMemoryGatherlyTest() {
         .assertIsNotDisplayed()
     composeTestRule.onNodeWithTag(EditEventsScreenTestTags.BTN_SAVE)
     composeTestRule.onNodeWithTag(EditEventsScreenTestTags.BTN_DELETE)
+  }
+
+  /** Check that menus are displayed */
+  @Test
+  fun displayMenus() {
+    composeTestRule.onNodeWithTag(EditEventsScreenTestTags.INPUT_LOCATION).performTextInput("Paris")
+    composeTestRule.waitUntil(timeoutMillis = 5000L) {
+      composeTestRule.onNodeWithTag(EditEventsScreenTestTags.LOCATION_MENU).isDisplayed()
+    }
+
+    composeTestRule
+        .onNodeWithTag(EditEventsScreenTestTags.INPUT_PARTICIPANT)
+        .performTextInput("Participant")
+    composeTestRule.waitUntil(timeoutMillis = 5000L) {
+      composeTestRule.onNodeWithTag(EditEventsScreenTestTags.PARTICIPANT_MENU).isDisplayed()
+    }
   }
 
   // This function fills the profile repository with the created profiles, and the event repository

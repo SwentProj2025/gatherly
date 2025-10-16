@@ -66,6 +66,10 @@ object EditEventsScreenTestTags {
 
   const val INPUT_PARTICIPANT = "EVENT_PARTICIPANT_SEARCH"
 
+  const val PARTICIPANT_MENU = "PARTICIPANT_MENU"
+
+  const val LOCATION_MENU = "LOCATION_MENU"
+
   const val PROFILE_SUGGESTION_ITEM = "EVENT_PROFILE_SUGGESTION_ITEM"
   const val PROFILE_SUGGESTION_ADD = "EVENT_PROFILE_SUGGESTION_ADD"
   const val PROFILE_SUGGESTION_REMOVE = "EVENT_PROFILE_SUGGESTION_REMOVE"
@@ -240,7 +244,10 @@ fun EditEventsScreen(
                       expanded = showProfilesDropdown && ui.suggestedProfiles.isNotEmpty(),
                       onDismissRequest = { showProfilesDropdown = false },
                       properties = PopupProperties(focusable = false),
-                      modifier = Modifier.fillMaxWidth().height(200.dp)) {
+                      modifier =
+                          Modifier.testTag(EditEventsScreenTestTags.PARTICIPANT_MENU)
+                              .fillMaxWidth()
+                              .height(200.dp)) {
                         ui.suggestedProfiles.forEach { profile ->
                           val isAlreadyParticipant = ui.participants.any { it.uid == profile.uid }
                           DropdownMenuItem(
@@ -306,7 +313,10 @@ fun EditEventsScreen(
                       expanded = showLocationDropdown && ui.suggestedLocations.isNotEmpty(),
                       onDismissRequest = { showLocationDropdown = false },
                       properties = PopupProperties(focusable = false),
-                      modifier = Modifier.fillMaxWidth().height(200.dp)) {
+                      modifier =
+                          Modifier.testTag(EditEventsScreenTestTags.LOCATION_MENU)
+                              .fillMaxWidth()
+                              .height(200.dp)) {
                         ui.suggestedLocations.take(3).forEach { loc ->
                           DropdownMenuItem(
                               text = {
