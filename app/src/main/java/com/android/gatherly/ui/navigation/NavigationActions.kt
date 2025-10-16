@@ -28,6 +28,16 @@ sealed class Screen(
   object FocusTimerScreen : Screen(route = "focus_timer_screen", name = "Focus Timer")
 
   object EventsScreen : Screen(route = "events_screen", name = "Your events")
+    object AddEventScreen : Screen(route = "add_event_screen", name = "Create an event")
+
+  object EditeventScreen : Screen(route = "edit_event", name = "Edit event")
+
+    data class EditEvent(val eventUid: String) :
+        Screen(route = "edit_event/${eventUid}", name = "Edit Event") {
+        companion object {
+            const val route = "edit_event/{uid}"
+        }
+    }
 
   object ProfileScreen : Screen(route = "profile_screen", name = "Your profile")
 

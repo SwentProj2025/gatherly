@@ -37,5 +37,12 @@
     <string name="addtodo_title"> Add To-Do</string>
     <string name="edittodo_title">Edit To-Do</string>
 
+    <!-- Events -->
+    <string name="goback_button_title">Go back</string>
+    <string name="unregister_button_title">Unregister</string>
+    <string name="participate_button_title">Participate</string>
+    <string name="edit_button_title">Edit the event</string>
+    <string name="create_event_button_title">Create Event</string>
+
 
 </resources>

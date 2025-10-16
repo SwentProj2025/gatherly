@@ -1,6 +1,7 @@
 package com.android.gatherly.ui.events
 
 import android.icu.text.SimpleDateFormat
+import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -20,26 +21,33 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.android.gatherly.R
 import com.android.gatherly.model.event.Event
 import com.google.firebase.auth.FirebaseAuth
 import java.util.Locale
 import kotlin.Boolean
 import com.android.gatherly.model.event.EventsRepositoryFirestore
 import com.android.gatherly.ui.navigation.BottomNavigationMenu
+import com.android.gatherly.ui.navigation.HandleSignedOutState
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
@@ -48,6 +56,12 @@ import com.android.gatherly.utils.GenericViewModelFactory
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.android.gatherly.R.string.unregister_button_title
+import com.android.gatherly.R.string.participate_button_title
+import com.android.gatherly.R.string.edit_button_title
+import com.android.gatherly.R.string.goback_button_title
+import kotlinx.coroutines.launch
+
 
 object EventsScreenTestTags {
 
@@ -115,40 +129,27 @@ fun EventsScreen(
                       currentUserId = Firebase.auth.currentUser?.uid ?: "")
                 }),
 ) {
-/* TODO
+
+    val currentUserIdFromVM = eventsViewModel.currentUserId
+    val coroutineScope = rememberCoroutineScope()
+
+
     val context = LocalContext.current
     val uiState by eventsViewModel.uiState.collectAsState()
     val listEvents = uiState.fullEventList
     val browserEvents = uiState.globalEventList
     val upcomingEvents = uiState.participatedEventList
     val myOwnEvents = uiState.createdEventList
-
- */
-    val listEvents = emptyList<Event>()
-    val browserEvents = emptyList<Event>()
-    val upcomingEvents = emptyList<Event>()
-    val myOwnEvents = emptyList<Event>()
-
-
-    val currentUser = FirebaseAuth.getInstance().currentUser
-    val currentUserId = currentUser?.uid
-    /* TODO
-    LaunchedEffect(Unit) {
-        eventsViewModel.refreshEvents(currentUserId.toString())
-    }
-
-     */
+    Log.e("EventsScreen", "myOwnEvents size: ${myOwnEvents.size}")
 
     val isPopupOn = remember { mutableStateOf(false) }
 
+    LaunchedEffect(uiState) {
+        Log.e("EventsScreen", "LaunchedEffect: uiState changed")
+        eventsViewModel.refreshEvents(currentUserIdFromVM)
+    }
 
-    /* TODO
-    LaunchedEffect(uiState.signedOut) {
-        if (uiState.signedOut) {
-            onSignedOut()
-            Toast.makeText(context, "Logout successful", Toast.LENGTH_SHORT).show()
-        }
-    }*/
+    HandleSignedOutState(uiState.signedOut, onSignedOut)
 
   Scaffold(
       topBar = {
@@ -166,7 +167,6 @@ fun EventsScreen(
       },
 
         content = { padding ->
-            if (listEvents.isNotEmpty()) {
                 LazyColumn(
                     contentPadding = PaddingValues(vertical = 8.dp),
                     modifier =
@@ -198,13 +198,17 @@ fun EventsScreen(
                                 BrowserEventsPopUp(
                                     event = browserEvents[index],
                                     shouldShowDialog = isPopupOn,
-                                    participate = {} /* TODO {
-                                        eventsViewModel.onParticipate(
-                                            browserEvents[index].id,
-                                            currentUserId = currentUserId.toString()
-                                        )
-                                    } */
+                                    participate =
 
+                                        {coroutineScope.launch {
+                                            eventsViewModel.onParticipate(
+                                                browserEvents[index].id,
+                                                currentUserId = eventsViewModel.currentUserId
+                                            )
+                                            kotlinx.coroutines.delay(6000L)
+
+                                        }
+                                    }
                                 )
                             }
 
@@ -246,12 +250,12 @@ fun EventsScreen(
                                 UpComingEventsPopUp(
                                     event = upcomingEvents[index],
                                     shouldShowDialog = isPopupOn,
-                                    unparticipate = {} /* TODO{
+                                    unparticipate = {
                                         eventsViewModel.onUnregister(
                                             eventId = upcomingEvents[index].id,
-                                            currentUserId = currentUserId.toString()
+                                            currentUserId = eventsViewModel.currentUserId
                                         )
-                                    } */
+                                    }
                                 )
                             }
                         }
@@ -332,8 +336,6 @@ fun EventsScreen(
                     }
 
                 }
-            }
-
         }
     )
 }
@@ -454,7 +456,7 @@ fun UpComingEventsPopUp(
                     modifier = Modifier.testTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON)
                 ) {
                     Text(
-                        text = "go Back",
+                        text = stringResource(R.string.goback_button_title),
                         color = Color.White
                     )
                 }
@@ -471,7 +473,7 @@ fun UpComingEventsPopUp(
                     modifier = Modifier.testTag(EventsScreenTestTags.UNREGISTER_BUTTON)
                 ) {
                     Text(
-                        text = "Unregister",
+                        text = stringResource(R.string.unregister_button_title),
                         color = Color.White
                     )
                 }
@@ -504,7 +506,7 @@ fun BrowserEventsPopUp(
                     modifier = Modifier.testTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON)
                 ) {
                     Text(
-                        text = "go Back",
+                        text = stringResource(R.string.goback_button_title),
                         color = Color.White
                     )
                 }
@@ -521,7 +523,7 @@ fun BrowserEventsPopUp(
                     modifier = Modifier.testTag(EventsScreenTestTags.PARTICIPATE_BUTTON)
                 ) {
                     Text(
-                        text = "Participate",
+                        text = stringResource(R.string.participate_button_title),
                         color = Color.White
                     )
                 }
@@ -600,7 +602,7 @@ fun MyOwnEventsPopUp(
                     modifier = Modifier.testTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON)
                 ) {
                     Text(
-                        text = "go Back",
+                        text = stringResource(R.string.goback_button_title),
                         color = Color.White
                     )
                 }
@@ -617,7 +619,7 @@ fun MyOwnEventsPopUp(
                     modifier = Modifier.testTag(EventsScreenTestTags.EDIT_EVENT_BUTTON)
                 ) {
                     Text(
-                        text = "Edit the event",
+                        text = stringResource(R.string.edit_button_title),
                         color = Color.White
                     )
                 }
