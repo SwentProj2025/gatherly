@@ -216,6 +216,9 @@ class ProfileRepositoryFirestore(private val db: FirebaseFirestore) : ProfileRep
     return true
   }
 
+  /** Creates a profile. This is to be used only for testing purpose. */
+  override suspend fun addProfile(profile: Profile) {}
+
   /**
    * Converts a Firestore [DocumentSnapshot] into a [Profile].
    *

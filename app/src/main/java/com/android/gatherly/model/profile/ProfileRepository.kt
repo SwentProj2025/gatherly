@@ -101,4 +101,7 @@ interface ProfileRepository {
    * @return true if a new [Profile] was created, false if it already existed.
    */
   suspend fun initProfileIfMissing(uid: String, defaultPhotoUrl: String): Boolean
+
+  /** Creates a profile. This is to be used only for testing purpose. */
+  suspend fun addProfile(profile: Profile)
 }
