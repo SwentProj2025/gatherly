@@ -20,7 +20,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBarColors
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -97,13 +97,12 @@ fun EditToDoScreen(
   val fieldSpacing = dimensionResource(id = R.dimen.spacing_between_fields)
   val buttonSpacing = dimensionResource(id = R.dimen.spacing_between_buttons)
 
-  val appBarColors =
-      TopAppBarColors(
-          containerColor = MaterialTheme.colorScheme.background,
-          scrolledContainerColor = MaterialTheme.colorScheme.background,
-          navigationIconContentColor = MaterialTheme.colorScheme.primary,
-          titleContentColor = MaterialTheme.colorScheme.primary,
-          actionIconContentColor = MaterialTheme.colorScheme.primary,
+  val textFieldColors =
+      TextFieldDefaults.colors(
+          focusedContainerColor = MaterialTheme.colorScheme.background,
+          unfocusedContainerColor = MaterialTheme.colorScheme.background,
+          unfocusedTextColor = MaterialTheme.colorScheme.primary,
+          focusedTextColor = MaterialTheme.colorScheme.primary,
       )
 
   LaunchedEffect(errorMsg) {
@@ -116,7 +115,7 @@ fun EditToDoScreen(
   Scaffold(
       topBar = {
         TopNavigationMenu_Goback(
-            selectedTab = Tab.AddTodo,
+            selectedTab = Tab.EditTodo,
             modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
             goBack = goBack)
       },
@@ -136,6 +135,7 @@ fun EditToDoScreen(
                       Text(it, modifier = Modifier.testTag(EditToDoScreenTestTags.ERROR_MESSAGE))
                     }
                   },
+                  colors = textFieldColors,
                   modifier =
                       Modifier.fillMaxWidth().testTag(EditToDoScreenTestTags.INPUT_TODO_TITLE))
 
@@ -151,6 +151,7 @@ fun EditToDoScreen(
                       Text(it, modifier = Modifier.testTag(EditToDoScreenTestTags.ERROR_MESSAGE))
                     }
                   },
+                  colors = textFieldColors,
                   modifier =
                       Modifier.fillMaxWidth()
                           .testTag(EditToDoScreenTestTags.INPUT_TODO_DESCRIPTION),
@@ -169,6 +170,7 @@ fun EditToDoScreen(
                       Text(it, modifier = Modifier.testTag(EditToDoScreenTestTags.ERROR_MESSAGE))
                     }
                   },
+                  colors = textFieldColors,
                   modifier =
                       Modifier.fillMaxWidth().testTag(EditToDoScreenTestTags.INPUT_TODO_ASSIGNEE))
 
@@ -178,6 +180,7 @@ fun EditToDoScreen(
                   onValueChange = { editTodoViewModel.onLocationChanged(it) },
                   label = { Text(stringResource(R.string.todos_location_field_label)) },
                   placeholder = { Text(stringResource(R.string.todos_location_field_label)) },
+                  colors = textFieldColors,
                   modifier =
                       Modifier.fillMaxWidth().testTag(EditToDoScreenTestTags.INPUT_TODO_LOCATION),
               )
@@ -194,6 +197,7 @@ fun EditToDoScreen(
                       Text(it, modifier = Modifier.testTag(EditToDoScreenTestTags.ERROR_MESSAGE))
                     }
                   },
+                  colors = textFieldColors,
                   modifier =
                       Modifier.fillMaxWidth().testTag(EditToDoScreenTestTags.INPUT_TODO_DATE))
 
@@ -209,6 +213,7 @@ fun EditToDoScreen(
                       Text(it, modifier = Modifier.testTag(EditToDoScreenTestTags.ERROR_MESSAGE))
                     }
                   },
+                  colors = textFieldColors,
                   modifier =
                       Modifier.fillMaxWidth().testTag(EditToDoScreenTestTags.INPUT_TODO_TIME))
 

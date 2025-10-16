@@ -15,6 +15,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -84,6 +85,14 @@ fun AddToDoScreen(
   val fieldSpacing = dimensionResource(id = R.dimen.spacing_between_fields)
   val inputHeight = dimensionResource(id = R.dimen.input_height)
 
+  val textFieldColors =
+      TextFieldDefaults.colors(
+          focusedContainerColor = MaterialTheme.colorScheme.background,
+          unfocusedContainerColor = MaterialTheme.colorScheme.background,
+          unfocusedTextColor = MaterialTheme.colorScheme.primary,
+          focusedTextColor = MaterialTheme.colorScheme.primary,
+      )
+
   LaunchedEffect(errorMsg) {
     if (errorMsg != null) {
       Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
@@ -114,6 +123,7 @@ fun AddToDoScreen(
                       Text(it, modifier = Modifier.testTag(AddToDoScreenTestTags.ERROR_MESSAGE))
                     }
                   },
+                  colors = textFieldColors,
                   modifier =
                       Modifier.fillMaxWidth().testTag(AddToDoScreenTestTags.INPUT_TODO_TITLE))
 
@@ -129,6 +139,7 @@ fun AddToDoScreen(
                       Text(it, modifier = Modifier.testTag(AddToDoScreenTestTags.ERROR_MESSAGE))
                     }
                   },
+                  colors = textFieldColors,
                   modifier =
                       Modifier.fillMaxWidth()
                           .height(inputHeight)
@@ -148,6 +159,7 @@ fun AddToDoScreen(
                       Text(it, modifier = Modifier.testTag(AddToDoScreenTestTags.ERROR_MESSAGE))
                     }
                   },
+                  colors = textFieldColors,
                   modifier =
                       Modifier.fillMaxWidth().testTag(AddToDoScreenTestTags.INPUT_TODO_ASSIGNEE))
 
@@ -157,6 +169,7 @@ fun AddToDoScreen(
                   onValueChange = { addTodoViewModel.onLocationChanged(it) },
                   label = { Text(stringResource(R.string.todos_location_field_label)) },
                   placeholder = { Text(stringResource(R.string.todos_location_field_label)) },
+                  colors = textFieldColors,
                   modifier =
                       Modifier.fillMaxWidth().testTag(AddToDoScreenTestTags.INPUT_TODO_LOCATION),
               )
@@ -173,6 +186,7 @@ fun AddToDoScreen(
                       Text(it, modifier = Modifier.testTag(AddToDoScreenTestTags.ERROR_MESSAGE))
                     }
                   },
+                  colors = textFieldColors,
                   modifier = Modifier.fillMaxWidth().testTag(AddToDoScreenTestTags.INPUT_TODO_DATE))
 
               // Due Time Input
@@ -187,6 +201,7 @@ fun AddToDoScreen(
                       Text(it, modifier = Modifier.testTag(AddToDoScreenTestTags.ERROR_MESSAGE))
                     }
                   },
+                  colors = textFieldColors,
                   modifier = Modifier.fillMaxWidth().testTag(AddToDoScreenTestTags.INPUT_TODO_TIME))
 
               Spacer(modifier = Modifier.height(fieldSpacing))
