@@ -1,11 +1,9 @@
 package com.android.gatherly.utils
 
-import android.util.Log
 import com.google.firebase.Firebase
 import com.google.firebase.FirebaseApp
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
-import io.mockk.InternalPlatformDsl.toArray
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -66,7 +64,6 @@ object FirebaseEmulator {
     val client = httpClient
     val request = Request.Builder().url(endpoint).delete().build()
     val response = client.newCall(request).execute()
-
     assert(response.isSuccessful) { "Failed to clear emulator at $endpoint" }
   }
 
@@ -143,9 +140,7 @@ object FirebaseEmulator {
                   "http://$HOST:$AUTH_PORT/identitytoolkit.googleapis.com/v1/accounts:query?key=fake-api-key")
               .build()
 
-      Log.d("FirebaseEmulator", "Fetching users with request: ${request.url.toString()}")
       val response = httpClient.newCall(request).execute()
-      Log.d("FirebaseEmulator", "Response received: ${response.toArray()}")
       return response.body.toString()
     }
 }
