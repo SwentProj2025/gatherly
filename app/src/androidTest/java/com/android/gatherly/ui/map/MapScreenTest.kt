@@ -7,6 +7,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
+/** Tests for the MapScreen composable. */
 class MapScreenTest : FirestoreGatherlyTest() {
 
   @get:Rule val composeTestRule = createComposeRule()
@@ -17,8 +18,9 @@ class MapScreenTest : FirestoreGatherlyTest() {
     composeTestRule.setContent { MapScreen() }
   }
 
+  /** Checks if google map is displayed */
   @Test
-  fun mapScreen_allExpectedTestTags_exist() {
+  fun google_map_is_displayed() {
 
     composeTestRule
         .onNodeWithTag(MapScreenTestTags.GOOGLE_MAP_SCREEN, useUnmergedTree = true)
