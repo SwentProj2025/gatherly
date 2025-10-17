@@ -73,7 +73,7 @@ fun SettingsScreen(
             modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
             onSignedOut = { settingsViewModel.signOut(credentialManager) })
       },
-      containerColor = Color(0xFF1A1D1F),
+      containerColor = MaterialTheme.colorScheme.background,
       content = { paddingValues ->
         Column(
             modifier =
@@ -100,7 +100,7 @@ fun SettingsScreen(
               Text(
                   text = stringResource(R.string.settings_default_username),
                   color = Color.White,
-                  fontSize = 18.sp,
+                  fontSize = 20.sp,
                   fontWeight = FontWeight.Medium,
                   modifier = Modifier.testTag(SettingsScreenTestTags.USERNAME))
 
@@ -108,12 +108,15 @@ fun SettingsScreen(
 
               // Edit Photo Button currently non-functional, will be implemented in next sprint
               Button(
-                  onClick = { /* Handle edit photo */},
+                  onClick = { /* Handle edit photo will be handled in next sprint*/},
                   modifier =
                       Modifier.fillMaxWidth()
                           .height(48.dp)
                           .testTag(SettingsScreenTestTags.EDIT_PHOTO_BUTTON),
-                  colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2D3135)),
+                  colors =
+                      ButtonDefaults.buttonColors(
+                          containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                          contentColor = MaterialTheme.colorScheme.onSurface),
                   shape = RoundedCornerShape(12.dp)) {
                     Text(text = "Edit Photo", color = Color.White, fontSize = 16.sp)
                   }
@@ -153,18 +156,17 @@ fun SettingsScreen(
                     currentUser?.uid?.let { uid -> settingsViewModel.updateProfile(uid) }
                   },
                   modifier =
-                      Modifier.fillMaxWidth(0.8f) // 80% width, you can tweak this (0.7f, 0.9f…)
+                      Modifier.fillMaxWidth(0.8f)
                           .height(48.dp)
                           .padding(bottom = 16.dp)
                           .testTag(SettingsScreenTestTags.SAVE_BUTTON),
                   colors =
                       ButtonDefaults.buttonColors(
-                          containerColor = Color.White,
-                          contentColor = MaterialTheme.colorScheme.primary),
+                          containerColor = MaterialTheme.colorScheme.primary,
+                          contentColor = MaterialTheme.colorScheme.onPrimary),
                   enabled = uiState.isValid) {
                     Text(
                         text = stringResource(R.string.settings_save),
-                        color = MaterialTheme.colorScheme.primary,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Medium)
                   }
@@ -185,7 +187,11 @@ fun SettingsField(
     Text(
         text = label,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
-        style = MaterialTheme.typography.labelMedium,
+        style =
+            MaterialTheme.typography.labelMedium.copy(
+                fontSize = 16.sp,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant),
         modifier = Modifier.padding(bottom = 8.dp))
 
     OutlinedTextField(
@@ -197,8 +203,8 @@ fun SettingsField(
                 focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                 unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                 disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                focusedTextColor = Color.White,
+                unfocusedTextColor = Color.White,
                 cursorColor = MaterialTheme.colorScheme.primary,
                 focusedBorderColor = MaterialTheme.colorScheme.primary,
                 unfocusedBorderColor = Color.Transparent),
