@@ -75,7 +75,7 @@ fun ProfileScreen(
   val profile = uiState.profile
 
   // Fetch profile when the screen is recomposed
-  LaunchedEffect(Unit) { profileViewModel.loadProfile(profile?.username ?: "") }
+  LaunchedEffect(Unit) { profileViewModel.loadUserProfile() }
 
   val paddingRegular = dimensionResource(id = R.dimen.padding_regular)
   val paddingMedium = dimensionResource(id = R.dimen.padding_medium)
