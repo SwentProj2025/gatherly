@@ -128,13 +128,15 @@ fun SettingsScreen(
                   label = stringResource(R.string.settings_label_name),
                   value = uiState.name,
                   onValueChange = { settingsViewModel.editName(it) },
-                  testTag = SettingsScreenTestTags.NAME_FIELD)
+                  testTag = SettingsScreenTestTags.NAME_FIELD,
+                  errorMessage = uiState.invalidNameMsg)
               Spacer(modifier = Modifier.height(16.dp))
               SettingsField(
                   label = stringResource(R.string.settings_label_birthday),
                   value = uiState.birthday,
                   onValueChange = { settingsViewModel.editBirthday(it) },
-                  testTag = SettingsScreenTestTags.BIRTHDAY_FIELD)
+                  testTag = SettingsScreenTestTags.BIRTHDAY_FIELD,
+                  errorMessage = uiState.invalidBirthdayMsg)
               Spacer(modifier = Modifier.height(16.dp))
               SettingsField(
                   label = stringResource(R.string.settings_label_school),
@@ -182,6 +184,7 @@ fun SettingsField(
     onValueChange: (String) -> Unit,
     modifier: Modifier = Modifier,
     testTag: String = "",
+    errorMessage: String? = null,
 ) {
   Column(modifier = modifier.fillMaxWidth()) {
     Text(
@@ -211,5 +214,14 @@ fun SettingsField(
         shape = RoundedCornerShape(12.dp),
         singleLine = true,
         textStyle = LocalTextStyle.current.copy(fontSize = 16.sp))
+
+    // Show error message if not null
+    if (!errorMessage.isNullOrEmpty()) {
+      Text(
+          text = errorMessage,
+          color = MaterialTheme.colorScheme.error,
+          fontSize = 14.sp,
+          modifier = Modifier.padding(top = 4.dp))
+    }
   }
 }

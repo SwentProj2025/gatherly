@@ -136,4 +136,44 @@ class SettingsScreenTest : FirestoreGatherlyTest() {
     composeRule.onNodeWithTag(SettingsScreenTestTags.NAME_FIELD).performTextInput(name)
     composeRule.onNodeWithTag(SettingsScreenTestTags.NAME_FIELD).assertTextEquals(name)
   }
+
+  @Test
+  fun settingsScreen_showsError_whenNameEmpty() {
+    composeRule.setContent { SettingsScreen() }
+
+    val nameField = composeRule.onNodeWithTag(SettingsScreenTestTags.NAME_FIELD)
+
+    // Simulate user typing then clearing
+    nameField.performTextInput("X") // triggers onValueChange
+    nameField.performTextClearance() // triggers invalidNameMsg to be set
+
+    // Now the error text should appear
+    composeRule.onNodeWithText("Name cannot be empty").assertIsDisplayed()
+  }
+
+  @Test
+  fun settingsScreen_showsError_whenBirthdayInvalid() {
+    composeRule.setContent { SettingsScreen() }
+
+    // Enter a valid name to not block save for other reasons
+    composeRule.onNodeWithTag(SettingsScreenTestTags.NAME_FIELD).performTextInput("Alice")
+
+    // Enter an invalid birthday
+    composeRule.onNodeWithTag(SettingsScreenTestTags.BIRTHDAY_FIELD).performTextInput("31-31-2025")
+
+    // Error message should appear below the birthday field
+    composeRule.onNodeWithText("Date is not valid (format: dd/mm/yyyy)").assertIsDisplayed()
+  }
+
+  @Test
+  fun settingsScreen_noError_whenFieldsValid() {
+    composeRule.setContent { SettingsScreen() }
+
+    composeRule.onNodeWithTag(SettingsScreenTestTags.NAME_FIELD).performTextInput("Alice")
+    composeRule.onNodeWithTag(SettingsScreenTestTags.BIRTHDAY_FIELD).performTextInput("17/10/2025")
+
+    // Error messages should not exist
+    composeRule.onNodeWithText("Name cannot be empty").assertDoesNotExist()
+    composeRule.onNodeWithText("Date is not valid (format: dd/mm/yyyy)").assertDoesNotExist()
+  }
 }
