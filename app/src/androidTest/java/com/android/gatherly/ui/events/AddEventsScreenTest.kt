@@ -16,11 +16,19 @@ import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.ui.todo.AddToDoScreenTestTags
+import com.android.gatherly.utils.FirebaseEmulator
 import com.android.gatherly.utils.InMemoryGatherlyTest
+import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
+import com.google.firebase.auth.auth
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -37,18 +45,45 @@ class AddEventsScreenTest : InMemoryGatherlyTest() {
   private lateinit var eventsRepository: EventsRepository
   private lateinit var profileRepository: ProfileRepository
 
+  private val testDispatcher = UnconfinedTestDispatcher()
+
   @Before
   override fun setUp() {
     super.setUp()
-    // initialize repos and viewModel
-    profileRepository = ProfileLocalRepository()
-    eventsRepository = EventsLocalRepository()
-    addEventsViewModel = AddEventViewModel(profileRepository, eventsRepository)
 
-    // fill the profile and events repositories with profiles and event
-    runBlocking { fill_repositories() }
+    Dispatchers.setMain(testDispatcher)
+
+    if (!FirebaseEmulator.isRunning) {
+      error("Firebase emulator must be running! Use: firebase emulators:start")
+    }
+    runTest {
+      FirebaseEmulator.auth.signInAnonymously().await()
+      val uid = Firebase.auth.currentUser?.uid!!
+
+      profileRepository = ProfileLocalRepository()
+      eventsRepository = EventsLocalRepository()
+
+      ownerProfile = ownerProfile.copy(uid = uid)
+      profileRepository.addProfile(ownerProfile)
+      profileRepository.addProfile(profile1)
+      profileRepository.addProfile(profile2)
+      profileRepository.addProfile(profile3)
+      profileRepository.addProfile(participantProfile)
+
+      eventsRepository.addEvent(
+          event.copy(creatorId = uid, participants = listOf(uid, participantProfile.uid)))
+
+      addEventsViewModel = AddEventViewModel(profileRepository, eventsRepository)
+    }
+    Dispatchers.resetMain()
 
     composeTestRule.setContent { AddEventScreen(addEventsViewModel) }
+  }
+
+  @After
+  override fun tearDown() {
+    FirebaseEmulator.clearAuthEmulator()
+    FirebaseEmulator.clearFirestoreEmulator()
   }
 
   /*----------------------------------------Profiles--------------------------------------------*/
@@ -88,7 +123,7 @@ class AddEventsScreenTest : InMemoryGatherlyTest() {
           groupIds = emptyList(),
           friendUids = emptyList())
 
-  val ownerProfile: Profile =
+  var ownerProfile: Profile =
       Profile(
           uid = "0",
           name = "Owner",
