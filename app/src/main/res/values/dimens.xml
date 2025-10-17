@@ -1,6 +1,14 @@
 <resources>
     <dimen name="padding_screen">16dp</dimen>
+    <dimen name="padding_regular">16dp</dimen>
+    <dimen name="padding_medium">24dp</dimen>
+    <dimen name="padding_large">32dp</dimen>
     <dimen name="spacing_between_buttons">4dp</dimen>
     <dimen name="spacing_between_fields">8dp</dimen>
+    <dimen name="spacing_between_fields_regular">16dp</dimen>
+    <dimen name="spacing_between_fields_medium">24dp</dimen>
+    <dimen name="spacing_between_fields_large">32dp</dimen>
     <dimen name="input_height">100dp</dimen>
+    <dimen name="profile_pic_size">120dp</dimen>
+    <dimen name="profile_pic_border">2dp</dimen>
 </resources>

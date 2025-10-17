@@ -17,6 +17,7 @@ import kotlinx.coroutines.launch
 data class ProfileState(
     val isLoading: Boolean = false,
     val profile: Profile? = null,
+    val focusPoints: Int = 0,
     val errorMessage: String? = null,
     val signedOut: Boolean = false
 )
