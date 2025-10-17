@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">gatherly</string>
     <string name="title_activity_main">MainActivity</string>
+
     <!-- To-Do Pages. -->
     <string name="todos_title_add_todo_screen">Add To-Do</string>
     <string name="todos_title_edit_todo_screen">Edit To-Do</string>
@@ -19,13 +20,14 @@
     <string name="todos_save_button_text">Save</string>
     <string name="todos_back_button_desc">Back</string>
     <string name="todos_delete_button_text">Delete</string>
+
     <!-- Sign In Page. -->
     <string name="web_client_id">854490974901-rc0seqlo7nbm1net10ujpte2ckkrsgn2.apps.googleusercontent.com</string>
 
     <!-- Navigation -->
     <string name="logOut_message">Logout successful</string>
 
-
+    <!-- Timer -->
     <string name="timer_hours">Hours</string>
     <string name="timer_minutes">Minutes</string>
     <string name="timer_seconds">Seconds</string>
@@ -46,4 +48,20 @@
     <string name="settings_label_birthday">Birthday date:</string>
     <string name="settings_label_school">School :</string>
     <string name="settings_label_school_year">School year :</string>
+
+    <!-- Events -->
+    <string name="events_title_field_label">Title</string>
+    <string name="events_title_field_placeholder">Task Title</string>
+    <string name="events_description_field_label">Description</string>
+    <string name="events_description_placeholder">Describe the task</string>
+    <string name="events_creator_field_label">Creator</string>
+    <string name="events_creator_placeholder">Assign a creator</string>
+    <string name="events_start_time_field_label">Start Time</string>
+    <string name="events_end_time_field_label">End Time</string>
+    <string name="events_date_field_label">Due Date</string>
+    <string name="events_location_field_label">Location</string>
+    <string name="events_location_field_placeholder">Enter an Address or Location</string>
+    <string name="events_participant_field_label">Participant</string>
+    <string name="events_participant_placeholder">Add or remove a participant</string>
+
 </resources>
