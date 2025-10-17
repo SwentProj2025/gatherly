@@ -109,13 +109,24 @@ class AddEventViewModel(
 
   /*----------------------------------Initialize------------------------------------------------*/
   init {
-    // The string formatter should use strictly the format wanted
     dateFormat.isLenient = false
     timeFormat.isLenient = false
+
     viewModelScope.launch {
-      val profile = profileRepository.getProfileByUid(Firebase.auth.currentUser?.uid!!)!!
-      currentProfile = profile
-      uiState = uiState.copy(participants = listOf(profile))
+      Firebase.auth.currentUser?.uid?.let { userUid ->
+        val profile = profileRepository.getProfileByUid(userUid)
+
+        profile?.let { p ->
+          currentProfile = p
+          uiState = uiState.copy(participants = listOf(p))
+        }
+            ?: run {
+              val defaultProfile =
+                  Profile(uid = userUid, name = "", username = "", profilePicture = "")
+
+              currentProfile = defaultProfile
+            }
+      } ?: run {}
     }
   }
 

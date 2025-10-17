@@ -75,7 +75,7 @@ class EventsViewModel(private val repository: EventsRepository, val currentUserI
    *
    * @param currentUserId the ID of the current user
    */
-  private suspend fun refreshEvents(currentUserId: String) {
+  suspend fun refreshEvents(currentUserId: String) {
     val events = repository.getAllEvents()
     _uiState.value =
         _uiState.value.copy(
@@ -103,6 +103,7 @@ class EventsViewModel(private val repository: EventsRepository, val currentUserI
       refreshEvents(currentUserId)
     }
   }
+
   /**
    * Handles user unregistration from an event.
    *
