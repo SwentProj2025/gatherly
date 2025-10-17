@@ -17,7 +17,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.credentials.CredentialManager
@@ -126,25 +125,25 @@ fun SettingsScreen(
                   label = stringResource(R.string.settings_label_name),
                   value = uiState.name,
                   onValueChange = { settingsViewModel.editName(it) },
-                  modifier = Modifier.testTag(SettingsScreenTestTags.NAME_FIELD))
+                  testTag = SettingsScreenTestTags.NAME_FIELD)
               Spacer(modifier = Modifier.height(16.dp))
               SettingsField(
                   label = stringResource(R.string.settings_label_birthday),
                   value = uiState.birthday,
                   onValueChange = { settingsViewModel.editBirthday(it) },
-                  modifier = Modifier.testTag(SettingsScreenTestTags.BIRTHDAY_FIELD))
+                  testTag = SettingsScreenTestTags.BIRTHDAY_FIELD)
               Spacer(modifier = Modifier.height(16.dp))
               SettingsField(
                   label = stringResource(R.string.settings_label_school),
                   value = uiState.school,
                   onValueChange = { settingsViewModel.editSchool(it) },
-                  modifier = Modifier.testTag(SettingsScreenTestTags.SCHOOL_FIELD))
+                  testTag = SettingsScreenTestTags.SCHOOL_FIELD)
               Spacer(modifier = Modifier.height(16.dp))
               SettingsField(
                   label = stringResource(R.string.settings_label_school_year),
                   value = uiState.schoolYear,
                   onValueChange = { settingsViewModel.editSchoolYear(it) },
-                  modifier = Modifier.testTag(SettingsScreenTestTags.SCHOOL_YEAR_FIELD))
+                  testTag = SettingsScreenTestTags.SCHOOL_YEAR_FIELD)
 
               Spacer(modifier = Modifier.height(32.dp))
 
@@ -179,7 +178,8 @@ fun SettingsField(
     label: String,
     value: String,
     onValueChange: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    testTag: String = "",
 ) {
   Column(modifier = modifier.fillMaxWidth()) {
     Text(
@@ -191,127 +191,19 @@ fun SettingsField(
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().testTag(testTag),
         colors =
             OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = Color(0xFF2D3135),
-                unfocusedContainerColor = Color(0xFF2D3135),
-                disabledContainerColor = Color(0xFF2D3135),
-                focusedTextColor = Color.White,
-                unfocusedTextColor = Color.White,
-                cursorColor = Color.White,
-                focusedBorderColor = Color(0xFF4A4D52),
+                focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                cursorColor = MaterialTheme.colorScheme.primary,
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
                 unfocusedBorderColor = Color.Transparent),
         shape = RoundedCornerShape(12.dp),
         singleLine = true,
         textStyle = LocalTextStyle.current.copy(fontSize = 16.sp))
   }
-}
-
-@Composable
-fun SettingsScreenPreviewContent() {
-  // Fake UI state for preview
-  val fakeUiState =
-      object {
-        val name = "Gersende Kerjan"
-        val birthday = "28/07/2005"
-        val school = "EPFL"
-        val schoolYear = "IN BA5"
-        val isValid = true
-        val errorMsg: String? = null
-        val signedOut = false
-      }
-
-  Scaffold(
-      topBar = {
-        TopNavigationMenuSettings(
-            selectedTab = Tab.Settings,
-            onTabSelected = {},
-            modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
-            onSignedOut = {})
-      },
-      containerColor = Color(0xFF1A1D1F),
-      content = { paddingValues ->
-        Column(
-            modifier =
-                Modifier.fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(horizontal = 16.dp, vertical = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally) {
-              Image(
-                  painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                  contentDescription =
-                      stringResource(R.string.settings_profile_picture_description),
-                  modifier = Modifier.size(120.dp).clip(CircleShape),
-                  contentScale = ContentScale.Crop)
-
-              Spacer(modifier = Modifier.height(16.dp))
-
-              Text(
-                  text = stringResource(R.string.settings_default_username),
-                  color = Color.White,
-                  fontSize = 18.sp,
-                  fontWeight = FontWeight.Medium)
-
-              Spacer(modifier = Modifier.height(16.dp))
-
-              Button(
-                  onClick = {},
-                  modifier = Modifier.fillMaxWidth().height(48.dp),
-                  colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF2D3135)),
-                  shape = RoundedCornerShape(12.dp)) {
-                    Text(
-                        text = stringResource(R.string.settings_edit_photo),
-                        color = Color.White,
-                        fontSize = 16.sp)
-                  }
-
-              Spacer(modifier = Modifier.height(32.dp))
-
-              SettingsField(
-                  label = stringResource(R.string.settings_label_name),
-                  value = fakeUiState.name,
-                  onValueChange = {})
-              Spacer(modifier = Modifier.height(16.dp))
-              SettingsField(
-                  label = stringResource(R.string.settings_label_birthday),
-                  value = fakeUiState.birthday,
-                  onValueChange = {})
-              Spacer(modifier = Modifier.height(16.dp))
-              SettingsField(
-                  label = stringResource(R.string.settings_label_school),
-                  value = fakeUiState.school,
-                  onValueChange = {})
-              Spacer(modifier = Modifier.height(16.dp))
-              SettingsField(
-                  label = stringResource(R.string.settings_label_school_year),
-                  value = fakeUiState.schoolYear,
-                  onValueChange = {})
-
-              Spacer(modifier = Modifier.height(32.dp))
-
-              Button(
-                  onClick = {},
-                  modifier = Modifier.fillMaxWidth(0.8f).height(48.dp).padding(bottom = 16.dp),
-                  colors =
-                      ButtonDefaults.buttonColors(
-                          containerColor = Color.White,
-                          contentColor = MaterialTheme.colorScheme.primary),
-                  enabled = fakeUiState.isValid) {
-                    Text(
-                        text = stringResource(R.string.settings_save),
-                        color = MaterialTheme.colorScheme.primary,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium)
-                  }
-
-              Spacer(modifier = Modifier.weight(1f))
-            }
-      })
-}
-
-@Preview(showBackground = true)
-@Composable
-fun SettingsScreenPreview() {
-  SettingsScreenPreviewContent()
 }
