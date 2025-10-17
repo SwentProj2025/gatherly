@@ -9,14 +9,11 @@ import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryProvider
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
-import java.time.LocalDate
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
-/**
- * Represents the UI state of the Profile screen.
- */
+/** Represents the UI state of the Profile screen. */
 data class ProfileState(
     val isLoading: Boolean = false,
     val profile: Profile? = null,
@@ -42,43 +39,38 @@ class ProfileViewModel(
 
   private val _uiState = MutableStateFlow(ProfileState())
 
-    /** Exposes the immutable UI state of the Profile screen. */
-    val uiState: StateFlow<ProfileState> = _uiState
+  /** Exposes the immutable UI state of the Profile screen. */
+  val uiState: StateFlow<ProfileState> = _uiState
 
-    /**
-     * Loads the currently authenticated user's [Profile] from Firestore.
-     *
-     * Assumes that a [Profile] already exists (it should be created at sign-in).
-     * If the [Profile] is missing, sets an appropriate error state.
-     */
-    fun loadUserProfile() {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+  /**
+   * Loads the currently authenticated user's [Profile] from Firestore.
+   *
+   * Assumes that a [Profile] already exists (it should be created at sign-in). If the [Profile] is
+   * missing, sets an appropriate error state.
+   */
+  fun loadUserProfile() {
+    viewModelScope.launch {
+      _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
 
-            val user = Firebase.auth.currentUser
-            if (user == null) {
-                _uiState.value = _uiState.value.copy(
-                    isLoading = false,
-                    errorMessage = "User not authenticated"
-                )
-                return@launch
-            }
+      val user = Firebase.auth.currentUser
+      if (user == null) {
+        _uiState.value =
+            _uiState.value.copy(isLoading = false, errorMessage = "User not authenticated")
+        return@launch
+      }
 
-            try {
-                val profile = repository.getProfileByUid(user.uid)
-                if (profile == null) {
-                    _uiState.value = ProfileState(
-                        isLoading = false,
-                        errorMessage = "Profile not found"
-                    )
-                } else {
-                    _uiState.value = ProfileState(isLoading = false, profile = profile)
-                }
-            } catch (e: Exception) {
-                _uiState.value = ProfileState(isLoading = false, errorMessage = e.message)
-            }
+      try {
+        val profile = repository.getProfileByUid(user.uid)
+        if (profile == null) {
+          _uiState.value = ProfileState(isLoading = false, errorMessage = "Profile not found")
+        } else {
+          _uiState.value = ProfileState(isLoading = false, profile = profile)
         }
+      } catch (e: Exception) {
+        _uiState.value = ProfileState(isLoading = false, errorMessage = e.message)
+      }
     }
+  }
 
   /** Initiates sign-out */
   fun signOut(credentialManager: CredentialManager): Unit {
