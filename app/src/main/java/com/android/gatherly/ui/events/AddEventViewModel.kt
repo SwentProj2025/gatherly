@@ -13,13 +13,16 @@ import com.android.gatherly.model.map.Location
 import com.android.gatherly.model.map.NominatimLocationRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
+import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
+import com.google.firebase.auth.auth
 import java.text.ParseException
 import java.text.SimpleDateFormat
+import kotlin.collections.plus
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 
-data class EditEventsUIState(
+data class AddEventUiState(
     // the event title
     val name: String = "",
     // the event description
@@ -37,7 +40,7 @@ data class EditEventsUIState(
     // the event participant search string
     val participant: String = "",
     // list of event participants
-    val participants: List<Profile> = emptyList(),
+    val participants: List<Profile> = listOf(),
     // list of suggested profiles given the search string
     val suggestedProfiles: List<Profile> = emptyList(),
     // list of suggested locations given the search string
@@ -76,26 +79,32 @@ private var client: OkHttpClient =
         }
         .build()
 
+/**
+ * ViewModel responsible for managing the "Add Event" screen.
+ *
+ * Handles user input updates, field validation, and saving Event items to the Firestore repository
+ * through [EventRepository].
+ *
+ * @param eventRepository The repository responsible for persisting Event items.
+ */
 @SuppressLint("SimpleDateFormat")
-class EditEventsViewModel(
+class AddEventViewModel(
     private val profileRepository: ProfileRepository,
     private val eventsRepository: EventsRepository,
     private val nominatimClient: NominatimLocationRepository = NominatimLocationRepository(client)
+    // private val eventRepository: EventsRepository = EventsRepositoryProvider.repository,
 ) : ViewModel() {
-
   // State with a private set
-  var uiState by mutableStateOf<EditEventsUIState>(EditEventsUIState())
+  var uiState by mutableStateOf(AddEventUiState())
     private set
 
   // Formats used for date and time parsing
   private val dateFormat = SimpleDateFormat("dd/MM/yyyy")
   private val timeFormat = SimpleDateFormat("HH:mm")
 
-  // Event id and Creator id needed for saving the edited event
-  private lateinit var eventId: String
-  private lateinit var creatorId: String
-
-  // Selected Location
+  // Current user profile
+  private lateinit var currentProfile: Profile
+  // Chosen location
   private var chosenLocation: Location? = null
 
   /*----------------------------------Initialize------------------------------------------------*/
@@ -103,24 +112,10 @@ class EditEventsViewModel(
     // The string formatter should use strictly the format wanted
     dateFormat.isLenient = false
     timeFormat.isLenient = false
-  }
-
-  // Sets the values of the event to edit given an event id
-  fun setEventValues(givenEventId: String) {
     viewModelScope.launch {
-      val event = eventsRepository.getEvent(givenEventId)
-      uiState =
-          uiState.copy(
-              name = event.title,
-              description = event.description,
-              creatorName = event.creatorName,
-              location = event.location?.name ?: "",
-              date = dateFormat.format(event.date.toDate()),
-              startTime = timeFormat.format(event.startTime.toDate()),
-              endTime = timeFormat.format(event.endTime.toDate()),
-              participants = event.participants.map { profileRepository.getProfileByUid(it)!! })
-      eventId = event.id
-      creatorId = event.creatorId
+      val profile = profileRepository.getProfileByUid(Firebase.auth.currentUser?.uid!!)!!
+      currentProfile = profile
+      uiState = uiState.copy(participants = listOf(profile))
     }
   }
 
@@ -241,10 +236,11 @@ class EditEventsViewModel(
           uiState.copy(
               displayToast = true,
               toastString = "Cannot delete this participant, as they are not participating")
-        } else if (participant == creatorId) {
-          uiState.copy(displayToast = true, toastString = "Cannot delete the owner")
+        } else if (participant == currentProfile.uid) {
+          uiState.copy(displayToast = true, toastString = "Cannot delete yourself from your event")
         } else {
           uiState.copy(
+              participant = "",
               participants = uiState.participants.filter { it.uid != participant },
               suggestedProfiles = emptyList())
         }
@@ -264,11 +260,18 @@ class EditEventsViewModel(
     }
     uiState =
         uiState.copy(
-            participants = uiState.participants + participant, suggestedProfiles = emptyList())
+            participant = "",
+            participants = uiState.participants + participant,
+            suggestedProfiles = emptyList())
   }
 
   /*----------------------------------Location--------------------------------------------------*/
 
+  /**
+   * Updates the location to the selected location
+   *
+   * @param location the selected location
+   */
   fun selectLocation(location: Location) {
     uiState = uiState.copy(location = location.name, suggestedLocations = emptyList())
     chosenLocation = location
@@ -354,7 +357,7 @@ class EditEventsViewModel(
       // Create new event
       val event =
           Event(
-              id = eventId,
+              id = eventsRepository.getNewId(),
               title = uiState.name,
               description = uiState.description,
               creatorName = uiState.creatorName,
@@ -362,7 +365,7 @@ class EditEventsViewModel(
               date = timestampDate,
               startTime = timestampStartTime,
               endTime = timestampEndTime,
-              creatorId = creatorId,
+              creatorId = currentProfile.uid,
               participants = uiState.participants.map { it.uid },
               status = EventStatus.UPCOMING)
 
@@ -370,7 +373,7 @@ class EditEventsViewModel(
 
       // Save in event repository
       viewModelScope.launch {
-        eventsRepository.editEvent(eventId, event)
+        eventsRepository.addEvent(event)
         uiState = uiState.copy(displayToast = true, toastString = "Saved")
       }
 
@@ -378,12 +381,5 @@ class EditEventsViewModel(
     } else {
       uiState = uiState.copy(displayToast = true, toastString = "Failed to save :(")
     }
-  }
-
-  /** Deletes the event from the events repository */
-  fun deleteEvent() {
-    // Call event repository
-    viewModelScope.launch { eventsRepository.deleteEvent(eventId) }
-    uiState = uiState.copy(backToOverview = true)
   }
 }
