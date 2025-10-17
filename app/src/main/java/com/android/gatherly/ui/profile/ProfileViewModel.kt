@@ -62,12 +62,13 @@ class ProfileViewModel(
       try {
         val profile = repository.getProfileByUid(user.uid)
         if (profile == null) {
-          _uiState.value = ProfileState(isLoading = false, errorMessage = "Profile not found")
+          _uiState.value =
+              _uiState.value.copy(isLoading = false, errorMessage = "Profile not found")
         } else {
-          _uiState.value = ProfileState(isLoading = false, profile = profile)
+          _uiState.value = _uiState.value.copy(isLoading = false, profile = profile)
         }
       } catch (e: Exception) {
-        _uiState.value = ProfileState(isLoading = false, errorMessage = e.message)
+        _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = e.message)
       }
     }
   }
