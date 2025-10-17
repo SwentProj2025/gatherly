@@ -14,36 +14,71 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
+/**
+ * Represents the UI state of the Profile screen.
+ */
 data class ProfileState(
     val isLoading: Boolean = false,
     val profile: Profile? = null,
-    val focusHoursPerDay: Map<LocalDate, Double> = emptyMap(),
-    val focusPoints: Int = 0,
-    val error: String? = null,
+    val errorMessage: String? = null,
     val signedOut: Boolean = false
 )
 
+/**
+ * ViewModel responsible for fetching the authenticated user's [Profile].
+ *
+ * This ViewModel interacts with [ProfileRepository] to:
+ * - Load the authenticated user's profile from Firestore.
+ *
+ * Handle user sign-out action.
+ *
+ * The UI observes [uiState] to react to updates in [Profile] data, loading, or errors.
+ *
+ * @param repository The [ProfileRepository] used to interact with Firestore.
+ */
 class ProfileViewModel(
     private val repository: ProfileRepository = ProfileRepositoryProvider.repository
-    // Will also need the focus sessions repository when it is available
 ) : ViewModel() {
 
   private val _uiState = MutableStateFlow(ProfileState())
-  val uiState: StateFlow<ProfileState> = _uiState
 
-  fun loadProfile(username: String) {
-    viewModelScope.launch {
-      val profile = repository.getProfileByUid(username)
-      val focusHoursPerDay: Map<LocalDate, Double> = emptyMap()
-      val focusPoints = 0
-      _uiState.value =
-          ProfileState(
-              isLoading = false,
-              profile = profile,
-              focusHoursPerDay = focusHoursPerDay,
-              focusPoints = focusPoints)
+    /** Exposes the immutable UI state of the Profile screen. */
+    val uiState: StateFlow<ProfileState> = _uiState
+
+    /**
+     * Loads the currently authenticated user's [Profile] from Firestore.
+     *
+     * Assumes that a [Profile] already exists (it should be created at sign-in).
+     * If the [Profile] is missing, sets an appropriate error state.
+     */
+    fun loadUserProfile() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+
+            val user = Firebase.auth.currentUser
+            if (user == null) {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    errorMessage = "User not authenticated"
+                )
+                return@launch
+            }
+
+            try {
+                val profile = repository.getProfileByUid(user.uid)
+                if (profile == null) {
+                    _uiState.value = ProfileState(
+                        isLoading = false,
+                        errorMessage = "Profile not found"
+                    )
+                } else {
+                    _uiState.value = ProfileState(isLoading = false, profile = profile)
+                }
+            } catch (e: Exception) {
+                _uiState.value = ProfileState(isLoading = false, errorMessage = e.message)
+            }
+        }
     }
-  }
 
   /** Initiates sign-out */
   fun signOut(credentialManager: CredentialManager): Unit {
