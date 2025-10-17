@@ -176,7 +176,12 @@ fun GatherlyApp(
               navigationActions.navigateTo(Screen.EditEvent(event.id))
             })
       }
-      composable(Screen.AddEventScreen.route) { AddEventScreen() }
+      composable(Screen.AddEventScreen.route) {
+          AddEventScreen(
+              goBack = {navigationActions.goBack()},
+              onSave = {navigationActions.navigateTo(Screen.EventsScreen)}
+          )
+      }
 
       composable(Screen.EditEvent.route) { navBackStackEntry ->
           val uid = navBackStackEntry.arguments?.getString("uid")
