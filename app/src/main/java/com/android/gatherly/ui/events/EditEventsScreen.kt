@@ -325,7 +325,7 @@ fun EditEventsScreen(
                                         loc.name.take(40) + if (loc.name.length > 40) "..." else "")
                               },
                               onClick = {
-                                // TODO CLICK LOCATION
+                                editEventsViewModel.selectLocation(loc)
                                 showLocationDropdown = false
                               },
                               modifier = Modifier.testTag(EditEventsScreenTestTags.INPUT_LOCATION))
