@@ -5,6 +5,7 @@ import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import com.android.gatherly.GatherlyApp
 import com.android.gatherly.ui.authentication.SignInScreenTestTags
@@ -37,6 +38,7 @@ class Milestone1End2End {
   // make sure to clear Firebase emulators
   @After
   fun tearDown() {
+    FirebaseEmulator.auth.signOut()
     FirebaseEmulator.clearAuthEmulator()
   }
 
@@ -91,17 +93,18 @@ class Milestone1End2End {
 
     // wait for timer tab to appear
     composeTestRule.waitUntil(TIMEOUT) {
-      composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.TIMERTEXT).isDisplayed()
+      composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.START_BUTTON).isDisplayed()
     }
 
     // choose my todo, start 1 minute timer
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.TODO_TO_CHOOSE).performClick()
+    composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.MINUTES_TEXT).performTextClearance()
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.MINUTES_TEXT).performTextInput("01")
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.START_BUTTON).performClick()
 
     // wait for timer to start
     composeTestRule.waitUntil(TIMEOUT) {
-      composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.STOP_BUTTON).isDisplayed()
+      composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.TIMER_CIRCLE).isDisplayed()
     }
 
     // stop timer
