@@ -4,15 +4,20 @@ import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.android.gatherly.utils.FirebaseEmulator
 import com.android.gatherly.utils.FirestoreGatherlyProfileTest
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import org.junit.Assert.*
 import org.junit.Test
 
+private const val TIMEOUT = 30_000L
+private const val DELAY = 200L
+
 /**
- * Integration tests for [ProfileViewModel] using the Firebase Emulator Suite.
+ * Integration tests for [ProfileViewModel] using the Firebase Emulators.
  *
  * These tests verify:
  * - ProfileViewModel correctly loads an existing profile from Firestore.
@@ -35,7 +40,16 @@ class ProfileViewModelIntegrationTest : FirestoreGatherlyProfileTest() {
     viewModel = ProfileViewModel(repository)
     viewModel.loadUserProfile()
 
-    val state = viewModel.uiState.first { !it.isLoading }
+    // Wait until loading completes and profile is available
+    withContext(Dispatchers.Default.limitedParallelism(1)) {
+      withTimeout(TIMEOUT) {
+        while (viewModel.uiState.value.isLoading || viewModel.uiState.value.profile == null) {
+          delay(DELAY)
+        }
+      }
+    }
+
+    val state = viewModel.uiState.value
     assertNotNull(state.profile)
     assertEquals("Alice", state.profile!!.name)
     assertEquals("EPFL", state.profile!!.school)
@@ -50,7 +64,16 @@ class ProfileViewModelIntegrationTest : FirestoreGatherlyProfileTest() {
     viewModel = ProfileViewModel(ProfileRepositoryFirestore(FirebaseEmulator.firestore))
     viewModel.loadUserProfile()
 
-    val state = viewModel.uiState.first { !it.isLoading }
+    // Wait until loading completes and an error appears
+    withContext(Dispatchers.Default.limitedParallelism(1)) {
+      withTimeout(TIMEOUT) {
+        while (viewModel.uiState.value.isLoading && viewModel.uiState.value.errorMessage == null) {
+          delay(DELAY)
+        }
+      }
+    }
+
+    val state = viewModel.uiState.value
     assertNull(state.profile)
     assertEquals("Profile not found", state.errorMessage)
   }
@@ -62,9 +85,16 @@ class ProfileViewModelIntegrationTest : FirestoreGatherlyProfileTest() {
     viewModel = ProfileViewModel(repository)
     viewModel.loadUserProfile()
 
-    delay(500)
+    // Wait until loading completes and an error appears
+    withContext(Dispatchers.Default.limitedParallelism(1)) {
+      withTimeout(TIMEOUT) {
+        while (viewModel.uiState.value.isLoading && viewModel.uiState.value.errorMessage == null) {
+          delay(DELAY)
+        }
+      }
+    }
 
-    val state = viewModel.uiState.first { !it.isLoading }
+    val state = viewModel.uiState.value
     assertNull(state.profile)
     assertEquals("User not authenticated", state.errorMessage)
   }
