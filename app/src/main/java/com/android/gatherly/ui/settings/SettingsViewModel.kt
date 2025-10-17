@@ -81,8 +81,7 @@ class SettingsViewModel(
   fun loadProfile(profileUID: String) {
     viewModelScope.launch {
       try {
-        val profile =
-            repository.getProfileByUid(profileUID) ?: Profile(uid = profileUID, name = profileUID)
+        val profile = repository.getProfileByUid(profileUID) ?: Profile(uid = profileUID, name = "")
         originalProfile = profile
         _uiState.value =
             SettingsUiState(
