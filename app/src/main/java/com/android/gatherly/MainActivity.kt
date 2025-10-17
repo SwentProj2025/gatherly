@@ -12,17 +12,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.credentials.CredentialManager
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
-import com.android.gatherly.model.event.EventsLocalRepository
-import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.ui.authentication.SignInScreen
 import com.android.gatherly.ui.events.AddEventScreen
 import com.android.gatherly.ui.events.EditEventsScreen
-import com.android.gatherly.ui.events.EditEventsViewModel
 import com.android.gatherly.ui.events.EventsScreen
 import com.android.gatherly.ui.focusTimer.TimerScreen
 import com.android.gatherly.ui.friends.FriendsScreen
@@ -36,7 +32,6 @@ import com.android.gatherly.ui.theme.GatherlyTheme
 import com.android.gatherly.ui.todo.AddToDoScreen
 import com.android.gatherly.ui.todo.EditToDoScreen
 import com.android.gatherly.ui.todo.OverviewScreen
-import com.android.gatherly.utils.GenericViewModelFactory
 import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : ComponentActivity() {
@@ -177,26 +172,24 @@ fun GatherlyApp(
             })
       }
       composable(Screen.AddEventScreen.route) {
-          AddEventScreen(
-              goBack = {navigationActions.goBack()},
-              onSave = {navigationActions.navigateTo(Screen.EventsScreen)}
-          )
+        AddEventScreen(
+            goBack = { navigationActions.goBack() },
+            onSave = { navigationActions.navigateTo(Screen.EventsScreen) })
       }
 
       composable(Screen.EditEvent.route) { navBackStackEntry ->
-          val uid = navBackStackEntry.arguments?.getString("uid")
-          uid?.let {
-              EditEventsScreen(
-                  eventId = it,
-                  goBack = { navigationActions.goBack() },
-                  onSave = { navigationActions.navigateTo(Screen.EventsScreen) }
-              )
-          }
-              ?: run {
-                  Log.e("EditEventsScreen", "Event UID is null")
-                  Toast.makeText(context, "Event UID is null", Toast.LENGTH_SHORT).show()
-              }
-          }
+        val uid = navBackStackEntry.arguments?.getString("uid")
+        uid?.let {
+          EditEventsScreen(
+              eventId = it,
+              goBack = { navigationActions.goBack() },
+              onSave = { navigationActions.navigateTo(Screen.EventsScreen) })
+        }
+            ?: run {
+              Log.e("EditEventsScreen", "Event UID is null")
+              Toast.makeText(context, "Event UID is null", Toast.LENGTH_SHORT).show()
+            }
+      }
     }
 
     // PROFILE COMPOSABLE  ------------------------------

@@ -1,7 +1,6 @@
 package com.android.gatherly.ui.events
 
 import android.annotation.SuppressLint
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -17,12 +16,10 @@ import com.android.gatherly.model.profile.ProfileRepository
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.auth
-import kotlinx.coroutines.delay
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import kotlin.collections.plus
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
 import okhttp3.OkHttpClient
 
 data class AddEventUiState(
@@ -112,25 +109,25 @@ class AddEventViewModel(
 
   /*----------------------------------Initialize------------------------------------------------*/
   init {
-      dateFormat.isLenient = false
-      timeFormat.isLenient = false
+    dateFormat.isLenient = false
+    timeFormat.isLenient = false
 
-      viewModelScope.launch {
-          Firebase.auth.currentUser?.uid?.let { userUid ->
-              val profile = profileRepository.getProfileByUid(userUid)
+    viewModelScope.launch {
+      Firebase.auth.currentUser?.uid?.let { userUid ->
+        val profile = profileRepository.getProfileByUid(userUid)
 
-              profile?.let { p ->
-                  currentProfile = p
-                  uiState = uiState.copy(participants = listOf(p))
-              } ?: run {
-                  val defaultProfile =
-                      Profile(uid = userUid, name = "", username = "", profilePicture = "")
+        profile?.let { p ->
+          currentProfile = p
+          uiState = uiState.copy(participants = listOf(p))
+        }
+            ?: run {
+              val defaultProfile =
+                  Profile(uid = userUid, name = "", username = "", profilePicture = "")
 
-                  currentProfile = defaultProfile
-              }
-          } ?: run {
-          }
-      }
+              currentProfile = defaultProfile
+            }
+      } ?: run {}
+    }
   }
 
   // Clears the error message once the toast is done displaying
