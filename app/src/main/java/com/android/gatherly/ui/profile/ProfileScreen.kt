@@ -20,6 +20,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -72,6 +73,9 @@ fun ProfileScreen(
 ) {
   val uiState by profileViewModel.uiState.collectAsState()
   val profile = uiState.profile
+
+  // Fetch profile when the screen is recomposed
+  LaunchedEffect(Unit) { profileViewModel.loadProfile(profile?.username ?: "") }
 
   val paddingRegular = dimensionResource(id = R.dimen.padding_regular)
   val paddingMedium = dimensionResource(id = R.dimen.padding_medium)
