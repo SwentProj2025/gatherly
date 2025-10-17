@@ -1,5 +1,14 @@
 package com.android.gatherly.model.event
 
+/**
+ * Local in-memory implementation of [EventsRepository].
+ *
+ * This repository stores events in a mutable list and is intended for testing or temporary storage.
+ * Data is not persisted and will be lost when the instance is destroyed.
+ *
+ * @property counter Internal counter used to generate unique sequential IDs for new events.
+ * @property events Mutable list that holds all events in memory.
+ */
 class EventsLocalRepository : EventsRepository {
 
   var counter = 0
@@ -31,7 +40,7 @@ class EventsLocalRepository : EventsRepository {
   }
 
   override suspend fun deleteEvent(eventId: String) {
-    events.filter { it.id != eventId }
+    events.removeIf { it.id == eventId }
   }
 
   override suspend fun addParticipant(eventId: String, userId: String) {
