@@ -95,6 +95,9 @@ class EditEventsViewModel(
   private lateinit var eventId: String
   private lateinit var creatorId: String
 
+  // Selected Location
+  private var chosenLocation: Location? = null
+
   /*----------------------------------Initialize------------------------------------------------*/
   init {
     // The string formatter should use strictly the format wanted
@@ -241,7 +244,9 @@ class EditEventsViewModel(
         } else if (participant == creatorId) {
           uiState.copy(displayToast = true, toastString = "Cannot delete the owner")
         } else {
-          uiState.copy(participants = uiState.participants.filter { it.uid != participant })
+          uiState.copy(
+              participants = uiState.participants.filter { it.uid != participant },
+              suggestedProfiles = emptyList())
         }
   }
 
@@ -257,7 +262,16 @@ class EditEventsViewModel(
               displayToast = true, toastString = "Cannot add a participant that is already added")
       return
     }
-    uiState = uiState.copy(participants = uiState.participants + participant)
+    uiState =
+        uiState.copy(
+            participants = uiState.participants + participant, suggestedProfiles = emptyList())
+  }
+
+  /*----------------------------------Location--------------------------------------------------*/
+
+  fun selectLocation(location: Location) {
+    uiState = uiState.copy(location = location.name, suggestedLocations = emptyList())
+    chosenLocation = location
   }
 
   /*----------------------------------Helpers---------------------------------------------------*/
@@ -268,7 +282,7 @@ class EditEventsViewModel(
    */
   fun searchProfileByString(string: String) {
     viewModelScope.launch {
-      val profilesList = profileRepository.findProfilesByUidSubstring(string)
+      val profilesList = profileRepository.searchProfilesByNamePrefix(string)
       println("profiles list" + profilesList.size)
       uiState = uiState.copy(suggestedProfiles = profilesList)
     }
@@ -344,7 +358,7 @@ class EditEventsViewModel(
               title = uiState.name,
               description = uiState.description,
               creatorName = uiState.creatorName,
-              location = null,
+              location = chosenLocation,
               date = timestampDate,
               startTime = timestampStartTime,
               endTime = timestampEndTime,

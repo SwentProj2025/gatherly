@@ -18,45 +18,59 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-/** EPFL Latitude and Longitude values. */
+/** Default location coordinates for EPFL campus. */
 val EPFL_LATLNG = LatLng(46.5197, 6.5663)
 
 /**
- * UI state for the Map's ViewModel.
+ * UI state for the Map screen.
  *
- * @param todoList list of todos for the signed-in user /* @param eventList list of events */
- *   /* @param expandedTodoId todoId of the latest marker that was clicked and expanded by user */
- *   /* @param latestConsultedTodoId todoId of the latest marker that provoked a screen
- *   navigation/transition */ /* @param cameraPos current position of the camera (determined in part
- *   by latestConsulterMarker) */
+ * @property todoList List of drawable todos (incomplete todos with valid locations).
+ * @property expandedTodoId ID of the todo whose marker is currently expanded, or null if none.
+ * @property lastConsultedTodoId ID of the most recently consulted todo.
+ * @property cameraPos Current camera position on the map.
+ * @property errorMsg Error message to display, or null if no error.
+ * @property onSignedOut Flag indicating whether the user has signed out.
  */
 data class UIState(
     val todoList: List<ToDo> = emptyList(),
-    /* TODO : eventList: List<CampusEvent> = emptyList() */
     val expandedTodoId: String? = null,
     val lastConsultedTodoId: String? = null,
-    val cameraPos: LatLng = EPFL_LATLNG, // TODO: Replace placeholder with current user location!
+    val cameraPos: LatLng = EPFL_LATLNG,
     val errorMsg: String? = null,
     val onSignedOut: Boolean = false
 )
 
 /**
- * Function that retrieves "drawable" todos, i.e. those which are not complete, and have a valid
- * location.
+ * Filters todos to return only those that should be displayed on the map.
  *
- * @param todos input list of todos to filter from
- * @return list of drawable todos
+ * A todo is drawable if it is not complete and has a valid location.
+ *
+ * @param todos The list of todos to filter.
+ * @return List of todos that can be drawn on the map.
  */
 private fun getDrawableTodos(todos: List<ToDo>): List<ToDo> {
   return todos.filter { it.status != ToDoStatus.ENDED && it.location != null }
 }
 
+/**
+ * ViewModel for the Map screen.
+ *
+ * Manages the UI state for displaying todos on a map, including marker expansion and user sign-out
+ * functionality.
+ *
+ * @property repository Repository for accessing todo data.
+ */
 class MapViewModel(private val repository: ToDosRepository = ToDosRepositoryLocalMapTest()) :
     ViewModel() {
 
+  /** StateFlow that emits the current UI state for the Map screen. */
   private val _uiState: MutableStateFlow<UIState> = MutableStateFlow(UIState())
   val uiState: StateFlow<UIState> = _uiState.asStateFlow()
 
+  /**
+   * Initializes the ViewModel by loading all todos from the repository and filtering them to
+   * display only drawable todos.
+   */
   init {
     viewModelScope.launch {
       val todos = repository.getAllTodos()
@@ -65,35 +79,25 @@ class MapViewModel(private val repository: ToDosRepository = ToDosRepositoryLoca
   }
 
   /**
-   * Function that updates the expandedTodoId value to match the clicked/pressed Marker.
+   * Handles a tap on a todo marker by expanding it.
    *
-   * @param todoId the ID of the todo list item represented by the Marker
+   * @param todoId The ID of the todo whose marker was tapped.
    */
   fun onTodoMarkerTapped(todoId: String) {
     _uiState.value = _uiState.value.copy(expandedTodoId = todoId)
   }
 
-  /**
-   * Function that updates the expandedTodoId value to make it null upon minimising/dismissing a
-   * marker.
-   */
+  /** Handles dismissal of an expanded marker by collapsing it. */
   fun onTodoMarkerDismissed() {
     _uiState.value = _uiState.value.copy(expandedTodoId = null)
   }
 
-  /* TODO : IMPLEMENT THIS PROPERLY
-  /** Function that updates the lastConsultedTodoId when causing navigation to the todo screen. */
-  fun onTodoConsulted(todoId: String) {
-    _uiState.value =
-        _uiState.value.copy(
-            lastConsultedTodoId = todoId,
-            // TODO : update camera position accordingly
-        )
-  }
-  */
-
-  /** Initiates sign-out */
-  fun signOut(credentialManager: CredentialManager): Unit {
+  /**
+   * Signs out the current user and clears credential state.
+   *
+   * @param credentialManager The credential manager to clear stored credentials.
+   */
+  fun signOut(credentialManager: CredentialManager) {
     viewModelScope.launch {
       _uiState.value = _uiState.value.copy(onSignedOut = true)
       Firebase.auth.signOut()
