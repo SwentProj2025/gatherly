@@ -5,21 +5,13 @@ import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
-import com.android.gatherly.utils.FirestoreGatherlyTest
 import kotlinx.coroutines.runBlocking
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
-class ProfileScreenTest : FirestoreGatherlyTest() {
+class ProfileScreenTest {
 
   @get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()
-
-  @Before
-  override fun setUp() {
-
-    super.setUp()
-  }
 
   private fun setContent() {
     val profile =
