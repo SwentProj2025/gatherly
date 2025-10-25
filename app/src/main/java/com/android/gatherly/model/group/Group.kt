@@ -5,6 +5,7 @@ package com.android.gatherly.model.group
 /** Represents a single [Group] item within the app. */
 data class Group(
     val gid: String,
+    val creatorId: String,
     val name: String,
     val description: String? = null,
     val memberIds: List<String>, // contains userIds
