@@ -8,7 +8,6 @@ import com.android.gatherly.viewmodel.FakeEventsRepositoryLocal
 import com.android.gatherly.viewmodel.FakeToDosRepositoryLocal
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -51,7 +50,7 @@ class MapViewModelTests {
   /** Test data objects used across multiple test cases. */
   val testObjects = MapViewModelTestsTodos.testedTodos
 
-  //-------------------------------------Todos------------------------------------------------------
+  // -------------------------------------Todos------------------------------------------------------
   /**
    * Helper function to determine if a todo should be displayed on the map.
    *
@@ -188,10 +187,8 @@ class MapViewModelTests {
     assertNull(vm.uiState.value.expandedItemId)
   }
 
-  //------------------------------------Events------------------------------------------------------
-  /**
-   * Verifies that tapping an event marker updates the expanded event ID in the UI state.
-   */
+  // ------------------------------------Events------------------------------------------------------
+  /** Verifies that tapping an event marker updates the expanded event ID in the UI state. */
   @Test
   fun onEventMarkerTappedDismissed_UpdateExpandedId() = runTest {
     val todosRepo = FakeToDosRepositoryLocal()
@@ -207,9 +204,7 @@ class MapViewModelTests {
     assertEquals(null, vm.uiState.value.expandedItemId)
   }
 
-  /**
-   * Verifies that [MapViewModel] correctly filters and displays only drawable events.
-   */
+  /** Verifies that [MapViewModel] correctly filters and displays only drawable events. */
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun getDrawableEventsRetrievesCorrectList() = runTest {
@@ -225,19 +220,18 @@ class MapViewModelTests {
     vm.changeView()
 
     val expectedList: List<Event> =
-      listOf(
-        MapViewModelTestsEvents.upcomingEventWithLocation1,
-        MapViewModelTestsEvents.upcomingEventWithLocation2)
+        listOf(
+            MapViewModelTestsEvents.upcomingEventWithLocation1,
+            MapViewModelTestsEvents.upcomingEventWithLocation2)
 
     val actualList: List<Event> = vm.uiState.value.itemsList.map { it as Event }
     assertEquals(expectedList, actualList)
   }
 
-  //----------------------------------View change---------------------------------------------------
+  // ----------------------------------View
+  // change---------------------------------------------------
 
-  /**
-   * Verifies that [MapViewModel] correctly switches from an todo view to a event view and back.
-   */
+  /** Verifies that [MapViewModel] correctly switches from an todo view to a event view and back. */
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun canChangeViewBetweenTodosAndEvents() = runTest {
@@ -255,14 +249,14 @@ class MapViewModelTests {
     advanceUntilIdle()
 
     val expectedTodosList: List<ToDo> =
-      listOf(
-        MapViewModelTestsTodos.incompleteTodoWithLocation1,
-        MapViewModelTestsTodos.incompleteTodoWithLocation2)
+        listOf(
+            MapViewModelTestsTodos.incompleteTodoWithLocation1,
+            MapViewModelTestsTodos.incompleteTodoWithLocation2)
 
     val expectedEventsList: List<Event> =
-      listOf(
-        MapViewModelTestsEvents.upcomingEventWithLocation1,
-        MapViewModelTestsEvents.upcomingEventWithLocation2)
+        listOf(
+            MapViewModelTestsEvents.upcomingEventWithLocation1,
+            MapViewModelTestsEvents.upcomingEventWithLocation2)
 
     val actualTodosList: List<ToDo> = vm.uiState.value.itemsList.map { it as ToDo }
     assertEquals(expectedTodosList, actualTodosList)
