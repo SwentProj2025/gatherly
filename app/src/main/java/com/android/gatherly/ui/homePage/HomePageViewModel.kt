@@ -33,28 +33,6 @@ data class HomePageUIState(
     val signedOut: Boolean = false
 )
 
-/**
- * Filters todos to return only those that should be displayed on the map. A todo is drawable if it
- * is not complete and has a valid location.
- *
- * @param todos The list of todos to filter.
- * @return List of todos that can be drawn on the map.
- */
-private fun getDrawableTodos(todos: List<ToDo>): List<ToDo> {
-  return todos.filter { it.status != ToDoStatus.ENDED && it.location != null }
-}
-
-/**
- * Filters events to return only those that should be displayed on the map. An event is drawable if
- * it is not past and has a valid location.
- *
- * @param events The list of events to filter.
- * @return List of events that can be drawn on the map.
- */
-private fun getDrawableEvents(events: List<Event>): List<Event> {
-  return events.filter { it.status != EventStatus.PAST && it.location != null }
-}
-
 class HomePageViewModel(
     private val eventsRepository: EventsRepository = EventsRepositoryFirestore(Firebase.firestore),
     private val toDosRepository: ToDosRepository = ToDosRepositoryFirestore(Firebase.firestore),
@@ -66,6 +44,11 @@ class HomePageViewModel(
   val uiState: StateFlow<HomePageUIState> = _uiState.asStateFlow()
 
   init {
+    updateUI()
+  }
+
+  /** Updates the [uiState] with possibly new values from repositories */
+  fun updateUI() {
     viewModelScope.launch {
       val todos = toDosRepository.getAllTodos()
       val events = eventsRepository.getAllEvents()
@@ -79,6 +62,28 @@ class HomePageViewModel(
               friends = friends,
               todos = todos.take(3))
     }
+  }
+
+  /**
+   * Filters todos to return only those that should be displayed on the map. A todo is drawable if
+   * it is not complete and has a valid location.
+   *
+   * @param todos The list of todos to filter.
+   * @return List of todos that can be drawn on the map.
+   */
+  private fun getDrawableTodos(todos: List<ToDo>): List<ToDo> {
+    return todos.filter { it.status != ToDoStatus.ENDED && it.location != null }
+  }
+
+  /**
+   * Filters events to return only those that should be displayed on the map. An event is drawable
+   * if it is not past and has a valid location.
+   *
+   * @param events The list of events to filter.
+   * @return List of events that can be drawn on the map.
+   */
+  private fun getDrawableEvents(events: List<Event>): List<Event> {
+    return events.filter { it.status != EventStatus.PAST && it.location != null }
   }
 
   /** Initiates sign-out */
