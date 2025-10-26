@@ -8,7 +8,6 @@ import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsRepository
 import com.android.gatherly.model.event.EventsRepositoryFirestore
-import com.android.gatherly.model.map.DisplayedMapElement
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
@@ -27,7 +26,6 @@ import kotlinx.coroutines.launch
 data class HomePageUIState(
     val displayableTodos: List<ToDo> = emptyList(),
     val displayableEvents: List<Event> = emptyList(),
-    val expandedElement: DisplayedMapElement? = null,
     val friends: List<Profile> = emptyList(),
     val todos: List<ToDo> = emptyList(),
     val timerString: String = "Are you ready to focus?",
@@ -81,25 +79,6 @@ class HomePageViewModel(
               friends = friends,
               todos = todos.take(3))
     }
-  }
-
-  /**
-   * Handles a tap on a displayable element so that it can be expanded. Clicking on an already
-   * expanded element collapses it.
-   *
-   * @param displayable the item we want to expand
-   */
-  fun selectItem(displayable: DisplayedMapElement) {
-    if (_uiState.value.expandedElement == displayable) {
-      _uiState.value = _uiState.value.copy(expandedElement = null)
-    } else {
-      _uiState.value = _uiState.value.copy(expandedElement = displayable)
-    }
-  }
-
-  /** Handles the dismissal of an expanded element */
-  fun dismissItem() {
-    _uiState.value = _uiState.value.copy(expandedElement = null)
   }
 
   /** Initiates sign-out */
