@@ -7,7 +7,6 @@ import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.event.EventsRepository
 import com.android.gatherly.model.event.EventsRepositoryFirestore
-import com.android.gatherly.model.map.DisplayedMapElement
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
@@ -25,7 +24,6 @@ import kotlinx.coroutines.launch
 data class HomePageUIState(
     val displayableTodos: List<ToDo> = emptyList(),
     val displayableEvents: List<Event> = emptyList(),
-    val expandedElement: DisplayedMapElement? = null,
     val friends: List<Profile> = emptyList(),
     val todos: List<ToDo> = emptyList(),
     val timerString: String = "",
@@ -42,16 +40,6 @@ class HomePageViewModel(
 
   private val _uiState = MutableStateFlow(HomePageUIState())
   val uiState: StateFlow<HomePageUIState> = _uiState.asStateFlow()
-
-  /**
-   * Handles a tap on a displayable element so that it can be expanded
-   *
-   * @param displayable the item we want to expand
-   */
-  fun selectItem(displayable: DisplayedMapElement) {}
-
-  /** Handles the dismissal of an expanded element */
-  fun dismissItem() {}
 
   /** Initiates sign-out */
   fun signOut(credentialManager: CredentialManager): Unit {
