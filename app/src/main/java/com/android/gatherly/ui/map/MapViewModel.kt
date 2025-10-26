@@ -104,6 +104,8 @@ class MapViewModel(
 
       val events = eventsRepository.getAllEvents()
       eventsList = getDrawableEvents(events)
+
+      _uiState.value = _uiState.value.copy(itemsList = todoList)
     }
   }
 

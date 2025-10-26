@@ -15,7 +15,7 @@ data class Event(
     override val location: Location?,
     val date: Timestamp,
     val startTime: Timestamp,
-    val endTime: Timestamp, // TODO: Is timestamp adequate for Start/End time?
+    val endTime: Timestamp,
     val creatorId: String,
     val participants: List<String>, // contains userIds
     val status: EventStatus
