@@ -73,12 +73,23 @@ class GroupsRepositoryFirestore(private val db: FirebaseFirestore) : GroupsRepos
   }
 
   override suspend fun addMember(groupId: String, userId: String) {
+    val existing = getGroup(groupId)
+    if (currentUserId() !in existing.adminIds) {
+      throw SecurityException("Only admins can add members to this group")
+    }
     val groupRef = collection.document(groupId)
     groupRef.update("memberIds", FieldValue.arrayUnion(userId)).await()
   }
 
   override suspend fun removeMember(groupId: String, userId: String) {
     val existing = getGroup(groupId)
+    val currentUser = currentUserId()
+
+    // Allow self-removal (leaving the group) OR admin removing someone
+    if (currentUser != userId && currentUser !in existing.adminIds) {
+      throw SecurityException("Only admins can remove other members from this group")
+    }
+
     // Prevent removing the last admin
     if (userId in existing.adminIds && existing.adminIds.size <= 1) {
       throw IllegalStateException("Cannot remove the last admin from the group")
@@ -91,6 +102,9 @@ class GroupsRepositoryFirestore(private val db: FirebaseFirestore) : GroupsRepos
 
   override suspend fun addAdmin(groupId: String, userId: String) {
     val existing = getGroup(groupId)
+    if (currentUserId() !in existing.adminIds) {
+      throw SecurityException("Only admins can promote members to admin")
+    }
     // Verify user is a member before making them admin
     if (userId !in existing.memberIds) {
       throw IllegalStateException("User must be a member before becoming an admin")
@@ -100,6 +114,9 @@ class GroupsRepositoryFirestore(private val db: FirebaseFirestore) : GroupsRepos
 
   override suspend fun removeAdmin(groupId: String, userId: String) {
     val existing = getGroup(groupId)
+    if (currentUserId() !in existing.adminIds) {
+      throw SecurityException("Only admins can demote other admins")
+    }
     // Prevent removing the last admin
     if (existing.adminIds.size <= 1) {
       throw IllegalStateException("Cannot remove the last admin from the group")
