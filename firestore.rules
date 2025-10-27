@@ -44,6 +44,8 @@ service cloud.firestore {
         match /events/{eventId} {
           // Anyone authenticated can read events
           allow read: if request.auth != null;
+          allow get: if request.auth != null;
+          allow list: if request.auth != null;
 
           // Only authenticated users can create events,
           // and the event's creatorId must match their UID

@@ -1,5 +1,6 @@
 package com.android.gatherly.ui.events
 
+import android.util.Log
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.assertIsDisplayed
@@ -16,12 +17,15 @@ import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.map.Location
 import com.android.gatherly.ui.navigation.NavigationTestTags
+import com.android.gatherly.ui.navigation.Tab
+import com.android.gatherly.utils.FirebaseEmulator
 import com.android.gatherly.utils.FirestoreEventsGatherlyTest
 import com.android.gatherly.utils.GatherlyTest.Companion.fromDate
 import com.android.gatherly.utils.UI_WAIT_TIMEOUT
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.auth
+import kotlinx.coroutines.tasks.await
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.NoSuchElementException
@@ -101,8 +105,6 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
    * Test : Log in as Anonym Bob, create her own event. Verifies that Bob does see her event in
    * "Your Events" list. Verifies if the title and date of the event are correctly displayed.
    */
-  /*
-  TODO : ENABLE WHEN FIREBASE RULE WILL BE FIXED
   @Test
   fun testYourEventDisplayCorrectly() = runTest {
     val auth = FirebaseEmulator.auth
@@ -143,36 +145,37 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
     }
   }
 
-   */
-
   /**
    * Test: scenario: Log in as Anonym Alice, create her own event, log out. Log in as Anonym Bob,
    * and get his screen. Verifies that Bob does see Alice's event in browser events list. Verifies
    * if the title and date of the event are correctly displayed.
    */
-  /* TODO : ENABLE WHEN FIREBASE RULES WILL BE FIXED
   @Test
   fun testBrowserEventDisplayCorrectly() = runTest {
     val auth = FirebaseEmulator.auth
 
     try {
+        Log.e("TEST", "Start signing in as Alice")
       auth.signInAnonymously().await()
       val aliceId = auth.currentUser?.uid ?: error("Alice auth failed")
+        Log.e("TEST1", "Signing in as Alice")
       val eventByAlice = createYourEvent(aliceId)
+        Log.e("TEST2", "Alice create her event")
       repository.addEvent(eventByAlice)
+        Log.e("TEST3", "Add event")
 
       auth.signOut()
-      delay(100)
+        Log.e("TEST4", "Alice signout ")
 
       auth.signInAnonymously().await()
       val bobId = auth.currentUser?.uid ?: error("Bob auth failed")
-
-      eventByAlice.copy(participants = listOf())
+        Log.e("TEST", "BOB signing in ")
 
       composeTestRule.setContent {
         EventsScreen(
             eventsViewModel = EventsViewModel(repository = repository, currentUserId = bobId))
       }
+        Log.e("TEST", "BOB set content ")
 
       composeTestRule.waitForIdle()
 
@@ -194,12 +197,160 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
 
       composeTestRule.onEventItem(eventByAlice, hasTestTag(EventsScreenTestTags.EVENT_TITLE))
       composeTestRule.onEventItem(eventByAlice, hasTestTag(EventsScreenTestTags.EVENT_DATE))
+        Log.e("TEST", " wtf bob event displayed ")
     } finally {
       // Sign Out
       auth.signOut()
+        Log.e("TEST", "BOB sign out ")
     }
   }
-   */
+
+    /**
+     * Test: scenario: Log in as Anonym Alice, create her own event, log out. Log in as Anonym Bob,
+     * and get his screen. Verifies that Bob does see Alice's event in browser events list.
+     * Click on the Alice Event in browser events list. Verifies that the AlertDialog is displayed
+     * Click on Participate button. Verifies that Bob is added to the participants list of the event.
+     */
+    @Test
+    fun testUpcomingEventDisplayCorrectly() = runTest {
+        val auth = FirebaseEmulator.auth
+
+        try {
+            auth.signInAnonymously().await()
+            val aliceId = auth.currentUser?.uid ?: error("Alice auth failed")
+            val eventByAlice = createYourEvent(aliceId)
+            repository.addEvent(eventByAlice)
+
+            auth.signOut()
+
+            auth.signInAnonymously().await()
+            val bobId = auth.currentUser?.uid ?: error("Bob auth failed")
+
+            eventByAlice.copy(participants = listOf())
+
+            composeTestRule.setContent {
+                EventsScreen(
+                    eventsViewModel = EventsViewModel(repository = repository, currentUserId = bobId))
+            }
+
+            composeTestRule.waitForIdle()
+
+            composeTestRule
+                .onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(eventByAlice))
+                .assertIsDisplayed()
+            composeTestRule
+                .onNodeWithTag(EventsScreenTestTags.EMPTY_BROWSER_LIST_MSG)
+                .assertIsNotDisplayed()
+            composeTestRule
+                .onNodeWithTag(EventsScreenTestTags.EMPTY_UPCOMING_LIST_MSG)
+                .assertIsDisplayed()
+
+            composeTestRule.clickEventItem(eventByAlice)
+            composeTestRule.onNodeWithTag(EventsScreenTestTags.EVENT_POPUP).assertIsDisplayed()
+            composeTestRule.onNodeWithTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON).assertIsDisplayed()
+            composeTestRule.onNodeWithTag(EventsScreenTestTags.POPUP_TITLE).assertIsDisplayed()
+            composeTestRule.onNodeWithTag(EventsScreenTestTags.POPUP_DESCRIPTION).assertIsDisplayed()
+            composeTestRule
+                .onNodeWithTag(EventsScreenTestTags.PARTICIPATE_BUTTON)
+                .assertIsDisplayed()
+                .performClick()
+
+            composeTestRule.onNodeWithTag(EventsScreenTestTags.EVENT_POPUP).assertIsNotDisplayed()
+            composeTestRule
+                .onNodeWithTag(EventsScreenTestTags.EMPTY_BROWSER_LIST_MSG)
+                .assertIsDisplayed()
+            composeTestRule
+                .onNodeWithTag(EventsScreenTestTags.EMPTY_UPCOMING_LIST_MSG)
+                .assertIsNotDisplayed()
+
+        } finally {
+            // Sign Out
+            auth.signOut()
+        }
+    }
+
+    /**
+     * Test: scenario: Log in as Anonym Alice, create her own event, log out. Log in as Anonym Bob,
+     * and get his screen. Bob want to participate to Alice's event. Clicks on the event.
+     * Click on Participate button. Verifies that Bob is added to the participants list of the event.
+     * Then Bob want to unregister from the event. Clicks on the event.
+     * Click on Unregister button. Verifies that Bob is removed from the participants.
+     * Verifies that the event is back in the browser events list.
+     */
+    @Test
+    fun testUnregisterUpcomingEventCorrectly() = runTest {
+        val auth = FirebaseEmulator.auth
+
+        try {
+            auth.signInAnonymously().await()
+            val aliceId = auth.currentUser?.uid ?: error("Alice auth failed")
+            val eventByAlice = createYourEvent(aliceId)
+            repository.addEvent(eventByAlice)
+
+            auth.signOut()
+
+            auth.signInAnonymously().await()
+            val bobId = auth.currentUser?.uid ?: error("Bob auth failed")
+
+            eventByAlice.copy(participants = listOf())
+
+            composeTestRule.setContent {
+                EventsScreen(
+                    eventsViewModel = EventsViewModel(repository = repository, currentUserId = bobId))
+            }
+
+            composeTestRule.waitForIdle()
+
+            composeTestRule
+                .onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(eventByAlice))
+                .assertIsDisplayed()
+            composeTestRule
+                .onNodeWithTag(EventsScreenTestTags.EMPTY_BROWSER_LIST_MSG)
+                .assertIsNotDisplayed()
+            composeTestRule
+                .onNodeWithTag(EventsScreenTestTags.EMPTY_UPCOMING_LIST_MSG)
+                .assertIsDisplayed()
+
+            composeTestRule.clickEventItem(eventByAlice)
+            composeTestRule.onNodeWithTag(EventsScreenTestTags.EVENT_POPUP).assertIsDisplayed()
+            composeTestRule
+                .onNodeWithTag(EventsScreenTestTags.PARTICIPATE_BUTTON)
+                .assertIsDisplayed()
+                .performClick()
+
+            composeTestRule.onNodeWithTag(EventsScreenTestTags.EVENT_POPUP).assertIsNotDisplayed()
+
+            composeTestRule
+                .onNodeWithTag(EventsScreenTestTags.EMPTY_BROWSER_LIST_MSG)
+                .assertIsDisplayed()
+            composeTestRule
+                .onNodeWithTag(EventsScreenTestTags.EMPTY_UPCOMING_LIST_MSG)
+                .assertIsNotDisplayed()
+
+            // Now Bob want to unregister from the event
+            composeTestRule.clickEventItem(eventByAlice)
+            composeTestRule.onNodeWithTag(EventsScreenTestTags.EVENT_POPUP).assertIsDisplayed()
+            composeTestRule.onNodeWithTag(EventsScreenTestTags.POPUP_TITLE).assertIsDisplayed()
+            composeTestRule.onNodeWithTag(EventsScreenTestTags.POPUP_DESCRIPTION).assertIsDisplayed()
+            composeTestRule.onNodeWithTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON).assertIsDisplayed()
+            composeTestRule
+                .onNodeWithTag(EventsScreenTestTags.UNREGISTER_BUTTON)
+                .assertIsDisplayed()
+                .performClick()
+
+            composeTestRule.onNodeWithTag(EventsScreenTestTags.EVENT_POPUP).assertIsNotDisplayed()
+            composeTestRule
+                .onNodeWithTag(EventsScreenTestTags.EMPTY_BROWSER_LIST_MSG)
+                .assertIsNotDisplayed()
+            composeTestRule
+                .onNodeWithTag(EventsScreenTestTags.EMPTY_UPCOMING_LIST_MSG)
+                .assertIsDisplayed()
+
+        } finally {
+            // Sign Out
+            auth.signOut()
+        }
+    }
 
   /**
    * Test: scenario: Log in as Anonym Bob, create his own event. Verifies that Bob does see his
@@ -208,8 +359,6 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
    * displayed. Verifies that Bob can click on the "Edit" button. Verifies that Bob is redirected to
    * the Edit Event screen.
    */
-  /*
-    TODO : ENABLE WHEN FIREBASE RULES WILL BE FIXED
   @Test
   fun testCanEditAnEvent() {
     runTest {
@@ -238,14 +387,13 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
             .onNodeWithTag(EventsScreenTestTags.EDIT_EVENT_BUTTON)
             .assertIsDisplayed()
             .performClick()
+          // TODO check if going on the Edit Event screen
       } finally {
         // Sign Out
         auth.signOut()
       }
     }
   }
-
-   */
 
   /**
    * Test: scenario: Log in as Anonym Bob, create his own event. Verifies that Bob does see his
@@ -254,8 +402,6 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
    * displayed. Verifies that Bob can click on the "Cancel" button. Verifies that the pop up is
    * closed and Bob is back to the overview screen.
    */
-  /*
-  TODO : ENABLE WHEN FIREBASE RULES WILL BE FIXED
   @Test
   fun testCanCloseAlertDialogYourEvent() {
     runTest {
@@ -292,15 +438,13 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
       }
     }
   }
-   */
 
   /**
    * Test: scenario: Log in as Anonym Bob, want to create an event. Verifies that the "Create Event"
    * button is displayed. Verifies that Bob can click on the "Create Event" button. Verifies that
    * Bob is redirected to the Create Event screen.
    */
-  /* TODO : ENABLE WHEN FIREBASE RULES WILL BE FIXED
-  @Test
+   @Test
   fun testCanClickOnCreateEventButton() {
 
     runTest {
@@ -321,14 +465,13 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
             .onNodeWithTag(EventsScreenTestTags.CREATE_EVENT_BUTTON)
             .assertIsDisplayed()
             .performClick()
+        // TODO check if going on the Add Event screen
       } finally {
         // Sign Out
         auth.signOut()
       }
     }
   }
-
-   */
 
   // ///////////////////// UTILS
 
