@@ -60,10 +60,9 @@ class ProfileLocalRepository : ProfileRepository {
   override suspend fun initProfileIfMissing(uid: String, defaultPhotoUrl: String): Boolean {
     if (profiles.indexOfFirst { it.uid == uid } == -1) {
       addProfile(
-        Profile(
-          uid = uid,
-        )
-      )
+          Profile(
+              uid = uid,
+          ))
       return true
     } else {
       return false

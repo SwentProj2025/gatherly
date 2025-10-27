@@ -13,7 +13,6 @@ import androidx.lifecycle.viewModelScope
 import com.android.gatherly.R
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
-import com.android.gatherly.model.profile.ProfileRepositoryProvider
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.Companion.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
@@ -26,7 +25,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class SignInViewModel(
-    private val profileRepository: ProfileRepository = ProfileRepositoryFirestore(Firebase.firestore)
+    private val profileRepository: ProfileRepository =
+        ProfileRepositoryFirestore(Firebase.firestore)
 ) : ViewModel() {
   // UI State containing the user sign in status
   private val _uiState = MutableStateFlow(false)
@@ -50,13 +50,12 @@ class SignInViewModel(
             .signInWithCredential(firebaseCredential)
             .addOnSuccessListener {
               Log.d("Firebase authentication with Google", "Successful authentication")
-                viewModelScope.launch {
-                    val bool = profileRepository.initProfileIfMissing(
-                        Firebase.auth.currentUser?.uid!!,
-                        "default"
-                    )
-                    _uiState.value = true
-                }
+              viewModelScope.launch {
+                val bool =
+                    profileRepository.initProfileIfMissing(
+                        Firebase.auth.currentUser?.uid!!, "default")
+                _uiState.value = true
+              }
             }
             .addOnFailureListener {
               Log.e(
@@ -98,13 +97,11 @@ class SignInViewModel(
         .signInAnonymously()
         .addOnSuccessListener {
           Log.d("Firebase anonymous authentication", "Successful authentication")
-            viewModelScope.launch {
-                val bool = profileRepository.initProfileIfMissing(
-                    Firebase.auth.currentUser?.uid!!,
-                    "default"
-                )
-                _uiState.value = true
-            }
+          viewModelScope.launch {
+            val bool =
+                profileRepository.initProfileIfMissing(Firebase.auth.currentUser?.uid!!, "default")
+            _uiState.value = true
+          }
         }
         .addOnFailureListener {
           Log.e("Firebase anonymous authentication", "Failed to authenticate Firebase credentials")
