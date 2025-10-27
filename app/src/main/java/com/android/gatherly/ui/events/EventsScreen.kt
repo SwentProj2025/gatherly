@@ -145,10 +145,10 @@ fun EventsScreen(
   val isPopupOn = remember { mutableStateOf(false) }
 
   LaunchedEffect(currentUserIdFromVM) {
-        if (currentUserIdFromVM.isNotBlank()) {
-            eventsViewModel.refreshEvents(currentUserIdFromVM)
-        }
+    if (currentUserIdFromVM.isNotBlank()) {
+      eventsViewModel.refreshEvents(currentUserIdFromVM)
     }
+  }
 
   HandleSignedOutState(uiState.signedOut, onSignedOut)
 
