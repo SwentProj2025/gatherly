@@ -3,11 +3,14 @@ package com.android.gatherly.screen.authentication
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.android.gatherly.model.profile.ProfileLocalRepository
+import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.ui.authentication.SignInViewModel
 import com.android.gatherly.utils.FakeCredentialManager
 import com.android.gatherly.utils.FakeJwtGenerator
 import com.android.gatherly.utils.FirebaseEmulator
 import com.android.gatherly.utils.FirestoreGatherlyTest
+import kotlinx.coroutines.test.runTest
 import java.lang.Thread.sleep
 import org.junit.Before
 import org.junit.Test
@@ -19,6 +22,7 @@ const val WAIT_TIMEOUT = 5_000L
 class SignInViewModelTest : FirestoreGatherlyTest() {
 
   private lateinit var signInViewModel: SignInViewModel
+  private val profileRepository: ProfileRepository = ProfileLocalRepository()
 
   // set up then sign out of the firebase
   @Before
@@ -28,7 +32,7 @@ class SignInViewModelTest : FirestoreGatherlyTest() {
   }
 
   @Test
-  fun canSignInWithGoogle() {
+  fun canSignInWithGoogle() = runTest {
     val fakeGoogleIdToken =
         FakeJwtGenerator.createFakeGoogleIdToken("12345", email = "test@example.com")
 
@@ -36,7 +40,7 @@ class SignInViewModelTest : FirestoreGatherlyTest() {
 
     val context = ApplicationProvider.getApplicationContext<Context>()
 
-    signInViewModel = SignInViewModel()
+    signInViewModel = SignInViewModel(profileRepository = profileRepository)
     val userSignedIn = signInViewModel.uiState
 
     signInViewModel.signInWithGoogle(context, fakeCredentialManager)
@@ -45,11 +49,12 @@ class SignInViewModelTest : FirestoreGatherlyTest() {
 
     assert(userSignedIn.value)
     assert(FirebaseEmulator.auth.currentUser != null)
+    assert(!profileRepository.initProfileIfMissing(FirebaseEmulator.auth.currentUser?.uid!!, ""))
   }
 
   @Test
-  fun canSignInAnonymously() {
-    signInViewModel = SignInViewModel()
+  fun canSignInAnonymously() = runTest {
+    signInViewModel = SignInViewModel(profileRepository = profileRepository)
     val userSignedIn = signInViewModel.uiState
 
     signInViewModel.signInAnonymously()
@@ -58,5 +63,6 @@ class SignInViewModelTest : FirestoreGatherlyTest() {
 
     assert(userSignedIn.value)
     assert(FirebaseEmulator.auth.currentUser != null)
+    assert(!profileRepository.initProfileIfMissing(FirebaseEmulator.auth.currentUser?.uid!!, ""))
   }
 }
