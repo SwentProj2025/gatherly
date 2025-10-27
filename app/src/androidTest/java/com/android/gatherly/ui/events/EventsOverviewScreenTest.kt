@@ -1,6 +1,5 @@
 package com.android.gatherly.ui.events
 
-import android.util.Log
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.assertIsDisplayed
@@ -110,6 +109,7 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
 
     try {
 
+      // Sign in as Bob
       auth.signInAnonymously().await()
       val bobId = auth.currentUser?.uid ?: error("Bob auth failed")
       val eventByBob = createYourEvent(bobId)
@@ -154,33 +154,30 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
     val auth = FirebaseEmulator.auth
 
     try {
-      Log.e("TEST", "Start signing in as Alice")
+      // Sign in as Alice
       auth.signInAnonymously().await()
       val aliceId = auth.currentUser?.uid ?: error("Alice auth failed")
-      Log.e("TEST1", "Signing in as Alice")
+      // Create event by Alice
       val eventByAlice = createYourEvent(aliceId)
-      Log.e("TEST2", "Alice create her event")
       repository.addEvent(eventByAlice)
-      Log.e("TEST3", "Add event")
-
+      // Sign out Alice
       auth.signOut()
-      Log.e("TEST4", "Alice signout ")
 
+      // Sign in as Bob
       auth.signInAnonymously().await()
       val bobId = auth.currentUser?.uid ?: error("Bob auth failed")
-      Log.e("TEST", "BOB signing in ")
 
       composeTestRule.setContent {
         EventsScreen(
             eventsViewModel = EventsViewModel(repository = repository, currentUserId = bobId))
       }
-      Log.e("TEST", "BOB set content ")
 
       composeTestRule.waitForIdle()
 
       composeTestRule
           .onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(eventByAlice))
           .assertIsDisplayed()
+      // Check that the event created by Alice show up in the Bob's browser list
       composeTestRule
           .onNodeWithTag(EventsScreenTestTags.EMPTY_BROWSER_LIST_MSG)
           .assertIsNotDisplayed()
@@ -194,13 +191,12 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
           .onNodeWithTag(EventsScreenTestTags.EMPTY_OUREVENTS_LIST_MSG)
           .assertIsDisplayed()
 
+      // Check that the event details (title and date) are correctly displayed
       composeTestRule.onEventItem(eventByAlice, hasTestTag(EventsScreenTestTags.EVENT_TITLE))
       composeTestRule.onEventItem(eventByAlice, hasTestTag(EventsScreenTestTags.EVENT_DATE))
-      Log.e("TEST", " wtf bob event displayed ")
     } finally {
       // Sign Out
       auth.signOut()
-      Log.e("TEST", "BOB sign out ")
     }
   }
 
@@ -215,13 +211,16 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
     val auth = FirebaseEmulator.auth
 
     try {
+      // Sign in as Alice
       auth.signInAnonymously().await()
       val aliceId = auth.currentUser?.uid ?: error("Alice auth failed")
+      // Create event by Alice
       val eventByAlice = createYourEvent(aliceId)
       repository.addEvent(eventByAlice)
-
+      // Sign out Alice
       auth.signOut()
 
+      // Sign in as Bob
       auth.signInAnonymously().await()
       val bobId = auth.currentUser?.uid ?: error("Bob auth failed")
 
@@ -232,6 +231,7 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
 
       composeTestRule.waitForIdle()
 
+      // Check that the event created by Alice show up in the Bob's browser list
       composeTestRule
           .onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(eventByAlice))
           .assertIsDisplayed()
@@ -242,13 +242,19 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
           .onNodeWithTag(EventsScreenTestTags.EMPTY_UPCOMING_LIST_MSG)
           .assertIsDisplayed()
 
+      // Click on the event item
       composeTestRule.clickEventItem(eventByAlice)
+      // Check that the popup is displayed
       composeTestRule.onNodeWithTag(EventsScreenTestTags.EVENT_POPUP).assertIsDisplayed()
+      composeTestRule.onNodeWithTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON).assertIsDisplayed()
+
+      // Click on Participate button
       composeTestRule
           .onNodeWithTag(EventsScreenTestTags.PARTICIPATE_BUTTON)
           .assertIsDisplayed()
           .performClick()
 
+      // Wait until the popup is closed
       composeTestRule.waitUntil(UI_WAIT_TIMEOUT) {
         composeTestRule
             .onAllNodesWithTag(EventsScreenTestTags.EVENT_POPUP)
@@ -257,6 +263,7 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
       }
       composeTestRule.waitForIdle()
 
+      // Verify that Bob is added to the participants list of the event
       kotlinx.coroutines.runBlocking {
         val deadline = System.currentTimeMillis() + UI_WAIT_TIMEOUT
         while (System.currentTimeMillis() < deadline) {
@@ -268,6 +275,8 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
         }
       }
 
+      // Verify that the event is no longer in the browser events list
+      // and is now in the upcoming events list
       composeTestRule.waitUntil(UI_WAIT_TIMEOUT) {
         composeTestRule
             .onAllNodesWithTag(EventsScreenTestTags.EMPTY_BROWSER_LIST_MSG)
@@ -302,13 +311,16 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
     val auth = FirebaseEmulator.auth
 
     try {
+      // Sign in as Alice
       auth.signInAnonymously().await()
       val aliceId = auth.currentUser?.uid ?: error("Alice auth failed")
+      // Create event by Alice
       val eventByAlice = createYourEvent(aliceId)
       repository.addEvent(eventByAlice)
-
+      // Sign out Alice
       auth.signOut()
 
+      // Sign in as Bob
       auth.signInAnonymously().await()
       val bobId = auth.currentUser?.uid ?: error("Bob auth failed")
 
@@ -330,6 +342,7 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
           .onNodeWithTag(EventsScreenTestTags.EMPTY_UPCOMING_LIST_MSG)
           .assertIsDisplayed()
 
+      // Click on the event item and participate button
       composeTestRule.clickEventItem(eventByAlice)
       composeTestRule.onNodeWithTag(EventsScreenTestTags.EVENT_POPUP).assertIsDisplayed()
       composeTestRule
@@ -346,6 +359,7 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
         }
       }
 
+      // Verify that Bob is registered to the event
       composeTestRule.waitUntil(UI_WAIT_TIMEOUT) {
         val browserEmpty =
             composeTestRule
@@ -360,6 +374,7 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
         browserEmpty && upcomingNotEmpty
       }
 
+      // Click on the event item and unregister button
       composeTestRule.clickEventItem(eventByAlice)
       composeTestRule.onNodeWithTag(EventsScreenTestTags.EVENT_POPUP).assertIsDisplayed()
       composeTestRule.onNodeWithTag(EventsScreenTestTags.POPUP_TITLE).assertIsDisplayed()
@@ -370,6 +385,7 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
           .assertIsDisplayed()
           .performClick()
 
+      // Verify that Bob is removed from the participants list of the event
       kotlinx.coroutines.runBlocking {
         val deadline = System.currentTimeMillis() + UI_WAIT_TIMEOUT
         while (System.currentTimeMillis() < deadline) {
@@ -379,6 +395,7 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
         }
       }
 
+      // Verify that the event is back in the browser events list
       composeTestRule.waitUntil(UI_WAIT_TIMEOUT) {
         val browserNotEmpty =
             composeTestRule
@@ -416,8 +433,10 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
     runTest {
       val auth = FirebaseEmulator.auth
       try {
+        // Sign in as Bob
         auth.signInAnonymously().await()
         val bobId = auth.currentUser?.uid ?: error("Bob auth failed")
+        // Create event by Bob
         val eventByBob = createYourEvent(bobId)
         repository.addEvent(eventByBob)
 
@@ -426,15 +445,18 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
               eventsViewModel = EventsViewModel(repository = repository, currentUserId = bobId))
         }
 
+        // Verify that Bob's event is displayed
         composeTestRule.waitForIdle()
         composeTestRule
             .onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(eventByBob))
             .assertIsDisplayed()
+        // Click on Bob's event item and verify the popup
         composeTestRule.clickEventItem(eventByBob)
         composeTestRule.onNodeWithTag(EventsScreenTestTags.EVENT_POPUP).assertIsDisplayed()
         composeTestRule.onNodeWithTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON).assertIsDisplayed()
         composeTestRule.onNodeWithTag(EventsScreenTestTags.POPUP_TITLE).assertIsDisplayed()
         composeTestRule.onNodeWithTag(EventsScreenTestTags.POPUP_DESCRIPTION).assertIsDisplayed()
+        // Click on the Edit button
         composeTestRule
             .onNodeWithTag(EventsScreenTestTags.EDIT_EVENT_BUTTON)
             .assertIsDisplayed()
@@ -459,9 +481,10 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
       val auth = FirebaseEmulator.auth
 
       try {
-
+        // Sign in as Bob
         auth.signInAnonymously().await()
         val bobId = auth.currentUser?.uid ?: error("Bob auth failed")
+        // Create event by Bob
         val eventByBob = createYourEvent(bobId)
         repository.addEvent(eventByBob)
 
@@ -478,6 +501,7 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
         composeTestRule.onNodeWithTag(EventsScreenTestTags.EVENT_POPUP).assertIsDisplayed()
         composeTestRule.onNodeWithTag(EventsScreenTestTags.POPUP_TITLE).assertIsDisplayed()
         composeTestRule.onNodeWithTag(EventsScreenTestTags.POPUP_DESCRIPTION).assertIsDisplayed()
+        // Click on the Cancel button and verify that the popup is closed
         composeTestRule
             .onNodeWithTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON)
             .assertIsDisplayed()
@@ -502,7 +526,7 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
       val auth = FirebaseEmulator.auth
 
       try {
-
+        // Sign in as Bob
         auth.signInAnonymously().await()
         val bobId = auth.currentUser?.uid ?: error("Bob auth failed")
 
@@ -512,6 +536,7 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
         }
 
         composeTestRule.waitForIdle()
+        // Click on the Create Event button
         composeTestRule
             .onNodeWithTag(EventsScreenTestTags.CREATE_EVENT_BUTTON)
             .assertIsDisplayed()
