@@ -251,8 +251,9 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
                 .performClick()
 
             composeTestRule.waitUntil(UI_WAIT_TIMEOUT) {
-                 composeTestRule.onNodeWithTag(EventsScreenTestTags.EVENT_POPUP).assertIsNotDisplayed()
-                    true
+                composeTestRule.onAllNodesWithTag(EventsScreenTestTags.EVENT_POPUP)
+                    .fetchSemanticsNodes()
+                    .isEmpty()
             }
             composeTestRule.waitForIdle()
 
@@ -437,7 +438,6 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
             .onNodeWithTag(EventsScreenTestTags.EDIT_EVENT_BUTTON)
             .assertIsDisplayed()
             .performClick()
-          // TODO check if going on the Edit Event screen
       } finally {
         // Sign Out
         auth.signOut()
@@ -515,7 +515,6 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
             .onNodeWithTag(EventsScreenTestTags.CREATE_EVENT_BUTTON)
             .assertIsDisplayed()
             .performClick()
-        // TODO check if going on the Add Event screen
       } finally {
         // Sign Out
         auth.signOut()
