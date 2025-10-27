@@ -69,7 +69,7 @@ class ProfileViewModelIntegrationTest : FirestoreGatherlyProfileTest() {
     // Wait until loading completes and an error appears
     withContext(Dispatchers.Default.limitedParallelism(1)) {
       withTimeout(TIMEOUT) {
-        while (viewModel.uiState.value.isLoading && viewModel.uiState.value.errorMessage == null) {
+        while (viewModel.uiState.value.isLoading || viewModel.uiState.value.errorMessage == null) {
           delay(DELAY)
         }
       }
