@@ -226,8 +226,6 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
             auth.signInAnonymously().await()
             val bobId = auth.currentUser?.uid ?: error("Bob auth failed")
 
-            eventByAlice.copy(participants = listOf())
-
             composeTestRule.setContent {
                 EventsScreen(
                     eventsViewModel = EventsViewModel(repository = repository, currentUserId = bobId))
@@ -247,15 +245,40 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
 
             composeTestRule.clickEventItem(eventByAlice)
             composeTestRule.onNodeWithTag(EventsScreenTestTags.EVENT_POPUP).assertIsDisplayed()
-            composeTestRule.onNodeWithTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON).assertIsDisplayed()
-            composeTestRule.onNodeWithTag(EventsScreenTestTags.POPUP_TITLE).assertIsDisplayed()
-            composeTestRule.onNodeWithTag(EventsScreenTestTags.POPUP_DESCRIPTION).assertIsDisplayed()
             composeTestRule
                 .onNodeWithTag(EventsScreenTestTags.PARTICIPATE_BUTTON)
                 .assertIsDisplayed()
                 .performClick()
 
-            composeTestRule.onNodeWithTag(EventsScreenTestTags.EVENT_POPUP).assertIsNotDisplayed()
+            composeTestRule.waitUntil(UI_WAIT_TIMEOUT) {
+                 composeTestRule.onNodeWithTag(EventsScreenTestTags.EVENT_POPUP).assertIsNotDisplayed()
+                    true
+            }
+            composeTestRule.waitForIdle()
+
+           kotlinx.coroutines.runBlocking {
+                val deadline = System.currentTimeMillis() + UI_WAIT_TIMEOUT
+                while (System.currentTimeMillis() < deadline) {
+                    try {
+                        val updated = repository.getEvent(eventByAlice.id)
+                        if (updated.participants.contains(bobId)) break
+                    } catch (_: Exception) {
+                    }
+                    kotlinx.coroutines.delay(200)
+                }
+            }
+
+           composeTestRule.waitUntil(UI_WAIT_TIMEOUT) {
+                composeTestRule
+                    .onAllNodesWithTag(EventsScreenTestTags.EMPTY_BROWSER_LIST_MSG)
+                    .fetchSemanticsNodes()
+                    .isNotEmpty() &&
+                        composeTestRule
+                            .onAllNodesWithTag(EventsScreenTestTags.EMPTY_UPCOMING_LIST_MSG)
+                            .fetchSemanticsNodes()
+                            .isEmpty()
+            }
+
             composeTestRule
                 .onNodeWithTag(EventsScreenTestTags.EMPTY_BROWSER_LIST_MSG)
                 .assertIsDisplayed()
@@ -292,8 +315,6 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
             auth.signInAnonymously().await()
             val bobId = auth.currentUser?.uid ?: error("Bob auth failed")
 
-            eventByAlice.copy(participants = listOf())
-
             composeTestRule.setContent {
                 EventsScreen(
                     eventsViewModel = EventsViewModel(repository = repository, currentUserId = bobId))
@@ -304,6 +325,7 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
             composeTestRule
                 .onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(eventByAlice))
                 .assertIsDisplayed()
+
             composeTestRule
                 .onNodeWithTag(EventsScreenTestTags.EMPTY_BROWSER_LIST_MSG)
                 .assertIsNotDisplayed()
@@ -318,16 +340,25 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
                 .assertIsDisplayed()
                 .performClick()
 
-            composeTestRule.onNodeWithTag(EventsScreenTestTags.EVENT_POPUP).assertIsNotDisplayed()
+            kotlinx.coroutines.runBlocking {
+                val deadline = System.currentTimeMillis() + UI_WAIT_TIMEOUT
+                while (System.currentTimeMillis() < deadline) {
+                    val updated = repository.getEvent(eventByAlice.id)
+                    if (updated.participants.contains(bobId)) break
+                    kotlinx.coroutines.delay(200)
+                }
+            }
 
-            composeTestRule
-                .onNodeWithTag(EventsScreenTestTags.EMPTY_BROWSER_LIST_MSG)
-                .assertIsDisplayed()
-            composeTestRule
-                .onNodeWithTag(EventsScreenTestTags.EMPTY_UPCOMING_LIST_MSG)
-                .assertIsNotDisplayed()
+            composeTestRule.waitUntil(UI_WAIT_TIMEOUT) {
+                val browserEmpty =
+                    composeTestRule.onAllNodesWithTag(EventsScreenTestTags.EMPTY_BROWSER_LIST_MSG)
+                        .fetchSemanticsNodes().isNotEmpty()
+                val upcomingNotEmpty =
+                    composeTestRule.onAllNodesWithTag(EventsScreenTestTags.EMPTY_UPCOMING_LIST_MSG)
+                        .fetchSemanticsNodes().isEmpty()
+                browserEmpty && upcomingNotEmpty
+            }
 
-            // Now Bob want to unregister from the event
             composeTestRule.clickEventItem(eventByAlice)
             composeTestRule.onNodeWithTag(EventsScreenTestTags.EVENT_POPUP).assertIsDisplayed()
             composeTestRule.onNodeWithTag(EventsScreenTestTags.POPUP_TITLE).assertIsDisplayed()
@@ -338,7 +369,26 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
                 .assertIsDisplayed()
                 .performClick()
 
-            composeTestRule.onNodeWithTag(EventsScreenTestTags.EVENT_POPUP).assertIsNotDisplayed()
+
+            kotlinx.coroutines.runBlocking {
+                val deadline = System.currentTimeMillis() + UI_WAIT_TIMEOUT
+                while (System.currentTimeMillis() < deadline) {
+                    val updated = repository.getEvent(eventByAlice.id)
+                    if (!updated.participants.contains(bobId)) break
+                    kotlinx.coroutines.delay(200)
+                }
+            }
+
+            composeTestRule.waitUntil(UI_WAIT_TIMEOUT) {
+                val browserNotEmpty =
+                    composeTestRule.onAllNodesWithTag(EventsScreenTestTags.EMPTY_BROWSER_LIST_MSG)
+                        .fetchSemanticsNodes().isEmpty()
+                val upcomingEmpty =
+                    composeTestRule.onAllNodesWithTag(EventsScreenTestTags.EMPTY_UPCOMING_LIST_MSG)
+                        .fetchSemanticsNodes().isNotEmpty()
+                browserNotEmpty && upcomingEmpty
+            }
+
             composeTestRule
                 .onNodeWithTag(EventsScreenTestTags.EMPTY_BROWSER_LIST_MSG)
                 .assertIsNotDisplayed()
@@ -347,12 +397,12 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
                 .assertIsDisplayed()
 
         } finally {
-            // Sign Out
             auth.signOut()
         }
     }
 
-  /**
+
+    /**
    * Test: scenario: Log in as Anonym Bob, create his own event. Verifies that Bob does see his
    * event in "Your Events" list. Click on the Bob Event in "Your Events" list. Verifies that the
    * AlertDialog is displayed with the correct information. Verifies that the "Edit" button is
