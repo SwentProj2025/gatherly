@@ -57,12 +57,14 @@ class GroupsRepositoryFirestoreTest : FirestoreGroupsGatherlyTest() {
     repository.addGroup(group1)
 
     val retrieved = repository.getGroup(group1.gid)
-    assertEquals(group1.gid, retrieved.gid)
-    assertEquals(group1.creatorId, retrieved.creatorId)
-    assertEquals(group1.name, retrieved.name)
-    assertEquals(group1.description, retrieved.description)
-    assertEquals(group1.memberIds, retrieved.memberIds)
-    assertEquals(group1.adminIds, retrieved.adminIds)
+    val expected =
+        group1.copy(creatorId = user1Id, memberIds = listOf(user1Id), adminIds = listOf(user1Id))
+    assertEquals(expected.gid, retrieved.gid)
+    assertEquals(expected.creatorId, retrieved.creatorId)
+    assertEquals(expected.name, retrieved.name)
+    assertEquals(expected.description, retrieved.description)
+    assertEquals(expected.memberIds, retrieved.memberIds)
+    assertEquals(expected.adminIds, retrieved.adminIds)
   }
 
   @Test

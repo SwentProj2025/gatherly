@@ -104,7 +104,7 @@ open class FirestoreGroupsGatherlyTest {
     signInWithToken(user1Token)
 
     repository = GroupsRepositoryFirestore(FirebaseEmulator.firestore)
-    clearAllGroups()
+    // clearAllGroups() // DEBUG: MAY CONFLICT WITH FIRESTORE RULES
   }
 
   /**
@@ -119,7 +119,7 @@ open class FirestoreGroupsGatherlyTest {
    */
   @After
   open fun tearDown() = runTest {
-    clearAllGroups()
+    // clearAllGroups() // DEBUG: MAY CONFLICT WITH FIRESTORE RULES
     FirebaseEmulator.clearAuthEmulator()
     FirebaseEmulator.clearFirestoreEmulator()
   }

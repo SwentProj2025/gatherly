@@ -96,8 +96,13 @@ class GroupsRepositoryFirestore(private val db: FirebaseFirestore) : GroupsRepos
     }
 
     val groupRef = collection.document(groupId)
-    groupRef.update("memberIds", FieldValue.arrayRemove(userId)).await()
-    groupRef.update("adminIds", FieldValue.arrayRemove(userId)).await()
+    // Single update with both fields
+    groupRef
+        .update(
+            mapOf(
+                "memberIds" to FieldValue.arrayRemove(userId),
+                "adminIds" to FieldValue.arrayRemove(userId)))
+        .await()
   }
 
   override suspend fun addAdmin(groupId: String, userId: String) {
