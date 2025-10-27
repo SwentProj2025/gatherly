@@ -8,9 +8,13 @@ import com.google.firebase.Timestamp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
@@ -28,13 +32,23 @@ private const val DELAY = 50L
  * repository errors are surfaced to the UI state.
  */
 @RunWith(AndroidJUnit4::class)
+@OptIn(ExperimentalCoroutinesApi::class)
 class OverviewViewModelFirestoreTest : FirestoreGatherlyTest() {
   private lateinit var viewModel: OverviewViewModel
+
+  private val testDispatcher = StandardTestDispatcher()
 
   @Before
   override fun setUp() {
     super.setUp()
+    Dispatchers.setMain(testDispatcher)
     viewModel = OverviewViewModel(repository)
+  }
+
+  @After
+  override fun tearDown() {
+    Dispatchers.resetMain()
+    super.tearDown()
   }
 
   private fun makeTodo(
@@ -58,7 +72,7 @@ class OverviewViewModelFirestoreTest : FirestoreGatherlyTest() {
 
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
-  fun getAllTodos_success_updatesUiStateWithData() = runTest {
+  fun getAllTodos_success_updatesUiStateWithData() = runTest(testDispatcher) {
     // Pre-populate repository
     val todo1 = makeTodo("Sample Todo 1")
     val todo2 = makeTodo("Sample Todo 2")
@@ -90,7 +104,7 @@ class OverviewViewModelFirestoreTest : FirestoreGatherlyTest() {
   }
 
   @Test
-  fun getAllTodos_setsLoadingStateDuringFetch() = runTest {
+  fun getAllTodos_setsLoadingStateDuringFetch() = runTest(testDispatcher) {
     viewModel.refreshUIState()
 
     // Wait for loading to start
@@ -108,7 +122,7 @@ class OverviewViewModelFirestoreTest : FirestoreGatherlyTest() {
   }
 
   @Test
-  fun getAllTodos_withEmptyRepo_returnsEmptyList() = runTest {
+  fun getAllTodos_withEmptyRepo_returnsEmptyList() = runTest(testDispatcher) {
     // Repository has no data
     viewModel.refreshUIState()
 
@@ -121,7 +135,7 @@ class OverviewViewModelFirestoreTest : FirestoreGatherlyTest() {
 
   @Test
   @OptIn(ExperimentalCoroutinesApi::class)
-  fun refreshUiState_triggersReloadSuccessfully() = runTest {
+  fun refreshUiState_triggersReloadSuccessfully() = runTest(testDispatcher) {
     val todo1 = makeTodo("Initial Todo")
     repository.addTodo(todo1)
 
@@ -164,7 +178,7 @@ class OverviewViewModelFirestoreTest : FirestoreGatherlyTest() {
 
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
-  fun onCheckboxChanged_updatesStatusAndRefreshesUiState() = runTest {
+  fun onCheckboxChanged_updatesStatusAndRefreshesUiState() = runTest(testDispatcher) {
     // create and add a todo
     val todo = makeTodo("Status Change Test")
     repository.addTodo(todo)
