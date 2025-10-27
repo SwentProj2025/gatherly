@@ -14,10 +14,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -37,6 +37,15 @@ object SettingsScreenTestTags {
   const val SAVE_BUTTON = "settings_save_button"
 }
 
+/**
+ * Settings screen composable, where users can view and edit their profile information.
+ *
+ * This screen allows editing of basic user details (e.g name, school).
+ *
+ * @param credentialManager Used for managing sign-out actions.
+ * @param onSignedOut Callback triggered when the user signs out.
+ * @param navigationActions Handles navigation between different app sections.
+ */
 @Composable
 fun SettingsScreen(
     settingsViewModel: SettingsViewModel = viewModel(),
@@ -44,8 +53,11 @@ fun SettingsScreen(
     onSignedOut: () -> Unit = {},
     navigationActions: NavigationActions? = null,
 ) {
-
+  val paddingRegular = dimensionResource(id = R.dimen.padding_regular)
+  val fieldSpacingRegular = dimensionResource(id = R.dimen.spacing_between_fields_regular)
+  val paddingMedium = dimensionResource(id = R.dimen.padding_medium)
   val currentUser = Firebase.auth.currentUser
+  val fieldSpacingMedium = dimensionResource(id = R.dimen.spacing_between_fields_medium)
 
   // Load the profile only once when the screen appears
   LaunchedEffect(currentUser?.uid) {
@@ -79,7 +91,7 @@ fun SettingsScreen(
             modifier =
                 Modifier.fillMaxSize()
                     .padding(paddingValues)
-                    .padding(horizontal = 16.dp, vertical = 24.dp),
+                    .padding(horizontal = paddingRegular, vertical = paddingMedium),
             horizontalAlignment = Alignment.CenterHorizontally) {
               // Profile Picture
               Image(
@@ -89,39 +101,44 @@ fun SettingsScreen(
                   contentDescription =
                       stringResource(R.string.settings_profile_picture_description),
                   modifier =
-                      Modifier.size(120.dp)
+                      Modifier.size(dimensionResource(id = R.dimen.profile_pic_size))
                           .clip(CircleShape)
                           .testTag(SettingsScreenTestTags.PROFILE_PICTURE),
                   contentScale = ContentScale.Crop)
 
-              Spacer(modifier = Modifier.height(16.dp))
+              Spacer(modifier = Modifier.height(fieldSpacingRegular))
 
               // Username
               Text(
                   text = stringResource(R.string.settings_default_username),
-                  color = Color.White,
+                  color = MaterialTheme.colorScheme.primary,
                   fontSize = 20.sp,
                   fontWeight = FontWeight.Medium,
                   modifier = Modifier.testTag(SettingsScreenTestTags.USERNAME))
 
-              Spacer(modifier = Modifier.height(16.dp))
+              Spacer(modifier = Modifier.height(fieldSpacingRegular))
 
               // Edit Photo Button currently non-functional, will be implemented in next sprint
               Button(
                   onClick = { /* Handle edit photo will be handled in next sprint*/},
                   modifier =
                       Modifier.fillMaxWidth()
-                          .height(48.dp)
+                          .height(dimensionResource(id = R.dimen.settings_text_field_height))
                           .testTag(SettingsScreenTestTags.EDIT_PHOTO_BUTTON),
                   colors =
                       ButtonDefaults.buttonColors(
                           containerColor = MaterialTheme.colorScheme.surfaceVariant,
                           contentColor = MaterialTheme.colorScheme.onSurface),
-                  shape = RoundedCornerShape(12.dp)) {
-                    Text(text = "Edit Photo", color = Color.White, fontSize = 16.sp)
+                  shape =
+                      RoundedCornerShape(
+                          dimensionResource(id = R.dimen.rounded_corner_shape_medium))) {
+                    Text(
+                        text = stringResource(id = R.string.settings_edit_photo),
+                        color = MaterialTheme.colorScheme.primary,
+                        fontSize = 16.sp)
                   }
 
-              Spacer(modifier = Modifier.height(32.dp))
+              Spacer(modifier = Modifier.height(fieldSpacingMedium))
 
               // Settings Fields
               SettingsField(
@@ -130,27 +147,27 @@ fun SettingsScreen(
                   onValueChange = { settingsViewModel.editName(it) },
                   testTag = SettingsScreenTestTags.NAME_FIELD,
                   errorMessage = uiState.invalidNameMsg)
-              Spacer(modifier = Modifier.height(16.dp))
+              Spacer(modifier = Modifier.height(fieldSpacingRegular))
               SettingsField(
                   label = stringResource(R.string.settings_label_birthday),
                   value = uiState.birthday,
                   onValueChange = { settingsViewModel.editBirthday(it) },
                   testTag = SettingsScreenTestTags.BIRTHDAY_FIELD,
                   errorMessage = uiState.invalidBirthdayMsg)
-              Spacer(modifier = Modifier.height(16.dp))
+              Spacer(modifier = Modifier.height(fieldSpacingRegular))
               SettingsField(
                   label = stringResource(R.string.settings_label_school),
                   value = uiState.school,
                   onValueChange = { settingsViewModel.editSchool(it) },
                   testTag = SettingsScreenTestTags.SCHOOL_FIELD)
-              Spacer(modifier = Modifier.height(16.dp))
+              Spacer(modifier = Modifier.height(fieldSpacingRegular))
               SettingsField(
                   label = stringResource(R.string.settings_label_school_year),
                   value = uiState.schoolYear,
                   onValueChange = { settingsViewModel.editSchoolYear(it) },
                   testTag = SettingsScreenTestTags.SCHOOL_YEAR_FIELD)
 
-              Spacer(modifier = Modifier.height(32.dp))
+              Spacer(modifier = Modifier.height(fieldSpacingMedium))
 
               // Save Button
               Button(
@@ -159,8 +176,8 @@ fun SettingsScreen(
                   },
                   modifier =
                       Modifier.fillMaxWidth(0.8f)
-                          .height(48.dp)
-                          .padding(bottom = 16.dp)
+                          .height(dimensionResource(id = R.dimen.settings_save_button_height))
+                          .padding(bottom = paddingRegular)
                           .testTag(SettingsScreenTestTags.SAVE_BUTTON),
                   colors =
                       ButtonDefaults.buttonColors(
@@ -177,6 +194,16 @@ fun SettingsScreen(
       })
 }
 
+/**
+ * A reusable input field composable used within the Settings screen for editing profile details.
+ *
+ * @param label The text label shown above the input field.
+ * @param value The current text value of the field.
+ * @param onValueChange Callback triggered when the field’s value changes.
+ * @param modifier Modifier for styling or layout customization.
+ * @param testTag Tag used for UI testing.
+ * @param errorMessage Optional error message displayed below the field.
+ */
 @Composable
 fun SettingsField(
     label: String,
@@ -186,16 +213,14 @@ fun SettingsField(
     testTag: String = "",
     errorMessage: String? = null,
 ) {
+
+  val fieldsTextColor = MaterialTheme.colorScheme.primary
   Column(modifier = modifier.fillMaxWidth()) {
     Text(
         text = label,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        style =
-            MaterialTheme.typography.labelMedium.copy(
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant),
-        modifier = Modifier.padding(bottom = 8.dp))
+        color = fieldsTextColor,
+        style = MaterialTheme.typography.titleMedium,
+        modifier = Modifier.padding(bottom = dimensionResource(id = R.dimen.padding_small)))
 
     OutlinedTextField(
         value = value,
@@ -206,12 +231,12 @@ fun SettingsField(
                 focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                 unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
                 disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                focusedTextColor = Color.White,
-                unfocusedTextColor = Color.White,
+                focusedTextColor = fieldsTextColor,
+                unfocusedTextColor = fieldsTextColor,
                 cursorColor = MaterialTheme.colorScheme.primary,
                 focusedBorderColor = MaterialTheme.colorScheme.primary,
                 unfocusedBorderColor = Color.Transparent),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(dimensionResource(id = R.dimen.rounded_corner_shape_medium)),
         singleLine = true,
         textStyle = LocalTextStyle.current.copy(fontSize = 16.sp))
 
@@ -221,7 +246,7 @@ fun SettingsField(
           text = errorMessage,
           color = MaterialTheme.colorScheme.error,
           fontSize = 14.sp,
-          modifier = Modifier.padding(top = 4.dp))
+          modifier = Modifier.padding(top = dimensionResource(id = R.dimen.padding_extra_small)))
     }
   }
 }
