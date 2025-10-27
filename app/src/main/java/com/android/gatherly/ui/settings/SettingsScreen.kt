@@ -246,7 +246,9 @@ fun SettingsField(
           text = errorMessage,
           color = MaterialTheme.colorScheme.error,
           fontSize = 14.sp,
-          modifier = Modifier.padding(top = dimensionResource(id = R.dimen.padding_extra_small)))
+          modifier =
+              Modifier.padding(top = dimensionResource(id = R.dimen.padding_extra_small))
+                  .testTag("${testTag}_error"))
     }
   }
 }
