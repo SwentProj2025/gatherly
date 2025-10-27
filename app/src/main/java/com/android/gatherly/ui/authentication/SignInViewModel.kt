@@ -52,8 +52,7 @@ class SignInViewModel(
               Log.d("Firebase authentication with Google", "Successful authentication")
               viewModelScope.launch {
                 val bool =
-                    profileRepository.initProfileIfMissing(
-                        Firebase.auth.currentUser?.uid!!, "default")
+                    profileRepository.initProfileIfMissing(Firebase.auth.currentUser?.uid!!, "")
                 _uiState.value = true
               }
             }
