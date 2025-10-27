@@ -23,6 +23,7 @@ import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 class SignInViewModel(
     private val profileRepository: ProfileRepository =
@@ -46,21 +47,9 @@ class SignInViewModel(
 
         // Authenticate to Firebase
         val firebaseCredential = GoogleAuthProvider.getCredential(idToken, null)
-        Firebase.auth
-            .signInWithCredential(firebaseCredential)
-            .addOnSuccessListener {
-              Log.d("Firebase authentication with Google", "Successful authentication")
-              viewModelScope.launch {
-                val bool =
-                    profileRepository.initProfileIfMissing(Firebase.auth.currentUser?.uid!!, "")
-                _uiState.value = true
-              }
-            }
-            .addOnFailureListener {
-              Log.e(
-                  "Firebase authentication with Google",
-                  "Failed to authenticate Firebase credentials")
-            }
+        Firebase.auth.signInWithCredential(firebaseCredential).await()
+        val bool = profileRepository.initProfileIfMissing(Firebase.auth.currentUser?.uid!!, "")
+        _uiState.value = true
       } else {
         Log.e("Google credentials", "Failed to recognize Google credentials")
       }
