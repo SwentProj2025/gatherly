@@ -77,7 +77,7 @@
     <string name="browseEvents_list_title">Browse Events</string>
     <string name="browseEvents_emptylist_msg">No events upcoming</string>
     <string name="upcomingEvents_list_title">My Upcoming Events</string>
-    <string name="upcomingEvents_emptylist_msg">You are not register to any upcoming events</string>
+    <string name="upcomingEvents_emptylist_msg">You are not registered to any upcoming events</string>
     <string name="userEvents_list_title">My Own Events</string>
     <string name="userEvents_emptylist_msg">You have not created any events</string>
     <string name="create_event_button_title">Create an event</string>

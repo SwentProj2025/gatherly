@@ -56,7 +56,7 @@ sealed class Tab(val name: String, val icon: ImageVector, val destination: Scree
 
   object Events : Tab("Events", Icons.Outlined.Group, Screen.EventsScreen)
 
-  object EditEvent : Tab("Edit Event", Icons.Outlined.Edit, Screen.EditeventScreen)
+  object EditEvent : Tab("Edit Event", Icons.Outlined.Edit, Screen.EditEventScreen)
 
   object AddEvent : Tab("Add Event", Icons.Outlined.Add, Screen.AddEventScreen)
 

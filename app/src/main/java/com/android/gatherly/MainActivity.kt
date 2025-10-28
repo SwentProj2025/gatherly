@@ -166,7 +166,7 @@ fun GatherlyApp(
             navigationActions = navigationActions,
             credentialManager = credentialManager,
             onSignedOut = { navigationActions.navigateTo(Screen.SignIn) },
-            addYourNewEvent = { navigationActions.navigateTo(Screen.AddEventScreen) },
+            onAddEvent = { navigationActions.navigateTo(Screen.AddEventScreen) },
             navigateToEditEvent = { event ->
               navigationActions.navigateTo(Screen.EditEvent(event.id))
             })

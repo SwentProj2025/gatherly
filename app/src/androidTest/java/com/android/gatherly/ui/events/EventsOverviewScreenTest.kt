@@ -551,7 +551,7 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
   // ///////////////////// UTILS
 
   /** Helper function to use when we want to click on a specific event item */
-  fun ComposeTestRule.clickEventItem(event: Event) {
+  private fun ComposeTestRule.clickEventItem(event: Event) {
     waitUntilEventIsDisplayed(event).performClick()
   }
 
@@ -573,14 +573,14 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
    * Helper function to use when we want to check if a specific event item is displayed on the
    * screen
    */
-  fun ComposeTestRule.checkEventItemIsDisplayed(event: Event): SemanticsNodeInteraction =
+  private fun ComposeTestRule.checkEventItemIsDisplayed(event: Event): SemanticsNodeInteraction =
       onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(event)).assertIsDisplayed()
 
   /**
    * Helper function to use when we want to check if the current screen displaying is the events
    * overview screen
    */
-  fun ComposeTestRule.checkEventsScreenIsDisplayed() {
+  private fun ComposeTestRule.checkEventsScreenIsDisplayed() {
     onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
         .assertTextContains("Events", substring = true, ignoreCase = true)
   }
@@ -589,7 +589,7 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
    * Helper function to use when we want to check if a specific event item is displayed on the
    * screen with a specific matcher
    */
-  fun ComposeTestRule.onEventItem(event: Event, matcher: SemanticsMatcher) {
+  private fun ComposeTestRule.onEventItem(event: Event, matcher: SemanticsMatcher) {
     val eventNode = this.waitUntilEventIsDisplayed(event)
     onNode(
             hasTestTag(EventsScreenTestTags.getTestTagForEventItem(event))

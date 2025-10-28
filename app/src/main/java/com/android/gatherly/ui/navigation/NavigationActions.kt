@@ -33,7 +33,7 @@ sealed class Screen(
 
   object AddEventScreen : Screen(route = "add_event_screen", name = "Create an event")
 
-  object EditeventScreen : Screen(route = "edit_event", name = "Edit event")
+  object EditEventScreen : Screen(route = "edit_event", name = "Edit event")
 
   data class EditEvent(val eventUid: String) :
       Screen(route = "edit_event/${eventUid}", name = "Edit Event") {

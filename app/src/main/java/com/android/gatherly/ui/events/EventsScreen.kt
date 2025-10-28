@@ -112,7 +112,7 @@ object EventsScreenTestTags {
  *
  * @param credentialManager Manages user credentials for sign-in/sign-out operations.
  * @param onSignedOut Callback invoked when the user signs out.
- * @param addYourNewEvent Callback to navigate to the event creation screen.
+ * @param onAddEvent Callback to navigate to the event creation screen.
  * @param navigateToEditEvent Callback to navigate to the event editing screen with the selected
  *   event
  * @param navigationActions Handles navigation between different tabs/screens.
@@ -122,7 +122,7 @@ object EventsScreenTestTags {
 fun EventsScreen(
     credentialManager: CredentialManager = CredentialManager.create(LocalContext.current),
     onSignedOut: () -> Unit = {},
-    addYourNewEvent: () -> Unit = {},
+    onAddEvent: () -> Unit = {},
     navigateToEditEvent: (Event) -> Unit = {},
     navigationActions: NavigationActions? = null,
     eventsViewModel: EventsViewModel =
@@ -312,7 +312,7 @@ fun EventsScreen(
 
               item {
                 Button(
-                    onClick = { addYourNewEvent() },
+                    onClick = { onAddEvent() },
                     modifier =
                         Modifier.fillMaxWidth()
                             .height(80.dp)
