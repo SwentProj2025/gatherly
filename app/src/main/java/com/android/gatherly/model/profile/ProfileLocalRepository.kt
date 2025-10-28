@@ -58,4 +58,29 @@ class ProfileLocalRepository : ProfileRepository {
       emptyList()
 
   override suspend fun initProfileIfMissing(uid: String, defaultPhotoUrl: String): Boolean = true
+
+  override suspend fun getListNoFriends(currentUserId: String): List<String> {
+    val currentProfile = getProfileByUid(currentUserId) ?: return emptyList()
+    val friendUids = currentProfile.friendUids.toSet()
+
+    return profiles
+        .filter { it.uid != currentUserId && it.uid !in friendUids }
+        .mapNotNull { it.username.takeIf { username -> username.isNotBlank() } }
+  }
+
+  override suspend fun deleteFriend(friend: String, currentUserId: String) {
+    val currentProfile = getProfileByUid(currentUserId) ?: return
+    val updatedFriends = currentProfile.friendUids.filter { it != friend }
+    val updatedProfile = currentProfile.copy(friendUids = updatedFriends)
+    updateProfile(updatedProfile)
+  }
+
+  override suspend fun addFriend(friend: String, currentUserId: String) {
+    val currentProfile = getProfileByUid(currentUserId) ?: return
+    if (!currentProfile.friendUids.contains(friend)) {
+      val updatedFriends = currentProfile.friendUids + friend
+      val updatedProfile = currentProfile.copy(friendUids = updatedFriends)
+      updateProfile(updatedProfile)
+    }
+  }
 }

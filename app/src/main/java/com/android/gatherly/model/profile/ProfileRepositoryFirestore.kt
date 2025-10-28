@@ -1,6 +1,7 @@
 package com.android.gatherly.model.profile
 
 import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
@@ -273,5 +274,27 @@ class ProfileRepositoryFirestore(private val db: FirebaseFirestore) : ProfileRep
         "schoolYear" to profile.schoolYear,
         "birthday" to profile.birthday,
         "profilePicture" to profile.profilePicture)
+  }
+
+  override suspend fun getListNoFriends(currentUserId: String): List<String> {
+    val currentProfile = getProfileByUid(currentUserId) ?: return emptyList()
+    val friendUids = currentProfile.friendUids.toSet()
+
+    val snap = profilesCollection.get().await()
+    val allProfiles = snap.documents.mapNotNull { snapshotToProfile(it) }
+
+    return allProfiles
+        .filter { it.uid != currentUserId && it.uid !in friendUids }
+        .mapNotNull { it.username.takeIf { username -> username.isNotBlank() } }
+  }
+
+  override suspend fun addFriend(friend: String, currentUserId: String) {
+    val docRef = profilesCollection.document(currentUserId)
+    docRef.update("friendUids", FieldValue.arrayUnion(friend)).await()
+  }
+
+  override suspend fun deleteFriend(friend: String, currentUserId: String) {
+    val docRef = profilesCollection.document(currentUserId)
+    docRef.update("friendUids", FieldValue.arrayRemove(friend)).await()
   }
 }
