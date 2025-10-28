@@ -81,18 +81,11 @@ class SignInViewModel(
 
   /** Sign in anonymously */
   fun signInAnonymously() {
-    Firebase.auth
-        .signInAnonymously()
-        .addOnSuccessListener {
-          Log.d("Firebase anonymous authentication", "Successful authentication")
-          viewModelScope.launch {
-            val bool =
-                profileRepository.initProfileIfMissing(Firebase.auth.currentUser?.uid!!, "default")
-            _uiState.value = true
-          }
-        }
-        .addOnFailureListener {
-          Log.e("Firebase anonymous authentication", "Failed to authenticate Firebase credentials")
-        }
+    viewModelScope.launch {
+      Firebase.auth.signInAnonymously().await()
+
+      val bool = profileRepository.initProfileIfMissing(Firebase.auth.currentUser?.uid!!, "default")
+      _uiState.value = true
+    }
   }
 }
