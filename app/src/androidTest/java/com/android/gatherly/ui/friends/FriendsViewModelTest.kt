@@ -37,7 +37,8 @@ class FriendsViewModelTest {
           focusSessionIds = emptyList(),
           eventIds = emptyList(),
           groupIds = emptyList(),
-          friendUids = listOf("B"))
+          friendUids = listOf("B"),
+          profilePicture = "profileA.png")
 
   private val userB: Profile =
       Profile(
@@ -47,7 +48,8 @@ class FriendsViewModelTest {
           focusSessionIds = emptyList(),
           eventIds = emptyList(),
           groupIds = emptyList(),
-          friendUids = listOf("A"))
+          friendUids = listOf("A"),
+          profilePicture = "profileB.png")
 
   val userC: Profile =
       Profile(
@@ -57,7 +59,8 @@ class FriendsViewModelTest {
           focusSessionIds = emptyList(),
           eventIds = emptyList(),
           groupIds = emptyList(),
-          friendUids = emptyList())
+          friendUids = emptyList(),
+          profilePicture = "profileC.png")
 
   @Before
   fun setup() = runTest {
@@ -108,5 +111,27 @@ class FriendsViewModelTest {
 
     val state = viewModel.uiState.value
     assertFalse(state.friends.contains("B"))
+  }
+
+  @Test
+  fun testGetProfilePictureOfFriend() = runTest {
+    val state = viewModel.uiState.value
+    state.friends.forEach { friend ->
+      val profilePicture = viewModel.getFriendProfilePicture(friend)
+
+      withContext(Dispatchers.Default.limitedParallelism(1)) {
+        withTimeout(TIMEOUT) {
+          while (profilePicture != "profileB.png") {
+            delay(DELAY)
+          }
+        }
+      }
+
+      if (friend == "B") {
+        assertEquals("profileB.png", profilePicture)
+      } else {
+        fail("Unexpected friend username: $friend")
+      }
+    }
   }
 }
