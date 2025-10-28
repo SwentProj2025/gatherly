@@ -1,14 +1,20 @@
 package com.android.gatherly.ui.friends
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults.buttonColors
@@ -19,22 +25,34 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role.Companion.Button
+import androidx.compose.ui.semantics.Role.Companion.Image
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
+import com.android.gatherly.utils.GenericViewModelFactory
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
+import com.google.firebase.firestore.firestore
+import com.android.gatherly.R
+import com.android.gatherly.model.profile.Profile
 
 object FriendsScreenTestTags {
   const val FriendsText = "friends"
@@ -42,30 +60,21 @@ object FriendsScreenTestTags {
 
 @Composable
 fun FriendsScreen(
-    friendsViewModel: FriendsViewModel = viewModel(),
+    friendsViewModel: FriendsViewModel = viewModel(
+        factory =
+            GenericViewModelFactory<FriendsViewModel> {
+                FriendsViewModel(
+                    ProfileRepositoryFirestore(Firebase.firestore),
+                    currentUserId = Firebase.auth.currentUser?.uid ?: ""
+                )
+
+            }),
     credentialManager: CredentialManager = CredentialManager.create(LocalContext.current),
     goBack: () -> Unit,
     findNewFriend: () -> Unit,
 ) {
 
-    /* TODO : to add in the arguments of the FriendsScreen function
-
-        friendsViewModel: FriendsViewModel =
-        viewModel(
-            factory =
-                GenericViewModelFactory<FriendsViewModel> {
-                  FriendsViewModel(
-                      ProfileRepositoryFirestore(Firebase.firestore),
-                      currentUserId = Firebase.auth.currentUser?.uid ?: "")
-                }),
-
-
-     */
-
-    /*
-
     val currentUserIdFromVM = friendsViewModel.currentUserId
-
     val uiState by friendsViewModel.uiState.collectAsState()
     val friendslist = uiState.friends
 
@@ -149,9 +158,8 @@ fun FriendItem(friend: String, unfollow: () -> Unit) {
         ) {
 
         Image(
-            painter = friend.profilePicture,
-                ?: rememberAsyncImagePainter(R.drawable.ic_default_profile_picture),
-            contentDescription = "Profile picture of ${friend.surname}",
+            painter = painterResource(0),//todo friend.profilePicture,
+            contentDescription = "Profile picture of ${friend}",
             modifier = Modifier
                 .size(56.dp)
                 .clip(CircleShape)
@@ -160,14 +168,10 @@ fun FriendItem(friend: String, unfollow: () -> Unit) {
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = friend.surname ?: "Friend Name",
+                    text = friend,
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Medium)
-                Text(
-                    text = friend.status ?: "Friend Status",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary,)
             }
             Spacer(modifier = Modifier.width(16.dp))
 
@@ -179,8 +183,4 @@ fun FriendItem(friend: String, unfollow: () -> Unit) {
         }
         }
     }
-}
-
-
-*/
 }
