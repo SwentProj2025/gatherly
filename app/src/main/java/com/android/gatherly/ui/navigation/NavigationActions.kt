@@ -18,7 +18,7 @@ sealed class Screen(
 
   object AddToDo : Screen(route = "add_todo", name = "Create a new task")
 
-  object Task : Screen(route = "edit_todo", name = "Edit a task")
+  object EditTodo : Screen(route = "edit_todo", name = "Edit a task")
 
   data class EditToDo(val todoUid: String) :
       Screen(route = "edit_todo/${todoUid}", name = "Edit ToDo") {
