@@ -94,7 +94,7 @@ fun FriendsScreen(
               if (friendslist.isEmpty()) {
                   item {
                       Text(
-                          text = "You have no friends added yet.",  // todo : place it to R.string
+                          text = stringResource(R.string.friends_empty_list_msg),
                           modifier = Modifier
                               .padding(16.dp))
                   }
@@ -118,7 +118,7 @@ fun FriendsScreen(
                       colors = buttonColors(containerColor = Color(0xFF9ADCE5))) {
 
                       Text(
-                          text = "Find New Friends", // todo : stringResource(R.string.create_event_button_title)
+                          text = stringResource(R.string.find_friends_button_label),
                           fontSize = 16.sp,
                           fontWeight = FontWeight.Medium,
                           color = MaterialTheme.colorScheme.onPrimary)
@@ -142,8 +142,6 @@ fun FriendItem(friend: String, unfollow: () -> Unit) {
             Modifier.clickable(onClick = unfollow)
             .fillMaxWidth()
             .padding(vertical = 4.dp)) {
-            //todo first column photo
-            // todo second column is a row : first row username second row bio
 
         Row(
             modifier = Modifier.fillMaxWidth().padding(12.dp),

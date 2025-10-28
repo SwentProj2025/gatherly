@@ -104,4 +104,26 @@ interface ProfileRepository {
 
   /** Creates a profile. This is to be used only for testing purpose. */
   suspend fun addProfile(profile: Profile)
+  /**
+   * Retrieves all the profiles username that the user is not friends with.
+   *
+   * @param currentUserId the ID of the current user
+   */
+  suspend fun getListNoFriends(currentUserId: String): List<String>
+  /**
+   * Deletes a Friend from the friend list from the repository.
+   *
+   * @param friend the username of the friend to unfollow
+   * @param currentUserId the ID of the current user
+   */
+  suspend fun deleteFriend(friend: String, currentUserId: String)
+
+  /**
+   * Adds a Friend to the friend list from the repository.
+   *
+   * @param friend the username of the friend to follow
+   * @param currentUserId the ID of the current user
+   */
+  suspend fun addFriend(friend: String, currentUserId: String)
+
 }

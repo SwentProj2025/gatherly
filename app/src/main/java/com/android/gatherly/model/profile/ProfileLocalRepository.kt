@@ -58,4 +58,13 @@ class ProfileLocalRepository : ProfileRepository {
       emptyList()
 
   override suspend fun initProfileIfMissing(uid: String, defaultPhotoUrl: String): Boolean = true
+
+  override suspend fun getListNoFriends(currentUserId: String): List<String> {
+    return emptyList()
+  }
+
+  override suspend fun deleteFriend(friend: String, currentUserId: String) {}
+
+  override suspend fun addFriend(friend: String, currentUserId: String) {}
+
 }
