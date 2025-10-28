@@ -1,16 +1,16 @@
 package com.android.gatherly.model.profile
 
-import android.util.Log
 import com.android.gatherly.utils.FirebaseEmulator
 import com.android.gatherly.utils.FirestoreGatherlyProfileTest
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.*
-import org.junit.Test
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
-import kotlinx.coroutines.Dispatchers
+import org.junit.Assert.*
+import org.junit.Test
+
 private const val TIMEOUT = 30_000L
 private const val DELAY = 200L
 
@@ -322,7 +322,6 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     val firestore = FirebaseEmulator.firestore
     val repo = ProfileRepositoryFirestore(firestore)
 
-
     // User B
     auth.signInAnonymously().await()
     val userBUid = auth.currentUser!!.uid
@@ -370,6 +369,4 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     assertNotNull(profileA)
     assertFalse(profileA!!.friendUids.contains(userBUid))
   }
-
-
 }
