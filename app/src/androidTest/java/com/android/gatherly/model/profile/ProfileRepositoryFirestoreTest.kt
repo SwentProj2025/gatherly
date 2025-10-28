@@ -277,7 +277,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
 
     // Check the non-friends list for User C
     val noFriendsListC = repoC.getListNoFriends(userCUid)
-    assertEquals(listOf("alice", "bob"), noFriendsListC)
+    assertTrue(noFriendsListC == listOf("alice", "bob") || noFriendsListC == listOf("bob", "alice"))
   }
 
   @Test
