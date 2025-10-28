@@ -1,6 +1,5 @@
 package com.android.gatherly.utils
 
-import android.util.Log
 import com.android.gatherly.model.group.Group
 import com.android.gatherly.model.group.GroupsRepository
 import com.android.gatherly.model.group.GroupsRepositoryFirestore
@@ -104,7 +103,6 @@ open class FirestoreGroupsGatherlyTest {
     signInWithToken(user1Token)
 
     repository = GroupsRepositoryFirestore(FirebaseEmulator.firestore)
-    // clearAllGroups() // DEBUG: MAY CONFLICT WITH FIRESTORE RULES
   }
 
   /**
@@ -119,7 +117,6 @@ open class FirestoreGroupsGatherlyTest {
    */
   @After
   open fun tearDown() = runTest {
-    // clearAllGroups() // DEBUG: MAY CONFLICT WITH FIRESTORE RULES
     FirebaseEmulator.clearAuthEmulator()
     FirebaseEmulator.clearFirestoreEmulator()
   }
@@ -132,22 +129,5 @@ open class FirestoreGroupsGatherlyTest {
   protected suspend fun signInWithToken(token: String) {
     val credential = GoogleAuthProvider.getCredential(token, null)
     FirebaseEmulator.auth.signInWithCredential(credential).await()
-  }
-
-  /** Deletes all groups in the emulator Firestore (global collection) */
-  protected suspend fun clearAllGroups() {
-    val groups = FirebaseEmulator.firestore.collection("groups").get().await()
-
-    val batch = FirebaseEmulator.firestore.batch()
-    groups.documents.forEach { batch.delete(it.reference) }
-    batch.commit().await()
-
-    Log.d("FirestoreGroupsGatherlyTest", "Cleared ${groups.size()} groups")
-  }
-
-  /** Returns the current count of groups in the system. */
-  protected suspend fun getGroupsCount(): Int {
-    val snap = FirebaseEmulator.firestore.collection("groups").get().await()
-    return snap.size()
   }
 }
