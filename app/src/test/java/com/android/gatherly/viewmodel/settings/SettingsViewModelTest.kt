@@ -57,8 +57,8 @@ class SettingsViewModelTest {
     advanceUntilIdle()
 
     val state = viewModel.uiState.value
-    assertEquals("new_user", state.name)
-    assertTrue(state.isValid)
+    assertEquals("", state.name)
+    assertFalse(state.isValid)
     assertNull(state.errorMsg)
   }
 
