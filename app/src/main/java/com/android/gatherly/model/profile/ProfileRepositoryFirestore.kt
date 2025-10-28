@@ -1,5 +1,6 @@
 package com.android.gatherly.model.profile
 
+import android.util.Log
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
@@ -235,7 +236,7 @@ class ProfileRepositoryFirestore(private val db: FirebaseFirestore) : ProfileRep
     val focusSessionIds = doc.get("focusSessions") as? List<String> ?: emptyList()
     val eventIds = doc.get("events") as? List<String> ?: emptyList()
     val groupIds = doc.get("groups") as? List<String> ?: emptyList()
-    val friendUids = doc.get("friends") as? List<String> ?: emptyList()
+    val friendUids = doc.get("friendUids") as? List<String> ?: emptyList()
     val school = doc.getString("school") ?: ""
     val schoolYear = doc.getString("schoolYear") ?: ""
     val birthday = doc.getTimestamp("birthday")
