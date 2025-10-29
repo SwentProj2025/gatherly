@@ -1,6 +1,4 @@
-# Title
-
-## Description
+# Description
 This PR introduces... It closes issue #...
 
 ## Changes
@@ -12,13 +10,8 @@ This PR introduces... It closes issue #...
 - file 2
 - ...
 #### Modified
-
-#### Removed
-
-## Dependencies Added
-- dependency 1 for XXX
+- file 1
 - ...
-
 ## Testing
 
 ## Screenshots (if applicable)
