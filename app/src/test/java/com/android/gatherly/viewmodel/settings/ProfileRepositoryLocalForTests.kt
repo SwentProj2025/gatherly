@@ -57,7 +57,7 @@ class ProfileRepositoryLocalForTests : ProfileRepository {
 
   override suspend fun getListNoFriends(currentUserId: String): List<String> {
     val currentProfile = getProfileByUid(currentUserId) ?: return emptyList()
-    val friendUids = currentProfile.friendUids.toSet()
+    val friendUids = currentProfile.friendUids
 
     return profiles.values
         .filter { it.uid != currentUserId && it.uid !in friendUids }

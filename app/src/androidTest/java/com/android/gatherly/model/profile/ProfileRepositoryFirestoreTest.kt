@@ -261,7 +261,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     // User A adds User B as a friend
     repoA.addFriend(userBUid, userAUid)
 
-    var updatedProfileA: Profile? = null
+    var updatedProfileA: Profile? = repo.getProfileByUid(userAUid)
     withContext(Dispatchers.Default.limitedParallelism(1)) {
       withTimeout(TIMEOUT) {
         while (updatedProfileA?.friendUids?.contains(userBUid) != true) {
@@ -277,7 +277,10 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
 
     // Check the non-friends list for User C
     val noFriendsListC = repoC.getListNoFriends(userCUid)
-    assertTrue(noFriendsListC == listOf("alice", "bob") || noFriendsListC == listOf("bob", "alice"))
+    assertTrue(
+        noFriendsListC.size == 2 &&
+            noFriendsListC.contains("alice") &&
+            noFriendsListC.contains("bob"))
   }
 
   @Test
@@ -300,7 +303,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     // User A adds User B as a friend
     repo.addFriend(userBUid, userAUid)
 
-    var updatedProfileA: Profile? = null
+    var updatedProfileA: Profile? = repo.getProfileByUid(userAUid)
     withContext(Dispatchers.Default.limitedParallelism(1)) {
       withTimeout(TIMEOUT) {
         while (updatedProfileA?.friendUids?.contains(userBUid) != true) {
@@ -354,11 +357,11 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     // User A deletes User B from friends
     repo.deleteFriend(userBUid, userAUid)
 
-    var SecondUpdatedProfileA: Profile? = null
+    updatedProfileA = repo.getProfileByUid(userAUid)
     withContext(Dispatchers.Default.limitedParallelism(1)) {
       withTimeout(TIMEOUT) {
-        while (SecondUpdatedProfileA?.friendUids?.contains(userBUid) == true) {
-          SecondUpdatedProfileA = repo.getProfileByUid(userAUid)
+        while (updatedProfileA?.friendUids?.contains(userBUid) == true) {
+          updatedProfileA = repo.getProfileByUid(userAUid)
           delay(DELAY)
         }
       }

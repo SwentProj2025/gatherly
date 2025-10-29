@@ -278,14 +278,15 @@ class ProfileRepositoryFirestore(private val db: FirebaseFirestore) : ProfileRep
 
   override suspend fun getListNoFriends(currentUserId: String): List<String> {
     val currentProfile = getProfileByUid(currentUserId) ?: return emptyList()
-    val friendUids = currentProfile.friendUids.toSet()
+    val friendUids = currentProfile.friendUids
 
     val snap = profilesCollection.get().await()
     val allProfiles = snap.documents.mapNotNull { snapshotToProfile(it) }
 
     return allProfiles
         .filter { it.uid != currentUserId && it.uid !in friendUids }
-        .mapNotNull { it.username.takeIf { username -> username.isNotBlank() } }
+        .mapNotNull { it.username }
+        .filter { it.isNotBlank() }
   }
 
   override suspend fun addFriend(friend: String, currentUserId: String) {
