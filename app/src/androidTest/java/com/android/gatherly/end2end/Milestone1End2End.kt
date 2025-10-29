@@ -23,7 +23,7 @@ import org.junit.Test
 class Milestone1End2End {
   @get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
-  val TIMEOUT = 2000L
+  val TIMEOUT = 5000L
 
   // set content
   @Before

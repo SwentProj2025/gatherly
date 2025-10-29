@@ -104,6 +104,7 @@ interface ProfileRepository {
 
   /** Creates a profile. This is to be used only for testing purpose. */
   suspend fun addProfile(profile: Profile)
+
   /**
    * Retrieves all the profiles username that the user is not friends with.
    *
@@ -125,5 +126,4 @@ interface ProfileRepository {
    * @param currentUserId the ID of the current user
    */
   suspend fun addFriend(friend: String, currentUserId: String)
-
 }

@@ -39,6 +39,16 @@
     <string name="timer_resume">Resume</string>
     <string name="timer_stop">Stop</string>
 
+    <!-- Settings Page -->
+    <string name="settings_edit_photo">Edit Photo</string>
+    <string name="settings_save">Save</string>
+    <string name="settings_profile_picture_description">Profile Picture</string>
+    <string name="settings_default_username">\@defaultuser</string>
+    <string name="settings_label_name">Name :</string>
+    <string name="settings_label_birthday">Birthday date:</string>
+    <string name="settings_label_school">School :</string>
+    <string name="settings_label_school_year">School year :</string>
+
     <!-- Profile Page -->
     <string name="profile_screen_title">Profile</string>
     <string name="profile_picture_description">Profile picture</string>
@@ -69,7 +79,6 @@
     <string name="events_location_field_placeholder">Enter an Address or Location</string>
     <string name="events_participant_field_label">Participant</string>
     <string name="events_participant_placeholder">Add or remove a participant</string>
-
 
     <!-- Friends Screen -->
     <string name="friends_empty_list_msg">You have no friends added yet.</string>

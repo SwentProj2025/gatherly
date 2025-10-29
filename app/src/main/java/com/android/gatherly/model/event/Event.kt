@@ -1,5 +1,6 @@
 package com.android.gatherly.model.event
 
+import com.android.gatherly.model.map.DisplayedMapElement
 import com.android.gatherly.model.map.Location
 import com.google.firebase.Timestamp
 
@@ -11,14 +12,14 @@ data class Event(
     val title: String,
     val description: String,
     val creatorName: String,
-    val location: Location?,
+    override val location: Location?,
     val date: Timestamp,
     val startTime: Timestamp,
-    val endTime: Timestamp, // TODO: Is timestamp adequate for Start/End time?
+    val endTime: Timestamp,
     val creatorId: String,
     val participants: List<String>, // contains userIds
     val status: EventStatus
-)
+) : DisplayedMapElement
 
 /** Represents the state of an [Event] item. */
 enum class EventStatus {

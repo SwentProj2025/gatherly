@@ -275,25 +275,27 @@ class ProfileRepositoryFirestore(private val db: FirebaseFirestore) : ProfileRep
         "birthday" to profile.birthday,
         "profilePicture" to profile.profilePicture)
   }
-    override suspend fun getListNoFriends(currentUserId: String): List<String> {
-        val currentProfile = getProfileByUid(currentUserId) ?: return emptyList()
-        val friendUids = currentProfile.friendUids.toSet()
 
-        val snap = profilesCollection.get().await()
-        val allProfiles = snap.documents.mapNotNull { snapshotToProfile(it) }
+  override suspend fun getListNoFriends(currentUserId: String): List<String> {
+    val currentProfile = getProfileByUid(currentUserId) ?: return emptyList()
+    val friendUids = currentProfile.friendUids
 
-        return allProfiles
-            .filter { it.uid != currentUserId && it.uid !in friendUids }
-            .mapNotNull { it.username.takeIf { username -> username.isNotBlank() } }
-    }
+    val snap = profilesCollection.get().await()
+    val allProfiles = snap.documents.mapNotNull { snapshotToProfile(it) }
 
-    override suspend fun addFriend(friend: String, currentUserId: String) {
-        val docRef = profilesCollection.document(currentUserId)
-        docRef.update("friendUids", FieldValue.arrayUnion(friend)).await()
-    }
+    return allProfiles
+        .filter { it.uid != currentUserId && it.uid !in friendUids }
+        .mapNotNull { it.username }
+        .filter { it.isNotBlank() }
+  }
 
-    override suspend fun deleteFriend(friend: String, currentUserId: String) {
-        val docRef = profilesCollection.document(currentUserId)
-        docRef.update("friendUids", FieldValue.arrayRemove(friend)).await()
-    }
+  override suspend fun addFriend(friend: String, currentUserId: String) {
+    val docRef = profilesCollection.document(currentUserId)
+    docRef.update("friendUids", FieldValue.arrayUnion(friend)).await()
+  }
+
+  override suspend fun deleteFriend(friend: String, currentUserId: String) {
+    val docRef = profilesCollection.document(currentUserId)
+    docRef.update("friendUids", FieldValue.arrayRemove(friend)).await()
+  }
 }
