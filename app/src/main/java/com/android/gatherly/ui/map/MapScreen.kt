@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.graphics.createBitmap
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.ui.navigation.BottomNavigationMenu
 import com.android.gatherly.ui.navigation.HandleSignedOutState
 import com.android.gatherly.ui.navigation.NavigationActions
@@ -91,39 +92,41 @@ fun MapScreen(
             modifier =
                 Modifier.fillMaxSize().padding(pd).testTag(MapScreenTestTags.GOOGLE_MAP_SCREEN),
             cameraPositionState = cameraPositionState) {
-              uiState.todoList.forEach { todo ->
-                val loc = todo.location ?: return@forEach
-                val isExpanded = uiState.expandedTodoId == todo.uid
+              uiState.itemsList.forEach { todo ->
+                if (todo is ToDo) {
+                  val loc = todo.location ?: return@forEach
+                  val isExpanded = uiState.expandedItemId == todo.uid
 
-                val markerTestTag =
-                    if (isExpanded) MapScreenTestTags.getTestTagForTodoMarkerExpanded(todo.uid)
-                    else MapScreenTestTags.getTestTagForTodoMarker(todo.uid)
+                  val markerTestTag =
+                      if (isExpanded) MapScreenTestTags.getTestTagForTodoMarkerExpanded(todo.uid)
+                      else MapScreenTestTags.getTestTagForTodoMarker(todo.uid)
 
-                val formattedDate =
-                    remember(todo.dueDate) {
-                      val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-                      sdf.format(todo.dueDate.toDate())
-                    }
+                  val formattedDate =
+                      remember(todo.dueDate) {
+                        val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                        sdf.format(todo.dueDate.toDate())
+                      }
 
-                // not clicked
-                val iconCollapsed = todoIcon(todo.name)
+                  // not clicked
+                  val iconCollapsed = todoIcon(todo.name)
 
-                // clicked
-                val iconExpanded =
-                    todoExpanded(
-                        title = todo.name,
-                        description = todo.description,
-                        dateText = formattedDate,
-                        expanded = true)
+                  // clicked
+                  val iconExpanded =
+                      todoExpanded(
+                          title = todo.name,
+                          description = todo.description,
+                          dateText = formattedDate,
+                          expanded = true)
 
-                Marker(
-                    state = MarkerState(LatLng(loc.latitude, loc.longitude)),
-                    icon = if (isExpanded) iconExpanded else iconCollapsed,
-                    onClick = {
-                      if (isExpanded) viewModel.onTodoMarkerDismissed()
-                      else viewModel.onTodoMarkerTapped(todo.uid)
-                      true
-                    })
+                  Marker(
+                      state = MarkerState(LatLng(loc.latitude, loc.longitude)),
+                      icon = if (isExpanded) iconExpanded else iconCollapsed,
+                      onClick = {
+                        if (isExpanded) viewModel.onTodoMarkerDismissed()
+                        else viewModel.onTodoMarkerTapped(todo.uid)
+                        true
+                      })
+                }
               }
             }
       })
