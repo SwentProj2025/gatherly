@@ -34,6 +34,12 @@ jobs:
           else
             echo "::warning::LOCAL_PROPERTIES secret is not set. local.properties will not be created."
           fi
+          
+          if [ -n "$ANDROID_DEBUG_KEYSTORE_BASE64" ]; then
+            echo "$ANDROID_DEBUG_KEYSTORE_BASE64" | base64 --decode > ./debug.keystore
+          else
+            echo "::warning::ANDROID_DEBUG_KEYSTORE_BASE64 secret is not set. debug.keystore will not be created."
+          fi
 
       - name: Setup JDK
         uses: actions/setup-java@v4
@@ -46,6 +52,11 @@ jobs:
 
       - name: Build Debug APK
         run: ./gradlew assembleDebug
+        env:
+          ANDROID_DEBUG_KEYSTORE_BASE64: ${{ secrets.ANDROID_DEBUG_KEYSTORE_BASE64 }}
+          DEBUG_STORE_PASSWORD: ${{ secrets.DEBUG_STORE_PASSWORD }}
+          DEBUG_KEY_ALIAS: ${{ secrets.DEBUG_KEY_ALIAS }}
+          DEBUG_KEY_PASSWORD: ${{ secrets.DEBUG_KEY_PASSWORD }}
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
