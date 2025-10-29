@@ -1,9 +1,7 @@
 package com.android.gatherly.ui.friends
 
-import android.R
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -68,22 +66,5 @@ class FriendsViewModel(private val repository: ProfileRepository, val currentUse
       repository.addFriend(friend, currentUserId)
       refreshFriends(currentUserId)
     }
-  }
-
-  /**
-   * Helper function to get the profilePicture of a friend by their username.
-   *
-   * @param friend the username of the friend
-   * @return the profile picture URL of the friend, or a default if not found
-   */
-  fun getFriendProfilePicture(friend: String): String {
-    var profilePicture = R.drawable.ic_menu_report_image.toString()
-    viewModelScope.launch {
-      val profile: Profile? = repository.getProfileByUsername(friend)
-      if (profile != null) {
-        profilePicture = profile.profilePicture
-      }
-    }
-    return profilePicture
   }
 }

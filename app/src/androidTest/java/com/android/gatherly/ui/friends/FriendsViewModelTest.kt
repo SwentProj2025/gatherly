@@ -112,28 +112,4 @@ class FriendsViewModelTest {
     val state = viewModel.uiState.value
     assertFalse(state.friends.contains("B"))
   }
-
-  @Test
-  fun testGetProfilePictureOfFriend() = runTest {
-    val state = viewModel.uiState.value
-    state.friends.forEach { friend ->
-      val profilePicture = viewModel.getFriendProfilePicture(friend)
-
-      withContext(Dispatchers.Default.limitedParallelism(1)) {
-        withTimeout(TIMEOUT) {
-          var profile: String? = viewModel.getFriendProfilePicture(friend)
-          while (profile != "profileB.png") {
-            profile = viewModel.getFriendProfilePicture(friend)
-            delay(DELAY)
-          }
-        }
-      }
-
-      if (friend == "B") {
-        assertEquals("profileB.png", profilePicture)
-      } else {
-        fail("Unexpected friend username: $friend")
-      }
-    }
-  }
 }
