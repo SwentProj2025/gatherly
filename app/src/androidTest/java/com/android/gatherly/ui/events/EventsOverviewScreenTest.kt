@@ -26,11 +26,18 @@ import com.google.firebase.auth.auth
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.NoSuchElementException
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+
+private const val TIMEOUT = 30_000L
+private const val DELAY = 200L
 
 class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
 
@@ -264,14 +271,12 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
       composeTestRule.waitForIdle()
 
       // Verify that Bob is added to the participants list of the event
-      kotlinx.coroutines.runBlocking {
-        val deadline = System.currentTimeMillis() + UI_WAIT_TIMEOUT
-        while (System.currentTimeMillis() < deadline) {
-          try {
-            val updated = repository.getEvent(eventByAlice.id)
-            if (updated.participants.contains(bobId)) break
-          } catch (_: Exception) {}
-          kotlinx.coroutines.delay(200)
+      val updated = repository.getEvent(eventByAlice.id)
+      withContext(Dispatchers.Default.limitedParallelism(1)) {
+        withTimeout(TIMEOUT) {
+          while (!updated.participants.contains(bobId)) {
+            delay(DELAY)
+          }
         }
       }
 
@@ -329,6 +334,15 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
             eventsViewModel = EventsViewModel(repository = repository, currentUserId = bobId))
       }
 
+      // Verify that Alice's event is displayed
+      withContext(Dispatchers.Default.limitedParallelism(1)) {
+        withTimeout(TIMEOUT) {
+          while (!repository.getAllEvents().contains(eventByAlice)) {
+            delay(DELAY)
+          }
+        }
+      }
+
       composeTestRule.waitForIdle()
 
       composeTestRule
@@ -350,6 +364,7 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
           .assertIsDisplayed()
           .performClick()
 
+      // Wait to add Bob as participant
       kotlinx.coroutines.runBlocking {
         val deadline = System.currentTimeMillis() + UI_WAIT_TIMEOUT
         while (System.currentTimeMillis() < deadline) {
@@ -386,12 +401,12 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
           .performClick()
 
       // Verify that Bob is removed from the participants list of the event
-      kotlinx.coroutines.runBlocking {
-        val deadline = System.currentTimeMillis() + UI_WAIT_TIMEOUT
-        while (System.currentTimeMillis() < deadline) {
-          val updated = repository.getEvent(eventByAlice.id)
-          if (!updated.participants.contains(bobId)) break
-          kotlinx.coroutines.delay(200)
+      val updated = repository.getEvent(eventByAlice.id)
+      withContext(Dispatchers.Default.limitedParallelism(1)) {
+        withTimeout(TIMEOUT) {
+          while (updated.participants.contains(bobId)) {
+            delay(DELAY)
+          }
         }
       }
 
@@ -446,6 +461,14 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
         }
 
         // Verify that Bob's event is displayed
+        withContext(Dispatchers.Default.limitedParallelism(1)) {
+          withTimeout(TIMEOUT) {
+            while (!repository.getAllEvents().contains(eventByBob)) {
+              delay(DELAY)
+            }
+          }
+        }
+
         composeTestRule.waitForIdle()
         composeTestRule
             .onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(eventByBob))
@@ -491,6 +514,15 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
         composeTestRule.setContent {
           EventsScreen(
               eventsViewModel = EventsViewModel(repository = repository, currentUserId = bobId))
+        }
+
+        // Verify that Bob's event is displayed
+        withContext(Dispatchers.Default.limitedParallelism(1)) {
+          withTimeout(TIMEOUT) {
+            while (!repository.getAllEvents().contains(eventByBob)) {
+              delay(DELAY)
+            }
+          }
         }
 
         composeTestRule.waitForIdle()
