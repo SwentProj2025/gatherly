@@ -64,7 +64,7 @@ fun FriendsScreen(
         factory =
             GenericViewModelFactory<FriendsViewModel> {
                 FriendsViewModel(
-                    ProfileRepositoryFirestore(Firebase.firestore),
+                    repository = ProfileRepositoryFirestore(Firebase.firestore),
                     currentUserId = Firebase.auth.currentUser?.uid ?: ""
                 )
 
@@ -158,7 +158,7 @@ fun FriendItem(friend: String, unfollow: () -> Unit) {
         ) {
 
         Image(
-            painter = painterResource(0),//todo friend.profilePicture,
+            painter = painterResource(id = R.drawable.ic_launcher_foreground), // currently a placeholder image
             contentDescription = "Profile picture of ${friend}",
             modifier = Modifier
                 .size(56.dp)
