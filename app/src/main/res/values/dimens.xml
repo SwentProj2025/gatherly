@@ -1,14 +1,26 @@
 <resources>
+    <!-- Padding -->
+    <dimen name="padding_extra_small">4dp</dimen>
+    <dimen name="padding_small">8dp</dimen>
     <dimen name="padding_screen">16dp</dimen>
     <dimen name="padding_regular">16dp</dimen>
     <dimen name="padding_medium">24dp</dimen>
     <dimen name="padding_large">32dp</dimen>
+
+    <!-- Spacing -->
     <dimen name="spacing_between_buttons">4dp</dimen>
     <dimen name="spacing_between_fields">8dp</dimen>
     <dimen name="spacing_between_fields_regular">16dp</dimen>
     <dimen name="spacing_between_fields_medium">24dp</dimen>
     <dimen name="spacing_between_fields_large">32dp</dimen>
+
+    <!-- Component Sizes -->
     <dimen name="input_height">100dp</dimen>
     <dimen name="profile_pic_size">120dp</dimen>
     <dimen name="profile_pic_border">2dp</dimen>
+    <dimen name="settings_text_field_height">48dp</dimen>
+    <dimen name="settings_save_button_height">48dp</dimen>
+
+    <!-- Shapes -->
+    <dimen name="rounded_corner_shape_medium">12dp</dimen>
 </resources>
