@@ -53,12 +53,14 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
             ?: throw IllegalStateException("Firebase user is not authenticated after setUp.")
   }
 
-  val dateB = Timestamp.Companion.fromDate(2025, Calendar.OCTOBER, 25)
-  val start = SimpleDateFormat("HH:mm").parse("12:00") ?: throw NoSuchElementException("no date ")
-  val finish = SimpleDateFormat("HH:mm").parse("23:00") ?: throw NoSuchElementException("no date ")
+  private val dateB = Timestamp.Companion.fromDate(2025, Calendar.OCTOBER, 25)
+  private val start =
+      SimpleDateFormat("HH:mm").parse("12:00") ?: throw NoSuchElementException("no date ")
+  private val finish =
+      SimpleDateFormat("HH:mm").parse("23:00") ?: throw NoSuchElementException("no date ")
 
   /** Helper function: set the content of the composeTestRule without initial events */
-  fun setContent() {
+  private fun setContent() {
     runTest {
       composeTestRule.setContent {
         EventsScreen(
@@ -69,7 +71,7 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
   }
 
   /** Helper function to create an event for the current user */
-  fun createYourEvent(currentUserId: String): Event {
+  private fun createYourEvent(currentUserId: String): Event {
     return Event(
         id = "mine",
         title = "working session with Gab",
