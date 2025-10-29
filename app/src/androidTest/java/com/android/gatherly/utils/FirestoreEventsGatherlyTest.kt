@@ -120,7 +120,6 @@ open class FirestoreEventsGatherlyTest {
    */
   @After
   open fun tearDown() = runTest {
-    clearAllEvents()
     FirebaseEmulator.clearAuthEmulator()
     FirebaseEmulator.clearFirestoreEmulator()
   }
