@@ -8,9 +8,13 @@ import com.google.firebase.Timestamp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
@@ -28,13 +32,23 @@ private const val DELAY = 50L
  * repository errors are surfaced to the UI state.
  */
 @RunWith(AndroidJUnit4::class)
+@OptIn(ExperimentalCoroutinesApi::class)
 class OverviewViewModelFirestoreTest : FirestoreGatherlyTest() {
   private lateinit var viewModel: OverviewViewModel
+
+  private val testDispatcher = StandardTestDispatcher()
 
   @Before
   override fun setUp() {
     super.setUp()
+    Dispatchers.setMain(testDispatcher)
     viewModel = OverviewViewModel(repository)
+  }
+
+  @After
+  override fun tearDown() {
+    Dispatchers.resetMain()
+    super.tearDown()
   }
 
   private fun makeTodo(
@@ -58,151 +72,156 @@ class OverviewViewModelFirestoreTest : FirestoreGatherlyTest() {
 
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
-  fun getAllTodos_success_updatesUiStateWithData() = runTest {
-    // Pre-populate repository
-    val todo1 = makeTodo("Sample Todo 1")
-    val todo2 = makeTodo("Sample Todo 2")
-    repository.addTodo(todo1)
-    repository.addTodo(todo2)
+  fun getAllTodos_success_updatesUiStateWithData() =
+      runTest(testDispatcher) {
+        // Pre-populate repository
+        val todo1 = makeTodo("Sample Todo 1")
+        val todo2 = makeTodo("Sample Todo 2")
+        repository.addTodo(todo1)
+        repository.addTodo(todo2)
 
-    withContext(Dispatchers.Default.limitedParallelism(1)) {
-      withTimeout(TIMEOUT) {
-        while (viewModel.uiState.value.todos.size != 2) {
-          viewModel.refreshUIState()
-          delay(200)
+        withContext(Dispatchers.Default.limitedParallelism(1)) {
+          withTimeout(TIMEOUT) {
+            while (viewModel.uiState.value.todos.size != 2) {
+              viewModel.refreshUIState()
+              delay(200)
+            }
+          }
         }
+        // Trigger reload
+        viewModel.refreshUIState()
+
+        // Wait for repository load
+        waitUntilLoaded(viewModel)
+
+        val state = viewModel.uiState.value
+        assertFalse("isLoading should be false after load", state.isLoading)
+        assertNull("errorMsg should be null on success", state.errorMsg)
+        assertEquals(2, state.todos.size)
+
+        val names = state.todos.map { it.name }
+        assertTrue("Sample Todo 1" in names)
+        assertTrue("Sample Todo 2" in names)
       }
-    }
-    // Trigger reload
-    viewModel.refreshUIState()
-
-    // Wait for repository load
-    waitUntilLoaded(viewModel)
-
-    val state = viewModel.uiState.value
-    assertFalse("isLoading should be false after load", state.isLoading)
-    assertNull("errorMsg should be null on success", state.errorMsg)
-    assertEquals(2, state.todos.size)
-
-    val names = state.todos.map { it.name }
-    assertTrue("Sample Todo 1" in names)
-    assertTrue("Sample Todo 2" in names)
-  }
 
   @Test
-  fun getAllTodos_setsLoadingStateDuringFetch() = runTest {
-    viewModel.refreshUIState()
+  fun getAllTodos_setsLoadingStateDuringFetch() =
+      runTest(testDispatcher) {
+        viewModel.refreshUIState()
 
-    // Wait for loading to start
-    withTimeout(TIMEOUT) {
-      while (!viewModel.uiState.value.isLoading) {
-        delay(DELAY)
+        // Wait for loading to start
+        withTimeout(TIMEOUT) {
+          while (!viewModel.uiState.value.isLoading) {
+            delay(DELAY)
+          }
+        }
+
+        // Then wait for loading to end
+        waitUntilLoaded(viewModel)
+
+        val state = viewModel.uiState.value
+        assertFalse("Expected isLoading=false after job completion", state.isLoading)
       }
-    }
-
-    // Then wait for loading to end
-    waitUntilLoaded(viewModel)
-
-    val state = viewModel.uiState.value
-    assertFalse("Expected isLoading=false after job completion", state.isLoading)
-  }
 
   @Test
-  fun getAllTodos_withEmptyRepo_returnsEmptyList() = runTest {
-    // Repository has no data
-    viewModel.refreshUIState()
+  fun getAllTodos_withEmptyRepo_returnsEmptyList() =
+      runTest(testDispatcher) {
+        // Repository has no data
+        viewModel.refreshUIState()
 
-    waitUntilLoaded(viewModel)
+        waitUntilLoaded(viewModel)
 
-    val state = viewModel.uiState.value
-    assertTrue(state.todos.isEmpty())
-    assertNull(state.errorMsg)
-  }
+        val state = viewModel.uiState.value
+        assertTrue(state.todos.isEmpty())
+        assertNull(state.errorMsg)
+      }
 
   @Test
   @OptIn(ExperimentalCoroutinesApi::class)
-  fun refreshUiState_triggersReloadSuccessfully() = runTest {
-    val todo1 = makeTodo("Initial Todo")
-    repository.addTodo(todo1)
+  fun refreshUiState_triggersReloadSuccessfully() =
+      runTest(testDispatcher) {
+        val todo1 = makeTodo("Initial Todo")
+        repository.addTodo(todo1)
 
-    withContext(Dispatchers.Default.limitedParallelism(1)) {
-      withTimeout(TIMEOUT) {
-        while (viewModel.uiState.value.todos.size != 1) {
-          viewModel.refreshUIState()
-          delay(200)
+        withContext(Dispatchers.Default.limitedParallelism(1)) {
+          withTimeout(TIMEOUT) {
+            while (viewModel.uiState.value.todos.size != 1) {
+              viewModel.refreshUIState()
+              delay(200)
+            }
+          }
         }
-      }
-    }
 
-    viewModel.refreshUIState()
+        viewModel.refreshUIState()
 
-    waitUntilLoaded(viewModel)
+        waitUntilLoaded(viewModel)
 
-    val initialCount = viewModel.uiState.value.todos.size
-    assertEquals(1, initialCount)
+        val initialCount = viewModel.uiState.value.todos.size
+        assertEquals(1, initialCount)
 
-    // Add another todo and refresh again
-    val todo2 = makeTodo("Another Todo")
-    repository.addTodo(todo2)
+        // Add another todo and refresh again
+        val todo2 = makeTodo("Another Todo")
+        repository.addTodo(todo2)
 
-    withContext(Dispatchers.Default.limitedParallelism(1)) {
-      withTimeout(TIMEOUT) {
-        while (viewModel.uiState.value.todos.size != 2) {
-          viewModel.refreshUIState()
-          delay(200)
+        withContext(Dispatchers.Default.limitedParallelism(1)) {
+          withTimeout(TIMEOUT) {
+            while (viewModel.uiState.value.todos.size != 2) {
+              viewModel.refreshUIState()
+              delay(200)
+            }
+          }
         }
+
+        viewModel.refreshUIState()
+
+        waitUntilLoaded(viewModel)
+
+        val updatedCount = viewModel.uiState.value.todos.size
+        assertEquals(2, updatedCount)
       }
-    }
-
-    viewModel.refreshUIState()
-
-    waitUntilLoaded(viewModel)
-
-    val updatedCount = viewModel.uiState.value.todos.size
-    assertEquals(2, updatedCount)
-  }
 
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
-  fun onCheckboxChanged_updatesStatusAndRefreshesUiState() = runTest {
-    // create and add a todo
-    val todo = makeTodo("Status Change Test")
-    repository.addTodo(todo)
+  fun onCheckboxChanged_updatesStatusAndRefreshesUiState() =
+      runTest(testDispatcher) {
+        // create and add a todo
+        val todo = makeTodo("Status Change Test")
+        repository.addTodo(todo)
 
-    withContext(Dispatchers.Default.limitedParallelism(1)) {
-      withTimeout(TIMEOUT) {
-        while (viewModel.uiState.value.todos.size != 1) {
-          viewModel.refreshUIState()
-          delay(200)
+        withContext(Dispatchers.Default.limitedParallelism(1)) {
+          withTimeout(TIMEOUT) {
+            while (viewModel.uiState.value.todos.size != 1) {
+              viewModel.refreshUIState()
+              delay(200)
+            }
+          }
         }
-      }
-    }
 
-    // Initial load
-    viewModel.refreshUIState()
-    waitUntilLoaded(viewModel)
+        // Initial load
+        viewModel.refreshUIState()
+        waitUntilLoaded(viewModel)
 
-    val initial = viewModel.uiState.value.todos.first()
-    assertEquals(ToDoStatus.ONGOING, initial.status)
+        val initial = viewModel.uiState.value.todos.first()
+        assertEquals(ToDoStatus.ONGOING, initial.status)
 
-    // update the todo's status
-    viewModel.onCheckboxChanged(todo.uid, ToDoStatus.ENDED)
+        // update the todo's status
+        viewModel.onCheckboxChanged(todo.uid, ToDoStatus.ENDED)
 
-    // Wait for the UI to refresh and reflect the change
-    withContext(Dispatchers.Default.limitedParallelism(1)) {
-      withTimeout(TIMEOUT) {
-        var updated = viewModel.uiState.value.todos.firstOrNull { it.uid == todo.uid }
-        while (updated == null || updated.status != ToDoStatus.ENDED) {
-          delay(DELAY)
-          updated = viewModel.uiState.value.todos.firstOrNull { it.uid == todo.uid }
+        // Wait for the UI to refresh and reflect the change
+        withContext(Dispatchers.Default.limitedParallelism(1)) {
+          withTimeout(TIMEOUT) {
+            var updated = viewModel.uiState.value.todos.firstOrNull { it.uid == todo.uid }
+            while (updated == null || updated.status != ToDoStatus.ENDED) {
+              delay(DELAY)
+              updated = viewModel.uiState.value.todos.firstOrNull { it.uid == todo.uid }
+            }
+          }
         }
-      }
-    }
 
-    val updatedTodo = viewModel.uiState.value.todos.first { it.uid == todo.uid }
-    assertEquals(
-        "Expected todo status to be updated to ENDED", ToDoStatus.ENDED, updatedTodo.status)
-  }
+        val updatedTodo = viewModel.uiState.value.todos.first { it.uid == todo.uid }
+        assertEquals(
+            "Expected todo status to be updated to ENDED", ToDoStatus.ENDED, updatedTodo.status)
+      }
 
   private suspend fun waitUntilLoaded(viewModel: OverviewViewModel) {
     withContext(Dispatchers.Default.limitedParallelism(1)) {
