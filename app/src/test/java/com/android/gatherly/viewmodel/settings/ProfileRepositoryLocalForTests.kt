@@ -61,7 +61,8 @@ class ProfileRepositoryLocalForTests : ProfileRepository {
 
     return profiles.values
         .filter { it.uid != currentUserId && it.uid !in friendUids }
-        .mapNotNull { it.username.takeIf { username -> username.isNotBlank() } }
+        .mapNotNull { it.username }
+        .filter { it.isNotBlank() }
   }
 
   override suspend fun addFriend(friend: String, currentUserId: String) {

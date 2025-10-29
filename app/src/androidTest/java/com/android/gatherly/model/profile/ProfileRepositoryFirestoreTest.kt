@@ -238,28 +238,25 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     // User B
     auth.signInAnonymously().await()
     val userBUid = auth.currentUser!!.uid
-    val repoB = ProfileRepositoryFirestore(firestore)
-    repoB.initProfileIfMissing(userBUid, "bob.png")
-    repoB.registerUsername(userBUid, "bob")
+    repo.initProfileIfMissing(userBUid, "bob.png")
+    repo.registerUsername(userBUid, "bob")
     auth.signOut()
 
     // User C
     auth.signInAnonymously().await()
     val userCUid = auth.currentUser!!.uid
-    val repoC = ProfileRepositoryFirestore(firestore)
-    repoC.initProfileIfMissing(userCUid, "charlie.png")
-    repoC.registerUsername(userCUid, "charlie")
+    repo.initProfileIfMissing(userCUid, "charlie.png")
+    repo.registerUsername(userCUid, "charlie")
     auth.signOut()
 
     // User A
     auth.signInAnonymously().await()
     val userAUid = auth.currentUser!!.uid
-    val repoA = ProfileRepositoryFirestore(firestore)
-    repoA.initProfileIfMissing(userAUid, "alice.png")
-    repoA.registerUsername(userAUid, "alice")
+    repo.initProfileIfMissing(userAUid, "alice.png")
+    repo.registerUsername(userAUid, "alice")
 
     // User A adds User B as a friend
-    repoA.addFriend(userBUid, userAUid)
+    repo.addFriend(userBUid, userAUid)
 
     var updatedProfileA: Profile? = repo.getProfileByUid(userAUid)
     withContext(Dispatchers.Default.limitedParallelism(1)) {
@@ -272,11 +269,11 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     }
 
     // Check the non-friends list for User A
-    val noFriendsList = repoA.getListNoFriends(userAUid)
+    val noFriendsList = repo.getListNoFriends(userAUid)
     assertEquals(listOf("charlie"), noFriendsList)
 
     // Check the non-friends list for User C
-    val noFriendsListC = repoC.getListNoFriends(userCUid)
+    val noFriendsListC = repo.getListNoFriends(userCUid)
     assertTrue(
         noFriendsListC.size == 2 &&
             noFriendsListC.contains("alice") &&
