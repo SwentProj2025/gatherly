@@ -235,7 +235,7 @@ class ProfileRepositoryFirestore(private val db: FirebaseFirestore) : ProfileRep
     val focusSessionIds = doc.get("focusSessions") as? List<String> ?: emptyList()
     val eventIds = doc.get("events") as? List<String> ?: emptyList()
     val groupIds = doc.get("groups") as? List<String> ?: emptyList()
-    val friendUids = doc.get("friends") as? List<String> ?: emptyList()
+    val friendUids = doc.get("friendUids") as? List<String> ?: emptyList()
     val school = doc.getString("school") ?: ""
     val schoolYear = doc.getString("schoolYear") ?: ""
     val birthday = doc.getTimestamp("birthday")
@@ -278,14 +278,15 @@ class ProfileRepositoryFirestore(private val db: FirebaseFirestore) : ProfileRep
 
   override suspend fun getListNoFriends(currentUserId: String): List<String> {
     val currentProfile = getProfileByUid(currentUserId) ?: return emptyList()
-    val friendUids = currentProfile.friendUids.toSet()
+    val friendUids = currentProfile.friendUids
 
     val snap = profilesCollection.get().await()
     val allProfiles = snap.documents.mapNotNull { snapshotToProfile(it) }
 
     return allProfiles
         .filter { it.uid != currentUserId && it.uid !in friendUids }
-        .mapNotNull { it.username.takeIf { username -> username.isNotBlank() } }
+        .mapNotNull { it.username }
+        .filter { it.isNotBlank() }
   }
 
   override suspend fun addFriend(friend: String, currentUserId: String) {
