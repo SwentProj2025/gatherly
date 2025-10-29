@@ -5,6 +5,7 @@ import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.android.gatherly.utils.FirebaseEmulator
 import com.android.gatherly.utils.FirestoreGatherlyProfileTest
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
@@ -25,6 +26,7 @@ private const val DELAY = 200L
  *
  * Firestore and Auth emulators must be running locally before executing: firebase emulators:start
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 class ProfileViewModelIntegrationTest : FirestoreGatherlyProfileTest() {
 
   private lateinit var viewModel: ProfileViewModel
@@ -67,7 +69,7 @@ class ProfileViewModelIntegrationTest : FirestoreGatherlyProfileTest() {
     // Wait until loading completes and an error appears
     withContext(Dispatchers.Default.limitedParallelism(1)) {
       withTimeout(TIMEOUT) {
-        while (viewModel.uiState.value.isLoading && viewModel.uiState.value.errorMessage == null) {
+        while (viewModel.uiState.value.isLoading || viewModel.uiState.value.errorMessage == null) {
           delay(DELAY)
         }
       }
@@ -88,7 +90,7 @@ class ProfileViewModelIntegrationTest : FirestoreGatherlyProfileTest() {
     // Wait until loading completes and an error appears
     withContext(Dispatchers.Default.limitedParallelism(1)) {
       withTimeout(TIMEOUT) {
-        while (viewModel.uiState.value.isLoading && viewModel.uiState.value.errorMessage == null) {
+        while (viewModel.uiState.value.isLoading || viewModel.uiState.value.errorMessage == null) {
           delay(DELAY)
         }
       }

@@ -57,7 +57,17 @@ class ProfileLocalRepository : ProfileRepository {
   override suspend fun searchProfilesByUsernamePrefix(prefix: String, limit: Int): List<Profile> =
       emptyList()
 
-  override suspend fun initProfileIfMissing(uid: String, defaultPhotoUrl: String): Boolean = true
+  override suspend fun initProfileIfMissing(uid: String, defaultPhotoUrl: String): Boolean {
+    if (profiles.indexOfFirst { it.uid == uid } == -1) {
+      addProfile(
+          Profile(
+              uid = uid,
+          ))
+      return true
+    } else {
+      return false
+    }
+  }
 
   override suspend fun getListNoFriends(currentUserId: String): List<String> {
     return emptyList()
