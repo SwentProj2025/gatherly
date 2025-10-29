@@ -51,10 +51,48 @@ import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
 import com.android.gatherly.R
+import com.android.gatherly.model.event.Event
+import com.android.gatherly.model.profile.Profile
+import com.android.gatherly.ui.events.EventsScreenTestTags
 
 object FriendsScreenTestTags {
     const val BUTTON_FIND_FRIENDS = "buttonFindFriends"
-    const val FRIEND_ITEM = "friendItems"
+    const val SEARCH_FRIENDS_BAR = "searchBarFriends"
+    const val EMPTY_LIST_MSG = "messageEmptyList"
+
+
+    /**
+     * Returns a unique test tag for the card or container representing a given [Profile.username] item.
+     *
+     * @param friend The [Profile.username] item of a chosen friend whose test tag will be generated.
+     * @return A string uniquely identifying the Friend username item in the UI.
+     */
+    fun getTestTagForFriendItem(friend: String): String = "friendItem${friend}"
+
+    /**
+     * Returns a unique test tag for the card container representing a given [Profile.username] item.
+     *
+     * @param friend The [Profile.username] TExt item of a chosen friend whose test tag will be generated.
+     * @return A string uniquely identifying the Friend username Text item in the UI.
+     */
+    fun getTestTagForFriendUsername(friend: String): String = "friendUsername${friend}"
+
+    /**
+     * Returns a unique test tag for the card or container representing a given [Profile.profilePicture] item.
+     *
+     * @param friend The [Profile.profilePicture] item of a chosen friend [Profile.username]
+     * whose test tag will be generated.
+     * @return A string uniquely identifying the Friend username item in the UI.
+     */
+    fun getTestTagForFriendProfilePicture(friend: String): String = "friendProfilePicture${friend}"
+
+    /**
+     * Returns a unique test tag for the card or container representing a given [Profile.username] item.
+     *
+     * @param friend The [Button] item for unfollowing button whose test tag will be generated.
+     * @return A string uniquely identifying the Friend username item in the UI.
+     */
+    fun getTestTagForFriendUnfollowButton(friend: String): String = "friendUnfollowingButton${friend}"
 }
 
 @Composable
@@ -68,8 +106,8 @@ fun FriendsScreen(
                 )
 
             }),
-    goBack: () -> Unit,
-    onFindFriends: () -> Unit,
+    goBack: () -> Unit = {},
+    onFindFriends: () -> Unit = {},
 ) {
 
     val currentUserIdFromVM = friendsViewModel.currentUserId
@@ -112,7 +150,9 @@ fun FriendsScreen(
                       Text(
                           text = stringResource(R.string.friends_empty_list_msg),
                           modifier = Modifier
-                              .padding(16.dp))
+                              .padding(16.dp)
+                              .testTag(FriendsScreenTestTags.EMPTY_LIST_MSG)
+                      )
                   }
               } else {
                   item {
@@ -121,7 +161,9 @@ fun FriendsScreen(
                           onValueChange = { searchQuery = it },
                           modifier = Modifier
                               .fillMaxWidth()
-                              .padding(vertical = 8.dp),
+                              .padding(vertical = 8.dp)
+                              .testTag(FriendsScreenTestTags.SEARCH_FRIENDS_BAR)
+                          ,
                           placeholder = {
                               Text(
                                   text = stringResource(R.string.friends_search_bar_label),
@@ -135,7 +177,10 @@ fun FriendsScreen(
                   items(filteredFriends.size) { index ->
                       val friend : String = filteredFriends[index]
                       FriendItem(friend = friend,
-                          unfollow = { friendsViewModel.unfollowFriend(currentUserIdFromVM, friend ?: "") } )
+                          unfollow = { friendsViewModel
+                              .unfollowFriend(
+                                  currentUserId = currentUserIdFromVM,
+                                  friend = friend ) } )
 
                   }
               }
@@ -146,7 +191,9 @@ fun FriendsScreen(
                       modifier =
                           Modifier.fillMaxWidth()
                               .height(80.dp)
-                              .padding(vertical = 12.dp),
+                              .padding(vertical = 12.dp)
+                              .testTag(FriendsScreenTestTags.BUTTON_FIND_FRIENDS)
+                      ,
                       shape = RoundedCornerShape(12.dp),
                       colors = buttonColors(containerColor = Color(0xFF9ADCE5))) {
 
@@ -173,8 +220,11 @@ fun FriendItem(friend: String, unfollow: () -> Unit) {
             contentColor = MaterialTheme.colorScheme.primary),
         modifier =
             Modifier.clickable(onClick = unfollow)
-            .fillMaxWidth()
-            .padding(vertical = 4.dp)) {
+                .testTag(FriendsScreenTestTags.getTestTagForFriendItem(friend))
+                .fillMaxWidth()
+                .padding(vertical = 4.dp))
+
+    {
 
         Row(
             modifier = Modifier.fillMaxWidth().padding(12.dp),
@@ -187,6 +237,7 @@ fun FriendItem(friend: String, unfollow: () -> Unit) {
             modifier = Modifier
                 .size(56.dp)
                 .clip(CircleShape)
+                .testTag(FriendsScreenTestTags.getTestTagForFriendProfilePicture(friend))
         )
         Spacer(modifier = Modifier.width(12.dp))
 
@@ -195,13 +246,18 @@ fun FriendItem(friend: String, unfollow: () -> Unit) {
                     text = friend,
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.primary,
-                    fontWeight = FontWeight.Medium)
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.testTag(
+                        FriendsScreenTestTags.getTestTagForFriendUsername(friend)
+                    ))
+
             }
             Spacer(modifier = Modifier.width(16.dp))
 
             Button(
             onClick = unfollow,
             modifier = Modifier.wrapContentWidth()
+                .testTag(FriendsScreenTestTags.getTestTagForFriendUnfollowButton(friend))
         ) {
             Text("Unfollow")
         }
