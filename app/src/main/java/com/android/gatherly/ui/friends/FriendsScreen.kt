@@ -69,7 +69,7 @@ fun FriendsScreen(
 
             }),
     goBack: () -> Unit,
-    findNewFriend: () -> Unit,
+    onFindFriends: () -> Unit,
 ) {
 
     val currentUserIdFromVM = friendsViewModel.currentUserId
@@ -86,13 +86,11 @@ fun FriendsScreen(
         }
     }
 
-
     LaunchedEffect(currentUserIdFromVM) {
         if (currentUserIdFromVM.isNotBlank()) {
             friendsViewModel.refreshFriends(currentUserIdFromVM)
         }
     }
-
 
   Scaffold(
       topBar = {
@@ -144,7 +142,7 @@ fun FriendsScreen(
 
               item {
                   Button(
-                      onClick = { findNewFriend() },
+                      onClick = { onFindFriends() },
                       modifier =
                           Modifier.fillMaxWidth()
                               .height(80.dp)
