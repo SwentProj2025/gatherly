@@ -21,27 +21,26 @@ import androidx.compose.material3.ButtonDefaults.buttonColors
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role.Companion.Button
-import androidx.compose.ui.semantics.Role.Companion.Image
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.android.gatherly.ui.navigation.NavigationTestTags
@@ -52,10 +51,10 @@ import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
 import com.android.gatherly.R
-import com.android.gatherly.model.profile.Profile
 
 object FriendsScreenTestTags {
-  const val FriendsText = "friends"
+    const val BUTTON_FIND_FRIENDS = "buttonFindFriends"
+    const val FRIEND_ITEM = "friendItems"
 }
 
 @Composable
@@ -69,14 +68,24 @@ fun FriendsScreen(
                 )
 
             }),
-    credentialManager: CredentialManager = CredentialManager.create(LocalContext.current),
     goBack: () -> Unit,
     findNewFriend: () -> Unit,
 ) {
 
     val currentUserIdFromVM = friendsViewModel.currentUserId
     val uiState by friendsViewModel.uiState.collectAsState()
-    val friendslist = uiState.friends
+    val friendsList = uiState.friends
+
+    var searchQuery by remember { mutableStateOf("") }
+
+    val filteredFriends = if (searchQuery.isBlank()) {
+        friendsList
+    } else {
+        friendsList.filter { friend ->
+            friend.contains(searchQuery, ignoreCase = true)
+        }
+    }
+
 
     LaunchedEffect(currentUserIdFromVM) {
         if (currentUserIdFromVM.isNotBlank()) {
@@ -100,7 +109,7 @@ fun FriendsScreen(
                       .padding(horizontal = 16.dp)
                       .padding(padding)) {
 
-              if (friendslist.isEmpty()) {
+              if (filteredFriends.isEmpty()) {
                   item {
                       Text(
                           text = stringResource(R.string.friends_empty_list_msg),
@@ -108,8 +117,25 @@ fun FriendsScreen(
                               .padding(16.dp))
                   }
               } else {
-                  items(friendslist.size) { index ->
-                      val friend : String = friendslist[index] ?: throw Exception("Friend at index $index is null")
+                  item {
+                      OutlinedTextField(
+                          value = searchQuery,
+                          onValueChange = { searchQuery = it },
+                          modifier = Modifier
+                              .fillMaxWidth()
+                              .padding(vertical = 8.dp),
+                          placeholder = {
+                              Text(
+                                  text = stringResource(R.string.friends_search_bar_label),
+                                  modifier = Modifier.padding(16.dp)) },
+                          singleLine = true,
+                          shape = RoundedCornerShape(12.dp)
+                      )
+
+                  }
+
+                  items(filteredFriends.size) { index ->
+                      val friend : String = filteredFriends[index]
                       FriendItem(friend = friend,
                           unfollow = { friendsViewModel.unfollowFriend(currentUserIdFromVM, friend ?: "") } )
 

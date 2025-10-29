@@ -95,6 +95,7 @@
     <!-- Friends Screen -->
     <string name="friends_empty_list_msg">You have no friends added yet.</string>
     <string name="find_friends_button_label">Find New Friends</string>
+    <string name="friends_search_bar_label">Search friends …</string>
 
 
 </resources>
