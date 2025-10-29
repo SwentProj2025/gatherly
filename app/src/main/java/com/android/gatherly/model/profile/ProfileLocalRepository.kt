@@ -68,4 +68,12 @@ class ProfileLocalRepository : ProfileRepository {
       return false
     }
   }
+
+  override suspend fun getListNoFriends(currentUserId: String): List<String> {
+    return emptyList()
+  }
+
+  override suspend fun deleteFriend(friend: String, currentUserId: String) {}
+
+  override suspend fun addFriend(friend: String, currentUserId: String) {}
 }

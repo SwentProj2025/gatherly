@@ -2,11 +2,17 @@ package com.android.gatherly.model.profile
 
 import com.android.gatherly.utils.FirebaseEmulator
 import com.android.gatherly.utils.FirestoreGatherlyProfileTest
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import org.junit.Assert.*
 import org.junit.Test
+
+private const val TIMEOUT = 30_000L
+private const val DELAY = 200L
 
 /**
  * Integration tests for [ProfileRepositoryFirestore] using the Firebase Emulators.
@@ -221,5 +227,146 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     // Already taken username
     repository.registerUsername(uid, "takenuser")
     assertFalse(repository.isUsernameAvailable("takenuser"))
+  }
+
+  @Test
+  fun testGetListNoFriends() = runTest {
+    val auth = FirebaseEmulator.auth
+    val firestore = FirebaseEmulator.firestore
+    val repo = ProfileRepositoryFirestore(firestore)
+
+    // User B
+    auth.signInAnonymously().await()
+    val userBUid = auth.currentUser!!.uid
+    repo.initProfileIfMissing(userBUid, "bob.png")
+    repo.registerUsername(userBUid, "bob")
+    auth.signOut()
+
+    // User C
+    auth.signInAnonymously().await()
+    val userCUid = auth.currentUser!!.uid
+    repo.initProfileIfMissing(userCUid, "charlie.png")
+    repo.registerUsername(userCUid, "charlie")
+    auth.signOut()
+
+    // User A
+    auth.signInAnonymously().await()
+    val userAUid = auth.currentUser!!.uid
+    repo.initProfileIfMissing(userAUid, "alice.png")
+    repo.registerUsername(userAUid, "alice")
+
+    // User A adds User B as a friend
+    repo.addFriend(userBUid, userAUid)
+
+    var updatedProfileA: Profile? = repo.getProfileByUid(userAUid)
+    withContext(Dispatchers.Default.limitedParallelism(1)) {
+      withTimeout(TIMEOUT) {
+        while (updatedProfileA?.friendUids?.contains(userBUid) != true) {
+          updatedProfileA = repo.getProfileByUid(userAUid)
+          delay(DELAY)
+        }
+      }
+    }
+
+    // Check the non-friends list for User A
+    val noFriendsList = repo.getListNoFriends(userAUid)
+    assertEquals(listOf("charlie"), noFriendsList)
+
+    // Check the non-friends list for User C
+    val noFriendsListC = repo.getListNoFriends(userCUid)
+    assertTrue(
+        noFriendsListC.size == 2 &&
+            noFriendsListC.contains("alice") &&
+            noFriendsListC.contains("bob"))
+  }
+
+  @Test
+  fun testAddFriend() = runTest {
+    val auth = FirebaseEmulator.auth
+    val firestore = FirebaseEmulator.firestore
+    val repo = ProfileRepositoryFirestore(firestore)
+
+    // User B
+    auth.signInAnonymously().await()
+    val userBUid = auth.currentUser!!.uid
+    repo.initProfileIfMissing(userBUid, "bob.png")
+    auth.signOut()
+
+    // User A
+    auth.signInAnonymously().await()
+    val userAUid = auth.currentUser!!.uid
+    repo.initProfileIfMissing(userAUid, "alice.png")
+
+    // User A adds User B as a friend
+    repo.addFriend(userBUid, userAUid)
+
+    var updatedProfileA: Profile? = repo.getProfileByUid(userAUid)
+    withContext(Dispatchers.Default.limitedParallelism(1)) {
+      withTimeout(TIMEOUT) {
+        while (updatedProfileA?.friendUids?.contains(userBUid) != true) {
+          updatedProfileA = repo.getProfileByUid(userAUid)
+          delay(DELAY)
+        }
+      }
+    }
+
+    // Verify that User B is in User A's friend list
+    val profileA = repo.getProfileByUid(userAUid)
+    assertNotNull(profileA)
+    assertTrue(profileA!!.friendUids.contains(userBUid))
+  }
+
+  @Test
+  fun deleteFriend_removesUidFromFriendList() = runTest {
+    val auth = FirebaseEmulator.auth
+    val firestore = FirebaseEmulator.firestore
+    val repo = ProfileRepositoryFirestore(firestore)
+
+    // User B
+    auth.signInAnonymously().await()
+    val userBUid = auth.currentUser!!.uid
+    repo.initProfileIfMissing(userBUid, "bob.png")
+    auth.signOut()
+
+    // User A
+    auth.signInAnonymously().await()
+    val userAUid = auth.currentUser!!.uid
+    repo.initProfileIfMissing(userAUid, "alice.png")
+
+    // User A adds User B as a friend
+    repo.addFriend(userBUid, userAUid)
+
+    var updatedProfileA: Profile? = null
+    withContext(Dispatchers.Default.limitedParallelism(1)) {
+      withTimeout(TIMEOUT) {
+        while (updatedProfileA?.friendUids?.contains(userBUid) != true) {
+          updatedProfileA = repo.getProfileByUid(userAUid)
+          delay(DELAY)
+        }
+      }
+    }
+
+    // Check that User B is in User A's friend list
+    val profile = repo.getProfileByUid(userAUid)
+    assertNotNull(profile)
+    assertTrue(profile!!.friendUids.contains(userBUid))
+
+    // User A deletes User B from friends
+    repo.deleteFriend(userBUid, userAUid)
+
+    updatedProfileA = repo.getProfileByUid(userAUid)
+    withContext(Dispatchers.Default.limitedParallelism(1)) {
+      withTimeout(TIMEOUT) {
+        while (updatedProfileA?.friendUids?.contains(userBUid) == true) {
+          updatedProfileA = repo.getProfileByUid(userAUid)
+          delay(DELAY)
+        }
+      }
+    }
+
+    // Verify that User B is no longer in User A's friend list
+    val profileA = repo.getProfileByUid(userAUid)
+    assertNotNull(profileA)
+    assertFalse(profileA!!.friendUids.contains(userBUid))
   }
 }
