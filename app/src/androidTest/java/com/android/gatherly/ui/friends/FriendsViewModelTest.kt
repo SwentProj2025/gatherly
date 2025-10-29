@@ -75,7 +75,7 @@ class FriendsViewModelTest {
   @Test
   fun testInitialStateShouldContainEachFriends() = runTest {
     val state = viewModel.uiState.value
-    assertEquals(listOf("B"), state.friends)
+    assertEquals(listOf("bob"), state.friends)
     assertTrue(state.listNoFriends.contains("charlie"))
   }
 
@@ -86,14 +86,14 @@ class FriendsViewModelTest {
     // Wait until the friends list is updated
     withContext(Dispatchers.Default.limitedParallelism(1)) {
       withTimeout(TIMEOUT) {
-        while (viewModel.uiState.value.friends != listOf("B", "C")) {
+        while (viewModel.uiState.value.friends != listOf("bob", "charlie")) {
           delay(DELAY)
         }
       }
     }
 
     val state = viewModel.uiState.value
-    assertTrue(state.friends.contains("C"))
+    assertTrue(state.friends.contains("charlie"))
   }
 
   @Test
@@ -103,13 +103,13 @@ class FriendsViewModelTest {
     // Wait until the friends list is updated
     withContext(Dispatchers.Default.limitedParallelism(1)) {
       withTimeout(TIMEOUT) {
-        while (viewModel.uiState.value.friends == listOf("C")) {
+        while (viewModel.uiState.value.friends == listOf("charlie")) {
           delay(DELAY)
         }
       }
     }
 
     val state = viewModel.uiState.value
-    assertFalse(state.friends.contains("B"))
+    assertFalse(state.friends.contains("bob"))
   }
 }

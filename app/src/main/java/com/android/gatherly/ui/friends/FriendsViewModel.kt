@@ -38,7 +38,10 @@ class FriendsViewModel(private val repository: ProfileRepository, val currentUse
     val profile = repository.getProfileByUid(currentUserId)
     _uiState.value =
         _uiState.value.copy(
-            friends = profile?.friendUids ?: throw Exception("FriendsVM: Profile not found"),
+            friends = profile?.friendUids
+                ?.mapNotNull { repository.getProfileByUid(it)?.username }
+                ?: throw Exception("FriendsVM: Profile not found"),
+
             listNoFriends = repository.getListNoFriends(currentUserId))
   }
 
