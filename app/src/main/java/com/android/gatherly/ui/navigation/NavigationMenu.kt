@@ -13,6 +13,7 @@ import androidx.compose.material.icons.outlined.Diversity1
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.FormatListBulleted
 import androidx.compose.material.icons.outlined.Group
+import androidx.compose.material.icons.outlined.GroupAdd
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Logout
 import androidx.compose.material.icons.outlined.MoreVert
@@ -72,6 +73,7 @@ sealed class Tab(val name: String, val icon: ImageVector, val destination: Scree
 
   object Friends : Tab("Friends", Icons.Outlined.Diversity1, Screen.FriendsScreen)
 
+    object FindFriends : Tab("Find Friends", Icons.Outlined.GroupAdd, Screen.FindFriends)
   object AddTodo : Tab("Add To-Do", Icons.Outlined.Add, Screen.AddToDo)
 
   object EditTodo : Tab("Edit To-Do", Icons.Outlined.Edit, Screen.Task)
