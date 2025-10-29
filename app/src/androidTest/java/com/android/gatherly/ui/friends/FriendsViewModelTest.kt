@@ -120,11 +120,13 @@ class FriendsViewModelTest {
       val profilePicture = viewModel.getFriendProfilePicture(friend)
 
       withContext(Dispatchers.Default.limitedParallelism(1)) {
-        withTimeout(TIMEOUT) {
-          while (profilePicture != "profileB.png") {
-            delay(DELAY)
+          withTimeout(TIMEOUT) {
+              while (true) {
+                  val current = viewModel.getFriendProfilePicture(friend)
+                  if (current == "profileB.png") break
+                  delay(DELAY)
+              }
           }
-        }
       }
 
       if (friend == "B") {
