@@ -64,7 +64,7 @@ class HomePageViewModel(
                 todos = todos.take(3))
       } catch (e: Exception) {
         _uiState.value = _uiState.value.copy(errorMsg = "There was an error loading your home page")
-          Log.e("Homepage loading", "Exception when loading lists for Homepage displaying: $e")
+        Log.e("Homepage loading", "Exception when loading lists for Homepage displaying: $e")
       }
     }
   }

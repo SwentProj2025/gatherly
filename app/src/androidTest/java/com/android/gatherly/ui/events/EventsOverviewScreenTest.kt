@@ -148,8 +148,8 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
           .assertIsDisplayed()
       composeTestRule.onEventItem(eventByBob, hasTestTag(EventsScreenTestTags.EVENT_TITLE))
       composeTestRule.onEventItem(eventByBob, hasTestTag(EventsScreenTestTags.EVENT_DATE))
-    } catch (e : Exception) {
-        Log.e("Test error", e.toString())
+    } catch (e: Exception) {
+      Log.e("Test error", e.toString())
     }
   }
 
@@ -203,8 +203,8 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
       // Check that the event details (title and date) are correctly displayed
       composeTestRule.onEventItem(eventByAlice, hasTestTag(EventsScreenTestTags.EVENT_TITLE))
       composeTestRule.onEventItem(eventByAlice, hasTestTag(EventsScreenTestTags.EVENT_DATE))
-    } catch (e : Exception) {
-        Log.e("Test error", e.toString())
+    } catch (e: Exception) {
+      Log.e("Test error", e.toString())
     }
   }
 
@@ -298,8 +298,8 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
       composeTestRule
           .onNodeWithTag(EventsScreenTestTags.EMPTY_UPCOMING_LIST_MSG)
           .assertIsNotDisplayed()
-    } catch (e : Exception) {
-        Log.e("Test error", e.toString())
+    } catch (e: Exception) {
+      Log.e("Test error", e.toString())
     }
   }
 
@@ -431,8 +431,8 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
       composeTestRule
           .onNodeWithTag(EventsScreenTestTags.EMPTY_UPCOMING_LIST_MSG)
           .assertIsDisplayed()
-    } catch (e : Exception) {
-        Log.e("Test error", e.toString())
+    } catch (e: Exception) {
+      Log.e("Test error", e.toString())
     }
   }
 
@@ -484,8 +484,8 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
             .onNodeWithTag(EventsScreenTestTags.EDIT_EVENT_BUTTON)
             .assertIsDisplayed()
             .performClick()
-      } catch (e : Exception) {
-          Log.e("Test error", e.toString())
+      } catch (e: Exception) {
+        Log.e("Test error", e.toString())
       }
     }
   }
@@ -538,8 +538,8 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
             .assertIsDisplayed()
             .performClick()
         composeTestRule.onNodeWithTag(EventsScreenTestTags.EVENT_POPUP).assertIsNotDisplayed()
-      } catch (e : Exception) {
-          Log.e("Test error", e.toString())
+      } catch (e: Exception) {
+        Log.e("Test error", e.toString())
       }
     }
   }
@@ -571,8 +571,8 @@ class EventsOverviewScreenTest : FirestoreEventsGatherlyTest() {
             .onNodeWithTag(EventsScreenTestTags.CREATE_EVENT_BUTTON)
             .assertIsDisplayed()
             .performClick()
-      } catch (e : Exception) {
-          Log.e("Test error", e.toString())
+      } catch (e: Exception) {
+        Log.e("Test error", e.toString())
       }
     }
   }
