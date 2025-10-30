@@ -1,7 +1,13 @@
 package com.android.gatherly.ui.homePage
 
-import androidx.compose.foundation.background
+import android.content.res.Configuration
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.Rect
+import android.graphics.RectF
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,17 +20,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -33,25 +35,43 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.TextUnit
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.graphics.createBitmap
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.android.gatherly.R
+import com.android.gatherly.model.event.Event
+import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.ui.navigation.BottomNavigationMenu
 import com.android.gatherly.ui.navigation.HandleSignedOutState
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_HomePage
+import com.android.gatherly.ui.theme.GatherlyTheme
+import com.google.android.gms.maps.model.BitmapDescriptor
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapUiSettings
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.rememberCameraPositionState
 
 object HomePageScreenTestTags {}
 
@@ -61,37 +81,18 @@ fun HomePageScreen(
     credentialManager: CredentialManager = CredentialManager.create(LocalContext.current),
     onSignedOut: () -> Unit = {},
     navigationActions: NavigationActions? = null,
+    onClickFocusButton: () -> Unit = {},
+    onClickMap: () -> Unit = {},
 ) {
   val uiState by homePageViewModel.uiState.collectAsState()
 
   HandleSignedOutState(uiState.signedOut, onSignedOut)
 
-  // Dimension values will be moved to dimens.xml
-  val horizontalPadding = 16.dp
-  val verticalSpacing = 24.dp
-  val sectionTitleSize = 20.sp
-  val carouselHeight = 200.dp
-  val friendAvatarSize = 56.dp
-  val friendAvatarSpacing = 8.dp
-  val taskItemHeight = 56.dp
-  val taskItemSpacing = 12.dp
-  val iconSize = 24.dp
-  val mapImageHeight = 160.dp
-  val buttonHeight = 56.dp
-  val buttonCornerRadius = 28.dp
-  val smallIconSize = 20.dp
-  val chevronIconSize = 20.dp
-  val profileIconSize = 28.dp
-  val dividerThickness = 1.dp
-  val bottomSpacing = 16.dp
-  val focusMessagePadding = 16.dp
-  val sectionSpacing = 20.dp
-  val taskIconSize = 24.dp
-  val friendsLabelTopMargin = 8.dp
-  val carouselItemWidth = 280.dp
-  val carouselImageRadius = 12.dp
+  val screenPadding = dimensionResource(id = R.dimen.padding_screen)
+  val verticalSpacing = dimensionResource(id = R.dimen.spacing_between_fields_medium)
+  val sectionSpacing = dimensionResource(id = R.dimen.homepage_section_spacing)
 
-  Scaffold(
+  Scaffold( //  TODO BALA Screen Padding for all instead of in each children, spacers inside Titles
       topBar = {
         TopNavigationMenu_HomePage(
             selectedTab = Tab.HomePage,
@@ -105,221 +106,276 @@ fun HomePageScreen(
             modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU))
       },
       content = { paddingValues ->
-        Column(
-            modifier =
-                Modifier.fillMaxSize()
-                    .padding(paddingValues)
-                    .verticalScroll(rememberScrollState())
-                    .background(Color(0xFF1A1F25))) {
-              Spacer(modifier = Modifier.height(verticalSpacing))
+        Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+          Spacer(modifier = Modifier.height(verticalSpacing))
 
-              SectionTitle(
-                  text = "Upcoming events",
-                  modifier = Modifier.padding(horizontal = horizontalPadding),
-                  fontSize = sectionTitleSize)
+          SectionTitle(
+              text = stringResource(id = R.string.homepage_upcoming_events_title),
+              modifier = Modifier.padding(horizontal = screenPadding))
 
-              Spacer(modifier = Modifier.height(sectionSpacing))
+          Spacer(modifier = Modifier.height(sectionSpacing))
 
-              EventsAndFriendsSection(
-                  carouselHeight = carouselHeight,
-                  carouselItemWidth = carouselItemWidth,
-                  cardCornerRadius = carouselImageRadius,
-                  mapImageHeight = mapImageHeight,
-                  friendAvatarSize = friendAvatarSize,
-                  friendAvatarSpacing = friendAvatarSpacing,
-                  friendsLabelTopMargin = friendsLabelTopMargin)
+          EventsAndFriendsSection(
+              todos = uiState.displayableTodos,
+              events = uiState.displayableEvents,
+              onClickMap = onClickMap)
 
-              Spacer(modifier = Modifier.height(verticalSpacing))
+          Spacer(modifier = Modifier.height(verticalSpacing))
 
-              SectionTitle(
-                  text = "My upcoming tasks",
-                  modifier = Modifier.padding(horizontal = horizontalPadding),
-                  fontSize = sectionTitleSize)
+          SectionTitle(
+              text = stringResource(id = R.string.homepage_upcoming_tasks_title),
+              modifier = Modifier.padding(horizontal = screenPadding))
 
-              Spacer(modifier = Modifier.height(sectionSpacing))
+          Spacer(modifier = Modifier.height(sectionSpacing))
 
-              TaskList(
-                  tasks = listOf("Working with Gersende", "Lunch with Clic", "Workout with Claire"),
-                  horizontalPadding = horizontalPadding,
-                  taskItemHeight = taskItemHeight,
-                  taskItemSpacing = taskItemSpacing,
-                  taskIconSize = taskIconSize,
-                  chevronIconSize = chevronIconSize)
+          TaskList(todos = uiState.todos)
 
-              Spacer(modifier = Modifier.height(verticalSpacing))
+          Spacer(modifier = Modifier.height(verticalSpacing))
 
-              FocusMessage(
-                  message = "You focused 5h yesterday!",
-                  modifier = Modifier.padding(horizontal = horizontalPadding),
-                  padding = focusMessagePadding)
+          Spacer(modifier = Modifier.weight(1f))
+          FocusSection(
+              modifier = Modifier.padding(horizontal = screenPadding),
+              timerString = uiState.timerString,
+              onClick = onClickFocusButton)
 
-              Spacer(modifier = Modifier.height(sectionSpacing))
-
-              FocusTimerButton(
-                  modifier = Modifier.padding(horizontal = horizontalPadding),
-                  buttonHeight = buttonHeight,
-                  buttonCornerRadius = buttonCornerRadius)
-
-              Spacer(modifier = Modifier.height(bottomSpacing))
-            }
+          Spacer(
+              modifier =
+                  Modifier.height(dimensionResource(id = R.dimen.spacing_between_fields_regular)))
+        }
       })
 }
 
 @Composable
-fun HomeTopBar(height: Dp, horizontalPadding: Dp, iconSize: Dp) {
-  Surface(modifier = Modifier.fillMaxWidth().height(height), color = Color(0xFF1A1F25)) {
-    Row(
-        modifier = Modifier.fillMaxSize().padding(horizontal = horizontalPadding),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically) {
-          Text(
-              text = "Home Page",
-              color = Color.White,
-              style = MaterialTheme.typography.headlineSmall)
+fun SectionTitle(text: String, modifier: Modifier = Modifier) {
 
-          Icon(
-              imageVector = Icons.Default.AccountCircle,
-              contentDescription = "Profile",
-              tint = Color.White,
-              modifier = Modifier.size(iconSize))
-        }
+  Text(
+      text = text, color = MaterialTheme.colorScheme.primary, fontSize = 20.sp, modifier = modifier)
+}
+
+@Composable
+fun EventsAndFriendsSection(todos: List<ToDo>, events: List<Event>, onClickMap: () -> Unit) {
+
+  val spacingRegular = dimensionResource(id = R.dimen.spacing_between_fields_regular)
+  Row(
+      modifier =
+          Modifier.fillMaxWidth()
+              .height(dimensionResource(id = R.dimen.homepage_events_section_height))) {
+        Spacer(modifier = Modifier.width(spacingRegular))
+
+        MiniMap(todos = todos, events = events, onClickMap = { onClickMap })
+
+        Spacer(modifier = Modifier.width(spacingRegular))
+
+        FriendsSection()
+
+        Spacer(modifier = Modifier.width(spacingRegular))
+      }
+}
+
+@Composable
+fun MiniMap(todos: List<ToDo>, events: List<Event>, onClickMap: () -> Unit) {
+  val defaultLoc = LatLng(46.5191, 6.5668) // EPFL campus loc
+  val firstTodoLoc =
+      todos.firstOrNull()?.location?.let { LatLng(it.latitude, it.longitude) } ?: defaultLoc
+
+  val cameraPositionState = rememberCameraPositionState {
+    position = CameraPosition.fromLatLngZoom(firstTodoLoc, 14f)
   }
-}
 
-@Composable
-fun SectionTitle(text: String, modifier: Modifier = Modifier, fontSize: TextUnit) {
-  Text(text = text, color = Color.White, fontSize = fontSize, modifier = modifier)
-}
-
-@Composable
-fun EventsAndFriendsSection(
-    carouselHeight: Dp,
-    carouselItemWidth: Dp,
-    cardCornerRadius: Dp,
-    mapImageHeight: Dp,
-    friendAvatarSize: Dp,
-    friendAvatarSpacing: Dp,
-    friendsLabelTopMargin: Dp
-) {
-  Row(modifier = Modifier.fillMaxWidth().height(carouselHeight)) {
-    Spacer(modifier = Modifier.width(16.dp))
-
-    // Map
-    Card(
-        modifier = Modifier.width(carouselItemWidth).fillMaxHeight(),
-        shape = RoundedCornerShape(cardCornerRadius),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF2A3139))) {
-          Box(modifier = Modifier.fillMaxSize()) {
-            Text("MAP", color = Color.White, modifier = Modifier.align(Alignment.Center))
+  Card(
+      modifier =
+          Modifier.width(dimensionResource(id = R.dimen.homepage_minimap_width))
+              .fillMaxHeight()
+              .clickable { onClickMap() },
+      shape = RoundedCornerShape(dimensionResource(id = R.dimen.rounded_corner_shape_medium)),
+  ) {
+    GoogleMap(
+        modifier = Modifier.fillMaxSize(),
+        cameraPositionState = cameraPositionState,
+        uiSettings =
+            MapUiSettings(
+                zoomControlsEnabled = false,
+                scrollGesturesEnabled = false,
+                zoomGesturesEnabled = false,
+                tiltGesturesEnabled = false,
+            ),
+        properties = MapProperties(isMyLocationEnabled = false)) {
+          todos.forEach { todo ->
+            val loc = todo.location ?: return@forEach
+            Marker(
+                state = MarkerState(LatLng(loc.latitude, loc.longitude)),
+                icon = todoIcon(todo.name))
           }
         }
+  }
+}
 
-    Spacer(modifier = Modifier.width(16.dp))
+/**
+ * Creates a small rounded marker icon displaying a ToDo title.
+ *
+ * @param title the title of the toDo to render inside the marker icon.
+ * @return A [BitmapDescriptor] representing the ToDo marker icon.
+ */
+@Composable
+private fun todoIcon(title: String): BitmapDescriptor {
+  val density = LocalDensity.current
+  val primary = MaterialTheme.colorScheme.primary
+  val onPrimary = MaterialTheme.colorScheme.onPrimary
+  return remember(title) {
+    // Text Style
+    val textPaint =
+        Paint().apply {
+          color = onPrimary.toArgb()
+          textSize = with(density) { 20.sp.toPx() }
+        }
 
-    FriendsSection()
+    // measures
+    val bounds = Rect().also { textPaint.getTextBounds(title, 0, title.length, it) }
+    val hPad = with(density) { 8f * density.density }
+    val vPad = with(density) { 4f * density.density }
+    val w = (bounds.width() + 2 * hPad).toInt().coerceAtLeast(1)
+    val h = (bounds.height() + 2 * vPad).toInt().coerceAtLeast(1)
 
-    Spacer(modifier = Modifier.width(16.dp))
+    // creates the bitmap and canvas to draw on
+    val bmp = createBitmap(w, h)
+    val c = Canvas(bmp)
+
+    // Box
+    val bg = Paint().apply { color = primary.toArgb() }
+    c.drawRoundRect(RectF(0f, 0f, w.toFloat(), h.toFloat()), 12f, 12f, bg)
+
+    // Text
+    val baselineY = h / 2f + bounds.height() / 2f - bounds.bottom
+    c.drawText(title, hPad, baselineY, textPaint)
+
+    // creates the icon
+    BitmapDescriptorFactory.fromBitmap(bmp)
   }
 }
 
 @Composable
-fun FriendAvatar(size: Dp, color: Color = Color(0xFF3A4149)) {
-  Box(modifier = Modifier.size(size).clip(CircleShape).background(color))
+fun FriendAvatar(
+    // imageUrl: String,
+    modifier: Modifier = Modifier,
+) {
+  val size = dimensionResource(id = R.dimen.homepage_friend_profile_pic_size)
+  Box(modifier = modifier.size(size)) {
+    // Avatar Image
+    // AsyncImage( todo
+    //  model = imageUrl,
+    //  contentDescription = "Friend avatar",
+    //  modifier = Modifier
+    //    .fillMaxSize()
+    //    .clip(CircleShape),
+    //  contentScale = ContentScale.Crop
+    // )
+    Image(
+        painter = painterResource(id = R.drawable.default_profile_picture),
+        contentDescription = stringResource(id = R.string.homepage_profile_image_description),
+        modifier = Modifier.fillMaxSize().clip(CircleShape),
+        contentScale = ContentScale.Crop)
+  }
 }
 
 @Composable
 fun FriendsSection() {
 
   val friendCount = 3
-  val friendAvatarSize = 48.dp
-  val friendAvatarSpacing = 8.dp
-  val borderWidth = 2.dp
+  val roundedCornerPercentage = 50
   Column(
       horizontalAlignment = Alignment.CenterHorizontally,
       modifier =
           Modifier.border(
-                  width = borderWidth,
-                  color = Color.White,
-                  shape = RoundedCornerShape(percent = 50))
-              .clip(RoundedCornerShape(percent = 50)) // Ensures children stay within border radius
-              .padding(vertical = 12.dp, horizontal = 8.dp)) {
-        Column(verticalArrangement = Arrangement.spacedBy(friendAvatarSpacing)) {
-          repeat(friendCount) { FriendAvatar(size = friendAvatarSize) }
-        }
-
-        Text(text = "Friends", color = Color.White, style = MaterialTheme.typography.bodySmall)
-      }
-}
-
-@Composable
-fun TaskList(
-    tasks: List<String>,
-    horizontalPadding: Dp,
-    taskItemHeight: Dp,
-    taskItemSpacing: Dp,
-    taskIconSize: Dp,
-    chevronIconSize: Dp
-) {
-  Column(
-      modifier = Modifier.padding(horizontal = horizontalPadding),
-      verticalArrangement = Arrangement.spacedBy(taskItemSpacing)) {
-        tasks.forEach { task ->
-          TaskItem(
-              text = task,
-              height = taskItemHeight,
-              iconSize = taskIconSize,
-              chevronIconSize = chevronIconSize)
-        }
-      }
-}
-
-@Composable
-fun TaskItem(text: String, height: Dp, iconSize: Dp, chevronIconSize: Dp) {
-  Surface(
-      modifier = Modifier.fillMaxWidth().height(height),
-      color = Color(0xFF2A3139),
-      shape = RoundedCornerShape(8.dp),
-      onClick = { /* Handle click */}) {
-        Row(
-            modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically) {
-              Text(text = text, color = Color.White, style = MaterialTheme.typography.bodyLarge)
-
-              Icon(
-                  imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                  contentDescription = "Navigate",
-                  tint = Color.White,
-                  modifier = Modifier.size(chevronIconSize))
+                  width = dimensionResource(id = R.dimen.homepage_friends_section_border_width),
+                  color = MaterialTheme.colorScheme.primary,
+                  shape = RoundedCornerShape(percent = roundedCornerPercentage))
+              .clip(
+                  RoundedCornerShape(
+                      percent =
+                          roundedCornerPercentage)) // Ensures children stay within border radius
+              .padding(
+                  vertical =
+                      dimensionResource(
+                          id = R.dimen.homepage_friends_section_vertical_border_padding),
+                  horizontal = dimensionResource(id = R.dimen.padding_small))) {
+        Column(
+            verticalArrangement =
+                Arrangement.spacedBy(dimensionResource(id = R.dimen.spacing_between_fields))) {
+              repeat(friendCount) { FriendAvatar() }
             }
+
+        Text(
+            text = stringResource(R.string.homepage_friends_section_label),
+            color = MaterialTheme.colorScheme.primary,
+            style = MaterialTheme.typography.bodySmall)
       }
 }
 
 @Composable
-fun FocusMessage(message: String, modifier: Modifier = Modifier, padding: Dp) {
+fun TaskList(todos: List<ToDo>) {
+  Column() { todos.forEach { todo -> TaskItem(text = todo.description, onClick = {}) } }
+}
+
+@Composable
+fun TaskItem(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+  Surface(modifier = modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.background) {
+    val paddingRegular = dimensionResource(id = R.dimen.padding_regular)
+    Row(
+        modifier =
+            Modifier.clickable(onClick = onClick)
+                .fillMaxWidth()
+                .padding(horizontal = paddingRegular, vertical = paddingRegular),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically) {
+          Text(
+              text = text,
+              style = MaterialTheme.typography.bodyLarge,
+              color = MaterialTheme.colorScheme.primary,
+              modifier = Modifier.weight(1f))
+
+          Icon(
+              imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+              contentDescription = stringResource(id = R.string.homepage_arrow_icon_description),
+              tint = MaterialTheme.colorScheme.primary,
+              modifier = Modifier.size(dimensionResource(R.dimen.homepage_arrow_icon_size)))
+        }
+  }
+}
+
+@Composable
+fun FocusSection(timerString: String = "", modifier: Modifier = Modifier, onClick: () -> Unit) {
   Text(
-      text = message,
-      color = Color.White,
+      text = timerString,
+      color = MaterialTheme.colorScheme.primary,
       style = MaterialTheme.typography.bodyLarge,
       modifier = modifier)
-}
 
-@Composable
-fun FocusTimerButton(modifier: Modifier = Modifier, buttonHeight: Dp, buttonCornerRadius: Dp) {
+  Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.homepage_section_spacing)))
+
   Button(
-      onClick = { /* Navigate to Focus Timer */},
-      modifier = modifier.fillMaxWidth().height(buttonHeight),
-      shape = RoundedCornerShape(buttonCornerRadius),
-      colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00A8E8))) {
+      onClick = onClick,
+      modifier =
+          modifier.fillMaxWidth().height(dimensionResource(R.dimen.homepage_focus_button_height)),
+      shape =
+          RoundedCornerShape(dimensionResource(id = R.dimen.homepage_save_button_corner_radius)),
+      colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)) {
         Text(
-            text = "Go to Focus Timer",
-            color = Color.White,
+            text = stringResource(id = R.string.homepage_focus_button_text),
+            color = MaterialTheme.colorScheme.primary,
             style = MaterialTheme.typography.titleMedium)
       }
 }
 
-@Preview(showBackground = true)
+// @Preview(name = "Light Mode", showBackground = true)
+// @Composable
+// fun HomePageScreenLightPreview() {
+//  GatherlyTheme(darkTheme = false) {
+//    HomePageScreen()
+//  }
+// }
+
+@Preview(name = "Dark Mode", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
 @Composable
-fun HomePageScreenPreview() {
-  HomePageScreen()
+fun HomePageScreenDarkPreview() {
+  GatherlyTheme(darkTheme = true) { HomePageScreen() }
 }
