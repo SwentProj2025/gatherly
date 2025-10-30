@@ -46,6 +46,12 @@ jobs:
           else
             echo "::warning::LOCAL_PROPERTIES secret is not set. local.properties will not be created."
           fi
+          
+          if [ -n "$ANDROID_DEBUG_KEYSTORE_BASE64" ]; then
+            echo "$ANDROID_DEBUG_KEYSTORE_BASE64" | base64 --decode > ./debug.keystore
+          else
+            echo "::warning::ANDROID_DEBUG_KEYSTORE_BASE64 secret is not set. debug.keystore will not be created."
+          fi
 
 
       # Kernel-based Virtual Machine (KVM) is an open source virtualization technology built into Linux. Enabling it allows the Android emulator to run faster.
