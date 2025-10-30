@@ -10,11 +10,11 @@ import com.android.gatherly.model.event.EventsRepository
 import com.android.gatherly.model.event.EventsRepositoryFirestore
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
-import com.android.gatherly.model.profile.ProfileRepositoryFirestore
+import com.android.gatherly.model.profile.ProfileRepositoryProvider
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosRepository
-import com.android.gatherly.model.todo.ToDosRepositoryFirestore
+import com.android.gatherly.model.todo.ToDosRepositoryProvider
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
@@ -35,9 +35,8 @@ data class HomePageUIState(
 
 class HomePageViewModel(
     private val eventsRepository: EventsRepository = EventsRepositoryFirestore(Firebase.firestore),
-    private val toDosRepository: ToDosRepository = ToDosRepositoryFirestore(Firebase.firestore),
-    private val profileRepository: ProfileRepository =
-        ProfileRepositoryFirestore(Firebase.firestore)
+    private val toDosRepository: ToDosRepository = ToDosRepositoryProvider.repository,
+    private val profileRepository: ProfileRepository = ProfileRepositoryProvider.repository
 ) : ViewModel() {
 
   private val _uiState = MutableStateFlow(HomePageUIState())
@@ -50,17 +49,21 @@ class HomePageViewModel(
   /** Updates the [uiState] with possibly new values from repositories */
   fun updateUI() {
     viewModelScope.launch {
-      val todos = toDosRepository.getAllTodos()
-      val events = eventsRepository.getAllEvents()
-      val profile = profileRepository.getProfileByUid(Firebase.auth.currentUser?.uid!!)!!
-      val friends = profile.friendUids.take(3).map { profileRepository.getProfileByUid(it)!! }
+      try {
+        val todos = toDosRepository.getAllTodos()
+        val events = eventsRepository.getAllEvents()
+        val profile = profileRepository.getProfileByUid(Firebase.auth.currentUser?.uid!!)!!
+        val friends = profile.friendUids.take(3).map { profileRepository.getProfileByUid(it)!! }
 
-      _uiState.value =
-          _uiState.value.copy(
-              displayableTodos = getDrawableTodos(todos),
-              displayableEvents = getDrawableEvents(events),
-              friends = friends,
-              todos = todos.take(3))
+        _uiState.value =
+            _uiState.value.copy(
+                displayableTodos = getDrawableTodos(todos),
+                displayableEvents = getDrawableEvents(events),
+                friends = friends,
+                todos = todos.take(3))
+      } catch (e: Exception) {
+        _uiState.value = _uiState.value.copy(errorMsg = "There was an error loading your home page")
+      }
     }
   }
 
