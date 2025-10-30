@@ -29,6 +29,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -55,6 +56,7 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import java.util.Locale
+import kotlinx.coroutines.launch
 
 object EventsScreenTestTags {
 
@@ -136,17 +138,22 @@ fun EventsScreen(
 ) {
 
   val currentUserIdFromVM = eventsViewModel.currentUserId
+  val coroutineScope = rememberCoroutineScope()
 
   val uiState by eventsViewModel.uiState.collectAsState()
   val browserEvents = uiState.globalEventList
   val upcomingEvents = uiState.participatedEventList
   val myOwnEvents = uiState.createdEventList
 
+  val selectedBrowserEvent = remember { mutableStateOf<Event?>(null) }
+  val selectedUpcomingEvent = remember { mutableStateOf<Event?>(null) }
+  val selectedYourEvent = remember { mutableStateOf<Event?>(null) }
+
   val isPopupOnBrowser = remember { mutableStateOf(false) }
   val isPopupOnUpcoming = remember { mutableStateOf(false) }
   val isPopupOnYourE = remember { mutableStateOf(false) }
 
-  LaunchedEffect(currentUserIdFromVM) {
+  LaunchedEffect(Unit, currentUserIdFromVM) {
     if (currentUserIdFromVM.isNotBlank()) {
       eventsViewModel.refreshEvents(currentUserIdFromVM)
     }
@@ -193,17 +200,11 @@ fun EventsScreen(
               if (browserEvents.isNotEmpty()) {
                 items(browserEvents.size) { index ->
                   BrowserEventsItem(
-                      event = browserEvents[index], onClick = { isPopupOnBrowser.value = true })
-                  if (isPopupOnBrowser.value) {
-                    BrowserEventsPopUp(
-                        event = browserEvents[index],
-                        shouldShowDialog = isPopupOnBrowser,
-                        participate = {
-                          eventsViewModel.onParticipate(
-                              eventId = browserEvents[index].id,
-                              currentUserId = eventsViewModel.currentUserId)
-                        })
-                  }
+                      event = browserEvents[index],
+                      onClick = {
+                        selectedBrowserEvent.value = browserEvents[index]
+                        isPopupOnBrowser.value = true
+                      })
                 }
               } else { // When there is no events in the browser list
                 item {
@@ -238,18 +239,11 @@ fun EventsScreen(
               if (upcomingEvents.isNotEmpty()) {
                 items(upcomingEvents.size) { index ->
                   UpcomingEventsItem(
-                      event = upcomingEvents[index], onClick = { isPopupOnUpcoming.value = true })
-
-                  if (isPopupOnUpcoming.value) {
-                    UpComingEventsPopUp(
-                        event = upcomingEvents[index],
-                        shouldShowDialog = isPopupOnUpcoming,
-                        unparticipate = {
-                          eventsViewModel.onUnregister(
-                              eventId = upcomingEvents[index].id,
-                              currentUserId = eventsViewModel.currentUserId)
-                        })
-                  }
+                      event = upcomingEvents[index],
+                      onClick = {
+                        selectedUpcomingEvent.value = upcomingEvents[index]
+                        isPopupOnUpcoming.value = true
+                      })
                 }
               } else { // When there is no events in the upcoming list
                 item {
@@ -284,14 +278,11 @@ fun EventsScreen(
               if (myOwnEvents.isNotEmpty()) {
                 items(myOwnEvents.size) { index ->
                   MyOwnEventsItem(
-                      event = myOwnEvents[index], onClick = { isPopupOnYourE.value = true })
-
-                  if (isPopupOnYourE.value) {
-                    MyOwnEventsPopUp(
-                        event = myOwnEvents[index],
-                        shouldShowDialog = isPopupOnYourE,
-                        cancelYourEvent = { navigateToEditEvent(myOwnEvents[index]) })
-                  }
+                      event = myOwnEvents[index],
+                      onClick = {
+                        selectedYourEvent.value = myOwnEvents[index]
+                        isPopupOnYourE.value = true
+                      })
                 }
               } else {
                 item {
@@ -331,6 +322,41 @@ fun EventsScreen(
                     }
               }
             }
+        selectedBrowserEvent.value?.let { event ->
+          BrowserEventsPopUp(
+              event = event,
+              shouldShowDialog = isPopupOnBrowser,
+              participate = {
+                eventsViewModel.onParticipate(
+                    eventId = event.id, currentUserId = eventsViewModel.currentUserId)
+                coroutineScope.launch { eventsViewModel.refreshEvents(currentUserIdFromVM) }
+              })
+          selectedBrowserEvent.value = if (isPopupOnBrowser.value) event else null
+        }
+
+        selectedUpcomingEvent.value?.let { event ->
+          UpComingEventsPopUp(
+              event = event,
+              shouldShowDialog = isPopupOnUpcoming,
+              unparticipate = {
+                eventsViewModel.onUnregister(
+                    eventId = event.id, currentUserId = eventsViewModel.currentUserId)
+
+                coroutineScope.launch { eventsViewModel.refreshEvents(currentUserIdFromVM) }
+              })
+          selectedUpcomingEvent.value = if (isPopupOnUpcoming.value) event else null
+        }
+
+        selectedYourEvent.value?.let { event ->
+          MyOwnEventsPopUp(
+              event = event,
+              shouldShowDialog = isPopupOnYourE,
+              cancelYourEvent = {
+                navigateToEditEvent(event)
+                coroutineScope.launch { eventsViewModel.refreshEvents(currentUserIdFromVM) }
+              })
+          selectedYourEvent.value = if (isPopupOnYourE.value) event else null
+        }
       })
 }
 
