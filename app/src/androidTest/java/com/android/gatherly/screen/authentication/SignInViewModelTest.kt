@@ -3,22 +3,29 @@ package com.android.gatherly.screen.authentication
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.android.gatherly.model.profile.ProfileLocalRepository
+import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.ui.authentication.SignInViewModel
 import com.android.gatherly.utils.FakeCredentialManager
 import com.android.gatherly.utils.FakeJwtGenerator
 import com.android.gatherly.utils.FirebaseEmulator
 import com.android.gatherly.utils.FirestoreGatherlyTest
-import java.lang.Thread.sleep
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
-const val WAIT_TIMEOUT = 5_000L
-
+@OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
 class SignInViewModelTest : FirestoreGatherlyTest() {
 
   private lateinit var signInViewModel: SignInViewModel
+  private val profileRepository: ProfileRepository = ProfileLocalRepository()
 
   // set up then sign out of the firebase
   @Before
@@ -28,7 +35,7 @@ class SignInViewModelTest : FirestoreGatherlyTest() {
   }
 
   @Test
-  fun canSignInWithGoogle() {
+  fun canSignInWithGoogle_destinationInitProfileIfFirst() = runTest {
     val fakeGoogleIdToken =
         FakeJwtGenerator.createFakeGoogleIdToken("12345", email = "test@example.com")
 
@@ -36,52 +43,43 @@ class SignInViewModelTest : FirestoreGatherlyTest() {
 
     val context = ApplicationProvider.getApplicationContext<Context>()
 
-    signInViewModel = SignInViewModel()
+    signInViewModel = SignInViewModel(profileRepository = profileRepository)
     val userSignedIn = signInViewModel.uiState
 
     signInViewModel.signInWithGoogle(context, fakeCredentialManager)
 
-    sleep(WAIT_TIMEOUT)
+    withContext(Dispatchers.Default.limitedParallelism(1)) {
+      withTimeout(5000L) {
+        while (!signInViewModel.uiState.value) {
+          delay(50)
+        }
+      }
+    }
 
     assert(userSignedIn.value)
     assert(FirebaseEmulator.auth.currentUser != null)
-  }
-
-  @Test
-  fun canSignInAnonymously() {
-    signInViewModel = SignInViewModel()
-    val userSignedIn = signInViewModel.uiState
-
-    signInViewModel.signInAnonymously()
-
-    sleep(WAIT_TIMEOUT)
-
-    assert(userSignedIn.value)
-    assert(FirebaseEmulator.auth.currentUser != null)
-  }
-
-  @Test
-  fun googleSignIn_setsDestinationToInitProfile_whenNoUsername() {
-    val fakeGoogleIdToken =
-        FakeJwtGenerator.createFakeGoogleIdToken("uid_123", email = "test@example.com")
-    val fakeCredentialManager = FakeCredentialManager.create(fakeGoogleIdToken)
-    val context = ApplicationProvider.getApplicationContext<Context>()
-
-    signInViewModel = SignInViewModel()
-    signInViewModel.signInWithGoogle(context, fakeCredentialManager)
-
-    sleep(WAIT_TIMEOUT)
-
+    assert(!profileRepository.initProfileIfMissing(FirebaseEmulator.auth.currentUser?.uid!!, ""))
     assert(signInViewModel.destination.value == "init_profile")
   }
 
   @Test
-  fun anonymousSignIn_setsDestinationToInitProfile_whenNoUsername() {
-    signInViewModel = SignInViewModel()
+  fun canSignInAnonymously_destinationInitProfileIfFirst() = runTest {
+    signInViewModel = SignInViewModel(profileRepository = profileRepository)
+    val userSignedIn = signInViewModel.uiState
+
     signInViewModel.signInAnonymously()
 
-    sleep(WAIT_TIMEOUT)
+    withContext(Dispatchers.Default.limitedParallelism(1)) {
+      withTimeout(5000L) {
+        while (!signInViewModel.uiState.value) {
+          delay(50)
+        }
+      }
+    }
 
+    assert(userSignedIn.value)
+    assert(FirebaseEmulator.auth.currentUser != null)
+    assert(!profileRepository.initProfileIfMissing(FirebaseEmulator.auth.currentUser?.uid!!, ""))
     assert(signInViewModel.destination.value == "init_profile")
   }
 }
