@@ -85,6 +85,9 @@ class SettingsScreenTest : FirestoreGatherlyTest() {
 
     // WHEN: The user enters a valid name
     composeRule.onNodeWithTag(SettingsScreenTestTags.NAME_FIELD).performTextInput("Alice")
+    // WHEN: The user enters a valid username
+    composeRule.onNodeWithTag(SettingsScreenTestTags.USERNAME).performTextInput("validuser")
+
 
     // THEN: Save button should be enabled
     composeRule.onNodeWithTag(SettingsScreenTestTags.SAVE_BUTTON).assertIsEnabled()
@@ -98,6 +101,7 @@ class SettingsScreenTest : FirestoreGatherlyTest() {
      */
 
     // WHEN: The user enters valid optional fields
+    composeRule.onNodeWithTag(SettingsScreenTestTags.USERNAME).performTextInput("userna23_.test")
     composeRule.onNodeWithTag(SettingsScreenTestTags.NAME_FIELD).performTextInput("Bob")
     composeRule.onNodeWithTag(SettingsScreenTestTags.SCHOOL_FIELD).performTextInput("EPFL")
     composeRule.onNodeWithTag(SettingsScreenTestTags.SCHOOL_YEAR_FIELD).performTextInput("IN BA5")
@@ -125,6 +129,7 @@ class SettingsScreenTest : FirestoreGatherlyTest() {
   fun settingsScreen_validBirthday_enablesSave() {
     /** Ensures that entering a valid birthday enables the save button. */
     composeRule.onNodeWithTag(SettingsScreenTestTags.NAME_FIELD).performTextInput("Alice")
+    composeRule.onNodeWithTag(SettingsScreenTestTags.USERNAME).performTextInput("test_user")
     composeRule.onNodeWithTag(SettingsScreenTestTags.BIRTHDAY_FIELD).performTextInput("28/07/2005")
 
     composeRule.onNodeWithTag(SettingsScreenTestTags.SAVE_BUTTON).assertIsEnabled()
@@ -137,6 +142,7 @@ class SettingsScreenTest : FirestoreGatherlyTest() {
      * Checks that the button is enabled and clickable.
      */
     composeRule.onNodeWithTag(SettingsScreenTestTags.NAME_FIELD).performTextInput("Diana")
+    composeRule.onNodeWithTag(SettingsScreenTestTags.USERNAME).performTextInput("testusername123")
     composeRule.onNodeWithTag(SettingsScreenTestTags.BIRTHDAY_FIELD).performTextInput("10/10/2000")
 
     val saveButton = composeRule.onNodeWithTag(SettingsScreenTestTags.SAVE_BUTTON)
@@ -211,4 +217,36 @@ class SettingsScreenTest : FirestoreGatherlyTest() {
     composeRule.onNodeWithTag(SettingsScreenTestTags.NAME_FIELD + "_error").assertDoesNotExist()
     composeRule.onNodeWithTag(SettingsScreenTestTags.BIRTHDAY_FIELD + "_error").assertDoesNotExist()
   }
+
+  @Test
+  fun settingsScreen_showsError_whenUsernameInvalid() {
+    composeRule.onNodeWithTag(SettingsScreenTestTags.USERNAME).performTextInput("!!bad!!")
+
+    composeRule.onNodeWithTag(SettingsScreenTestTags.USERNAME + "_error")
+      .assertIsDisplayed()
+  }
+
+  @Test
+  fun settingsScreen_showsError_whenUsernameEmpty() {
+    composeRule.onNodeWithTag(SettingsScreenTestTags.USERNAME).performTextInput("tempUsername")
+    composeRule.onNodeWithTag(SettingsScreenTestTags.USERNAME).performTextClearance()
+    composeRule.onNodeWithTag(SettingsScreenTestTags.USERNAME + "_error")
+      .assertIsDisplayed()
+  }
+
+  @Test
+  fun settingsScreen_validUsername_enablesSave() {
+    composeRule.onNodeWithTag(SettingsScreenTestTags.NAME_FIELD).performTextInput("Alice")
+    composeRule.onNodeWithTag(SettingsScreenTestTags.USERNAME).performTextInput("alice_ok")
+    composeRule.waitForIdle()
+    composeRule.onNodeWithTag(SettingsScreenTestTags.SAVE_BUTTON).assertIsEnabled()
+  }
+
+  @Test
+  fun settingsScreen_validUsername_showsConfirmationText() {
+    composeRule.onNodeWithTag(SettingsScreenTestTags.USERNAME).performTextInput("validuser")
+
+    composeRule.onNodeWithText("Username is valid").assertDoesNotExist() // optional
+  }
+
 }
