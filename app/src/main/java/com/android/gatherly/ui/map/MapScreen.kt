@@ -28,7 +28,6 @@ import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu
-import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.model.*
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.CameraPosition
@@ -86,14 +85,9 @@ fun MapScreen(
       },
       content = { pd ->
         // Camera position state, using the first ToDo location if available
-        val cameraPositionState = rememberCameraPositionState()
-
-        LaunchedEffect(uiState.cameraPos) {
-          cameraPositionState.move(
-              CameraUpdateFactory.newCameraPosition(
-                  CameraPosition.fromLatLngZoom(uiState.cameraPos, 14f)))
+        val cameraPositionState = rememberCameraPositionState {
+          position = CameraPosition.fromLatLngZoom(uiState.cameraPos, 10f)
         }
-
         GoogleMap(
             modifier =
                 Modifier.fillMaxSize().padding(pd).testTag(MapScreenTestTags.GOOGLE_MAP_SCREEN),
