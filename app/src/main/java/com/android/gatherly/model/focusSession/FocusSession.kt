@@ -15,6 +15,6 @@ data class FocusSession(
     val duration: Duration = Duration.ZERO,
     /** Timestamp indicating when the focus session started */
     val startedAt: Timestamp? = null,
-    /** Timestamp indicating when the focus session started */
+    /** Timestamp indicating when the focus session ended */
     val endedAt: Timestamp? = null
 )
