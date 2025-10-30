@@ -91,6 +91,26 @@ service cloud.firestore {
                                );
         }
 
+        // --- FOCUS SESSIONS ---
+        match /focusSessions/{focusSessionId} {
+
+          // Anyone authenticated can read focus sessions (since it's visible publicly in anyone's profile)
+            allow read: if request.auth != null;
+            allow get: if request.auth != null;
+            allow list: if request.auth != null;
+
+          // Only authenticated users can create if their ID matches creatorId
+          allow create: if request.auth != null
+            && request.resource.data.creatorId == request.auth.uid;
+
+          // Only the creator of the focus session can update it
+          allow update: if request.auth != null
+            && resource.data.creatorId == request.auth.uid;
+
+          // Only the creator of the focus session can delete it
+          allow delete: if request.auth != null
+            && resource.data.creatorId == request.auth.uid;
+        }
 
   }
 }
