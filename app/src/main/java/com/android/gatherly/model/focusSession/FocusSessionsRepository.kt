@@ -30,7 +30,7 @@ interface FocusSessionsRepository {
   /**
    * Returns the [FocusSession] with the given ID.
    *
-   * @param focusSessionId The unique identifier of the group.
+   * @param focusSessionId The unique identifier of the Focus Session.
    * @return The focus session with the specified ID.
    * @throws NoSuchElementException if no focus session with the given ID exists.
    */
