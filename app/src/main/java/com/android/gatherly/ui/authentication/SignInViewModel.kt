@@ -11,28 +11,26 @@ import androidx.credentials.exceptions.NoCredentialException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.R
+import com.android.gatherly.model.profile.ProfileRepository
+import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.Companion.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
 import com.google.firebase.Firebase
-import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.auth
+import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
-/**
- * Represents the UI state for authentication.
- *
- * @property isLoading Whether an authentication operation is in progress.
- * @property user The currently signed-in [FirebaseUser], or null if not signed in.
- * @property errorMsg An error message to display, or null if there is no error.
- * @property signedOut True if a sign-out operation has completed.
- */
-class SignInViewModel : ViewModel() {
+class SignInViewModel(
+    private val profileRepository: ProfileRepository =
+        ProfileRepositoryFirestore(Firebase.firestore)
+) : ViewModel() {
   // UI State containing the user sign in status
-  private val _uiState = MutableStateFlow<Boolean>(false)
+  private val _uiState = MutableStateFlow(false)
 
   // Read-only UI State presented to the UI
   val uiState: StateFlow<Boolean>
@@ -49,17 +47,9 @@ class SignInViewModel : ViewModel() {
 
         // Authenticate to Firebase
         val firebaseCredential = GoogleAuthProvider.getCredential(idToken, null)
-        Firebase.auth
-            .signInWithCredential(firebaseCredential)
-            .addOnSuccessListener {
-              Log.d("Firebase authentication with Google", "Successful authentication")
-              _uiState.value = true
-            }
-            .addOnFailureListener {
-              Log.e(
-                  "Firebase authentication with Google",
-                  "Failed to authenticate Firebase credentials")
-            }
+        Firebase.auth.signInWithCredential(firebaseCredential).await()
+        val bool = profileRepository.initProfileIfMissing(Firebase.auth.currentUser?.uid!!, "")
+        _uiState.value = true
       } else {
         Log.e("Google credentials", "Failed to recognize Google credentials")
       }
@@ -91,14 +81,11 @@ class SignInViewModel : ViewModel() {
 
   /** Sign in anonymously */
   fun signInAnonymously() {
-    Firebase.auth
-        .signInAnonymously()
-        .addOnSuccessListener {
-          Log.d("Firebase anonymous authentication", "Successful authentication")
-          _uiState.value = true
-        }
-        .addOnFailureListener {
-          Log.e("Firebase anonymous authentication", "Failed to authenticate Firebase credentials")
-        }
+    viewModelScope.launch {
+      Firebase.auth.signInAnonymously().await()
+
+      val bool = profileRepository.initProfileIfMissing(Firebase.auth.currentUser?.uid!!, "default")
+      _uiState.value = true
+    }
   }
 }
