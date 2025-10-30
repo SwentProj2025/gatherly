@@ -127,6 +127,15 @@ class AddTodoViewModel(
   }
 
   /**
+   * Updates the location field.
+   *
+   * @param newLocation The name or description of the location.
+   */
+  fun onLocationChanged(newLocation: String) {
+    _uiState.value = _uiState.value.copy(location = newLocation)
+  }
+
+  /**
    * Updates the due date field and validates the format.
    *
    * @param newValue The new due date as a string (expected format: dd/MM/yyyy).
@@ -187,15 +196,6 @@ class AddTodoViewModel(
     } catch (e: Exception) {
       false
     }
-  }
-
-  /**
-   * Updates the event location
-   *
-   * @param updatedLocation the string with which to update
-   */
-  fun updateLocation(updatedLocation: String) {
-    _uiState.value = _uiState.value.copy(location = updatedLocation)
   }
 
   /*----------------------------------Location--------------------------------------------------*/

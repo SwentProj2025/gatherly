@@ -187,7 +187,7 @@ fun AddToDoScreen(
               OutlinedTextField(
                   value = todoUIState.location,
                   onValueChange = {
-                    addTodoViewModel.updateLocation(it)
+                    addTodoViewModel.onLocationChanged(it)
                     showLocationDropdown = it.isNotBlank()
                   },
                   label = { Text(stringResource(R.string.events_location_field_label)) },
