@@ -226,7 +226,7 @@ fun EditToDoScreen(
                             editTodoViewModel.selectLocation(loc)
                             showLocationDropdown = false
                           },
-                          modifier = Modifier.testTag(EditToDoScreenTestTags.INPUT_TODO_LOCATIONg))
+                          modifier = Modifier.testTag(EditToDoScreenTestTags.INPUT_TODO_LOCATION))
                     }
                     if (todoUIState.suggestions.size > 3) {
                       DropdownMenuItem(text = { Text("More...") }, onClick = {})
