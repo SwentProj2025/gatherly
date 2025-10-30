@@ -11,10 +11,11 @@ import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsRepository
 import com.android.gatherly.model.event.EventsRepositoryFirestore
 import com.android.gatherly.model.map.DisplayedMapElement
+import com.android.gatherly.model.map.Location
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosRepository
-import com.android.gatherly.model.todo.ToDosRepositoryLocalMapTest
+import com.android.gatherly.model.todo.ToDosRepositoryFirestore
 import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
@@ -23,9 +24,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-
-/** Default location coordinates for EPFL campus. */
-val EPFL_LATLNG = LatLng(46.5197, 6.5663)
 
 /**
  * UI state for the Map screen.
@@ -43,7 +41,7 @@ data class UIState(
     val itemsList: List<DisplayedMapElement> = emptyList(),
     val expandedItemId: String? = null,
     val lastConsultedTodoId: String? = null,
-    val cameraPos: LatLng = EPFL_LATLNG,
+    val cameraPos: LatLng = LatLng(46.5191, 6.5668),
     val errorMsg: String? = null,
     val onSignedOut: Boolean = false,
     val displayEventsPage: Boolean = false
@@ -80,9 +78,10 @@ private fun getDrawableEvents(events: List<Event>): List<Event> {
  * functionality.
  *
  * @property todosRepository Repository for accessing todo data.
+ * @property eventsRepository Repository for accessing event data.
  */
 class MapViewModel(
-    private val todosRepository: ToDosRepository = ToDosRepositoryLocalMapTest(),
+    private val todosRepository: ToDosRepository = ToDosRepositoryFirestore(Firebase.firestore),
     private val eventsRepository: EventsRepository = EventsRepositoryFirestore(Firebase.firestore)
 ) : ViewModel() {
 
@@ -92,6 +91,14 @@ class MapViewModel(
 
   private lateinit var todoList: List<ToDo>
   private lateinit var eventsList: List<Event>
+
+  /** Default location coordinates for EPFL campus. */
+  private val EPFL_LOCATION =
+      Location(46.5191, 6.5668, "École Polytechnique Fédérale de Lausanne (EPFL), Switzerland")
+
+  private fun toLatLng(location: Location): LatLng {
+    return LatLng(location.latitude, location.longitude)
+  }
 
   /**
    * Initializes the ViewModel by loading all todos from the repository and filtering them to
@@ -105,7 +112,8 @@ class MapViewModel(
       val events = eventsRepository.getAllEvents()
       eventsList = getDrawableEvents(events)
 
-      _uiState.value = _uiState.value.copy(itemsList = todoList)
+      val cameraPos = todoList.firstOrNull()?.location ?: EPFL_LOCATION
+      _uiState.value = _uiState.value.copy(cameraPos = toLatLng(cameraPos), itemsList = todoList)
     }
   }
 
@@ -129,6 +137,22 @@ class MapViewModel(
       _uiState.value = _uiState.value.copy(itemsList = todoList, displayEventsPage = false)
     } else {
       _uiState.value = _uiState.value.copy(itemsList = eventsList, displayEventsPage = true)
+    }
+  }
+
+  fun refreshUIState() {
+    viewModelScope.launch {
+      val todos = todosRepository.getAllTodos()
+      todoList = getDrawableTodos(todos)
+
+      val events = eventsRepository.getAllEvents()
+      eventsList = getDrawableEvents(events)
+
+      val cameraPos = todoList.firstOrNull()?.location ?: EPFL_LOCATION
+      _uiState.value =
+          _uiState.value.copy(
+              cameraPos = toLatLng(cameraPos),
+              itemsList = if (_uiState.value.displayEventsPage) eventsList else todoList)
     }
   }
 
