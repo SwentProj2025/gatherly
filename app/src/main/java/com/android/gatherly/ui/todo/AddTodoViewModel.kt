@@ -39,7 +39,6 @@ data class AddTodoUiState(
     val isSaving: Boolean = false,
     val saveError: String? = null,
     val saveSuccess: Boolean = false,
-
     val isLocLoading: Boolean = false,
     val suggestions: List<Location> = emptyList()
 )
@@ -48,13 +47,13 @@ data class AddTodoUiState(
 private var client: OkHttpClient =
     OkHttpClient.Builder()
         .addInterceptor { chain ->
-            val request =
-                chain
-                    .request()
-                    .newBuilder()
-                    .header("User-Agent", "BootcampApp (croissant.kerjan@gmail.com)")
-                    .build()
-            chain.proceed(request)
+          val request =
+              chain
+                  .request()
+                  .newBuilder()
+                  .header("User-Agent", "BootcampApp (croissant.kerjan@gmail.com)")
+                  .build()
+          chain.proceed(request)
         }
         .build()
 
@@ -78,8 +77,8 @@ class AddTodoViewModel(
   /** Public immutable access to the Add ToDo UI state. */
   val uiState: StateFlow<AddTodoUiState> = _uiState.asStateFlow()
 
-    // Chosen location
-    private var chosenLocation: Location? = null
+  // Chosen location
+  private var chosenLocation: Location? = null
 
   /** Clears the error message in the UI state. */
   fun clearErrorMsg() {
@@ -190,40 +189,40 @@ class AddTodoViewModel(
     }
   }
 
-    /**
-    * Updates the event location
-    *
-    * @param updatedLocation the string with which to update
-    */
-    fun updateLocation(updatedLocation: String) {
-        _uiState.value = _uiState.value.copy(location = updatedLocation)
+  /**
+   * Updates the event location
+   *
+   * @param updatedLocation the string with which to update
+   */
+  fun updateLocation(updatedLocation: String) {
+    _uiState.value = _uiState.value.copy(location = updatedLocation)
+  }
+
+  /*----------------------------------Location--------------------------------------------------*/
+
+  /**
+   * Updates the location to the selected location
+   *
+   * @param location the selected location
+   */
+  fun selectLocation(location: Location) {
+    _uiState.value = _uiState.value.copy(location = location.name, suggestions = emptyList())
+    chosenLocation = location
+  }
+
+  /*----------------------------------Helpers---------------------------------------------------*/
+
+  /**
+   * Given a string, search locations with Nominatim
+   *
+   * @param location the substring with which to search
+   */
+  fun searchLocationByString(location: String) {
+    viewModelScope.launch {
+      val list = nominatimClient.search(location)
+      _uiState.value = _uiState.value.copy(suggestions = list)
     }
-
-    /*----------------------------------Location--------------------------------------------------*/
-
-    /**
-    * Updates the location to the selected location
-    *
-    * @param location the selected location
-    */
-    fun selectLocation(location: Location) {
-        _uiState.value = _uiState.value.copy(location = location.name, suggestions = emptyList())
-        chosenLocation = location
-    }
-
-    /*----------------------------------Helpers---------------------------------------------------*/
-
-    /**
-    * Given a string, search locations with Nominatim
-    *
-    * @param location the substring with which to search
-    */
-    fun searchLocationByString(location: String) {
-        viewModelScope.launch {
-            val list = nominatimClient.search(location)
-            _uiState.value = _uiState.value.copy(suggestions = list)
-        }
-    }
+  }
 
   /**
    * Attempts to create and save a new [ToDo] entry to the repository.

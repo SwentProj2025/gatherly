@@ -102,8 +102,8 @@ fun AddToDoScreen(
           focusedTextColor = MaterialTheme.colorScheme.primary,
       )
 
-    // Local state for the dropdown visibility
-    var showLocationDropdown by remember { mutableStateOf(false) }
+  // Local state for the dropdown visibility
+  var showLocationDropdown by remember { mutableStateOf(false) }
 
   LaunchedEffect(errorMsg) {
     if (errorMsg != null) {
@@ -112,13 +112,13 @@ fun AddToDoScreen(
     }
   }
 
-    // Search location when input changes
-    LaunchedEffect(todoUIState.location) {
-        if (todoUIState.location.isNotBlank()) {
-            delay(1000)
-            addTodoViewModel.searchLocationByString(todoUIState.location)
-        }
+  // Search location when input changes
+  LaunchedEffect(todoUIState.location) {
+    if (todoUIState.location.isNotBlank()) {
+      delay(1000)
+      addTodoViewModel.searchLocationByString(todoUIState.location)
     }
+  }
 
   Scaffold(
       topBar = {
@@ -183,46 +183,43 @@ fun AddToDoScreen(
                   modifier =
                       Modifier.fillMaxWidth().testTag(AddToDoScreenTestTags.INPUT_TODO_ASSIGNEE))
 
-              //Location Input
-            OutlinedTextField(
-                value = todoUIState.location,
-                onValueChange = {
+              // Location Input
+              OutlinedTextField(
+                  value = todoUIState.location,
+                  onValueChange = {
                     addTodoViewModel.updateLocation(it)
                     showLocationDropdown = it.isNotBlank()
-                },
-                label = { Text(stringResource(R.string.events_location_field_label)) },
-                placeholder = {
+                  },
+                  label = { Text(stringResource(R.string.events_location_field_label)) },
+                  placeholder = {
                     Text(stringResource(R.string.events_location_field_placeholder))
-                },
-                colors = textFieldColors,
-                modifier =
-                    Modifier.fillMaxWidth().testTag(AddEventScreenTestTags.INPUT_LOCATION))
+                  },
+                  colors = textFieldColors,
+                  modifier = Modifier.fillMaxWidth().testTag(AddEventScreenTestTags.INPUT_LOCATION))
 
-            DropdownMenu(
-                expanded = showLocationDropdown && todoUIState.suggestions.isNotEmpty(),
-                onDismissRequest = { showLocationDropdown = false },
-                properties = PopupProperties(focusable = false),
-                modifier =
-                    Modifier.testTag(AddEventScreenTestTags.LOCATION_MENU)
-                        .fillMaxWidth()
-                        .height(200.dp)) {
-                todoUIState.suggestions.take(3).forEach { loc ->
-                    DropdownMenuItem(
-                        text = {
-                            Text(
-                                text =
-                                    loc.name.take(40) + if (loc.name.length > 40) "..." else "")
-                        },
-                        onClick = {
+              DropdownMenu(
+                  expanded = showLocationDropdown && todoUIState.suggestions.isNotEmpty(),
+                  onDismissRequest = { showLocationDropdown = false },
+                  properties = PopupProperties(focusable = false),
+                  modifier =
+                      Modifier.testTag(AddEventScreenTestTags.LOCATION_MENU)
+                          .fillMaxWidth()
+                          .height(200.dp)) {
+                    todoUIState.suggestions.take(3).forEach { loc ->
+                      DropdownMenuItem(
+                          text = {
+                            Text(text = loc.name.take(40) + if (loc.name.length > 40) "..." else "")
+                          },
+                          onClick = {
                             addTodoViewModel.selectLocation(loc)
                             showLocationDropdown = false
-                        },
-                        modifier = Modifier.testTag(AddEventScreenTestTags.INPUT_LOCATION))
-                }
-                if (todoUIState.suggestions.size > 3) {
-                    DropdownMenuItem(text = { Text("More...") }, onClick = {})
-                }
-            }
+                          },
+                          modifier = Modifier.testTag(AddEventScreenTestTags.INPUT_LOCATION))
+                    }
+                    if (todoUIState.suggestions.size > 3) {
+                      DropdownMenuItem(text = { Text("More...") }, onClick = {})
+                    }
+                  }
 
               // Due Date Input
               OutlinedTextField(

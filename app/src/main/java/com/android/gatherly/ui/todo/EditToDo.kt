@@ -40,7 +40,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
-import com.android.gatherly.ui.events.AddEventScreenTestTags
 import com.android.gatherly.ui.events.EditEventsScreenTestTags
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
@@ -79,8 +78,8 @@ object EditToDoScreenTestTags {
   /** Tag for displaying error messages under text fields. */
   const val ERROR_MESSAGE = "errorMessage"
 
-    /** Tag for displaying error messages under text fields. */
-    const val LOCATION_MENU = "locationMenu"
+  /** Tag for displaying error messages under text fields. */
+  const val LOCATION_MENU = "locationMenu"
 }
 
 /**
@@ -110,8 +109,8 @@ fun EditToDoScreen(
   val fieldSpacing = dimensionResource(id = R.dimen.spacing_between_fields)
   val buttonSpacing = dimensionResource(id = R.dimen.spacing_between_buttons)
 
-    // Local state for the dropdown visibility
-    var showLocationDropdown by remember { mutableStateOf(false) }
+  // Local state for the dropdown visibility
+  var showLocationDropdown by remember { mutableStateOf(false) }
 
   val textFieldColors =
       TextFieldDefaults.colors(
@@ -121,13 +120,13 @@ fun EditToDoScreen(
           focusedTextColor = MaterialTheme.colorScheme.primary,
       )
 
-    // Search location when input changes
-    LaunchedEffect(todoUIState.location) {
-        if (todoUIState.location.isNotBlank()) {
-            delay(1000)
-            editTodoViewModel.searchLocationByString(todoUIState.location)
-        }
+  // Search location when input changes
+  LaunchedEffect(todoUIState.location) {
+    if (todoUIState.location.isNotBlank()) {
+      delay(1000)
+      editTodoViewModel.searchLocationByString(todoUIState.location)
     }
+  }
 
   LaunchedEffect(errorMsg) {
     if (errorMsg != null) {
@@ -198,49 +197,46 @@ fun EditToDoScreen(
                   modifier =
                       Modifier.fillMaxWidth().testTag(EditToDoScreenTestTags.INPUT_TODO_ASSIGNEE))
 
-            //Location Input
-            OutlinedTextField(
-                value = todoUIState.location,
-                onValueChange = {
+              // Location Input
+              OutlinedTextField(
+                  value = todoUIState.location,
+                  onValueChange = {
                     editTodoViewModel.onLocationChanged(it)
                     showLocationDropdown = it.isNotBlank()
-                },
-                label = { Text(stringResource(R.string.events_location_field_label)) },
-                placeholder = {
+                  },
+                  label = { Text(stringResource(R.string.events_location_field_label)) },
+                  placeholder = {
                     Text(stringResource(R.string.events_location_field_placeholder))
-                },
-                colors = textFieldColors,
-                modifier =
-                    Modifier.fillMaxWidth().testTag(EditEventsScreenTestTags.INPUT_LOCATION))
+                  },
+                  colors = textFieldColors,
+                  modifier =
+                      Modifier.fillMaxWidth().testTag(EditEventsScreenTestTags.INPUT_LOCATION))
 
-            DropdownMenu(
-                expanded = showLocationDropdown && todoUIState.suggestions.isNotEmpty(),
-                onDismissRequest = { showLocationDropdown = false },
-                properties = PopupProperties(focusable = false),
-                modifier =
-                    Modifier.testTag(EditToDoScreenTestTags.LOCATION_MENU)
-                        .fillMaxWidth()
-                        .height(200.dp)) {
-                todoUIState.suggestions.take(3).forEach { loc ->
-                    DropdownMenuItem(
-                        text = {
-                            Text(
-                                text =
-                                    loc.name.take(40) + if (loc.name.length > 40) "..." else "")
-                        },
-                        onClick = {
+              DropdownMenu(
+                  expanded = showLocationDropdown && todoUIState.suggestions.isNotEmpty(),
+                  onDismissRequest = { showLocationDropdown = false },
+                  properties = PopupProperties(focusable = false),
+                  modifier =
+                      Modifier.testTag(EditToDoScreenTestTags.LOCATION_MENU)
+                          .fillMaxWidth()
+                          .height(200.dp)) {
+                    todoUIState.suggestions.take(3).forEach { loc ->
+                      DropdownMenuItem(
+                          text = {
+                            Text(text = loc.name.take(40) + if (loc.name.length > 40) "..." else "")
+                          },
+                          onClick = {
                             editTodoViewModel.selectLocation(loc)
                             showLocationDropdown = false
-                        },
-                        modifier = Modifier.testTag(EditEventsScreenTestTags.INPUT_LOCATION))
-                }
-                if (todoUIState.suggestions.size > 3) {
-                    DropdownMenuItem(text = { Text("More...") }, onClick = {})
-                }
-            }
+                          },
+                          modifier = Modifier.testTag(EditEventsScreenTestTags.INPUT_LOCATION))
+                    }
+                    if (todoUIState.suggestions.size > 3) {
+                      DropdownMenuItem(text = { Text("More...") }, onClick = {})
+                    }
+                  }
 
-
-            // Due Date Input
+              // Due Date Input
               OutlinedTextField(
                   value = todoUIState.dueDate,
                   onValueChange = { editTodoViewModel.onDateChanged(it) },

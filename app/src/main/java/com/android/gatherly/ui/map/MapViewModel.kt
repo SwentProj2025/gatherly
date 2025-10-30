@@ -82,8 +82,8 @@ private fun getDrawableEvents(events: List<Event>): List<Event> {
  * @property todosRepository Repository for accessing todo data.
  */
 class MapViewModel(
-  private val todosRepository: ToDosRepository = ToDosRepositoryFirestore(Firebase.firestore),
-  private val eventsRepository: EventsRepository = EventsRepositoryFirestore(Firebase.firestore)
+    private val todosRepository: ToDosRepository = ToDosRepositoryFirestore(Firebase.firestore),
+    private val eventsRepository: EventsRepository = EventsRepositoryFirestore(Firebase.firestore)
 ) : ViewModel() {
 
   /** StateFlow that emits the current UI state for the Map screen. */

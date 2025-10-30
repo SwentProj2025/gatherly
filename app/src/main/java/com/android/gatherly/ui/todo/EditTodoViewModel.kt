@@ -49,13 +49,13 @@ data class EditTodoUIState(
 private var client: OkHttpClient =
     OkHttpClient.Builder()
         .addInterceptor { chain ->
-            val request =
-                chain
-                    .request()
-                    .newBuilder()
-                    .header("User-Agent", "BootcampApp (croissant.kerjan@gmail.com)")
-                    .build()
-            chain.proceed(request)
+          val request =
+              chain
+                  .request()
+                  .newBuilder()
+                  .header("User-Agent", "BootcampApp (croissant.kerjan@gmail.com)")
+                  .build()
+          chain.proceed(request)
         }
         .build()
 
@@ -78,8 +78,8 @@ class EditTodoViewModel(
   /** Public immutable access to the Edit ToDo UI state. */
   val uiState: StateFlow<EditTodoUIState> = _uiState.asStateFlow()
 
-    // Selected Location
-    private var chosenLocation: Location? = null
+  // Selected Location
+  private var chosenLocation: Location? = null
 
   /** Clears the error message in the UI state. */
   fun clearErrorMsg() {
@@ -316,24 +316,24 @@ class EditTodoViewModel(
     }
   }
 
-    /*----------------------------------Location--------------------------------------------------*/
+  /*----------------------------------Location--------------------------------------------------*/
 
-    fun selectLocation(location: Location) {
-        _uiState.value = _uiState.value.copy(location = location.name, suggestions = emptyList())
-        chosenLocation = location
+  fun selectLocation(location: Location) {
+    _uiState.value = _uiState.value.copy(location = location.name, suggestions = emptyList())
+    chosenLocation = location
+  }
+
+  /*----------------------------------Helpers--------------------------------------------------*/
+
+  /**
+   * Given a string, search locations with Nominatim
+   *
+   * @param location the substring with which to search
+   */
+  fun searchLocationByString(location: String) {
+    viewModelScope.launch {
+      val list = nominatimClient.search(location)
+      _uiState.value = _uiState.value.copy(suggestions = list)
     }
-
-    /*----------------------------------Helpers--------------------------------------------------*/
-
-    /**
-     * Given a string, search locations with Nominatim
-     *
-     * @param location the substring with which to search
-     */
-    fun searchLocationByString(location: String) {
-        viewModelScope.launch {
-            val list = nominatimClient.search(location)
-            _uiState.value = _uiState.value.copy(suggestions = list)
-        }
-    }
+  }
 }
