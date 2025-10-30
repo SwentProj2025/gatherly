@@ -39,6 +39,16 @@
     <string name="timer_resume">Resume</string>
     <string name="timer_stop">Stop</string>
 
+    <!-- Settings Page -->
+    <string name="settings_edit_photo">Edit Photo</string>
+    <string name="settings_save">Save</string>
+    <string name="settings_profile_picture_description">Profile Picture</string>
+    <string name="settings_default_username">\@defaultuser</string>
+    <string name="settings_label_name">Name :</string>
+    <string name="settings_label_birthday">Birthday date:</string>
+    <string name="settings_label_school">School :</string>
+    <string name="settings_label_school_year">School year :</string>
+
     <!-- Profile Page -->
     <string name="profile_screen_title">Profile</string>
     <string name="profile_picture_description">Profile picture</string>
@@ -69,4 +79,17 @@
     <string name="events_location_field_placeholder">Enter an Address or Location</string>
     <string name="events_participant_field_label">Participant</string>
     <string name="events_participant_placeholder">Add or remove a participant</string>
+
+    <string name="goback_button_title">Go back</string>
+    <string name="unregister_button_title">Unregister</string>
+    <string name="participate_button_title">Participate</string>
+    <string name="edit_button_title">Edit the event</string>
+    <string name="browseEvents_list_title">Browse Events</string>
+    <string name="browseEvents_emptylist_msg">No events upcoming</string>
+    <string name="upcomingEvents_list_title">My Upcoming Events</string>
+    <string name="upcomingEvents_emptylist_msg">You are not registered to any upcoming events</string>
+    <string name="userEvents_list_title">My Own Events</string>
+    <string name="userEvents_emptylist_msg">You have not created any events</string>
+    <string name="create_event_button_title">Create an event</string>
+
 </resources>
