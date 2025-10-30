@@ -27,6 +27,7 @@ import com.android.gatherly.ui.map.MapScreen
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.Screen
 import com.android.gatherly.ui.profile.ProfileScreen
+import com.android.gatherly.ui.authentication.InitProfileScreen
 import com.android.gatherly.ui.settings.SettingsScreen
 import com.android.gatherly.ui.theme.GatherlyTheme
 import com.android.gatherly.ui.todo.AddToDoScreen
@@ -76,7 +77,7 @@ fun GatherlyApp(
       composable(Screen.SignIn.route) {
         SignInScreen(
             credentialManager = credentialManager,
-            onSignedIn = { navigationActions.navigateTo(Screen.HomePage) })
+            navigationActions = navigationActions)
       }
     }
     // HOMEPAGE COMPOSABLE  ------------------------------
@@ -228,5 +229,17 @@ fun GatherlyApp(
             credentialManager = credentialManager, goBack = { navigationActions.goBack() })
       }
     }
+
+      // INIT PROFILE COMPOSABLE  ------------------------------
+      navigation(
+          startDestination = Screen.InitProfileScreen.route,
+          route = Screen.InitProfileScreen.name,
+      ) {
+          composable(Screen.InitProfileScreen.route) {
+              InitProfileScreen(
+                  navigationActions = navigationActions
+              )
+          }
+      }
   }
 }
