@@ -10,6 +10,15 @@ import kotlinx.coroutines.tasks.await
 
 // This class contains code adapted from the CS-311 bootcamp.
 
+/**
+ * Firestore-based implementation of [FocusSessionsRepository].
+ *
+ * This repository stores each user's ToDo items under: /focusSessions/{focusSessionsId}
+ *
+ * All methods are asynchronous and must be called from a coroutine scope.
+ *
+ * @param db A [FirebaseFirestore] instance used for database operations.
+ */
 class FocusSessionsRepositoryFirestore(private val db: FirebaseFirestore) :
     FocusSessionsRepository {
 
