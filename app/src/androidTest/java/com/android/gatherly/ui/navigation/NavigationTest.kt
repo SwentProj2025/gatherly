@@ -9,7 +9,11 @@ import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.android.gatherly.GatherlyApp
+import com.android.gatherly.ui.authentication.InitProfileScreen
 import com.android.gatherly.ui.authentication.SignInScreenTestTags
 import com.android.gatherly.utils.FirebaseEmulator
 import com.android.gatherly.utils.FirestoreGatherlyTest
@@ -749,5 +753,13 @@ class NavigationTest : FirestoreGatherlyTest() {
     onNodeWithTag(SignInScreenTestTags.WELCOME_TITLE)
         .assertIsDisplayed()
         .assertTextContains("Welcome to Gatherly,", substring = true, ignoreCase = true)
+  }
+
+  /**
+   * Helper function to verify that the InitProfile (UsernameSetup) screen is displayed.
+   */
+  fun ComposeTestRule.checkInitProfileScreenIsDisplayed() {
+    onNodeWithTag("onboarding_save_button").assertIsDisplayed()
+    onNodeWithTag("onboarding_username_field").assertIsDisplayed()
   }
 }
