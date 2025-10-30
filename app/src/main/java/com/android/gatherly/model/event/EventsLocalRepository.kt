@@ -11,29 +11,6 @@ package com.android.gatherly.model.event
  */
 class EventsLocalRepository : EventsRepository {
 
-  /*  private val todos =
-  mutableListOf(
-      ToDo(
-          uid = "1",
-          name = "Buy groceries",
-          description = "Milk, Bread, Eggs, Butter",
-          assigneeName = "Alice",
-          dueDate = Timestamp.now(),
-          dueTime = null,
-          location = Location(46.5238, 6.5627, "Bassenges"),
-          status = ToDoStatus.ONGOING,
-          ownerId = "user1"),
-      ToDo(
-          uid = "2",
-          name = "Finish swent",
-          description = "FInish map ui",
-          assigneeName = "Colombe",
-          dueDate = Timestamp.now(),
-          dueTime = null,
-          location = Location(46.5197, 6.5663, "EPFL"),
-          status = ToDoStatus.ONGOING,
-          ownerId = "user1"))*/
-
   var counter = 0
   private val events: MutableList<Event> = mutableListOf()
 
