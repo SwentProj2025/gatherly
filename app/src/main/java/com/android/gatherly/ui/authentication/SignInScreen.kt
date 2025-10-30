@@ -48,13 +48,13 @@ fun SignInScreen(
 
   val context = LocalContext.current
   val isSignedIn by authViewModel.uiState.collectAsState()
-    val destination by authViewModel.destination.collectAsState()
+  val destination by authViewModel.destination.collectAsState()
 
   // Navigate to home page screen on successful login
   LaunchedEffect(destination) {
-    when (destination){
-        "home" -> navigationActions?.navigateTo(Tab.HomePage.destination)
-        "init_profile" -> navigationActions?.navigateTo(Screen.InitProfileScreen)
+    when (destination) {
+      "home" -> navigationActions?.navigateTo(Tab.HomePage.destination)
+      "init_profile" -> navigationActions?.navigateTo(Screen.InitProfileScreen)
     }
   }
 

@@ -8,7 +8,6 @@ import com.android.gatherly.utils.FakeCredentialManager
 import com.android.gatherly.utils.FakeJwtGenerator
 import com.android.gatherly.utils.FirebaseEmulator
 import com.android.gatherly.utils.FirestoreGatherlyTest
-import kotlinx.coroutines.test.runTest
 import java.lang.Thread.sleep
 import org.junit.Before
 import org.junit.Test
@@ -64,7 +63,7 @@ class SignInViewModelTest : FirestoreGatherlyTest() {
   @Test
   fun googleSignIn_setsDestinationToInitProfile_whenNoUsername() {
     val fakeGoogleIdToken =
-      FakeJwtGenerator.createFakeGoogleIdToken("uid_123", email = "test@example.com")
+        FakeJwtGenerator.createFakeGoogleIdToken("uid_123", email = "test@example.com")
     val fakeCredentialManager = FakeCredentialManager.create(fakeGoogleIdToken)
     val context = ApplicationProvider.getApplicationContext<Context>()
 
@@ -85,6 +84,4 @@ class SignInViewModelTest : FirestoreGatherlyTest() {
 
     assert(signInViewModel.destination.value == "init_profile")
   }
-
-
 }

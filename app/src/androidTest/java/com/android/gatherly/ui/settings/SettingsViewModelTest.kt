@@ -16,148 +16,130 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
-/**
- * Integration tests for [SettingsViewModel] using the real Firestore repository (emulator).
- */
+/** Integration tests for [SettingsViewModel] using the real Firestore repository (emulator). */
 @RunWith(AndroidJUnit4::class)
 class SettingsViewModelInstrumentedTest : FirestoreGatherlyTest() {
 
-    private lateinit var repo: ProfileRepositoryFirestore
-    private lateinit var viewModel: SettingsViewModel
-    private lateinit var testUid: String
+  private lateinit var repo: ProfileRepositoryFirestore
+  private lateinit var viewModel: SettingsViewModel
+  private lateinit var testUid: String
 
-    @Before
-    override fun setUp() {
-        super.setUp()
-        repo = ProfileRepositoryFirestore(Firebase.firestore)
-        viewModel = SettingsViewModel(repo)
+  @Before
+  override fun setUp() {
+    super.setUp()
+    repo = ProfileRepositoryFirestore(Firebase.firestore)
+    viewModel = SettingsViewModel(repo)
 
-        // Create a test user (anonymous is fine)
-        runBlocking {
-            val auth = Firebase.auth
-            val user = auth.signInAnonymously().result?.user
-            testUid = user?.uid ?: throw IllegalStateException("Auth failed")
-            repo.initProfileIfMissing(testUid, "")
-        }
+    // Create a test user (anonymous is fine)
+    runBlocking {
+      val auth = Firebase.auth
+      val user = auth.signInAnonymously().result?.user
+      testUid = user?.uid ?: throw IllegalStateException("Auth failed")
+      repo.initProfileIfMissing(testUid, "")
     }
+  }
 
-    @After
-    fun cleanup() {
-        runBlocking {
-            Firebase.firestore.collection("profiles").document(testUid).delete()
-        }
-    }
+  @After
+  fun cleanup() {
+    runBlocking { Firebase.firestore.collection("profiles").document(testUid).delete() }
+  }
 
-    /**
-     * Ensures loading an existing profile from Firestore populates the UI state correctly.
-     */
-    @Test
-    fun loadProfile_populatesUiStateFromFirestore() = runBlocking {
-        val profile = Profile(
+  /** Ensures loading an existing profile from Firestore populates the UI state correctly. */
+  @Test
+  fun loadProfile_populatesUiStateFromFirestore() = runBlocking {
+    val profile =
+        Profile(
             uid = testUid,
             name = "Alice",
             username = "alice_test",
             school = "EPFL",
-            schoolYear = "BA3"
-        )
-        repo.updateProfile(profile)
+            schoolYear = "BA3")
+    repo.updateProfile(profile)
 
-        delay(500) // wait for write propagation
-        viewModel.loadProfile(testUid)
-        delay(500)
+    delay(500) // wait for write propagation
+    viewModel.loadProfile(testUid)
+    delay(500)
 
-        val state = viewModel.uiState.first()
-        assertEquals("Alice", state.name)
-        assertEquals("alice_test", state.username)
-        assertEquals("EPFL", state.school)
-    }
+    val state = viewModel.uiState.first()
+    assertEquals("Alice", state.name)
+    assertEquals("alice_test", state.username)
+    assertEquals("EPFL", state.school)
+  }
 
-    /**
-     * Ensures that editing a username updates UI state and validates format correctly.
-     */
-    @Test
-    fun editUsername_setsValidationMessagesCorrectly() = runBlocking {
-        viewModel.editUsername("Bad!!Name")
-        var state = viewModel.uiState.first()
-        assertNotNull(state.invalidUsernameMsg)
-        assertNull(state.isUsernameAvailable)
+  /** Ensures that editing a username updates UI state and validates format correctly. */
+  @Test
+  fun editUsername_setsValidationMessagesCorrectly() = runBlocking {
+    viewModel.editUsername("Bad!!Name")
+    var state = viewModel.uiState.first()
+    assertNotNull(state.invalidUsernameMsg)
+    assertNull(state.isUsernameAvailable)
 
-        viewModel.editUsername("good_name")
-        delay(300)
-        state = viewModel.uiState.first()
-        assertNull(state.invalidUsernameMsg)
-        assertNotNull(state.isUsernameAvailable)
-    }
+    viewModel.editUsername("good_name")
+    delay(300)
+    state = viewModel.uiState.first()
+    assertNull(state.invalidUsernameMsg)
+    assertNotNull(state.isUsernameAvailable)
+  }
 
-    /**
-     * Ensures that an invalid name triggers an error in the ViewModel.
-     */
-    @Test
-    fun editName_invalid_setsErrorMessage() = runBlocking {
-        viewModel.editName("")
-        val state = viewModel.uiState.first()
-        assertEquals("Name cannot be empty", state.invalidNameMsg)
-        assertFalse(state.isValid)
-    }
+  /** Ensures that an invalid name triggers an error in the ViewModel. */
+  @Test
+  fun editName_invalid_setsErrorMessage() = runBlocking {
+    viewModel.editName("")
+    val state = viewModel.uiState.first()
+    assertEquals("Name cannot be empty", state.invalidNameMsg)
+    assertFalse(state.isValid)
+  }
 
-    /**
-     * Ensures that a valid updateProfile() correctly persists to Firestore.
-     */
-    @Test
-    fun updateProfile_persistsToFirestore() = runBlocking {
-        // First load and set valid values
-        viewModel.loadProfile(testUid)
-        delay(500)
+  /** Ensures that a valid updateProfile() correctly persists to Firestore. */
+  @Test
+  fun updateProfile_persistsToFirestore() = runBlocking {
+    // First load and set valid values
+    viewModel.loadProfile(testUid)
+    delay(500)
 
-        viewModel.editName("Updated Name")
-        viewModel.editUsername("updated_user")
-        delay(500) // allow username availability check
-        viewModel.editSchool("EPFL")
-        viewModel.editSchoolYear("MA1")
+    viewModel.editName("Updated Name")
+    viewModel.editUsername("updated_user")
+    delay(500) // allow username availability check
+    viewModel.editSchool("EPFL")
+    viewModel.editSchoolYear("MA1")
 
-        viewModel.updateProfile(testUid, isFirstTime = true)
-        delay(1000)
+    viewModel.updateProfile(testUid, isFirstTime = true)
+    delay(1000)
 
-        // Verify persistence
-        val stored = repo.getProfileByUid(testUid)
-        assertEquals("Updated Name", stored?.name)
-        assertEquals("updated_user", stored?.username)
-        assertEquals("EPFL", stored?.school)
-        assertEquals("MA1", stored?.schoolYear)
-    }
+    // Verify persistence
+    val stored = repo.getProfileByUid(testUid)
+    assertEquals("Updated Name", stored?.name)
+    assertEquals("updated_user", stored?.username)
+    assertEquals("EPFL", stored?.school)
+    assertEquals("MA1", stored?.schoolYear)
+  }
 
-    /**
-     * Ensures invalid birthday prevents profile from being valid.
-     */
-    @Test
-    fun editBirthday_invalidDate_setsError() = runBlocking {
-        viewModel.editBirthday("31-31-2025")
-        val state = viewModel.uiState.first()
-        assertEquals("Date is not valid (format: dd/mm/yyyy)", state.invalidBirthdayMsg)
-        assertFalse(state.isValid)
-    }
+  /** Ensures invalid birthday prevents profile from being valid. */
+  @Test
+  fun editBirthday_invalidDate_setsError() = runBlocking {
+    viewModel.editBirthday("31-31-2025")
+    val state = viewModel.uiState.first()
+    assertEquals("Date is not valid (format: dd/mm/yyyy)", state.invalidBirthdayMsg)
+    assertFalse(state.isValid)
+  }
 
-    /**
-     * Ensures valid birthday passes validation.
-     */
-    @Test
-    fun editBirthday_validDate_clearsError() = runBlocking {
-        viewModel.editBirthday("17/07/2000")
-        val state = viewModel.uiState.first()
-        assertNull(state.invalidBirthdayMsg)
-    }
+  /** Ensures valid birthday passes validation. */
+  @Test
+  fun editBirthday_validDate_clearsError() = runBlocking {
+    viewModel.editBirthday("17/07/2000")
+    val state = viewModel.uiState.first()
+    assertNull(state.invalidBirthdayMsg)
+  }
 
-    /**
-     * Ensures an invalid username prevents updateProfile() from running.
-     */
-    @Test
-    fun updateProfile_invalidUsername_blocksSave() = runBlocking {
-        viewModel.editName("Test")
-        viewModel.editUsername("Bad!!Name")
+  /** Ensures an invalid username prevents updateProfile() from running. */
+  @Test
+  fun updateProfile_invalidUsername_blocksSave() = runBlocking {
+    viewModel.editName("Test")
+    viewModel.editUsername("Bad!!Name")
 
-        viewModel.updateProfile(testUid, isFirstTime = true)
-        delay(500)
-        val state = viewModel.uiState.first()
-        assertEquals("At least one field is not valid.", state.errorMsg)
-    }
+    viewModel.updateProfile(testUid, isFirstTime = true)
+    delay(500)
+    val state = viewModel.uiState.first()
+    assertEquals("At least one field is not valid.", state.errorMsg)
+  }
 }

@@ -88,7 +88,6 @@ class SettingsScreenTest : FirestoreGatherlyTest() {
     // WHEN: The user enters a valid username
     composeRule.onNodeWithTag(SettingsScreenTestTags.USERNAME).performTextInput("validuser")
 
-
     // THEN: Save button should be enabled
     composeRule.onNodeWithTag(SettingsScreenTestTags.SAVE_BUTTON).assertIsEnabled()
   }
@@ -222,16 +221,14 @@ class SettingsScreenTest : FirestoreGatherlyTest() {
   fun settingsScreen_showsError_whenUsernameInvalid() {
     composeRule.onNodeWithTag(SettingsScreenTestTags.USERNAME).performTextInput("!!bad!!")
 
-    composeRule.onNodeWithTag(SettingsScreenTestTags.USERNAME + "_error")
-      .assertIsDisplayed()
+    composeRule.onNodeWithTag(SettingsScreenTestTags.USERNAME + "_error").assertIsDisplayed()
   }
 
   @Test
   fun settingsScreen_showsError_whenUsernameEmpty() {
     composeRule.onNodeWithTag(SettingsScreenTestTags.USERNAME).performTextInput("tempUsername")
     composeRule.onNodeWithTag(SettingsScreenTestTags.USERNAME).performTextClearance()
-    composeRule.onNodeWithTag(SettingsScreenTestTags.USERNAME + "_error")
-      .assertIsDisplayed()
+    composeRule.onNodeWithTag(SettingsScreenTestTags.USERNAME + "_error").assertIsDisplayed()
   }
 
   @Test
@@ -248,5 +245,4 @@ class SettingsScreenTest : FirestoreGatherlyTest() {
 
     composeRule.onNodeWithText("Username is valid").assertDoesNotExist() // optional
   }
-
 }

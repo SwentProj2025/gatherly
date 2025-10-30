@@ -35,7 +35,8 @@ import kotlinx.coroutines.tasks.await
  * @property signedOut True if a sign-out operation has completed.
  */
 class SignInViewModel(
-    private val profileRepository: ProfileRepository = ProfileRepositoryFirestore(Firebase.firestore)
+    private val profileRepository: ProfileRepository =
+        ProfileRepositoryFirestore(Firebase.firestore)
 ) : ViewModel() {
   // UI State containing the user sign in status
   private val _uiState = MutableStateFlow<Boolean>(false)
@@ -44,87 +45,86 @@ class SignInViewModel(
   val uiState: StateFlow<Boolean>
     get() = _uiState
 
-    private val _destination = MutableStateFlow<String?>(null)
-    val destination: StateFlow<String?> get() = _destination
+  private val _destination = MutableStateFlow<String?>(null)
+  val destination: StateFlow<String?>
+    get() = _destination
 
-    /** Decide where to navigate after a successful sign in*/
-    private suspend fun handlePostSignInNav(){
-        val uid = Firebase.auth.currentUser?.uid ?: return
-        val profile = profileRepository.getProfileByUid(uid)
+  /** Decide where to navigate after a successful sign in */
+  private suspend fun handlePostSignInNav() {
+    val uid = Firebase.auth.currentUser?.uid ?: return
+    val profile = profileRepository.getProfileByUid(uid)
 
-        _destination.value =
-            if (profile?.username.isNullOrEmpty()){
-                "init_profile"
-            }else{
-                "home"
-            }
-    }
-
-    /** Authenticate to Firebase */
-    private fun authenticateFirebaseWithGoogle(credential: Credential) {
-        viewModelScope.launch {
-            // Check that this is the right type of credential
-            if (credential is CustomCredential && credential.type == TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
-                try {
-                    // Create idToken
-                    val googleIdTokenCredential =
-                        GoogleIdTokenCredential.createFrom(credential.data)
-                    val idToken = googleIdTokenCredential.idToken
-
-                    // Authenticate to Firebase
-                    val firebaseCredential = GoogleAuthProvider.getCredential(idToken, null)
-                    Firebase.auth.signInWithCredential(firebaseCredential).await()
-                    val uid = Firebase.auth.currentUser?.uid ?: return@launch
-                    profileRepository.initProfileIfMissing(uid, "")
-                    handlePostSignInNav()
-                    _uiState.value = true
-                }catch (e: Exception){
-                    Log.e("SignInViewModel", "Google sign-in failed", e)
-                }
-            } else {
-                Log.e("Google credentials", "Failed to recognize Google credentials")
-            }
+    _destination.value =
+        if (profile?.username.isNullOrEmpty()) {
+          "init_profile"
+        } else {
+          "home"
         }
-    }
+  }
 
-    /** Sign in with Google */
-    fun signInWithGoogle(context: Context, credentialManager: CredentialManager) {
-        viewModelScope.launch {
-            try {
-                val signInWithGoogleOption =
-                    GetSignInWithGoogleOption.Builder(
-                        serverClientId = context.getString(R.string.web_client_id))
-                        .build()
+  /** Authenticate to Firebase */
+  private fun authenticateFirebaseWithGoogle(credential: Credential) {
+    viewModelScope.launch {
+      // Check that this is the right type of credential
+      if (credential is CustomCredential && credential.type == TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+        try {
+          // Create idToken
+          val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
+          val idToken = googleIdTokenCredential.idToken
 
-                val request =
-                    GetCredentialRequest.Builder().addCredentialOption(signInWithGoogleOption).build()
-
-                val result = credentialManager.getCredential(request = request, context = context)
-
-                authenticateFirebaseWithGoogle(result.credential)
-            } catch (e: NoCredentialException) {
-                Log.e("Google authentication", e.message.orEmpty())
-            } catch (e: GetCredentialException) {
-                Log.e("Google authentication", e.message.orEmpty())
-            }
+          // Authenticate to Firebase
+          val firebaseCredential = GoogleAuthProvider.getCredential(idToken, null)
+          Firebase.auth.signInWithCredential(firebaseCredential).await()
+          val uid = Firebase.auth.currentUser?.uid ?: return@launch
+          profileRepository.initProfileIfMissing(uid, "")
+          handlePostSignInNav()
+          _uiState.value = true
+        } catch (e: Exception) {
+          Log.e("SignInViewModel", "Google sign-in failed", e)
         }
+      } else {
+        Log.e("Google credentials", "Failed to recognize Google credentials")
+      }
     }
+  }
 
-    /** Sign in anonymously */
-    fun signInAnonymously() {
-        viewModelScope.launch {
-            try {
-                Firebase.auth.signInAnonymously().await()
-                val uid = Firebase.auth.currentUser?.uid ?: return@launch
-                profileRepository.initProfileIfMissing(uid, "")
+  /** Sign in with Google */
+  fun signInWithGoogle(context: Context, credentialManager: CredentialManager) {
+    viewModelScope.launch {
+      try {
+        val signInWithGoogleOption =
+            GetSignInWithGoogleOption.Builder(
+                    serverClientId = context.getString(R.string.web_client_id))
+                .build()
 
-                handlePostSignInNav()
+        val request =
+            GetCredentialRequest.Builder().addCredentialOption(signInWithGoogleOption).build()
 
-                _uiState.value = true
-            } catch (e: Exception) {
-                Log.e("SignInViewModel", "Anonymous sign-in failed", e)
-            }
-        }
+        val result = credentialManager.getCredential(request = request, context = context)
+
+        authenticateFirebaseWithGoogle(result.credential)
+      } catch (e: NoCredentialException) {
+        Log.e("Google authentication", e.message.orEmpty())
+      } catch (e: GetCredentialException) {
+        Log.e("Google authentication", e.message.orEmpty())
+      }
     }
+  }
+
+  /** Sign in anonymously */
+  fun signInAnonymously() {
+    viewModelScope.launch {
+      try {
+        Firebase.auth.signInAnonymously().await()
+        val uid = Firebase.auth.currentUser?.uid ?: return@launch
+        profileRepository.initProfileIfMissing(uid, "")
+
+        handlePostSignInNav()
+
+        _uiState.value = true
+      } catch (e: Exception) {
+        Log.e("SignInViewModel", "Anonymous sign-in failed", e)
+      }
+    }
+  }
 }
-

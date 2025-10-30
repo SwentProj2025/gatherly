@@ -47,11 +47,11 @@ data class SettingsUiState(
   val isValid: Boolean
     get() =
         invalidNameMsg == null &&
-        invalidBirthdayMsg == null &&
-        invalidUsernameMsg == null &&
-        name.isNotEmpty() &&
-        username.isNotEmpty() &&
-        (isUsernameAvailable == true)
+            invalidBirthdayMsg == null &&
+            invalidUsernameMsg == null &&
+            name.isNotEmpty() &&
+            username.isNotEmpty() &&
+            (isUsernameAvailable == true)
 }
 /**
  * ViewModel for the Settings screen. This ViewModel manages the state of input fields for the
@@ -119,54 +119,55 @@ class SettingsViewModel(
    *
    * @param id The id of the Profile to be updated.
    */
-  fun updateProfile(id: String, isFirstTime: Boolean){
-      val state = _uiState.value
-      if (!state.isValid) {
-          setErrorMsg("At least one field is not valid.")
-          return
-      }
+  fun updateProfile(id: String, isFirstTime: Boolean) {
+    val state = _uiState.value
+    if (!state.isValid) {
+      setErrorMsg("At least one field is not valid.")
+      return
+    }
 
-      val birthdayDate = DateParser.parse(state.birthday)
-      val originalP =
-          originalProfile ?: run {
+    val birthdayDate = DateParser.parse(state.birthday)
+    val originalP =
+        originalProfile
+            ?: run {
               setErrorMsg("Original profile not loaded.")
               return
-          }
+            }
 
-      viewModelScope.launch {
-          try {
-              val usernameSuccess =
-                  if (isFirstTime) {
-                      repository.registerUsername(id, state.username)
-                  } else {
-                      repository.updateUsername(id, originalProfile?.username, state.username)
-                  }
+    viewModelScope.launch {
+      try {
+        val usernameSuccess =
+            if (isFirstTime) {
+              repository.registerUsername(id, state.username)
+            } else {
+              repository.updateUsername(id, originalProfile?.username, state.username)
+            }
 
-              if (!usernameSuccess) {
-                  setErrorMsg("Username is invalid or already taken.")
-                  return@launch
-              }
+        if (!usernameSuccess) {
+          setErrorMsg("Username is invalid or already taken.")
+          return@launch
+        }
 
-              val updatedProfile =
-                  originalP.copy(
-                      uid = id,
-                      name = state.name,
-                      username = state.username,
-                      school = state.school,
-                      schoolYear = state.schoolYear,
-                      profilePicture = state.profilePictureUrl,
-                      birthday = birthdayDate?.let { Timestamp(it) })
+        val updatedProfile =
+            originalP.copy(
+                uid = id,
+                name = state.name,
+                username = state.username,
+                school = state.school,
+                schoolYear = state.schoolYear,
+                profilePicture = state.profilePictureUrl,
+                birthday = birthdayDate?.let { Timestamp(it) })
 
-              repository.updateProfile(updatedProfile)
-              clearErrorMsg()
-          } catch (e: Exception) {
-              Log.e("SettingsViewModel", "Error saving profile", e)
-              setErrorMsg("Failed to save profile: ${e.message}")
-          }
+        repository.updateProfile(updatedProfile)
+        clearErrorMsg()
+      } catch (e: Exception) {
+        Log.e("SettingsViewModel", "Error saving profile", e)
+        setErrorMsg("Failed to save profile: ${e.message}")
       }
+    }
 
-      return
-      }
+    return
+  }
 
   fun editName(newName: String) {
     _uiState.value =
@@ -197,38 +198,37 @@ class SettingsViewModel(
                 else null)
   }
 
-    fun editUsername(newUsername: String){
-        val normalized = Username.normalize(newUsername)
-        val validFormat = Username.isValid(normalized)
+  fun editUsername(newUsername: String) {
+    val normalized = Username.normalize(newUsername)
+    val validFormat = Username.isValid(normalized)
+    _uiState.value =
+        _uiState.value.copy(
+            username = newUsername,
+            invalidUsernameMsg =
+                when {
+                  newUsername.isBlank() -> "Username cannot be empty"
+                  !validFormat -> "Invalid username format (3–20 chars, lowercase, ., -, _ allowed)"
+                  else -> null
+                },
+            isUsernameAvailable = null)
+    if (validFormat) {
+      checkUsernameAvailability(normalized)
+    }
+  }
+
+  private fun checkUsernameAvailability(username: String) {
+    viewModelScope.launch {
+      try {
+        val available = repository.isUsernameAvailable(username)
         _uiState.value =
             _uiState.value.copy(
-                username = newUsername,
-                invalidUsernameMsg =
-                    when {
-                        newUsername.isBlank() -> "Username cannot be empty"
-                        !validFormat -> "Invalid username format (3–20 chars, lowercase, ., -, _ allowed)"
-                        else -> null
-                    },
-                isUsernameAvailable = null
-            )
-        if(validFormat){
-            checkUsernameAvailability(normalized)
-        }
+                isUsernameAvailable = available,
+                invalidUsernameMsg = if (!available) "This username is already taken" else null)
+      } catch (e: Exception) {
+        Log.e("SettingsViewModel", "Failed to check username", e)
+        _uiState.value =
+            _uiState.value.copy(invalidUsernameMsg = "Unable to verify username availability")
+      }
     }
-
-    private fun checkUsernameAvailability(username: String) {
-        viewModelScope.launch {
-            try {
-                val available = repository.isUsernameAvailable(username)
-                _uiState.value =
-                    _uiState.value.copy(
-                        isUsernameAvailable = available,
-                        invalidUsernameMsg = if (!available) "This username is already taken" else null)
-            } catch (e: Exception) {
-                Log.e("SettingsViewModel", "Failed to check username", e)
-                _uiState.value =
-                    _uiState.value.copy(invalidUsernameMsg = "Unable to verify username availability")
-            }
-        }
-    }
+  }
 }

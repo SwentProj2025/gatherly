@@ -108,28 +108,26 @@ fun SettingsScreen(
 
               Spacer(modifier = Modifier.height(fieldSpacingRegular))
 
-            // Username Field
-            SettingsField(
-                label = stringResource(R.string.settings_label_username),
-                value = uiState.username,
-                onValueChange = { settingsViewModel.editUsername(it) },
-                testTag = SettingsScreenTestTags.USERNAME,
-                errorMessage = uiState.invalidUsernameMsg
-            )
+              // Username Field
+              SettingsField(
+                  label = stringResource(R.string.settings_label_username),
+                  value = uiState.username,
+                  onValueChange = { settingsViewModel.editUsername(it) },
+                  testTag = SettingsScreenTestTags.USERNAME,
+                  errorMessage = uiState.invalidUsernameMsg)
 
-            if (uiState.isUsernameAvailable == true && uiState.invalidUsernameMsg == null) {
+              if (uiState.isUsernameAvailable == true && uiState.invalidUsernameMsg == null) {
                 Text(
                     text = stringResource(R.string.settings_valid_username),
                     color = MaterialTheme.colorScheme.primary,
                     fontSize = 14.sp,
-                    modifier = Modifier.padding(top = dimensionResource(id = R.dimen.padding_extra_small))
-                )
-            }
+                    modifier =
+                        Modifier.padding(top = dimensionResource(id = R.dimen.padding_extra_small)))
+              }
 
-            Spacer(modifier = Modifier.height(fieldSpacingRegular))
+              Spacer(modifier = Modifier.height(fieldSpacingRegular))
 
-
-            // Edit Photo Button currently non-functional, will be implemented in next sprint
+              // Edit Photo Button currently non-functional, will be implemented in next sprint
               Button(
                   onClick = { /* Handle edit photo will be handled in next sprint*/},
                   modifier =
@@ -183,7 +181,9 @@ fun SettingsScreen(
               // Save Button
               Button(
                   onClick = {
-                    currentUser?.uid?.let { uid -> settingsViewModel.updateProfile(uid, isFirstTime = false) }
+                    currentUser?.uid?.let { uid ->
+                      settingsViewModel.updateProfile(uid, isFirstTime = false)
+                    }
                   },
                   modifier =
                       Modifier.fillMaxWidth(0.8f)

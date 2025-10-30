@@ -11,151 +11,148 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-/**
- * UI tests for the [InitProfileScreen].
- */
+/** UI tests for the [InitProfileScreen]. */
 @RunWith(AndroidJUnit4::class)
 class InitProfileScreenTest : FirestoreGatherlyTest() {
 
-    @get:Rule val composeRule = createComposeRule()
+  @get:Rule val composeRule = createComposeRule()
 
-    private lateinit var navigationActions: NavigationActions
+  private lateinit var navigationActions: NavigationActions
 
-    @Before
-    override fun setUp() {
-        super.setUp()
-        // Pass a no-op NavigationActions, navigation won’t be tested here.
-        composeRule.setContent {
-            InitProfileScreen()
-        }
-    }
+  @Before
+  override fun setUp() {
+    super.setUp()
+    // Pass a no-op NavigationActions, navigation won’t be tested here.
+    composeRule.setContent { InitProfileScreen() }
+  }
 
+  /** Ensures all UI components are visible when screen loads. */
+  @Test
+  fun onboardingScreen_componentsAreDisplayed() {
+    composeRule
+        .onNodeWithTag(SettingsScreenTestTags.PROFILE_PICTURE)
+        .assertExists()
+        .assertIsDisplayed()
+    composeRule.onNodeWithTag("onboarding_username_field").assertExists().assertIsDisplayed()
+    composeRule.onNodeWithTag("onboarding_name_field").assertExists().assertIsDisplayed()
+    composeRule.onNodeWithTag("onboarding_school_field").assertExists().assertIsDisplayed()
+    composeRule.onNodeWithTag("onboarding_school_year_field").assertExists().assertIsDisplayed()
+    composeRule.onNodeWithTag("onboarding_save_button").assertExists().assertIsDisplayed()
+  }
 
+  /** Verifies that username is mandatory and shows an error when cleared. */
+  @Test
+  fun onboardingScreen_showsError_whenUsernameEmpty() {
+    val usernameField = composeRule.onNodeWithTag("onboarding_username_field")
 
-    /** Ensures all UI components are visible when screen loads. */
-    @Test
-    fun onboardingScreen_componentsAreDisplayed() {
-        composeRule.onNodeWithTag(SettingsScreenTestTags.PROFILE_PICTURE).assertExists().assertIsDisplayed()
-        composeRule.onNodeWithTag("onboarding_username_field").assertExists().assertIsDisplayed()
-        composeRule.onNodeWithTag("onboarding_name_field").assertExists().assertIsDisplayed()
-        composeRule.onNodeWithTag("onboarding_school_field").assertExists().assertIsDisplayed()
-        composeRule.onNodeWithTag("onboarding_school_year_field").assertExists().assertIsDisplayed()
-        composeRule.onNodeWithTag("onboarding_save_button").assertExists().assertIsDisplayed()
-    }
+    // Trigger recomposition by typing then clearing
+    usernameField.performTextInput("tempuser")
+    usernameField.performTextClearance()
+    composeRule.waitForIdle()
 
-    /** Verifies that username is mandatory and shows an error when cleared. */
-    @Test
-    fun onboardingScreen_showsError_whenUsernameEmpty() {
-        val usernameField = composeRule.onNodeWithTag("onboarding_username_field")
+    composeRule.onNodeWithTag("onboarding_username_field_error").assertIsDisplayed()
+  }
 
-        // Trigger recomposition by typing then clearing
-        usernameField.performTextInput("tempuser")
-        usernameField.performTextClearance()
-        composeRule.waitForIdle()
+  /** Verifies that name is mandatory and shows an error when cleared. */
+  @Test
+  fun onboardingScreen_showsError_whenNameEmpty() {
+    val nameField = composeRule.onNodeWithTag("onboarding_name_field")
 
-        composeRule.onNodeWithTag("onboarding_username_field_error").assertIsDisplayed()
-    }
+    // Trigger recomposition
+    nameField.performTextInput("A")
+    nameField.performTextClearance()
+    composeRule.waitForIdle()
 
-    /** Verifies that name is mandatory and shows an error when cleared. */
-    @Test
-    fun onboardingScreen_showsError_whenNameEmpty() {
-        val nameField = composeRule.onNodeWithTag("onboarding_name_field")
+    composeRule.onNodeWithTag("onboarding_name_field_error").assertIsDisplayed()
+  }
 
-        // Trigger recomposition
-        nameField.performTextInput("A")
-        nameField.performTextClearance()
-        composeRule.waitForIdle()
+  /** Ensures that both username and name must be valid for the save button to be enabled. */
+  @Test
+  fun onboardingScreen_saveButton_enabledOnlyWhenValid() {
+    // Invalid (both empty)
+    composeRule.onNodeWithTag("onboarding_save_button").assertIsNotEnabled()
 
-        composeRule.onNodeWithTag("onboarding_name_field_error").assertIsDisplayed()
-    }
+    // Type only username → still invalid (name missing)
+    composeRule.onNodeWithTag("onboarding_username_field").performTextInput("alice_ok")
+    composeRule.waitForIdle()
+    composeRule.onNodeWithTag("onboarding_save_button").assertIsNotEnabled()
 
-    /** Ensures that both username and name must be valid for the save button to be enabled. */
-    @Test
-    fun onboardingScreen_saveButton_enabledOnlyWhenValid() {
-        // Invalid (both empty)
-        composeRule.onNodeWithTag("onboarding_save_button").assertIsNotEnabled()
+    // Add name → becomes valid
+    composeRule.onNodeWithTag("onboarding_name_field").performTextInput("Alice")
+    composeRule.waitForIdle()
+    composeRule.onNodeWithTag("onboarding_save_button").assertIsEnabled()
+  }
 
-        // Type only username → still invalid (name missing)
-        composeRule.onNodeWithTag("onboarding_username_field").performTextInput("alice_ok")
-        composeRule.waitForIdle()
-        composeRule.onNodeWithTag("onboarding_save_button").assertIsNotEnabled()
+  /** Ensures that an invalid username format triggers the appropriate error message. */
+  @Test
+  fun onboardingScreen_showsError_whenUsernameInvalid() {
+    composeRule.onNodeWithTag("onboarding_username_field").performTextInput("!!bad!!")
+    composeRule.waitForIdle()
 
-        // Add name → becomes valid
-        composeRule.onNodeWithTag("onboarding_name_field").performTextInput("Alice")
-        composeRule.waitForIdle()
-        composeRule.onNodeWithTag("onboarding_save_button").assertIsEnabled()
-    }
+    composeRule.onNodeWithTag("onboarding_username_field_error").assertIsDisplayed()
+  }
 
-    /** Ensures that an invalid username format triggers the appropriate error message. */
-    @Test
-    fun onboardingScreen_showsError_whenUsernameInvalid() {
-        composeRule.onNodeWithTag("onboarding_username_field").performTextInput("!!bad!!")
-        composeRule.waitForIdle()
+  /** Ensures that valid inputs hide all error messages. */
+  @Test
+  fun onboardingScreen_noError_whenFieldsValid() {
+    composeRule.onNodeWithTag("onboarding_username_field").performTextInput("validuser")
+    composeRule.onNodeWithTag("onboarding_name_field").performTextInput("Alice")
+    composeRule.waitForIdle()
 
-        composeRule.onNodeWithTag("onboarding_username_field_error").assertIsDisplayed()
-    }
+    composeRule.onNodeWithTag("onboarding_username_field_error").assertDoesNotExist()
+    composeRule.onNodeWithTag("onboarding_name_field_error").assertDoesNotExist()
+  }
 
-    /** Ensures that valid inputs hide all error messages. */
-    @Test
-    fun onboardingScreen_noError_whenFieldsValid() {
-        composeRule.onNodeWithTag("onboarding_username_field").performTextInput("validuser")
-        composeRule.onNodeWithTag("onboarding_name_field").performTextInput("Alice")
-        composeRule.waitForIdle()
+  /** Verifies that the username field retains its entered text after input. */
+  @Test
+  fun onboardingScreen_usernameField_retainsValue() {
+    val username = "persistentuser"
+    composeRule.onNodeWithTag("onboarding_username_field").performTextInput(username)
+    composeRule.waitForIdle()
+    composeRule.onNodeWithTag("onboarding_username_field").assertTextEquals(username)
+  }
 
-        composeRule.onNodeWithTag("onboarding_username_field_error").assertDoesNotExist()
-        composeRule.onNodeWithTag("onboarding_name_field_error").assertDoesNotExist()
-    }
+  /** Verifies that the name field retains its entered text after input. */
+  @Test
+  fun onboardingScreen_nameField_retainsValue() {
+    val name = "TestUser"
+    composeRule.onNodeWithTag("onboarding_name_field").performTextInput(name)
+    composeRule.waitForIdle()
+    composeRule.onNodeWithTag("onboarding_name_field").assertTextEquals(name)
+  }
 
-    /** Verifies that the username field retains its entered text after input. */
-    @Test
-    fun onboardingScreen_usernameField_retainsValue() {
-        val username = "persistentuser"
-        composeRule.onNodeWithTag("onboarding_username_field").performTextInput(username)
-        composeRule.waitForIdle()
-        composeRule.onNodeWithTag("onboarding_username_field").assertTextEquals(username)
-    }
+  /** Simulates user filling valid inputs and clicking the save button. */
+  @Test
+  fun onboardingScreen_clickSaveButton_isEnabledAndClickable() {
+    composeRule.onNodeWithTag("onboarding_username_field").performTextInput("user123")
+    composeRule.onNodeWithTag("onboarding_name_field").performTextInput("User 123")
+    composeRule.waitForIdle()
 
-    /** Verifies that the name field retains its entered text after input. */
-    @Test
-    fun onboardingScreen_nameField_retainsValue() {
-        val name = "TestUser"
-        composeRule.onNodeWithTag("onboarding_name_field").performTextInput(name)
-        composeRule.waitForIdle()
-        composeRule.onNodeWithTag("onboarding_name_field").assertTextEquals(name)
-    }
+    val saveButton = composeRule.onNodeWithTag("onboarding_save_button")
+    saveButton.assertIsEnabled()
+    saveButton.performClick()
+    saveButton.assertExists()
+  }
 
-    /** Simulates user filling valid inputs and clicking the save button. */
-    @Test
-    fun onboardingScreen_clickSaveButton_isEnabledAndClickable() {
-        composeRule.onNodeWithTag("onboarding_username_field").performTextInput("user123")
-        composeRule.onNodeWithTag("onboarding_name_field").performTextInput("User 123")
-        composeRule.waitForIdle()
+  /** Ensures school and school year inputs don’t affect save button availability. */
+  @Test
+  fun onboardingScreen_optionalFields_doNotBlockSave() {
+    composeRule.onNodeWithTag("onboarding_username_field").performTextInput("alice_ok")
+    composeRule.onNodeWithTag("onboarding_name_field").performTextInput("Alice")
 
-        val saveButton = composeRule.onNodeWithTag("onboarding_save_button")
-        saveButton.assertIsEnabled()
-        saveButton.performClick()
-        saveButton.assertExists()
-    }
+    composeRule.onNodeWithTag("onboarding_school_field").performTextInput("EPFL")
+    composeRule.onNodeWithTag("onboarding_school_year_field").performTextInput("BA5")
 
-    /** Ensures school and school year inputs don’t affect save button availability. */
-    @Test
-    fun onboardingScreen_optionalFields_doNotBlockSave() {
-        composeRule.onNodeWithTag("onboarding_username_field").performTextInput("alice_ok")
-        composeRule.onNodeWithTag("onboarding_name_field").performTextInput("Alice")
+    composeRule.waitForIdle()
+    composeRule.onNodeWithTag("onboarding_save_button").assertIsEnabled()
+  }
 
-        composeRule.onNodeWithTag("onboarding_school_field").performTextInput("EPFL")
-        composeRule.onNodeWithTag("onboarding_school_year_field").performTextInput("BA5")
+  /** Ensures valid username displays success message text. */
+  @Test
+  fun onboardingScreen_showsValidUsernameConfirmationText() {
+    composeRule.onNodeWithTag("onboarding_username_field").performTextInput("uniqueuser")
+    composeRule.waitForIdle()
 
-        composeRule.waitForIdle()
-        composeRule.onNodeWithTag("onboarding_save_button").assertIsEnabled()
-    }
-
-    /** Ensures valid username displays success message text. */
-    @Test
-    fun onboardingScreen_showsValidUsernameConfirmationText() {
-        composeRule.onNodeWithTag("onboarding_username_field").performTextInput("uniqueuser")
-        composeRule.waitForIdle()
-
-        composeRule.onNodeWithText("This username is available!").assertExists()
-    }
+    composeRule.onNodeWithText("This username is available!").assertExists()
+  }
 }

@@ -16,6 +16,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import com.android.gatherly.ui.authentication.InitProfileScreen
 import com.android.gatherly.ui.authentication.SignInScreen
 import com.android.gatherly.ui.events.AddEventScreen
 import com.android.gatherly.ui.events.EditEventsScreen
@@ -27,7 +28,6 @@ import com.android.gatherly.ui.map.MapScreen
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.Screen
 import com.android.gatherly.ui.profile.ProfileScreen
-import com.android.gatherly.ui.authentication.InitProfileScreen
 import com.android.gatherly.ui.settings.SettingsScreen
 import com.android.gatherly.ui.theme.GatherlyTheme
 import com.android.gatherly.ui.todo.AddToDoScreen
@@ -75,9 +75,7 @@ fun GatherlyApp(
         route = Screen.SignIn.name,
     ) {
       composable(Screen.SignIn.route) {
-        SignInScreen(
-            credentialManager = credentialManager,
-            navigationActions = navigationActions)
+        SignInScreen(credentialManager = credentialManager, navigationActions = navigationActions)
       }
     }
     // HOMEPAGE COMPOSABLE  ------------------------------
@@ -230,16 +228,14 @@ fun GatherlyApp(
       }
     }
 
-      // INIT PROFILE COMPOSABLE  ------------------------------
-      navigation(
-          startDestination = Screen.InitProfileScreen.route,
-          route = Screen.InitProfileScreen.name,
-      ) {
-          composable(Screen.InitProfileScreen.route) {
-              InitProfileScreen(
-                  navigationActions = navigationActions
-              )
-          }
+    // INIT PROFILE COMPOSABLE  ------------------------------
+    navigation(
+        startDestination = Screen.InitProfileScreen.route,
+        route = Screen.InitProfileScreen.name,
+    ) {
+      composable(Screen.InitProfileScreen.route) {
+        InitProfileScreen(navigationActions = navigationActions)
       }
+    }
   }
 }
