@@ -35,7 +35,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
-import com.android.gatherly.ui.events.AddEventScreenTestTags
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
@@ -69,6 +68,9 @@ object AddToDoScreenTestTags {
 
   /** Tag for displaying error messages under text fields. */
   const val ERROR_MESSAGE = "errorMessage"
+
+  /** Tag for displaying error messages under text fields. */
+  const val LOCATION_MENU = "locationMenu"
 }
 
 /**
@@ -190,19 +192,18 @@ fun AddToDoScreen(
                     addTodoViewModel.onLocationChanged(it)
                     showLocationDropdown = it.isNotBlank()
                   },
-                  label = { Text(stringResource(R.string.events_location_field_label)) },
-                  placeholder = {
-                    Text(stringResource(R.string.events_location_field_placeholder))
-                  },
+                  label = { Text(stringResource(R.string.todos_location_field_label)) },
+                  placeholder = { Text(stringResource(R.string.todos_location_field_placeholder)) },
                   colors = textFieldColors,
-                  modifier = Modifier.fillMaxWidth().testTag(AddEventScreenTestTags.INPUT_LOCATION))
+                  modifier =
+                      Modifier.fillMaxWidth().testTag(AddToDoScreenTestTags.INPUT_TODO_LOCATION))
 
               DropdownMenu(
                   expanded = showLocationDropdown && todoUIState.suggestions.isNotEmpty(),
                   onDismissRequest = { showLocationDropdown = false },
                   properties = PopupProperties(focusable = false),
                   modifier =
-                      Modifier.testTag(AddEventScreenTestTags.LOCATION_MENU)
+                      Modifier.testTag(AddToDoScreenTestTags.LOCATION_MENU)
                           .fillMaxWidth()
                           .height(200.dp)) {
                     todoUIState.suggestions.take(3).forEach { loc ->
@@ -214,7 +215,7 @@ fun AddToDoScreen(
                             addTodoViewModel.selectLocation(loc)
                             showLocationDropdown = false
                           },
-                          modifier = Modifier.testTag(AddEventScreenTestTags.INPUT_LOCATION))
+                          modifier = Modifier.testTag(AddToDoScreenTestTags.INPUT_TODO_LOCATION))
                     }
                     if (todoUIState.suggestions.size > 3) {
                       DropdownMenuItem(text = { Text("More...") }, onClick = {})

@@ -40,7 +40,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
-import com.android.gatherly.ui.events.EditEventsScreenTestTags
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
@@ -204,13 +203,11 @@ fun EditToDoScreen(
                     editTodoViewModel.onLocationChanged(it)
                     showLocationDropdown = it.isNotBlank()
                   },
-                  label = { Text(stringResource(R.string.events_location_field_label)) },
-                  placeholder = {
-                    Text(stringResource(R.string.events_location_field_placeholder))
-                  },
+                  label = { Text(stringResource(R.string.todos_location_field_label)) },
+                  placeholder = { Text(stringResource(R.string.todos_location_field_placeholder)) },
                   colors = textFieldColors,
                   modifier =
-                      Modifier.fillMaxWidth().testTag(EditEventsScreenTestTags.INPUT_LOCATION))
+                      Modifier.fillMaxWidth().testTag(EditToDoScreenTestTags.INPUT_TODO_LOCATION))
 
               DropdownMenu(
                   expanded = showLocationDropdown && todoUIState.suggestions.isNotEmpty(),
@@ -229,7 +226,7 @@ fun EditToDoScreen(
                             editTodoViewModel.selectLocation(loc)
                             showLocationDropdown = false
                           },
-                          modifier = Modifier.testTag(EditEventsScreenTestTags.INPUT_LOCATION))
+                          modifier = Modifier.testTag(EditToDoScreenTestTags.INPUT_TODO_LOCATIONg))
                     }
                     if (todoUIState.suggestions.size > 3) {
                       DropdownMenuItem(text = { Text("More...") }, onClick = {})
