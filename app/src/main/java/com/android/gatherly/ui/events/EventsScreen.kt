@@ -142,7 +142,9 @@ fun EventsScreen(
   val upcomingEvents = uiState.participatedEventList
   val myOwnEvents = uiState.createdEventList
 
-  val isPopupOn = remember { mutableStateOf(false) }
+  val isPopupOnBrowser = remember { mutableStateOf(false) }
+  val isPopupOnUpcoming = remember { mutableStateOf(false) }
+  val isPopupOnYourE = remember { mutableStateOf(false) }
 
   LaunchedEffect(currentUserIdFromVM) {
     if (currentUserIdFromVM.isNotBlank()) {
@@ -191,11 +193,11 @@ fun EventsScreen(
               if (browserEvents.isNotEmpty()) {
                 items(browserEvents.size) { index ->
                   BrowserEventsItem(
-                      event = browserEvents[index], onClick = { isPopupOn.value = true })
-                  if (isPopupOn.value) {
+                      event = browserEvents[index], onClick = { isPopupOnBrowser.value = true })
+                  if (isPopupOnBrowser.value) {
                     BrowserEventsPopUp(
                         event = browserEvents[index],
-                        shouldShowDialog = isPopupOn,
+                        shouldShowDialog = isPopupOnBrowser,
                         participate = {
                           eventsViewModel.onParticipate(
                               eventId = browserEvents[index].id,
@@ -236,12 +238,12 @@ fun EventsScreen(
               if (upcomingEvents.isNotEmpty()) {
                 items(upcomingEvents.size) { index ->
                   UpcomingEventsItem(
-                      event = upcomingEvents[index], onClick = { isPopupOn.value = true })
+                      event = upcomingEvents[index], onClick = { isPopupOnUpcoming.value = true })
 
-                  if (isPopupOn.value) {
+                  if (isPopupOnUpcoming.value) {
                     UpComingEventsPopUp(
                         event = upcomingEvents[index],
-                        shouldShowDialog = isPopupOn,
+                        shouldShowDialog = isPopupOnUpcoming,
                         unparticipate = {
                           eventsViewModel.onUnregister(
                               eventId = upcomingEvents[index].id,
@@ -281,12 +283,13 @@ fun EventsScreen(
 
               if (myOwnEvents.isNotEmpty()) {
                 items(myOwnEvents.size) { index ->
-                  MyOwnEventsItem(event = myOwnEvents[index], onClick = { isPopupOn.value = true })
+                  MyOwnEventsItem(
+                      event = myOwnEvents[index], onClick = { isPopupOnYourE.value = true })
 
-                  if (isPopupOn.value) {
+                  if (isPopupOnYourE.value) {
                     MyOwnEventsPopUp(
                         event = myOwnEvents[index],
-                        shouldShowDialog = isPopupOn,
+                        shouldShowDialog = isPopupOnYourE,
                         cancelYourEvent = { navigateToEditEvent(myOwnEvents[index]) })
                   }
                 }
@@ -471,7 +474,7 @@ fun UpComingEventsPopUp(
     unparticipate: () -> Unit
 ) {
   AlertDialog(
-      containerColor = MaterialTheme.colorScheme.primary,
+      containerColor = MaterialTheme.colorScheme.onTertiaryContainer,
       titleContentColor = MaterialTheme.colorScheme.onPrimary,
       textContentColor = MaterialTheme.colorScheme.onPrimary,
       title = {
@@ -493,7 +496,9 @@ fun UpComingEventsPopUp(
         Button(
             onClick = { shouldShowDialog.value = false },
             modifier = Modifier.testTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON)) {
-              Text(text = stringResource(R.string.goback_button_title), color = Color.White)
+              Text(
+                  text = stringResource(R.string.goback_button_title),
+                  color = MaterialTheme.colorScheme.onPrimary)
             }
       },
       onDismissRequest = { shouldShowDialog.value = false },
@@ -504,7 +509,9 @@ fun UpComingEventsPopUp(
               shouldShowDialog.value = false
             },
             modifier = Modifier.testTag(EventsScreenTestTags.UNREGISTER_BUTTON)) {
-              Text(text = stringResource(R.string.unregister_button_title), color = Color.White)
+              Text(
+                  text = stringResource(R.string.unregister_button_title),
+                  color = MaterialTheme.colorScheme.onPrimary)
             }
       },
   )
@@ -522,7 +529,7 @@ fun BrowserEventsPopUp(
     participate: () -> Unit
 ) {
   AlertDialog(
-      containerColor = MaterialTheme.colorScheme.primary,
+      containerColor = MaterialTheme.colorScheme.onTertiaryContainer,
       titleContentColor = MaterialTheme.colorScheme.onPrimary,
       textContentColor = MaterialTheme.colorScheme.onPrimary,
       title = {
@@ -545,7 +552,9 @@ fun BrowserEventsPopUp(
         Button(
             onClick = { shouldShowDialog.value = false },
             modifier = Modifier.testTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON)) {
-              Text(text = stringResource(R.string.goback_button_title), color = Color.White)
+              Text(
+                  text = stringResource(R.string.goback_button_title),
+                  color = MaterialTheme.colorScheme.onPrimary)
             }
       },
       onDismissRequest = { shouldShowDialog.value = false },
@@ -556,7 +565,9 @@ fun BrowserEventsPopUp(
               shouldShowDialog.value = false
             },
             modifier = Modifier.testTag(EventsScreenTestTags.PARTICIPATE_BUTTON)) {
-              Text(text = stringResource(R.string.participate_button_title), color = Color.White)
+              Text(
+                  text = stringResource(R.string.participate_button_title),
+                  color = MaterialTheme.colorScheme.onPrimary)
             }
       },
   )
@@ -574,7 +585,7 @@ fun MyOwnEventsPopUp(
     cancelYourEvent: () -> Unit
 ) {
   AlertDialog(
-      containerColor = MaterialTheme.colorScheme.primary,
+      containerColor = MaterialTheme.colorScheme.onTertiaryContainer,
       titleContentColor = MaterialTheme.colorScheme.onPrimary,
       textContentColor = MaterialTheme.colorScheme.onPrimary,
       title = {
@@ -597,7 +608,9 @@ fun MyOwnEventsPopUp(
         Button(
             onClick = { shouldShowDialog.value = false },
             modifier = Modifier.testTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON)) {
-              Text(text = stringResource(R.string.goback_button_title), color = Color.White)
+              Text(
+                  text = stringResource(R.string.goback_button_title),
+                  color = MaterialTheme.colorScheme.onPrimary)
             }
       },
       onDismissRequest = { shouldShowDialog.value = false },
@@ -608,7 +621,9 @@ fun MyOwnEventsPopUp(
               shouldShowDialog.value = false
             },
             modifier = Modifier.testTag(EventsScreenTestTags.EDIT_EVENT_BUTTON)) {
-              Text(text = stringResource(R.string.edit_button_title), color = Color.White)
+              Text(
+                  text = stringResource(R.string.edit_button_title),
+                  color = MaterialTheme.colorScheme.onPrimary)
             }
       },
   )
