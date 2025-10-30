@@ -2,6 +2,8 @@ package com.android.gatherly.ui.todo
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.android.gatherly.model.map.Location
+import com.android.gatherly.model.map.NominatimLocationRepository
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosRepository
@@ -13,6 +15,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import okhttp3.OkHttpClient
 
 /**
  * Represents the UI state of the Add ToDo screen.
@@ -37,9 +40,23 @@ data class AddTodoUiState(
     val saveError: String? = null,
     val saveSuccess: Boolean = false,
 
-    // val isLocLoading: Boolean = false,
-    // val suggestions: List<Location> = emptyList()
+    val isLocLoading: Boolean = false,
+    val suggestions: List<Location> = emptyList()
 )
+
+// create a HTTP Client for Nominatim
+private var client: OkHttpClient =
+    OkHttpClient.Builder()
+        .addInterceptor { chain ->
+            val request =
+                chain
+                    .request()
+                    .newBuilder()
+                    .header("User-Agent", "BootcampApp (croissant.kerjan@gmail.com)")
+                    .build()
+            chain.proceed(request)
+        }
+        .build()
 
 /**
  * ViewModel responsible for managing the "Add ToDo" screen.
@@ -54,13 +71,15 @@ data class AddTodoUiState(
  */
 class AddTodoViewModel(
     private val todoRepository: ToDosRepository = ToDosRepositoryProvider.repository,
-    // private val locationRepository: LocationRepository =
-    // NominatimLocationRepository(HttpClientProvider.client)
+    private val nominatimClient: NominatimLocationRepository = NominatimLocationRepository(client)
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(AddTodoUiState())
 
   /** Public immutable access to the Add ToDo UI state. */
   val uiState: StateFlow<AddTodoUiState> = _uiState.asStateFlow()
+
+    // Chosen location
+    private var chosenLocation: Location? = null
 
   /** Clears the error message in the UI state. */
   fun clearErrorMsg() {
@@ -71,9 +90,6 @@ class AddTodoViewModel(
   fun clearSaveSuccess() {
     _uiState.value = _uiState.value.copy(saveSuccess = false)
   }
-
-  // private var selectedLocation: Location? = null
-  // private var searchJob: Job? = null
 
   /**
    * Updates the title field and validates that it is not blank.
@@ -109,20 +125,6 @@ class AddTodoViewModel(
         _uiState.value.copy(
             assignee = newValue,
             assigneeError = if (newValue.isBlank()) "Assignee cannot be empty" else null)
-  }
-
-  /**
-   * Temporarily updates the location field.
-   *
-   * Currently stores it as a raw string until the Location class and repository are implemented.
-   *
-   * @param newValue The name or description of the location.
-   */
-  fun onLocationChanged(newValue: String) {
-    _uiState.value =
-        _uiState.value.copy(
-            location = newValue,
-            locationError = if (newValue.isBlank()) "Location cannot be empty" else null)
   }
 
   /**
@@ -188,37 +190,40 @@ class AddTodoViewModel(
     }
   }
 
-  /*
-  fun onLocationChanged(newValue: String) {
-      selectedLocation = null
-      _uiState.value = _uiState.value.copy(location = newValue)
+    /**
+    * Updates the event location
+    *
+    * @param updatedLocation the string with which to update
+    */
+    fun updateLocation(updatedLocation: String) {
+        _uiState.value = _uiState.value.copy(location = updatedLocation)
+    }
 
-      searchJob?.cancel()
-      if (newValue.isBlank()) {
-          _uiState.value = _uiState.value.copy(suggestions = emptyList(), isLocLoading = false)
-          return
-      }
+    /*----------------------------------Location--------------------------------------------------*/
 
-      searchJob = viewModelScope.launch {
-          _uiState.value = _uiState.value.copy(isLocLoading = true)
-          delay(300)
-          try {
-              val results = locationRepository.search(newValue).take(5)
-              _uiState.value = _uiState.value.copy(suggestions = results, isLocLoading = false)
-          } catch (e: Exception) {
-              _uiState.value = _uiState.value.copy(suggestions = emptyList(), isLocLoading = false)
-          }
-      }
-  }
+    /**
+    * Updates the location to the selected location
+    *
+    * @param location the selected location
+    */
+    fun selectLocation(location: Location) {
+        _uiState.value = _uiState.value.copy(location = location.name, suggestions = emptyList())
+        chosenLocation = location
+    }
 
-  fun onSelectLocation(loc: Location) {
-      selectedLocation = loc
-      _uiState.value = _uiState.value.copy(
-          location = loc.name,
-          suggestions = emptyList()
-      )
-  }
-   */
+    /*----------------------------------Helpers---------------------------------------------------*/
+
+    /**
+    * Given a string, search locations with Nominatim
+    *
+    * @param location the substring with which to search
+    */
+    fun searchLocationByString(location: String) {
+        viewModelScope.launch {
+            val list = nominatimClient.search(location)
+            _uiState.value = _uiState.value.copy(suggestions = list)
+        }
+    }
 
   /**
    * Attempts to create and save a new [ToDo] entry to the repository.
@@ -268,10 +273,6 @@ class AddTodoViewModel(
               Timestamp(sdfTime.parse(validated.dueTime)!!)
             } else null
 
-        // val loc = selectedLocation?.let { l ->
-        //  Location(latitude = l.latitude, longitude = l.longitude, name = l.name)
-        // }
-
         val todo =
             ToDo(
                 uid = uid,
@@ -280,7 +281,7 @@ class AddTodoViewModel(
                 assigneeName = validated.assignee,
                 dueDate = dueDateTimestamp,
                 dueTime = dueTimeTimestamp,
-                location = null, // selectedLocation,
+                location = chosenLocation,
                 status = ToDoStatus.ONGOING,
                 ownerId = "" // will be filled by Firestore repo
                 )

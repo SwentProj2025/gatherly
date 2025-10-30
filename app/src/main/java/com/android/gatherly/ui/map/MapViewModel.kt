@@ -14,7 +14,7 @@ import com.android.gatherly.model.map.DisplayedMapElement
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosRepository
-import com.android.gatherly.model.todo.ToDosRepositoryLocalMapTest
+import com.android.gatherly.model.todo.ToDosRepositoryFirestore
 import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
@@ -82,8 +82,8 @@ private fun getDrawableEvents(events: List<Event>): List<Event> {
  * @property todosRepository Repository for accessing todo data.
  */
 class MapViewModel(
-    private val todosRepository: ToDosRepository = ToDosRepositoryLocalMapTest(),
-    private val eventsRepository: EventsRepository = EventsRepositoryFirestore(Firebase.firestore)
+  private val todosRepository: ToDosRepository = ToDosRepositoryFirestore(Firebase.firestore),
+  private val eventsRepository: EventsRepository = EventsRepositoryFirestore(Firebase.firestore)
 ) : ViewModel() {
 
   /** StateFlow that emits the current UI state for the Map screen. */
