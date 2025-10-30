@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -20,17 +22,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.integerResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
+import kotlinx.coroutines.delay
 
 // Portions of the code in this file are copy-pasted from the Bootcamp solution provided by the
 // SwEnt staff.
@@ -60,6 +68,9 @@ object AddToDoScreenTestTags {
 
   /** Tag for displaying error messages under text fields. */
   const val ERROR_MESSAGE = "errorMessage"
+
+  /** Tag for displaying error messages under text fields. */
+  const val LOCATION_MENU = "locationMenu"
 }
 
 /**
@@ -93,10 +104,21 @@ fun AddToDoScreen(
           focusedTextColor = MaterialTheme.colorScheme.primary,
       )
 
+  // Local state for the dropdown visibility
+  var showLocationDropdown by remember { mutableStateOf(false) }
+
   LaunchedEffect(errorMsg) {
     if (errorMsg != null) {
       Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
       addTodoViewModel.clearErrorMsg()
+    }
+  }
+
+  // Search location when input changes
+  LaunchedEffect(todoUIState.location) {
+    if (todoUIState.location.isNotBlank()) {
+      delay(1000)
+      addTodoViewModel.searchLocationByString(todoUIState.location)
     }
   }
 
@@ -163,16 +185,42 @@ fun AddToDoScreen(
                   modifier =
                       Modifier.fillMaxWidth().testTag(AddToDoScreenTestTags.INPUT_TODO_ASSIGNEE))
 
-              // Placeholder Location Input
+              // Location Input
               OutlinedTextField(
                   value = todoUIState.location,
-                  onValueChange = { addTodoViewModel.onLocationChanged(it) },
+                  onValueChange = {
+                    addTodoViewModel.onLocationChanged(it)
+                    showLocationDropdown = it.isNotBlank()
+                  },
                   label = { Text(stringResource(R.string.todos_location_field_label)) },
-                  placeholder = { Text(stringResource(R.string.todos_location_field_label)) },
+                  placeholder = { Text(stringResource(R.string.todos_location_field_placeholder)) },
                   colors = textFieldColors,
                   modifier =
-                      Modifier.fillMaxWidth().testTag(AddToDoScreenTestTags.INPUT_TODO_LOCATION),
-              )
+                      Modifier.fillMaxWidth().testTag(AddToDoScreenTestTags.INPUT_TODO_LOCATION))
+
+              DropdownMenu(
+                  expanded = showLocationDropdown && todoUIState.suggestions.isNotEmpty(),
+                  onDismissRequest = { showLocationDropdown = false },
+                  properties = PopupProperties(focusable = false),
+                  modifier =
+                      Modifier.testTag(AddToDoScreenTestTags.LOCATION_MENU)
+                          .fillMaxWidth()
+                          .height(200.dp)) {
+                    todoUIState.suggestions.take(3).forEach { loc ->
+                      DropdownMenuItem(
+                          text = {
+                            Text(text = loc.name.take(40) + if (loc.name.length > 40) "..." else "")
+                          },
+                          onClick = {
+                            addTodoViewModel.selectLocation(loc)
+                            showLocationDropdown = false
+                          },
+                          modifier = Modifier.testTag(AddToDoScreenTestTags.INPUT_TODO_LOCATION))
+                    }
+                    if (todoUIState.suggestions.size > 3) {
+                      DropdownMenuItem(text = { Text("More...") }, onClick = {})
+                    }
+                  }
 
               // Due Date Input
               OutlinedTextField(
