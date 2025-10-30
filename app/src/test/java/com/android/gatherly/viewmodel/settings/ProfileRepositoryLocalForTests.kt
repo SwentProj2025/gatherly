@@ -35,7 +35,7 @@ class ProfileRepositoryLocalForTests : ProfileRepository {
   }
 
   override suspend fun searchProfilesByNamePrefix(prefix: String): List<Profile> =
-    profiles.values.filter { it.name.startsWith(prefix) }
+      profiles.values.filter { it.name.startsWith(prefix) }
 
   override suspend fun isUsernameAvailable(username: String): Boolean {
     return profiles.values.none { it.username == username }
@@ -50,9 +50,9 @@ class ProfileRepositoryLocalForTests : ProfileRepository {
   }
 
   override suspend fun updateUsername(
-    uid: String,
-    oldUsername: String?,
-    newUsername: String
+      uid: String,
+      oldUsername: String?,
+      newUsername: String
   ): Boolean {
     // If username is unchanged, allow update.
     if (oldUsername == newUsername) return true
@@ -65,10 +65,10 @@ class ProfileRepositoryLocalForTests : ProfileRepository {
   }
 
   override suspend fun getProfileByUsername(username: String): Profile? =
-    profiles.values.find { it.username == username }
+      profiles.values.find { it.username == username }
 
   override suspend fun searchProfilesByUsernamePrefix(prefix: String, limit: Int): List<Profile> =
-    profiles.values.filter { it.username.startsWith(prefix) }.take(limit)
+      profiles.values.filter { it.username.startsWith(prefix) }.take(limit)
 
   override suspend fun initProfileIfMissing(uid: String, defaultPhotoUrl: String): Boolean {
     if (!profiles.containsKey(uid)) {
