@@ -750,10 +750,4 @@ class NavigationTest : FirestoreGatherlyTest() {
         .assertIsDisplayed()
         .assertTextContains("Welcome to Gatherly,", substring = true, ignoreCase = true)
   }
-
-  /** Helper function to verify that the InitProfile (UsernameSetup) screen is displayed. */
-  fun ComposeTestRule.checkInitProfileScreenIsDisplayed() {
-    onNodeWithTag("onboarding_save_button").assertIsDisplayed()
-    onNodeWithTag("onboarding_username_field").assertIsDisplayed()
-  }
 }
