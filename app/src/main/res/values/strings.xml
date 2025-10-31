@@ -88,4 +88,16 @@
     <string name="homepage_upcoming_events_title">Upcoming events</string>
     <string name="homepage_upcoming_tasks_title">My upcoming tasks</string>
 
+    <string name="goback_button_title">Go back</string>
+    <string name="unregister_button_title">Unregister</string>
+    <string name="participate_button_title">Participate</string>
+    <string name="edit_button_title">Edit the event</string>
+    <string name="browseEvents_list_title">Browse Events</string>
+    <string name="browseEvents_emptylist_msg">No events upcoming</string>
+    <string name="upcomingEvents_list_title">My Upcoming Events</string>
+    <string name="upcomingEvents_emptylist_msg">You are not registered to any upcoming events</string>
+    <string name="userEvents_list_title">My Own Events</string>
+    <string name="userEvents_emptylist_msg">You have not created any events</string>
+    <string name="create_event_button_title">Create an event</string>
+
 </resources>

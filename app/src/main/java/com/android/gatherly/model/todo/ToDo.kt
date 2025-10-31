@@ -1,5 +1,6 @@
 package com.android.gatherly.model.todo
 
+import com.android.gatherly.model.map.DisplayedMapElement
 import com.android.gatherly.model.map.Location
 import com.google.firebase.Timestamp
 import java.util.Locale
@@ -12,10 +13,10 @@ data class ToDo(
     val assigneeName: String,
     val dueDate: Timestamp,
     val dueTime: Timestamp?,
-    val location: Location?,
+    override val location: Location?,
     val status: ToDoStatus,
     val ownerId: String
-)
+) : DisplayedMapElement
 
 /** Represents the state of a [ToDo] item. */
 enum class ToDoStatus {

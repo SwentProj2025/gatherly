@@ -4,13 +4,16 @@ import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertTextContains
+import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import com.android.gatherly.GatherlyApp
 import com.android.gatherly.ui.authentication.SignInScreenTestTags
+import com.android.gatherly.utils.FirebaseEmulator
 import com.android.gatherly.utils.FirestoreGatherlyTest
+import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -21,7 +24,24 @@ class NavigationTest : FirestoreGatherlyTest() {
   @Before
   override fun setUp() {
     super.setUp()
-    composeTestRule.setContent { GatherlyApp() }
+    runTest {
+      FirebaseEmulator.auth.signOut()
+      composeTestRule.setContent { GatherlyApp() }
+      composeTestRule.waitUntil(5000L) {
+        composeTestRule.onNodeWithTag(SignInScreenTestTags.WELCOME_TITLE).isDisplayed()
+      }
+      composeTestRule.onNodeWithTag(SignInScreenTestTags.ANONYMOUS_BUTTON).performClick()
+      composeTestRule.waitUntil(5000L) {
+        try {
+          composeTestRule
+              .onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
+              .assertTextContains(value = "Home")
+          true
+        } catch (_: AssertionError) {
+          false
+        }
+      }
+    }
   }
 
   // LOGOUT PART :

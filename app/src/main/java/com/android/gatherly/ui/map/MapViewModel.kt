@@ -6,13 +6,19 @@ import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.android.gatherly.model.event.Event
+import com.android.gatherly.model.event.EventStatus
+import com.android.gatherly.model.event.EventsRepository
+import com.android.gatherly.model.event.EventsRepositoryFirestore
+import com.android.gatherly.model.map.DisplayedMapElement
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosRepository
-import com.android.gatherly.model.todo.ToDosRepositoryLocalMapTest
+import com.android.gatherly.model.todo.ToDosRepositoryFirestore
 import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,20 +30,23 @@ val EPFL_LATLNG = LatLng(46.5197, 6.5663)
 /**
  * UI state for the Map screen.
  *
- * @property todoList List of drawable todos (incomplete todos with valid locations).
- * @property expandedTodoId ID of the todo whose marker is currently expanded, or null if none.
+ * @property itemsList of drawable items (incomplete todos or upcoming/current events with valid
+ *   locations).
+ * @property expandedItemId ID of the todo or event whose marker is currently expanded, or null if
+ *   none.
  * @property lastConsultedTodoId ID of the most recently consulted todo.
  * @property cameraPos Current camera position on the map.
  * @property errorMsg Error message to display, or null if no error.
  * @property onSignedOut Flag indicating whether the user has signed out.
  */
 data class UIState(
-    val todoList: List<ToDo> = emptyList(),
-    val expandedTodoId: String? = null,
+    val itemsList: List<DisplayedMapElement> = emptyList(),
+    val expandedItemId: String? = null,
     val lastConsultedTodoId: String? = null,
     val cameraPos: LatLng = EPFL_LATLNG,
     val errorMsg: String? = null,
-    val onSignedOut: Boolean = false
+    val onSignedOut: Boolean = false,
+    val displayEventsPage: Boolean = false
 )
 
 /**
@@ -53,19 +62,36 @@ private fun getDrawableTodos(todos: List<ToDo>): List<ToDo> {
 }
 
 /**
+ * Filters events to return only those that should be displayed on the map.
+ *
+ * An event is drawable if it is not past and has a valid location.
+ *
+ * @param events The list of events to filter.
+ * @return List of events that can be drawn on the map.
+ */
+private fun getDrawableEvents(events: List<Event>): List<Event> {
+  return events.filter { it.status != EventStatus.PAST && it.location != null }
+}
+
+/**
  * ViewModel for the Map screen.
  *
  * Manages the UI state for displaying todos on a map, including marker expansion and user sign-out
  * functionality.
  *
- * @property repository Repository for accessing todo data.
+ * @property todosRepository Repository for accessing todo data.
  */
-class MapViewModel(private val repository: ToDosRepository = ToDosRepositoryLocalMapTest()) :
-    ViewModel() {
+class MapViewModel(
+    private val todosRepository: ToDosRepository = ToDosRepositoryFirestore(Firebase.firestore),
+    private val eventsRepository: EventsRepository = EventsRepositoryFirestore(Firebase.firestore)
+) : ViewModel() {
 
   /** StateFlow that emits the current UI state for the Map screen. */
   private val _uiState: MutableStateFlow<UIState> = MutableStateFlow(UIState())
   val uiState: StateFlow<UIState> = _uiState.asStateFlow()
+
+  private lateinit var todoList: List<ToDo>
+  private lateinit var eventsList: List<Event>
 
   /**
    * Initializes the ViewModel by loading all todos from the repository and filtering them to
@@ -73,23 +99,37 @@ class MapViewModel(private val repository: ToDosRepository = ToDosRepositoryLoca
    */
   init {
     viewModelScope.launch {
-      val todos = repository.getAllTodos()
-      _uiState.value = _uiState.value.copy(todoList = getDrawableTodos(todos))
+      val todos = todosRepository.getAllTodos()
+      todoList = getDrawableTodos(todos)
+
+      val events = eventsRepository.getAllEvents()
+      eventsList = getDrawableEvents(events)
+
+      _uiState.value = _uiState.value.copy(itemsList = todoList)
     }
   }
 
   /**
    * Handles a tap on a todo marker by expanding it.
    *
-   * @param todoId The ID of the todo whose marker was tapped.
+   * @param itemId The ID of the todo whose marker was tapped.
    */
-  fun onTodoMarkerTapped(todoId: String) {
-    _uiState.value = _uiState.value.copy(expandedTodoId = todoId)
+  fun onTodoMarkerTapped(itemId: String) {
+    _uiState.value = _uiState.value.copy(expandedItemId = itemId)
   }
 
   /** Handles dismissal of an expanded marker by collapsing it. */
   fun onTodoMarkerDismissed() {
-    _uiState.value = _uiState.value.copy(expandedTodoId = null)
+    _uiState.value = _uiState.value.copy(expandedItemId = null)
+  }
+
+  /** Handles the switch from viewing todos to viewing events on the map */
+  fun changeView() {
+    if (_uiState.value.displayEventsPage) {
+      _uiState.value = _uiState.value.copy(itemsList = todoList, displayEventsPage = false)
+    } else {
+      _uiState.value = _uiState.value.copy(itemsList = eventsList, displayEventsPage = true)
+    }
   }
 
   /**

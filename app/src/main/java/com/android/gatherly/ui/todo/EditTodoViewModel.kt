@@ -2,6 +2,8 @@ package com.android.gatherly.ui.todo
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.android.gatherly.model.map.Location
+import com.android.gatherly.model.map.NominatimLocationRepository
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosRepository
@@ -15,6 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import okhttp3.OkHttpClient
 
 // Portions of the code in this file are copy-pasted from the Bootcamp solution provided by the
 // SwEnt staff.
@@ -34,13 +37,27 @@ data class EditTodoUIState(
     val titleError: String? = null,
     val descriptionError: String? = null,
     val assigneeError: String? = null,
-    val locationError: String? = null,
     val dueDateError: String? = null,
     val dueTimeError: String? = null,
     val isSaving: Boolean = false,
     val saveSuccess: Boolean = false,
     val deleteSuccess: Boolean = false,
+    val suggestions: List<Location> = emptyList()
 )
+
+// create a HTTP Client for Nominatim
+private var client: OkHttpClient =
+    OkHttpClient.Builder()
+        .addInterceptor { chain ->
+          val request =
+              chain
+                  .request()
+                  .newBuilder()
+                  .header("User-Agent", "BootcampApp (croissant.kerjan@gmail.com)")
+                  .build()
+          chain.proceed(request)
+        }
+        .build()
 
 /**
  * ViewModel responsible for managing the "Edit ToDo" screen.
@@ -55,10 +72,14 @@ data class EditTodoUIState(
  */
 class EditTodoViewModel(
     private val todoRepository: ToDosRepository = ToDosRepositoryProvider.repository,
+    private val nominatimClient: NominatimLocationRepository = NominatimLocationRepository(client)
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(EditTodoUIState())
   /** Public immutable access to the Edit ToDo UI state. */
   val uiState: StateFlow<EditTodoUIState> = _uiState.asStateFlow()
+
+  // Selected Location
+  private var chosenLocation: Location? = null
 
   /** Clears the error message in the UI state. */
   fun clearErrorMsg() {
@@ -120,8 +141,6 @@ class EditTodoViewModel(
                 if (_uiState.value.description.isBlank()) "Description cannot be empty" else null,
             assigneeError =
                 if (_uiState.value.assignee.isBlank()) "Assignee cannot be empty" else null,
-            locationError =
-                if (_uiState.value.location.isBlank()) "Location cannot be empty" else null,
             dueDateError =
                 if (!isValidDate(_uiState.value.dueDate)) "Invalid format (dd/MM/yyyy)" else null,
             dueTimeError =
@@ -132,7 +151,6 @@ class EditTodoViewModel(
     if (state.titleError != null ||
         state.descriptionError != null ||
         state.assigneeError != null ||
-        state.locationError != null ||
         state.dueDateError != null ||
         state.dueTimeError != null) {
       setErrorMsg("At least one field is not valid")
@@ -158,7 +176,7 @@ class EditTodoViewModel(
                 assigneeName = state.assignee,
                 dueDate = Timestamp(date),
                 dueTime = time,
-                location = null,
+                location = chosenLocation,
                 status = state.status,
                 uid = id,
                 ownerId = ownerId))
@@ -237,8 +255,7 @@ class EditTodoViewModel(
    * @param newLocation The name or description of the location.
    */
   fun onLocationChanged(newLocation: String) {
-    val errMsg = if (newLocation.isBlank()) "Location cannot be empty" else null
-    _uiState.value = _uiState.value.copy(locationError = errMsg, location = newLocation)
+    _uiState.value = _uiState.value.copy(location = newLocation)
   }
 
   /**
@@ -296,6 +313,27 @@ class EditTodoViewModel(
       return true
     } catch (_: Exception) {
       return false
+    }
+  }
+
+  /*----------------------------------Location--------------------------------------------------*/
+
+  fun selectLocation(location: Location) {
+    _uiState.value = _uiState.value.copy(location = location.name, suggestions = emptyList())
+    chosenLocation = location
+  }
+
+  /*----------------------------------Helpers--------------------------------------------------*/
+
+  /**
+   * Given a string, search locations with Nominatim
+   *
+   * @param location the substring with which to search
+   */
+  fun searchLocationByString(location: String) {
+    viewModelScope.launch {
+      val list = nominatimClient.search(location)
+      _uiState.value = _uiState.value.copy(suggestions = list)
     }
   }
 }
