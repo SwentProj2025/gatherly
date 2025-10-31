@@ -88,7 +88,10 @@ fun GatherlyApp(
         HomePageScreen(
             credentialManager = credentialManager,
             navigationActions = navigationActions,
-            onSignedOut = { navigationActions.navigateTo(Screen.SignIn) })
+            onSignedOut = { navigationActions.navigateTo(Screen.SignIn) },
+            onClickFocusButton = { navigationActions.navigateTo(Screen.FocusTimerScreen) },
+            onClickTodo = { navigationActions.navigateTo(Screen.OverviewToDo) },
+            onClickFriendsSection = { navigationActions.navigateTo(Screen.FriendsScreen) })
       }
     }
 

@@ -23,4 +23,18 @@
 
     <!-- Shapes -->
     <dimen name="rounded_corner_shape_medium">12dp</dimen>
+
+    <!-- HomePage -->
+    <dimen name="homepage_task_item_height">56dp</dimen>
+    <dimen name="homepage_task_item_spacing">12dp</dimen>
+    <dimen name="homepage_arrow_icon_size">24dp</dimen>
+    <dimen name="homepage_section_title_size">20.sp</dimen>
+    <dimen name="homepage_focus_button_height">56.dp</dimen>
+    <dimen name="homepage_save_button_corner_radius">28.dp</dimen>
+    <dimen name="homepage_friend_profile_pic_size">48.dp</dimen>
+    <dimen name="homepage_friends_section_vertical_border_padding">12.dp</dimen>
+    <dimen name="homepage_friends_section_border_width">2.dp</dimen>
+    <dimen name="homepage_section_spacing">20.dp</dimen>
+    <dimen name="homepage_events_section_height">200.dp</dimen>
+    <dimen name="homepage_minimap_width">280.dp</dimen>
 </resources>

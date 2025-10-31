@@ -80,6 +80,14 @@
     <string name="events_participant_field_label">Participant</string>
     <string name="events_participant_placeholder">Add or remove a participant</string>
 
+    <!-- HomePage -->
+    <string name="homepage_arrow_icon_description">Navigate</string>
+    <string name="homepage_focus_button_text">Go to Focus Timer</string>
+    <string name="homepage_friends_section_label">Friends</string>
+    <string name="homepage_profile_image_description">Friend Profile Picture</string>
+    <string name="homepage_upcoming_events_title">Upcoming events</string>
+    <string name="homepage_upcoming_tasks_title">My upcoming tasks</string>
+
     <string name="goback_button_title">Go back</string>
     <string name="unregister_button_title">Unregister</string>
     <string name="participate_button_title">Participate</string>
