@@ -21,11 +21,22 @@ import com.android.gatherly.R
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.settings.SettingsField
-import com.android.gatherly.ui.settings.SettingsScreenTestTags
 import com.android.gatherly.ui.settings.SettingsViewModel
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 
+object InitProfileScreenTestTags {
+  const val PROFILE_PICTURE = "initProfile_profile_picture"
+  const val USERNAME = "initProfile_username"
+  const val NAME_FIELD = "initProfile_name_field"
+  const val BIRTHDAY_FIELD = "initProfile_birthday_field"
+  const val SCHOOL_FIELD = "initProfile_school_field"
+  const val SCHOOL_YEAR_FIELD = "initProfile_school_year_field"
+  const val SAVE_BUTTON = "initProfile_save_button"
+  const val USERNAME_ERROR = "initProfile_username_error"
+  const val NAME_FIELD_ERROR = "initProfile_name_field_error"
+  const val BIRTHDAY_FIELD_ERROR = "initProfile_birthday_field_error"
+}
 /**
  * This screen is shown right after first login, to force the user to fill in a profile. Same fields
  * and ViewModel as SettingsScreen.
@@ -65,7 +76,7 @@ fun InitProfileScreen(
               modifier =
                   Modifier.size(dimensionResource(id = R.dimen.profile_pic_size))
                       .clip(CircleShape)
-                      .testTag(SettingsScreenTestTags.PROFILE_PICTURE),
+                      .testTag(InitProfileScreenTestTags.PROFILE_PICTURE),
               contentScale = ContentScale.Crop)
 
           Spacer(
@@ -76,7 +87,7 @@ fun InitProfileScreen(
               label = stringResource(R.string.settings_label_username),
               value = uiState.username,
               onValueChange = { settingsViewModel.editUsername(it) },
-              testTag = "onboarding_username_field",
+              testTag = InitProfileScreenTestTags.USERNAME,
               errorMessage = uiState.invalidUsernameMsg)
 
           if (uiState.isUsernameAvailable == true && uiState.invalidUsernameMsg == null) {
@@ -96,8 +107,19 @@ fun InitProfileScreen(
               label = stringResource(R.string.settings_label_name),
               value = uiState.name,
               onValueChange = { settingsViewModel.editName(it) },
-              testTag = "onboarding_name_field",
+              testTag = InitProfileScreenTestTags.NAME_FIELD,
               errorMessage = uiState.invalidNameMsg)
+
+          Spacer(
+              modifier =
+                  Modifier.height(dimensionResource(id = R.dimen.spacing_between_fields_regular)))
+
+          SettingsField(
+              label = stringResource(R.string.settings_label_birthday),
+              value = uiState.birthday,
+              onValueChange = { settingsViewModel.editBirthday(it) },
+              testTag = InitProfileScreenTestTags.BIRTHDAY_FIELD,
+              errorMessage = uiState.invalidBirthdayMsg)
 
           Spacer(
               modifier =
@@ -107,7 +129,7 @@ fun InitProfileScreen(
               label = stringResource(R.string.settings_label_school),
               value = uiState.school,
               onValueChange = { settingsViewModel.editSchool(it) },
-              testTag = "onboarding_school_field")
+              testTag = InitProfileScreenTestTags.SCHOOL_FIELD)
 
           Spacer(
               modifier =
@@ -117,7 +139,7 @@ fun InitProfileScreen(
               label = stringResource(R.string.settings_label_school_year),
               value = uiState.schoolYear,
               onValueChange = { settingsViewModel.editSchoolYear(it) },
-              testTag = "onboarding_school_year_field")
+              testTag = InitProfileScreenTestTags.SCHOOL_YEAR_FIELD)
 
           Spacer(
               modifier =
@@ -136,7 +158,7 @@ fun InitProfileScreen(
               modifier =
                   Modifier.fillMaxWidth(0.8f)
                       .height(dimensionResource(id = R.dimen.settings_save_button_height))
-                      .testTag("onboarding_save_button")) {
+                      .testTag(InitProfileScreenTestTags.SAVE_BUTTON)) {
                 Text(
                     text = stringResource(R.string.settings_save),
                     fontSize = 16.sp,
