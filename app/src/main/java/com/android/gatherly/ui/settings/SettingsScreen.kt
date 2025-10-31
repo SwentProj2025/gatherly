@@ -35,9 +35,9 @@ object SettingsScreenTestTags {
   const val SCHOOL_FIELD = "settings_school_field"
   const val SCHOOL_YEAR_FIELD = "settings_school_year_field"
   const val SAVE_BUTTON = "settings_save_button"
-    const val USERNAME_ERROR = "settings_username_error"
-    const val NAME_FIELD_ERROR = "settings_name_field_error"
-    const val BIRTHDAY_FIELD_ERROR = "settings_birthday_field_error"
+  const val USERNAME_ERROR = "settings_username_error"
+  const val NAME_FIELD_ERROR = "settings_name_field_error"
+  const val BIRTHDAY_FIELD_ERROR = "settings_birthday_field_error"
 }
 
 /**
