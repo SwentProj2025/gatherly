@@ -42,7 +42,9 @@ class SettingsScreenTest : FirestoreGatherlyTest() {
      * Verifies that all main UI components (profile picture, username, edit photo button, fields,
      * and save button) are present and visible when the SettingsScreen is displayed.
      */
-    composeRule.waitForIdle()
+    composeRule.waitUntil(10_000L) {
+      composeRule.onNodeWithTag(SettingsScreenTestTags.PROFILE_PICTURE).isDisplayed()
+    }
     composeRule
         .onNodeWithTag(SettingsScreenTestTags.PROFILE_PICTURE)
         .assertExists()
