@@ -1,10 +1,5 @@
 package com.android.gatherly.ui.homePage
 
-import android.content.res.Configuration
-import android.graphics.Canvas
-import android.graphics.Paint
-import android.graphics.Rect
-import android.graphics.RectF
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -35,21 +30,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
-import androidx.core.graphics.createBitmap
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
@@ -61,9 +51,6 @@ import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_HomePage
-import com.android.gatherly.ui.theme.GatherlyTheme
-import com.google.android.gms.maps.model.BitmapDescriptor
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
@@ -73,14 +60,33 @@ import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 
+// The documentation in this file was generated with the help of ChatGPT.
+
+/**
+ * Test tag constants for the Home Page screen. Used in Compose UI tests to locate and assert
+ * specific components.
+ */
 object HomePageScreenTestTags {
   const val UPCOMING_EVENTS_TITLE = "upcomingEventsTitle"
   const val UPCOMING_TASKS_TITLE = "upcomingTasksTitle"
   const val FOCUS_TIMER_TEXT = "focusTimerText"
   const val FOCUS_BUTTON = "focusButton"
   const val TASK_ITEM_PREFIX = "taskItem_"
+  const val FRIENDS_SECTION = "friendsSection"
+  const val MINI_MAP_CARD = "miniMapCard"
 }
 
+/**
+ * Main Home Page screen composable.
+ *
+ * Displays:
+ * - Upcoming events and tasks
+ * - A mini-map with markers
+ * - Friends section
+ * - Focus timer section
+ *
+ * Integrates data from [HomePageViewModel] and provides test tags for UI tests.
+ */
 @Composable
 fun HomePageScreen(
     homePageViewModel: HomePageViewModel = viewModel(),
@@ -88,8 +94,8 @@ fun HomePageScreen(
     onSignedOut: () -> Unit = {},
     navigationActions: NavigationActions? = null,
     onClickFocusButton: () -> Unit = {},
-    onClickMap: () -> Unit = {},
     onClickTodo: () -> Unit = {},
+    onClickFriendsSection: () -> Unit = {},
 ) {
   val uiState by homePageViewModel.uiState.collectAsState()
 
@@ -99,7 +105,7 @@ fun HomePageScreen(
   val verticalSpacing = dimensionResource(id = R.dimen.spacing_between_fields_medium)
   val sectionSpacing = dimensionResource(id = R.dimen.homepage_section_spacing)
 
-  Scaffold( //  TODO BALA Screen Padding for all instead of in each children, spacers inside Titles
+  Scaffold(
       topBar = {
         TopNavigationMenu_HomePage(
             selectedTab = Tab.HomePage,
@@ -127,7 +133,7 @@ fun HomePageScreen(
           EventsAndFriendsSection(
               todos = uiState.displayableTodos,
               events = uiState.displayableEvents,
-              onClickMap = onClickMap)
+              onClickFriendsSection = onClickFriendsSection)
 
           Spacer(modifier = Modifier.height(verticalSpacing))
 
@@ -156,6 +162,7 @@ fun HomePageScreen(
       })
 }
 
+/** Simple reusable section title used throughout the Home Page. */
 @Composable
 fun SectionTitle(text: String, modifier: Modifier = Modifier) {
 
@@ -163,8 +170,17 @@ fun SectionTitle(text: String, modifier: Modifier = Modifier) {
       text = text, color = MaterialTheme.colorScheme.primary, fontSize = 20.sp, modifier = modifier)
 }
 
+/**
+ * Displays the top half of the screen:
+ * - Mini map of nearby todos/events
+ * - Friends section
+ */
 @Composable
-fun EventsAndFriendsSection(todos: List<ToDo>, events: List<Event>, onClickMap: () -> Unit) {
+fun EventsAndFriendsSection(
+    todos: List<ToDo>,
+    events: List<Event>,
+    onClickFriendsSection: () -> Unit
+) {
 
   val spacingRegular = dimensionResource(id = R.dimen.spacing_between_fields_regular)
   Row(
@@ -173,18 +189,22 @@ fun EventsAndFriendsSection(todos: List<ToDo>, events: List<Event>, onClickMap: 
               .height(dimensionResource(id = R.dimen.homepage_events_section_height))) {
         Spacer(modifier = Modifier.width(spacingRegular))
 
-        MiniMap(todos = todos, events = events, onClickMap = { onClickMap })
+        MiniMap(todos = todos, events = events)
 
         Spacer(modifier = Modifier.width(spacingRegular))
 
-        FriendsSection()
+        FriendsSection(onClickFriendsSection = onClickFriendsSection)
 
         Spacer(modifier = Modifier.width(spacingRegular))
       }
 }
 
+/**
+ * Displays a small, zoomable Google Map showing markers for todos and events. Defaults to the EPFL
+ * campus if no locations are available.
+ */
 @Composable
-fun MiniMap(todos: List<ToDo>, events: List<Event>, onClickMap: () -> Unit) {
+fun MiniMap(todos: List<ToDo>, events: List<Event>) {
   val defaultLoc = LatLng(46.5191, 6.5668) // EPFL campus loc
   val firstTodoLoc =
       todos.firstOrNull()?.location?.let { LatLng(it.latitude, it.longitude) } ?: defaultLoc
@@ -197,7 +217,7 @@ fun MiniMap(todos: List<ToDo>, events: List<Event>, onClickMap: () -> Unit) {
       modifier =
           Modifier.width(dimensionResource(id = R.dimen.homepage_minimap_width))
               .fillMaxHeight()
-              .clickable { onClickMap() },
+              .testTag(HomePageScreenTestTags.MINI_MAP_CARD),
       shape = RoundedCornerShape(dimensionResource(id = R.dimen.rounded_corner_shape_medium)),
   ) {
     GoogleMap(
@@ -205,7 +225,7 @@ fun MiniMap(todos: List<ToDo>, events: List<Event>, onClickMap: () -> Unit) {
         cameraPositionState = cameraPositionState,
         uiSettings =
             MapUiSettings(
-                zoomControlsEnabled = true,
+                zoomControlsEnabled = false,
                 scrollGesturesEnabled = true,
                 zoomGesturesEnabled = true,
                 tiltGesturesEnabled = false,
@@ -215,72 +235,32 @@ fun MiniMap(todos: List<ToDo>, events: List<Event>, onClickMap: () -> Unit) {
             val loc = todo.location ?: return@forEach
             Marker(
                 state = MarkerState(LatLng(loc.latitude, loc.longitude)),
-                icon = todoIcon(todo.name))
+                title = todo.name,
+                snippet = todo.description)
+          }
+          events.forEach { event ->
+            val loc = event.location ?: return@forEach
+            Marker(
+                state = MarkerState(LatLng(loc.latitude, loc.longitude)),
+                title = event.title,
+                snippet = event.description)
           }
         }
   }
 }
 
 /**
- * Creates a small rounded marker icon displaying a ToDo title.
- *
- * @param title the title of the toDo to render inside the marker icon.
- * @return A [BitmapDescriptor] representing the ToDo marker icon.
+ * Circular avatar for a friend profile. Currently uses a default drawable until profile pictures
+ * are supported.
  */
 @Composable
-private fun todoIcon(title: String): BitmapDescriptor {
-  val density = LocalDensity.current
-  val primary = MaterialTheme.colorScheme.primary
-  val onPrimary = MaterialTheme.colorScheme.onPrimary
-  return remember(title) {
-    // Text Style
-    val textPaint =
-        Paint().apply {
-          color = onPrimary.toArgb()
-          textSize = with(density) { 20.sp.toPx() }
-        }
-
-    // measures
-    val bounds = Rect().also { textPaint.getTextBounds(title, 0, title.length, it) }
-    val hPad = with(density) { 8f * density.density }
-    val vPad = with(density) { 4f * density.density }
-    val w = (bounds.width() + 2 * hPad).toInt().coerceAtLeast(1)
-    val h = (bounds.height() + 2 * vPad).toInt().coerceAtLeast(1)
-
-    // creates the bitmap and canvas to draw on
-    val bmp = createBitmap(w, h)
-    val c = Canvas(bmp)
-
-    // Box
-    val bg = Paint().apply { color = primary.toArgb() }
-    c.drawRoundRect(RectF(0f, 0f, w.toFloat(), h.toFloat()), 12f, 12f, bg)
-
-    // Text
-    val baselineY = h / 2f + bounds.height() / 2f - bounds.bottom
-    c.drawText(title, hPad, baselineY, textPaint)
-
-    // creates the icon
-    BitmapDescriptorFactory.fromBitmap(bmp)
-  }
-}
-
-@Composable
 fun FriendAvatar(
-    // imageUrl: String,
     modifier: Modifier = Modifier,
 ) {
   val size = dimensionResource(id = R.dimen.homepage_friend_profile_pic_size)
   Box(modifier = modifier.size(size)) {
-    // Avatar Image
-    // AsyncImage( todo
-    //  model = imageUrl,
-    //  contentDescription = "Friend avatar",
-    //  modifier = Modifier
-    //    .fillMaxSize()
-    //    .clip(CircleShape),
-    //  contentScale = ContentScale.Crop
-    // )
-    Image(
+    Image( // Currently a placeholder image, will be implemented when profile picture storage is
+        // merged to main
         painter = painterResource(id = R.drawable.default_profile_picture),
         contentDescription = stringResource(id = R.string.homepage_profile_image_description),
         modifier = Modifier.fillMaxSize().clip(CircleShape),
@@ -288,15 +268,17 @@ fun FriendAvatar(
   }
 }
 
+/** Displays a bordered section with friend avatars and a label. The entire section is clickable. */
 @Composable
-fun FriendsSection() {
+fun FriendsSection(onClickFriendsSection: () -> Unit) {
 
   val friendCount = 3
   val roundedCornerPercentage = 50
   Column(
       horizontalAlignment = Alignment.CenterHorizontally,
       modifier =
-          Modifier.border(
+          Modifier.testTag(HomePageScreenTestTags.FRIENDS_SECTION)
+              .border(
                   width = dimensionResource(id = R.dimen.homepage_friends_section_border_width),
                   color = MaterialTheme.colorScheme.primary,
                   shape = RoundedCornerShape(percent = roundedCornerPercentage))
@@ -304,6 +286,7 @@ fun FriendsSection() {
                   RoundedCornerShape(
                       percent =
                           roundedCornerPercentage)) // Ensures children stay within border radius
+              .clickable { onClickFriendsSection() }
               .padding(
                   vertical =
                       dimensionResource(
@@ -322,6 +305,10 @@ fun FriendsSection() {
       }
 }
 
+/**
+ * Displays a vertical list of task items. Each [TaskItem] has a test tag for easier identification
+ * in tests.
+ */
 @Composable
 fun TaskList(todos: List<ToDo>, onClickTodo: () -> Unit = {}) {
   Column {
@@ -334,6 +321,7 @@ fun TaskList(todos: List<ToDo>, onClickTodo: () -> Unit = {}) {
   }
 }
 
+/** A single clickable task item with a description and arrow icon. */
 @Composable
 fun TaskItem(modifier: Modifier = Modifier, text: String, onClick: () -> Unit) {
   Surface(modifier = modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.background) {
@@ -360,6 +348,7 @@ fun TaskItem(modifier: Modifier = Modifier, text: String, onClick: () -> Unit) {
   }
 }
 
+/** Displays the focus timer text and button used for starting focus sessions. */
 @Composable
 fun FocusSection(modifier: Modifier = Modifier, timerString: String = "", onClick: () -> Unit) {
   Text(
@@ -385,18 +374,4 @@ fun FocusSection(modifier: Modifier = Modifier, timerString: String = "", onClic
             color = MaterialTheme.colorScheme.primary,
             style = MaterialTheme.typography.titleMedium)
       }
-}
-
-// @Preview(name = "Light Mode", showBackground = true)
-// @Composable
-// fun HomePageScreenLightPreview() {
-//  GatherlyTheme(darkTheme = false) {
-//    HomePageScreen()
-//  }
-// }
-
-@Preview(name = "Dark Mode", showBackground = true, uiMode = Configuration.UI_MODE_NIGHT_YES)
-@Composable
-fun HomePageScreenDarkPreview() {
-  GatherlyTheme(darkTheme = true) { HomePageScreen() }
 }
