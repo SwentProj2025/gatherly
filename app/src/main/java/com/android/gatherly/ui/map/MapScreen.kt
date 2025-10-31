@@ -4,9 +4,15 @@ import android.graphics.*
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.FilterAlt
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.FabPosition
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -21,6 +27,7 @@ import androidx.compose.ui.unit.sp
 import androidx.core.graphics.createBitmap
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.ui.navigation.BottomNavigationMenu
 import com.android.gatherly.ui.navigation.HandleSignedOutState
@@ -46,6 +53,8 @@ import java.util.Locale
 
 object MapScreenTestTags {
   const val GOOGLE_MAP_SCREEN = "mapScreen"
+
+  const val FILTER_TOGGLE = "filterToggle"
 
   fun getTestTagForTodoMarker(todoId: String): String = "todoMarker_$todoId"
 
@@ -84,6 +93,15 @@ fun MapScreen(
             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
             modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU))
       },
+      // Toggle button to switch between ToDos and Events
+      floatingActionButtonPosition = FabPosition.Start,
+      floatingActionButton = {
+        ExtendedFloatingActionButton(
+            onClick = { viewModel.changeView() },
+            text = { Text(if (uiState.displayEventsPage) "Show ToDos" else "Show Events") },
+            icon = { Icon(Icons.Outlined.FilterAlt, contentDescription = null) },
+            modifier = Modifier.testTag(MapScreenTestTags.FILTER_TOGGLE))
+      },
       content = { pd ->
         // Camera position state, using the first ToDo location if available
         val cameraPositionState = rememberCameraPositionState()
@@ -93,44 +111,67 @@ fun MapScreen(
               CameraUpdateFactory.newCameraPosition(
                   CameraPosition.fromLatLngZoom(uiState.cameraPos, 14f)))
         }
+
         GoogleMap(
             modifier =
                 Modifier.fillMaxSize().padding(pd).testTag(MapScreenTestTags.GOOGLE_MAP_SCREEN),
             cameraPositionState = cameraPositionState) {
-              uiState.itemsList.forEach { todo ->
-                if (todo is ToDo) {
-                  val loc = todo.location ?: return@forEach
-                  val isExpanded = uiState.expandedItemId == todo.uid
+              uiState.itemsList.forEach { item ->
+                when (item) {
+                  is ToDo -> {
+                    val loc = item.location ?: return@forEach
+                    val isExpanded = uiState.expandedItemId == item.uid
 
-                  val markerTestTag =
-                      if (isExpanded) MapScreenTestTags.getTestTagForTodoMarkerExpanded(todo.uid)
-                      else MapScreenTestTags.getTestTagForTodoMarker(todo.uid)
+                    val formattedDate =
+                        remember(item.dueDate) {
+                          val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                          sdf.format(item.dueDate.toDate())
+                        }
 
-                  val formattedDate =
-                      remember(todo.dueDate) {
-                        val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-                        sdf.format(todo.dueDate.toDate())
-                      }
+                    val iconCollapsed = todoIcon(item.name)
+                    val iconExpanded =
+                        todoExpanded(
+                            title = item.name,
+                            description = item.description,
+                            dateText = formattedDate,
+                            expanded = true)
 
-                  // not clicked
-                  val iconCollapsed = todoIcon(todo.name)
+                    Marker(
+                        state = MarkerState(LatLng(loc.latitude, loc.longitude)),
+                        icon = if (isExpanded) iconExpanded else iconCollapsed,
+                        onClick = {
+                          if (isExpanded) viewModel.onTodoMarkerDismissed()
+                          else viewModel.onTodoMarkerTapped(item.uid)
+                          true
+                        })
+                  }
+                  is Event -> {
+                    val loc = item.location ?: return@forEach
+                    val isExpanded = uiState.expandedItemId == item.id
 
-                  // clicked
-                  val iconExpanded =
-                      todoExpanded(
-                          title = todo.name,
-                          description = todo.description,
-                          dateText = formattedDate,
-                          expanded = true)
+                    val formattedDate =
+                        remember(item.date) {
+                          val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                          sdf.format(item.date.toDate())
+                        }
 
-                  Marker(
-                      state = MarkerState(LatLng(loc.latitude, loc.longitude)),
-                      icon = if (isExpanded) iconExpanded else iconCollapsed,
-                      onClick = {
-                        if (isExpanded) viewModel.onTodoMarkerDismissed()
-                        else viewModel.onTodoMarkerTapped(todo.uid)
-                        true
-                      })
+                    val iconCollapsed = todoIcon(item.title)
+                    val iconExpanded =
+                        todoExpanded(
+                            title = item.title,
+                            description = item.description,
+                            dateText = formattedDate,
+                            expanded = true)
+
+                    Marker(
+                        state = MarkerState(LatLng(loc.latitude, loc.longitude)),
+                        icon = if (isExpanded) iconExpanded else iconCollapsed,
+                        onClick = {
+                          if (isExpanded) viewModel.onTodoMarkerDismissed()
+                          else viewModel.onTodoMarkerTapped(item.id)
+                          true
+                        })
+                  }
                 }
               }
             }
