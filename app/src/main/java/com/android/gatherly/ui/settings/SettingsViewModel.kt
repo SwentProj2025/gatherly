@@ -168,8 +168,6 @@ class SettingsViewModel(
         setErrorMsg("Failed to save profile: ${e.message}")
       }
     }
-
-    return
   }
 
   fun editName(newName: String) {
