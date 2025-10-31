@@ -1,5 +1,7 @@
 package com.android.gatherly.ui.settings
 
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -40,24 +42,30 @@ class SettingsScreenTest : FirestoreGatherlyTest() {
      * Verifies that all main UI components (profile picture, username, edit photo button, fields,
      * and save button) are present and visible when the SettingsScreen is displayed.
      */
+    composeRule.waitForIdle()
     composeRule
         .onNodeWithTag(SettingsScreenTestTags.PROFILE_PICTURE)
         .assertExists()
         .assertIsDisplayed()
+    composeRule.waitForIdle()
     composeRule.onNodeWithTag(SettingsScreenTestTags.USERNAME).assertExists().assertIsDisplayed()
     composeRule
         .onNodeWithTag(SettingsScreenTestTags.EDIT_PHOTO_BUTTON)
         .assertExists()
         .assertIsDisplayed()
+    composeRule.waitForIdle()
     composeRule.onNodeWithTag(SettingsScreenTestTags.NAME_FIELD).assertExists().assertIsDisplayed()
+    composeRule.waitForIdle()
     composeRule
         .onNodeWithTag(SettingsScreenTestTags.BIRTHDAY_FIELD)
         .assertExists()
         .assertIsDisplayed()
+    composeRule.waitForIdle()
     composeRule
         .onNodeWithTag(SettingsScreenTestTags.SCHOOL_FIELD)
         .assertExists()
         .assertIsDisplayed()
+    composeRule.waitForIdle()
     composeRule
         .onNodeWithTag(SettingsScreenTestTags.SCHOOL_YEAR_FIELD)
         .assertExists()
@@ -89,6 +97,14 @@ class SettingsScreenTest : FirestoreGatherlyTest() {
     // WHEN: The user enters a valid username
     composeRule.onNodeWithTag(SettingsScreenTestTags.USERNAME).performTextInput("validuser")
     composeRule.waitForIdle()
+    // Given by chatgpt :
+    composeRule.waitUntil(10_000L) {
+      composeRule
+          .onNodeWithTag(SettingsScreenTestTags.SAVE_BUTTON)
+          .fetchSemanticsNode()
+          .config
+          .getOrNull(SemanticsProperties.Disabled) == null
+    }
     // THEN: Save button should be enabled
     composeRule.onNodeWithTag(SettingsScreenTestTags.SAVE_BUTTON).assertIsEnabled()
   }
