@@ -73,7 +73,13 @@ import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 
-object HomePageScreenTestTags {}
+object HomePageScreenTestTags {
+  const val UPCOMING_EVENTS_TITLE = "upcomingEventsTitle"
+  const val UPCOMING_TASKS_TITLE = "upcomingTasksTitle"
+  const val FOCUS_TIMER_TEXT = "focusTimerText"
+  const val FOCUS_BUTTON = "focusButton"
+  const val TASK_ITEM_PREFIX = "taskItem_"
+}
 
 @Composable
 fun HomePageScreen(
@@ -83,6 +89,7 @@ fun HomePageScreen(
     navigationActions: NavigationActions? = null,
     onClickFocusButton: () -> Unit = {},
     onClickMap: () -> Unit = {},
+    onClickTodo: () -> Unit = {},
 ) {
   val uiState by homePageViewModel.uiState.collectAsState()
 
@@ -111,7 +118,9 @@ fun HomePageScreen(
 
           SectionTitle(
               text = stringResource(id = R.string.homepage_upcoming_events_title),
-              modifier = Modifier.padding(horizontal = screenPadding))
+              modifier =
+                  Modifier.padding(horizontal = screenPadding)
+                      .testTag(HomePageScreenTestTags.UPCOMING_EVENTS_TITLE))
 
           Spacer(modifier = Modifier.height(sectionSpacing))
 
@@ -124,11 +133,13 @@ fun HomePageScreen(
 
           SectionTitle(
               text = stringResource(id = R.string.homepage_upcoming_tasks_title),
-              modifier = Modifier.padding(horizontal = screenPadding))
+              modifier =
+                  Modifier.padding(horizontal = screenPadding)
+                      .testTag(HomePageScreenTestTags.UPCOMING_TASKS_TITLE))
 
           Spacer(modifier = Modifier.height(sectionSpacing))
 
-          TaskList(todos = uiState.todos)
+          TaskList(todos = uiState.todos, onClickTodo)
 
           Spacer(modifier = Modifier.height(verticalSpacing))
 
@@ -179,7 +190,7 @@ fun MiniMap(todos: List<ToDo>, events: List<Event>, onClickMap: () -> Unit) {
       todos.firstOrNull()?.location?.let { LatLng(it.latitude, it.longitude) } ?: defaultLoc
 
   val cameraPositionState = rememberCameraPositionState {
-    position = CameraPosition.fromLatLngZoom(firstTodoLoc, 14f)
+    position = CameraPosition.fromLatLngZoom(firstTodoLoc, 15f)
   }
 
   Card(
@@ -194,9 +205,9 @@ fun MiniMap(todos: List<ToDo>, events: List<Event>, onClickMap: () -> Unit) {
         cameraPositionState = cameraPositionState,
         uiSettings =
             MapUiSettings(
-                zoomControlsEnabled = false,
-                scrollGesturesEnabled = false,
-                zoomGesturesEnabled = false,
+                zoomControlsEnabled = true,
+                scrollGesturesEnabled = true,
+                zoomGesturesEnabled = true,
                 tiltGesturesEnabled = false,
             ),
         properties = MapProperties(isMyLocationEnabled = false)) {
@@ -312,12 +323,19 @@ fun FriendsSection() {
 }
 
 @Composable
-fun TaskList(todos: List<ToDo>) {
-  Column() { todos.forEach { todo -> TaskItem(text = todo.description, onClick = {}) } }
+fun TaskList(todos: List<ToDo>, onClickTodo: () -> Unit = {}) {
+  Column {
+    todos.forEach { todo ->
+      TaskItem(
+          modifier = Modifier.testTag("${HomePageScreenTestTags.TASK_ITEM_PREFIX}${todo.uid}"),
+          text = todo.description,
+          onClick = onClickTodo)
+    }
+  }
 }
 
 @Composable
-fun TaskItem(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun TaskItem(modifier: Modifier = Modifier, text: String, onClick: () -> Unit) {
   Surface(modifier = modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.background) {
     val paddingRegular = dimensionResource(id = R.dimen.padding_regular)
     Row(
@@ -343,19 +361,22 @@ fun TaskItem(text: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun FocusSection(timerString: String = "", modifier: Modifier = Modifier, onClick: () -> Unit) {
+fun FocusSection(modifier: Modifier = Modifier, timerString: String = "", onClick: () -> Unit) {
   Text(
       text = timerString,
       color = MaterialTheme.colorScheme.primary,
       style = MaterialTheme.typography.bodyLarge,
-      modifier = modifier)
+      modifier = modifier.testTag(HomePageScreenTestTags.FOCUS_TIMER_TEXT))
 
   Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.homepage_section_spacing)))
 
   Button(
       onClick = onClick,
       modifier =
-          modifier.fillMaxWidth().height(dimensionResource(R.dimen.homepage_focus_button_height)),
+          modifier
+              .fillMaxWidth()
+              .height(dimensionResource(R.dimen.homepage_focus_button_height))
+              .testTag(HomePageScreenTestTags.FOCUS_BUTTON),
       shape =
           RoundedCornerShape(dimensionResource(id = R.dimen.homepage_save_button_corner_radius)),
       colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)) {
