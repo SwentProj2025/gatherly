@@ -7,16 +7,20 @@ import com.android.gatherly.utils.FirestoreGatherlyTest
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
-import org.junit.After
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
 /** Integration tests for [SettingsViewModel] using the real Firestore repository (emulator). */
+@OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
 class SettingsViewModelInstrumentedTest : FirestoreGatherlyTest() {
 
@@ -39,11 +43,6 @@ class SettingsViewModelInstrumentedTest : FirestoreGatherlyTest() {
     }
   }
 
-  @After
-  fun cleanup() {
-    runBlocking { Firebase.firestore.collection("profiles").document(testUid).delete() }
-  }
-
   /** Ensures loading an existing profile from Firestore populates the UI state correctly. */
   @Test
   fun loadProfile_populatesUiStateFromFirestore() = runBlocking {
@@ -56,9 +55,14 @@ class SettingsViewModelInstrumentedTest : FirestoreGatherlyTest() {
             schoolYear = "BA3")
     repo.updateProfile(profile)
 
-    delay(500) // wait for write propagation
     viewModel.loadProfile(testUid)
-    delay(500)
+    withContext(Dispatchers.Default.limitedParallelism(1)) {
+      withTimeout(5000L) {
+        while (viewModel.uiState.first().name.isEmpty()) {
+          delay(50)
+        }
+      }
+    }
 
     val state = viewModel.uiState.first()
     assertEquals("Alice", state.name)
@@ -75,7 +79,13 @@ class SettingsViewModelInstrumentedTest : FirestoreGatherlyTest() {
     assertNull(state.isUsernameAvailable)
 
     viewModel.editUsername("good_name")
-    delay(300)
+    withContext(Dispatchers.Default.limitedParallelism(1)) {
+      withTimeout(5000L) {
+        while (viewModel.uiState.first().isUsernameAvailable == null) {
+          delay(50)
+        }
+      }
+    }
     state = viewModel.uiState.first()
     assertNull(state.invalidUsernameMsg)
     assertNotNull(state.isUsernameAvailable)
@@ -95,17 +105,34 @@ class SettingsViewModelInstrumentedTest : FirestoreGatherlyTest() {
   fun updateProfile_persistsToFirestore() = runBlocking {
     // First load and set valid values
     viewModel.loadProfile(testUid)
-    delay(500)
+    withContext(Dispatchers.Default.limitedParallelism(1)) {
+      withTimeout(5000L) {
+        while (viewModel.uiState.value.isLoadingProfile) {
+          delay(50)
+        }
+      }
+    }
 
     viewModel.editName("Updated Name")
     viewModel.editUsername("updated_user")
-    delay(500) // allow username availability check
+    withContext(Dispatchers.Default.limitedParallelism(1)) {
+      withTimeout(5000L) {
+        while (viewModel.uiState.first().isUsernameAvailable == null) {
+          delay(50)
+        }
+      }
+    }
     viewModel.editSchool("EPFL")
     viewModel.editSchoolYear("MA1")
 
     viewModel.updateProfile(testUid, isFirstTime = true)
-    delay(1000)
-
+    withContext(Dispatchers.Default.limitedParallelism(1)) {
+      withTimeout(5000L) {
+        while (repo.getProfileByUid(testUid)?.name != "Updated Name") {
+          delay(50)
+        }
+      }
+    }
     // Verify persistence
     val stored = repo.getProfileByUid(testUid)
     assertEquals("Updated Name", stored?.name)
@@ -138,7 +165,13 @@ class SettingsViewModelInstrumentedTest : FirestoreGatherlyTest() {
     viewModel.editUsername("Bad!!Name")
 
     viewModel.updateProfile(testUid, isFirstTime = true)
-    delay(500)
+    withContext(Dispatchers.Default.limitedParallelism(1)) {
+      withTimeout(5000L) {
+        while (viewModel.uiState.first().errorMsg == null) {
+          delay(50)
+        }
+      }
+    }
     val state = viewModel.uiState.first()
     assertEquals("At least one field is not valid.", state.errorMsg)
   }

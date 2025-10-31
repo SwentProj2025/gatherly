@@ -42,7 +42,8 @@ data class SettingsUiState(
     val invalidNameMsg: String? = null,
     val invalidUsernameMsg: String? = null,
     val invalidBirthdayMsg: String? = null,
-    val isUsernameAvailable: Boolean? = null
+    val isUsernameAvailable: Boolean? = null,
+    val isLoadingProfile: Boolean = false
 ) {
   val isValid: Boolean
     get() =
@@ -91,6 +92,7 @@ class SettingsViewModel(
   fun loadProfile(profileUID: String) {
     viewModelScope.launch {
       try {
+        _uiState.value = _uiState.value.copy(isLoadingProfile = true)
         val profile = repository.getProfileByUid(profileUID) ?: Profile(uid = profileUID, name = "")
         originalProfile = profile
         _uiState.value =
@@ -106,7 +108,8 @@ class SettingsViewModel(
                       return@let if (profile.birthday != null)
                           dateFormat.format(profile.birthday.toDate())
                       else ""
-                    })
+                    },
+                isLoadingProfile = false)
       } catch (e: Exception) {
         Log.e("SettingsViewModel", "Error loading Profile by uid: $profileUID", e)
         setErrorMsg("Failed to load Profile: ${e.message}")
