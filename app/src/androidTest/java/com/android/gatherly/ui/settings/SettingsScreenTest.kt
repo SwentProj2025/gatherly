@@ -66,7 +66,7 @@ class SettingsScreenTest : FirestoreGatherlyTest() {
             SettingsScreenTestTags.SAVE_BUTTON)
 
     for (tag in tagsToCheck) {
-      composeRule.waitUntil(30_000L) {
+      composeRule.waitUntil() {
         try {
           composeRule.onNodeWithTag(tag).isDisplayed()
         } catch (_: Throwable) {
