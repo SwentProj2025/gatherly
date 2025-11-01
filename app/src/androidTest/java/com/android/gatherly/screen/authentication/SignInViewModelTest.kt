@@ -20,8 +20,6 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
-const val WAIT_TIMEOUT = 5_000L
-
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
 class SignInViewModelTest : FirestoreGatherlyTest() {
@@ -37,7 +35,7 @@ class SignInViewModelTest : FirestoreGatherlyTest() {
   }
 
   @Test
-  fun canSignInWithGoogle() = runTest {
+  fun canSignInWithGoogle_destinationInitProfileIfFirst() = runTest {
     val fakeGoogleIdToken =
         FakeJwtGenerator.createFakeGoogleIdToken("12345", email = "test@example.com")
 
@@ -61,10 +59,11 @@ class SignInViewModelTest : FirestoreGatherlyTest() {
     assert(userSignedIn.value)
     assert(FirebaseEmulator.auth.currentUser != null)
     assert(!profileRepository.initProfileIfMissing(FirebaseEmulator.auth.currentUser?.uid!!, ""))
+    assert(signInViewModel.destination.value == "init_profile")
   }
 
   @Test
-  fun canSignInAnonymously() = runTest {
+  fun canSignInAnonymously_destinationInitProfileIfFirst() = runTest {
     signInViewModel = SignInViewModel(profileRepository = profileRepository)
     val userSignedIn = signInViewModel.uiState
 
@@ -81,5 +80,6 @@ class SignInViewModelTest : FirestoreGatherlyTest() {
     assert(userSignedIn.value)
     assert(FirebaseEmulator.auth.currentUser != null)
     assert(!profileRepository.initProfileIfMissing(FirebaseEmulator.auth.currentUser?.uid!!, ""))
+    assert(signInViewModel.destination.value == "init_profile")
   }
 }

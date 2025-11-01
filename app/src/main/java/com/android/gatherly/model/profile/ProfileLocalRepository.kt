@@ -42,31 +42,45 @@ class ProfileLocalRepository : ProfileRepository {
   }
 
   // --- No-op or unused methods below ---
-  override suspend fun isUsernameAvailable(username: String): Boolean = true
+  override suspend fun isUsernameAvailable(username: String): Boolean {
+    return profiles.none { it.username == username }
+  }
 
-  override suspend fun registerUsername(uid: String, username: String): Boolean = true
+  override suspend fun registerUsername(uid: String, username: String): Boolean {
+    if (!isUsernameAvailable(username)) return false
+    val existing = getProfileByUid(uid)
+    val updated = (existing ?: Profile(uid = uid)).copy(username = username)
+    if (existing == null) addProfile(updated) else updateProfile(updated)
+    return true
+  }
 
   override suspend fun updateUsername(
       uid: String,
       oldUsername: String?,
       newUsername: String
-  ): Boolean = true
+  ): Boolean {
+    // Allow same username (no change)
+    if (oldUsername == newUsername) return true
+    if (!isUsernameAvailable(newUsername)) return false
 
-  override suspend fun getProfileByUsername(username: String): Profile? = null
+    val existing = getProfileByUid(uid)
+    val updated = (existing ?: Profile(uid = uid)).copy(username = newUsername)
+    if (existing == null) addProfile(updated) else updateProfile(updated)
+    return true
+  }
+
+  override suspend fun getProfileByUsername(username: String): Profile? =
+      profiles.find { it.username == username }
 
   override suspend fun searchProfilesByUsernamePrefix(prefix: String, limit: Int): List<Profile> =
-      emptyList()
+      profiles.filter { it.username.startsWith(prefix, ignoreCase = true) }.take(limit)
 
   override suspend fun initProfileIfMissing(uid: String, defaultPhotoUrl: String): Boolean {
-    if (profiles.indexOfFirst { it.uid == uid } == -1) {
-      addProfile(
-          Profile(
-              uid = uid,
-          ))
+    if (profiles.none { it.uid == uid }) {
+      addProfile(Profile(uid = uid, profilePicture = defaultPhotoUrl))
       return true
-    } else {
-      return false
     }
+    return false
   }
 
   override suspend fun getListNoFriends(currentUserId: String): List<String> {

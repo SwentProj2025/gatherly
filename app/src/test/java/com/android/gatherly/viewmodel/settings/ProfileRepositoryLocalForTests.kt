@@ -34,26 +34,49 @@ class ProfileRepositoryLocalForTests : ProfileRepository {
     return profiles.containsKey(uid)
   }
 
-  override suspend fun searchProfilesByNamePrefix(prefix: String): List<Profile> {
-    return profiles.values.filter { it.uid.contains(prefix) }
+  override suspend fun searchProfilesByNamePrefix(prefix: String): List<Profile> =
+      profiles.values.filter { it.name.startsWith(prefix) }
+
+  override suspend fun isUsernameAvailable(username: String): Boolean {
+    return profiles.values.none { it.username == username }
   }
 
-  override suspend fun isUsernameAvailable(username: String): Boolean = true
-
-  override suspend fun registerUsername(uid: String, username: String): Boolean = true
+  override suspend fun registerUsername(uid: String, username: String): Boolean {
+    if (!isUsernameAvailable(username)) return false
+    val existing = profiles[uid]
+    val updated = (existing ?: Profile(uid = uid)).copy(username = username)
+    profiles[uid] = updated
+    return true
+  }
 
   override suspend fun updateUsername(
       uid: String,
       oldUsername: String?,
       newUsername: String
-  ): Boolean = true
+  ): Boolean {
+    // If username is unchanged, allow update.
+    if (oldUsername == newUsername) return true
+    if (!isUsernameAvailable(newUsername)) return false
 
-  override suspend fun getProfileByUsername(username: String): Profile? = null
+    val existing = profiles[uid]
+    val updated = (existing ?: Profile(uid = uid)).copy(username = newUsername)
+    profiles[uid] = updated
+    return true
+  }
+
+  override suspend fun getProfileByUsername(username: String): Profile? =
+      profiles.values.find { it.username == username }
 
   override suspend fun searchProfilesByUsernamePrefix(prefix: String, limit: Int): List<Profile> =
-      emptyList()
+      profiles.values.filter { it.username.startsWith(prefix) }.take(limit)
 
-  override suspend fun initProfileIfMissing(uid: String, defaultPhotoUrl: String): Boolean = true
+  override suspend fun initProfileIfMissing(uid: String, defaultPhotoUrl: String): Boolean {
+    if (!profiles.containsKey(uid)) {
+      profiles[uid] = Profile(uid = uid, profilePicture = defaultPhotoUrl)
+      return true
+    }
+    return false
+  }
 
   override suspend fun getListNoFriends(currentUserId: String): List<String> {
     val currentProfile = getProfileByUid(currentUserId) ?: return emptyList()
