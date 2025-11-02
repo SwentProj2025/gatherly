@@ -58,7 +58,7 @@ class Milestone1End2End {
 
     // wait for homescreen to load
     composeTestRule.waitUntil(TIMEOUT) {
-      composeTestRule.onNodeWithTag(HomePageScreenTestTags.HOMETEXT).isDisplayed()
+      composeTestRule.onNodeWithTag(HomePageScreenTestTags.UPCOMING_EVENTS_TITLE).isDisplayed()
     }
 
     // go to todos tab
