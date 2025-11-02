@@ -8,6 +8,7 @@ import com.android.gatherly.model.group.Group
 import com.android.gatherly.model.group.GroupsRepository
 import com.android.gatherly.model.group.GroupsRepositoryFirestore
 import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -40,9 +41,11 @@ data class GroupsOverviewUIState(
  * [GroupsRepository].
  *
  * @property groupsRepository The repository used to fetch and manage Group items.
+ * @property authProvider Provider for Firebase authentication instance, injectable for testing.
  */
 class GroupsOverviewViewModel(
     private val groupsRepository: GroupsRepository = GroupsRepositoryFirestore(Firebase.firestore),
+    private val authProvider: () -> FirebaseAuth = { Firebase.auth }
 ) : ViewModel() {
 
   private val _uiState = MutableStateFlow(GroupsOverviewUIState())
@@ -75,7 +78,7 @@ class GroupsOverviewViewModel(
   fun onSignedOut(credentialManager: CredentialManager): Unit {
     viewModelScope.launch {
       _uiState.value = _uiState.value.copy(signedOut = true)
-      Firebase.auth.signOut()
+      authProvider().signOut()
       credentialManager.clearCredentialState(ClearCredentialStateRequest())
     }
   }
