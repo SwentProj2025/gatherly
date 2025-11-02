@@ -1,11 +1,10 @@
-package com.android.gatherly.screen.authentication
+package com.android.gatherly.ui.authentication
 
 import android.content.Context
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
-import com.android.gatherly.ui.authentication.SignInViewModel
 import com.android.gatherly.utils.FakeCredentialManager
 import com.android.gatherly.utils.FakeJwtGenerator
 import com.android.gatherly.utils.FirebaseEmulator
