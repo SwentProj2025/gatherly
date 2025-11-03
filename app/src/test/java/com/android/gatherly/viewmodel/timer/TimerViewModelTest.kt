@@ -87,7 +87,15 @@ class TimerViewModelTest {
 
     viewModel.startTimer()
 
-    withContext(Dispatchers.Default.limitedParallelism(1)) { delay(5000L) }
+    withContext(Dispatchers.Default.limitedParallelism(1)) {
+      withTimeout(7000L) {
+        while (viewModel.uiState.value.let {
+          it.hours != "00" || it.minutes != "00" || it.seconds != "00"
+        }) {
+          delay(100)
+        }
+      }
+    }
 
     val finalState = viewModel.uiState.value
 
