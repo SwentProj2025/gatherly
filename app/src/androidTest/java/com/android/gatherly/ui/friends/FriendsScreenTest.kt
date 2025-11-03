@@ -1,20 +1,27 @@
 package com.android.gatherly.ui.friends
 
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertTextContains
+import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onChild
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
-import com.android.gatherly.ui.events.EventsScreen
-import com.android.gatherly.ui.events.EventsViewModel
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.utils.FirestoreGatherlyProfileTest
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -165,18 +172,27 @@ class FriendsScreenTest : FirestoreGatherlyProfileTest() {
         composeTestRule.onNodeWithTag(FriendsScreenTestTags.SEARCH_FRIENDS_BAR).assertIsDisplayed()
         composeTestRule.onNodeWithTag(FriendsScreenTestTags.EMPTY_LIST_MSG).assertIsNotDisplayed()
         composeTestRule.onNodeWithTag(FriendsScreenTestTags
-            .getTestTagForFriendItem("1")).assertIsDisplayed()
+            .getTestTagForFriendItem("francis")).assertIsDisplayed()
+        composeTestRule
+            .onNodeWithTag(FriendsScreenTestTags
+                .getTestTagForFriendItem("francis"))
+            .assertIsDisplayed()
+            .assertTextEquals("francis")
         composeTestRule.onNodeWithTag(FriendsScreenTestTags
-            .getTestTagForFriendUsername("Profile1")).assertIsDisplayed()
-        composeTestRule.onNodeWithTag(FriendsScreenTestTags
-            .getTestTagForFriendProfilePicture("francis")).assertIsDisplayed()
+            .getTestTagForFriendProfilePicture("francis"),
+            useUnmergedTree = true)
+            .assertExists()
         composeTestRule.onNodeWithTag(FriendsScreenTestTags
             .getTestTagForFriendUnfollowButton("francis")).assertIsDisplayed()
 
         composeTestRule.onNodeWithTag(FriendsScreenTestTags
             .getTestTagForFriendItem("charlie")).assertIsDisplayed()
-        composeTestRule.onNodeWithTag(FriendsScreenTestTags
-            .getTestTagForFriendUsername("charlie")).assertIsDisplayed()
+        composeTestRule
+            .onNodeWithTag(FriendsScreenTestTags
+                .getTestTagForFriendItem("charlie"))
+            .assertIsDisplayed()
+            .assertTextEquals("charlie")
+
         composeTestRule.onNodeWithTag(FriendsScreenTestTags
             .getTestTagForFriendUnfollowButton("charlie")).assertIsDisplayed()
         composeTestRule.onNodeWithTag(FriendsScreenTestTags
@@ -184,8 +200,12 @@ class FriendsScreenTest : FirestoreGatherlyProfileTest() {
 
         composeTestRule.onNodeWithTag(FriendsScreenTestTags
             .getTestTagForFriendItem("denis")).assertIsDisplayed()
-        composeTestRule.onNodeWithTag(FriendsScreenTestTags
-            .getTestTagForFriendUsername("denis")).assertIsDisplayed()
+        composeTestRule
+            .onNodeWithTag(FriendsScreenTestTags
+                .getTestTagForFriendItem("denis"))
+            .assertIsDisplayed()
+            .assertTextEquals("denis")
+
         composeTestRule.onNodeWithTag(FriendsScreenTestTags
             .getTestTagForFriendUnfollowButton("denis")).assertIsDisplayed()
         composeTestRule.onNodeWithTag(FriendsScreenTestTags
@@ -196,22 +216,55 @@ class FriendsScreenTest : FirestoreGatherlyProfileTest() {
      * Test: Verifies that the user can click to the friend item to unfollow this friend
      */
     @Test
-    fun testClickToUnfollow(){
+    fun testClickToUnfollow(){ runTest {
         setContentwithAliceUID()
         composeTestRule.waitForIdle()
 
-        composeTestRule.onNodeWithTag(FriendsScreenTestTags
-            .getTestTagForFriendUnfollowButton("francis"))
+        composeTestRule.onNodeWithTag(
+            FriendsScreenTestTags
+                .getTestTagForFriendUnfollowButton("francis")
+        )
             .assertIsDisplayed()
             .performClick()
 
-        composeTestRule.waitForIdle()
+        withContext(Dispatchers.Default.limitedParallelism(1)) {
+            withTimeout(TIMEOUT) {
+                while (!aliceProfile.friendUids.contains("francis")) {
+                    delay(DELAY)
+                }
+            }
+        }
+
+        composeTestRule.onNodeWithTag(
+            FriendsScreenTestTags
+                .getTestTagForFriendItem("francis")
+        )
+            .assertIsNotDisplayed()
+
+    }
     }
 
     /**
      * Test: Verifies that the user can search a friend username and the screen display
      * only the correct profiles item
      */
+    @Test
+    fun testFriendSearchBar(){
+        setContentwithAliceUID()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithTag(FriendsScreenTestTags.SEARCH_FRIENDS_BAR)
+            .performTextInput("denis")
+
+        composeTestRule.onNodeWithTag(FriendsScreenTestTags
+            .getTestTagForFriendItem("denis")).assertIsDisplayed()
+
+        composeTestRule.onNodeWithTag(FriendsScreenTestTags
+            .getTestTagForFriendItem("francis")).assertIsNotDisplayed()
+
+        composeTestRule.onNodeWithTag(FriendsScreenTestTags
+            .getTestTagForFriendItem("charlie")).assertIsNotDisplayed()
+    }
 
 
 

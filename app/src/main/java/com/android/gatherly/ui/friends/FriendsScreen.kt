@@ -167,7 +167,7 @@ fun FriendsScreen(
                           placeholder = {
                               Text(
                                   text = stringResource(R.string.friends_search_bar_label),
-                                  modifier = Modifier.padding(16.dp)) },
+                                  modifier = Modifier.padding(10.dp)) },
                           singleLine = true,
                           shape = RoundedCornerShape(12.dp)
                       )
@@ -247,8 +247,9 @@ fun FriendItem(friend: String, unfollow: () -> Unit) {
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Medium,
-                    modifier = Modifier.testTag(
-                        FriendsScreenTestTags.getTestTagForFriendUsername(friend)
+                    modifier = Modifier
+                        .testTag(
+                            FriendsScreenTestTags.getTestTagForFriendUsername(friend)
                     ))
 
             }
