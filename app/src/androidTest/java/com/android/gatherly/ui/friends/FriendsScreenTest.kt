@@ -3,25 +3,17 @@ package com.android.gatherly.ui.friends
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertTextContains
-import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
+import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.ui.events.EventsScreen
-import com.android.gatherly.ui.events.EventsScreenTestTags
 import com.android.gatherly.ui.events.EventsViewModel
-import com.android.gatherly.ui.friends.FriendsScreen
-import com.android.gatherly.ui.friends.FriendsViewModel
 import com.android.gatherly.ui.navigation.NavigationTestTags
-import com.android.gatherly.ui.navigation.Screen
-import com.android.gatherly.utils.FirebaseEmulator
 import com.android.gatherly.utils.FirestoreGatherlyProfileTest
-import com.google.firebase.Firebase
-import com.google.firebase.auth.auth
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -34,26 +26,102 @@ class FriendsScreenTest : FirestoreGatherlyProfileTest() {
 
     @get:Rule val composeTestRule = createComposeRule()
     private lateinit var currentUserId: String
+    private lateinit var friendsViewModel: FriendsViewModel
+    private lateinit var profileRepository: ProfileRepository
 
     @Before
     override fun setUp() {
         super.setUp()
-        currentUserId =
-            Firebase.auth.currentUser?.uid
-                ?: throw IllegalStateException("Firebase user is not authenticated after setUp.")
     }
 
-    /** Helper function: set the content of the composeTestRule without initial events */
-    private fun setContent() {
+    /**
+     *  Helper function: set the content of the composeTestRule with currentUserID Bob who have no friend
+     */
+    private fun setContentwithBobUID() {
         runTest {
-            composeTestRule.setContent {
-                FriendsScreen(
-                    friendsViewModel = FriendsViewModel(
-                        repository = repository,
-                        currentUserId = currentUserId
-                    )
-                )
-            }
+            profileRepository = ProfileLocalRepository()
+
+            runBlocking { profileRepository.addProfile(bobProfile) }
+
+            currentUserId = bobProfile.uid
+
+            friendsViewModel = FriendsViewModel(profileRepository, currentUserId)
+
+            runBlocking { addProfiles() }
+
+            composeTestRule.setContent { FriendsScreen(friendsViewModel) }
+        }
+    }
+
+    /**
+     *  Helper function: set the content of the composeTestRule with currentUserID Alice
+     *  who have 3 friends
+     */
+    private fun setContentwithAliceUID() {
+        runTest {
+            profileRepository = ProfileLocalRepository()
+
+            runBlocking { addProfiles() }
+            runBlocking { profileRepository.addProfile(aliceProfile) }
+
+            currentUserId = aliceProfile.uid
+
+            friendsViewModel = FriendsViewModel(profileRepository, currentUserId)
+
+            composeTestRule.setContent { FriendsScreen(friendsViewModel) }
+        }
+    }
+
+    /*----------------------------------------Profiles--------------------------------------------*/
+    val bobProfile: Profile =
+        Profile(
+            uid = "bobID",
+            name = "bobby",
+            username = "bob",
+            groupIds = emptyList(),
+            friendUids = emptyList()
+        )
+
+    val aliceProfile: Profile =
+        Profile(
+            uid = "AliceID",
+            name = "alicia",
+            username = "alice",
+            groupIds = emptyList(),
+            friendUids = listOf("1", "2", "3"))
+    val profile1: Profile =
+        Profile(
+            uid = "1",
+            name = "Profile1",
+            username = "francis",
+            groupIds = emptyList(),
+            friendUids = emptyList())
+
+    val profile2: Profile =
+        Profile(
+            uid = "2",
+            name = "Profile2",
+            username = "charlie",
+            groupIds = emptyList(),
+            friendUids = emptyList())
+
+    val profile3: Profile =
+        Profile(
+            uid = "3",
+            name = "Profile3",
+            username = "denis",
+            groupIds = emptyList(),
+            friendUids = emptyList())
+
+
+    /**
+     * Helper function : fills the profile repository with created profiles
+     */
+    fun addProfiles() {
+        runTest {
+            profileRepository.addProfile(profile1)
+            profileRepository.addProfile(profile2)
+            profileRepository.addProfile(profile3)
         }
     }
 
@@ -63,7 +131,7 @@ class FriendsScreenTest : FirestoreGatherlyProfileTest() {
      */
     @Test
     fun testTagsCorrectlySetWhenListAreEmpty() {
-        setContent()
+        setContentwithBobUID()
         composeTestRule
             .onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
             .assertTextContains("Friends", substring = true, ignoreCase = true)
@@ -78,58 +146,74 @@ class FriendsScreenTest : FirestoreGatherlyProfileTest() {
      */
     @Test
     fun testButtonFindFriendClikable() {
-        setContent()
+        setContentwithBobUID()
         composeTestRule.onNodeWithTag(FriendsScreenTestTags.EMPTY_LIST_MSG).assertIsDisplayed()
         composeTestRule.onNodeWithTag(FriendsScreenTestTags.BUTTON_FIND_FRIENDS)
             .assertIsDisplayed()
             .performClick()
     }
 
+    /**
+     * Test : Verifies that when the user got 3 friends, the friends items display correctly
+     */
     @Test
-    fun testDisplayCorrectlyOneFriend(){
-        val auth = FirebaseEmulator.auth
-        val friend =
-            Profile(
-                name = "Alice",
-                username = "alice",
-                school = "University",
-                schoolYear = "Year",
-                friendUids = emptyList()
-            )
-        runBlocking { repository.addProfile(friend) }
+    fun testDisplayCorrectlyFriends(){
+        setContentwithAliceUID()
+        composeTestRule.waitForIdle()
 
-        try{
-            runBlocking { auth.signInAnonymously() }
-            val bobId = auth.currentUser?.uid ?: error("Bob auth failed")
-            val bobProfile =
-                Profile(
-                    uid = bobId,
-                    name = "Bob",
-                    username = "bob",
-                    school = "University",
-                    schoolYear = "Year",
-                    friendUids = emptyList()
-                )
+        composeTestRule.onNodeWithTag(FriendsScreenTestTags.BUTTON_FIND_FRIENDS).assertIsDisplayed()
+        composeTestRule.onNodeWithTag(FriendsScreenTestTags.SEARCH_FRIENDS_BAR).assertIsDisplayed()
+        composeTestRule.onNodeWithTag(FriendsScreenTestTags.EMPTY_LIST_MSG).assertIsNotDisplayed()
+        composeTestRule.onNodeWithTag(FriendsScreenTestTags
+            .getTestTagForFriendItem("1")).assertIsDisplayed()
+        composeTestRule.onNodeWithTag(FriendsScreenTestTags
+            .getTestTagForFriendUsername("Profile1")).assertIsDisplayed()
+        composeTestRule.onNodeWithTag(FriendsScreenTestTags
+            .getTestTagForFriendProfilePicture("francis")).assertIsDisplayed()
+        composeTestRule.onNodeWithTag(FriendsScreenTestTags
+            .getTestTagForFriendUnfollowButton("francis")).assertIsDisplayed()
 
-            runBlocking { repository.addProfile(bobProfile) }
-            runBlocking { repository.addFriend(friend.username, bobId) }
+        composeTestRule.onNodeWithTag(FriendsScreenTestTags
+            .getTestTagForFriendItem("charlie")).assertIsDisplayed()
+        composeTestRule.onNodeWithTag(FriendsScreenTestTags
+            .getTestTagForFriendUsername("charlie")).assertIsDisplayed()
+        composeTestRule.onNodeWithTag(FriendsScreenTestTags
+            .getTestTagForFriendUnfollowButton("charlie")).assertIsDisplayed()
+        composeTestRule.onNodeWithTag(FriendsScreenTestTags
+            .getTestTagForFriendUnfollowButton("charlie")).assertIsDisplayed()
 
-            composeTestRule.setContent {
-                FriendsScreen(
-                    friendsViewModel = FriendsViewModel(repository = repository, currentUserId = bobId),
-                )
-            }
-            composeTestRule.waitForIdle()
-
-            composeTestRule.onNodeWithTag(FriendsScreenTestTags.BUTTON_FIND_FRIENDS).assertIsDisplayed()
-            composeTestRule.onNodeWithTag(FriendsScreenTestTags.SEARCH_FRIENDS_BAR).assertIsDisplayed()
-            composeTestRule.onNodeWithTag(FriendsScreenTestTags.EMPTY_LIST_MSG).assertIsNotDisplayed()
-
-        } finally {
-            auth.signOut()
-        }
-
+        composeTestRule.onNodeWithTag(FriendsScreenTestTags
+            .getTestTagForFriendItem("denis")).assertIsDisplayed()
+        composeTestRule.onNodeWithTag(FriendsScreenTestTags
+            .getTestTagForFriendUsername("denis")).assertIsDisplayed()
+        composeTestRule.onNodeWithTag(FriendsScreenTestTags
+            .getTestTagForFriendUnfollowButton("denis")).assertIsDisplayed()
+        composeTestRule.onNodeWithTag(FriendsScreenTestTags
+            .getTestTagForFriendUnfollowButton("denis")).assertIsDisplayed()
     }
+
+    /**
+     * Test: Verifies that the user can click to the friend item to unfollow this friend
+     */
+    @Test
+    fun testClickToUnfollow(){
+        setContentwithAliceUID()
+        composeTestRule.waitForIdle()
+
+        composeTestRule.onNodeWithTag(FriendsScreenTestTags
+            .getTestTagForFriendUnfollowButton("francis"))
+            .assertIsDisplayed()
+            .performClick()
+
+        composeTestRule.waitForIdle()
+    }
+
+    /**
+     * Test: Verifies that the user can search a friend username and the screen display
+     * only the correct profiles item
+     */
+
+
 
 
 

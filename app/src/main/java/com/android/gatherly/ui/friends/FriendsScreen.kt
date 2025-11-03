@@ -259,7 +259,7 @@ fun FriendItem(friend: String, unfollow: () -> Unit) {
             modifier = Modifier.wrapContentWidth()
                 .testTag(FriendsScreenTestTags.getTestTagForFriendUnfollowButton(friend))
         ) {
-            Text("Unfollow")
+            Text( stringResource(R.string.friends_unfollow_button_title))
         }
         }
     }
