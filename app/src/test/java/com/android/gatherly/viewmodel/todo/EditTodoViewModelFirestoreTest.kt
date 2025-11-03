@@ -4,16 +4,17 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosRepository
+import com.android.gatherly.model.todo.ToDosRepositoryLocalMapTest
 import com.android.gatherly.ui.todo.EditTodoViewModel
-import com.android.gatherly.utils.FirestoreGatherlyTest
 import com.google.firebase.Timestamp
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.test.setMain
+import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
@@ -32,47 +33,55 @@ private const val DELAY = 100L
  * repository errors are surfaced in UI state.
  */
 @RunWith(AndroidJUnit4::class)
-class EditTodoViewModelFirestoreTest : FirestoreGatherlyTest() {
+@OptIn(ExperimentalCoroutinesApi::class)
+class EditTodoViewModelFirestoreTest {
 
-  private lateinit var viewModel: EditTodoViewModel
+  private lateinit var editTodoViewModel: EditTodoViewModel
+  private lateinit var toDosRepository: ToDosRepository
   private lateinit var baseTodo: ToDo
 
-  @Before
-  override fun setUp() {
-    super.setUp()
-    viewModel = EditTodoViewModel(repository)
+  // initialize this so that tests control all coroutines and can wait on them
+  private val testDispatcher = StandardTestDispatcher()
 
-    // Create a base ToDo in Firestore to edit later
-    runTest {
-      baseTodo =
-          ToDo(
-              uid = repository.getNewUid(),
-              name = "Initial task",
-              description = "Original description",
-              assigneeName = "John",
-              dueDate = Timestamp.now(),
-              dueTime = null,
-              location = null,
-              status = ToDoStatus.ONGOING,
-              ownerId = "owner")
-      repository.addTodo(baseTodo)
-    }
+  @Before
+  fun setUp() {
+    // so that tests can wait on coroutines
+    Dispatchers.setMain(testDispatcher)
+
+    toDosRepository = ToDosRepositoryLocalMapTest()
+    fillRepository()
+
+    editTodoViewModel = EditTodoViewModel(todoRepository = toDosRepository, currentUser = "owner")
+  }
+
+  @After
+  fun tearDown() {
+    Dispatchers.resetMain()
+  }
+
+  private fun fillRepository() = runTest {
+    baseTodo =
+        ToDo(
+            uid = toDosRepository.getNewUid(),
+            name = "Initial task",
+            description = "Original description",
+            assigneeName = "John",
+            dueDate = Timestamp.now(),
+            dueTime = null,
+            location = null,
+            status = ToDoStatus.ONGOING,
+            ownerId = "owner")
+    toDosRepository.addTodo(baseTodo)
+    advanceUntilIdle()
   }
 
   @Test
   fun loadTodo_withValidId_loadsSuccessfully() = runTest {
-    viewModel.loadTodo(baseTodo.uid)
+    editTodoViewModel.loadTodo(baseTodo.uid)
 
-    withContext(Dispatchers.Default.limitedParallelism(1)) {
-      withTimeout(TIMEOUT) {
-        while (viewModel.uiState.value.title.isEmpty() &&
-            viewModel.uiState.value.errorMsg == null) {
-          delay(DELAY)
-        }
-      }
-    }
+    advanceUntilIdle()
 
-    val state = viewModel.uiState.value
+    val state = editTodoViewModel.uiState.value
     assertEquals("Initial task", state.title)
     assertEquals("Original description", state.description)
     assertEquals("John", state.assignee)
@@ -81,96 +90,80 @@ class EditTodoViewModelFirestoreTest : FirestoreGatherlyTest() {
 
   @Test
   fun loadTodo_withInvalidId_setsErrorMessage() = runTest {
-    viewModel.loadTodo("nonexistent-id")
+    editTodoViewModel.loadTodo("nonexistent-id")
 
-    withContext(Dispatchers.Default.limitedParallelism(1)) {
-      withTimeout(TIMEOUT) {
-        while (viewModel.uiState.value.errorMsg == null) {
-          delay(DELAY)
-        }
-      }
-    }
+    advanceUntilIdle()
 
-    assertTrue(viewModel.uiState.value.errorMsg!!.contains("Failed to load ToDo"))
+    assertTrue(editTodoViewModel.uiState.value.errorMsg!!.contains("Failed to load ToDo"))
   }
 
   @Test
   fun editTodo_withValidFields_updatesRepository() = runTest {
     // Load the current ToDo
-    viewModel.loadTodo(baseTodo.uid)
-    withContext(Dispatchers.Default.limitedParallelism(1)) {
-      withTimeout(TIMEOUT) { while (viewModel.uiState.value.title.isBlank()) delay(DELAY) }
-    }
+    editTodoViewModel.loadTodo(baseTodo.uid)
+    advanceUntilIdle()
 
     // Provide valid values for all required fields
-    viewModel.onTitleChanged("Updated title")
-    viewModel.onDescriptionChanged("Updated description")
-    viewModel.onAssigneeChanged("Mary")
-    viewModel.onDateChanged("10/10/2025")
-    viewModel.onTimeChanged("14:00")
-    viewModel.onLocationChanged("Place")
+    editTodoViewModel.onTitleChanged("Updated title")
+    editTodoViewModel.onDescriptionChanged("Updated description")
+    editTodoViewModel.onAssigneeChanged("Mary")
+    editTodoViewModel.onDateChanged("10/10/2025")
+    editTodoViewModel.onTimeChanged("14:00")
+    editTodoViewModel.onLocationChanged("Place")
 
     // Perform the edit
-    viewModel.editTodo(baseTodo.uid)
+    editTodoViewModel.editTodo(baseTodo.uid)
 
     // Wait for async Firestore write
-    withContext(Dispatchers.Default.limitedParallelism(1)) {
-      withTimeout(TIMEOUT) {
-        var updated: ToDo? = null
-        while (updated == null || updated.name != "Updated title") {
-          delay(DELAY)
-          updated = repository.getTodo(baseTodo.uid)
-        }
-      }
-    }
+    advanceUntilIdle()
 
-    val updated = repository.getTodo(baseTodo.uid)
+    val updated = toDosRepository.getTodo(baseTodo.uid)
     assertEquals("Updated title", updated.name)
     assertEquals("Updated description", updated.description)
     assertEquals("Mary", updated.assigneeName)
     assertEquals(ToDoStatus.ONGOING, updated.status)
     assertEquals(baseTodo.uid, updated.uid)
 
-    val expectedOwnerId = Firebase.auth.currentUser?.uid ?: "owner"
+    val expectedOwnerId = "owner"
     assertEquals(expectedOwnerId, updated.ownerId)
   }
 
   @Test
   fun editTodo_withInvalidDate_doesNotSave() = runTest {
-    viewModel.onTitleChanged("Invalid edit")
-    viewModel.onDescriptionChanged("Bad date")
-    viewModel.onAssigneeChanged("User")
-    viewModel.onDateChanged("15-10-2025") // Wrong format
-    viewModel.onTimeChanged("14:00")
-    viewModel.onLocationChanged("Place")
+    editTodoViewModel.onTitleChanged("Invalid edit")
+    editTodoViewModel.onDescriptionChanged("Bad date")
+    editTodoViewModel.onAssigneeChanged("User")
+    editTodoViewModel.onDateChanged("15-10-2025") // Wrong format
+    editTodoViewModel.onTimeChanged("14:00")
+    editTodoViewModel.onLocationChanged("Place")
 
-    viewModel.editTodo(baseTodo.uid)
-    delay(DELAY)
+    editTodoViewModel.editTodo(baseTodo.uid)
+    advanceUntilIdle()
 
-    val state = viewModel.uiState.value
+    val state = editTodoViewModel.uiState.value
     assertNotNull(state.dueDateError)
     assertTrue(state.dueDateError!!.contains("Invalid format (dd/MM/yyyy)"))
   }
 
   @Test
   fun editTodo_withEmptyFields_doesNotProceed() = runTest {
-    viewModel.onTitleChanged("") // Missing title
-    viewModel.onDescriptionChanged("Desc")
-    viewModel.onAssigneeChanged("A")
-    viewModel.onDateChanged("10/10/2025")
-    viewModel.onTimeChanged("14:00")
-    viewModel.onLocationChanged("Place")
+    editTodoViewModel.onTitleChanged("") // Missing title
+    editTodoViewModel.onDescriptionChanged("Desc")
+    editTodoViewModel.onAssigneeChanged("A")
+    editTodoViewModel.onDateChanged("10/10/2025")
+    editTodoViewModel.onTimeChanged("14:00")
+    editTodoViewModel.onLocationChanged("Place")
 
-    viewModel.editTodo(baseTodo.uid)
-    delay(DELAY)
+    editTodoViewModel.editTodo(baseTodo.uid)
+    advanceUntilIdle()
 
-    val state = viewModel.uiState.value
+    val state = editTodoViewModel.uiState.value
     assertEquals("Title cannot be empty", state.titleError)
   }
 
   @Test
   fun deleteTodo_removesItemFromRepository() = runTest {
-    repository.addTodo(
+    toDosRepository.addTodo(
         ToDo(
             uid = "delete-me",
             name = "To delete",
@@ -182,17 +175,11 @@ class EditTodoViewModelFirestoreTest : FirestoreGatherlyTest() {
             status = ToDoStatus.ONGOING,
             ownerId = "owner"))
 
-    viewModel.deleteToDo("delete-me")
+    editTodoViewModel.deleteToDo("delete-me")
     // Wait deterministically until the repository no longer contains it
-    withContext(Dispatchers.Default.limitedParallelism(1)) {
-      withTimeout(TIMEOUT) {
-        while (repository.getAllTodos().any { it.uid == "delete-me" }) {
-          delay(DELAY)
-        }
-      }
-    }
+    advanceUntilIdle()
 
-    val all = repository.getAllTodos()
+    val all = toDosRepository.getAllTodos()
     assertTrue(all.none { it.uid == "delete-me" })
   }
 
@@ -219,16 +206,10 @@ class EditTodoViewModelFirestoreTest : FirestoreGatherlyTest() {
           override suspend fun toggleStatus(todoID: String) = Unit
         }
 
-    val viewModel = EditTodoViewModel(failingRepo)
+    val viewModel = EditTodoViewModel(failingRepo, currentUser = "")
     viewModel.deleteToDo("anything")
 
-    withContext(Dispatchers.Default.limitedParallelism(1)) {
-      withTimeout(TIMEOUT) {
-        while (viewModel.uiState.value.errorMsg == null) {
-          delay(DELAY)
-        }
-      }
-    }
+    advanceUntilIdle()
 
     assertTrue(viewModel.uiState.value.errorMsg!!.contains("Failed to delete ToDo"))
   }

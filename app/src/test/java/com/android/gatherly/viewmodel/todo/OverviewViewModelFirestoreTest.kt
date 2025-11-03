@@ -3,13 +3,15 @@ package com.android.gatherly.viewmodel.todo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
+import com.android.gatherly.model.todo.ToDosRepository
+import com.android.gatherly.model.todo.ToDosRepositoryLocalMapTest
 import com.android.gatherly.ui.todo.OverviewViewModel
-import com.android.gatherly.utils.FirestoreGatherlyTest
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -35,22 +37,23 @@ private const val DELAY = 50L
  */
 @RunWith(AndroidJUnit4::class)
 @OptIn(ExperimentalCoroutinesApi::class)
-class OverviewViewModelFirestoreTest : FirestoreGatherlyTest() {
-  private lateinit var viewModel: OverviewViewModel
+class OverviewViewModelFirestoreTest {
+  private lateinit var overviewViewModel: OverviewViewModel
+  private lateinit var toDosRepository: ToDosRepository
 
   private val testDispatcher = StandardTestDispatcher()
 
   @Before
-  override fun setUp() {
-    super.setUp()
+  fun setUp() {
     Dispatchers.setMain(testDispatcher)
-    viewModel = OverviewViewModel(repository)
+
+    toDosRepository = ToDosRepositoryLocalMapTest()
+    overviewViewModel = OverviewViewModel(toDosRepository)
   }
 
   @After
-  override fun tearDown() {
+  fun tearDown() {
     Dispatchers.resetMain()
-    super.tearDown()
   }
 
   private fun makeTodo(
@@ -61,7 +64,7 @@ class OverviewViewModelFirestoreTest : FirestoreGatherlyTest() {
   ): ToDo {
     val now = Timestamp.now()
     return ToDo(
-        uid = repository.getNewUid(),
+        uid = toDosRepository.getNewUid(),
         name = name,
         description = description,
         assigneeName = assignee,
@@ -79,24 +82,17 @@ class OverviewViewModelFirestoreTest : FirestoreGatherlyTest() {
         // Pre-populate repository
         val todo1 = makeTodo("Sample Todo 1")
         val todo2 = makeTodo("Sample Todo 2")
-        repository.addTodo(todo1)
-        repository.addTodo(todo2)
+        toDosRepository.addTodo(todo1)
+        toDosRepository.addTodo(todo2)
 
-        withContext(Dispatchers.Default.limitedParallelism(1)) {
-          withTimeout(TIMEOUT) {
-            while (viewModel.uiState.value.todos.size != 2) {
-              viewModel.refreshUIState()
-              delay(200)
-            }
-          }
-        }
+        advanceUntilIdle()
         // Trigger reload
-        viewModel.refreshUIState()
+        overviewViewModel.refreshUIState()
 
         // Wait for repository load
-        waitUntilLoaded(viewModel)
+        waitUntilLoaded(overviewViewModel)
 
-        val state = viewModel.uiState.value
+        val state = overviewViewModel.uiState.value
         assertFalse("isLoading should be false after load", state.isLoading)
         assertNull("errorMsg should be null on success", state.errorMsg)
         assertEquals(2, state.todos.size)
@@ -109,19 +105,15 @@ class OverviewViewModelFirestoreTest : FirestoreGatherlyTest() {
   @Test
   fun getAllTodos_setsLoadingStateDuringFetch() =
       runTest(testDispatcher) {
-        viewModel.refreshUIState()
+        overviewViewModel.refreshUIState()
 
         // Wait for loading to start
-        withTimeout(TIMEOUT) {
-          while (!viewModel.uiState.value.isLoading) {
-            delay(DELAY)
-          }
-        }
+        advanceUntilIdle()
 
         // Then wait for loading to end
-        waitUntilLoaded(viewModel)
+        waitUntilLoaded(overviewViewModel)
 
-        val state = viewModel.uiState.value
+        val state = overviewViewModel.uiState.value
         assertFalse("Expected isLoading=false after job completion", state.isLoading)
       }
 
@@ -129,11 +121,11 @@ class OverviewViewModelFirestoreTest : FirestoreGatherlyTest() {
   fun getAllTodos_withEmptyRepo_returnsEmptyList() =
       runTest(testDispatcher) {
         // Repository has no data
-        viewModel.refreshUIState()
+        overviewViewModel.refreshUIState()
 
-        waitUntilLoaded(viewModel)
+        waitUntilLoaded(overviewViewModel)
 
-        val state = viewModel.uiState.value
+        val state = overviewViewModel.uiState.value
         assertTrue(state.todos.isEmpty())
         assertNull(state.errorMsg)
       }
@@ -143,42 +135,28 @@ class OverviewViewModelFirestoreTest : FirestoreGatherlyTest() {
   fun refreshUiState_triggersReloadSuccessfully() =
       runTest(testDispatcher) {
         val todo1 = makeTodo("Initial Todo")
-        repository.addTodo(todo1)
+        toDosRepository.addTodo(todo1)
 
-        withContext(Dispatchers.Default.limitedParallelism(1)) {
-          withTimeout(TIMEOUT) {
-            while (viewModel.uiState.value.todos.size != 1) {
-              viewModel.refreshUIState()
-              delay(200)
-            }
-          }
-        }
+        advanceUntilIdle()
 
-        viewModel.refreshUIState()
+        overviewViewModel.refreshUIState()
 
-        waitUntilLoaded(viewModel)
+        waitUntilLoaded(overviewViewModel)
 
-        val initialCount = viewModel.uiState.value.todos.size
+        val initialCount = overviewViewModel.uiState.value.todos.size
         assertEquals(1, initialCount)
 
         // Add another todo and refresh again
         val todo2 = makeTodo("Another Todo")
-        repository.addTodo(todo2)
+        toDosRepository.addTodo(todo2)
 
-        withContext(Dispatchers.Default.limitedParallelism(1)) {
-          withTimeout(TIMEOUT) {
-            while (viewModel.uiState.value.todos.size != 2) {
-              viewModel.refreshUIState()
-              delay(200)
-            }
-          }
-        }
+        advanceUntilIdle()
 
-        viewModel.refreshUIState()
+        overviewViewModel.refreshUIState()
 
-        waitUntilLoaded(viewModel)
+        waitUntilLoaded(overviewViewModel)
 
-        val updatedCount = viewModel.uiState.value.todos.size
+        val updatedCount = overviewViewModel.uiState.value.todos.size
         assertEquals(2, updatedCount)
       }
 
@@ -188,39 +166,24 @@ class OverviewViewModelFirestoreTest : FirestoreGatherlyTest() {
       runTest(testDispatcher) {
         // create and add a todo
         val todo = makeTodo("Status Change Test")
-        repository.addTodo(todo)
+        toDosRepository.addTodo(todo)
 
-        withContext(Dispatchers.Default.limitedParallelism(1)) {
-          withTimeout(TIMEOUT) {
-            while (viewModel.uiState.value.todos.size != 1) {
-              viewModel.refreshUIState()
-              delay(200)
-            }
-          }
-        }
+        advanceUntilIdle()
 
         // Initial load
-        viewModel.refreshUIState()
-        waitUntilLoaded(viewModel)
+        overviewViewModel.refreshUIState()
+        waitUntilLoaded(overviewViewModel)
 
-        val initial = viewModel.uiState.value.todos.first()
+        val initial = overviewViewModel.uiState.value.todos.first()
         assertEquals(ToDoStatus.ONGOING, initial.status)
 
         // update the todo's status
-        viewModel.onCheckboxChanged(todo.uid, ToDoStatus.ENDED)
+        overviewViewModel.onCheckboxChanged(todo.uid, ToDoStatus.ENDED)
 
         // Wait for the UI to refresh and reflect the change
-        withContext(Dispatchers.Default.limitedParallelism(1)) {
-          withTimeout(TIMEOUT) {
-            var updated = viewModel.uiState.value.todos.firstOrNull { it.uid == todo.uid }
-            while (updated == null || updated.status != ToDoStatus.ENDED) {
-              delay(DELAY)
-              updated = viewModel.uiState.value.todos.firstOrNull { it.uid == todo.uid }
-            }
-          }
-        }
+        advanceUntilIdle()
 
-        val updatedTodo = viewModel.uiState.value.todos.first { it.uid == todo.uid }
+        val updatedTodo = overviewViewModel.uiState.value.todos.first { it.uid == todo.uid }
         assertEquals(
             "Expected todo status to be updated to ENDED", ToDoStatus.ENDED, updatedTodo.status)
       }

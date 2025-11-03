@@ -72,7 +72,8 @@ private var client: OkHttpClient =
  */
 class EditTodoViewModel(
     private val todoRepository: ToDosRepository = ToDosRepositoryProvider.repository,
-    private val nominatimClient: NominatimLocationRepository = NominatimLocationRepository(client)
+    private val nominatimClient: NominatimLocationRepository = NominatimLocationRepository(client),
+    private val currentUser: String = Firebase.auth.currentUser?.uid ?: ""
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(EditTodoUIState())
   /** Public immutable access to the Edit ToDo UI state. */
@@ -165,7 +166,7 @@ class EditTodoViewModel(
           Timestamp(sdfTime.parse(state.dueTime)!!)
         } else null
 
-    val ownerId = Firebase.auth.currentUser?.uid ?: ""
+    val ownerId = currentUser
 
     editTodoToRepository(
         todoID = id,
