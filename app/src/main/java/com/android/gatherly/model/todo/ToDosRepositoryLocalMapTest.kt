@@ -1,34 +1,11 @@
 package com.android.gatherly.model.todo
 
-import com.android.gatherly.model.map.Location
-import com.google.firebase.Timestamp
 import kotlin.String
 
 /** Represents a repository that manages a local list of todos. */
 class ToDosRepositoryLocalMapTest : ToDosRepository {
 
-  private val todos =
-      mutableListOf(
-          ToDo(
-              uid = "1",
-              name = "Buy groceries",
-              description = "Milk, Bread, Eggs, Butter",
-              assigneeName = "Alice",
-              dueDate = Timestamp.now(),
-              dueTime = null,
-              location = Location(46.5238, 6.5627, "Bassenges"),
-              status = ToDoStatus.ONGOING,
-              ownerId = "user1"),
-          ToDo(
-              uid = "2",
-              name = "Finish swent",
-              description = "FInish map ui",
-              assigneeName = "Colombe",
-              dueDate = Timestamp.now(),
-              dueTime = null,
-              location = Location(46.5197, 6.5663, "EPFL"),
-              status = ToDoStatus.ONGOING,
-              ownerId = "user1"))
+  private val todos: MutableList<ToDo> = mutableListOf()
 
   private var counter = 0
 

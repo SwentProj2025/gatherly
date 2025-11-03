@@ -301,8 +301,6 @@ class HomePageViewModelTest {
       profileRepository.addProfile(friend4Profile)
       eventsRepository.addEvent(event1)
       eventsRepository.addEvent(event2)
-      toDosRepository.deleteTodo("1")
-      toDosRepository.deleteTodo("2")
       advanceUntilIdle()
     }
   }
