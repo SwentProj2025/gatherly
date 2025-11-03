@@ -17,13 +17,9 @@ import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.utils.InMemoryGatherlyTest
 import com.google.firebase.Timestamp
 import java.util.Calendar
-import kotlin.collections.last
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
-
-// Portions of the code in this file are copy-pasted from the Bootcamp solution provided by the
-// SwEnt staff.
 
 class OverviewScreenTest : InMemoryGatherlyTest() {
   @get:Rule val composeTestRule = createComposeRule()
@@ -64,7 +60,7 @@ class OverviewScreenTest : InMemoryGatherlyTest() {
 
   @Test
   fun todoListDisplaysDueDate() {
-    val todo = todo1.copy(dueDate = Timestamp.fromDate(2023, Calendar.DECEMBER, 25))
+    val todo = todo1.copy(dueDate = Timestamp.Companion.fromDate(2023, Calendar.DECEMBER, 25))
     val todoList = listOf(todo)
     val dueDate = "25/12/2023"
     setContent(withInitialTodos = todoList)
@@ -81,7 +77,8 @@ class OverviewScreenTest : InMemoryGatherlyTest() {
 
   @Test
   fun dueDateIsCorrectlyFormatted() {
-    val todo1 = todo1.copy(uid = "1", dueDate = Timestamp.fromDate(2023, Calendar.DECEMBER, 25))
+    val todo1 =
+        todo1.copy(uid = "1", dueDate = Timestamp.Companion.fromDate(2023, Calendar.DECEMBER, 25))
     val todoList = listOf(todo1)
     val dueDate1 = "25/12/2023"
     setContent(withInitialTodos = todoList)

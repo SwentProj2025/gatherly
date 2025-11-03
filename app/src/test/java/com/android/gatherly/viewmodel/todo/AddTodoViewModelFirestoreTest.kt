@@ -1,15 +1,17 @@
-package com.android.gatherly.ui.todo
+package com.android.gatherly.viewmodel.todo
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosRepository
+import com.android.gatherly.ui.todo.AddTodoViewModel
 import com.android.gatherly.utils.FirestoreGatherlyTest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import org.junit.Assert
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
@@ -19,7 +21,8 @@ private const val TIMEOUT = 100_000L
 private const val DELAY = 500L
 
 /**
- * Integration tests for [AddTodoViewModel] using the real Firestore repository (via emulator).
+ * Integration tests for [com.android.gatherly.ui.todo.AddTodoViewModel] using the real Firestore
+ * repository (via emulator).
  *
  * These tests verify that valid inputs lead to successful writes in Firestore, and invalid inputs
  * are rejected without repository side effects.
@@ -61,7 +64,7 @@ class AddTodoViewModelFirestoreTest : FirestoreGatherlyTest() {
 
     // Check repository contents
     val todos = repository.getAllTodos()
-    assertEquals(1, todos.size)
+    Assert.assertEquals(1, todos.size)
     val saved = todos.first()
 
     assertEquals("Study session", saved.name)
@@ -86,7 +89,7 @@ class AddTodoViewModelFirestoreTest : FirestoreGatherlyTest() {
     assertFalse(state.saveSuccess)
 
     // Repo should still be empty
-    assertEquals(0, getTodosCount())
+    Assert.assertEquals(0, getTodosCount())
   }
 
   @Test
@@ -103,7 +106,7 @@ class AddTodoViewModelFirestoreTest : FirestoreGatherlyTest() {
     assertNotNull(state.titleError)
     assertFalse(state.saveSuccess)
 
-    assertEquals(0, getTodosCount())
+    Assert.assertEquals(0, getTodosCount())
   }
 
   @Test
@@ -133,7 +136,7 @@ class AddTodoViewModelFirestoreTest : FirestoreGatherlyTest() {
     waitForTodosCount(repository, expectedCount = 2)
 
     val todos = repository.getAllTodos()
-    assertEquals(2, todos.size)
+    Assert.assertEquals(2, todos.size)
 
     val names = todos.map { it.name }
     assertTrue("Walk dog" in names)
@@ -151,7 +154,7 @@ class AddTodoViewModelFirestoreTest : FirestoreGatherlyTest() {
     viewModel.saveTodo()
 
     val todos = repository.getAllTodos()
-    assertEquals(1, todos.size)
+    Assert.assertEquals(1, todos.size)
     val saved = todos.first()
     assertNull(saved.dueTime)
   }
@@ -169,7 +172,7 @@ class AddTodoViewModelFirestoreTest : FirestoreGatherlyTest() {
     val state = viewModel.uiState.value
     assertEquals("Invalid time (HH:mm)", state.dueTimeError)
     assertFalse("Expected saveSuccess=false but got true", state.saveSuccess)
-    assertEquals(0, getTodosCount())
+    Assert.assertEquals(0, getTodosCount())
   }
 
   @Test
@@ -185,7 +188,7 @@ class AddTodoViewModelFirestoreTest : FirestoreGatherlyTest() {
     val state = viewModel.uiState.value
     assertEquals("Invalid time (HH:mm)", state.dueTimeError)
     assertFalse("Expected saveSuccess=false but got true", state.saveSuccess)
-    assertEquals(0, getTodosCount())
+    Assert.assertEquals(0, getTodosCount())
   }
 
   @Test
@@ -201,7 +204,7 @@ class AddTodoViewModelFirestoreTest : FirestoreGatherlyTest() {
     val state = viewModel.uiState.value
     assertEquals("Invalid time (HH:mm)", state.dueTimeError)
     assertFalse("Expected saveSuccess=false but got true", state.saveSuccess)
-    assertEquals(0, getTodosCount())
+    Assert.assertEquals(0, getTodosCount())
   }
 
   @Test

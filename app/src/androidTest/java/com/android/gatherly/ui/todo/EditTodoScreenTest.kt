@@ -10,9 +10,6 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
 
-// Portions of the code in this file are copy-pasted from the Bootcamp solution provided by the
-// SwEnt staff.
-
 class EditTodoScreenTest : InMemoryGatherlyTest() {
   @get:Rule val composeTestRule = createComposeRule()
 
