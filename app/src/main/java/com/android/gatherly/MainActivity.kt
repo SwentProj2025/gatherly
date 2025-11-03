@@ -227,14 +227,11 @@ fun GatherlyApp(
     ) {
       composable(Screen.FriendsScreen.route) {
         FriendsScreen(
-            onFindFriends = { navigationActions.navigateTo(Screen.FindFriends)},
-            goBack = {navigationActions.goBack()}
-        )
+            onFindFriends = { navigationActions.navigateTo(Screen.FindFriends) },
+            goBack = { navigationActions.goBack() })
       }
 
-        composable(Screen.FindFriends.route){
-
-        }
+      composable(Screen.FindFriends.route) {}
     }
 
     // INIT PROFILE COMPOSABLE  ------------------------------
