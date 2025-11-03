@@ -100,4 +100,9 @@
     <string name="userEvents_emptylist_msg">You have not created any events</string>
     <string name="create_event_button_title">Create an event</string>
 
+    <string name="sign_in_google_button_label">Continue with Google</string>
+    <string name="sign_in_anonymous_button_label">Continue without account</string>
+    <string name="sign_in_welcome_section_text0">Welcome to Gatherly,</string>
+    <string name="sign_in_welcome_section_text1">Your workflow and social events app!</string>
+
 </resources>
