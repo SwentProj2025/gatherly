@@ -102,4 +102,10 @@
     <string name="userEvents_emptylist_msg">You have not created any events</string>
     <string name="create_event_button_title">Create an event</string>
 
+
+
+    <string name="friends_follow_button_title">Follow</string>
+    <string name="find_friends_search_bar_label">Search a profile to add a new friend</string>
+    <string name="find_friends_empty_list_message">There is actually no other user who can be your friend</string>
+
 </resources>
