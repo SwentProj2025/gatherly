@@ -4,13 +4,17 @@ import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertTextContains
+import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
 import com.android.gatherly.GatherlyApp
 import com.android.gatherly.ui.authentication.SignInScreenTestTags
+import com.android.gatherly.utils.FirebaseEmulator
 import com.android.gatherly.utils.FirestoreGatherlyTest
+import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -21,7 +25,34 @@ class NavigationTest : FirestoreGatherlyTest() {
   @Before
   override fun setUp() {
     super.setUp()
-    composeTestRule.setContent { GatherlyApp() }
+    runTest {
+      FirebaseEmulator.auth.signOut()
+      composeTestRule.setContent { GatherlyApp() }
+      composeTestRule.waitUntil(10000L) {
+        composeTestRule.onNodeWithTag(SignInScreenTestTags.WELCOME_TITLE).isDisplayed()
+      }
+      composeTestRule.onNodeWithTag(SignInScreenTestTags.ANONYMOUS_BUTTON).performClick()
+      composeTestRule.waitUntil(10_000L) {
+        composeTestRule.onNodeWithTag("initProfile_save_button").isDisplayed()
+      }
+      // Fill mandatory fields so navigation can continue
+      composeTestRule.onNodeWithTag("initProfile_username").performTextInput("testuser")
+      composeTestRule.onNodeWithTag("initProfile_name_field").performTextInput("Test User")
+      // Save and wait for HomePage
+      composeTestRule.onNodeWithTag("initProfile_save_button").performClick()
+      composeTestRule.waitForIdle()
+
+      composeTestRule.waitUntil(10000L) {
+        try {
+          composeTestRule
+              .onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
+              .assertTextContains(value = "Home")
+          true
+        } catch (_: AssertionError) {
+          false
+        }
+      }
+    }
   }
 
   // LOGOUT PART :

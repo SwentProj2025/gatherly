@@ -49,6 +49,8 @@ sealed class Screen(
   object FindFriends : Screen(route = "find_friends_screen", name = "Find new friends")
 
   object SettingsScreen : Screen(route = "settings_screen", name = "Settings")
+
+  object InitProfileScreen : Screen(route = "init_profile_screen", name = "Complete your profile")
 }
 
 open class NavigationActions(

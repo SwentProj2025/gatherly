@@ -1,9 +1,7 @@
 package com.android.gatherly.ui.friends
 
-import android.R
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -11,13 +9,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 data class FriendsUIState(
-  val errorMsg: String? = null,
-  val friends: List<String> = emptyList(),
-  val listNoFriends: List<String> = emptyList()
+    val errorMsg: String? = null,
+    val friends: List<String> = emptyList(),
+    val listNoFriends: List<String> = emptyList()
 )
 
 class FriendsViewModel(private val repository: ProfileRepository, val currentUserId: String) :
-  ViewModel() {
+    ViewModel() {
 
   /** StateFlow that emits the current UI state for the Friends screen. */
   private val _uiState = MutableStateFlow(FriendsUIState())
@@ -36,12 +34,14 @@ class FriendsViewModel(private val repository: ProfileRepository, val currentUse
    *
    * @param currentUserId the ID of the current user
    */
-   suspend fun refreshFriends(currentUserId: String) {
+  private suspend fun refreshFriends(currentUserId: String) {
     val profile = repository.getProfileByUid(currentUserId)
     _uiState.value =
-      _uiState.value.copy(
-        friends = profile?.friendUids ?: throw Exception("FriendsVM: Profile not found"),
-        listNoFriends = repository.getListNoFriends(currentUserId))
+        _uiState.value.copy(
+            friends =
+                profile?.friendUids?.mapNotNull { repository.getProfileByUid(it)?.username }
+                    ?: throw Exception("FriendsVM: Profile not found"),
+            listNoFriends = repository.getListNoFriends(currentUserId))
   }
 
   /**
@@ -68,22 +68,5 @@ class FriendsViewModel(private val repository: ProfileRepository, val currentUse
       repository.addFriend(friend, currentUserId)
       refreshFriends(currentUserId)
     }
-  }
-
-  /**
-   * Helper function to get the profilePicture of a friend by their username.
-   *
-   * @param friend the username of the friend
-   * @return the profile picture URL of the friend, or a default if not found
-   */
-  fun getFriendProfilePicture(friend: String): String {
-    var profilePicture = R.drawable.ic_menu_report_image.toString()
-    viewModelScope.launch {
-      val profile: Profile? = repository.getProfileByUsername(friend)
-      if (profile != null) {
-        profilePicture = profile.profilePicture
-      }
-    }
-    return profilePicture
   }
 }
