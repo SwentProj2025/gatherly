@@ -35,6 +35,9 @@ object SettingsScreenTestTags {
   const val SCHOOL_FIELD = "settings_school_field"
   const val SCHOOL_YEAR_FIELD = "settings_school_year_field"
   const val SAVE_BUTTON = "settings_save_button"
+  const val USERNAME_ERROR = "settings_username_error"
+  const val NAME_FIELD_ERROR = "settings_name_field_error"
+  const val BIRTHDAY_FIELD_ERROR = "settings_birthday_field_error"
 }
 
 /**
@@ -108,13 +111,22 @@ fun SettingsScreen(
 
               Spacer(modifier = Modifier.height(fieldSpacingRegular))
 
-              // Username
-              Text(
-                  text = stringResource(R.string.settings_default_username),
-                  color = MaterialTheme.colorScheme.primary,
-                  fontSize = 20.sp,
-                  fontWeight = FontWeight.Medium,
-                  modifier = Modifier.testTag(SettingsScreenTestTags.USERNAME))
+              // Username Field
+              SettingsField(
+                  label = stringResource(R.string.settings_label_username),
+                  value = uiState.username,
+                  onValueChange = { settingsViewModel.editUsername(it) },
+                  testTag = SettingsScreenTestTags.USERNAME,
+                  errorMessage = uiState.invalidUsernameMsg)
+
+              if (uiState.isUsernameAvailable == true && uiState.invalidUsernameMsg == null) {
+                Text(
+                    text = stringResource(R.string.settings_valid_username),
+                    color = MaterialTheme.colorScheme.primary,
+                    fontSize = 14.sp,
+                    modifier =
+                        Modifier.padding(top = dimensionResource(id = R.dimen.padding_extra_small)))
+              }
 
               Spacer(modifier = Modifier.height(fieldSpacingRegular))
 
@@ -172,7 +184,9 @@ fun SettingsScreen(
               // Save Button
               Button(
                   onClick = {
-                    currentUser?.uid?.let { uid -> settingsViewModel.updateProfile(uid) }
+                    currentUser?.uid?.let { uid ->
+                      settingsViewModel.updateProfile(uid, isFirstTime = false)
+                    }
                   },
                   modifier =
                       Modifier.fillMaxWidth(0.8f)

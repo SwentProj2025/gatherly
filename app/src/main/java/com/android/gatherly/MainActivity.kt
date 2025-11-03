@@ -16,6 +16,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import com.android.gatherly.ui.authentication.InitProfileScreen
 import com.android.gatherly.ui.authentication.SignInScreen
 import com.android.gatherly.ui.events.AddEventScreen
 import com.android.gatherly.ui.events.EditEventsScreen
@@ -74,9 +75,7 @@ fun GatherlyApp(
         route = Screen.SignIn.name,
     ) {
       composable(Screen.SignIn.route) {
-        SignInScreen(
-            credentialManager = credentialManager,
-            onSignedIn = { navigationActions.navigateTo(Screen.HomePage) })
+        SignInScreen(credentialManager = credentialManager, navigationActions = navigationActions)
       }
     }
     // HOMEPAGE COMPOSABLE  ------------------------------
@@ -229,6 +228,16 @@ fun GatherlyApp(
       composable(Screen.FriendsScreen.route) {
         FriendsScreen(
             credentialManager = credentialManager, goBack = { navigationActions.goBack() })
+      }
+    }
+
+    // INIT PROFILE COMPOSABLE  ------------------------------
+    navigation(
+        startDestination = Screen.InitProfileScreen.route,
+        route = Screen.InitProfileScreen.name,
+    ) {
+      composable(Screen.InitProfileScreen.route) {
+        InitProfileScreen(navigationActions = navigationActions)
       }
     }
   }
