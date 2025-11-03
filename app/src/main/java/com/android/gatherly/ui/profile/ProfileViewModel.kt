@@ -35,7 +35,8 @@ data class ProfileState(
  * @param repository The [ProfileRepository] used to interact with Firestore.
  */
 class ProfileViewModel(
-    private val repository: ProfileRepository = ProfileRepositoryProvider.repository
+    private val repository: ProfileRepository = ProfileRepositoryProvider.repository,
+    private val currentUser: String = Firebase.auth.currentUser?.uid ?: ""
 ) : ViewModel() {
 
   private val _uiState = MutableStateFlow(ProfileState())
@@ -53,15 +54,15 @@ class ProfileViewModel(
     viewModelScope.launch {
       _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
 
-      val user = Firebase.auth.currentUser
-      if (user == null) {
+      val user = currentUser
+      if (user == "") {
         _uiState.value =
             _uiState.value.copy(isLoading = false, errorMessage = "User not authenticated")
         return@launch
       }
 
       try {
-        val profile = repository.getProfileByUid(user.uid)
+        val profile = repository.getProfileByUid(currentUser)
         if (profile == null) {
           _uiState.value =
               _uiState.value.copy(isLoading = false, errorMessage = "Profile not found")

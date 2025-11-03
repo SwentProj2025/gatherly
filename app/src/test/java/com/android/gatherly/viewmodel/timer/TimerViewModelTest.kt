@@ -10,9 +10,13 @@ import com.google.firebase.Timestamp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
 import kotlinx.coroutines.withContext
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -51,10 +55,22 @@ class TimerViewModelTest {
         ownerId = ownerId)
   }
 
+  // initialize this so that tests control all coroutines and can wait on them
+  private val testDispatcher = StandardTestDispatcher()
+
   @Before
   fun setUp() {
+    // so that tests can wait on coroutines
+    Dispatchers.setMain(testDispatcher)
+
     toDosRepository = ToDosRepositoryLocalMapTest()
+
     viewModel = TimerViewModel(toDosRepository)
+  }
+
+  @After
+  fun tearDown() {
+    Dispatchers.resetMain()
   }
 
   /** Check that the timer counts down correctly from 5 seconds to 0. */

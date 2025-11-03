@@ -44,7 +44,7 @@ class FriendsViewModelTest {
 
     fill_repositories()
 
-    viewModel = FriendsViewModel(profileRepository, "A")
+    viewModel = FriendsViewModel(repository = profileRepository, currentUserId = "A")
   }
 
   @After

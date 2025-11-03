@@ -1,7 +1,8 @@
-package com.android.gatherly.ui.profile
+package com.android.gatherly.viewmodel.profile
 
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
+import com.android.gatherly.ui.profile.ProfileViewModel
 import com.android.gatherly.utils.FirebaseEmulator
 import com.android.gatherly.utils.FirestoreGatherlyProfileTest
 import kotlinx.coroutines.Dispatchers
@@ -18,7 +19,8 @@ private const val TIMEOUT = 30_000L
 private const val DELAY = 200L
 
 /**
- * Integration tests for [ProfileViewModel] using the Firebase Emulators.
+ * Integration tests for [com.android.gatherly.ui.profile.ProfileViewModel] using the Firebase
+ * Emulators.
  *
  * These tests verify:
  * - ProfileViewModel correctly loads an existing profile from Firestore.
