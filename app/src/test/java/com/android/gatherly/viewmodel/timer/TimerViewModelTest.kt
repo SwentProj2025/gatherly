@@ -25,9 +25,6 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
-private const val TIMEOUT = 5000L
-private const val DELAY = 200L
-
 /** Test class to check that [TimerViewModel] functions correctly. */
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
@@ -74,7 +71,6 @@ class TimerViewModelTest {
   }
 
   /** Check that the timer counts down correctly from 5 seconds to 0. */
-  @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun timer_runs_out() = runTest {
     val hours = "00"
@@ -86,16 +82,6 @@ class TimerViewModelTest {
     viewModel.setSeconds(seconds)
 
     viewModel.startTimer()
-
-    withContext(Dispatchers.Default.limitedParallelism(1)) {
-      withTimeout(7000L) {
-        while (viewModel.uiState.value.let {
-          it.hours != "00" || it.minutes != "00" || it.seconds != "00"
-        }) {
-          delay(100)
-        }
-      }
-    }
 
     val finalState = viewModel.uiState.value
 
