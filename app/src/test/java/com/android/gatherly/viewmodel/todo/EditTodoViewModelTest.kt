@@ -34,7 +34,7 @@ private const val DELAY = 100L
  */
 @RunWith(AndroidJUnit4::class)
 @OptIn(ExperimentalCoroutinesApi::class)
-class EditTodoViewModelFirestoreTest {
+class EditTodoViewModelTest {
 
   private lateinit var editTodoViewModel: EditTodoViewModel
   private lateinit var toDosRepository: ToDosRepository

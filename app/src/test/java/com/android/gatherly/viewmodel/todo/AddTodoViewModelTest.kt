@@ -26,15 +26,14 @@ private const val TIMEOUT = 100_000L
 private const val DELAY = 500L
 
 /**
- * Integration tests for [com.android.gatherly.ui.todo.AddTodoViewModel] using the real Firestore
- * repository (via emulator).
+ * Integration tests for [AddTodoViewModel]
  *
- * These tests verify that valid inputs lead to successful writes in Firestore, and invalid inputs
- * are rejected without repository side effects.
+ * These tests verify that valid inputs lead to successful writes, and invalid inputs are rejected
+ * without repository side effects.
  */
 @RunWith(AndroidJUnit4::class)
 @OptIn(ExperimentalCoroutinesApi::class)
-class AddTodoViewModelFirestoreTest {
+class AddTodoViewModelTest {
 
   private lateinit var addToDoViewModel: AddTodoViewModel
   private lateinit var toDosRepository: ToDosRepository
