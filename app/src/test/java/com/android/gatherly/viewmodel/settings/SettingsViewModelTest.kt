@@ -28,12 +28,19 @@ class SettingsViewModelTest {
   fun setup() {
     Dispatchers.setMain(testDispatcher)
     repo = ProfileRepositoryLocalForTests()
-    viewModel = SettingsViewModel(repo)
+    fill_repository()
+
+    viewModel = SettingsViewModel(repo, "currentUser")
   }
 
   @After
   fun tearDown() {
     Dispatchers.resetMain()
+  }
+
+  fun fill_repository() = runTest {
+    repo.initProfileIfMissing("currentUser", "")
+    advanceUntilIdle()
   }
 
   // ------------------------------------------------------------------------
