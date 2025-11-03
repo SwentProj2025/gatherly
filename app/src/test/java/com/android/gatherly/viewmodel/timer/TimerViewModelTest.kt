@@ -16,6 +16,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -75,13 +76,23 @@ class TimerViewModelTest {
   fun timer_runs_out() = runTest {
     val hours = "00"
     val minutes = "00"
-    val seconds = "05"
+    val seconds = "03"
 
     viewModel.setHours(hours)
     viewModel.setMinutes(minutes)
     viewModel.setSeconds(seconds)
 
     viewModel.startTimer()
+
+    withContext(Dispatchers.Default.limitedParallelism(1)) {
+      withTimeout(7000L) {
+        while (viewModel.uiState.value.let {
+          it.hours != "00" || it.minutes != "00" || it.seconds != "00"
+        }) {
+          delay(100)
+        }
+      }
+    }
 
     val finalState = viewModel.uiState.value
 
@@ -174,6 +185,8 @@ class TimerViewModelTest {
 
     // Trigger reload
     viewModel.getAllTodos()
+
+    advanceUntilIdle()
 
     val state = viewModel.uiState.value
     assertNull("errorMsg should be null on success", state.errorMsg)
