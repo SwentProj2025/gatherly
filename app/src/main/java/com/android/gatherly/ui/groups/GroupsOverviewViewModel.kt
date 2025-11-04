@@ -66,7 +66,7 @@ class GroupsOverviewViewModel(
       _uiState.value = _uiState.value.copy(isLoading = true, errorMsg = null)
       try {
         val groups = groupsRepository.getUserGroups()
-        _uiState.value = GroupsOverviewUIState(groups = groups, isLoading = false)
+        _uiState.value = _uiState.value.copy(groups = groups, isLoading = false)
       } catch (e: Exception) {
         _uiState.value =
             _uiState.value.copy(groups = emptyList(), errorMsg = e.message, isLoading = false)
