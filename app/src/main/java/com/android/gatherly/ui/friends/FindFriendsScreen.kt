@@ -2,22 +2,20 @@ package com.android.gatherly.ui.friends
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults.buttonColors
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -34,13 +32,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.android.gatherly.ui.navigation.NavigationTestTags
@@ -51,12 +47,9 @@ import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
 import com.android.gatherly.R
-import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.profile.Profile
-import com.android.gatherly.ui.events.EventsScreenTestTags
 
 object FindFriendsScreenTestTags {
-    const val BUTTON_FIND_FRIENDS = "buttonFindFriends"
     const val SEARCH_FRIENDS_BAR = "searchBarFriends"
     const val EMPTY_LIST_MSG = "messageEmptyList"
 
@@ -92,7 +85,7 @@ object FindFriendsScreenTestTags {
      * @param friend The [Button] item for unfollowing button whose test tag will be generated.
      * @return A string uniquely identifying the Friend username item in the UI.
      */
-    fun getTestTagForFriendUnfollowButton(friend: String): String = "friendUnfollowingButton${friend}"
+    fun getTestTagForFriendFollowButton(friend: String): String = "friendFollowingButton${friend}"
 }
 
 @Composable
@@ -111,14 +104,14 @@ fun FindFriendsScreen(
 
     val currentUserIdFromVM = friendsViewModel.currentUserId
     val uiState by friendsViewModel.uiState.collectAsState()
-    val friendsList = uiState.listNoFriends
+    val notFriendsList = uiState.listNoFriends
 
     var searchQuery by remember { mutableStateOf("") }
 
-    val filteredFriends = if (searchQuery.isBlank()) {
-        friendsList
+    val filteredNotFriends = if (searchQuery.isBlank()) {
+        notFriendsList
     } else {
-        friendsList.filter { friend ->
+        notFriendsList.filter { friend ->
             friend.contains(searchQuery, ignoreCase = true)
         }
     }
@@ -144,7 +137,7 @@ fun FindFriendsScreen(
                         .padding(horizontal = 16.dp)
                         .padding(padding)) {
 
-                if (filteredFriends.isEmpty()) {
+                if (filteredNotFriends.isEmpty()) {
                     item {
                         Text(
                             text = stringResource(R.string.find_friends_empty_list_message),
@@ -173,15 +166,21 @@ fun FindFriendsScreen(
 
                     }
 
-                    items(filteredFriends.size) { index ->
-                        val friend : String = filteredFriends[index]
-                        FriendItem(friend = friend,
-                            follow = { friendsViewModel
-                                .followFriend(
-                                    currentUserId = currentUserIdFromVM,
-                                    friend = friend ) } )
+                    items(
+                        items = filteredNotFriends,
+                        key = { friend -> friend }){
+                            friend ->
 
+                        FriendItem(
+                            friend = friend,
+                            follow = {
+                                friendsViewModel.followFriend(
+                                    currentUserId = currentUserIdFromVM,
+                                    friend = friend)
+                            }
+                        )
                     }
+
                 }
             }
 
@@ -236,7 +235,7 @@ fun FriendItem(friend: String, follow: () -> Unit) {
             Button(
                 onClick = follow,
                 modifier = Modifier.wrapContentWidth()
-                    .testTag(FindFriendsScreenTestTags.getTestTagForFriendUnfollowButton(friend))
+                    .testTag(FindFriendsScreenTestTags.getTestTagForFriendFollowButton(friend))
             ) {
                 Text( stringResource(R.string.friends_follow_button_title))
             }
