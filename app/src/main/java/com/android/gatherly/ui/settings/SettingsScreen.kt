@@ -3,8 +3,10 @@ package com.android.gatherly.ui.settings
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -96,88 +98,97 @@ fun SettingsScreen(
                     .padding(paddingValues)
                     .padding(horizontal = paddingRegular, vertical = paddingMedium),
             horizontalAlignment = Alignment.CenterHorizontally) {
-              // Profile Picture
-              Image(
-                  painter =
-                      painterResource(
-                          id = R.drawable.ic_launcher_foreground), // currently a placeholder image
-                  contentDescription =
-                      stringResource(R.string.settings_profile_picture_description),
+              Column(
                   modifier =
-                      Modifier.size(dimensionResource(id = R.dimen.profile_pic_size))
-                          .clip(CircleShape)
-                          .testTag(SettingsScreenTestTags.PROFILE_PICTURE),
-                  contentScale = ContentScale.Crop)
+                      Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()),
+                  horizontalAlignment = Alignment.CenterHorizontally) {
+                    // Profile Picture
+                    Image(
+                        painter =
+                            painterResource(
+                                id =
+                                    R.drawable
+                                        .ic_launcher_foreground), // currently a placeholder image
+                        contentDescription =
+                            stringResource(R.string.settings_profile_picture_description),
+                        modifier =
+                            Modifier.size(dimensionResource(id = R.dimen.profile_pic_size))
+                                .clip(CircleShape)
+                                .testTag(SettingsScreenTestTags.PROFILE_PICTURE),
+                        contentScale = ContentScale.Crop)
 
-              Spacer(modifier = Modifier.height(fieldSpacingRegular))
+                    Spacer(modifier = Modifier.height(fieldSpacingRegular))
 
-              // Username Field
-              SettingsField(
-                  label = stringResource(R.string.settings_label_username),
-                  value = uiState.username,
-                  onValueChange = { settingsViewModel.editUsername(it) },
-                  testTag = SettingsScreenTestTags.USERNAME,
-                  errorMessage = uiState.invalidUsernameMsg)
+                    // Username Field
+                    SettingsField(
+                        label = stringResource(R.string.settings_label_username),
+                        value = uiState.username,
+                        onValueChange = { settingsViewModel.editUsername(it) },
+                        testTag = SettingsScreenTestTags.USERNAME,
+                        errorMessage = uiState.invalidUsernameMsg)
 
-              if (uiState.isUsernameAvailable == true && uiState.invalidUsernameMsg == null) {
-                Text(
-                    text = stringResource(R.string.settings_valid_username),
-                    color = MaterialTheme.colorScheme.primary,
-                    fontSize = 14.sp,
-                    modifier =
-                        Modifier.padding(top = dimensionResource(id = R.dimen.padding_extra_small)))
-              }
+                    if (uiState.isUsernameAvailable == true && uiState.invalidUsernameMsg == null) {
+                      Text(
+                          text = stringResource(R.string.settings_valid_username),
+                          color = MaterialTheme.colorScheme.primary,
+                          fontSize = 14.sp,
+                          modifier =
+                              Modifier.padding(
+                                  top = dimensionResource(id = R.dimen.padding_extra_small)))
+                    }
 
-              Spacer(modifier = Modifier.height(fieldSpacingRegular))
+                    Spacer(modifier = Modifier.height(fieldSpacingRegular))
 
-              // Edit Photo Button currently non-functional, will be implemented in next sprint
-              Button(
-                  onClick = { /* Handle edit photo will be handled in next sprint*/},
-                  modifier =
-                      Modifier.fillMaxWidth()
-                          .height(dimensionResource(id = R.dimen.settings_text_field_height))
-                          .testTag(SettingsScreenTestTags.EDIT_PHOTO_BUTTON),
-                  colors =
-                      ButtonDefaults.buttonColors(
-                          containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                          contentColor = MaterialTheme.colorScheme.onSurface),
-                  shape =
-                      RoundedCornerShape(
-                          dimensionResource(id = R.dimen.rounded_corner_shape_medium))) {
-                    Text(
-                        text = stringResource(id = R.string.settings_edit_photo),
-                        color = MaterialTheme.colorScheme.primary,
-                        fontSize = 16.sp)
+                    // Edit Photo Button currently non-functional, will be implemented in next
+                    // sprint
+                    Button(
+                        onClick = { /* Handle edit photo will be handled in next sprint*/},
+                        modifier =
+                            Modifier.fillMaxWidth()
+                                .height(dimensionResource(id = R.dimen.settings_text_field_height))
+                                .testTag(SettingsScreenTestTags.EDIT_PHOTO_BUTTON),
+                        colors =
+                            ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                contentColor = MaterialTheme.colorScheme.onSurface),
+                        shape =
+                            RoundedCornerShape(
+                                dimensionResource(id = R.dimen.rounded_corner_shape_medium))) {
+                          Text(
+                              text = stringResource(id = R.string.settings_edit_photo),
+                              color = MaterialTheme.colorScheme.primary,
+                              fontSize = 16.sp)
+                        }
+
+                    Spacer(modifier = Modifier.height(fieldSpacingMedium))
+
+                    // Settings Fields
+                    SettingsField(
+                        label = stringResource(R.string.settings_label_name),
+                        value = uiState.name,
+                        onValueChange = { settingsViewModel.editName(it) },
+                        testTag = SettingsScreenTestTags.NAME_FIELD,
+                        errorMessage = uiState.invalidNameMsg)
+                    Spacer(modifier = Modifier.height(fieldSpacingRegular))
+                    SettingsField(
+                        label = stringResource(R.string.settings_label_birthday),
+                        value = uiState.birthday,
+                        onValueChange = { settingsViewModel.editBirthday(it) },
+                        testTag = SettingsScreenTestTags.BIRTHDAY_FIELD,
+                        errorMessage = uiState.invalidBirthdayMsg)
+                    Spacer(modifier = Modifier.height(fieldSpacingRegular))
+                    SettingsField(
+                        label = stringResource(R.string.settings_label_school),
+                        value = uiState.school,
+                        onValueChange = { settingsViewModel.editSchool(it) },
+                        testTag = SettingsScreenTestTags.SCHOOL_FIELD)
+                    Spacer(modifier = Modifier.height(fieldSpacingRegular))
+                    SettingsField(
+                        label = stringResource(R.string.settings_label_school_year),
+                        value = uiState.schoolYear,
+                        onValueChange = { settingsViewModel.editSchoolYear(it) },
+                        testTag = SettingsScreenTestTags.SCHOOL_YEAR_FIELD)
                   }
-
-              Spacer(modifier = Modifier.height(fieldSpacingMedium))
-
-              // Settings Fields
-              SettingsField(
-                  label = stringResource(R.string.settings_label_name),
-                  value = uiState.name,
-                  onValueChange = { settingsViewModel.editName(it) },
-                  testTag = SettingsScreenTestTags.NAME_FIELD,
-                  errorMessage = uiState.invalidNameMsg)
-              Spacer(modifier = Modifier.height(fieldSpacingRegular))
-              SettingsField(
-                  label = stringResource(R.string.settings_label_birthday),
-                  value = uiState.birthday,
-                  onValueChange = { settingsViewModel.editBirthday(it) },
-                  testTag = SettingsScreenTestTags.BIRTHDAY_FIELD,
-                  errorMessage = uiState.invalidBirthdayMsg)
-              Spacer(modifier = Modifier.height(fieldSpacingRegular))
-              SettingsField(
-                  label = stringResource(R.string.settings_label_school),
-                  value = uiState.school,
-                  onValueChange = { settingsViewModel.editSchool(it) },
-                  testTag = SettingsScreenTestTags.SCHOOL_FIELD)
-              Spacer(modifier = Modifier.height(fieldSpacingRegular))
-              SettingsField(
-                  label = stringResource(R.string.settings_label_school_year),
-                  value = uiState.schoolYear,
-                  onValueChange = { settingsViewModel.editSchoolYear(it) },
-                  testTag = SettingsScreenTestTags.SCHOOL_YEAR_FIELD)
 
               Spacer(modifier = Modifier.height(fieldSpacingMedium))
 
@@ -203,7 +214,6 @@ fun SettingsScreen(
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Medium)
                   }
-              Spacer(modifier = Modifier.weight(1f))
             }
       })
 }
