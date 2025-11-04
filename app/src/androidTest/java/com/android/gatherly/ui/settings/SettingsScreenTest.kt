@@ -274,4 +274,16 @@ class SettingsScreenTest : FirestoreGatherlyTest() {
 
     composeRule.onNodeWithText("Username is valid").assertDoesNotExist() // optional
   }
+
+  @Test
+  fun settingsScreen_isScrollable_andSaveButtonReachable() {
+    /**
+     * Scrolls to the last editable field (School Year) to verify that it can be reached even if
+     * it’s not initially visible on smaller screens.
+     */
+    composeRule
+        .onNodeWithTag(SettingsScreenTestTags.SCHOOL_YEAR_FIELD)
+        .performScrollTo()
+        .assertIsDisplayed()
+  }
 }
