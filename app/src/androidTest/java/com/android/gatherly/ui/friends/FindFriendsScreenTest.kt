@@ -22,210 +22,213 @@ private const val TIMEOUT = 30_000L
 
 class FindFriendsScreenTest : FirestoreGatherlyProfileTest() {
 
-    @get:Rule val composeTestRule = createComposeRule()
-    private lateinit var currentUserId: String
-    private lateinit var friendsViewModel: FriendsViewModel
-    private lateinit var profileRepository: ProfileRepository
+  @get:Rule val composeTestRule = createComposeRule()
+  private lateinit var currentUserId: String
+  private lateinit var friendsViewModel: FriendsViewModel
+  private lateinit var profileRepository: ProfileRepository
 
-    @Before
-    override fun setUp() {
-        super.setUp()
+  @Before
+  override fun setUp() {
+    super.setUp()
+  }
+
+  /**
+   * Helper function: set the content of the composeTestRule with currentUserID Bob who have no
+   * friend
+   */
+  private fun setContentwithBobUID() {
+    runTest {
+      profileRepository = ProfileLocalRepository()
+
+      runBlocking { addProfiles() }
+      runBlocking { profileRepository.addProfile(bobProfile) }
+
+      currentUserId = bobProfile.uid
+
+      friendsViewModel = FriendsViewModel(profileRepository, currentUserId)
+
+      runBlocking { addProfiles() }
+
+      composeTestRule.setContent { FindFriendsScreen(friendsViewModel) }
     }
+  }
 
-    /**
-     *  Helper function: set the content of the composeTestRule with currentUserID Bob who have no friend
-     */
-    private fun setContentwithBobUID() {
-        runTest {
-            profileRepository = ProfileLocalRepository()
+  /**
+   * Helper function: set the content of the composeTestRule with currentUserID Alice who have 3
+   * friends
+   */
+  private fun setContentwithAliceUID() {
+    runTest {
+      profileRepository = ProfileLocalRepository()
 
-            runBlocking { addProfiles() }
-            runBlocking { profileRepository.addProfile(bobProfile) }
+      runBlocking { addProfiles() }
+      runBlocking { profileRepository.addProfile(aliceProfile) }
 
-            currentUserId = bobProfile.uid
+      currentUserId = aliceProfile.uid
 
-            friendsViewModel = FriendsViewModel(profileRepository, currentUserId)
+      friendsViewModel = FriendsViewModel(profileRepository, currentUserId)
 
-            runBlocking { addProfiles() }
-
-            composeTestRule.setContent { FindFriendsScreen(friendsViewModel) }
-        }
+      composeTestRule.setContent { FindFriendsScreen(friendsViewModel) }
     }
+  }
 
-    /**
-     *  Helper function: set the content of the composeTestRule with currentUserID Alice
-     *  who have 3 friends
-     */
-    private fun setContentwithAliceUID() {
-        runTest {
-            profileRepository = ProfileLocalRepository()
+  /*----------------------------------------Profiles--------------------------------------------*/
+  val bobProfile: Profile =
+      Profile(
+          uid = "bobID",
+          name = "bobby",
+          username = "bob",
+          groupIds = emptyList(),
+          friendUids = emptyList())
 
-            runBlocking { addProfiles() }
-            runBlocking { profileRepository.addProfile(aliceProfile) }
+  val aliceProfile: Profile =
+      Profile(
+          uid = "AliceID",
+          name = "alicia",
+          username = "alice",
+          groupIds = emptyList(),
+          friendUids = listOf("1", "2", "3"))
+  val profile1: Profile =
+      Profile(
+          uid = "1",
+          name = "Profile1",
+          username = "francis",
+          groupIds = emptyList(),
+          friendUids = emptyList())
 
-            currentUserId = aliceProfile.uid
+  val profile2: Profile =
+      Profile(
+          uid = "2",
+          name = "Profile2",
+          username = "charlie",
+          groupIds = emptyList(),
+          friendUids = emptyList())
 
-            friendsViewModel = FriendsViewModel(profileRepository, currentUserId)
+  val profile3: Profile =
+      Profile(
+          uid = "3",
+          name = "Profile3",
+          username = "denis",
+          groupIds = emptyList(),
+          friendUids = emptyList())
 
-            composeTestRule.setContent { FindFriendsScreen(friendsViewModel) }
-        }
+  /** Helper function : fills the profile repository with created profiles */
+  fun addProfiles() {
+    runTest {
+      profileRepository.addProfile(profile1)
+      profileRepository.addProfile(profile2)
+      profileRepository.addProfile(profile3)
     }
+  }
 
-    /*----------------------------------------Profiles--------------------------------------------*/
-    val bobProfile: Profile =
-        Profile(
-            uid = "bobID",
-            name = "bobby",
-            username = "bob",
-            groupIds = emptyList(),
-            friendUids = emptyList()
-        )
+  /**
+   * Test: Verifies that when the user got no friend, all relevant UI components are displayed
+   * correctly.
+   */
+  @Test
+  fun testTagsCorrectlySetWhenListAreEmpty() {
+    setContentwithAliceUID()
+    composeTestRule
+        .onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
+        .assertTextContains("Friends", substring = true, ignoreCase = true)
+    composeTestRule.onNodeWithTag(FindFriendsScreenTestTags.EMPTY_LIST_MSG).assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(FindFriendsScreenTestTags.SEARCH_FRIENDS_BAR)
+        .assertIsNotDisplayed()
+  }
 
-    val aliceProfile: Profile =
-        Profile(
-            uid = "AliceID",
-            name = "alicia",
-            username = "alice",
-            groupIds = emptyList(),
-            friendUids = listOf("1", "2", "3"))
-    val profile1: Profile =
-        Profile(
-            uid = "1",
-            name = "Profile1",
-            username = "francis",
-            groupIds = emptyList(),
-            friendUids = emptyList())
+  /**
+   * Test : Verifies that when the user got multiple possibilities of new friends, the items display
+   * correctly
+   */
+  @Test
+  fun testDisplayCorrectlyUsers() {
+    setContentwithBobUID()
+    composeTestRule.waitForIdle()
 
-    val profile2: Profile =
-        Profile(
-            uid = "2",
-            name = "Profile2",
-            username = "charlie",
-            groupIds = emptyList(),
-            friendUids = emptyList())
+    composeTestRule.onNodeWithTag(FindFriendsScreenTestTags.SEARCH_FRIENDS_BAR).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(FindFriendsScreenTestTags.EMPTY_LIST_MSG).assertIsNotDisplayed()
+    composeTestRule
+        .onNodeWithTag(FindFriendsScreenTestTags.getTestTagForFriendItem("francis"))
+        .assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(FindFriendsScreenTestTags.getTestTagForFriendUsername("francis"))
+        .assertIsDisplayed()
 
-    val profile3: Profile =
-        Profile(
-            uid = "3",
-            name = "Profile3",
-            username = "denis",
-            groupIds = emptyList(),
-            friendUids = emptyList())
-
-
-    /**
-     * Helper function : fills the profile repository with created profiles
-     */
-    fun addProfiles() {
-        runTest {
-            profileRepository.addProfile(profile1)
-            profileRepository.addProfile(profile2)
-            profileRepository.addProfile(profile3)
-        }
-    }
-
-    /**
-     * Test: Verifies that when the user got no friend, all relevant UI components are displayed
-     * correctly.
-     */
-    @Test
-    fun testTagsCorrectlySetWhenListAreEmpty() {
-        setContentwithAliceUID()
-        composeTestRule
-            .onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
-            .assertTextContains("Friends", substring = true, ignoreCase = true)
-        composeTestRule.onNodeWithTag(FindFriendsScreenTestTags.EMPTY_LIST_MSG).assertIsDisplayed()
-        composeTestRule.onNodeWithTag(FindFriendsScreenTestTags.SEARCH_FRIENDS_BAR).assertIsNotDisplayed()
-      }
-
-    /**
-     * Test : Verifies that when the user got multiple possibilities of new friends,
-     * the items display correctly
-     */
-    @Test
-    fun testDisplayCorrectlyUsers(){
-        setContentwithBobUID()
-        composeTestRule.waitForIdle()
-
-        composeTestRule.onNodeWithTag(FindFriendsScreenTestTags.SEARCH_FRIENDS_BAR).assertIsDisplayed()
-        composeTestRule.onNodeWithTag(FindFriendsScreenTestTags.EMPTY_LIST_MSG).assertIsNotDisplayed()
-        composeTestRule.onNodeWithTag(FindFriendsScreenTestTags
-            .getTestTagForFriendItem("francis")).assertIsDisplayed()
-        composeTestRule.onNodeWithTag(FindFriendsScreenTestTags
-            .getTestTagForFriendUsername("francis")).assertIsDisplayed()
-
-        composeTestRule.onNodeWithTag(FindFriendsScreenTestTags
-            .getTestTagForFriendProfilePicture("francis"),
+    composeTestRule
+        .onNodeWithTag(
+            FindFriendsScreenTestTags.getTestTagForFriendProfilePicture("francis"),
             useUnmergedTree = true)
-            .assertExists()
-        composeTestRule.onNodeWithTag(FindFriendsScreenTestTags
-            .getTestTagForFriendFollowButton("francis")).assertIsDisplayed()
+        .assertExists()
+    composeTestRule
+        .onNodeWithTag(FindFriendsScreenTestTags.getTestTagForFriendFollowButton("francis"))
+        .assertIsDisplayed()
 
-        composeTestRule.onNodeWithTag(FindFriendsScreenTestTags
-            .getTestTagForFriendItem("charlie")).assertIsDisplayed()
-        composeTestRule.onNodeWithTag(FindFriendsScreenTestTags
-            .getTestTagForFriendUsername("charlie")).assertIsDisplayed()
-        composeTestRule.onNodeWithTag(FindFriendsScreenTestTags
-            .getTestTagForFriendFollowButton("charlie")).assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(FindFriendsScreenTestTags.getTestTagForFriendItem("charlie"))
+        .assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(FindFriendsScreenTestTags.getTestTagForFriendUsername("charlie"))
+        .assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(FindFriendsScreenTestTags.getTestTagForFriendFollowButton("charlie"))
+        .assertIsDisplayed()
 
-        composeTestRule.onNodeWithTag(FindFriendsScreenTestTags
-            .getTestTagForFriendItem("denis")).assertIsDisplayed()
-        composeTestRule.onNodeWithTag(FindFriendsScreenTestTags
-            .getTestTagForFriendUsername("denis")).assertIsDisplayed()
-        composeTestRule.onNodeWithTag(FindFriendsScreenTestTags
-            .getTestTagForFriendFollowButton("denis")).assertIsDisplayed()
-        composeTestRule.onNodeWithTag(FindFriendsScreenTestTags
-            .getTestTagForFriendFollowButton("denis")).assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(FindFriendsScreenTestTags.getTestTagForFriendItem("denis"))
+        .assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(FindFriendsScreenTestTags.getTestTagForFriendUsername("denis"))
+        .assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(FindFriendsScreenTestTags.getTestTagForFriendFollowButton("denis"))
+        .assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(FindFriendsScreenTestTags.getTestTagForFriendFollowButton("denis"))
+        .assertIsDisplayed()
+  }
+
+  /** Test: Verifies that the user can click to the friend item to follow this user */
+  @Test
+  fun testClickToFollow() {
+    runTest {
+      setContentwithBobUID()
+      composeTestRule.waitForIdle()
+
+      composeTestRule
+          .onNodeWithTag(FindFriendsScreenTestTags.getTestTagForFriendFollowButton("francis"))
+          .assertIsDisplayed()
+          .performClick()
+
+      composeTestRule
+          .onNodeWithTag(FindFriendsScreenTestTags.getTestTagForFriendItem("francis"))
+          .assertIsNotDisplayed()
     }
+  }
 
-    /**
-     * Test: Verifies that the user can click to the friend item to follow this user
-     */
-    @Test
-    fun testClickToFollow(){ runTest {
-        setContentwithBobUID()
-        composeTestRule.waitForIdle()
+  /**
+   * Test: Verifies that the user can search an user username and the screen display only the
+   * correct profiles item
+   */
+  @Test
+  fun testUserSearchBar() {
+    setContentwithBobUID()
+    composeTestRule.waitForIdle()
 
-        composeTestRule.onNodeWithTag(
-            FindFriendsScreenTestTags
-                .getTestTagForFriendFollowButton("francis")
-        )
-            .assertIsDisplayed()
-            .performClick()
+    composeTestRule
+        .onNodeWithTag(FindFriendsScreenTestTags.SEARCH_FRIENDS_BAR)
+        .performTextInput("denis")
 
-        composeTestRule.onNodeWithTag(
-            FindFriendsScreenTestTags
-                .getTestTagForFriendItem("francis")
-        ).assertIsNotDisplayed()
+    composeTestRule
+        .onNodeWithTag(FindFriendsScreenTestTags.getTestTagForFriendItem("denis"))
+        .assertIsDisplayed()
 
-    }
-    }
+    composeTestRule
+        .onNodeWithTag(FindFriendsScreenTestTags.getTestTagForFriendItem("francis"))
+        .assertIsNotDisplayed()
 
-    /**
-     * Test: Verifies that the user can search an user username and the screen display
-     * only the correct profiles item
-     */
-    @Test
-    fun testUserSearchBar(){
-        setContentwithBobUID()
-        composeTestRule.waitForIdle()
-
-        composeTestRule.onNodeWithTag(FindFriendsScreenTestTags.SEARCH_FRIENDS_BAR)
-            .performTextInput("denis")
-
-        composeTestRule.onNodeWithTag(FindFriendsScreenTestTags
-            .getTestTagForFriendItem("denis")).assertIsDisplayed()
-
-        composeTestRule.onNodeWithTag(FindFriendsScreenTestTags
-            .getTestTagForFriendItem("francis")).assertIsNotDisplayed()
-
-        composeTestRule.onNodeWithTag(FindFriendsScreenTestTags
-            .getTestTagForFriendItem("charlie")).assertIsNotDisplayed()
-    }
-
-
-
-
-
-
+    composeTestRule
+        .onNodeWithTag(FindFriendsScreenTestTags.getTestTagForFriendItem("charlie"))
+        .assertIsNotDisplayed()
+  }
 }

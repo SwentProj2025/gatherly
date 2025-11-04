@@ -1,6 +1,5 @@
 package com.android.gatherly.ui.friends
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.profile.ProfileRepository
@@ -66,13 +65,8 @@ class FriendsViewModel(private val repository: ProfileRepository, val currentUse
    */
   fun followFriend(friend: String, currentUserId: String) {
     viewModelScope.launch {
-        Log.e("follow", "vm : before follow ${friend}  currentuser list : " +
-                "${repository.getProfileByUid(currentUserId)?.friendUids} ")
       repository.addFriend(friend, currentUserId)
       refreshFriends(currentUserId)
-        Log.e("follow", "vm : after follow ${friend}  currentuser list : " +
-                "${repository.getProfileByUid(currentUserId)?.friendUids} ")
-
     }
   }
 }
