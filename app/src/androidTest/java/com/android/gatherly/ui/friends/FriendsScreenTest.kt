@@ -183,18 +183,12 @@ class FriendsScreenTest : FirestoreGatherlyProfileTest() {
     composeTestRule
         .onNodeWithTag(FriendsScreenTestTags.getTestTagForFriendUnfollowButton("charlie"))
         .assertIsDisplayed()
-    composeTestRule
-        .onNodeWithTag(FriendsScreenTestTags.getTestTagForFriendUnfollowButton("charlie"))
-        .assertIsDisplayed()
 
     composeTestRule
         .onNodeWithTag(FriendsScreenTestTags.getTestTagForFriendItem("denis"))
         .assertIsDisplayed()
     composeTestRule
         .onNodeWithTag(FriendsScreenTestTags.getTestTagForFriendUsername("denis"))
-        .assertIsDisplayed()
-    composeTestRule
-        .onNodeWithTag(FriendsScreenTestTags.getTestTagForFriendUnfollowButton("denis"))
         .assertIsDisplayed()
     composeTestRule
         .onNodeWithTag(FriendsScreenTestTags.getTestTagForFriendUnfollowButton("denis"))
