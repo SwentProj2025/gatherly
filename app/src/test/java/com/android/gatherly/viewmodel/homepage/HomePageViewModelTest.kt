@@ -10,8 +10,8 @@ import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
+import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.model.todo.ToDosRepository
-import com.android.gatherly.model.todo.ToDosRepositoryLocalMapTest
 import com.android.gatherly.ui.homePage.HomePageViewModel
 import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
@@ -195,7 +195,7 @@ class HomePageViewModelTest {
     // initialize repos and viewModel
     profileRepository = ProfileLocalRepository()
     eventsRepository = EventsLocalRepository()
-    toDosRepository = ToDosRepositoryLocalMapTest()
+    toDosRepository = ToDosLocalRepository()
 
     // fill the profile and events repositories with profiles and event
     fill_repositories()

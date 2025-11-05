@@ -3,8 +3,8 @@ package com.android.gatherly.viewmodel.todo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
+import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.model.todo.ToDosRepository
-import com.android.gatherly.model.todo.ToDosRepositoryLocalMapTest
 import com.android.gatherly.ui.todo.OverviewViewModel
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.Dispatchers
@@ -47,7 +47,7 @@ class OverviewViewModelTest {
   fun setUp() {
     Dispatchers.setMain(testDispatcher)
 
-    toDosRepository = ToDosRepositoryLocalMapTest()
+    toDosRepository = ToDosLocalRepository()
     overviewViewModel = OverviewViewModel(toDosRepository)
   }
 

@@ -4,8 +4,8 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import com.android.gatherly.model.event.EventsLocalRepository
 import com.android.gatherly.model.event.EventsRepository
+import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.model.todo.ToDosRepository
-import com.android.gatherly.model.todo.ToDosRepositoryLocalMapTest
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -21,7 +21,7 @@ class MapScreenTest {
 
   @Before
   fun setUp() {
-    toDosRepository = ToDosRepositoryLocalMapTest()
+    toDosRepository = ToDosLocalRepository()
     eventsRepository = EventsLocalRepository()
     mapViewModel =
         MapViewModel(todosRepository = toDosRepository, eventsRepository = eventsRepository)

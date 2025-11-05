@@ -1,6 +1,8 @@
 package com.android.gatherly.viewmodel.settings
 
 import com.android.gatherly.model.profile.Profile
+import com.android.gatherly.model.profile.ProfileLocalRepository
+import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.ui.settings.SettingsViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -21,13 +23,13 @@ import org.junit.Test
 class SettingsViewModelTest {
 
   private val testDispatcher = StandardTestDispatcher()
-  private lateinit var repo: ProfileRepositoryLocalForTests
+  private lateinit var repo: ProfileRepository
   private lateinit var viewModel: SettingsViewModel
 
   @Before
   fun setup() {
     Dispatchers.setMain(testDispatcher)
-    repo = ProfileRepositoryLocalForTests()
+    repo = ProfileLocalRepository()
     fill_repository()
 
     viewModel = SettingsViewModel(repo, "currentUser")

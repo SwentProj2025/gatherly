@@ -17,8 +17,8 @@ import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.android.gatherly.model.map.Location
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
+import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.model.todo.ToDosRepository
-import com.android.gatherly.model.todo.ToDosRepositoryLocalMapTest
 import com.android.gatherly.ui.todo.AddToDoScreenTestTags
 import com.android.gatherly.ui.todo.EditToDoScreenTestTags
 import com.android.gatherly.ui.todo.OverviewScreenTestTags
@@ -38,7 +38,7 @@ const val UI_WAIT_TIMEOUT = 100_000L
 /** Base class for Gatherly tests, providing common setup and utility functions. */
 abstract class GatherlyTest() {
 
-  var repository: ToDosRepository = ToDosRepositoryLocalMapTest()
+  var repository: ToDosRepository = ToDosLocalRepository()
 
   open val todo1 =
       ToDo(

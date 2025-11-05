@@ -3,8 +3,8 @@ package com.android.gatherly.viewmodel.timer
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
+import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.model.todo.ToDosRepository
-import com.android.gatherly.model.todo.ToDosRepositoryLocalMapTest
 import com.android.gatherly.ui.focusTimer.TimerViewModel
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.Dispatchers
@@ -61,7 +61,7 @@ class TimerViewModelTest {
     // so that tests can wait on coroutines
     Dispatchers.setMain(testDispatcher)
 
-    toDosRepository = ToDosRepositoryLocalMapTest()
+    toDosRepository = ToDosLocalRepository()
 
     viewModel = TimerViewModel(toDosRepository)
   }

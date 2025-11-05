@@ -3,8 +3,8 @@ package com.android.gatherly.viewmodel.todo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
+import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.model.todo.ToDosRepository
-import com.android.gatherly.model.todo.ToDosRepositoryLocalMapTest
 import com.android.gatherly.ui.todo.AddTodoViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -45,7 +45,7 @@ class AddTodoViewModelTest {
     // so that tests can wait on coroutines
     Dispatchers.setMain(testDispatcher)
 
-    toDosRepository = ToDosRepositoryLocalMapTest()
+    toDosRepository = ToDosLocalRepository()
     addToDoViewModel = AddTodoViewModel(toDosRepository)
   }
 

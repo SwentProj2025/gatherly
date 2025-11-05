@@ -14,7 +14,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
-import com.android.gatherly.model.todo.ToDosRepositoryLocalMapTest
+import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.utils.GatherlyTest
 import com.google.firebase.Timestamp
 import java.util.Calendar
@@ -33,7 +33,7 @@ class OverviewScreenTest : GatherlyTest() {
 
   @Before
   fun setUp() {
-    repository = ToDosRepositoryLocalMapTest()
+    repository = ToDosLocalRepository()
   }
 
   fun setContent(withInitialTodos: List<ToDo> = emptyList()) = runTest {

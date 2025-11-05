@@ -3,7 +3,7 @@ package com.android.gatherly.model.todo
 import kotlin.String
 
 /** Represents a repository that manages a local list of todos. */
-class ToDosRepositoryLocalMapTest : ToDosRepository {
+class ToDosLocalRepository : ToDosRepository {
 
   private val todos: MutableList<ToDo> = mutableListOf()
 

@@ -4,7 +4,7 @@ import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
-import com.android.gatherly.model.todo.ToDosRepositoryLocalMapTest
+import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.utils.GatherlyTest
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -21,7 +21,7 @@ class EditTodoScreenTest : GatherlyTest() {
 
   @Before
   fun setUp() {
-    repository = ToDosRepositoryLocalMapTest()
+    repository = ToDosLocalRepository()
     fill_repository()
     editTodoViewModel = EditTodoViewModel(todoRepository = repository, currentUser = "user")
     composeTestRule.setContent {

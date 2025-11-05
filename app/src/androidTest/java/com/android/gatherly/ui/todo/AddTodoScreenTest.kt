@@ -5,7 +5,7 @@ import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
-import com.android.gatherly.model.todo.ToDosRepositoryLocalMapTest
+import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.utils.GatherlyTest
 import org.junit.Before
 import org.junit.Rule
@@ -18,7 +18,7 @@ class AddTodoScreenTest : GatherlyTest() {
 
   @Before
   fun setUp() {
-    repository = ToDosRepositoryLocalMapTest()
+    repository = ToDosLocalRepository()
     addTodoViewModel = AddTodoViewModel(todoRepository = repository)
     composeTestRule.setContent { AddToDoScreen(addTodoViewModel = addTodoViewModel) }
   }
