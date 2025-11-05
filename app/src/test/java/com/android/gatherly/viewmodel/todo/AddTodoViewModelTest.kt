@@ -256,13 +256,7 @@ class AddTodoViewModelTest {
     viewModel.saveTodo()
 
     // Snippet of code to wait until saving is done:
-    withContext(Dispatchers.Default.limitedParallelism(1)) {
-      withTimeout(TIMEOUT) {
-        while (viewModel.uiState.value.saveError == null && viewModel.uiState.value.isSaving) {
-          delay(DELAY)
-        }
-      }
-    }
+    advanceUntilIdle()
 
     val state = viewModel.uiState.value
 
