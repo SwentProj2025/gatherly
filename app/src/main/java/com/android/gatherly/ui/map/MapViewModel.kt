@@ -122,12 +122,12 @@ class MapViewModel(
    *
    * @param itemId The ID of the todo whose marker was tapped.
    */
-  fun onTodoMarkerTapped(itemId: String) {
+  fun onMarkerTapped(itemId: String) {
     _uiState.value = _uiState.value.copy(expandedItemId = itemId)
   }
 
   /** Handles dismissal of an expanded marker by collapsing it. */
-  fun onTodoMarkerDismissed() {
+  fun onMarkerDismissed() {
     _uiState.value = _uiState.value.copy(expandedItemId = null)
   }
 
@@ -137,22 +137,6 @@ class MapViewModel(
       _uiState.value = _uiState.value.copy(itemsList = todoList, displayEventsPage = false)
     } else {
       _uiState.value = _uiState.value.copy(itemsList = eventsList, displayEventsPage = true)
-    }
-  }
-
-  fun refreshUIState() {
-    viewModelScope.launch {
-      val todos = todosRepository.getAllTodos()
-      todoList = getDrawableTodos(todos)
-
-      val events = eventsRepository.getAllEvents()
-      eventsList = getDrawableEvents(events)
-
-      val cameraPos = todoList.firstOrNull()?.location ?: EPFL_LOCATION
-      _uiState.value =
-          _uiState.value.copy(
-              cameraPos = toLatLng(cameraPos),
-              itemsList = if (_uiState.value.displayEventsPage) eventsList else todoList)
     }
   }
 
