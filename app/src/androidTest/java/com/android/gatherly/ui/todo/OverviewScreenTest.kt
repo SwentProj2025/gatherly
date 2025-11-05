@@ -14,19 +14,33 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
-import com.android.gatherly.utils.InMemoryGatherlyTest
+import com.android.gatherly.model.todo.ToDosRepositoryLocalMapTest
+import com.android.gatherly.utils.GatherlyTest
 import com.google.firebase.Timestamp
 import java.util.Calendar
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
-class OverviewScreenTest : InMemoryGatherlyTest() {
+@OptIn(ExperimentalCoroutinesApi::class)
+class OverviewScreenTest : GatherlyTest() {
   @get:Rule val composeTestRule = createComposeRule()
 
-  fun setContent(withInitialTodos: List<ToDo> = emptyList()) {
-    runTest { withInitialTodos.forEach { repository.addTodo(it) } }
-    composeTestRule.setContent { OverviewScreen() }
+  private lateinit var overviewViewModel: OverviewViewModel
+
+  @Before
+  fun setUp() {
+    repository = ToDosRepositoryLocalMapTest()
+  }
+
+  fun setContent(withInitialTodos: List<ToDo> = emptyList()) = runTest {
+    withInitialTodos.forEach { repository.addTodo(it) }
+    overviewViewModel = OverviewViewModel(todoRepository = repository)
+    composeTestRule.setContent { OverviewScreen(overviewViewModel = overviewViewModel) }
+    advanceUntilIdle()
   }
 
   @Test
