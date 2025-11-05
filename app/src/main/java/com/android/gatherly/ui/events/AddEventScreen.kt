@@ -40,12 +40,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
-import com.android.gatherly.model.event.EventsLocalRepository
+import com.android.gatherly.model.event.EventsRepositoryFirestore
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
 import com.android.gatherly.utils.GenericViewModelFactory
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.delay
 
 object AddEventScreenTestTags {
@@ -85,7 +87,7 @@ fun AddEventScreen(
                 GenericViewModelFactory {
                   AddEventViewModel(
                       profileRepository = ProfileLocalRepository(),
-                      eventsRepository = EventsLocalRepository())
+                      eventsRepository = EventsRepositoryFirestore(Firebase.firestore))
                 }),
     onSave: () -> Unit = {},
     goBack: () -> Unit = {},

@@ -21,6 +21,9 @@ import androidx.compose.ui.unit.sp
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
+import com.android.gatherly.ui.navigation.NavigationActions
+import com.android.gatherly.ui.navigation.Screen
+import com.android.gatherly.ui.navigation.Tab
 
 object SignInScreenTestTags {
   const val WELCOME_TITLE = "welcomeTitle"
@@ -40,16 +43,18 @@ private val TextWhite = Color(0xFFFFFFFF)
 fun SignInScreen(
     authViewModel: SignInViewModel = viewModel(),
     credentialManager: CredentialManager = CredentialManager.create(LocalContext.current),
-    onSignedIn: () -> Unit = {},
+    navigationActions: NavigationActions? = null,
 ) {
 
   val context = LocalContext.current
   val isSignedIn by authViewModel.uiState.collectAsState()
+  val destination by authViewModel.destination.collectAsState()
 
   // Navigate to home page screen on successful login
-  LaunchedEffect(isSignedIn) {
-    if (isSignedIn) {
-      onSignedIn()
+  LaunchedEffect(destination) {
+    when (destination) {
+      "home" -> navigationActions?.navigateTo(Tab.HomePage.destination)
+      "init_profile" -> navigationActions?.navigateTo(Screen.InitProfileScreen)
     }
   }
 
