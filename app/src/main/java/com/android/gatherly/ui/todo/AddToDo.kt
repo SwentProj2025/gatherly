@@ -2,14 +2,17 @@ package com.android.gatherly.ui.todo
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -184,57 +187,71 @@ fun AddToDoScreen(
                   modifier =
                       Modifier.fillMaxWidth().testTag(AddToDoScreenTestTags.INPUT_TODO_ASSIGNEE))
 
-              // Location Input
-              OutlinedTextField(
-                  value = todoUIState.location,
-                  onValueChange = {
-                    addTodoViewModel.onLocationChanged(it)
-                    showLocationDropdown = it.isNotBlank()
-                  },
-                  label = { Text(stringResource(R.string.todos_location_field_label)) },
-                  placeholder = { Text(stringResource(R.string.todos_location_field_placeholder)) },
-                  colors = textFieldColors,
-                  modifier =
-                      Modifier.fillMaxWidth().testTag(AddToDoScreenTestTags.INPUT_TODO_LOCATION))
+              // Location Input with dropdown
+              Box(modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    value = todoUIState.location,
+                    onValueChange = {
+                      addTodoViewModel.onLocationChanged(it)
+                      showLocationDropdown = it.isNotBlank()
+                    },
+                    label = { Text(stringResource(R.string.todos_location_field_label)) },
+                    placeholder = {
+                      Text(stringResource(R.string.todos_location_field_placeholder))
+                    },
+                    colors = textFieldColors,
+                    modifier =
+                        Modifier.fillMaxWidth().testTag(AddToDoScreenTestTags.INPUT_TODO_LOCATION))
 
-              DropdownMenu(
-                  expanded = showLocationDropdown && todoUIState.suggestions.isNotEmpty(),
-                  onDismissRequest = { showLocationDropdown = false },
-                  properties = PopupProperties(focusable = false),
-                  modifier =
-                      Modifier.testTag(AddToDoScreenTestTags.LOCATION_MENU)
-                          .fillMaxWidth()
-                          .height(dimensionResource(R.dimen.todo_location_dropdown_height))) {
-                    todoUIState.suggestions
-                        .take(integerResource(R.integer.todo_location_number_of_suggestions))
-                        .forEach { loc ->
-                          DropdownMenuItem(
-                              text = {
-                                Text(
-                                    text =
-                                        loc.name.take(
-                                            integerResource(
-                                                R.integer.todo_location_suggestion_length)) +
-                                            if (loc.name.length >
-                                                integerResource(
-                                                    R.integer.todo_location_suggestion_length))
-                                                stringResource(R.string.todos_location_text_etc)
-                                            else "")
-                              },
-                              onClick = {
-                                addTodoViewModel.selectLocation(loc)
-                                showLocationDropdown = false
-                              },
-                              modifier =
-                                  Modifier.testTag(AddToDoScreenTestTags.INPUT_TODO_LOCATION))
-                        }
-                    if (todoUIState.suggestions.size >
-                        integerResource(R.integer.todo_location_number_of_suggestions)) {
-                      DropdownMenuItem(
-                          text = { Text(stringResource(R.string.todos_location_suggestions_more)) },
-                          onClick = {})
+                DropdownMenu(
+                    expanded = showLocationDropdown && todoUIState.suggestions.isNotEmpty(),
+                    onDismissRequest = { showLocationDropdown = false },
+                    properties = PopupProperties(focusable = false),
+                    containerColor = MaterialTheme.colorScheme.onSurface,
+                    modifier =
+                        Modifier.testTag(AddToDoScreenTestTags.LOCATION_MENU)
+                            .fillMaxWidth()
+                            .heightIn(dimensionResource(R.dimen.todo_location_dropdown_height))) {
+                      todoUIState.suggestions
+                          .filterNotNull()
+                          .take(integerResource(R.integer.todo_location_number_of_suggestions))
+                          .forEach { loc ->
+                            DropdownMenuItem(
+                                text = {
+                                  Text(
+                                      color = MaterialTheme.colorScheme.outline,
+                                      maxLines = 1, // Ensure name doesn't overflow
+                                      text =
+                                          loc.name.take(
+                                              integerResource(
+                                                  R.integer.todo_location_suggestion_length)) +
+                                              if (loc.name.length >
+                                                  integerResource(
+                                                      R.integer.todo_location_suggestion_length))
+                                                  stringResource(R.string.todos_location_text_etc)
+                                              else "")
+                                },
+                                onClick = {
+                                  addTodoViewModel.selectLocation(loc)
+                                  showLocationDropdown = false
+                                },
+                                modifier =
+                                    Modifier.padding(
+                                            dimensionResource(
+                                                R.dimen.todo_location_dropdown_padding))
+                                        .testTag(AddToDoScreenTestTags.INPUT_TODO_LOCATION))
+                            Divider() // Separate items with a divider
+                          }
+                      if (todoUIState.suggestions.size >
+                          integerResource(R.integer.todo_location_number_of_suggestions)) {
+                        DropdownMenuItem(
+                            text = {
+                              Text(stringResource(R.string.todos_location_suggestions_more))
+                            },
+                            onClick = {})
+                      }
                     }
-                  }
+              }
 
               // Due Date Input
               OutlinedTextField(

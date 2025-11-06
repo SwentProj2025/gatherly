@@ -31,7 +31,8 @@
     <dimen name="todo_item_vertical_padding">4dp</dimen>
     <dimen name="todo_item_row_padding">12dp</dimen>
     <dimen name="todo_item_checkbox_padding">8dp</dimen>
-    <dimen name="todo_location_dropdown_height">8dp</dimen>
+    <dimen name="todo_location_dropdown_height">200dp</dimen>
+    <dimen name="todo_location_dropdown_padding">8dp</dimen>
 
     <!-- HomePage -->
     <dimen name="homepage_task_item_height">56dp</dimen>
