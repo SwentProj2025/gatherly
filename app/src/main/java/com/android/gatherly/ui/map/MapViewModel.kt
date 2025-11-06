@@ -25,6 +25,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+/** Default location coordinates for EPFL campus. */
+val EPFL_LATLNG = LatLng(46.5197, 6.5663)
+
 /**
  * UI state for the Map screen.
  *
@@ -41,7 +44,7 @@ data class UIState(
     val itemsList: List<DisplayedMapElement> = emptyList(),
     val expandedItemId: String? = null,
     val lastConsultedTodoId: String? = null,
-    val cameraPos: LatLng = LatLng(46.5191, 6.5668),
+    val cameraPos: LatLng = EPFL_LATLNG,
     val errorMsg: String? = null,
     val onSignedOut: Boolean = false,
     val displayEventsPage: Boolean = false
