@@ -59,7 +59,11 @@ object MapScreenTestTags {
   const val TODO_EXPANDED_CARD = "todoExpandedCard"
   const val EVENT_EXPANDED_CARD = "eventExpandedCard"
   const val TODO_TITLE = "todoTitle"
+  const val TODO_TITLE_EXPANDED = "todoTitleExpanded"
+
   const val EVENT_TITLE = "eventTitle"
+  const val EVENT_TITLE_EXPANDED = "eventTitleExpanded"
+
   const val TODO_DUE_DATE = "todoDueDate"
   const val EVENT_DATE = "eventDate"
   const val TODO_DESCRIPTION = "todoDescription"
@@ -239,7 +243,7 @@ fun EventIcon(event: Event) {
               .testTag(MapScreenTestTags.EVENT_CARD),
   ) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(12.dp),
+        modifier = Modifier.fillMaxWidth().padding(Dimensions.cardPadding),
         verticalAlignment = Alignment.CenterVertically,
     ) {
       Column(modifier = Modifier.weight(1f)) {
@@ -281,7 +285,7 @@ fun EventExpandedIcon(event: Event) {
         ) {
           Column(modifier = Modifier.weight(1f)) {
             Text(
-                modifier = Modifier.testTag(MapScreenTestTags.EVENT_TITLE),
+                modifier = Modifier.testTag(MapScreenTestTags.EVENT_TITLE_EXPANDED),
                 text = event.title.uppercase(),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.primary,
@@ -364,7 +368,7 @@ fun ToDoExpandedIcon(toDo: ToDo) {
         ) {
           Column(modifier = Modifier.weight(1f)) {
             Text(
-                modifier = Modifier.testTag(MapScreenTestTags.TODO_TITLE),
+                modifier = Modifier.testTag(MapScreenTestTags.TODO_TITLE_EXPANDED),
                 text = toDo.name.uppercase(),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.primary,
