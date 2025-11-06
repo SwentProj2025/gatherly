@@ -202,8 +202,10 @@ class EditTodoViewModel(
       _uiState.value = _uiState.value.copy(isSaving = true, errorMsg = null)
       try {
         todoRepository.editTodo(todoID = todoID, newValue = todo)
+        _uiState.value = _uiState.value.copy(isSaving = false, saveSuccess = true)
       } catch (e: Exception) {
-        setErrorMsg("Failed to edit ToDo: ${e.message}")
+        _uiState.value =
+            _uiState.value.copy(isSaving = false, errorMsg = "Failed to edit ToDo: ${e.message}")
       }
     }
   }
@@ -215,10 +217,13 @@ class EditTodoViewModel(
    */
   fun deleteToDo(todoID: String) {
     viewModelScope.launch {
+      _uiState.value = _uiState.value.copy(isSaving = true, errorMsg = null)
       try {
         todoRepository.deleteTodo(todoID = todoID)
+        _uiState.value = _uiState.value.copy(isSaving = false, saveSuccess = true)
       } catch (e: Exception) {
-        setErrorMsg("Failed to delete ToDo: ${e.message}")
+        _uiState.value =
+            _uiState.value.copy(isSaving = false, errorMsg = "Failed to delete ToDo: ${e.message}")
       }
     }
   }
