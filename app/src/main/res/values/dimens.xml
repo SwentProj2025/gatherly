@@ -24,6 +24,15 @@
     <!-- Shapes -->
     <dimen name="rounded_corner_shape_medium">12dp</dimen>
 
+    <!-- ToDos -->
+    <dimen name="todos_overview_vertical_padding">8dp</dimen>
+    <dimen name="todos_overview_horizontal_padding">16dp</dimen>
+    <dimen name="todos_overview_section_text_vertical_padding">8dp</dimen>
+    <dimen name="todo_item_vertical_padding">4dp</dimen>
+    <dimen name="todo_item_row_padding">12dp</dimen>
+    <dimen name="todo_item_checkbox_padding">8dp</dimen>
+    <dimen name="todo_location_dropdown_height">8dp</dimen>
+
     <!-- HomePage -->
     <dimen name="homepage_task_item_height">56dp</dimen>
     <dimen name="homepage_task_item_spacing">12dp</dimen>

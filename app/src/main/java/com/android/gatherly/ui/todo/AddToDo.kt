@@ -31,7 +31,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.integerResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
@@ -205,20 +204,35 @@ fun AddToDoScreen(
                   modifier =
                       Modifier.testTag(AddToDoScreenTestTags.LOCATION_MENU)
                           .fillMaxWidth()
-                          .height(200.dp)) {
-                    todoUIState.suggestions.take(3).forEach { loc ->
+                          .height(dimensionResource(R.dimen.todo_location_dropdown_height))) {
+                    todoUIState.suggestions
+                        .take(integerResource(R.integer.todo_location_number_of_suggestions))
+                        .forEach { loc ->
+                          DropdownMenuItem(
+                              text = {
+                                Text(
+                                    text =
+                                        loc.name.take(
+                                            integerResource(
+                                                R.integer.todo_location_suggestion_length)) +
+                                            if (loc.name.length >
+                                                integerResource(
+                                                    R.integer.todo_location_suggestion_length))
+                                                stringResource(R.string.todos_location_text_etc)
+                                            else "")
+                              },
+                              onClick = {
+                                addTodoViewModel.selectLocation(loc)
+                                showLocationDropdown = false
+                              },
+                              modifier =
+                                  Modifier.testTag(AddToDoScreenTestTags.INPUT_TODO_LOCATION))
+                        }
+                    if (todoUIState.suggestions.size >
+                        integerResource(R.integer.todo_location_number_of_suggestions)) {
                       DropdownMenuItem(
-                          text = {
-                            Text(text = loc.name.take(40) + if (loc.name.length > 40) "..." else "")
-                          },
-                          onClick = {
-                            addTodoViewModel.selectLocation(loc)
-                            showLocationDropdown = false
-                          },
-                          modifier = Modifier.testTag(AddToDoScreenTestTags.INPUT_TODO_LOCATION))
-                    }
-                    if (todoUIState.suggestions.size > 3) {
-                      DropdownMenuItem(text = { Text("More...") }, onClick = {})
+                          text = { Text(stringResource(R.string.todos_location_suggestions_more)) },
+                          onClick = {})
                     }
                   }
 
