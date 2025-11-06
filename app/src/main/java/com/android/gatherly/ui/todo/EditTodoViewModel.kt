@@ -110,6 +110,7 @@ class EditTodoViewModel(
     viewModelScope.launch {
       try {
         val todo = todoRepository.getTodo(todoID)
+        chosenLocation = todo.location
         _uiState.value =
             EditTodoUIState(
                 title = todo.name,
