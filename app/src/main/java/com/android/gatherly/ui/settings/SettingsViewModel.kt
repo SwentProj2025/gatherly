@@ -43,7 +43,8 @@ data class SettingsUiState(
     val invalidUsernameMsg: String? = null,
     val invalidBirthdayMsg: String? = null,
     val isUsernameAvailable: Boolean? = null,
-    val isLoadingProfile: Boolean = false
+    val isLoadingProfile: Boolean = false,
+    val saveSuccess: Boolean = false
 ) {
   val isValid: Boolean
     get() =
@@ -52,7 +53,7 @@ data class SettingsUiState(
             invalidUsernameMsg == null &&
             name.isNotEmpty() &&
             username.isNotEmpty() &&
-            (isUsernameAvailable == true)
+            (isUsernameAvailable != false)
 }
 /**
  * ViewModel for the Settings screen. This ViewModel manages the state of input fields for the
@@ -77,6 +78,11 @@ class SettingsViewModel(
   /** Clears the error message in the UI state. */
   fun clearErrorMsg() {
     _uiState.value = _uiState.value.copy(errorMsg = null)
+  }
+
+  /** Clears the save success flag in the UI state. */
+  fun clearSaveSuccess() {
+    _uiState.value = _uiState.value.copy(saveSuccess = false)
   }
 
   /** Sets an error message in the UI state. */
@@ -139,9 +145,12 @@ class SettingsViewModel(
 
     viewModelScope.launch {
       try {
+        val usernameChanged = state.username != originalProfile?.username
         val usernameSuccess =
             if (isFirstTime) {
               repository.registerUsername(id, state.username)
+            } else if (!usernameChanged) {
+              true
             } else {
               repository.updateUsername(id, originalProfile?.username, state.username)
             }
@@ -163,6 +172,7 @@ class SettingsViewModel(
 
         repository.updateProfile(updatedProfile)
         clearErrorMsg()
+        _uiState.value = _uiState.value.copy(saveSuccess = true)
       } catch (e: Exception) {
         Log.e("SettingsViewModel", "Error saving profile", e)
         setErrorMsg("Failed to save profile: ${e.message}")
@@ -220,6 +230,10 @@ class SettingsViewModel(
   private fun checkUsernameAvailability(username: String) {
     viewModelScope.launch {
       try {
+        if (username == originalProfile?.username) {
+          _uiState.value.copy(isUsernameAvailable = true, invalidUsernameMsg = null)
+          return@launch
+        }
         val available = repository.isUsernameAvailable(username)
         _uiState.value =
             _uiState.value.copy(
