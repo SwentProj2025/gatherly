@@ -1,6 +1,9 @@
 package com.android.gatherly.end2end
 
 import androidx.activity.ComponentActivity
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.Surface
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -8,10 +11,12 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import com.android.gatherly.GatherlyApp
+import com.android.gatherly.ui.authentication.InitProfileScreenTestTags
 import com.android.gatherly.ui.authentication.SignInScreenTestTags
 import com.android.gatherly.ui.focusTimer.FocusTimerScreenTestTags
 import com.android.gatherly.ui.homePage.HomePageScreenTestTags
 import com.android.gatherly.ui.navigation.NavigationTestTags
+import com.android.gatherly.ui.theme.GatherlyTheme
 import com.android.gatherly.ui.todo.AddToDoScreenTestTags
 import com.android.gatherly.ui.todo.OverviewScreenTestTags
 import com.android.gatherly.utils.FirebaseEmulator
@@ -32,7 +37,11 @@ class Milestone1End2End {
       error("Firebase emulator must be running! Use: firebase emulators:start")
     }
 
-    composeTestRule.setContent { GatherlyApp() }
+    composeTestRule.setContent {
+      GatherlyTheme(darkTheme = true) {
+        Surface(modifier = Modifier.fillMaxSize()) { GatherlyApp() }
+      }
+    }
   }
 
   // make sure to clear Firebase emulators
@@ -48,13 +57,29 @@ class Milestone1End2End {
     // sign in anonymously
     composeTestRule.onNodeWithTag(SignInScreenTestTags.ANONYMOUS_BUTTON).performClick()
 
+    // Fill profile init screen
+    composeTestRule.waitUntil(TIMEOUT) {
+      composeTestRule.onNodeWithTag(InitProfileScreenTestTags.SAVE_BUTTON).isDisplayed()
+    }
+
+    // Fill username and name (mandatory fields)
+    composeTestRule.onNodeWithTag(InitProfileScreenTestTags.USERNAME).performTextInput("testuser")
+    composeTestRule
+        .onNodeWithTag(InitProfileScreenTestTags.NAME_FIELD)
+        .performTextInput("Test User")
+
+    // Save so navigate automatically to HomePage
+    composeTestRule.onNodeWithTag(InitProfileScreenTestTags.SAVE_BUTTON).performClick()
+    composeTestRule.waitForIdle()
+
     // wait for homescreen to load
     composeTestRule.waitUntil(TIMEOUT) {
-      composeTestRule.onNodeWithTag(HomePageScreenTestTags.HOMETEXT).isDisplayed()
+      composeTestRule.onNodeWithTag(HomePageScreenTestTags.UPCOMING_EVENTS_TITLE).isDisplayed()
     }
 
     // go to todos tab
     composeTestRule.onNodeWithTag(NavigationTestTags.OVERVIEW_TAB).performClick()
+    composeTestRule.waitForIdle()
 
     // wait for it to appear
     composeTestRule.waitUntil(TIMEOUT) {
@@ -63,6 +88,7 @@ class Milestone1End2End {
 
     // click to create a todo
     composeTestRule.onNodeWithTag(OverviewScreenTestTags.CREATE_TODO_BUTTON).performClick()
+    composeTestRule.waitForIdle()
 
     // wait for add todo screen to appear
     composeTestRule.waitUntil(TIMEOUT) {
@@ -82,6 +108,7 @@ class Milestone1End2End {
         .performTextInput("20/12/2025")
     composeTestRule.onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_TIME).performTextInput("10:00")
     composeTestRule.onNodeWithTag(AddToDoScreenTestTags.TODO_SAVE).performClick()
+    composeTestRule.waitForIdle()
 
     // wait for overview todos to appear again
     composeTestRule.waitUntil(TIMEOUT) {
@@ -90,6 +117,7 @@ class Milestone1End2End {
 
     // go to timer tab
     composeTestRule.onNodeWithTag(NavigationTestTags.TIMER_TAB).performClick()
+    composeTestRule.waitForIdle()
 
     // wait for timer tab to appear
     composeTestRule.waitUntil(TIMEOUT) {
@@ -112,6 +140,7 @@ class Milestone1End2End {
 
     // click on drop down menu
     composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.waitForIdle()
 
     // wait for drop down menu to appear
     composeTestRule.waitUntil(TIMEOUT) {
