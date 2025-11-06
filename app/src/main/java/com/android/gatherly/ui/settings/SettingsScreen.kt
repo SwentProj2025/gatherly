@@ -54,6 +54,9 @@ object SettingsScreenTestTags {
   const val USERNAME_ERROR = "settings_username_error"
   const val NAME_FIELD_ERROR = "settings_name_field_error"
   const val BIRTHDAY_FIELD_ERROR = "settings_birthday_field_error"
+  const val PHOTO_PICKER_CAMERA_BUTTON = "settings_photo_picker_camera_button"
+  const val PHOTO_PICKER_GALLERY_BUTTON = "settings_photo_picker_gallery_button"
+  const val PHOTO_PICKER_CANCEL_BUTTON = "settings_photo_picker_cancel_button"
 }
 
 /**
@@ -229,7 +232,10 @@ fun SettingsScreen(
                                   onClick = {
                                     takePhotoLauncher.launch(imageUri)
                                     showPhotoPickerDialog = false
-                                  }) {
+                                  },
+                                  modifier =
+                                      Modifier.testTag(
+                                          SettingsScreenTestTags.PHOTO_PICKER_CAMERA_BUTTON)) {
                                     Text(
                                         color = MaterialTheme.colorScheme.primary,
                                         text =
@@ -241,7 +247,10 @@ fun SettingsScreen(
                                   onClick = {
                                     pickImageLauncher.launch(MIME_TYPE_IMAGE)
                                     showPhotoPickerDialog = false
-                                  }) {
+                                  },
+                                  modifier =
+                                      Modifier.testTag(
+                                          SettingsScreenTestTags.PHOTO_PICKER_GALLERY_BUTTON)) {
                                     Text(
                                         color = MaterialTheme.colorScheme.primary,
                                         text =
@@ -251,10 +260,15 @@ fun SettingsScreen(
                             }
                           },
                           dismissButton = {
-                            TextButton(onClick = { showPhotoPickerDialog = false }) {
-                              Text(
-                                  stringResource(id = R.string.settings_alert_dialog_option_cancel))
-                            }
+                            TextButton(
+                                onClick = { showPhotoPickerDialog = false },
+                                modifier =
+                                    Modifier.testTag(
+                                        SettingsScreenTestTags.PHOTO_PICKER_CANCEL_BUTTON)) {
+                                  Text(
+                                      stringResource(
+                                          id = R.string.settings_alert_dialog_option_cancel))
+                                }
                           })
                     }
 

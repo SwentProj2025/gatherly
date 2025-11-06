@@ -286,4 +286,39 @@ class SettingsScreenTest : FirestoreGatherlyTest() {
         .performScrollTo()
         .assertIsDisplayed()
   }
+
+  @Test
+  fun settings_screen_profilePicture_isDisplayedInitially() {
+    /** Verifies the profile picture Image composable is visible at startup. */
+    composeRule
+        .onNodeWithTag(SettingsScreenTestTags.PROFILE_PICTURE)
+        .assertExists()
+        .assertIsDisplayed()
+  }
+
+  @Test
+  fun settings_screen_editPhotoButton_opensPhotoPickerDialog() {
+    /** Ensures clicking "Edit Photo" opens the dialog with all three buttons. */
+    composeRule.onNodeWithTag(SettingsScreenTestTags.EDIT_PHOTO_BUTTON).performClick()
+
+    composeRule.onNodeWithTag(SettingsScreenTestTags.PHOTO_PICKER_CAMERA_BUTTON).assertIsDisplayed()
+    composeRule
+        .onNodeWithTag(SettingsScreenTestTags.PHOTO_PICKER_GALLERY_BUTTON)
+        .assertIsDisplayed()
+    composeRule.onNodeWithTag(SettingsScreenTestTags.PHOTO_PICKER_CANCEL_BUTTON).assertIsDisplayed()
+  }
+
+  @Test
+  fun settings_screen_photoPicker_cancelButton_closesDialog() {
+    /** Tests that pressing "Cancel" closes the dialog and hides all options. */
+    composeRule.onNodeWithTag(SettingsScreenTestTags.EDIT_PHOTO_BUTTON).performClick()
+    composeRule.onNodeWithTag(SettingsScreenTestTags.PHOTO_PICKER_CANCEL_BUTTON).performClick()
+
+    composeRule
+        .onNodeWithTag(SettingsScreenTestTags.PHOTO_PICKER_CAMERA_BUTTON)
+        .assertDoesNotExist()
+    composeRule
+        .onNodeWithTag(SettingsScreenTestTags.PHOTO_PICKER_GALLERY_BUTTON)
+        .assertDoesNotExist()
+  }
 }
