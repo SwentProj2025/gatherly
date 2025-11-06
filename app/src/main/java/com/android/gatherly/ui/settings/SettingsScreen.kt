@@ -1,6 +1,12 @@
 package com.android.gatherly.ui.settings
 
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.ImageDecoder
+import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -21,12 +27,20 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import androidx.core.content.FileProvider
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.rememberAsyncImagePainter
 import com.android.gatherly.R
 import com.android.gatherly.ui.navigation.*
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+import java.io.File
+import java.io.FileOutputStream
+
+// Technical constants
+private const val PROFILE_PICTURE_FILENAME = "profile_picture.jpg"
+private const val MIME_TYPE_IMAGE = "image/*"
 
 object SettingsScreenTestTags {
   const val PROFILE_PICTURE = "settings_profile_picture"
@@ -72,6 +86,33 @@ fun SettingsScreen(
   val uiState by settingsViewModel.uiState.collectAsState()
   val context = LocalContext.current
 
+  var showPhotoPickerDialog by remember { mutableStateOf(false) }
+
+  val imageFile = remember { File(context.filesDir, PROFILE_PICTURE_FILENAME) }
+
+  val imageUri = FileProvider.getUriForFile(context, "${context.packageName}.provider", imageFile)
+
+  // launcher to pick from gallery
+  val pickImageLauncher =
+      rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { uri: Uri?
+        ->
+        uri?.let {
+          val source = ImageDecoder.createSource(context.contentResolver, it)
+          val bitmap = ImageDecoder.decodeBitmap(source)
+          saveProfilePicture(context, bitmap)
+          settingsViewModel.editPhoto("${imageFile.toURI()}?t=${System.currentTimeMillis()}")
+        }
+      }
+
+  // launcher to take a photo with the camera
+  val takePhotoLauncher =
+      rememberLauncherForActivityResult(contract = ActivityResultContracts.TakePicture()) { success
+        ->
+        if (success) {
+          settingsViewModel.editPhoto("${imageFile.toURI()}?t=${System.currentTimeMillis()}")
+        }
+      }
+
   val errorMsg = uiState.errorMsg
   LaunchedEffect(errorMsg) {
     if (errorMsg != null) {
@@ -102,20 +143,29 @@ fun SettingsScreen(
                   modifier =
                       Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()),
                   horizontalAlignment = Alignment.CenterHorizontally) {
+
                     // Profile Picture
-                    Image(
-                        painter =
-                            painterResource(
-                                id =
-                                    R.drawable
-                                        .ic_launcher_foreground), // currently a placeholder image
-                        contentDescription =
-                            stringResource(R.string.settings_profile_picture_description),
-                        modifier =
-                            Modifier.size(dimensionResource(id = R.dimen.profile_pic_size))
-                                .clip(CircleShape)
-                                .testTag(SettingsScreenTestTags.PROFILE_PICTURE),
-                        contentScale = ContentScale.Crop)
+                    if (uiState.profilePictureUrl.isNotEmpty()) {
+                      Image(
+                          painter = rememberAsyncImagePainter(uiState.profilePictureUrl),
+                          contentDescription =
+                              stringResource(R.string.settings_profile_picture_description),
+                          modifier =
+                              Modifier.size(dimensionResource(id = R.dimen.profile_pic_size))
+                                  .clip(CircleShape)
+                                  .testTag(SettingsScreenTestTags.PROFILE_PICTURE),
+                          contentScale = ContentScale.Crop)
+                    } else {
+                      Image(
+                          painter = painterResource(R.drawable.ic_launcher_foreground),
+                          contentDescription =
+                              stringResource(R.string.settings_profile_picture_description),
+                          modifier =
+                              Modifier.size(dimensionResource(id = R.dimen.profile_pic_size))
+                                  .clip(CircleShape)
+                                  .testTag(SettingsScreenTestTags.PROFILE_PICTURE),
+                          contentScale = ContentScale.Crop)
+                    }
 
                     Spacer(modifier = Modifier.height(fieldSpacingRegular))
 
@@ -139,10 +189,10 @@ fun SettingsScreen(
 
                     Spacer(modifier = Modifier.height(fieldSpacingRegular))
 
-                    // Edit Photo Button currently non-functional, will be implemented in next
-                    // sprint
+                    // Edit Photo Button (currently firestore profile picture storage is not
+                    // implemented, photo is saved locally)
                     Button(
-                        onClick = { /* Handle edit photo will be handled in next sprint*/},
+                        onClick = { showPhotoPickerDialog = true },
                         modifier =
                             Modifier.fillMaxWidth()
                                 .height(dimensionResource(id = R.dimen.settings_text_field_height))
@@ -159,6 +209,54 @@ fun SettingsScreen(
                               color = MaterialTheme.colorScheme.primary,
                               fontSize = 16.sp)
                         }
+
+                    if (showPhotoPickerDialog) {
+                      AlertDialog(
+                          onDismissRequest = { showPhotoPickerDialog = false },
+                          title = {
+                            Text(
+                                color = MaterialTheme.colorScheme.primary,
+                                text = stringResource(id = R.string.settings_alert_dialog_title))
+                          },
+                          text = {
+                            Text(
+                                color = MaterialTheme.colorScheme.primary,
+                                text = stringResource(id = R.string.settings_alert_dialog_text))
+                          },
+                          confirmButton = {
+                            Column {
+                              TextButton(
+                                  onClick = {
+                                    takePhotoLauncher.launch(imageUri)
+                                    showPhotoPickerDialog = false
+                                  }) {
+                                    Text(
+                                        color = MaterialTheme.colorScheme.primary,
+                                        text =
+                                            stringResource(
+                                                id = R.string.settings_alert_dialog_option_camera))
+                                  }
+
+                              TextButton(
+                                  onClick = {
+                                    pickImageLauncher.launch(MIME_TYPE_IMAGE)
+                                    showPhotoPickerDialog = false
+                                  }) {
+                                    Text(
+                                        color = MaterialTheme.colorScheme.primary,
+                                        text =
+                                            stringResource(
+                                                id = R.string.settings_alert_dialog_option_gallery))
+                                  }
+                            }
+                          },
+                          dismissButton = {
+                            TextButton(onClick = { showPhotoPickerDialog = false }) {
+                              Text(
+                                  stringResource(id = R.string.settings_alert_dialog_option_cancel))
+                            }
+                          })
+                    }
 
                     Spacer(modifier = Modifier.height(fieldSpacingMedium))
 
@@ -275,4 +373,18 @@ fun SettingsField(
                   .testTag("${testTag}_error"))
     }
   }
+}
+
+/**
+ * Saves a [Bitmap] image to the app's internal storage as "profile_picture.jpg".
+ *
+ * @param context The [Context] used to access the app's internal files directory.
+ * @param bitmap The [Bitmap] image to save.
+ *
+ * The image is compressed in JPEG format with 90% quality. The file will be overwritten if it
+ * already exists.
+ */
+fun saveProfilePicture(context: Context, bitmap: Bitmap) {
+  val file = File(context.filesDir, PROFILE_PICTURE_FILENAME)
+  FileOutputStream(file).use { out -> bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out) }
 }

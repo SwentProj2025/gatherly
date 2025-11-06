@@ -221,6 +221,8 @@ dependencies {
     androidTestImplementation(libs.mockito.android)
     androidTestImplementation(libs.kaspresso.allure.support)
     testImplementation(libs.kotlinx.coroutines.test)
+
+    implementation("io.coil-kt:coil-compose:2.6.0")
 }
 
 configurations.all {
