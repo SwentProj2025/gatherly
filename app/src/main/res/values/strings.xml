@@ -102,4 +102,8 @@
     <string name="userEvents_emptylist_msg">You have not created any events</string>
     <string name="create_event_button_title">Create an event</string>
 
+    <!-- Map page -->
+    <string name="show_events_button_title">Show events</string>
+    <string name="show_todos_button_title">Show toDos</string>
+
 </resources>
