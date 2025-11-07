@@ -1,6 +1,8 @@
 package com.android.gatherly.utils
 
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
+import com.google.firebase.Firebase
+import com.google.firebase.storage.storage
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -39,7 +41,10 @@ open class FirestoreGatherlyProfileTest {
 
   @After
   open fun tearDown() {
-    runTest { clearCurrentUserData() }
+    runTest {
+      clearCurrentUserData()
+      clearStorageData()
+    }
     FirebaseEmulator.clearFirestoreEmulator()
   }
 
@@ -56,5 +61,18 @@ open class FirestoreGatherlyProfileTest {
     val batch = firestore.batch()
     usernames.documents.forEach { batch.delete(it.reference) }
     batch.commit().await()
+  }
+
+  /** Deletes all uploaded test files in the Firebase Storage emulator under profile_pictures/. */
+  protected suspend fun clearStorageData() {
+    val storage = Firebase.storage
+    try {
+      val list = storage.reference.child("profile_pictures").listAll().await()
+      for (item in list.items) {
+        item.delete().await()
+      }
+    } catch (_: Exception) {
+      // Ignore if folder doesn't exist (e.g., no uploads happened)
+    }
   }
 }
