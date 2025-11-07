@@ -14,6 +14,8 @@ import com.android.gatherly.ui.settings.SettingsViewModel
 class ProfileRepositoryLocalForTests : ProfileRepository {
   private val profiles = mutableMapOf<String, Profile>()
 
+  var shouldFailRegisterUsername = false
+
   override suspend fun getProfileByUid(uid: String): Profile? {
     return profiles[uid]
   }
@@ -42,6 +44,7 @@ class ProfileRepositoryLocalForTests : ProfileRepository {
   }
 
   override suspend fun registerUsername(uid: String, username: String): Boolean {
+    if (shouldFailRegisterUsername) return false
     if (!isUsernameAvailable(username)) return false
     val existing = profiles[uid]
     val updated = (existing ?: Profile(uid = uid)).copy(username = username)

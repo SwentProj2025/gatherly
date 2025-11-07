@@ -80,6 +80,14 @@ fun SettingsScreen(
     }
   }
 
+  val saveSuccess = uiState.saveSuccess
+  LaunchedEffect(saveSuccess) {
+    if (saveSuccess) {
+      Toast.makeText(context, "Profile saved successfully!", Toast.LENGTH_SHORT).show()
+      settingsViewModel.clearSaveSuccess()
+    }
+  }
+
   HandleSignedOutState(uiState.signedOut, onSignedOut)
 
   Scaffold(
