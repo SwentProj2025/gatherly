@@ -263,4 +263,32 @@ class SettingsViewModelTest {
     viewModel.clearSaveSuccess()
     assertFalse(viewModel.uiState.value.saveSuccess)
   }
+
+  @Test
+  fun updateProfile_WhenRepositoryReturnsFalse_SetsUsernameTakenError() = runTest {
+    // GIVEN an existing valid profile
+    val existing = Profile(uid = "u1", name = "Alice", username = "old_name")
+    repo.addProfile(existing)
+
+    // Override repo behavior to simulate failure on username registration
+    repo.shouldFailRegisterUsername = true
+
+    viewModel.loadProfile("u1")
+    advanceUntilIdle()
+
+    // User edits to a new username
+    viewModel.editName("Alice Updated")
+    viewModel.editUsername("new_user")
+    advanceUntilIdle()
+
+    // WHEN updateProfile is called
+    viewModel.updateProfile("u1", isFirstTime = true)
+    advanceUntilIdle()
+
+    // THEN the ViewModel should report the username invalid/taken error
+    val state = viewModel.uiState.value
+    assertEquals("Username is invalid or already taken.", state.errorMsg)
+    assertFalse(state.saveSuccess)
+    repo.shouldFailRegisterUsername = false
+  }
 }
