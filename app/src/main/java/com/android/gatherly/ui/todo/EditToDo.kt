@@ -109,6 +109,9 @@ fun EditToDoScreen(
           unfocusedContainerColor = MaterialTheme.colorScheme.background,
           unfocusedTextColor = MaterialTheme.colorScheme.primary,
           focusedTextColor = MaterialTheme.colorScheme.primary,
+          errorTextColor = MaterialTheme.colorScheme.primary,
+          errorPlaceholderColor = MaterialTheme.colorScheme.primary,
+          errorLabelColor = MaterialTheme.colorScheme.primary,
       )
 
   // Search location when input changes

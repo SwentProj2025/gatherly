@@ -65,6 +65,9 @@ fun LocationSuggestions(
           unfocusedContainerColor = MaterialTheme.colorScheme.background,
           unfocusedTextColor = MaterialTheme.colorScheme.primary,
           focusedTextColor = MaterialTheme.colorScheme.primary,
+          errorTextColor = MaterialTheme.colorScheme.primary,
+          errorPlaceholderColor = MaterialTheme.colorScheme.primary,
+          errorLabelColor = MaterialTheme.colorScheme.primary,
       )
 
   var showLocationDropdown by remember { mutableStateOf(false) }
