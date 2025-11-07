@@ -2,6 +2,7 @@ package com.android.gatherly.model.profile
 
 import com.android.gatherly.utils.FirebaseEmulator
 import com.android.gatherly.utils.FirestoreGatherlyProfileTest
+import com.google.firebase.storage.storage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.tasks.await
@@ -380,4 +381,83 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     assertNotNull(profileA)
     assertFalse(profileA!!.friendUids.contains(userBUid))
   }
+
+  @Test
+  fun updateProfilePic_uploadsToStorageAndUpdatesFirestore() = runTest {
+    val uid = FirebaseEmulator.auth.currentUser!!.uid
+    withTimeout(3000) {
+      while (FirebaseEmulator.auth.currentUser == null) delay(50)
+    }
+    repository.initProfileIfMissing(uid, "old_pic.png")
+
+    // Prepare fake image file
+    val tmpFile = kotlin.io.path.createTempFile("test_image", ".jpg").toFile()
+    tmpFile.writeBytes(ByteArray(10) { 0x42 })
+    val uri = android.net.Uri.fromFile(tmpFile)
+
+    println("Uploading file for user: $uid ...")
+    repository.updateProfilePic(uid, uri)
+    println("Upload finished, fetching profile...")
+
+    val updatedProfile = repository.getProfileByUid(uid)
+    println("Updated profile: $updatedProfile")
+
+    assertNotNull("Profile is null", updatedProfile)
+
+    val url = updatedProfile!!.profilePicture
+    println("Profile picture URL: $url")
+
+    assertTrue(
+      "Unexpected profile picture URL: ${updatedProfile.profilePicture}",
+      updatedProfile!!.profilePicture.startsWith("https://") ||
+              updatedProfile.profilePicture.startsWith("http://10.0.2.2")
+    )
+
+    println("Checking storage metadata...")
+    val storageRef =
+      com.google.firebase.Firebase.storage.reference.child("profile_pictures/$uid.jpg")
+
+    val metadata = try {
+      storageRef.metadata.await()
+    } catch (e: Exception) {
+      println("Failed to fetch metadata: ${e.message}")
+      throw e
+    }
+
+    println("Metadata: $metadata")
+    assertNotNull("Storage metadata is null", metadata)
+  }
+
+
+  @Test
+  fun updateProfilePic_overwritesExistingFile() = runTest {
+    val uid = FirebaseEmulator.auth.currentUser!!.uid
+    withTimeout(3000) {
+      while (FirebaseEmulator.auth.currentUser == null) delay(50)
+    }
+    repository.initProfileIfMissing(uid, "pic.png")
+
+    val file1 = kotlin.io.path.createTempFile("first", ".jpg").toFile()
+    file1.writeBytes(ByteArray(20) { 1 })
+    val uri1 = android.net.Uri.fromFile(file1)
+
+    repository.updateProfilePic(uid, uri1)
+    val metadata1 = com.google.firebase.Firebase.storage.reference
+      .child("profile_pictures/$uid.jpg")
+      .metadata.await()
+
+    val file2 = kotlin.io.path.createTempFile("second", ".jpg").toFile()
+    file2.writeBytes(ByteArray(30) { 2 })
+    val uri2 = android.net.Uri.fromFile(file2)
+
+    repository.updateProfilePic(uid, uri2)
+    val metadata2 = com.google.firebase.Firebase.storage.reference
+      .child("profile_pictures/$uid.jpg")
+      .metadata.await()
+
+    // Both metadata should exist but may have different updated timestamps
+    assertTrue(metadata2.updatedTimeMillis >= metadata1.updatedTimeMillis)
+  }
+
+
 }
