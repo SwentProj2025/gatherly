@@ -552,4 +552,34 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   fun test_getFriendsAndNonFriendsUsernames_throwsIfProfileMissing() = runTest {
     repository.getFriendsAndNonFriendsUsernames("non_existent_uid")
   }
+
+  @Test
+  fun deleteUserProfile_removesAllDataAndFreesUsername() = runTest {
+    val uid = FirebaseEmulator.auth.currentUser!!.uid
+    repository.initProfileIfMissing(uid, "pic.png")
+    repository.registerUsername(uid, "testuser")
+
+    // Add fake profile pic in storage
+    val storageRef = com.google.firebase.Firebase.storage
+      .reference.child("profile_pictures/$uid.jpg")
+    storageRef.putBytes(ByteArray(10)).await()
+
+    // Delete full profile
+    repository.deleteUserProfile(uid)
+
+    // Profile document should be gone
+    assertFalse(repository.isUidRegistered(uid))
+
+    // Username should be available again
+    assertTrue(repository.isUsernameAvailable("testuser"))
+
+    // Picture should no longer exist
+    try {
+      storageRef.metadata.await()
+      fail("Expected picture to be deleted")
+    } catch (e: Exception) {
+      assertTrue(e.message!!.contains("Object does not exist"))
+    }
+  }
+
 }
