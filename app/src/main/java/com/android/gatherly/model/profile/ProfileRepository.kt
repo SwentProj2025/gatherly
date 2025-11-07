@@ -1,5 +1,7 @@
 package com.android.gatherly.model.profile
 
+import android.net.Uri
+
 /**
  * Interface for repositories managing user profiles.
  *
@@ -74,6 +76,14 @@ interface ProfileRepository {
    */
   suspend fun updateUsername(uid: String, oldUsername: String?, newUsername: String): Boolean
 
+  /**
+   * Updates a user's profile picture.
+   *
+   * @param uid The UID of the user.
+   * @param url The new profile picture link.
+
+   */
+  suspend fun updateProfilePic(uid: String, uri: Uri): String
   /**
    * Retrieves a [Profile] by its username.
    *

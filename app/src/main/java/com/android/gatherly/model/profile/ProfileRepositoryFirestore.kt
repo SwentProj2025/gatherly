@@ -1,8 +1,10 @@
 package com.android.gatherly.model.profile
 
+import android.net.Uri
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.storage
 import kotlinx.coroutines.tasks.await
 
 /**
@@ -162,6 +164,15 @@ class ProfileRepositoryFirestore(private val db: FirebaseFirestore) : ProfileRep
         }
         .await()
   }
+
+    override suspend fun updateProfilePic(uid: String, uri: Uri): String{
+        val storageRef = com.google.firebase.Firebase.storage.reference.child("profile_pictures/$uid.jpg")
+        storageRef.putFile(uri).await()
+        val downloadUrl = storageRef.downloadUrl.await().toString()
+        val doc = profilesCollection.document(uid)
+        doc.update("profilePicture", downloadUrl).await()
+        return downloadUrl
+    }
 
   /**
    * Retrieves a [Profile] by its username.
