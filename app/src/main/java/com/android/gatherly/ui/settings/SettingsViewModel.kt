@@ -1,5 +1,6 @@
 package com.android.gatherly.ui.settings
 
+import android.net.Uri
 import android.util.Log
 import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
@@ -164,6 +165,15 @@ class SettingsViewModel(
           return@launch
         }
 
+          val newProfilePictureUrl = if((state.profilePictureUrl != originalProfile?.profilePicture) &&
+              (state.profilePictureUrl.isNotBlank()) &&
+              Uri.parse(state.profilePictureUrl).scheme == "content")
+          {
+              repository.updateProfilePic(id, Uri.parse(state.profilePictureUrl))
+          }else{
+              state.profilePictureUrl
+          }
+
         val updatedProfile =
             originalP.copy(
                 uid = id,
@@ -171,7 +181,7 @@ class SettingsViewModel(
                 username = state.username,
                 school = state.school,
                 schoolYear = state.schoolYear,
-                profilePicture = state.profilePictureUrl,
+                profilePicture = newProfilePictureUrl,
                 birthday = birthdayDate?.let { Timestamp(it) })
 
         repository.updateProfile(updatedProfile)
@@ -230,6 +240,10 @@ class SettingsViewModel(
       checkUsernameAvailability(normalized)
     }
   }
+
+    fun editProfilePicture(newPhotoUrl: String){
+        _uiState.value = _uiState.value.copy(profilePictureUrl = newPhotoUrl)
+    }
 
   private fun checkUsernameAvailability(username: String) {
     viewModelScope.launch {
