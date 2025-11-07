@@ -251,4 +251,16 @@ class SettingsViewModelTest {
     assertEquals("user_ok_new", updated?.username)
     assertTrue(viewModel.uiState.value.saveSuccess)
   }
+
+  @Test
+  fun clearSaveSuccess_ResetsFlag() = runTest {
+    viewModel.editName("Test")
+    viewModel.editUsername("valid_name")
+    advanceUntilIdle()
+    viewModel.updateProfile("id1", isFirstTime = true)
+    advanceUntilIdle()
+
+    viewModel.clearSaveSuccess()
+    assertFalse(viewModel.uiState.value.saveSuccess)
+  }
 }
