@@ -9,6 +9,7 @@ import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -56,7 +57,8 @@ data class EditGroupUiState(
 class EditGroupViewModel(
     private val groupsRepository: GroupsRepository = GroupsRepositoryFirestore(Firebase.firestore),
     private val profileRepository: ProfileRepository =
-        ProfileRepositoryFirestore(Firebase.firestore)
+        ProfileRepositoryFirestore(Firebase.firestore),
+    private val authProvider: () -> FirebaseAuth = { Firebase.auth }
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(EditGroupUiState())
 
@@ -136,7 +138,7 @@ class EditGroupViewModel(
   private suspend fun loadFriends(currentMemberIds: List<String>) {
     try {
       val currentUserId =
-          Firebase.auth.currentUser?.uid ?: throw IllegalStateException("No signed in user")
+          authProvider().currentUser?.uid ?: throw IllegalStateException("No signed in user")
       val currentProfile =
           profileRepository.getProfileByUid(currentUserId)
               ?: throw NoSuchElementException("Current user profile not found")
