@@ -110,6 +110,7 @@ class EditTodoViewModel(
     viewModelScope.launch {
       try {
         val todo = todoRepository.getTodo(todoID)
+        chosenLocation = todo.location
         _uiState.value =
             EditTodoUIState(
                 title = todo.name,
@@ -119,6 +120,11 @@ class EditTodoViewModel(
                     todo.dueDate.let {
                       val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
                       return@let dateFormat.format(todo.dueDate.toDate())
+                    },
+                dueTime =
+                    todo.dueTime.let {
+                      val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+                      return@let timeFormat.format(todo.dueTime?.toDate() ?: "")
                     },
                 location = todo.location?.name ?: "",
             )
@@ -196,8 +202,10 @@ class EditTodoViewModel(
       _uiState.value = _uiState.value.copy(isSaving = true, errorMsg = null)
       try {
         todoRepository.editTodo(todoID = todoID, newValue = todo)
+        _uiState.value = _uiState.value.copy(isSaving = false, saveSuccess = true)
       } catch (e: Exception) {
-        setErrorMsg("Failed to edit ToDo: ${e.message}")
+        _uiState.value =
+            _uiState.value.copy(isSaving = false, errorMsg = "Failed to edit ToDo: ${e.message}")
       }
     }
   }
@@ -209,10 +217,13 @@ class EditTodoViewModel(
    */
   fun deleteToDo(todoID: String) {
     viewModelScope.launch {
+      _uiState.value = _uiState.value.copy(isSaving = true, errorMsg = null)
       try {
         todoRepository.deleteTodo(todoID = todoID)
+        _uiState.value = _uiState.value.copy(isSaving = false, saveSuccess = true)
       } catch (e: Exception) {
-        setErrorMsg("Failed to delete ToDo: ${e.message}")
+        _uiState.value =
+            _uiState.value.copy(isSaving = false, errorMsg = "Failed to delete ToDo: ${e.message}")
       }
     }
   }
