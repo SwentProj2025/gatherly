@@ -11,6 +11,7 @@ import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsRepository
 import com.android.gatherly.model.event.EventsRepositoryFirestore
 import com.android.gatherly.model.map.DisplayedMapElement
+import com.android.gatherly.model.map.Location
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosRepository
@@ -80,6 +81,7 @@ private fun getDrawableEvents(events: List<Event>): List<Event> {
  * functionality.
  *
  * @property todosRepository Repository for accessing todo data.
+ * @property eventsRepository Repository for accessing event data.
  */
 class MapViewModel(
     private val todosRepository: ToDosRepository = ToDosRepositoryFirestore(Firebase.firestore),
@@ -93,6 +95,14 @@ class MapViewModel(
   private lateinit var todoList: List<ToDo>
   private lateinit var eventsList: List<Event>
 
+  /** Default location coordinates for EPFL campus. */
+  private val EPFL_LOCATION =
+      Location(46.5191, 6.5668, "École Polytechnique Fédérale de Lausanne (EPFL), Switzerland")
+
+  private fun toLatLng(location: Location): LatLng {
+    return LatLng(location.latitude, location.longitude)
+  }
+
   /**
    * Initializes the ViewModel by loading all todos from the repository and filtering them to
    * display only drawable todos.
@@ -105,7 +115,8 @@ class MapViewModel(
       val events = eventsRepository.getAllEvents()
       eventsList = getDrawableEvents(events)
 
-      _uiState.value = _uiState.value.copy(itemsList = todoList)
+      val cameraPos = todoList.firstOrNull()?.location ?: EPFL_LOCATION
+      _uiState.value = _uiState.value.copy(cameraPos = toLatLng(cameraPos), itemsList = todoList)
     }
   }
 
@@ -114,12 +125,12 @@ class MapViewModel(
    *
    * @param itemId The ID of the todo whose marker was tapped.
    */
-  fun onTodoMarkerTapped(itemId: String) {
+  fun onMarkerTapped(itemId: String) {
     _uiState.value = _uiState.value.copy(expandedItemId = itemId)
   }
 
   /** Handles dismissal of an expanded marker by collapsing it. */
-  fun onTodoMarkerDismissed() {
+  fun onMarkerDismissed() {
     _uiState.value = _uiState.value.copy(expandedItemId = null)
   }
 

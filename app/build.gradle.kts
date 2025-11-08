@@ -124,6 +124,22 @@ android {
                 java.srcDirs("src/test/java")
                 resources.srcDirs("src/test/resources")
             }   // TODO if we want to implement androidTest only tests just like bootcamp
+
+
+    signingConfigs {
+        getByName("debug").apply {
+            storeFile = file("${rootDir}/debug.keystore")
+            storePassword = System.getenv("DEBUG_STORE_PASSWORD") ?: "android"
+            keyAlias = System.getenv("DEBUG_KEY_ALIAS") ?: "androiddebugkey"
+            keyPassword = System.getenv("DEBUG_KEY_PASSWORD") ?: "android"
+        }
+    }
+
+    buildTypes {
+        getByName("debug") {
+            signingConfig = signingConfigs.getByName("debug")
+        }
+    }
 }
 
 

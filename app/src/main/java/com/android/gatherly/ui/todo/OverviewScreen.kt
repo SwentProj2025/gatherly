@@ -27,10 +27,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.integerResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.android.gatherly.R
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.ui.navigation.BottomNavigationMenu
@@ -126,16 +129,22 @@ fun OverviewScreen(
             modifier = Modifier.testTag(OverviewScreenTestTags.CREATE_TODO_BUTTON),
             containerColor = MaterialTheme.colorScheme.secondary,
             contentColor = MaterialTheme.colorScheme.primary) {
-              Icon(imageVector = Icons.Default.Add, contentDescription = "Add")
+              Icon(
+                  imageVector = Icons.Default.Add,
+                  contentDescription = stringResource(R.string.todos_add_button_text))
             }
       },
       content = { pd ->
         if (todos.isNotEmpty()) {
           LazyColumn(
-              contentPadding = PaddingValues(vertical = 8.dp),
+              contentPadding =
+                  PaddingValues(
+                      vertical = dimensionResource(id = R.dimen.todos_overview_vertical_padding)),
               modifier =
                   Modifier.fillMaxWidth()
-                      .padding(horizontal = 16.dp)
+                      .padding(
+                          horizontal =
+                              dimensionResource(id = R.dimen.todos_overview_horizontal_padding))
                       .padding(pd)
                       .testTag(OverviewScreenTestTags.TODO_LIST)) {
 
@@ -143,10 +152,14 @@ fun OverviewScreen(
                 if (ongoingTodos.isNotEmpty()) {
                   item {
                     Text(
-                        text = "Ongoing",
+                        text = stringResource(R.string.todos_ongoing_section_label),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(vertical = 8.dp))
+                        modifier =
+                            Modifier.padding(
+                                vertical =
+                                    dimensionResource(
+                                        id = R.dimen.todos_overview_section_text_vertical_padding)))
                   }
                   items(ongoingTodos.size) { index ->
                     ToDoItem(
@@ -164,10 +177,14 @@ fun OverviewScreen(
                 if (completedTodos.isNotEmpty()) {
                   item {
                     Text(
-                        text = "Completed",
+                        text = stringResource(R.string.todos_completed_section_label),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(vertical = 8.dp))
+                        modifier =
+                            Modifier.padding(
+                                vertical =
+                                    dimensionResource(
+                                        id = R.dimen.todos_overview_section_text_vertical_padding)))
                   }
                   items(completedTodos.size) { index ->
                     ToDoItem(
@@ -184,7 +201,7 @@ fun OverviewScreen(
         } else {
           Text(
               modifier = Modifier.padding(pd).testTag(OverviewScreenTestTags.EMPTY_TODO_LIST_MSG),
-              text = "You have no ToDo yet.")
+              text = stringResource(R.string.no_todos_text))
         }
       })
 }
@@ -216,32 +233,37 @@ fun ToDoItem(
           Modifier.clickable(onClick = onClick)
               .testTag(OverviewScreenTestTags.getTestTagForTodoItem(todo))
               .fillMaxWidth()
-              .padding(vertical = 4.dp)) {
+              .padding(vertical = dimensionResource(id = R.dimen.todo_item_vertical_padding))) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(12.dp),
+            modifier =
+                Modifier.fillMaxWidth()
+                    .padding(dimensionResource(id = R.dimen.todo_item_row_padding)),
             verticalAlignment = Alignment.CenterVertically,
         ) {
           Checkbox(
               checked = isChecked,
               onCheckedChange = onCheckedChange,
               modifier =
-                  Modifier.padding(end = 8.dp)
+                  Modifier.padding(end = dimensionResource(id = R.dimen.todo_item_checkbox_padding))
                       .testTag(OverviewScreenTestTags.getCheckboxTagForTodoItem(todo)))
 
-          Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = todo.name,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Medium)
-            Text(
-                text =
-                    SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-                        .format(todo.dueDate.toDate()),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.primary,
-            )
-          }
+          Column(
+              modifier =
+                  Modifier.weight(
+                      integerResource(id = R.integer.todo_item_column_weight).toFloat())) {
+                Text(
+                    text = todo.name,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Medium)
+                Text(
+                    text =
+                        SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                            .format(todo.dueDate.toDate()),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+              }
         }
       }
 }
