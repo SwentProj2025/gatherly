@@ -10,6 +10,8 @@ class ProfileLocalRepository : ProfileRepository {
 
   private val profiles: MutableList<Profile> = mutableListOf()
 
+  var shouldFailRegisterUsername = false
+
   override suspend fun addProfile(profile: Profile) {
     if (!profiles.any { it.uid == profile.uid }) {
       profiles += profile
@@ -47,6 +49,7 @@ class ProfileLocalRepository : ProfileRepository {
   }
 
   override suspend fun registerUsername(uid: String, username: String): Boolean {
+    if (shouldFailRegisterUsername) return false
     if (!isUsernameAvailable(username)) return false
     val existing = getProfileByUid(uid)
     val updated = (existing ?: Profile(uid = uid)).copy(username = username)
