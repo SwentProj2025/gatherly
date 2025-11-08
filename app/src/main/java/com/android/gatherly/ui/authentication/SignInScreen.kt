@@ -155,7 +155,7 @@ fun SignInButton(
           modifier.fillMaxWidth().height(dimensionResource(id = R.dimen.sign_in_button_height)),
       colors =
           ButtonDefaults.buttonColors(
-              containerColor = MaterialTheme.colorScheme.onSurface,
+              containerColor = MaterialTheme.colorScheme.surfaceVariant,
               contentColor = MaterialTheme.colorScheme.primary),
       shape = RoundedCornerShape(dimensionResource(id = R.dimen.rounded_corner_shape_medium))) {
         Row(
