@@ -39,7 +39,6 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
@@ -139,13 +138,17 @@ fun FriendsScreen(
       content = { padding ->
         LazyColumn(
             contentPadding = PaddingValues(vertical = dimensionResource(R.dimen.padding_small)),
-            modifier = Modifier.fillMaxWidth().padding(horizontal = dimensionResource(R.dimen.padding_screen)).padding(padding)) {
+            modifier =
+                Modifier.fillMaxWidth()
+                    .padding(horizontal = dimensionResource(R.dimen.padding_screen))
+                    .padding(padding)) {
               if (filteredFriends.isEmpty()) {
                 item {
                   Text(
                       text = stringResource(R.string.friends_empty_list_msg),
                       modifier =
-                          Modifier.padding(dimensionResource(R.dimen.padding_screen)).testTag(FriendsScreenTestTags.EMPTY_LIST_MSG))
+                          Modifier.padding(dimensionResource(R.dimen.padding_screen))
+                              .testTag(FriendsScreenTestTags.EMPTY_LIST_MSG))
                 }
               } else {
                 item {
@@ -159,10 +162,14 @@ fun FriendsScreen(
                       placeholder = {
                         Text(
                             text = stringResource(R.string.friends_search_bar_label),
-                            modifier = Modifier.padding(dimensionResource(R.dimen.friends_search_bar_width)))
+                            modifier =
+                                Modifier.padding(
+                                    dimensionResource(R.dimen.friends_search_bar_width)))
                       },
                       singleLine = true,
-                      shape = RoundedCornerShape(dimensionResource(R.dimen.friends_item_rounded_corner_shape)))
+                      shape =
+                          RoundedCornerShape(
+                              dimensionResource(R.dimen.friends_item_rounded_corner_shape)))
                 }
 
                 items(items = filteredFriends, key = { it }) { friend ->
@@ -181,10 +188,14 @@ fun FriendsScreen(
                     modifier =
                         Modifier.fillMaxWidth()
                             .height(dimensionResource(R.dimen.friends_find_button_height))
-                            .padding(vertical = dimensionResource(R.dimen.friends_find_button_vertical))
+                            .padding(
+                                vertical = dimensionResource(R.dimen.friends_find_button_vertical))
                             .testTag(FriendsScreenTestTags.BUTTON_FIND_FRIENDS),
-                    shape = RoundedCornerShape(dimensionResource(R.dimen.friends_item_rounded_corner_shape)),
-                    colors = buttonColors(containerColor = MaterialTheme.colorScheme.inversePrimary)) {
+                    shape =
+                        RoundedCornerShape(
+                            dimensionResource(R.dimen.friends_item_rounded_corner_shape)),
+                    colors =
+                        buttonColors(containerColor = MaterialTheme.colorScheme.inversePrimary)) {
                       Text(
                           text = stringResource(R.string.find_friends_button_label),
                           fontSize = 16.sp,
@@ -199,10 +210,11 @@ fun FriendsScreen(
 @Composable
 fun FriendItem(friend: String, unfollow: () -> Unit) {
   Card(
-      border = BorderStroke(dimensionResource(R.dimen.friends_item_card_border_width),
-          MaterialTheme.colorScheme.primary),
-      shape = RoundedCornerShape(
-          dimensionResource(R.dimen.friends_item_card_rounded_corner_shape)),
+      border =
+          BorderStroke(
+              dimensionResource(R.dimen.friends_item_card_border_width),
+              MaterialTheme.colorScheme.primary),
+      shape = RoundedCornerShape(dimensionResource(R.dimen.friends_item_card_rounded_corner_shape)),
       colors =
           CardDefaults.cardColors(
               containerColor = MaterialTheme.colorScheme.onSurface,
@@ -210,11 +222,11 @@ fun FriendItem(friend: String, unfollow: () -> Unit) {
       modifier =
           Modifier.testTag(FriendsScreenTestTags.getTestTagForFriendItem(friend))
               .fillMaxWidth()
-              .padding(vertical =
-                  dimensionResource(R.dimen.friends_item_card_padding_vertical))) {
+              .padding(vertical = dimensionResource(R.dimen.friends_item_card_padding_vertical))) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(
-                dimensionResource(R.dimen.friends_item_card_padding)),
+            modifier =
+                Modifier.fillMaxWidth()
+                    .padding(dimensionResource(R.dimen.friends_item_card_padding)),
             verticalAlignment = Alignment.CenterVertically,
         ) {
           Image(
@@ -223,13 +235,13 @@ fun FriendItem(friend: String, unfollow: () -> Unit) {
                       id = R.drawable.ic_launcher_foreground), // currently a placeholder image
               contentDescription = "Profile picture of ${friend}",
               modifier =
-                  Modifier.size(
-                      dimensionResource(R.dimen.friends_item_profile_picture_size))
+                  Modifier.size(dimensionResource(R.dimen.friends_item_profile_picture_size))
                       .clip(CircleShape)
                       .testTag(FriendsScreenTestTags.getTestTagForFriendProfilePicture(friend)))
 
-            Spacer(modifier = Modifier.width(
-                dimensionResource(R.dimen.spacing_between_fields_smaller_regular)))
+          Spacer(
+              modifier =
+                  Modifier.width(dimensionResource(R.dimen.spacing_between_fields_smaller_regular)))
 
           Column(modifier = Modifier.weight(1f)) {
             Text(
@@ -240,8 +252,8 @@ fun FriendItem(friend: String, unfollow: () -> Unit) {
                 modifier =
                     Modifier.testTag(FriendsScreenTestTags.getTestTagForFriendUsername(friend)))
           }
-          Spacer(modifier = Modifier.width(
-              dimensionResource(R.dimen.spacing_between_fields_regular)))
+          Spacer(
+              modifier = Modifier.width(dimensionResource(R.dimen.spacing_between_fields_regular)))
 
           Button(
               onClick = unfollow,
