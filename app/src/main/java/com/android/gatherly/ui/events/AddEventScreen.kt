@@ -36,15 +36,17 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
 import com.android.gatherly.model.event.EventsRepositoryFirestore
-import com.android.gatherly.model.profile.ProfileLocalRepository
+import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
+import com.android.gatherly.ui.theme.GatherlyTheme
 import com.android.gatherly.utils.GenericViewModelFactory
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -86,7 +88,7 @@ fun AddEventScreen(
             factory =
                 GenericViewModelFactory {
                   AddEventViewModel(
-                      profileRepository = ProfileLocalRepository(),
+                      profileRepository = ProfileRepositoryFirestore(Firebase.firestore),
                       eventsRepository = EventsRepositoryFirestore(Firebase.firestore))
                 }),
     onSave: () -> Unit = {},
@@ -104,9 +106,9 @@ fun AddEventScreen(
       TextFieldDefaults.colors(
           focusedContainerColor = MaterialTheme.colorScheme.background,
           unfocusedContainerColor = MaterialTheme.colorScheme.background,
-          unfocusedTextColor = MaterialTheme.colorScheme.primary,
-          focusedTextColor = MaterialTheme.colorScheme.primary,
-      )
+          unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+          focusedTextColor = MaterialTheme.colorScheme.onBackground,
+          errorTextColor = MaterialTheme.colorScheme.onBackground)
 
   // Local state for the dropdown visibility
   var showLocationDropdown by remember { mutableStateOf(false) }
@@ -401,9 +403,15 @@ fun AddEventScreen(
                             !ui.dateError &&
                             !ui.startTimeError &&
                             !ui.endTimeError) {
-                      Text("Save", color = MaterialTheme.colorScheme.primary)
+                      Text("Save", color = MaterialTheme.colorScheme.onSecondary)
                     }
               }
             }
       }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun AddEventScreenPreview() {
+  GatherlyTheme(darkTheme = true) { AddEventScreen() }
 }
