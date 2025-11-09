@@ -12,7 +12,10 @@ import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.utils.FirestoreGatherlyProfileTest
+import com.android.gatherly.utils.FirestoreGatherlyTest
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -20,7 +23,7 @@ import org.junit.Test
 
 private const val TIMEOUT = 30_000L
 
-class FriendsScreenTest : FirestoreGatherlyProfileTest() {
+class FriendsScreenTest : FirestoreGatherlyTest() {
 
   @get:Rule val composeTestRule = createComposeRule()
   private lateinit var currentUserId: String
@@ -40,13 +43,13 @@ class FriendsScreenTest : FirestoreGatherlyProfileTest() {
     runTest {
       profileRepository = ProfileLocalRepository()
 
-      runBlocking { profileRepository.addProfile(bobProfile) }
+      profileRepository.addProfile(bobProfile)
 
       currentUserId = bobProfile.uid
 
       friendsViewModel = FriendsViewModel(profileRepository, currentUserId)
 
-      runBlocking { addProfiles() }
+      addProfiles()
 
       composeTestRule.setContent { FriendsScreen(friendsViewModel) }
     }
@@ -60,8 +63,8 @@ class FriendsScreenTest : FirestoreGatherlyProfileTest() {
     runTest {
       profileRepository = ProfileLocalRepository()
 
-      runBlocking { addProfiles() }
-      runBlocking { profileRepository.addProfile(aliceProfile) }
+      addProfiles()
+      profileRepository.addProfile(aliceProfile)
 
       currentUserId = aliceProfile.uid
 
@@ -112,11 +115,15 @@ class FriendsScreenTest : FirestoreGatherlyProfileTest() {
           friendUids = emptyList())
 
   /** Helper function : fills the profile repository with created profiles */
+  @OptIn(ExperimentalCoroutinesApi::class)
   fun addProfiles() {
     runTest {
       profileRepository.addProfile(profile1)
+        advanceUntilIdle()
       profileRepository.addProfile(profile2)
+        advanceUntilIdle()
       profileRepository.addProfile(profile3)
+        advanceUntilIdle()
     }
   }
 
