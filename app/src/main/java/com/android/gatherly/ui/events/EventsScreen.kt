@@ -32,29 +32,27 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
 import com.android.gatherly.model.event.Event
-import com.android.gatherly.model.event.EventsRepositoryFirestore
+import com.android.gatherly.model.event.EventsLocalRepository
 import com.android.gatherly.ui.navigation.BottomNavigationMenu
 import com.android.gatherly.ui.navigation.HandleSignedOutState
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu
+import com.android.gatherly.ui.theme.GatherlyTheme
 import com.android.gatherly.utils.GenericViewModelFactory
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
 import java.util.Locale
 import kotlinx.coroutines.launch
 
@@ -132,8 +130,8 @@ fun EventsScreen(
             factory =
                 GenericViewModelFactory<EventsViewModel> {
                   EventsViewModel(
-                      EventsRepositoryFirestore(Firebase.firestore),
-                      currentUserId = Firebase.auth.currentUser?.uid ?: "")
+                      EventsLocalRepository(), // EventsRepositoryFirestore(Firebase.firestore),
+                      currentUserId = "") // Firebase.auth.currentUser?.uid ?: "")
                 }),
 ) {
 
@@ -162,7 +160,6 @@ fun EventsScreen(
   HandleSignedOutState(uiState.signedOut, onSignedOut)
 
   Scaffold(
-      containerColor = MaterialTheme.colorScheme.onSurface,
       topBar = {
         TopNavigationMenu(
             selectedTab = Tab.Events,
@@ -194,7 +191,7 @@ fun EventsScreen(
                     modifier =
                         Modifier.padding(vertical = 10.dp)
                             .testTag(EventsScreenTestTags.BROWSE_TITLE),
-                    color = MaterialTheme.colorScheme.primary)
+                    color = MaterialTheme.colorScheme.onBackground)
               }
 
               if (browserEvents.isNotEmpty()) {
@@ -217,7 +214,7 @@ fun EventsScreen(
                       textAlign = TextAlign.Center,
                       style = MaterialTheme.typography.titleMedium,
                       fontWeight = FontWeight.Bold,
-                      color = MaterialTheme.colorScheme.primary)
+                      color = MaterialTheme.colorScheme.onBackground)
                 }
               }
 
@@ -233,7 +230,7 @@ fun EventsScreen(
                     modifier =
                         Modifier.padding(vertical = 10.dp)
                             .testTag(EventsScreenTestTags.UPCOMING_TITLE),
-                    color = MaterialTheme.colorScheme.primary)
+                    color = MaterialTheme.colorScheme.onBackground)
               }
 
               if (upcomingEvents.isNotEmpty()) {
@@ -256,7 +253,7 @@ fun EventsScreen(
                       textAlign = TextAlign.Center,
                       style = MaterialTheme.typography.titleMedium,
                       fontWeight = FontWeight.Bold,
-                      color = MaterialTheme.colorScheme.primary)
+                      color = MaterialTheme.colorScheme.onBackground)
                 }
               }
 
@@ -272,7 +269,7 @@ fun EventsScreen(
                     modifier =
                         Modifier.padding(vertical = 8.dp)
                             .testTag(EventsScreenTestTags.YOUR_EVENTS_TITLE),
-                    color = MaterialTheme.colorScheme.primary)
+                    color = MaterialTheme.colorScheme.onBackground)
               }
 
               if (myOwnEvents.isNotEmpty()) {
@@ -295,7 +292,7 @@ fun EventsScreen(
                       textAlign = TextAlign.Center,
                       style = MaterialTheme.typography.titleMedium,
                       fontWeight = FontWeight.Bold,
-                      color = MaterialTheme.colorScheme.primary)
+                      color = MaterialTheme.colorScheme.onBackground)
                 }
               }
 
@@ -313,12 +310,12 @@ fun EventsScreen(
                             .padding(vertical = 12.dp)
                             .testTag(EventsScreenTestTags.CREATE_EVENT_BUTTON),
                     shape = RoundedCornerShape(12.dp),
-                    colors = buttonColors(containerColor = Color(0xFF9ADCE5))) {
+                    colors = buttonColors(containerColor = MaterialTheme.colorScheme.secondary)) {
                       Text(
                           text = stringResource(R.string.create_event_button_title),
                           fontSize = 16.sp,
                           fontWeight = FontWeight.Medium,
-                          color = MaterialTheme.colorScheme.onPrimary)
+                          color = MaterialTheme.colorScheme.onSecondary)
                     }
               }
             }
@@ -370,12 +367,12 @@ fun EventsScreen(
 @Composable
 fun BrowserEventsItem(event: Event, onClick: () -> Unit) {
   Card(
-      border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
+      border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurfaceVariant),
       shape = RoundedCornerShape(8.dp),
       colors =
           CardDefaults.cardColors(
-              containerColor = MaterialTheme.colorScheme.onSurface,
-              contentColor = MaterialTheme.colorScheme.primary),
+              containerColor = MaterialTheme.colorScheme.surfaceVariant,
+              contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
       modifier =
           Modifier.clickable(onClick = onClick)
               .testTag(EventsScreenTestTags.getTestTagForEventItem(event))
@@ -389,14 +386,14 @@ fun BrowserEventsItem(event: Event, onClick: () -> Unit) {
             Text(
                 text = event.title,
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.primary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.testTag(EventsScreenTestTags.EVENT_TITLE))
             Text(
                 text =
                     SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(event.date.toDate()),
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.primary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.testTag(EventsScreenTestTags.EVENT_DATE))
           }
         }
@@ -413,12 +410,12 @@ fun BrowserEventsItem(event: Event, onClick: () -> Unit) {
 @Composable
 fun UpcomingEventsItem(event: Event, onClick: () -> Unit) {
   Card(
-      border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
+      border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurfaceVariant),
       shape = RoundedCornerShape(8.dp),
       colors =
           CardDefaults.cardColors(
-              containerColor = MaterialTheme.colorScheme.onSurface,
-              contentColor = MaterialTheme.colorScheme.primary),
+              containerColor = MaterialTheme.colorScheme.surfaceVariant,
+              contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
       modifier =
           Modifier.clickable(onClick = onClick)
               .testTag(EventsScreenTestTags.getTestTagForEventItem(event))
@@ -432,14 +429,14 @@ fun UpcomingEventsItem(event: Event, onClick: () -> Unit) {
             Text(
                 text = event.title,
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.primary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.testTag(EventsScreenTestTags.EVENT_TITLE))
             Text(
                 text =
                     SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(event.date.toDate()),
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.primary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.testTag(EventsScreenTestTags.EVENT_DATE))
           }
         }
@@ -456,12 +453,12 @@ fun UpcomingEventsItem(event: Event, onClick: () -> Unit) {
 @Composable
 fun MyOwnEventsItem(event: Event, onClick: () -> Unit) {
   Card(
-      border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
+      border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurfaceVariant),
       shape = RoundedCornerShape(8.dp),
       colors =
           CardDefaults.cardColors(
-              containerColor = MaterialTheme.colorScheme.onSurface,
-              contentColor = MaterialTheme.colorScheme.primary),
+              containerColor = MaterialTheme.colorScheme.surfaceVariant,
+              contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
       modifier =
           Modifier.clickable(onClick = onClick)
               .testTag(EventsScreenTestTags.getTestTagForEventItem(event))
@@ -475,14 +472,14 @@ fun MyOwnEventsItem(event: Event, onClick: () -> Unit) {
             Text(
                 text = event.title,
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.primary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.testTag(EventsScreenTestTags.EVENT_TITLE))
             Text(
                 text =
                     SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(event.date.toDate()),
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.primary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.testTag(EventsScreenTestTags.EVENT_DATE))
           }
         }
@@ -653,4 +650,10 @@ fun MyOwnEventsPopUp(
             }
       },
   )
+}
+
+@Preview(showBackground = true)
+@Composable
+fun EventsScreenPreview() {
+  GatherlyTheme(darkTheme = true) { EventsScreen() }
 }
