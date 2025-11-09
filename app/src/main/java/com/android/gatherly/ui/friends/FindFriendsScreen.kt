@@ -33,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -57,7 +58,8 @@ object FindFriendsScreenTestTags {
    * Returns a unique test tag for the card or container representing a given [Profile.username]
    * item.
    *
-   * @param username The [Profile.username] item of a chosen friend whose test tag will be generated.
+   * @param username The [Profile.username] item of a chosen friend whose test tag will be
+   *   generated.
    * @return A string uniquely identifying the Friend username item in the UI.
    */
   fun getTestTagForFriendItem(username: String): String = "friendItem${username}"
@@ -78,7 +80,8 @@ object FindFriendsScreenTestTags {
    * @param username The username of the friend whose profile picture test tag will be generated.
    * @return A string uniquely identifying the friend's profile picture item in the UI.
    */
-  fun getTestTagForFriendProfilePicture(username: String): String = "friendProfilePicture${username}"
+  fun getTestTagForFriendProfilePicture(username: String): String =
+      "friendProfilePicture${username}"
 
   /**
    * Returns a unique test tag for the card or container representing a given [Profile.username]
@@ -131,14 +134,18 @@ fun FindFriendsScreen(
       },
       content = { padding ->
         LazyColumn(
-            contentPadding = PaddingValues(vertical = 8.dp),
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(padding)) {
+            contentPadding = PaddingValues(vertical = dimensionResource(R.dimen.padding_small)),
+            modifier =
+                Modifier.fillMaxWidth()
+                    .padding(horizontal = dimensionResource(R.dimen.padding_screen))
+                    .padding(padding)) {
               if (filteredNotFriends.isEmpty()) {
                 item {
                   Text(
                       text = stringResource(R.string.find_friends_empty_list_message),
                       modifier =
-                          Modifier.padding(16.dp).testTag(FindFriendsScreenTestTags.EMPTY_LIST_MSG))
+                          Modifier.padding(dimensionResource(R.dimen.padding_screen))
+                              .testTag(FindFriendsScreenTestTags.EMPTY_LIST_MSG))
                 }
               } else {
                 item {
@@ -147,18 +154,22 @@ fun FindFriendsScreen(
                       onValueChange = { searchQuery = it },
                       modifier =
                           Modifier.fillMaxWidth()
-                              .padding(vertical = 8.dp)
+                              .padding(vertical = dimensionResource(R.dimen.padding_small))
                               .testTag(FindFriendsScreenTestTags.SEARCH_FRIENDS_BAR),
                       placeholder = {
                         Text(
                             text = stringResource(R.string.find_friends_search_bar_label),
-                            modifier = Modifier.padding(10.dp))
+                            modifier =
+                                Modifier.padding(
+                                    dimensionResource(R.dimen.find_friends_search_bar_width)))
                       },
                       singleLine = true,
-                      shape = RoundedCornerShape(12.dp))
+                      shape =
+                          RoundedCornerShape(
+                              dimensionResource(R.dimen.find_friends_item_rounded_corner_shape)))
                 }
 
-                items(items = filteredNotFriends, key = { friend -> friend }) { friend ->
+                items(items = filteredNotFriends, key = { it }) { friend ->
                   FriendItem(
                       friend = friend,
                       follow = {
@@ -174,8 +185,13 @@ fun FindFriendsScreen(
 @Composable
 fun FriendItem(friend: String, follow: () -> Unit) {
   Card(
-      border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary),
-      shape = RoundedCornerShape(8.dp),
+      border =
+          BorderStroke(
+              dimensionResource(R.dimen.find_friends_item_card_border_width),
+              MaterialTheme.colorScheme.primary),
+      shape =
+          RoundedCornerShape(
+              dimensionResource(R.dimen.find_friends_item_card_rounded_corner_shape)),
       colors =
           CardDefaults.cardColors(
               containerColor = MaterialTheme.colorScheme.onSurface,
@@ -185,7 +201,9 @@ fun FriendItem(friend: String, follow: () -> Unit) {
               .fillMaxWidth()
               .padding(vertical = 4.dp)) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(12.dp),
+            modifier =
+                Modifier.fillMaxWidth()
+                    .padding(dimensionResource(R.dimen.find_friends_item_card_padding)),
             verticalAlignment = Alignment.CenterVertically,
         ) {
           Image(
@@ -194,10 +212,13 @@ fun FriendItem(friend: String, follow: () -> Unit) {
                       id = R.drawable.ic_launcher_foreground), // currently a placeholder image
               contentDescription = "Profile picture of ${friend}",
               modifier =
-                  Modifier.size(56.dp)
+                  Modifier.size(dimensionResource(R.dimen.find_friends_item_profile_picture_size))
                       .clip(CircleShape)
                       .testTag(FindFriendsScreenTestTags.getTestTagForFriendProfilePicture(friend)))
-          Spacer(modifier = Modifier.width(12.dp))
+
+          Spacer(
+              modifier =
+                  Modifier.width(dimensionResource(R.dimen.spacing_between_fields_smaller_regular)))
 
           Column(modifier = Modifier.weight(1f)) {
             Text(
@@ -208,7 +229,8 @@ fun FriendItem(friend: String, follow: () -> Unit) {
                 modifier =
                     Modifier.testTag(FindFriendsScreenTestTags.getTestTagForFriendUsername(friend)))
           }
-          Spacer(modifier = Modifier.width(16.dp))
+          Spacer(
+              modifier = Modifier.width(dimensionResource(R.dimen.spacing_between_fields_regular)))
 
           Button(
               onClick = follow,

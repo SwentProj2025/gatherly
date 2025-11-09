@@ -11,10 +11,8 @@ import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.ui.navigation.NavigationTestTags
-import com.android.gatherly.utils.FirestoreGatherlyProfileTest
 import com.android.gatherly.utils.FirestoreGatherlyTest
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -46,7 +44,7 @@ class FindFriendsScreenTest : FirestoreGatherlyTest() {
 
       addProfiles()
       profileRepository.addProfile(bobProfile)
-        advanceUntilIdle()
+      advanceUntilIdle()
 
       currentUserId = bobProfile.uid
 
@@ -69,7 +67,7 @@ class FindFriendsScreenTest : FirestoreGatherlyTest() {
 
       addProfiles()
       profileRepository.addProfile(aliceProfile)
-        advanceUntilIdle()
+      advanceUntilIdle()
 
       currentUserId = aliceProfile.uid
 
@@ -124,12 +122,11 @@ class FindFriendsScreenTest : FirestoreGatherlyTest() {
   fun addProfiles() {
     runTest {
       profileRepository.addProfile(profile1)
-        advanceUntilIdle()
+      advanceUntilIdle()
       profileRepository.addProfile(profile2)
-        advanceUntilIdle()
+      advanceUntilIdle()
       profileRepository.addProfile(profile3)
-        advanceUntilIdle()
-
+      advanceUntilIdle()
     }
   }
 
