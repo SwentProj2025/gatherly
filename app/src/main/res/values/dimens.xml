@@ -25,6 +25,16 @@
     <!-- Shapes -->
     <dimen name="rounded_corner_shape_medium">12dp</dimen>
 
+    <!-- ToDos -->
+    <dimen name="todos_overview_vertical_padding">8dp</dimen>
+    <dimen name="todos_overview_horizontal_padding">16dp</dimen>
+    <dimen name="todos_overview_section_text_vertical_padding">8dp</dimen>
+    <dimen name="todo_item_vertical_padding">4dp</dimen>
+    <dimen name="todo_item_row_padding">12dp</dimen>
+    <dimen name="todo_item_checkbox_padding">8dp</dimen>
+    <dimen name="todo_location_dropdown_height">200dp</dimen>
+    <dimen name="todo_location_dropdown_padding">8dp</dimen>
+
     <!-- HomePage -->
     <dimen name="homepage_task_item_height">56dp</dimen>
     <dimen name="homepage_task_item_spacing">12dp</dimen>
@@ -38,6 +48,14 @@
     <dimen name="homepage_section_spacing">20.dp</dimen>
     <dimen name="homepage_events_section_height">200.dp</dimen>
     <dimen name="homepage_minimap_width">280.dp</dimen>
+
+    <!-- SignIn Screen -->
+    <dimen name="sign_in_top_spacing">80.dp</dimen>
+    <dimen name="sign_in_top_buttons_spacing">60.dp</dimen>
+    <dimen name="sign_in_welcome_text_spacing">20.dp</dimen>
+    <dimen name="sign_in_button_height">56.dp</dimen>
+    <dimen name="sign_in_button_icon_size">30.dp</dimen>
+
 
     <!-- Friends Screen -->
     <dimen name="friends_search_bar_width">10.dp</dimen>

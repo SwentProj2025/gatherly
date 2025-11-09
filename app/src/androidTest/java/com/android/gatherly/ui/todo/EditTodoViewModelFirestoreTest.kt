@@ -5,9 +5,11 @@ import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.utils.FirestoreGatherlyTest
+import com.android.gatherly.utils.GatherlyTest.Companion.fromDate
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
+import java.util.Calendar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.runTest
@@ -48,8 +50,8 @@ class EditTodoViewModelFirestoreTest : FirestoreGatherlyTest() {
               name = "Initial task",
               description = "Original description",
               assigneeName = "John",
-              dueDate = Timestamp.now(),
-              dueTime = null,
+              dueDate = Timestamp.fromDate(2025, Calendar.DECEMBER, 24),
+              dueTime = Timestamp.now(),
               location = null,
               status = ToDoStatus.ONGOING,
               ownerId = "owner")
@@ -97,16 +99,19 @@ class EditTodoViewModelFirestoreTest : FirestoreGatherlyTest() {
     // Load the current ToDo
     viewModel.loadTodo(baseTodo.uid)
     withContext(Dispatchers.Default.limitedParallelism(1)) {
-      withTimeout(TIMEOUT) { while (viewModel.uiState.value.title.isBlank()) delay(DELAY) }
+      withTimeout(TIMEOUT) {
+        while (viewModel.uiState.value.title.isEmpty() &&
+            viewModel.uiState.value.errorMsg == null) {
+          delay(DELAY)
+        }
+      }
     }
-
     // Provide valid values for all required fields
     viewModel.onTitleChanged("Updated title")
     viewModel.onDescriptionChanged("Updated description")
     viewModel.onAssigneeChanged("Mary")
     viewModel.onDateChanged("10/10/2025")
     viewModel.onTimeChanged("14:00")
-    viewModel.onLocationChanged("Place")
 
     // Perform the edit
     viewModel.editTodo(baseTodo.uid)

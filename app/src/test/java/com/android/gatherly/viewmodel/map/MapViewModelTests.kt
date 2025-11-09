@@ -162,7 +162,7 @@ class MapViewModelTests {
 
     assertNull(vm.uiState.value.expandedItemId)
 
-    vm.onTodoMarkerTapped("todo1")
+    vm.onMarkerTapped("todo1")
 
     assertEquals("todo1", vm.uiState.value.expandedItemId)
   }
@@ -179,10 +179,10 @@ class MapViewModelTests {
     val eventsRepo = FakeEventsRepositoryLocal()
     val vm = MapViewModel(todosRepository = todosRepo, eventsRepository = eventsRepo)
 
-    vm.onTodoMarkerTapped("todo1")
+    vm.onMarkerTapped("todo1")
     assertEquals("todo1", vm.uiState.value.expandedItemId)
 
-    vm.onTodoMarkerDismissed()
+    vm.onMarkerDismissed()
 
     assertNull(vm.uiState.value.expandedItemId)
   }
@@ -197,10 +197,10 @@ class MapViewModelTests {
 
     assertNull(vm.uiState.value.expandedItemId)
 
-    vm.onTodoMarkerTapped("upcoming_location")
+    vm.onMarkerTapped("upcoming_location")
     assertEquals("upcoming_location", vm.uiState.value.expandedItemId)
 
-    vm.onTodoMarkerDismissed()
+    vm.onMarkerDismissed()
     assertEquals(null, vm.uiState.value.expandedItemId)
   }
 
