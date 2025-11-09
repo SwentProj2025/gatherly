@@ -116,7 +116,7 @@ fun WelcomeSection() {
   Column(horizontalAlignment = Alignment.Start, modifier = Modifier.fillMaxWidth()) {
     Text(
         text = stringResource(id = R.string.sign_in_welcome_section_text0),
-        color = MaterialTheme.colorScheme.primary,
+        color = MaterialTheme.colorScheme.onBackground,
         style = MaterialTheme.typography.headlineLarge,
         fontWeight = FontWeight.Bold,
         modifier = Modifier.fillMaxWidth().testTag(SignInScreenTestTags.WELCOME_TITLE))
@@ -125,7 +125,7 @@ fun WelcomeSection() {
 
     Text(
         text = stringResource(id = R.string.sign_in_welcome_section_text1),
-        color = MaterialTheme.colorScheme.primary,
+        color = MaterialTheme.colorScheme.onBackground,
         style = MaterialTheme.typography.titleLarge,
         modifier = Modifier.fillMaxWidth().testTag(SignInScreenTestTags.WELCOME_SUBTITLE))
   }
