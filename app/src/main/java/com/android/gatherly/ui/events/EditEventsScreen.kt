@@ -44,7 +44,7 @@ import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
 import com.android.gatherly.model.event.EventsRepositoryFirestore
-import com.android.gatherly.model.profile.ProfileLocalRepository
+import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
@@ -93,7 +93,7 @@ fun EditEventsScreen(
             factory =
                 GenericViewModelFactory {
                   EditEventsViewModel(
-                      profileRepository = ProfileLocalRepository(),
+                      profileRepository = ProfileRepositoryFirestore(Firebase.firestore),
                       eventsRepository = EventsRepositoryFirestore(Firebase.firestore))
                 }),
     onSave: () -> Unit = {},
@@ -113,9 +113,9 @@ fun EditEventsScreen(
       TextFieldDefaults.colors(
           focusedContainerColor = MaterialTheme.colorScheme.background,
           unfocusedContainerColor = MaterialTheme.colorScheme.background,
-          unfocusedTextColor = MaterialTheme.colorScheme.primary,
-          focusedTextColor = MaterialTheme.colorScheme.primary,
-      )
+          unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+          focusedTextColor = MaterialTheme.colorScheme.onBackground,
+          errorTextColor = MaterialTheme.colorScheme.onBackground)
 
   // Local state for the dropdown visibility
   var showLocationDropdown by remember { mutableStateOf(false) }
@@ -414,7 +414,7 @@ fun EditEventsScreen(
                             !ui.dateError &&
                             !ui.startTimeError &&
                             !ui.endTimeError) {
-                      Text("Save", color = MaterialTheme.colorScheme.primary)
+                      Text("Save", color = MaterialTheme.colorScheme.onSecondary)
                     }
               }
 
@@ -428,15 +428,15 @@ fun EditEventsScreen(
                     modifier = Modifier.fillMaxWidth().testTag(EditEventsScreenTestTags.BTN_DELETE),
                     colors =
                         ButtonDefaults.textButtonColors(
-                            contentColor = MaterialTheme.colorScheme.tertiary)) {
+                            contentColor = MaterialTheme.colorScheme.error)) {
                       Icon(
                           imageVector = Icons.Filled.DeleteForever,
                           contentDescription = "Delete event",
-                          tint = MaterialTheme.colorScheme.tertiary)
+                          tint = MaterialTheme.colorScheme.error)
                       Text(
                           "Delete",
                           modifier = Modifier.padding(start = buttonSpacing),
-                          color = MaterialTheme.colorScheme.tertiary)
+                          color = MaterialTheme.colorScheme.error)
                     }
               }
             }
@@ -446,5 +446,5 @@ fun EditEventsScreen(
 @Preview
 @Composable
 fun EditEventsScreenPreview() {
-  GatherlyTheme { EditEventsScreen() }
+  GatherlyTheme(darkTheme = true) { EditEventsScreen() }
 }
