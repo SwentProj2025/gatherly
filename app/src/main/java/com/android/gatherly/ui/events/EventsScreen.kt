@@ -44,17 +44,12 @@ import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
 import com.android.gatherly.model.event.Event
-import com.android.gatherly.model.event.EventsRepositoryFirestore
 import com.android.gatherly.ui.navigation.BottomNavigationMenu
 import com.android.gatherly.ui.navigation.HandleSignedOutState
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu
-import com.android.gatherly.utils.GenericViewModelFactory
-import com.google.firebase.auth.ktx.auth
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
 import java.util.Locale
 import kotlinx.coroutines.launch
 
@@ -118,7 +113,8 @@ object EventsScreenTestTags {
  * @param navigateToEditEvent Callback to navigate to the event editing screen with the selected
  *   event
  * @param navigationActions Handles navigation between different tabs/screens.
- * @param eventsViewModel The ViewModel managing the state and logic for the Events screen.
+ * @param eventsViewModel The ViewModel managing the state and logic for the Events screen, calling
+ *   with the ViewModel declaration factory which is within a Composable function
  */
 @Composable
 fun EventsScreen(
@@ -127,14 +123,7 @@ fun EventsScreen(
     onAddEvent: () -> Unit = {},
     navigateToEditEvent: (Event) -> Unit = {},
     navigationActions: NavigationActions? = null,
-    eventsViewModel: EventsViewModel =
-        viewModel(
-            factory =
-                GenericViewModelFactory<EventsViewModel> {
-                  EventsViewModel(
-                      EventsRepositoryFirestore(Firebase.firestore),
-                      currentUserId = Firebase.auth.currentUser?.uid ?: "")
-                }),
+    eventsViewModel: EventsViewModel = viewModel(factory = EventsViewModel.provideFactory())
 ) {
 
   val currentUserIdFromVM = eventsViewModel.currentUserId

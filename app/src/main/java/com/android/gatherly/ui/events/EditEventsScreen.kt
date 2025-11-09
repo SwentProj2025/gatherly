@@ -43,15 +43,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
-import com.android.gatherly.model.event.EventsRepositoryFirestore
-import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
 import com.android.gatherly.ui.theme.GatherlyTheme
-import com.android.gatherly.utils.GenericViewModelFactory
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.delay
 
 object EditEventsScreenTestTags {
@@ -81,6 +76,8 @@ object EditEventsScreenTestTags {
  * Screen for editing an existing Event.
  *
  * @param eventId id of the event to load and edit.
+ * @param editEventsViewModel calling with the ViewModel declaration factory which is within a
+ *   Composable function
  * @param onSave called after a successful save or deletion and navigation intent.
  * @param goBack called when back arrow is pressed.
  */
@@ -89,13 +86,7 @@ object EditEventsScreenTestTags {
 fun EditEventsScreen(
     eventId: String = "",
     editEventsViewModel: EditEventsViewModel =
-        viewModel(
-            factory =
-                GenericViewModelFactory {
-                  EditEventsViewModel(
-                      profileRepository = ProfileLocalRepository(),
-                      eventsRepository = EventsRepositoryFirestore(Firebase.firestore))
-                }),
+        viewModel(factory = EditEventsViewModel.provideFactory()),
     onSave: () -> Unit = {},
     goBack: () -> Unit = {},
 ) {

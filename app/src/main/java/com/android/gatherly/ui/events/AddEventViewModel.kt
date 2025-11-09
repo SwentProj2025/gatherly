@@ -5,17 +5,22 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsRepository
+import com.android.gatherly.model.event.EventsRepositoryFirestore
 import com.android.gatherly.model.map.Location
 import com.android.gatherly.model.map.NominatimLocationRepository
 import com.android.gatherly.model.profile.Profile
+import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
+import com.android.gatherly.utils.GenericViewModelFactory
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.auth
+import com.google.firebase.firestore.firestore
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import kotlin.collections.plus
@@ -391,6 +396,19 @@ class AddEventViewModel(
       uiState = uiState.copy(backToOverview = true)
     } else {
       uiState = uiState.copy(displayToast = true, toastString = "Failed to save :(")
+    }
+  }
+
+  /**
+   * Companion Object used to encapsulate a static method to retrieve a ViewModelProvider.Factory
+   * and its default dependencies.
+   */
+  companion object {
+    fun provideFactory(
+        profileRepository: ProfileRepository = ProfileLocalRepository(),
+        eventsRepository: EventsRepository = EventsRepositoryFirestore(Firebase.firestore)
+    ): ViewModelProvider.Factory {
+      return GenericViewModelFactory { AddEventViewModel(profileRepository, eventsRepository) }
     }
   }
 }
