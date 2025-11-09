@@ -57,38 +57,37 @@ object FindFriendsScreenTestTags {
    * Returns a unique test tag for the card or container representing a given [Profile.username]
    * item.
    *
-   * @param friend The [Profile.username] item of a chosen friend whose test tag will be generated.
+   * @param username The [Profile.username] item of a chosen friend whose test tag will be generated.
    * @return A string uniquely identifying the Friend username item in the UI.
    */
-  fun getTestTagForFriendItem(friend: String): String = "friendItem${friend}"
+  fun getTestTagForFriendItem(username: String): String = "friendItem${username}"
 
   /**
    * Returns a unique test tag for the card container representing a given [Profile.username] item.
    *
-   * @param friend The [Profile.username] TExt item of a chosen friend whose test tag will be
+   * @param username The [Profile.username] Text item of a chosen friend whose test tag will be
    *   generated.
    * @return A string uniquely identifying the Friend username Text item in the UI.
    */
-  fun getTestTagForFriendUsername(friend: String): String = "friendUsername${friend}"
+  fun getTestTagForFriendUsername(username: String): String = "friendUsername${username}"
 
   /**
    * Returns a unique test tag for the card or container representing a given
    * [Profile.profilePicture] item.
    *
-   * @param friend The [Profile.profilePicture] item of a chosen friend [Profile.username] whose
-   *   test tag will be generated.
-   * @return A string uniquely identifying the Friend username item in the UI.
+   * @param username The username of the friend whose profile picture test tag will be generated.
+   * @return A string uniquely identifying the friend's profile picture item in the UI.
    */
-  fun getTestTagForFriendProfilePicture(friend: String): String = "friendProfilePicture${friend}"
+  fun getTestTagForFriendProfilePicture(username: String): String = "friendProfilePicture${username}"
 
   /**
    * Returns a unique test tag for the card or container representing a given [Profile.username]
    * item.
    *
-   * @param friend The [Button] item for unfollowing button whose test tag will be generated.
+   * @param username The [Button] item for following button whose test tag will be generated.
    * @return A string uniquely identifying the Friend username item in the UI.
    */
-  fun getTestTagForFriendFollowButton(friend: String): String = "friendFollowingButton${friend}"
+  fun getTestTagForFriendFollowButton(username: String): String = "friendFollowingButton${username}"
 }
 
 @Composable
