@@ -233,7 +233,8 @@ class ProfileRepositoryFirestore(private val db: FirebaseFirestore) : ProfileRep
     val name = doc.getString("name") ?: ""
     val username = doc.getString("username") ?: ""
     val focusSessionIds = doc.get("focusSessions") as? List<String> ?: emptyList()
-    val eventIds = doc.get("events") as? List<String> ?: emptyList()
+    val eventIds = doc.get("eventIds") as? List<String> ?: emptyList()
+      val eventOwnerIds = doc.get("eventOwnerIds") as? List<String> ?: emptyList()
     val groupIds = doc.get("groups") as? List<String> ?: emptyList()
     val friendUids = doc.get("friendUids") as? List<String> ?: emptyList()
     val school = doc.getString("school") ?: ""
@@ -247,6 +248,7 @@ class ProfileRepositoryFirestore(private val db: FirebaseFirestore) : ProfileRep
         username = username,
         focusSessionIds = focusSessionIds,
         eventIds = eventIds,
+        eventOwnerIds = eventOwnerIds,
         groupIds = groupIds,
         friendUids = friendUids,
         school = school,
@@ -268,6 +270,7 @@ class ProfileRepositoryFirestore(private val db: FirebaseFirestore) : ProfileRep
         "username" to profile.username,
         "focusSessionIds" to profile.focusSessionIds,
         "eventIds" to profile.eventIds,
+        "eventOwnerIds" to profile.eventOwnerIds,
         "groupIds" to profile.groupIds,
         "friendUids" to profile.friendUids,
         "school" to profile.school,
