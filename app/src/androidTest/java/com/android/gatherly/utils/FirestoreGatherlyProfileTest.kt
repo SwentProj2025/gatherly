@@ -33,7 +33,7 @@ open class FirestoreGatherlyProfileTest {
     runTest { FirebaseEmulator.auth.signInAnonymously().await() }
 
     // Create the repository
-    repository = ProfileRepositoryFirestore(FirebaseEmulator.firestore)
+    repository = ProfileRepositoryFirestore(FirebaseEmulator.firestore, FirebaseEmulator.storage)
 
     // Clean up existing test data
     runTest { clearCurrentUserData() }
