@@ -4,37 +4,38 @@ import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
-import com.android.gatherly.model.todo.ToDo
-import com.android.gatherly.utils.InMemoryGatherlyTest
+import com.android.gatherly.model.todo.ToDosLocalRepository
+import com.android.gatherly.utils.GatherlyTest
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
-// Portions of the code in this file are copy-pasted from the Bootcamp solution provided by the
-// SwEnt staff.
-
-class EditTodoScreenTest : InMemoryGatherlyTest() {
+@OptIn(ExperimentalCoroutinesApi::class)
+class EditTodoScreenTest : GatherlyTest() {
   @get:Rule val composeTestRule = createComposeRule()
 
-  val todo = todo1
+  private lateinit var editTodoViewModel: EditTodoViewModel
 
-  private fun withContent(
-      editedTodo: ToDo = todo,
-      todoList: List<ToDo> = listOf<ToDo>(editedTodo),
-      block: (ToDo) -> Unit
-  ) {
-    runTest {
-      for (todo in todoList) {
-        repository.addTodo(todo)
-      }
+  @Before
+  fun setUp() {
+    repository = ToDosLocalRepository()
+    fill_repository()
+    editTodoViewModel = EditTodoViewModel(todoRepository = repository, currentUser = "user")
+    composeTestRule.setContent {
+      EditToDoScreen(todoUid = todo1.uid, editTodoViewModel = editTodoViewModel)
     }
+  }
 
-    composeTestRule.setContent { EditToDoScreen(todoUid = editedTodo.uid) }
-    block(editedTodo)
+  private fun fill_repository() = runTest {
+    repository.addTodo(todo1)
+    advanceUntilIdle()
   }
 
   @Test
-  fun displayAllComponents() = withContent {
+  fun displayAllComponents() {
     composeTestRule
         .onNodeWithTag(EditToDoScreenTestTags.TODO_SAVE)
         .assertExists()
@@ -54,7 +55,7 @@ class EditTodoScreenTest : InMemoryGatherlyTest() {
   }
 
   @Test
-  fun canEnterTitle() = withContent {
+  fun canEnterTitle() {
     val text = "testTitle"
     composeTestRule.enterEditTodoTitle(text)
     composeTestRule.onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_TITLE).assertTextContains(text)
@@ -64,7 +65,7 @@ class EditTodoScreenTest : InMemoryGatherlyTest() {
   }
 
   @Test
-  fun canEnterDescription() = withContent {
+  fun canEnterDescription() {
     val text = "testDescription"
     composeTestRule.enterEditTodoDescription(text)
     composeTestRule
@@ -76,7 +77,7 @@ class EditTodoScreenTest : InMemoryGatherlyTest() {
   }
 
   @Test
-  fun canEnterAssigneeName() = withContent {
+  fun canEnterAssigneeName() {
     val text = "testAssignee"
     composeTestRule.enterEditTodoAssignee(text)
     composeTestRule
@@ -88,7 +89,7 @@ class EditTodoScreenTest : InMemoryGatherlyTest() {
   }
 
   @Test
-  fun canEnterLocation() = withContent {
+  fun canEnterLocation() {
     val text = "testLocation"
     composeTestRule.enterEditTodoLocation(text)
     composeTestRule
@@ -100,28 +101,28 @@ class EditTodoScreenTest : InMemoryGatherlyTest() {
   }
 
   @Test
-  fun canEnterAValidDate() = withContent {
+  fun canEnterAValidDate() {
     val text = "10/02/2023"
     composeTestRule.enterEditTodoDate(text)
     composeTestRule.onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_DATE).assertTextContains(text)
   }
 
   @Test
-  fun canEnterAnInvalidDate() = withContent {
+  fun canEnterAnInvalidDate() {
     val invalidDate = "invalid date" // Invalid date format
     composeTestRule.enterEditTodoDate(invalidDate)
     composeTestRule.checkErrorMessageIsDisplayedForEditTodo()
   }
 
   @Test
-  fun canEnterAValidTime() = withContent {
+  fun canEnterAValidTime() {
     val text = "14:30"
     composeTestRule.enterEditTodoTime(text)
     composeTestRule.onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_TIME).assertTextContains(text)
   }
 
   @Test
-  fun canEnterAnInvalidTime() = withContent {
+  fun canEnterAnInvalidTime() {
     val invalidTime = "invalid time" // Invalid time format
     composeTestRule.enterEditTodoTime(invalidTime)
     composeTestRule.checkErrorMessageIsDisplayedForEditTodo()

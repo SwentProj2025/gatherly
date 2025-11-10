@@ -31,6 +31,8 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunnerArguments["timeout_msec"] = "30000"
+
         vectorDrawables {
             useSupportLibrary = true
         }
@@ -157,6 +159,7 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     testImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.kotlin.test)
     androidTestImplementation(libs.androidx.espresso.core)
     testImplementation(libs.androidx.espresso.core)
 
