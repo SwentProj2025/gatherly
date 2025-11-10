@@ -14,10 +14,11 @@ import com.android.gatherly.model.event.EventsRepositoryFirestore
 import com.android.gatherly.model.map.Location
 import com.android.gatherly.model.map.NominatimLocationRepository
 import com.android.gatherly.model.profile.Profile
-import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
+import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.android.gatherly.utils.GenericViewModelFactory
 import com.google.firebase.Timestamp
+import com.google.firebase.firestore.firestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import java.text.ParseException
@@ -399,7 +400,8 @@ class EditEventsViewModel(
    */
   companion object {
     fun provideFactory(
-        profileRepository: ProfileRepository = ProfileLocalRepository(),
+        profileRepository: ProfileRepository =
+            ProfileRepositoryFirestore(com.google.firebase.Firebase.firestore),
         eventsRepository: EventsRepository = EventsRepositoryFirestore(Firebase.firestore)
     ): ViewModelProvider.Factory {
       return GenericViewModelFactory { EditEventsViewModel(profileRepository, eventsRepository) }

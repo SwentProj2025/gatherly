@@ -14,8 +14,8 @@ import com.android.gatherly.model.event.EventsRepositoryFirestore
 import com.android.gatherly.model.map.Location
 import com.android.gatherly.model.map.NominatimLocationRepository
 import com.android.gatherly.model.profile.Profile
-import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
+import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.android.gatherly.utils.GenericViewModelFactory
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
@@ -399,7 +399,7 @@ class AddEventViewModel(
    */
   companion object {
     fun provideFactory(
-        profileRepository: ProfileRepository = ProfileLocalRepository(),
+        profileRepository: ProfileRepository = ProfileRepositoryFirestore(Firebase.firestore),
         eventsRepository: EventsRepository = EventsRepositoryFirestore(Firebase.firestore)
     ): ViewModelProvider.Factory {
       return GenericViewModelFactory { AddEventViewModel(profileRepository, eventsRepository) }
