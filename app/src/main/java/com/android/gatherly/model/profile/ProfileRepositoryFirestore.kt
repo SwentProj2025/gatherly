@@ -291,11 +291,13 @@ class ProfileRepositoryFirestore(private val db: FirebaseFirestore) : ProfileRep
 
   override suspend fun addFriend(friend: String, currentUserId: String) {
     val docRef = profilesCollection.document(currentUserId)
-    docRef.update("friendUids", FieldValue.arrayUnion(friend)).await()
+    val friendId = getProfileByUsername(friend)?.uid
+    docRef.update("friendUids", FieldValue.arrayUnion(friendId)).await()
   }
 
   override suspend fun deleteFriend(friend: String, currentUserId: String) {
     val docRef = profilesCollection.document(currentUserId)
-    docRef.update("friendUids", FieldValue.arrayRemove(friend)).await()
+    val friendId = getProfileByUsername(friend)?.uid
+    docRef.update("friendUids", FieldValue.arrayRemove(friendId)).await()
   }
 }
