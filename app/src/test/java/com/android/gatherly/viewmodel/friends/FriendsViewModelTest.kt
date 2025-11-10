@@ -104,7 +104,7 @@ class FriendsViewModelTest {
 
   @Test
   fun testUnfollowFriendBFromProfileA() = runTest {
-    viewModel.unfollowFriend("B", "A")
+    viewModel.unfollowFriend("bob", "A")
 
     advanceUntilIdle()
 
