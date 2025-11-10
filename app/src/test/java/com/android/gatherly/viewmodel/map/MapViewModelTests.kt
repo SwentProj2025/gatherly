@@ -2,6 +2,7 @@ package com.android.gatherly.viewmodel.map
 
 import android.content.Context
 import android.content.pm.PackageManager
+import android.location.Location
 import androidx.core.content.ContextCompat
 import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.todo.ToDo
@@ -11,11 +12,15 @@ import com.android.gatherly.ui.map.MapViewModel
 import com.android.gatherly.viewmodel.FakeEventsRepositoryLocal
 import com.android.gatherly.viewmodel.FakeToDosRepositoryLocal
 import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationResult
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.tasks.Task
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -277,10 +282,9 @@ class MapViewModelTests {
     val actualTodosListAgain: List<ToDo> = vm.uiState.value.itemsList.map { it as ToDo }
     assertEquals(expectedTodosList, actualTodosListAgain)
   }
-
-  // ------------------------------------Camera &
-  // Location------------------------------------------------------
-
+/**   * Verifies that consulting a todo item updates the last consulted todo ID and clears the camera
+   * position in the UI state.
+   */
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun onItemConsulted_withTodo_setsLastConsultedTodoIdAndNullsCameraPos() =
@@ -302,6 +306,9 @@ class MapViewModelTests {
         assertNull(vm.uiState.value.cameraPos)
       }
 
+  /** Verifies that consulting an event item updates the last consulted event ID and clears the
+   * camera position in the UI state.
+   */
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun onItemConsulted_withEvent_setsLastConsultedEventIdAndNullsCameraPos() =
@@ -320,6 +327,7 @@ class MapViewModelTests {
         assertNull(vm.uiState.value.cameraPos)
       }
 
+  /** Verifies that initializing the camera position updates the camera position in the UI state. */
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun initializeCameraPosition_updatesCameraPosInUIState() =
@@ -339,6 +347,7 @@ class MapViewModelTests {
         assertEquals(EPFL_LATLNG, vm.uiState.value.cameraPos)
       }
 
+  /** Verifies that fetching location to center on returns the last consulted todo's location. */
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun fetchLocationToCenterOn_withLastConsultedTodo_returnsTodoLocation() =
@@ -362,6 +371,7 @@ class MapViewModelTests {
         assertEquals(expectedLatLng, result)
       }
 
+  /** Verifies that fetching location to center on returns the last consulted event's location. */
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun fetchLocationToCenterOn_withLastConsultedEvent_returnsEventLocation() =
@@ -386,6 +396,7 @@ class MapViewModelTests {
         assertEquals(expectedLatLng, result)
       }
 
+  /** Verifies that fetching location to center on with no consulted item returns EPFL location. */
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun fetchLocationToCenterOn_withNoConsultedItem_returnsEPFL() =
@@ -406,6 +417,64 @@ class MapViewModelTests {
         assertEquals(EPFL_LATLNG, result)
       }
 
+  /** Verifies that fetching location to center on with location permission and no consulted item returns current location. */
+  @OptIn(ExperimentalCoroutinesApi::class)
+  @Test
+  fun fetchLocationToCenterOn_withLocationPermissionAndNoConsultedItem_returnsCurrentLocation() =
+      runTest(UnconfinedTestDispatcher()) {
+        val todosRepo = FakeToDosRepositoryLocal()
+        val eventsRepo = FakeEventsRepositoryLocal()
+        val mockContext = mockk<Context>()
+        val mockClient = mockk<FusedLocationProviderClient>(relaxed = true)
+        val mockTask = mockk<Task<Void>>(relaxed = true)
+        val mockLocation = mockk<Location>()
+
+        every {
+          ContextCompat.checkSelfPermission(
+              mockContext, android.Manifest.permission.ACCESS_FINE_LOCATION)
+        } returns PackageManager.PERMISSION_GRANTED
+
+        every { mockLocation.latitude } returns 50.1231
+        every { mockLocation.longitude } returns 2.3253
+
+        var capturedCallback: LocationCallback? = null
+
+        every {
+          mockClient.requestLocationUpdates(any(), any<LocationCallback>(), isNull())
+        } answers
+            {
+              capturedCallback = secondArg()
+              mockTask
+            }
+
+        every { mockClient.removeLocationUpdates(any<LocationCallback>()) } returns mockTask
+
+        val locationResult = mockk<LocationResult>(relaxed = true)
+        every { locationResult.locations } returns listOf(mockLocation)
+
+        val vm =
+            MapViewModel(
+                todosRepository = todosRepo,
+                eventsRepository = eventsRepo,
+                fusedLocationClient = mockClient)
+
+        advanceUntilIdle()
+
+        var result: LatLng? = null
+        val job = launch { result = vm.fetchLocationToCenterOn(mockContext) }
+
+        assertNotNull("Callback should have been captured", capturedCallback)
+        capturedCallback?.onLocationResult(locationResult)
+
+        advanceUntilIdle()
+
+        val expectedLatLng = LatLng(50.1231, 2.3253)
+        assertNotNull(result)
+        assertEquals(expectedLatLng, result)
+        job.cancel() // cleanup
+      }
+
+  /** Verifies that starting and stopping location updates manages the location job without crashing. */
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun startAndStopLocationUpdates_managesLocationJob() =
