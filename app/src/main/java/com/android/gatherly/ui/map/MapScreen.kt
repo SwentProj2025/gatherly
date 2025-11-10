@@ -1,6 +1,5 @@
 package com.android.gatherly.ui.map
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -61,12 +60,13 @@ object MapScreenTestTags {
 
   const val TODO_CARD = "todoCard"
   const val EVENT_CARD = "eventCard"
-  const val TODO_EXPANDED_CARD = "todoExpandedCard"
+  const val TODO_SHEET = "todoModal"
   const val EVENT_SHEET = "eventModal"
   const val TODO_TITLE = "todoTitle"
-  const val TODO_TITLE_EXPANDED = "todoTitleExpanded"
+  const val TODO_TITLE_SHEET = "todoTitleSheet"
 
   const val EVENT_BUTTON = "eventButton"
+  const val TODO_BUTTON = "todoButton"
 
   const val EVENT_TITLE = "eventTitle"
   const val EVENT_TITLE_SHEET = "eventTitleSheet"
@@ -89,7 +89,6 @@ object MapScreenTestTags {
 private object Dimensions {
   val markerWidth = 180.dp
   val markerHeightCollapsed = 50.dp
-  val markerHeightExpanded = 150.dp
   val cardPadding = 12.dp
 
   val spacerPadding = 20.dp
@@ -116,17 +115,25 @@ fun MapScreen(
     credentialManager: CredentialManager = CredentialManager.create(LocalContext.current),
     onSignedOut: () -> Unit = {},
     navigationActions: NavigationActions? = null,
-    goToEvent: () -> Unit = {}
+    goToEvent: () -> Unit = {},
+    goToToDo: () -> Unit = {}
 ) {
 
   val uiState by viewModel.uiState.collectAsState()
   HandleSignedOutState(uiState.onSignedOut, onSignedOut)
 
   // Bottom sheet state for the selected event
-  val selectedItem =
+  val selectedEvent =
       remember(uiState.selectedItemId, uiState.itemsList) {
         uiState.itemsList.asSequence().filterIsInstance<Event>().firstOrNull {
           it.id == uiState.selectedItemId
+        }
+      }
+
+  val selectedToDo =
+      remember(uiState.selectedItemId, uiState.itemsList) {
+        uiState.itemsList.asSequence().filterIsInstance<ToDo>().firstOrNull {
+          it.uid == uiState.selectedItemId
         }
       }
 
@@ -198,21 +205,10 @@ fun MapScreen(
                           state = markerState,
                           zIndex = z,
                           onClick = {
-                            if (isExpanded) viewModel.clearSelection()
-                            else viewModel.onSelectedItem(item.uid)
+                            viewModel.onSelectedItem(item.uid)
                             true
                           }) {
-                            if (isExpanded) {
-                              Box(
-                                  Modifier.testTag(
-                                      MapScreenTestTags.todoMarkerExpanded(item.uid))) {
-                                    ToDoExpandedIcon(item)
-                                  }
-                            } else {
-                              Box(Modifier.testTag(MapScreenTestTags.todoMarker(item.uid))) {
-                                ToDoIcon(item)
-                              }
-                            }
+                            ToDoIcon(item)
                           }
                     }
                   }
@@ -241,14 +237,25 @@ fun MapScreen(
               }
             }
 
-        if (selectedItem != null) {
+        if (selectedEvent != null) {
           ModalBottomSheet(
               sheetState = sheetState, onDismissRequest = { viewModel.clearSelection() }) {
                 EventSheet(
-                    event = selectedItem,
+                    event = selectedEvent,
                     onGoToEvent = {
                       viewModel.clearSelection()
                       goToEvent()
+                    },
+                    onClose = { viewModel.clearSelection() })
+              }
+        } else if (selectedToDo != null) {
+          ModalBottomSheet(
+              sheetState = sheetState, onDismissRequest = { viewModel.clearSelection() }) {
+                ToDoSheet(
+                    toDo = selectedToDo,
+                    onGoToToDo = {
+                      viewModel.clearSelection()
+                      goToToDo()
                     },
                     onClose = { viewModel.clearSelection() })
               }
@@ -370,7 +377,7 @@ fun ToDoIcon(toDo: ToDo) {
       colors =
           CardDefaults.cardColors(
               containerColor = MaterialTheme.colorScheme.secondary,
-              contentColor = MaterialTheme.colorScheme.primary),
+              contentColor = MaterialTheme.colorScheme.onSecondary),
       modifier =
           Modifier.size(Dimensions.markerWidth, Dimensions.markerHeightCollapsed)
               .testTag(MapScreenTestTags.TODO_CARD),
@@ -384,7 +391,7 @@ fun ToDoIcon(toDo: ToDo) {
             modifier = Modifier.testTag(MapScreenTestTags.TODO_TITLE),
             text = toDo.name.uppercase(),
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.primary,
+            color = MaterialTheme.colorScheme.onSecondary,
             fontWeight = FontWeight.Medium)
       }
     }
@@ -392,50 +399,69 @@ fun ToDoIcon(toDo: ToDo) {
 }
 
 /**
- * Expanded ToDo marker icon
+ * ToDo Sheet displayed when a toDo marker is tapped
  *
- * @param toDo The ToDo data to display in the marker.
+ * @param toDo The todo data to display in the marker.
+ * @param onGoToToDo Go to Todo Page when button is clicked.
+ * @param onClose closes the sheet when tapped outside.
  */
 @Composable
-fun ToDoExpandedIcon(toDo: ToDo) {
+fun ToDoSheet(toDo: ToDo, onGoToToDo: () -> Unit, onClose: () -> Unit) {
   val formattedDate =
       remember(toDo.dueDate) {
         val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
         sdf.format(toDo.dueDate.toDate())
       }
 
-  Card(
-      colors =
-          CardDefaults.cardColors(
-              containerColor = MaterialTheme.colorScheme.secondary,
-              contentColor = MaterialTheme.colorScheme.primary),
+  Column(
       modifier =
-          Modifier.size(Dimensions.markerWidth, Dimensions.markerHeightExpanded)
-              .testTag(MapScreenTestTags.TODO_EXPANDED_CARD)) {
+          Modifier.fillMaxWidth()
+              .padding(Dimensions.rowColPadding)
+              .testTag(MapScreenTestTags.TODO_SHEET)) {
+        Text(
+            text = toDo.name.uppercase(),
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.testTag(MapScreenTestTags.TODO_TITLE_SHEET))
+
+        Spacer(modifier = Modifier.size(Dimensions.spacerPadding))
+
+        Text(
+            modifier =
+                Modifier.padding(Dimensions.textPadding).testTag(MapScreenTestTags.TODO_DUE_DATE),
+            text = formattedDate,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.primary)
+        Text(
+            modifier =
+                Modifier.padding(Dimensions.textPadding)
+                    .testTag(MapScreenTestTags.TODO_DESCRIPTION),
+            text = toDo.description,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.primary)
+
+        Spacer(modifier = Modifier.size(Dimensions.spacerPadding))
+
         Row(
-            modifier = Modifier.fillMaxWidth().padding(Dimensions.cardPadding),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-          Column(modifier = Modifier.weight(Dimensions.weight)) {
-            Text(
-                modifier = Modifier.testTag(MapScreenTestTags.TODO_TITLE_EXPANDED),
-                text = toDo.name.uppercase(),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Medium)
-            Text(
-                modifier = Modifier.testTag(MapScreenTestTags.TODO_DUE_DATE),
-                text = formattedDate,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Medium)
-            Text(
-                modifier = Modifier.testTag(MapScreenTestTags.TODO_DESCRIPTION),
-                text = toDo.description,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Medium)
-          }
-        }
+            modifier = Modifier.padding(Dimensions.rowColPadding),
+            verticalAlignment = Alignment.CenterVertically) {
+              Button(
+                  modifier =
+                      Modifier.weight(Dimensions.weight).testTag(MapScreenTestTags.TODO_BUTTON),
+                  onClick = onGoToToDo,
+                  colors =
+                      ButtonColors(
+                          containerColor = MaterialTheme.colorScheme.secondary,
+                          contentColor = MaterialTheme.colorScheme.onSecondary,
+                          disabledContainerColor = MaterialTheme.colorScheme.secondary,
+                          disabledContentColor = MaterialTheme.colorScheme.onSecondary)) {
+                    Text(
+                        text = stringResource(R.string.go_to_todo_page_button),
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium)
+                  }
+            }
+
+        Spacer(modifier = Modifier.size(Dimensions.spacerPadding))
       }
 }

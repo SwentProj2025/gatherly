@@ -67,7 +67,7 @@ class MapScreenTest {
     compose.setContent {
       MapScreen(viewModel = viewModel)
       ToDoIcon(todo)
-      ToDoExpandedIcon(todo)
+      ToDoSheet(todo, onGoToToDo = {}, onClose = {})
       EventIcon(event)
       EventSheet(event, onGoToEvent = {}, onClose = {})
     }
@@ -89,26 +89,6 @@ class MapScreenTest {
     compose.onNodeWithTag(MapScreenTestTags.FILTER_TOGGLE, useUnmergedTree = true).assertExists()
   }
 
-  // Test Todo_Icon exists
-  @Test
-  fun todo_Icon() {
-    compose.onNodeWithTag(MapScreenTestTags.TODO_TITLE, useUnmergedTree = true).assertExists()
-    compose.onNodeWithTag(MapScreenTestTags.TODO_CARD, useUnmergedTree = true).assertExists()
-  }
-
-  // Test Todo_Expanded_Icon exists
-  @Test
-  fun todo_Icon_expanded() {
-    compose
-        .onNodeWithTag(MapScreenTestTags.TODO_EXPANDED_CARD, useUnmergedTree = true)
-        .assertExists()
-    compose
-        .onNodeWithTag(MapScreenTestTags.TODO_TITLE_EXPANDED, useUnmergedTree = true)
-        .assertExists()
-    compose.onNodeWithTag(MapScreenTestTags.TODO_DUE_DATE, useUnmergedTree = true).assertExists()
-    compose.onNodeWithTag(MapScreenTestTags.TODO_DESCRIPTION, useUnmergedTree = true).assertExists()
-  }
-
   // Test Event_Icon exists
   @Test
   fun event_exists() {
@@ -128,5 +108,22 @@ class MapScreenTest {
         .onNodeWithTag(MapScreenTestTags.EVENT_DESCRIPTION, useUnmergedTree = true)
         .assertExists()
     compose.onNodeWithTag(MapScreenTestTags.EVENT_BUTTON, useUnmergedTree = true).assertExists()
+  }
+
+  // Test ToDo Icon exists
+  @Test
+  fun todo_exists() {
+    compose.onNodeWithTag(MapScreenTestTags.TODO_CARD, useUnmergedTree = true).assertExists()
+    compose.onNodeWithTag(MapScreenTestTags.TODO_TITLE, useUnmergedTree = true).assertExists()
+  }
+
+  // Test ToDo Sheet exists
+  @Test
+  fun todo_sheet_exists() {
+    compose.onNodeWithTag(MapScreenTestTags.TODO_SHEET, useUnmergedTree = true).assertExists()
+    compose.onNodeWithTag(MapScreenTestTags.TODO_DUE_DATE, useUnmergedTree = true).assertExists()
+    compose.onNodeWithTag(MapScreenTestTags.TODO_TITLE_SHEET, useUnmergedTree = true).assertExists()
+    compose.onNodeWithTag(MapScreenTestTags.TODO_DESCRIPTION, useUnmergedTree = true).assertExists()
+    compose.onNodeWithTag(MapScreenTestTags.TODO_BUTTON, useUnmergedTree = true).assertExists()
   }
 }
