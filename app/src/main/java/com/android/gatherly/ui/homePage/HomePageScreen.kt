@@ -285,7 +285,7 @@ fun FriendsSection(onClickFriendsSection: () -> Unit) {
           Modifier.testTag(HomePageScreenTestTags.FRIENDS_SECTION)
               .border(
                   width = dimensionResource(id = R.dimen.homepage_friends_section_border_width),
-                  color = MaterialTheme.colorScheme.onBackground,
+                  color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f),
                   shape = RoundedCornerShape(percent = roundedCornerPercentage))
               .clip(
                   RoundedCornerShape(
@@ -341,13 +341,13 @@ fun TaskItem(modifier: Modifier = Modifier, text: String, onClick: () -> Unit) {
           Text(
               text = text,
               style = MaterialTheme.typography.bodyLarge,
-              color = MaterialTheme.colorScheme.primary,
+              color = MaterialTheme.colorScheme.onBackground,
               modifier = Modifier.weight(1f))
 
           Icon(
               imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
               contentDescription = stringResource(id = R.string.homepage_arrow_icon_description),
-              tint = MaterialTheme.colorScheme.primary,
+              tint = MaterialTheme.colorScheme.onBackground,
               modifier = Modifier.size(dimensionResource(R.dimen.homepage_arrow_icon_size)))
         }
   }
