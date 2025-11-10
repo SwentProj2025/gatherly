@@ -81,7 +81,6 @@ interface ProfileRepository {
    *
    * @param uid The UID of the user.
    * @param url The new profile picture link.
-
    */
   suspend fun updateProfilePic(uid: String, uri: Uri): String
   /**

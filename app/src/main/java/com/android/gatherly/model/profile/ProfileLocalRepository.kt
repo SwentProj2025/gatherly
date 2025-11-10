@@ -1,7 +1,6 @@
 package com.android.gatherly.model.profile
 
 import android.net.Uri
-import kotlinx.coroutines.tasks.await
 
 /**
  * Simplified in-memory local implementation of [ProfileRepository].
@@ -87,7 +86,6 @@ class ProfileLocalRepository : ProfileRepository {
     }
     return fakeUrl
   }
-
 
   override suspend fun getProfileByUsername(username: String): Profile? =
       profiles.find { it.username == username }

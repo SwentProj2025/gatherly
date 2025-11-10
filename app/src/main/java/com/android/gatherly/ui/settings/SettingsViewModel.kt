@@ -165,14 +165,14 @@ class SettingsViewModel(
           return@launch
         }
 
-          val newProfilePictureUrl = if((state.profilePictureUrl != originalProfile?.profilePicture) &&
-              (state.profilePictureUrl.isNotBlank()) &&
-              Uri.parse(state.profilePictureUrl).scheme == "content")
-          {
+        val newProfilePictureUrl =
+            if ((state.profilePictureUrl != originalProfile?.profilePicture) &&
+                (state.profilePictureUrl.isNotBlank()) &&
+                Uri.parse(state.profilePictureUrl).scheme == "content") {
               repository.updateProfilePic(id, Uri.parse(state.profilePictureUrl))
-          }else{
+            } else {
               state.profilePictureUrl
-          }
+            }
 
         val updatedProfile =
             originalP.copy(
@@ -241,9 +241,9 @@ class SettingsViewModel(
     }
   }
 
-    fun editProfilePicture(newPhotoUrl: String){
-        _uiState.value = _uiState.value.copy(profilePictureUrl = newPhotoUrl)
-    }
+  fun editProfilePicture(newPhotoUrl: String) {
+    _uiState.value = _uiState.value.copy(profilePictureUrl = newPhotoUrl)
+  }
 
   private fun checkUsernameAvailability(username: String) {
     viewModelScope.launch {

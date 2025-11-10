@@ -302,7 +302,8 @@ class SettingsViewModelTest {
 
   @Test
   fun updateProfilePicture_WithValidUri_TriggersRepositoryUpdate() = runTest {
-    val profile = Profile(uid = "u1", name = "Alice", username = "alice_ok", profilePicture = "old_url")
+    val profile =
+        Profile(uid = "u1", name = "Alice", username = "alice_ok", profilePicture = "old_url")
     repo.addProfile(profile)
     viewModel.loadProfile("u1")
     advanceUntilIdle()
@@ -321,5 +322,4 @@ class SettingsViewModelTest {
     advanceUntilIdle()
     assertNull(viewModel.uiState.value.errorMsg)
   }
-
 }

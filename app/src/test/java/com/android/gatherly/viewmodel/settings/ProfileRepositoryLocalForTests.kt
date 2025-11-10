@@ -73,7 +73,6 @@ class ProfileRepositoryLocalForTests : ProfileRepository {
     return fakeUrl
   }
 
-
   override suspend fun getProfileByUsername(username: String): Profile? =
       profiles.values.find { it.username == username }
 
