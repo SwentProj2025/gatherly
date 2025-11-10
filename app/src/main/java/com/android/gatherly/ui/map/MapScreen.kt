@@ -138,7 +138,9 @@ fun MapScreen(
             containerColor =
                 if (isEvents) MaterialTheme.colorScheme.secondary
                 else MaterialTheme.colorScheme.tertiary,
-            contentColor = MaterialTheme.colorScheme.primary,
+            contentColor =
+                if (isEvents) MaterialTheme.colorScheme.onSecondary
+                else MaterialTheme.colorScheme.onTertiary,
             modifier = Modifier.testTag(MapScreenTestTags.FILTER_TOGGLE))
       },
       content = { pd ->
@@ -237,7 +239,7 @@ fun EventIcon(event: Event) {
       colors =
           CardDefaults.cardColors(
               containerColor = MaterialTheme.colorScheme.tertiary,
-              contentColor = MaterialTheme.colorScheme.primary),
+              contentColor = MaterialTheme.colorScheme.onTertiary),
       modifier =
           Modifier.size(Dimensions.markerWidth, Dimensions.markerHeightCollapsed)
               .testTag(MapScreenTestTags.EVENT_CARD),
@@ -251,7 +253,7 @@ fun EventIcon(event: Event) {
             modifier = Modifier.testTag(MapScreenTestTags.EVENT_TITLE),
             text = event.title.uppercase(),
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.primary,
+            color = MaterialTheme.colorScheme.onTertiary,
             fontWeight = FontWeight.Medium)
       }
     }
@@ -275,7 +277,7 @@ fun EventExpandedIcon(event: Event) {
       colors =
           CardDefaults.cardColors(
               containerColor = MaterialTheme.colorScheme.tertiary,
-              contentColor = MaterialTheme.colorScheme.primary),
+              contentColor = MaterialTheme.colorScheme.onTertiary),
       modifier =
           Modifier.size(Dimensions.markerWidth, Dimensions.markerHeightExpanded)
               .testTag(MapScreenTestTags.EVENT_EXPANDED_CARD)) {
@@ -288,19 +290,19 @@ fun EventExpandedIcon(event: Event) {
                 modifier = Modifier.testTag(MapScreenTestTags.EVENT_TITLE_EXPANDED),
                 text = event.title.uppercase(),
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.primary,
+                color = MaterialTheme.colorScheme.onTertiary,
                 fontWeight = FontWeight.Medium)
             Text(
                 modifier = Modifier.testTag(MapScreenTestTags.EVENT_DATE),
                 text = formattedDate,
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.primary,
+                color = MaterialTheme.colorScheme.onTertiary,
                 fontWeight = FontWeight.Medium)
             Text(
                 modifier = Modifier.testTag(MapScreenTestTags.EVENT_DESCRIPTION),
                 text = event.description,
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.primary,
+                color = MaterialTheme.colorScheme.onTertiary,
                 fontWeight = FontWeight.Medium)
           }
         }
@@ -320,7 +322,7 @@ fun ToDoIcon(toDo: ToDo) {
       colors =
           CardDefaults.cardColors(
               containerColor = MaterialTheme.colorScheme.secondary,
-              contentColor = MaterialTheme.colorScheme.primary),
+              contentColor = MaterialTheme.colorScheme.onSecondary),
       modifier =
           Modifier.size(Dimensions.markerWidth, Dimensions.markerHeightCollapsed)
               .testTag(MapScreenTestTags.TODO_CARD),
@@ -334,7 +336,7 @@ fun ToDoIcon(toDo: ToDo) {
             modifier = Modifier.testTag(MapScreenTestTags.TODO_TITLE),
             text = toDo.name.uppercase(),
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.primary,
+            color = MaterialTheme.colorScheme.onSecondary,
             fontWeight = FontWeight.Medium)
       }
     }
@@ -358,7 +360,7 @@ fun ToDoExpandedIcon(toDo: ToDo) {
       colors =
           CardDefaults.cardColors(
               containerColor = MaterialTheme.colorScheme.secondary,
-              contentColor = MaterialTheme.colorScheme.primary),
+              contentColor = MaterialTheme.colorScheme.onSecondary),
       modifier =
           Modifier.size(Dimensions.markerWidth, Dimensions.markerHeightExpanded)
               .testTag(MapScreenTestTags.TODO_EXPANDED_CARD)) {
@@ -371,19 +373,19 @@ fun ToDoExpandedIcon(toDo: ToDo) {
                 modifier = Modifier.testTag(MapScreenTestTags.TODO_TITLE_EXPANDED),
                 text = toDo.name.uppercase(),
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.primary,
+                color = MaterialTheme.colorScheme.onSecondary,
                 fontWeight = FontWeight.Medium)
             Text(
                 modifier = Modifier.testTag(MapScreenTestTags.TODO_DUE_DATE),
                 text = formattedDate,
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.primary,
+                color = MaterialTheme.colorScheme.onSecondary,
                 fontWeight = FontWeight.Medium)
             Text(
                 modifier = Modifier.testTag(MapScreenTestTags.TODO_DESCRIPTION),
                 text = toDo.description,
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.primary,
+                color = MaterialTheme.colorScheme.onSecondary,
                 fontWeight = FontWeight.Medium)
           }
         }
