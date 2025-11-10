@@ -97,7 +97,8 @@ class ProfileLocalRepository : ProfileRepository {
 
   override suspend fun deleteFriend(friend: String, currentUserId: String) {
     val currentProfile = getProfileByUid(currentUserId) ?: return
-    val updatedFriends = currentProfile.friendUids.filter { it != friend }
+    val friendId = getProfileByUsername(friend)?.uid
+    val updatedFriends = currentProfile.friendUids.filter { it != friendId }
     val updatedProfile = currentProfile.copy(friendUids = updatedFriends)
     updateProfile(updatedProfile)
   }

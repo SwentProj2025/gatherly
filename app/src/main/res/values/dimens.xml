@@ -10,6 +10,7 @@
     <!-- Spacing -->
     <dimen name="spacing_between_buttons">4dp</dimen>
     <dimen name="spacing_between_fields">8dp</dimen>
+    <dimen name="spacing_between_fields_smaller_regular">12dp</dimen>
     <dimen name="spacing_between_fields_regular">16dp</dimen>
     <dimen name="spacing_between_fields_medium">24dp</dimen>
     <dimen name="spacing_between_fields_large">32dp</dimen>
@@ -54,5 +55,17 @@
     <dimen name="sign_in_welcome_text_spacing">20.dp</dimen>
     <dimen name="sign_in_button_height">56.dp</dimen>
     <dimen name="sign_in_button_icon_size">30.dp</dimen>
+
+
+    <!-- Friends Screen -->
+    <dimen name="friends_search_bar_width">10.dp</dimen>
+    <dimen name="friends_item_rounded_corner_shape">12.dp</dimen>
+    <dimen name="friends_find_button_height">80.dp</dimen>
+    <dimen name="friends_find_button_vertical">12.dp</dimen>
+    <dimen name="friends_item_card_border_width">1.dp</dimen>
+    <dimen name="friends_item_card_rounded_corner_shape">8.dp</dimen>
+    <dimen name="friends_item_card_padding_vertical">4.dp</dimen>
+    <dimen name="friends_item_card_padding">12.dp</dimen>
+    <dimen name="friends_item_profile_picture_size">56.dp</dimen>
 
 </resources>
