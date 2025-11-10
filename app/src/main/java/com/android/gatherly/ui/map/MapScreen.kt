@@ -1,6 +1,5 @@
 package com.android.gatherly.ui.map
 
-import android.widget.Button
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -124,8 +123,13 @@ fun MapScreen(
   HandleSignedOutState(uiState.onSignedOut, onSignedOut)
 
   // Bottom sheet state for the selected event
-  var sheetEvent by remember { mutableStateOf<Event?>(null) }
-  var showSheet by remember { mutableStateOf(false) }
+  val selectedItem =
+      remember(uiState.selectedItemId, uiState.itemsList) {
+        uiState.itemsList.asSequence().filterIsInstance<Event>().firstOrNull {
+          it.id == uiState.selectedItemId
+        }
+      }
+
   val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
   Scaffold(
@@ -157,7 +161,9 @@ fun MapScreen(
             containerColor =
                 if (isEvents) MaterialTheme.colorScheme.secondary
                 else MaterialTheme.colorScheme.tertiary,
-            contentColor = MaterialTheme.colorScheme.primary,
+            contentColor =
+                if (isEvents) MaterialTheme.colorScheme.onSecondary
+                else MaterialTheme.colorScheme.onTertiary,
             modifier = Modifier.testTag(MapScreenTestTags.FILTER_TOGGLE))
       },
       content = { pd ->
@@ -173,17 +179,15 @@ fun MapScreen(
                 Modifier.fillMaxSize().padding(pd).testTag(MapScreenTestTags.GOOGLE_MAP_SCREEN),
             cameraPositionState = cameraPositionState,
             onMapClick = { _ ->
-              // Close sheet and clear selection on map taps
-              showSheet = false
-              sheetEvent = null
-              viewModel.onMarkerDismissed()
+              viewModel.clearSelection()
+              viewModel.clearSelection()
             }) {
               uiState.itemsList.forEach { item ->
                 when (item) {
                   // -------------------------------- Todo Marker UI -------------------------------
                   is ToDo -> {
                     val loc = item.location ?: return@forEach
-                    val isExpanded = uiState.expandedItemId == item.uid
+                    val isExpanded = uiState.selectedItemId == item.uid
                     val z = if (isExpanded) 2f else 1f
 
                     key("todo_${item.uid}_$isExpanded") {
@@ -194,8 +198,8 @@ fun MapScreen(
                           state = markerState,
                           zIndex = z,
                           onClick = {
-                            if (isExpanded) viewModel.onMarkerDismissed()
-                            else viewModel.onMarkerTapped(item.uid)
+                            if (isExpanded) viewModel.clearSelection()
+                            else viewModel.onSelectedItem(item.uid)
                             true
                           }) {
                             if (isExpanded) {
@@ -215,7 +219,7 @@ fun MapScreen(
                   // -------------------------------- Event Marker UI ---------------------------
                   is Event -> {
                     val loc = item.location ?: return@forEach
-                    val isExpanded = uiState.expandedItemId == item.id
+                    val isExpanded = uiState.selectedItemId == item.id
                     val z = if (isExpanded) 2f else 1f
 
                     key("event_${item.id}_$isExpanded") {
@@ -226,15 +230,10 @@ fun MapScreen(
                           state = markerState,
                           zIndex = z,
                           onClick = {
-                            // Open bottom sheet with this event
-                            sheetEvent = item
-                            showSheet = true
-                            viewModel.onMarkerTapped(item.id) // optional tracking
+                            viewModel.onSelectedItem(item.id)
                             true
                           }) {
-                            Box(Modifier.testTag(MapScreenTestTags.eventMarker(item.id))) {
-                              EventIcon(item)
-                            }
+                            EventIcon(item)
                           }
                     }
                   }
@@ -242,26 +241,16 @@ fun MapScreen(
               }
             }
 
-        if (showSheet && sheetEvent != null) {
+        if (selectedItem != null) {
           ModalBottomSheet(
-              sheetState = sheetState,
-              onDismissRequest = {
-                showSheet = false
-                sheetEvent = null
-                viewModel.onMarkerDismissed()
-              }) {
+              sheetState = sheetState, onDismissRequest = { viewModel.clearSelection() }) {
                 EventSheet(
-                    event = sheetEvent!!,
+                    event = selectedItem,
                     onGoToEvent = {
-                      showSheet = false
-                      sheetEvent = null
+                      viewModel.clearSelection()
                       goToEvent()
                     },
-                    onClose = {
-                      showSheet = false
-                      sheetEvent = null
-                      viewModel.onMarkerDismissed()
-                    })
+                    onClose = { viewModel.clearSelection() })
               }
         }
       })
@@ -279,7 +268,7 @@ fun EventIcon(event: Event) {
       colors =
           CardDefaults.cardColors(
               containerColor = MaterialTheme.colorScheme.tertiary,
-              contentColor = MaterialTheme.colorScheme.primary),
+              contentColor = MaterialTheme.colorScheme.onTertiary),
       modifier =
           Modifier.size(Dimensions.markerWidth, Dimensions.markerHeightCollapsed)
               .testTag(MapScreenTestTags.EVENT_CARD),
@@ -293,7 +282,7 @@ fun EventIcon(event: Event) {
             modifier = Modifier.testTag(MapScreenTestTags.EVENT_TITLE),
             text = event.title.uppercase(),
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.primary,
+            color = MaterialTheme.colorScheme.onTertiary,
             fontWeight = FontWeight.Medium)
       }
     }
@@ -354,9 +343,9 @@ fun EventSheet(event: Event, onGoToEvent: () -> Unit, onClose: () -> Unit) {
                   colors =
                       ButtonColors(
                           containerColor = MaterialTheme.colorScheme.tertiary,
-                          contentColor = MaterialTheme.colorScheme.primary,
-                          disabledContainerColor = MaterialTheme.colorScheme.onTertiary,
-                          disabledContentColor = MaterialTheme.colorScheme.onPrimary)) {
+                          contentColor = MaterialTheme.colorScheme.onTertiary,
+                          disabledContainerColor = MaterialTheme.colorScheme.tertiary,
+                          disabledContentColor = MaterialTheme.colorScheme.onTertiary)) {
                     Text(
                         text = stringResource(R.string.go_to_event_page_button),
                         style = MaterialTheme.typography.bodyLarge,
