@@ -21,6 +21,7 @@ import com.google.firebase.Timestamp
 import com.google.firebase.firestore.firestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.storage
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import kotlinx.coroutines.launch
@@ -401,7 +402,8 @@ class EditEventsViewModel(
   companion object {
     fun provideFactory(
         profileRepository: ProfileRepository =
-            ProfileRepositoryFirestore(com.google.firebase.Firebase.firestore),
+            ProfileRepositoryFirestore(
+                com.google.firebase.Firebase.firestore, com.google.firebase.Firebase.storage),
         eventsRepository: EventsRepository = EventsRepositoryFirestore(Firebase.firestore)
     ): ViewModelProvider.Factory {
       return GenericViewModelFactory { EditEventsViewModel(profileRepository, eventsRepository) }
