@@ -1,9 +1,6 @@
 package com.android.gatherly.end2end
 
 import androidx.activity.ComponentActivity
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Surface
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -16,39 +13,25 @@ import com.android.gatherly.ui.authentication.SignInScreenTestTags
 import com.android.gatherly.ui.focusTimer.FocusTimerScreenTestTags
 import com.android.gatherly.ui.homePage.HomePageScreenTestTags
 import com.android.gatherly.ui.navigation.NavigationTestTags
-import com.android.gatherly.ui.theme.GatherlyTheme
 import com.android.gatherly.ui.todo.AddToDoScreenTestTags
 import com.android.gatherly.ui.todo.OverviewScreenTestTags
 import com.android.gatherly.utils.FirebaseEmulator
-import org.junit.After
+import com.android.gatherly.utils.FirestoreGatherlyTest
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
-class Milestone1End2End {
+class Milestone1End2End : FirestoreGatherlyTest() {
   @get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
   val TIMEOUT = 5000L
 
   // set content
   @Before
-  fun setUp() {
-    if (!FirebaseEmulator.isRunning) {
-      error("Firebase emulator must be running! Use: firebase emulators:start")
-    }
-
-    composeTestRule.setContent {
-      GatherlyTheme(darkTheme = true) {
-        Surface(modifier = Modifier.fillMaxSize()) { GatherlyApp() }
-      }
-    }
-  }
-
-  // make sure to clear Firebase emulators
-  @After
-  fun tearDown() {
+  override fun setUp() {
+    super.setUp()
     FirebaseEmulator.auth.signOut()
-    FirebaseEmulator.clearAuthEmulator()
+    composeTestRule.setContent { GatherlyApp() }
   }
 
   // an end to end test with what was implemented in the M1

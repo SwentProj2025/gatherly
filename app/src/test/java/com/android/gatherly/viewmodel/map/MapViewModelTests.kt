@@ -242,6 +242,9 @@ class MapViewModelTests {
     assertEquals(expectedList, actualList)
   }
 
+  // ----------------------------------View
+  // change---------------------------------------------------
+
   /** Verifies that [MapViewModel] correctly switches from an todo view to a event view and back. */
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
