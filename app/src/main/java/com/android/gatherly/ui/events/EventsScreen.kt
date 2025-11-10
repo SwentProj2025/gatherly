@@ -44,7 +44,7 @@ import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
 import com.android.gatherly.model.event.Event
-import com.android.gatherly.model.event.EventsLocalRepository
+import com.android.gatherly.model.event.EventsRepositoryFirestore
 import com.android.gatherly.ui.navigation.BottomNavigationMenu
 import com.android.gatherly.ui.navigation.HandleSignedOutState
 import com.android.gatherly.ui.navigation.NavigationActions
@@ -53,6 +53,9 @@ import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu
 import com.android.gatherly.ui.theme.GatherlyTheme
 import com.android.gatherly.utils.GenericViewModelFactory
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import java.util.Locale
 import kotlinx.coroutines.launch
 
@@ -130,8 +133,8 @@ fun EventsScreen(
             factory =
                 GenericViewModelFactory<EventsViewModel> {
                   EventsViewModel(
-                      EventsLocalRepository(), // EventsRepositoryFirestore(Firebase.firestore),
-                      currentUserId = "") // Firebase.auth.currentUser?.uid ?: "")
+                      EventsRepositoryFirestore(Firebase.firestore),
+                      currentUserId = Firebase.auth.currentUser?.uid ?: "")
                 }),
 ) {
 
@@ -497,9 +500,9 @@ fun UpComingEventsPopUp(
     unparticipate: () -> Unit
 ) {
   AlertDialog(
-      containerColor = MaterialTheme.colorScheme.onTertiaryContainer,
-      titleContentColor = MaterialTheme.colorScheme.onPrimary,
-      textContentColor = MaterialTheme.colorScheme.onPrimary,
+      containerColor = MaterialTheme.colorScheme.surfaceVariant,
+      titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+      textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
       title = {
         Text(
             text = event.title,
@@ -517,16 +520,24 @@ fun UpComingEventsPopUp(
       modifier = Modifier.testTag(EventsScreenTestTags.EVENT_POPUP),
       dismissButton = {
         Button(
+            colors =
+                buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
             onClick = { shouldShowDialog.value = false },
             modifier = Modifier.testTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON)) {
               Text(
                   text = stringResource(R.string.goback_button_title),
-                  color = MaterialTheme.colorScheme.onPrimary)
+                  color = MaterialTheme.colorScheme.onPrimaryContainer)
             }
       },
       onDismissRequest = { shouldShowDialog.value = false },
       confirmButton = {
         Button(
+            colors =
+                buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
             onClick = {
               unparticipate()
               shouldShowDialog.value = false
@@ -534,7 +545,7 @@ fun UpComingEventsPopUp(
             modifier = Modifier.testTag(EventsScreenTestTags.UNREGISTER_BUTTON)) {
               Text(
                   text = stringResource(R.string.unregister_button_title),
-                  color = MaterialTheme.colorScheme.onPrimary)
+                  color = MaterialTheme.colorScheme.onPrimaryContainer)
             }
       },
   )
@@ -552,9 +563,9 @@ fun BrowserEventsPopUp(
     participate: () -> Unit
 ) {
   AlertDialog(
-      containerColor = MaterialTheme.colorScheme.onTertiaryContainer,
-      titleContentColor = MaterialTheme.colorScheme.onPrimary,
-      textContentColor = MaterialTheme.colorScheme.onPrimary,
+      containerColor = MaterialTheme.colorScheme.surfaceVariant,
+      titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+      textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
       title = {
         Text(
             text = event.title,
@@ -573,16 +584,24 @@ fun BrowserEventsPopUp(
       modifier = Modifier.testTag(EventsScreenTestTags.EVENT_POPUP),
       dismissButton = {
         Button(
+            colors =
+                buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
             onClick = { shouldShowDialog.value = false },
             modifier = Modifier.testTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON)) {
               Text(
                   text = stringResource(R.string.goback_button_title),
-                  color = MaterialTheme.colorScheme.onPrimary)
+                  color = MaterialTheme.colorScheme.onPrimaryContainer)
             }
       },
       onDismissRequest = { shouldShowDialog.value = false },
       confirmButton = {
         Button(
+            colors =
+                buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
             onClick = {
               participate()
               shouldShowDialog.value = false
@@ -590,7 +609,7 @@ fun BrowserEventsPopUp(
             modifier = Modifier.testTag(EventsScreenTestTags.PARTICIPATE_BUTTON)) {
               Text(
                   text = stringResource(R.string.participate_button_title),
-                  color = MaterialTheme.colorScheme.onPrimary)
+                  color = MaterialTheme.colorScheme.onPrimaryContainer)
             }
       },
   )
@@ -608,9 +627,9 @@ fun MyOwnEventsPopUp(
     cancelYourEvent: () -> Unit
 ) {
   AlertDialog(
-      containerColor = MaterialTheme.colorScheme.onTertiaryContainer,
-      titleContentColor = MaterialTheme.colorScheme.onPrimary,
-      textContentColor = MaterialTheme.colorScheme.onPrimary,
+      containerColor = MaterialTheme.colorScheme.surfaceVariant,
+      titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+      textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
       title = {
         Text(
             text = event.title,
@@ -629,16 +648,24 @@ fun MyOwnEventsPopUp(
       modifier = Modifier.testTag(EventsScreenTestTags.EVENT_POPUP),
       dismissButton = {
         Button(
+            colors =
+                buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
             onClick = { shouldShowDialog.value = false },
             modifier = Modifier.testTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON)) {
               Text(
                   text = stringResource(R.string.goback_button_title),
-                  color = MaterialTheme.colorScheme.onPrimary)
+                  color = MaterialTheme.colorScheme.onPrimaryContainer)
             }
       },
       onDismissRequest = { shouldShowDialog.value = false },
       confirmButton = {
         Button(
+            colors =
+                buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
             onClick = {
               cancelYourEvent()
               shouldShowDialog.value = false
@@ -646,7 +673,7 @@ fun MyOwnEventsPopUp(
             modifier = Modifier.testTag(EventsScreenTestTags.EDIT_EVENT_BUTTON)) {
               Text(
                   text = stringResource(R.string.edit_button_title),
-                  color = MaterialTheme.colorScheme.onPrimary)
+                  color = MaterialTheme.colorScheme.onPrimaryContainer)
             }
       },
   )
