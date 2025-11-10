@@ -79,6 +79,7 @@ class EditTodoViewModelTest {
     advanceUntilIdle()
 
     val state = editTodoViewModel.uiState.value
+    assertNull(state.errorMsg)
     assertEquals("Initial task", state.title)
     assertEquals("Original description", state.description)
     assertEquals("John", state.assignee)

@@ -123,10 +123,10 @@ class EditTodoViewModel(
                       return@let dateFormat.format(todo.dueDate.toDate())
                     },
                 dueTime =
-                    todo.dueTime.let {
-                      val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
-                      return@let timeFormat.format(todo.dueTime?.toDate() ?: "")
-                    },
+                    todo.dueTime?.let {
+                      val dateFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+                      return@let dateFormat.format(it.toDate())
+                    } ?: "",
                 location = todo.location?.name ?: "",
             )
       } catch (e: Exception) {
