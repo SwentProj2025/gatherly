@@ -115,6 +115,7 @@
     <!-- Map page -->
     <string name="show_events_button_title">Show events</string>
     <string name="show_todos_button_title">Show toDos</string>
+    <string name="go_to_event_page_button">Go to Event</string>
 
     <!-- Friends Screen -->
     <string name="friends_empty_list_msg">You have no friends added yet.</string>
