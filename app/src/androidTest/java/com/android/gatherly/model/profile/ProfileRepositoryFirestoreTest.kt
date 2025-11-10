@@ -2,6 +2,7 @@ package com.android.gatherly.model.profile
 
 import com.android.gatherly.utils.FirebaseEmulator
 import com.android.gatherly.utils.FirestoreGatherlyProfileTest
+import com.google.firebase.auth.auth
 import com.google.firebase.storage.storage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -93,11 +94,12 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   fun searchProfilesByNamePrefix_returnsMatchingProfiles() = runTest {
     val auth = FirebaseEmulator.auth
     val firestore = FirebaseEmulator.firestore
+    val storage = FirebaseEmulator.storage
 
     // USER A
     auth.signInAnonymously().await()
     val userAUid = auth.currentUser!!.uid
-    val repoA = ProfileRepositoryFirestore(firestore)
+    val repoA = ProfileRepositoryFirestore(firestore, storage)
     repoA.initProfileIfMissing(userAUid, "defaultA.png")
     repoA.updateProfile(Profile(uid = userAUid, name = "Alice", profilePicture = "a.png"))
 
@@ -105,7 +107,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     auth.signOut()
     auth.signInAnonymously().await()
     val userBUid = auth.currentUser!!.uid
-    val repoB = ProfileRepositoryFirestore(firestore)
+    val repoB = ProfileRepositoryFirestore(firestore, storage)
     repoB.initProfileIfMissing(userBUid, "defaultB.png")
     repoB.updateProfile(Profile(uid = userBUid, name = "Alex", profilePicture = "b.png"))
 
@@ -170,18 +172,19 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   fun userCannotEditAnotherUserProfile_dueToRules() = runTest {
     val auth = FirebaseEmulator.auth
     val firestore = FirebaseEmulator.firestore
+    val storage = FirebaseEmulator.storage
 
     // User A creates a profile
     auth.signInAnonymously().await()
     val userAUid = auth.currentUser!!.uid
-    val repoA = ProfileRepositoryFirestore(firestore)
+    val repoA = ProfileRepositoryFirestore(firestore, storage)
     repoA.initProfileIfMissing(userAUid, "alice.png")
 
     // Switch to User B
     auth.signOut()
     auth.signInAnonymously().await()
     val userBUid = auth.currentUser!!.uid
-    val repoB = ProfileRepositoryFirestore(firestore)
+    val repoB = ProfileRepositoryFirestore(firestore, storage)
 
     // Attempt to edit Alice's profile should fail
     val unauthorized = Profile(uid = userAUid, name = "Hacked Alice", profilePicture = "evil.png")
@@ -197,17 +200,18 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   fun userCanReadOtherUserProfile_whenAuthenticated() = runTest {
     val auth = FirebaseEmulator.auth
     val firestore = FirebaseEmulator.firestore
+    val storage = FirebaseEmulator.storage
 
     // User A
     auth.signInAnonymously().await()
     val userAUid = auth.currentUser!!.uid
-    val repoA = ProfileRepositoryFirestore(firestore)
+    val repoA = ProfileRepositoryFirestore(firestore, storage)
     repoA.initProfileIfMissing(userAUid, "alice.png")
 
     // User B
     auth.signOut()
     auth.signInAnonymously().await()
-    val repoB = ProfileRepositoryFirestore(firestore)
+    val repoB = ProfileRepositoryFirestore(firestore, storage)
 
     val fetched = repoB.getProfileByUid(userAUid)
     assertNotNull(fetched)
@@ -234,7 +238,8 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   fun testGetListNoFriends() = runTest {
     val auth = FirebaseEmulator.auth
     val firestore = FirebaseEmulator.firestore
-    val repo = ProfileRepositoryFirestore(firestore)
+    val storage = FirebaseEmulator.storage
+    val repo = ProfileRepositoryFirestore(firestore, storage)
 
     // User B
     auth.signInAnonymously().await()
@@ -288,7 +293,8 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   fun testAddFriend() = runTest {
     val auth = FirebaseEmulator.auth
     val firestore = FirebaseEmulator.firestore
-    val repo = ProfileRepositoryFirestore(firestore)
+    val storage = FirebaseEmulator.storage
+    val repo = ProfileRepositoryFirestore(firestore, storage)
 
     // User B
     auth.signInAnonymously().await()
@@ -328,7 +334,8 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   fun deleteFriend_removesUidFromFriendList() = runTest {
     val auth = FirebaseEmulator.auth
     val firestore = FirebaseEmulator.firestore
-    val repo = ProfileRepositoryFirestore(firestore)
+    val storage = FirebaseEmulator.storage
+    val repo = ProfileRepositoryFirestore(firestore, storage)
 
     // User B
     auth.signInAnonymously().await()
@@ -385,79 +392,54 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   @Test
   fun updateProfilePic_uploadsToStorageAndUpdatesFirestore() = runTest {
     val uid = FirebaseEmulator.auth.currentUser!!.uid
-    withTimeout(3000) {
-      while (FirebaseEmulator.auth.currentUser == null) delay(50)
-    }
+    withTimeout(3000) { while (FirebaseEmulator.auth.currentUser == null) delay(50) }
     repository.initProfileIfMissing(uid, "old_pic.png")
 
     // Prepare fake image file
-    val tmpFile = kotlin.io.path.createTempFile("test_image", ".jpg").toFile()
+    val tmpFile = kotlin.io.path.createTempFile("test_image").toFile()
     tmpFile.writeBytes(ByteArray(10) { 0x42 })
     val uri = android.net.Uri.fromFile(tmpFile)
 
-    println("Uploading file for user: $uid ...")
     repository.updateProfilePic(uid, uri)
-    println("Upload finished, fetching profile...")
 
     val updatedProfile = repository.getProfileByUid(uid)
-    println("Updated profile: $updatedProfile")
 
     assertNotNull("Profile is null", updatedProfile)
 
-    val url = updatedProfile!!.profilePicture
-    println("Profile picture URL: $url")
-
     assertTrue(
-      "Unexpected profile picture URL: ${updatedProfile.profilePicture}",
-      updatedProfile!!.profilePicture.startsWith("https://") ||
-              updatedProfile.profilePicture.startsWith("http://10.0.2.2")
-    )
+        "Unexpected profile picture URL: ${updatedProfile?.profilePicture}",
+        updatedProfile!!.profilePicture.startsWith("https://") ||
+            updatedProfile.profilePicture.startsWith("http://10.0.2.2"))
 
-    println("Checking storage metadata...")
-    val storageRef =
-      com.google.firebase.Firebase.storage.reference.child("profile_pictures/$uid.jpg")
-
-    val metadata = try {
-      storageRef.metadata.await()
-    } catch (e: Exception) {
-      println("Failed to fetch metadata: ${e.message}")
-      throw e
-    }
-
-    println("Metadata: $metadata")
+    val storageRef = FirebaseEmulator.storage.reference.child("profile_pictures/$uid")
+    val metadata = storageRef.metadata.await()
     assertNotNull("Storage metadata is null", metadata)
   }
-
 
   @Test
   fun updateProfilePic_overwritesExistingFile() = runTest {
     val uid = FirebaseEmulator.auth.currentUser!!.uid
-    withTimeout(3000) {
-      while (FirebaseEmulator.auth.currentUser == null) delay(50)
-    }
+    withTimeout(3000) { while (FirebaseEmulator.auth.currentUser == null) delay(50) }
     repository.initProfileIfMissing(uid, "pic.png")
 
-    val file1 = kotlin.io.path.createTempFile("first", ".jpg").toFile()
+    val file1 = kotlin.io.path.createTempFile("first").toFile()
     file1.writeBytes(ByteArray(20) { 1 })
     val uri1 = android.net.Uri.fromFile(file1)
 
     repository.updateProfilePic(uid, uri1)
-    val metadata1 = com.google.firebase.Firebase.storage.reference
-      .child("profile_pictures/$uid.jpg")
-      .metadata.await()
 
-    val file2 = kotlin.io.path.createTempFile("second", ".jpg").toFile()
+    val metadata1 =
+        FirebaseEmulator.storage.reference.child("profile_pictures/$uid").metadata.await()
+
+    val file2 = kotlin.io.path.createTempFile("second").toFile()
     file2.writeBytes(ByteArray(30) { 2 })
     val uri2 = android.net.Uri.fromFile(file2)
 
     repository.updateProfilePic(uid, uri2)
-    val metadata2 = com.google.firebase.Firebase.storage.reference
-      .child("profile_pictures/$uid.jpg")
-      .metadata.await()
+    val metadata2 =
+        FirebaseEmulator.storage.reference.child("profile_pictures/$uid").metadata.await()
 
     // Both metadata should exist but may have different updated timestamps
     assertTrue(metadata2.updatedTimeMillis >= metadata1.updatedTimeMillis)
   }
-
-
 }
