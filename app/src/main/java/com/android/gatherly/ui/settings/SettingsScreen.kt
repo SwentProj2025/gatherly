@@ -26,6 +26,7 @@ import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
 import com.android.gatherly.ui.navigation.*
+import com.android.gatherly.ui.theme.GatherlyTheme
 
 object SettingsScreenTestTags {
   const val PROFILE_PICTURE = "settings_profile_picture"
