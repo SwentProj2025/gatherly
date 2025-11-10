@@ -238,6 +238,7 @@ fun AddEventScreen(
                       expanded = showProfilesDropdown && ui.suggestedProfiles.isNotEmpty(),
                       onDismissRequest = { showProfilesDropdown = false },
                       properties = PopupProperties(focusable = false),
+                      containerColor = MaterialTheme.colorScheme.surfaceVariant,
                       modifier =
                           Modifier.testTag(AddEventScreenTestTags.PARTICIPANT_MENU)
                               .fillMaxWidth()
@@ -252,7 +253,9 @@ fun AddEventScreen(
                                             .testTag(
                                                 AddEventScreenTestTags.PROFILE_SUGGESTION_ITEM),
                                     horizontalArrangement = Arrangement.SpaceBetween) {
-                                      Text(profile.name)
+                                      Text(
+                                          profile.name,
+                                          color = MaterialTheme.colorScheme.onSurfaceVariant)
                                       if (isAlreadyParticipant) {
                                         IconButton(
                                             onClick = {
@@ -264,7 +267,8 @@ fun AddEventScreen(
                                                         .PROFILE_SUGGESTION_REMOVE)) {
                                               Icon(
                                                   Icons.Filled.Remove,
-                                                  contentDescription = "Remove")
+                                                  contentDescription = "Remove",
+                                                  tint = MaterialTheme.colorScheme.error)
                                             }
                                       } else {
                                         IconButton(
@@ -273,7 +277,10 @@ fun AddEventScreen(
                                                 Modifier.testTag(
                                                     AddEventScreenTestTags
                                                         .PROFILE_SUGGESTION_ADD)) {
-                                              Icon(Icons.Filled.Add, contentDescription = "Add")
+                                              Icon(
+                                                  Icons.Filled.Add,
+                                                  contentDescription = "Add",
+                                                  tint = MaterialTheme.colorScheme.onSurfaceVariant)
                                             }
                                       }
                                     }
@@ -305,6 +312,7 @@ fun AddEventScreen(
                       expanded = showLocationDropdown && ui.suggestedLocations.isNotEmpty(),
                       onDismissRequest = { showLocationDropdown = false },
                       properties = PopupProperties(focusable = false),
+                      containerColor = MaterialTheme.colorScheme.surfaceVariant,
                       modifier =
                           Modifier.testTag(AddEventScreenTestTags.LOCATION_MENU)
                               .fillMaxWidth()
@@ -314,7 +322,8 @@ fun AddEventScreen(
                               text = {
                                 Text(
                                     text =
-                                        loc.name.take(40) + if (loc.name.length > 40) "..." else "")
+                                        loc.name.take(40) + if (loc.name.length > 40) "..." else "",
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant)
                               },
                               onClick = {
                                 addEventViewModel.selectLocation(loc)
@@ -323,7 +332,11 @@ fun AddEventScreen(
                               modifier = Modifier.testTag(AddEventScreenTestTags.INPUT_LOCATION))
                         }
                         if (ui.suggestedLocations.size > 3) {
-                          DropdownMenuItem(text = { Text("More...") }, onClick = {})
+                          DropdownMenuItem(
+                              text = {
+                                Text("More...", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                              },
+                              onClick = {})
                         }
                       }
                 }
