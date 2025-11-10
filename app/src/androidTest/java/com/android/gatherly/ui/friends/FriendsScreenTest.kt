@@ -11,27 +11,20 @@ import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.ui.navigation.NavigationTestTags
-import com.android.gatherly.utils.FirestoreGatherlyTest
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
 private const val TIMEOUT = 30_000L
 
-class FriendsScreenTest : FirestoreGatherlyTest() {
+class FriendsScreenTest {
 
   @get:Rule val composeTestRule = createComposeRule()
   private lateinit var currentUserId: String
   private lateinit var friendsViewModel: FriendsViewModel
   private lateinit var profileRepository: ProfileRepository
-
-  @Before
-  override fun setUp() {
-    super.setUp()
-  }
 
   /**
    * Helper function: set the content of the composeTestRule with currentUserID Bob who have no
