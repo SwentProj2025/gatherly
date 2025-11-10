@@ -3,7 +3,9 @@ package com.android.gatherly.ui.authentication
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.android.gatherly.utils.FirestoreGatherlyTest
+import com.android.gatherly.model.profile.ProfileLocalRepository
+import com.android.gatherly.model.profile.ProfileRepository
+import com.android.gatherly.ui.settings.SettingsViewModel
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -11,14 +13,19 @@ import org.junit.runner.RunWith
 
 /** UI tests for the [InitProfileScreen]. */
 @RunWith(AndroidJUnit4::class)
-class InitProfileScreenTest : FirestoreGatherlyTest() {
+class InitProfileScreenTest {
 
   @get:Rule val composeRule = createComposeRule()
 
+  private lateinit var profileRepository: ProfileRepository
+  private lateinit var settingsViewModel: SettingsViewModel
+
   @Before
-  override fun setUp() {
-    super.setUp()
-    composeRule.setContent { InitProfileScreen() }
+  fun setUp() {
+    profileRepository = ProfileLocalRepository()
+    settingsViewModel =
+        SettingsViewModel(repository = profileRepository, currentUser = "currentUser")
+    composeRule.setContent { InitProfileScreen(settingsViewModel = settingsViewModel) }
   }
 
   /** Ensures all UI components are visible when screen loads. */

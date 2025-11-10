@@ -9,18 +9,13 @@ import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
-import com.android.gatherly.model.todo.ToDosRepositoryLocalMapTest
+import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.ui.homePage.HomePageScreen
 import com.android.gatherly.ui.homePage.HomePageScreenTestTags
 import com.android.gatherly.ui.homePage.HomePageViewModel
-import com.android.gatherly.utils.FirebaseEmulator
-import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
-import com.google.firebase.auth.auth
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
-import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -47,16 +42,14 @@ class HomePageScreenTest {
   @get:Rule val composeRule = createComposeRule()
 
   private lateinit var fakeViewModel: HomePageViewModel
-  private lateinit var todosLocalRepo: ToDosRepositoryLocalMapTest
+  private lateinit var todosLocalRepo: ToDosLocalRepository
   private lateinit var eventsLocalRepo: EventsLocalRepository
   private lateinit var profileLocalRepo: ProfileLocalRepository
 
   @Before
   fun setUp() {
     runTest {
-      FirebaseEmulator.auth.signInAnonymously().await()
-      currentProfile = currentProfile.copy(uid = Firebase.auth.currentUser?.uid!!)
-      todosLocalRepo = ToDosRepositoryLocalMapTest()
+      todosLocalRepo = ToDosLocalRepository()
       eventsLocalRepo = EventsLocalRepository()
       profileLocalRepo = ProfileLocalRepository()
       populateRepositories()
@@ -64,15 +57,10 @@ class HomePageScreenTest {
           HomePageViewModel(
               toDosRepository = todosLocalRepo,
               eventsRepository = eventsLocalRepo,
-              profileRepository = profileLocalRepo)
+              profileRepository = profileLocalRepo,
+              currentUser = currentProfile.uid)
       composeRule.setContent { HomePageScreen(homePageViewModel = fakeViewModel) }
     }
-  }
-
-  @After
-  fun tearDown() {
-    FirebaseEmulator.clearAuthEmulator()
-    FirebaseEmulator.clearFirestoreEmulator()
   }
 
   /** Populates local repositories with fake data for testing. */

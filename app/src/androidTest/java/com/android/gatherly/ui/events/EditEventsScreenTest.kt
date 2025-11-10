@@ -16,10 +16,9 @@ import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.ui.todo.AddToDoScreenTestTags
-import com.android.gatherly.utils.InMemoryGatherlyTest
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -29,7 +28,7 @@ import org.junit.runner.RunWith
 /** Tests for the EditEventsScreen */
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
-class EditEventsScreenTest : InMemoryGatherlyTest() {
+class EditEventsScreenTest {
   @get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
   // declare viewModel and repositories
@@ -38,15 +37,14 @@ class EditEventsScreenTest : InMemoryGatherlyTest() {
   private lateinit var profileRepository: ProfileRepository
 
   @Before
-  override fun setUp() {
-    super.setUp()
+  fun setUp() {
     // initialize repos and viewModel
     profileRepository = ProfileLocalRepository()
     eventsRepository = EventsLocalRepository()
     editEventsViewModel = EditEventsViewModel(profileRepository, eventsRepository)
 
     // fill the profile and events repositories with profiles and event
-    runBlocking { fill_repositories() }
+    fill_repositories()
 
     composeTestRule.setContent { EditEventsScreen(event.id, editEventsViewModel) }
   }
@@ -156,6 +154,7 @@ class EditEventsScreenTest : InMemoryGatherlyTest() {
       profileRepository.addProfile(participantProfile)
       profileRepository.addProfile(ownerProfile)
       eventsRepository.addEvent(event)
+      advanceUntilIdle()
     }
   }
 }
