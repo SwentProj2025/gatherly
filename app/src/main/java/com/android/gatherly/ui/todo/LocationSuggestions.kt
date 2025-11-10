@@ -63,11 +63,9 @@ fun LocationSuggestions(
       TextFieldDefaults.colors(
           focusedContainerColor = MaterialTheme.colorScheme.background,
           unfocusedContainerColor = MaterialTheme.colorScheme.background,
-          unfocusedTextColor = MaterialTheme.colorScheme.primary,
-          focusedTextColor = MaterialTheme.colorScheme.primary,
-          errorTextColor = MaterialTheme.colorScheme.primary,
-          errorPlaceholderColor = MaterialTheme.colorScheme.primary,
-          errorLabelColor = MaterialTheme.colorScheme.primary,
+          unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+          focusedTextColor = MaterialTheme.colorScheme.onBackground,
+          errorTextColor = MaterialTheme.colorScheme.onBackground,
       )
 
   var showLocationDropdown by remember { mutableStateOf(false) }
@@ -88,7 +86,7 @@ fun LocationSuggestions(
         expanded = showLocationDropdown && suggestions.isNotEmpty(),
         onDismissRequest = { showLocationDropdown = false },
         properties = PopupProperties(focusable = false),
-        containerColor = MaterialTheme.colorScheme.onSurface,
+        containerColor = MaterialTheme.colorScheme.surfaceVariant,
         modifier =
             Modifier.testTag(testTagDropdown)
                 .fillMaxWidth()
@@ -100,7 +98,10 @@ fun LocationSuggestions(
                       loc.name.take(suggestionTextLimit) +
                           if (loc.name.length > suggestionTextLimit) etc else ""
 
-                  Text(text = displayName, color = MaterialTheme.colorScheme.outline, maxLines = 1)
+                  Text(
+                      text = displayName,
+                      color = MaterialTheme.colorScheme.onSurfaceVariant,
+                      maxLines = 1)
                 },
                 onClick = {
                   onSelectLocation(loc)
@@ -112,7 +113,11 @@ fun LocationSuggestions(
           }
 
           if (suggestions.size > suggestionLimit) {
-            DropdownMenuItem(text = { Text(moreSuggestionsText) }, onClick = {})
+            DropdownMenuItem(
+                text = {
+                  Text(moreSuggestionsText, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                },
+                onClick = {})
           }
         }
   }
