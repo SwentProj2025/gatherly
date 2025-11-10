@@ -20,6 +20,7 @@ import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Place
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -31,7 +32,6 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -39,13 +39,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.android.gatherly.R
 
@@ -103,7 +101,7 @@ fun BottomNavigationMenu(
   NavigationBar(
       modifier =
           modifier.fillMaxWidth().height(60.dp).testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU),
-      containerColor = MaterialTheme.colorScheme.onSurface,
+      containerColor = MaterialTheme.colorScheme.surfaceVariant,
       content = {
         bottomtabs.forEach { tab ->
           val isSelected = tab == selectedTab
@@ -114,16 +112,16 @@ fun BottomNavigationMenu(
                     contentDescription = null,
                     tint =
                         if (isSelected) MaterialTheme.colorScheme.primary
-                        else MaterialTheme.colorScheme.outline)
+                        else MaterialTheme.colorScheme.onSurfaceVariant)
               },
               label = { Text(tab.name) },
               colors =
                   NavigationBarItemDefaults.colors(
                       selectedIconColor = MaterialTheme.colorScheme.primary,
-                      unselectedIconColor = MaterialTheme.colorScheme.outline,
+                      unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
                       selectedTextColor = MaterialTheme.colorScheme.primary,
-                      unselectedTextColor = MaterialTheme.colorScheme.outline,
-                      indicatorColor = MaterialTheme.colorScheme.onSurface),
+                      unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                      indicatorColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.1f)),
               selected = tab == selectedTab,
               onClick = { onTabSelected(tab) },
               modifier =
@@ -155,14 +153,9 @@ fun TopNavigationMenu(
     modifier: Modifier = Modifier,
     onSignedOut: () -> Unit = {}
 ) {
-  TopAppBar(
+  CenterAlignedTopAppBar(
       title = {
-        Box(modifier = Modifier.fillMaxWidth()) {
-          Text(
-              text = selectedTab.name,
-              modifier = Modifier.align(Alignment.Center).testTag(NavigationTestTags.TOP_BAR_TITLE),
-              textAlign = TextAlign.Center)
-        }
+        Text(text = selectedTab.name, modifier = Modifier.testTag(NavigationTestTags.TOP_BAR_TITLE))
       },
       navigationIcon = {
         IconButton(
@@ -196,14 +189,9 @@ fun TopNavigationMenuSettings(
     modifier: Modifier = Modifier,
     onSignedOut: () -> Unit = {}
 ) {
-  TopAppBar(
+  CenterAlignedTopAppBar(
       title = {
-        Box(modifier = Modifier.fillMaxWidth()) {
-          Text(
-              text = selectedTab.name,
-              modifier = Modifier.align(Alignment.Center).testTag(NavigationTestTags.TOP_BAR_TITLE),
-              textAlign = TextAlign.Center)
-        }
+        Text(text = selectedTab.name, modifier = Modifier.testTag(NavigationTestTags.TOP_BAR_TITLE))
       },
       navigationIcon = {
         IconButton(
@@ -239,14 +227,9 @@ fun TopNavigationMenu_HomePage(
     modifier: Modifier = Modifier,
     onSignedOut: () -> Unit = {}
 ) {
-  TopAppBar(
+  CenterAlignedTopAppBar(
       title = {
-        Box(modifier = Modifier.fillMaxWidth()) {
-          Text(
-              text = selectedTab.name,
-              modifier = Modifier.align(Alignment.Center).testTag(NavigationTestTags.TOP_BAR_TITLE),
-              textAlign = TextAlign.Center)
-        }
+        Text(text = selectedTab.name, modifier = Modifier.testTag(NavigationTestTags.TOP_BAR_TITLE))
       },
       actions = { TopDropdownMenu(onTabSelected = onTabSelected, onSignedOut = onSignedOut) },
       modifier =
@@ -273,14 +256,9 @@ fun TopNavigationMenu_Profile(
     modifier: Modifier = Modifier,
     onSignedOut: () -> Unit = {}
 ) {
-  TopAppBar(
+  CenterAlignedTopAppBar(
       title = {
-        Box(modifier = Modifier.fillMaxWidth()) {
-          Text(
-              text = selectedTab.name,
-              modifier = Modifier.align(Alignment.Center).testTag(NavigationTestTags.TOP_BAR_TITLE),
-              textAlign = TextAlign.Center)
-        }
+        Text(text = selectedTab.name, modifier = Modifier.testTag(NavigationTestTags.TOP_BAR_TITLE))
       },
       actions = {
         TopDropdownMenuForProfile(onTabSelected = onTabSelected, onSignedOut = onSignedOut)
@@ -307,12 +285,9 @@ fun TopNavigationMenu_Goback(
     modifier: Modifier = Modifier,
     goBack: () -> Unit = {}
 ) {
-  TopAppBar(
+  CenterAlignedTopAppBar(
       title = {
-        Text(
-            text = selectedTab.name,
-            modifier = Modifier.fillMaxWidth().testTag(NavigationTestTags.TOP_BAR_TITLE),
-            textAlign = TextAlign.Center)
+        Text(text = selectedTab.name, modifier = Modifier.testTag(NavigationTestTags.TOP_BAR_TITLE))
       },
       navigationIcon = {
         IconButton(
@@ -351,39 +326,41 @@ fun TopDropdownMenu(onTabSelected: (Tab) -> Unit, onSignedOut: () -> Unit = {}) 
     DropdownMenu(
         expanded = expanded,
         onDismissRequest = { expanded = false },
-        containerColor = MaterialTheme.colorScheme.onSurface) {
+        containerColor = MaterialTheme.colorScheme.surfaceVariant) {
           // Profile section
           DropdownMenuItem(
-              text = { Text(Tab.Profile.name, color = MaterialTheme.colorScheme.outline) },
+              text = { Text(Tab.Profile.name, color = MaterialTheme.colorScheme.onSurfaceVariant) },
               leadingIcon = {
                 Icon(
                     imageVector = Tab.Profile.icon,
                     contentDescription = Tab.Profile.name,
-                    tint = MaterialTheme.colorScheme.outline)
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant)
               },
               onClick = { onTabSelected(Tab.Profile) },
               modifier = Modifier.testTag(NavigationTestTags.PROFILE_TAB))
 
           // Settings section
           DropdownMenuItem(
-              text = { Text(Tab.Settings.name, color = MaterialTheme.colorScheme.outline) },
+              text = {
+                Text(Tab.Settings.name, color = MaterialTheme.colorScheme.onSurfaceVariant)
+              },
               leadingIcon = {
                 Icon(
                     imageVector = Tab.Settings.icon,
                     contentDescription = Tab.Settings.name,
-                    tint = MaterialTheme.colorScheme.outline)
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant)
               },
               onClick = { onTabSelected(Tab.Settings) },
               modifier = Modifier.testTag(NavigationTestTags.SETTINGS_TAB))
 
           // Logout section
           DropdownMenuItem(
-              text = { Text(Tab.SignOut.name, color = MaterialTheme.colorScheme.outline) },
+              text = { Text(Tab.SignOut.name, color = MaterialTheme.colorScheme.onSurfaceVariant) },
               leadingIcon = {
                 Icon(
                     Icons.Outlined.Logout,
                     contentDescription = null,
-                    tint = MaterialTheme.colorScheme.outline)
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant)
               },
               onClick = { onSignedOut() },
               modifier = Modifier.testTag(NavigationTestTags.LOGOUT_TAB))
@@ -409,23 +386,34 @@ fun TopDropdownMenuForSettings(onTabSelected: (Tab) -> Unit, onSignedOut: () -> 
         modifier = Modifier.testTag(NavigationTestTags.DROPMENU)) {
           Icon(Icons.Outlined.Person, contentDescription = "Options")
         }
-    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-      // Profile section
-      DropdownMenuItem(
-          text = { Text(Tab.Profile.name) },
-          leadingIcon = {
-            Icon(imageVector = Tab.Profile.icon, contentDescription = Tab.Profile.name)
-          },
-          onClick = { onTabSelected(Tab.Profile) },
-          modifier = Modifier.testTag(NavigationTestTags.PROFILE_TAB))
+    DropdownMenu(
+        expanded = expanded,
+        onDismissRequest = { expanded = false },
+        containerColor = MaterialTheme.colorScheme.surfaceVariant) {
+          // Profile section
+          DropdownMenuItem(
+              text = { Text(Tab.Profile.name, color = MaterialTheme.colorScheme.onSurfaceVariant) },
+              leadingIcon = {
+                Icon(
+                    imageVector = Tab.Profile.icon,
+                    contentDescription = Tab.Profile.name,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant)
+              },
+              onClick = { onTabSelected(Tab.Profile) },
+              modifier = Modifier.testTag(NavigationTestTags.PROFILE_TAB))
 
-      // Logout section
-      DropdownMenuItem(
-          text = { Text(Tab.SignOut.name) },
-          leadingIcon = { Icon(Icons.Outlined.Logout, contentDescription = null) },
-          onClick = { onSignedOut() },
-          modifier = Modifier.testTag(NavigationTestTags.LOGOUT_TAB))
-    }
+          // Logout section
+          DropdownMenuItem(
+              text = { Text(Tab.SignOut.name, color = MaterialTheme.colorScheme.onSurfaceVariant) },
+              leadingIcon = {
+                Icon(
+                    Icons.Outlined.Logout,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant)
+              },
+              onClick = { onSignedOut() },
+              modifier = Modifier.testTag(NavigationTestTags.LOGOUT_TAB))
+        }
   }
 }
 
@@ -447,23 +435,36 @@ fun TopDropdownMenuForProfile(onTabSelected: (Tab) -> Unit, onSignedOut: () -> U
         modifier = Modifier.testTag(NavigationTestTags.DROPMENU)) {
           Icon(Icons.Outlined.Settings, contentDescription = "Options")
         }
-    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-      // Settings section
-      DropdownMenuItem(
-          text = { Text(Tab.Settings.name) },
-          leadingIcon = {
-            Icon(imageVector = Tab.Settings.icon, contentDescription = Tab.Settings.name)
-          },
-          onClick = { onTabSelected(Tab.Settings) },
-          modifier = Modifier.testTag(NavigationTestTags.SETTINGS_TAB))
+    DropdownMenu(
+        expanded = expanded,
+        onDismissRequest = { expanded = false },
+        containerColor = MaterialTheme.colorScheme.surfaceVariant) {
+          // Settings section
+          DropdownMenuItem(
+              text = {
+                Text(Tab.Settings.name, color = MaterialTheme.colorScheme.onSurfaceVariant)
+              },
+              leadingIcon = {
+                Icon(
+                    imageVector = Tab.Settings.icon,
+                    contentDescription = Tab.Settings.name,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant)
+              },
+              onClick = { onTabSelected(Tab.Settings) },
+              modifier = Modifier.testTag(NavigationTestTags.SETTINGS_TAB))
 
-      // Logout section
-      DropdownMenuItem(
-          text = { Text(Tab.SignOut.name) },
-          leadingIcon = { Icon(Icons.Outlined.Logout, contentDescription = null) },
-          onClick = { onSignedOut() },
-          modifier = Modifier.testTag(NavigationTestTags.LOGOUT_TAB))
-    }
+          // Logout section
+          DropdownMenuItem(
+              text = { Text(Tab.SignOut.name, color = MaterialTheme.colorScheme.onSurfaceVariant) },
+              leadingIcon = {
+                Icon(
+                    Icons.Outlined.Logout,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant)
+              },
+              onClick = { onSignedOut() },
+              modifier = Modifier.testTag(NavigationTestTags.LOGOUT_TAB))
+        }
   }
 }
 
