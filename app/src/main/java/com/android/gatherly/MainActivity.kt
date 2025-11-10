@@ -39,11 +39,7 @@ class MainActivity : ComponentActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContent {
-      GatherlyTheme(darkTheme = true) {
-        Surface(modifier = Modifier.fillMaxSize()) { GatherlyApp() }
-      }
-    }
+    setContent { GatherlyTheme() { Surface(modifier = Modifier.fillMaxSize()) { GatherlyApp() } } }
   }
 }
 
