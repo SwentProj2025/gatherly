@@ -1,5 +1,6 @@
 package com.android.gatherly.viewmodel.settings
 
+import com.android.gatherly.model.friends.Friends
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.ui.settings.SettingsViewModel
@@ -105,5 +106,17 @@ class ProfileRepositoryLocalForTests : ProfileRepository {
     val updatedFriends = currentProfile.friendUids.filter { it != friend }
     val updatedProfile = currentProfile.copy(friendUids = updatedFriends)
     updateProfile(updatedProfile)
+  }
+
+  override suspend fun getFriendsAndNonFriendsUsernames(currentUserId: String): Friends {
+    val currentProfile =
+        getProfileByUid(currentUserId)
+            ?: throw NoSuchElementException("Profile not found for uid=$currentUserId in test repo")
+
+    val friendUsernames =
+        currentProfile.friendUids.mapNotNull { friendUid -> getProfileByUid(friendUid)?.username }
+    val nonFriendUsernames = getListNoFriends(currentUserId)
+
+    return Friends(friendUsernames = friendUsernames, nonFriendUsernames = nonFriendUsernames)
   }
 }
