@@ -15,6 +15,7 @@ import com.google.firebase.Timestamp
 import java.util.Date
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.runBlocking
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
@@ -56,6 +57,7 @@ class MapScreenTest {
           participants = listOf("u1", "u2"),
           status = EventStatus.UPCOMING)
 
+  @Before
   fun setUp() = runBlocking {
     toDosRepository = ToDosLocalRepository().apply { addTodo(todo) }
     eventsRepository = EventsLocalRepository().apply { addEvent(event) }
