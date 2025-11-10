@@ -113,8 +113,9 @@ object EventsScreenTestTags {
  * @param navigateToEditEvent Callback to navigate to the event editing screen with the selected
  *   event
  * @param navigationActions Handles navigation between different tabs/screens.
- * @param eventsViewModel The ViewModel managing the state and logic for the Events screen, calling
- *   with the ViewModel declaration factory which is within a Composable function
+ * @param eventsViewModel The ViewModel managing the state and logic for the Events screen,
+ * instantiated with a factory provider defined in the ViewModel's companion object.
+ *
  */
 @Composable
 fun EventsScreen(

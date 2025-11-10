@@ -76,8 +76,8 @@ object EditEventsScreenTestTags {
  * Screen for editing an existing Event.
  *
  * @param eventId id of the event to load and edit.
- * @param editEventsViewModel calling with the ViewModel declaration factory which is within a
- *   Composable function
+ * @param editEventsViewModel The ViewModel managing the state and logic for the Edit Event screen,
+ *  instantiated with a factory provider defined in the ViewModel's companion object.
  * @param onSave called after a successful save or deletion and navigation intent.
  * @param goBack called when back arrow is pressed.
  */
