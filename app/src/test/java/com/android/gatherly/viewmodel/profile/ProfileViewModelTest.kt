@@ -87,7 +87,7 @@ class ProfileViewModelIntegrationTest {
 
   @Test
   fun loadUserProfile_returnsErrorIfUserNotAuthenticated() = runTest {
-    profileViewModel = ProfileViewModel(repository = profileRepository, currentUser = "")
+    profileViewModel = ProfileViewModel(repository = profileRepository, currentUser = null)
     profileViewModel.loadUserProfile()
 
     // Wait until loading completes and an error appears
