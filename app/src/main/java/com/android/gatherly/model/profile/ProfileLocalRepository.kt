@@ -105,9 +105,10 @@ class ProfileLocalRepository : ProfileRepository {
 
   override suspend fun addFriend(friend: String, currentUserId: String) {
     val currentProfile = getProfileByUid(currentUserId) ?: return
-    if (!currentProfile.friendUids.contains(friend)) {
-      val updatedFriends = currentProfile.friendUids + friend
-      val updatedProfile = currentProfile.copy(friendUids = updatedFriends)
+    val friendId = getProfileByUsername(friend)?.uid
+    if (!currentProfile.friendUids.contains(friendId)) {
+      val updatedFriends = currentProfile.friendUids + friendId
+      val updatedProfile = currentProfile.copy(friendUids = updatedFriends as List<String>)
       updateProfile(updatedProfile)
     }
   }
