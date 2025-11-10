@@ -1,20 +1,26 @@
 package com.android.gatherly.ui.map
 
+import android.widget.Button
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -57,12 +63,14 @@ object MapScreenTestTags {
   const val TODO_CARD = "todoCard"
   const val EVENT_CARD = "eventCard"
   const val TODO_EXPANDED_CARD = "todoExpandedCard"
-  const val EVENT_EXPANDED_CARD = "eventExpandedCard"
+  const val EVENT_SHEET = "eventModal"
   const val TODO_TITLE = "todoTitle"
   const val TODO_TITLE_EXPANDED = "todoTitleExpanded"
 
+  const val EVENT_BUTTON = "eventButton"
+
   const val EVENT_TITLE = "eventTitle"
-  const val EVENT_TITLE_EXPANDED = "eventTitleExpanded"
+  const val EVENT_TITLE_SHEET = "eventTitleSheet"
 
   const val TODO_DUE_DATE = "todoDueDate"
   const val EVENT_DATE = "eventDate"
@@ -76,8 +84,6 @@ object MapScreenTestTags {
 
   // Event markers
   fun eventMarker(id: String) = "eventMarker_$id"
-
-  fun eventMarkerExpanded(id: String) = "eventMarkerExpanded_$id"
 }
 
 /** Dimension constants to avoid magic numbers. */
@@ -86,6 +92,13 @@ private object Dimensions {
   val markerHeightCollapsed = 50.dp
   val markerHeightExpanded = 150.dp
   val cardPadding = 12.dp
+
+  val spacerPadding = 20.dp
+
+  val textPadding = 8.dp
+  val rowColPadding = 16.dp
+
+  val weight = 1f
 }
 
 /**
@@ -104,10 +117,16 @@ fun MapScreen(
     credentialManager: CredentialManager = CredentialManager.create(LocalContext.current),
     onSignedOut: () -> Unit = {},
     navigationActions: NavigationActions? = null,
+    goToEvent: () -> Unit = {}
 ) {
 
   val uiState by viewModel.uiState.collectAsState()
   HandleSignedOutState(uiState.onSignedOut, onSignedOut)
+
+  // Bottom sheet state for the selected event
+  var sheetEvent by remember { mutableStateOf<Event?>(null) }
+  var showSheet by remember { mutableStateOf(false) }
+  val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
   Scaffold(
       topBar = {
@@ -129,12 +148,12 @@ fun MapScreen(
         val isEvents = uiState.displayEventsPage
         ExtendedFloatingActionButton(
             onClick = { viewModel.changeView() },
+            icon = {},
             text = {
               Text(
                   if (uiState.displayEventsPage) stringResource(R.string.show_todos_button_title)
                   else stringResource(R.string.show_events_button_title))
             },
-            icon = {},
             containerColor =
                 if (isEvents) MaterialTheme.colorScheme.secondary
                 else MaterialTheme.colorScheme.tertiary,
@@ -152,7 +171,13 @@ fun MapScreen(
         GoogleMap(
             modifier =
                 Modifier.fillMaxSize().padding(pd).testTag(MapScreenTestTags.GOOGLE_MAP_SCREEN),
-            cameraPositionState = cameraPositionState) {
+            cameraPositionState = cameraPositionState,
+            onMapClick = { _ ->
+              // Close sheet and clear selection on map taps
+              showSheet = false
+              sheetEvent = null
+              viewModel.onMarkerDismissed()
+            }) {
               uiState.itemsList.forEach { item ->
                 when (item) {
                   // -------------------------------- Todo Marker UI -------------------------------
@@ -201,20 +226,14 @@ fun MapScreen(
                           state = markerState,
                           zIndex = z,
                           onClick = {
-                            if (isExpanded) viewModel.onMarkerDismissed()
-                            else viewModel.onMarkerTapped(item.id)
+                            // Open bottom sheet with this event
+                            sheetEvent = item
+                            showSheet = true
+                            viewModel.onMarkerTapped(item.id) // optional tracking
                             true
                           }) {
-                            if (isExpanded) {
-                              Box(
-                                  Modifier.testTag(
-                                      MapScreenTestTags.eventMarkerExpanded(item.id))) {
-                                    EventExpandedIcon(item)
-                                  }
-                            } else {
-                              Box(Modifier.testTag(MapScreenTestTags.eventMarker(item.id))) {
-                                EventIcon(item)
-                              }
+                            Box(Modifier.testTag(MapScreenTestTags.eventMarker(item.id))) {
+                              EventIcon(item)
                             }
                           }
                     }
@@ -222,6 +241,29 @@ fun MapScreen(
                 }
               }
             }
+
+        if (showSheet && sheetEvent != null) {
+          ModalBottomSheet(
+              sheetState = sheetState,
+              onDismissRequest = {
+                showSheet = false
+                sheetEvent = null
+                viewModel.onMarkerDismissed()
+              }) {
+                EventSheet(
+                    event = sheetEvent!!,
+                    onGoToEvent = {
+                      showSheet = false
+                      sheetEvent = null
+                      goToEvent()
+                    },
+                    onClose = {
+                      showSheet = false
+                      sheetEvent = null
+                      viewModel.onMarkerDismissed()
+                    })
+              }
+        }
       })
 }
 
@@ -246,7 +288,7 @@ fun EventIcon(event: Event) {
         modifier = Modifier.fillMaxWidth().padding(Dimensions.cardPadding),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-      Column(modifier = Modifier.weight(1f)) {
+      Column(modifier = Modifier.weight(Dimensions.weight)) {
         Text(
             modifier = Modifier.testTag(MapScreenTestTags.EVENT_TITLE),
             text = event.title.uppercase(),
@@ -259,51 +301,70 @@ fun EventIcon(event: Event) {
 }
 
 /**
- * Expanded Event marker icon
+ * Event Sheet displayed when an Event marker is tapped
  *
  * @param event The Event data to display in the marker.
+ * @param onGoToEvent Go to Event Page when button is clicked.
+ * @param onClose closes the sheet when tapped outside.
  */
 @Composable
-fun EventExpandedIcon(event: Event) {
+fun EventSheet(event: Event, onGoToEvent: () -> Unit, onClose: () -> Unit) {
   val formattedDate =
       remember(event.date) {
         val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
         sdf.format(event.date.toDate())
       }
 
-  Card(
-      colors =
-          CardDefaults.cardColors(
-              containerColor = MaterialTheme.colorScheme.tertiary,
-              contentColor = MaterialTheme.colorScheme.primary),
+  Column(
       modifier =
-          Modifier.size(Dimensions.markerWidth, Dimensions.markerHeightExpanded)
-              .testTag(MapScreenTestTags.EVENT_EXPANDED_CARD)) {
+          Modifier.fillMaxWidth()
+              .padding(Dimensions.rowColPadding)
+              .testTag(MapScreenTestTags.EVENT_SHEET)) {
+        Text(
+            text = event.title.uppercase(),
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.testTag(MapScreenTestTags.EVENT_TITLE_SHEET))
+
+        Spacer(modifier = Modifier.size(Dimensions.spacerPadding))
+
+        Text(
+            modifier =
+                Modifier.padding(Dimensions.textPadding).testTag(MapScreenTestTags.EVENT_DATE),
+            text = formattedDate,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.primary)
+        Text(
+            modifier =
+                Modifier.padding(Dimensions.textPadding)
+                    .testTag(MapScreenTestTags.EVENT_DESCRIPTION),
+            text = event.description,
+            style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.primary)
+
+        Spacer(modifier = Modifier.size(Dimensions.spacerPadding))
+
         Row(
-            modifier = Modifier.fillMaxWidth().padding(Dimensions.cardPadding),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-          Column(modifier = Modifier.weight(1f)) {
-            Text(
-                modifier = Modifier.testTag(MapScreenTestTags.EVENT_TITLE_EXPANDED),
-                text = event.title.uppercase(),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Medium)
-            Text(
-                modifier = Modifier.testTag(MapScreenTestTags.EVENT_DATE),
-                text = formattedDate,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Medium)
-            Text(
-                modifier = Modifier.testTag(MapScreenTestTags.EVENT_DESCRIPTION),
-                text = event.description,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Medium)
-          }
-        }
+            modifier = Modifier.padding(Dimensions.rowColPadding),
+            verticalAlignment = Alignment.CenterVertically) {
+              Button(
+                  modifier =
+                      Modifier.weight(Dimensions.weight).testTag(MapScreenTestTags.EVENT_BUTTON),
+                  onClick = onGoToEvent,
+                  colors =
+                      ButtonColors(
+                          containerColor = MaterialTheme.colorScheme.tertiary,
+                          contentColor = MaterialTheme.colorScheme.primary,
+                          disabledContainerColor = MaterialTheme.colorScheme.onTertiary,
+                          disabledContentColor = MaterialTheme.colorScheme.onPrimary)) {
+                    Text(
+                        text = stringResource(R.string.go_to_event_page_button),
+                        style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = FontWeight.Medium)
+                  }
+            }
+
+        Spacer(modifier = Modifier.size(Dimensions.spacerPadding))
       }
 }
 
@@ -329,7 +390,7 @@ fun ToDoIcon(toDo: ToDo) {
         modifier = Modifier.fillMaxWidth().padding(Dimensions.cardPadding),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-      Column(modifier = Modifier.weight(1f)) {
+      Column(modifier = Modifier.weight(Dimensions.weight)) {
         Text(
             modifier = Modifier.testTag(MapScreenTestTags.TODO_TITLE),
             text = toDo.name.uppercase(),
@@ -366,7 +427,7 @@ fun ToDoExpandedIcon(toDo: ToDo) {
             modifier = Modifier.fillMaxWidth().padding(Dimensions.cardPadding),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-          Column(modifier = Modifier.weight(1f)) {
+          Column(modifier = Modifier.weight(Dimensions.weight)) {
             Text(
                 modifier = Modifier.testTag(MapScreenTestTags.TODO_TITLE_EXPANDED),
                 text = toDo.name.uppercase(),
