@@ -57,6 +57,17 @@
     <dimen name="sign_in_button_icon_size">30.dp</dimen>
 
 
+    <!-- Friends Screen -->
+    <dimen name="friends_search_bar_width">10.dp</dimen>
+    <dimen name="friends_item_rounded_corner_shape">12.dp</dimen>
+    <dimen name="friends_find_button_height">80.dp</dimen>
+    <dimen name="friends_find_button_vertical">12.dp</dimen>
+    <dimen name="friends_item_card_border_width">1.dp</dimen>
+    <dimen name="friends_item_card_rounded_corner_shape">8.dp</dimen>
+    <dimen name="friends_item_card_padding_vertical">4.dp</dimen>
+    <dimen name="friends_item_card_padding">12.dp</dimen>
+    <dimen name="friends_item_profile_picture_size">56.dp</dimen>
+
     <!-- Find Friends Screen -->
     <dimen name="find_friends_search_bar_width">10.dp</dimen>
     <dimen name="find_friends_item_rounded_corner_shape">12.dp</dimen>
@@ -67,5 +78,4 @@
     <dimen name="find_friends_item_card_padding_vertical">4.dp</dimen>
     <dimen name="find_friends_item_card_padding">12.dp</dimen>
     <dimen name="find_friends_item_profile_picture_size">56.dp</dimen>
-
 </resources>
