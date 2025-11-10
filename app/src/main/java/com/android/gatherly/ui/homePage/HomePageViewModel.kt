@@ -37,7 +37,8 @@ data class HomePageUIState(
 class HomePageViewModel(
     private val eventsRepository: EventsRepository = EventsRepositoryFirestore(Firebase.firestore),
     private val toDosRepository: ToDosRepository = ToDosRepositoryProvider.repository,
-    private val profileRepository: ProfileRepository = ProfileRepositoryProvider.repository
+    private val profileRepository: ProfileRepository = ProfileRepositoryProvider.repository,
+    private val currentUser: String = Firebase.auth.currentUser?.uid ?: ""
 ) : ViewModel() {
 
   private val _uiState = MutableStateFlow(HomePageUIState())
@@ -53,7 +54,7 @@ class HomePageViewModel(
       try {
         val todos = toDosRepository.getAllTodos()
         val events = eventsRepository.getAllEvents()
-        val profile = profileRepository.getProfileByUid(Firebase.auth.currentUser?.uid!!)!!
+        val profile = profileRepository.getProfileByUid(currentUser)!!
         val friends = profile.friendUids.take(3).map { profileRepository.getProfileByUid(it)!! }
 
         _uiState.value =

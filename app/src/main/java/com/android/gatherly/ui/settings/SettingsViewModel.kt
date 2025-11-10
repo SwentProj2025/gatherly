@@ -61,6 +61,7 @@ data class SettingsUiState(
  */
 class SettingsViewModel(
     private val repository: ProfileRepository = ProfileRepositoryProvider.repository,
+    private val currentUser: String = Firebase.auth.currentUser?.uid ?: ""
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(SettingsUiState())
   val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
@@ -90,6 +91,9 @@ class SettingsViewModel(
     _uiState.value = _uiState.value.copy(errorMsg = errorMsg)
   }
 
+  init {
+    loadProfile(currentUser)
+  }
   /**
    * Loads a Profile by its ID and updates the UI state.
    *
@@ -128,7 +132,7 @@ class SettingsViewModel(
    *
    * @param id The id of the Profile to be updated.
    */
-  fun updateProfile(id: String, isFirstTime: Boolean) {
+  fun updateProfile(id: String = currentUser, isFirstTime: Boolean) {
     val state = _uiState.value
     if (!state.isValid) {
       setErrorMsg("At least one field is not valid.")

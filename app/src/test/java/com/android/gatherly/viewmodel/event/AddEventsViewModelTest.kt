@@ -1,4 +1,4 @@
-package com.android.gatherly.ui.events
+package com.android.gatherly.viewmodel.event
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.gatherly.model.event.Event
@@ -8,15 +8,12 @@ import com.android.gatherly.model.event.EventsRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
-import com.android.gatherly.utils.FirebaseEmulator
-import com.google.firebase.Firebase
+import com.android.gatherly.ui.events.AddEventViewModel
 import com.google.firebase.Timestamp
-import com.google.firebase.auth.auth
 import java.text.SimpleDateFormat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -36,36 +33,28 @@ class AddEventsViewModelTest {
   private lateinit var profileRepository: ProfileRepository
 
   // initialize this so that tests control all coroutines and can wait on them
-  private val testDispatcher = UnconfinedTestDispatcher()
+  private val testDispatcher = StandardTestDispatcher()
 
   @Before
   fun setUp() {
     // so that tests can wait on coroutines
     Dispatchers.setMain(testDispatcher)
+    // initialize repos and viewModel
+    profileRepository = ProfileLocalRepository()
+    eventsRepository = EventsLocalRepository()
 
-    if (!FirebaseEmulator.isRunning) {
-      error("Firebase emulator must be running! Use: firebase emulators:start")
-    }
-    runTest {
-      FirebaseEmulator.auth.signInAnonymously().await()
-      ownerProfile = ownerProfile.copy(uid = Firebase.auth.currentUser?.uid!!)
+    // fill the profile and events repositories with profiles and event
+    fill_repositories()
 
-      // initialize repos and viewModel
-      profileRepository = ProfileLocalRepository()
-      eventsRepository = EventsLocalRepository()
-
-      // fill the profile and events repositories with profiles and event
-      fill_repositories()
-      advanceUntilIdle()
-
-      addEventViewModel = AddEventViewModel(profileRepository, eventsRepository)
-    }
+    addEventViewModel =
+        AddEventViewModel(
+            profileRepository = profileRepository,
+            eventsRepository = eventsRepository,
+            currentUser = ownerProfile.uid)
   }
 
   @After
   fun tearDown() {
-    FirebaseEmulator.clearAuthEmulator()
-    FirebaseEmulator.clearFirestoreEmulator()
     Dispatchers.resetMain()
   }
 
@@ -491,7 +480,10 @@ class AddEventsViewModelTest {
       addEventViewModel.updateStartTime(SimpleDateFormat("HH:mm").format(event1.startTime.toDate()))
       addEventViewModel.updateEndTime(SimpleDateFormat("HH:mm").format(event1.endTime.toDate()))
       addEventViewModel.saveEvent()
-      // wait
+
+      // wait for coroutine completion
+      advanceUntilIdle()
+
       assert(eventsRepository.getAllEvents().size == 1) { "The event is not added" }
     }
   }

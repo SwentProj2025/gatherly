@@ -25,8 +25,6 @@ import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
 import com.android.gatherly.ui.navigation.*
-import com.google.firebase.Firebase
-import com.google.firebase.auth.auth
 
 object SettingsScreenTestTags {
   const val PROFILE_PICTURE = "settings_profile_picture"
@@ -61,13 +59,7 @@ fun SettingsScreen(
   val paddingRegular = dimensionResource(id = R.dimen.padding_regular)
   val fieldSpacingRegular = dimensionResource(id = R.dimen.spacing_between_fields_regular)
   val paddingMedium = dimensionResource(id = R.dimen.padding_medium)
-  val currentUser = Firebase.auth.currentUser
   val fieldSpacingMedium = dimensionResource(id = R.dimen.spacing_between_fields_medium)
-
-  // Load the profile only once when the screen appears
-  LaunchedEffect(currentUser?.uid) {
-    currentUser?.uid?.let { uid -> settingsViewModel.loadProfile(uid) }
-  }
 
   val uiState by settingsViewModel.uiState.collectAsState()
   val context = LocalContext.current
@@ -202,11 +194,7 @@ fun SettingsScreen(
 
               // Save Button
               Button(
-                  onClick = {
-                    currentUser?.uid?.let { uid ->
-                      settingsViewModel.updateProfile(uid, isFirstTime = false)
-                    }
-                  },
+                  onClick = { settingsViewModel.updateProfile(isFirstTime = false) },
                   modifier =
                       Modifier.fillMaxWidth(0.8f)
                           .height(dimensionResource(id = R.dimen.settings_save_button_height))
