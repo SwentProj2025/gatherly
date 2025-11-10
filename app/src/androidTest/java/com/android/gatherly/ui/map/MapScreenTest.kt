@@ -19,7 +19,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
-/** UI tests for MapScreen */
+/** Tests for the MapScreen composable. */
 class MapScreenTest {
 
   @get:Rule val compose = createComposeRule()

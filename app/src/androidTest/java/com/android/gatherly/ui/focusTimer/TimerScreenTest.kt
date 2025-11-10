@@ -10,9 +10,14 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.android.gatherly.utils.FirestoreGatherlyTest
+import com.android.gatherly.model.todo.ToDo
+import com.android.gatherly.model.todo.ToDoStatus
+import com.android.gatherly.model.todo.ToDosLocalRepository
+import com.android.gatherly.model.todo.ToDosRepository
+import com.google.firebase.Timestamp
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -20,22 +25,38 @@ import org.junit.runner.RunWith
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
-class TimerScreenTest : FirestoreGatherlyTest() {
+class TimerScreenTest {
 
   @get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
+  private val todo1 =
+      ToDo(
+          uid = "1",
+          name = "Buy groceries",
+          description = "Milk, eggs, bread",
+          assigneeName = "Alice",
+          dueDate = Timestamp.now(),
+          dueTime = null,
+          location = null,
+          status = ToDoStatus.ONGOING,
+          ownerId = "test-user")
+
+  private lateinit var toDosRepository: ToDosRepository
+  private lateinit var timerViewModel: TimerViewModel
+
   @Before
-  override fun setUp() {
-
-    super.setUp()
-
+  fun setUp() {
+    toDosRepository = ToDosLocalRepository()
     // Add a todo in the repository to test linking
-    runBlocking {
-      println("start run test")
-      repository.addTodo(todo1)
-    }
+    fill_repository()
+    timerViewModel = TimerViewModel(toDosRepository)
 
-    composeTestRule.setContent { TimerScreen(timerViewModel = TimerViewModel(repository)) }
+    composeTestRule.setContent { TimerScreen(timerViewModel) }
+  }
+
+  fun fill_repository() = runTest {
+    toDosRepository.addTodo(todo1)
+    advanceUntilIdle()
   }
 
   // Can enter a valid number of hours in the corresponding field

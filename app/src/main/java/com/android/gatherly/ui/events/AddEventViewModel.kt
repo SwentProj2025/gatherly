@@ -88,16 +88,16 @@ private var client: OkHttpClient =
  * ViewModel responsible for managing the "Add Event" screen.
  *
  * Handles user input updates, field validation, and saving Event items to the Firestore repository
- * through [EventRepository].
+ * through [EventsRepository].
  *
- * @param eventRepository The repository responsible for persisting Event items.
+ * @param eventsRepository The repository responsible for persisting Event items.
  */
 @SuppressLint("SimpleDateFormat")
 class AddEventViewModel(
     private val profileRepository: ProfileRepository,
     private val eventsRepository: EventsRepository,
-    private val nominatimClient: NominatimLocationRepository = NominatimLocationRepository(client)
-    // private val eventRepository: EventsRepository = EventsRepositoryProvider.repository,
+    private val nominatimClient: NominatimLocationRepository = NominatimLocationRepository(client),
+    private val currentUser: String = Firebase.auth.currentUser?.uid ?: ""
 ) : ViewModel() {
   // State with a private set
   var uiState by mutableStateOf(AddEventUiState())
@@ -118,20 +118,14 @@ class AddEventViewModel(
     timeFormat.isLenient = false
 
     viewModelScope.launch {
-      Firebase.auth.currentUser?.uid?.let { userUid ->
-        val profile = profileRepository.getProfileByUid(userUid)
+      currentUser.let { userUid ->
+        val profile =
+            profileRepository.getProfileByUid(userUid)
+                ?: Profile(uid = userUid, name = "", username = "", profilePicture = "")
 
-        profile?.let { p ->
-          currentProfile = p
-          uiState = uiState.copy(participants = listOf(p))
-        }
-            ?: run {
-              val defaultProfile =
-                  Profile(uid = userUid, name = "", username = "", profilePicture = "")
-
-              currentProfile = defaultProfile
-            }
-      } ?: run {}
+        currentProfile = profile
+        uiState = uiState.copy(participants = listOf(currentProfile))
+      }
     }
   }
 

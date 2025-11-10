@@ -29,15 +29,12 @@ open class FirestoreFocusSessionsGatherlyTest {
   // Create fake tokens for different users
   protected val user1Token = FakeJwtGenerator.createFakeGoogleIdToken("User1", "user1@test.com")
   protected val user2Token = FakeJwtGenerator.createFakeGoogleIdToken("User2", "user2@test.com")
-  protected val user3Token = FakeJwtGenerator.createFakeGoogleIdToken("User3", "user3@test.com")
 
   /**
    * The unique identifiers for the test users in the Firebase Auth emulator. Set dynamically during
    * setUp() after authentication.
    */
   protected lateinit var user1Id: String
-  protected lateinit var user2Id: String
-  protected lateinit var user3Id: String
 
   protected val session1 =
       FocusSession(
@@ -73,25 +70,13 @@ open class FirestoreFocusSessionsGatherlyTest {
       error("Firebase emulator must be running! Use: firebase emulators:start")
     }
 
-    // Clear any existing users and data
-    FirebaseEmulator.auth.signOut()
-    FirebaseEmulator.clearAuthEmulator()
-    FirebaseEmulator.clearFirestoreEmulator()
-
     // Seed users in emulator
     FirebaseEmulator.createGoogleUser(user1Token)
     FirebaseEmulator.createGoogleUser(user2Token)
-    FirebaseEmulator.createGoogleUser(user3Token)
 
     // Sign in as user1 by default
     signInWithToken(user1Token)
     user1Id = FirebaseEmulator.auth.currentUser!!.uid
-
-    // Store user IDs 2, 3 by signing in temporarily and then restore user1
-    signInWithToken(user2Token)
-    user2Id = FirebaseEmulator.auth.currentUser!!.uid
-    signInWithToken(user3Token)
-    user3Id = FirebaseEmulator.auth.currentUser!!.uid
 
     // Switch back to user1
     signInWithToken(user1Token)
