@@ -26,11 +26,13 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.integerResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
+import com.android.gatherly.ui.theme.GatherlyTheme
 import kotlinx.coroutines.delay
 
 // Portions of the code in this file are copy-pasted from the Bootcamp solution provided by the
@@ -93,12 +95,9 @@ fun AddToDoScreen(
       TextFieldDefaults.colors(
           focusedContainerColor = MaterialTheme.colorScheme.background,
           unfocusedContainerColor = MaterialTheme.colorScheme.background,
-          unfocusedTextColor = MaterialTheme.colorScheme.primary,
-          focusedTextColor = MaterialTheme.colorScheme.primary,
-          errorTextColor = MaterialTheme.colorScheme.primary,
-          errorPlaceholderColor = MaterialTheme.colorScheme.primary,
-          errorLabelColor = MaterialTheme.colorScheme.primary,
-      )
+          unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+          focusedTextColor = MaterialTheme.colorScheme.onBackground,
+          errorTextColor = MaterialTheme.colorScheme.onBackground)
 
   LaunchedEffect(errorMsg) {
     if (errorMsg != null) {
@@ -244,8 +243,15 @@ fun AddToDoScreen(
                           todoUIState.locationError == null) {
                     Text(
                         stringResource(R.string.todos_save_button_text),
-                        color = MaterialTheme.colorScheme.primary)
+                        color = MaterialTheme.colorScheme.onSecondary)
                   }
             }
       })
+}
+
+// Helper function to preview the timer screen
+@Preview
+@Composable
+fun AddToDoScreenPreview() {
+  GatherlyTheme(darkTheme = true) { AddToDoScreen() }
 }
