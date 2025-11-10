@@ -208,7 +208,7 @@ fun FriendsScreen(
 }
 
 @Composable
-fun FriendItem(friend: String, unfollow: () -> Unit) {
+private fun FriendItem(friend: String, unfollow: () -> Unit) {
   Card(
       border =
           BorderStroke(
