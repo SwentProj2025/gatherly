@@ -71,7 +71,7 @@ object AddEventScreenTestTags {
  * Screen for adding an existing Event.
  *
  * @param addEventViewModel The ViewModel managing the state and logic for the Edit Event screen,
- *  *  instantiated with a factory provider defined in the ViewModel's companion object.
+ *   instantiated with a factory provider defined in the ViewModel's companion object.
  * @param onSave called after a successful save or deletion and navigation intent.
  * @param goBack called when back arrow is pressed.
  */

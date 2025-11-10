@@ -114,8 +114,7 @@ object EventsScreenTestTags {
  *   event
  * @param navigationActions Handles navigation between different tabs/screens.
  * @param eventsViewModel The ViewModel managing the state and logic for the Events screen,
- * instantiated with a factory provider defined in the ViewModel's companion object.
- *
+ *   instantiated with a factory provider defined in the ViewModel's companion object.
  */
 @Composable
 fun EventsScreen(
