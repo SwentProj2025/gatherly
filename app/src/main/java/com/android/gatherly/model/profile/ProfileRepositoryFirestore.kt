@@ -267,7 +267,7 @@ class ProfileRepositoryFirestore(
         }
 
         try {
-            val storageRef = com.google.firebase.Firebase.storage.reference.child("profile_pictures/$uid.jpg")
+            val storageRef = com.google.firebase.Firebase.storage.reference.child("profile_pictures/$uid")
             storageRef.delete().await()
         }catch (e: Exception){
             //No profile pic was used.

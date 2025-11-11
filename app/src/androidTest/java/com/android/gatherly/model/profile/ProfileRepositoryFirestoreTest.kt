@@ -561,7 +561,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
 
     // Add fake profile pic in storage
     val storageRef = com.google.firebase.Firebase.storage
-      .reference.child("profile_pictures/$uid.jpg")
+      .reference.child("profile_pictures/$uid")
     storageRef.putBytes(ByteArray(10)).await()
 
     // Delete full profile
