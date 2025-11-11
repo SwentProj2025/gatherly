@@ -1,5 +1,6 @@
 package com.android.gatherly.model.profile
 
+import android.net.Uri
 import com.android.gatherly.utils.FirebaseEmulator
 import com.android.gatherly.utils.FirestoreGatherlyProfileTest
 import com.google.firebase.auth.auth
@@ -390,56 +391,74 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   }
 
   @Test
-  fun updateProfilePic_uploadsToStorageAndUpdatesFirestore() = runTest {
-    val uid = FirebaseEmulator.auth.currentUser!!.uid
-    withTimeout(TIMEOUT) { while (FirebaseEmulator.auth.currentUser == null) delay(DELAY) }
-    repository.initProfileIfMissing(uid, "old_pic.png")
-
-    // Prepare fake image file
-    val tmpFile = kotlin.io.path.createTempFile("test_image").toFile()
-    tmpFile.writeBytes(ByteArray(10) { 0x42 })
-    val uri = android.net.Uri.fromFile(tmpFile)
-
-    repository.updateProfilePic(uid, uri)
-
-    val updatedProfile = repository.getProfileByUid(uid)
-
-    assertNotNull("Profile is null", updatedProfile)
-
-    assertTrue(
-        "Unexpected profile picture URL: ${updatedProfile?.profilePicture}",
-        updatedProfile!!.profilePicture.startsWith("https://") ||
-            updatedProfile.profilePicture.startsWith("http://10.0.2.2"))
-
-    val storageRef = FirebaseEmulator.storage.reference.child("profile_pictures/$uid")
-    val metadata = storageRef.metadata.await()
-    assertNotNull("Storage metadata is null", metadata)
-  }
-
-  @Test
   fun updateProfilePic_overwritesExistingFile() = runTest {
     val uid = FirebaseEmulator.auth.currentUser!!.uid
     withTimeout(TIMEOUT) { while (FirebaseEmulator.auth.currentUser == null) delay(DELAY) }
     repository.initProfileIfMissing(uid, "pic.png")
 
     val file1 = kotlin.io.path.createTempFile("first").toFile()
-    file1.writeBytes(ByteArray(20) { 1 })
-    val uri1 = android.net.Uri.fromFile(file1)
+    val bytes1 = ByteArray(20) { 1 }
+    file1.writeBytes(bytes1)
+    val uri1 = Uri.fromFile(file1)
 
     repository.updateProfilePic(uid, uri1)
-
-    val metadata1 =
-        FirebaseEmulator.storage.reference.child("profile_pictures/$uid").metadata.await()
+    val storageRef = FirebaseEmulator.storage.reference.child("profile_pictures/$uid")
+    val metadata1 = storageRef.metadata.await()
+    val downloaded1 = storageRef.getBytes(1024 * 1024).await()
 
     val file2 = kotlin.io.path.createTempFile("second").toFile()
-    file2.writeBytes(ByteArray(30) { 2 })
-    val uri2 = android.net.Uri.fromFile(file2)
+    val bytes2 = ByteArray(30) { 2 }
+    file2.writeBytes(bytes2)
+    val uri2 = Uri.fromFile(file2)
 
     repository.updateProfilePic(uid, uri2)
-    val metadata2 =
-        FirebaseEmulator.storage.reference.child("profile_pictures/$uid").metadata.await()
+    val metadata2 = storageRef.metadata.await()
+    val downloaded2 = storageRef.getBytes(1024 * 1024).await()
 
-    // Both metadata should exist but may have different updated timestamps
     assertTrue(metadata2.updatedTimeMillis >= metadata1.updatedTimeMillis)
+    assertFalse("Expected file content to change", downloaded1.contentEquals(downloaded2))
+  }
+
+  @Test
+  fun updateProfilePic_withFileUri_uploadsSuccessfully() = runTest {
+    val uid = FirebaseEmulator.auth.currentUser!!.uid
+    repository.initProfileIfMissing(uid, "")
+
+    val tmpFile = kotlin.io.path.createTempFile("test_image").toFile()
+    val expectedBytes = ByteArray(20) { 0x42 }
+    tmpFile.writeBytes(expectedBytes)
+    val fileUri = Uri.fromFile(tmpFile)
+
+    val downloadUrl = repository.updateProfilePic(uid, fileUri)
+    assertTrue(downloadUrl.startsWith("http"))
+
+    val storageRef = FirebaseEmulator.storage.reference.child("profile_pictures/$uid")
+    val metadata = storageRef.metadata.await()
+    assertTrue(metadata.sizeBytes > 0)
+
+    val actualBytes = storageRef.getBytes(1024 * 1024).await()
+    assertArrayEquals(expectedBytes, actualBytes.take(expectedBytes.size).toByteArray())
+  }
+
+  @Test
+  fun updateProfilePic_withContentUri_uploadsSuccessfully() = runTest {
+    val uid = FirebaseEmulator.auth.currentUser!!.uid
+    repository.initProfileIfMissing(uid, "")
+
+    // Prepare fake file and simulate content URI (forces conversion code path)
+    val tmpFile = kotlin.io.path.createTempFile("content_image").toFile()
+    val expectedBytes = ByteArray(20) { 0x42 }
+    tmpFile.writeBytes(expectedBytes)
+    val contentUri = Uri.parse("content://${tmpFile.absolutePath}")
+
+    val downloadUrl = repository.updateProfilePic(uid, contentUri)
+    assertTrue(downloadUrl.startsWith("http"))
+
+    val storageRef = FirebaseEmulator.storage.reference.child("profile_pictures/$uid")
+    val metadata = storageRef.metadata.await()
+    assertTrue(metadata.sizeBytes > 0)
+
+    val actualBytes = storageRef.getBytes(1024 * 1024).await()
+    assertArrayEquals(expectedBytes, actualBytes.take(expectedBytes.size).toByteArray())
   }
 }
