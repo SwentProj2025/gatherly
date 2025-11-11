@@ -234,7 +234,7 @@ class ProfileRepositoryFirestore(private val db: FirebaseFirestore) : ProfileRep
     val username = doc.getString("username") ?: ""
     val focusSessionIds = doc.get("focusSessions") as? List<String> ?: emptyList()
     val eventIds = doc.get("eventIds") as? List<String> ?: emptyList()
-      val eventOwnerIds = doc.get("eventOwnerIds") as? List<String> ?: emptyList()
+    val eventOwnerIds = doc.get("eventOwnerIds") as? List<String> ?: emptyList()
     val groupIds = doc.get("groups") as? List<String> ?: emptyList()
     val friendUids = doc.get("friendUids") as? List<String> ?: emptyList()
     val school = doc.getString("school") ?: ""
@@ -300,5 +300,25 @@ class ProfileRepositoryFirestore(private val db: FirebaseFirestore) : ProfileRep
   override suspend fun deleteFriend(friend: String, currentUserId: String) {
     val docRef = profilesCollection.document(currentUserId)
     docRef.update("friendUids", FieldValue.arrayRemove(friend)).await()
+  }
+
+  override suspend fun createEvent(eventId: String, currentUserId: String) {
+    val docRef = profilesCollection.document(currentUserId)
+    docRef.update("eventOwnerIds", FieldValue.arrayUnion(eventId)).await()
+  }
+
+  override suspend fun deleteEvent(eventId: String, currentUserId: String) {
+    val docRef = profilesCollection.document(currentUserId)
+    docRef.update("eventOwnerIds", FieldValue.arrayRemove(eventId)).await()
+  }
+
+  override suspend fun participateEvent(eventId: String, currentUserId: String) {
+    val docRef = profilesCollection.document(currentUserId)
+    docRef.update("eventIds", FieldValue.arrayUnion(eventId)).await()
+  }
+
+  override suspend fun unregisterEvent(eventId: String, currentUserId: String) {
+    val docRef = profilesCollection.document(currentUserId)
+    docRef.update("eventIds", FieldValue.arrayRemove(eventId)).await()
   }
 }

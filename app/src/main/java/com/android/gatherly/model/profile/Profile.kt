@@ -8,8 +8,10 @@ data class Profile(
     val username: String = "",
     val name: String = "",
     val focusSessionIds: List<String> = emptyList(),
-    val eventIds: List<String> = emptyList(), // Represents the list of events that the user is participating
-    val eventOwnerIds : List<String> = emptyList(), // Represents the list of events that the user create
+    val eventIds: List<String> =
+        emptyList(), // Represents the list of events that the user is participating
+    val eventOwnerIds: List<String> =
+        emptyList(), // Represents the list of events that the user create
     val groupIds: List<String> = emptyList(),
     val friendUids: List<String> = emptyList(),
     val school: String = "",

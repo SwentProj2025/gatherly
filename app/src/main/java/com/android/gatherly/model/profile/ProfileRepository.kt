@@ -126,4 +126,36 @@ interface ProfileRepository {
    * @param currentUserId the ID of the current user
    */
   suspend fun addFriend(friend: String, currentUserId: String)
+
+  /**
+   * The user creates a new event
+   *
+   * @param eventId the ID of the event created
+   * @param currentUserId the ID of the current user
+   */
+  suspend fun createEvent(eventId: String, currentUserId: String)
+
+  /**
+   * The user deletes an event he created
+   *
+   * @param eventId the ID of the event he wants to delete
+   * @param currentUserId the ID of the current user
+   */
+  suspend fun deleteEvent(eventId: String, currentUserId: String)
+
+  /**
+   * The current user is added as a participant to an event
+   *
+   * @param eventId The ID of the event he wants to participate
+   * @param currentUserId the ID of the current user
+   */
+  suspend fun participateEvent(eventId: String, currentUserId: String)
+
+  /**
+   * The current user does not want anymore to participate to an event
+   *
+   * @param eventId The ID of the event he wants to unregister
+   * @param currentUserId the ID of the current user
+   */
+  suspend fun unregisterEvent(eventId: String, currentUserId: String)
 }

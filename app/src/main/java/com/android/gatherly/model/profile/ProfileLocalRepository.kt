@@ -111,4 +111,40 @@ class ProfileLocalRepository : ProfileRepository {
       updateProfile(updatedProfile)
     }
   }
+
+  override suspend fun createEvent(eventId: String, currentUserId: String) {
+    val currentProfile = getProfileByUid(currentUserId) ?: return
+    if (!currentProfile.eventOwnerIds.contains(eventId)) {
+      val updateEventOwnerIds = currentProfile.eventOwnerIds + eventId
+      val updatedProfile = currentProfile.copy(eventOwnerIds = updateEventOwnerIds)
+      updateProfile(updatedProfile)
+    }
+  }
+
+  override suspend fun deleteEvent(eventId: String, currentUserId: String) {
+    val currentProfile = getProfileByUid(currentUserId) ?: return
+    if (currentProfile.eventOwnerIds.contains(eventId)) {
+      val updateEventOwnerIds = currentProfile.eventOwnerIds.filter { it != eventId }
+      val updatedProfile = currentProfile.copy(eventOwnerIds = updateEventOwnerIds)
+      updateProfile(updatedProfile)
+    }
+  }
+
+  override suspend fun participateEvent(eventId: String, currentUserId: String) {
+    val currentProfile = getProfileByUid(currentUserId) ?: return
+    if (!currentProfile.eventIds.contains(eventId)) {
+      val updateEventIds = currentProfile.eventIds + eventId
+      val updatedProfile = currentProfile.copy(eventIds = updateEventIds)
+      updateProfile(updatedProfile)
+    }
+  }
+
+  override suspend fun unregisterEvent(eventId: String, currentUserId: String) {
+    val currentProfile = getProfileByUid(currentUserId) ?: return
+    if (currentProfile.eventIds.contains(eventId)) {
+      val updatedEventIds = currentProfile.eventIds.filter { it != eventId }
+      val updatedProfile = currentProfile.copy(eventIds = updatedEventIds)
+      updateProfile(updatedProfile)
+    }
+  }
 }
