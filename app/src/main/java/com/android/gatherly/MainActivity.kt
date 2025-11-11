@@ -143,7 +143,8 @@ fun GatherlyApp(
             navigationActions = navigationActions,
             credentialManager = credentialManager,
             onSignedOut = { navigationActions.navigateTo(Screen.SignIn) },
-            goToEvent = { navigationActions.navigateTo(Screen.EventsScreen) })
+            goToEvent = { navigationActions.navigateTo(Screen.EventsScreen) },
+            goToToDo = { navigationActions.navigateTo(Screen.OverviewToDo) })
       }
     }
 
