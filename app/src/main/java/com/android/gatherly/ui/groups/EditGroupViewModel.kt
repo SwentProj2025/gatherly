@@ -13,6 +13,7 @@ import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
+import com.google.firebase.storage.storage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -58,7 +59,7 @@ data class EditGroupUiState(
 class EditGroupViewModel(
     private val groupsRepository: GroupsRepository = GroupsRepositoryFirestore(Firebase.firestore),
     private val profileRepository: ProfileRepository =
-        ProfileRepositoryFirestore(Firebase.firestore),
+        ProfileRepositoryFirestore(Firebase.firestore, Firebase.storage),
     private val authProvider: () -> FirebaseAuth = { Firebase.auth }
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(EditGroupUiState())
