@@ -21,6 +21,7 @@ import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
+import com.google.firebase.storage.storage
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import kotlin.collections.plus
@@ -403,7 +404,8 @@ class AddEventViewModel(
    */
   companion object {
     fun provideFactory(
-        profileRepository: ProfileRepository = ProfileRepositoryFirestore(Firebase.firestore),
+        profileRepository: ProfileRepository =
+            ProfileRepositoryFirestore(Firebase.firestore, Firebase.storage),
         eventsRepository: EventsRepository = EventsRepositoryFirestore(Firebase.firestore)
     ): ViewModelProvider.Factory {
       return GenericViewModelFactory { AddEventViewModel(profileRepository, eventsRepository) }

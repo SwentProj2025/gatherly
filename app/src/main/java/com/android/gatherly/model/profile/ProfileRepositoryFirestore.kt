@@ -1,8 +1,11 @@
 package com.android.gatherly.model.profile
 
+import android.net.Uri
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.storage
 import kotlinx.coroutines.tasks.await
 
 /**
@@ -12,7 +15,10 @@ import kotlinx.coroutines.tasks.await
  * - /profiles/{uid} : main [Profile] documents
  * - /usernames/{username} : mapping from usernames to UIDs
  */
-class ProfileRepositoryFirestore(private val db: FirebaseFirestore) : ProfileRepository {
+class ProfileRepositoryFirestore(
+    private val db: FirebaseFirestore,
+    private val storage: FirebaseStorage
+) : ProfileRepository {
 
   private val profilesCollection = db.collection("profiles")
   private val usernamesCollection = db.collection("usernames")
@@ -161,6 +167,15 @@ class ProfileRepositoryFirestore(private val db: FirebaseFirestore) : ProfileRep
           true
         }
         .await()
+  }
+
+  override suspend fun updateProfilePic(uid: String, uri: Uri): String {
+    val storageRef = storage.reference.child("profile_pictures/$uid")
+    storageRef.putFile(uri).await()
+    val downloadUrl = storageRef.downloadUrl.await().toString()
+    val doc = profilesCollection.document(uid)
+    doc.update("profilePicture", downloadUrl).await()
+    return downloadUrl
   }
 
   /**
