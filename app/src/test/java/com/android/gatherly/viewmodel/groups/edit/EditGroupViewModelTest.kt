@@ -1,5 +1,6 @@
 package com.android.gatherly.viewmodel.groups.edit
 
+import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.ui.groups.EditGroupViewModel
 import com.android.gatherly.viewmodel.FakeGroupsRepositoryLocal
 import com.android.gatherly.viewmodel.groups.edit.EditGroupViewModelTestData.ALL_FRIENDS
@@ -12,7 +13,6 @@ import com.android.gatherly.viewmodel.groups.edit.EditGroupViewModelTestData.MEM
 import com.android.gatherly.viewmodel.groups.edit.EditGroupViewModelTestData.TEST_GROUP
 import com.android.gatherly.viewmodel.groups.edit.EditGroupViewModelTestData.TEST_GROUP_ID
 import com.android.gatherly.viewmodel.groups.edit.EditGroupViewModelTestData.TEST_USER_ID
-import com.android.gatherly.viewmodel.settings.ProfileRepositoryLocalForTests
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.Dispatchers
@@ -51,7 +51,7 @@ import org.mockito.Mockito.`when`
 class EditGroupViewModelTest {
 
   private lateinit var groupsRepository: FakeGroupsRepositoryLocal
-  private lateinit var profileRepository: ProfileRepositoryLocalForTests
+  private lateinit var profileRepository: ProfileLocalRepository
   private lateinit var mockAuth: FirebaseAuth
   private lateinit var mockUser: FirebaseUser
 
@@ -70,7 +70,7 @@ class EditGroupViewModelTest {
     Dispatchers.setMain(testDispatcher)
 
     groupsRepository = FakeGroupsRepositoryLocal(currentUserId = TEST_USER_ID)
-    profileRepository = ProfileRepositoryLocalForTests()
+    profileRepository = ProfileLocalRepository()
 
     // Mock Firebase Auth
     mockAuth = mock(FirebaseAuth::class.java)
