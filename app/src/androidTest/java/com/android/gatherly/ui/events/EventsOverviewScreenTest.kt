@@ -17,6 +17,8 @@ import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsLocalRepository
 import com.android.gatherly.model.event.EventsRepository
 import com.android.gatherly.model.map.Location
+import com.android.gatherly.model.profile.ProfileLocalRepository
+import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.utils.GatherlyTest.Companion.fromDate
 import com.android.gatherly.utils.UI_WAIT_TIMEOUT
@@ -36,11 +38,14 @@ class EventsOverviewScreenTest {
 
   private lateinit var currentUserId: String
   private lateinit var eventsRepository: EventsRepository
+
+  private lateinit var profileRepository: ProfileRepository
   private lateinit var eventsViewModel: EventsViewModel
 
   @Before
   fun setUp() {
     eventsRepository = EventsLocalRepository()
+    profileRepository = ProfileLocalRepository()
     currentUserId = ""
   }
 
@@ -53,7 +58,11 @@ class EventsOverviewScreenTest {
   /** Helper function: set the content of the composeTestRule without initial events */
   private fun setContent(uid: String = currentUserId) {
     currentUserId = ""
-    eventsViewModel = EventsViewModel(repository = eventsRepository, currentUserId = uid)
+    eventsViewModel =
+        EventsViewModel(
+            repository = eventsRepository,
+            profileRepository = profileRepository,
+            currentUserId = uid)
     composeTestRule.setContent { EventsScreen(eventsViewModel = eventsViewModel) }
   }
 

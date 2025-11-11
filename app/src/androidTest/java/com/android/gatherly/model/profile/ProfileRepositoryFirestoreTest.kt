@@ -3,6 +3,7 @@ package com.android.gatherly.model.profile
 import com.android.gatherly.utils.FirebaseEmulator
 import com.android.gatherly.utils.FirestoreGatherlyProfileTest
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
@@ -379,5 +380,142 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     val profileA = repo.getProfileByUid(userAUid)
     assertNotNull(profileA)
     assertFalse(profileA!!.friendUids.contains(userBUid))
+  }
+
+  @OptIn(ExperimentalCoroutinesApi::class)
+  @Test
+  fun testCreateEvent() = runTest {
+    val auth = FirebaseEmulator.auth
+    val firestore = FirebaseEmulator.firestore
+    val repo = ProfileRepositoryFirestore(firestore)
+
+    // User B
+    auth.signInAnonymously().await()
+    val userBUid = auth.currentUser!!.uid
+    repo.initProfileIfMissing(userBUid, "bob.png")
+
+    // Create a fictional event ID
+    val eventId = "BobEventID"
+
+    // UserB create a new event
+    repo.createEvent(eventId, userBUid)
+
+    // Verify that the event is in the User B profile's events list
+    val profileB = repo.getProfileByUid(userBUid)
+    assertNotNull(profileB)
+    assertTrue(profileB!!.eventOwnerIds.contains(eventId))
+  }
+
+  @OptIn(ExperimentalCoroutinesApi::class)
+  @Test
+  fun testDeleteEvent() = runTest {
+    val auth = FirebaseEmulator.auth
+    val firestore = FirebaseEmulator.firestore
+    val repo = ProfileRepositoryFirestore(firestore)
+
+    // User B
+    auth.signInAnonymously().await()
+    val userBUid = auth.currentUser!!.uid
+    repo.initProfileIfMissing(userBUid, "bob.png")
+
+    // Create a fictional event ID
+    val eventId = "BobEventID"
+
+    // UserB create a new event
+    repo.createEvent(eventId, userBUid)
+
+    // Verify that the event is in the User B profile's events list
+    val profileB = repo.getProfileByUid(userBUid)
+    assertNotNull(profileB)
+    assertTrue(profileB!!.eventOwnerIds.contains(eventId))
+
+    // UserB delete this event
+    repo.deleteEvent(eventId, userBUid)
+
+    // Verify that the event is not in the User B profile's events list
+    val profile = repo.getProfileByUid(userBUid)
+    assertNotNull(profile)
+    assertFalse(profile!!.eventOwnerIds.contains(eventId))
+  }
+
+  @Test
+  fun testParticipateEvent() = runTest {
+    val auth = FirebaseEmulator.auth
+    val firestore = FirebaseEmulator.firestore
+    val repo = ProfileRepositoryFirestore(firestore)
+
+    // User A
+    auth.signInAnonymously().await()
+    val userAUid = auth.currentUser!!.uid
+    repo.initProfileIfMissing(userAUid, "alice.png")
+
+    // Create a fictional event ID
+    val eventId = "AliceEventID"
+
+    // UserB create a new event
+    repo.createEvent(eventId, userAUid)
+
+    // Verify that the event is in the User B profile's events list
+    val profileA = repo.getProfileByUid(userAUid)
+    assertNotNull(profileA)
+    assertTrue(profileA!!.eventOwnerIds.contains(eventId))
+
+    auth.signOut()
+
+    // User B
+    auth.signInAnonymously().await()
+    val userBUid = auth.currentUser!!.uid
+    repo.initProfileIfMissing(userBUid, "bob.png")
+
+    repo.participateEvent(eventId, userBUid)
+
+    // Verify that the event is in the User B profile's events list
+    val profileB = repo.getProfileByUid(userBUid)
+    assertNotNull(profileB)
+    assertTrue(profileB!!.eventIds.contains(eventId))
+  }
+
+  @Test
+  fun testUnregisterEvent() = runTest {
+    val auth = FirebaseEmulator.auth
+    val firestore = FirebaseEmulator.firestore
+    val repo = ProfileRepositoryFirestore(firestore)
+
+    // User A
+    auth.signInAnonymously().await()
+    val userAUid = auth.currentUser!!.uid
+    repo.initProfileIfMissing(userAUid, "alice.png")
+
+    // Create a fictional event ID
+    val eventId = "AliceEventID"
+
+    // UserB create a new event
+    repo.createEvent(eventId, userAUid)
+
+    // Verify that the event is in the User B profile's events list
+    val profileA = repo.getProfileByUid(userAUid)
+    assertNotNull(profileA)
+    assertTrue(profileA!!.eventOwnerIds.contains(eventId))
+
+    auth.signOut()
+
+    // User B
+    auth.signInAnonymously().await()
+    val userBUid = auth.currentUser!!.uid
+    repo.initProfileIfMissing(userBUid, "bob.png")
+
+    repo.participateEvent(eventId, userBUid)
+
+    // Verify that the event is in the User B profile's events list
+    val profileB = repo.getProfileByUid(userBUid)
+    assertNotNull(profileB)
+    assertTrue(profileB!!.eventIds.contains(eventId))
+
+    repo.unregisterEvent(eventId, userBUid)
+
+    // Verify that the event is not in te User B profile's events list
+    val profile = repo.getProfileByUid(userBUid)
+    assertNotNull(profile)
+    assertFalse(profile!!.eventIds.contains(eventId))
   }
 }

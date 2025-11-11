@@ -3,6 +3,7 @@ package com.android.gatherly.viewmodel.event
 import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsLocalRepository
 import com.android.gatherly.model.event.EventsRepository
+import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.ui.events.EventsViewModel
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.Dispatchers
@@ -30,14 +31,17 @@ class EventsViewModelTests {
 
   private val testDispatcher = StandardTestDispatcher()
   private lateinit var repo: EventsRepository
+
+  private lateinit var profileRepo: ProfileLocalRepository
   private lateinit var vm: EventsViewModel
 
   @Before
   fun setup() {
     Dispatchers.setMain(testDispatcher)
     repo = EventsLocalRepository()
+    profileRepo = ProfileLocalRepository()
     fillRepository()
-    vm = EventsViewModel(repo, EventsViewModelTestsData.TEST_USER_ID)
+    vm = EventsViewModel(profileRepo, repo, EventsViewModelTestsData.TEST_USER_ID)
   }
 
   @After
