@@ -1,5 +1,7 @@
 package com.android.gatherly.model.profile
 
+import android.net.Uri
+
 /**
  * Simplified in-memory local implementation of [ProfileRepository].
  *
@@ -70,6 +72,19 @@ class ProfileLocalRepository : ProfileRepository {
     val updated = (existing ?: Profile(uid = uid)).copy(username = newUsername)
     if (existing == null) addProfile(updated) else updateProfile(updated)
     return true
+  }
+
+  override suspend fun updateProfilePic(uid: String, uri: Uri): String {
+    val fakeUrl = "https://local.test.storage/$uid.jpg"
+    val index = profiles.indexOfFirst { it.uid == uid }
+    if (index == -1) {
+      throw NoSuchElementException("Profile not found for uid=$uid")
+    } else {
+      val existing = profiles[index]
+      val updated = existing.copy(profilePicture = fakeUrl)
+      profiles[index] = updated
+    }
+    return fakeUrl
   }
 
   override suspend fun getProfileByUsername(username: String): Profile? =

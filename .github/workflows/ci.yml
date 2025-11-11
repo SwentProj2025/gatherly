@@ -147,6 +147,15 @@ jobs:
           else
             echo "(B3 Warning): Firestore rules file not found in firebase/firestore. Rules are setup in B3, you can ignore this warning in B2."
           fi
+          if [ -e "storage.rules" ]; then
+            jq -e '.storage.rules' firebase.json >/dev/null || {
+              echo "'firebase.json' is missing 'storage.rules'."
+              exit 1
+            }
+            echo "Storage rules found and referenced in firebase.json"
+          else
+            echo "(Warning): 'storage.rules' not found. The storage emulator will use default permissive rules."
+          fi
 
       # Check formatting
       - name: KTFmt Check
@@ -170,7 +179,7 @@ jobs:
         run: |
           if [ -e "firebase.json" ] && jq -e '.emulators' firebase.json >/dev/null; then
             echo "Starting Firebase emulators for instrumentation tests..."
-            firebase emulators:start --only auth,firestore --project demo-project &
+            firebase emulators:start --only auth,firestore,storage --project demo-project &
             echo "Firebase emulators started"
           else
             echo "Firebase emulators not configured, skipping emulator startup..."
