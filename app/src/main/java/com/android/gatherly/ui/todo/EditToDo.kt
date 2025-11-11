@@ -2,13 +2,13 @@ package com.android.gatherly.ui.todo
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material3.Button
@@ -129,6 +129,14 @@ fun EditToDoScreen(
     }
   }
 
+  // Observe save success
+  LaunchedEffect(todoUIState.saveSuccess) {
+    if (todoUIState.saveSuccess) {
+      onSave()
+      editTodoViewModel.clearSaveSuccess()
+    }
+  }
+
   Scaffold(
       topBar = {
         TopNavigationMenu_Goback(
@@ -137,159 +145,173 @@ fun EditToDoScreen(
             goBack = goBack)
       },
       content = { paddingVal ->
-        Column(
+        LazyColumn(
             modifier = Modifier.fillMaxSize().padding(paddingVal).padding(screenPadding),
             verticalArrangement = Arrangement.spacedBy(fieldSpacing)) {
+
               // Title Input
-              OutlinedTextField(
-                  value = todoUIState.title,
-                  onValueChange = { editTodoViewModel.onTitleChanged(it) },
-                  label = { Text(stringResource(R.string.todos_title_field_label)) },
-                  placeholder = { Text(stringResource(R.string.todos_title_field_placeholder)) },
-                  isError = todoUIState.titleError != null,
-                  supportingText = {
-                    todoUIState.titleError?.let {
-                      Text(it, modifier = Modifier.testTag(EditToDoScreenTestTags.ERROR_MESSAGE))
-                    }
-                  },
-                  colors = textFieldColors,
-                  modifier =
-                      Modifier.fillMaxWidth().testTag(EditToDoScreenTestTags.INPUT_TODO_TITLE))
+              item {
+                OutlinedTextField(
+                    value = todoUIState.title,
+                    onValueChange = { editTodoViewModel.onTitleChanged(it) },
+                    label = { Text(stringResource(R.string.todos_title_field_label)) },
+                    placeholder = { Text(stringResource(R.string.todos_title_field_placeholder)) },
+                    isError = todoUIState.titleError != null,
+                    supportingText = {
+                      todoUIState.titleError?.let {
+                        Text(it, modifier = Modifier.testTag(EditToDoScreenTestTags.ERROR_MESSAGE))
+                      }
+                    },
+                    colors = textFieldColors,
+                    modifier =
+                        Modifier.fillMaxWidth().testTag(EditToDoScreenTestTags.INPUT_TODO_TITLE))
+              }
 
               // Description Input
-              OutlinedTextField(
-                  value = todoUIState.description,
-                  onValueChange = { editTodoViewModel.onDescriptionChanged(it) },
-                  label = { Text(stringResource(R.string.todos_description_field_label)) },
-                  placeholder = { Text(stringResource(R.string.todos_description_placeholder)) },
-                  isError = todoUIState.descriptionError != null,
-                  supportingText = {
-                    todoUIState.descriptionError?.let {
-                      Text(it, modifier = Modifier.testTag(EditToDoScreenTestTags.ERROR_MESSAGE))
-                    }
-                  },
-                  colors = textFieldColors,
-                  modifier =
-                      Modifier.fillMaxWidth()
-                          .testTag(EditToDoScreenTestTags.INPUT_TODO_DESCRIPTION),
-                  minLines = integerResource(R.integer.todo_description_min_lines),
-                  maxLines = integerResource(R.integer.todo_description_max_lines))
+              item {
+                OutlinedTextField(
+                    value = todoUIState.description,
+                    onValueChange = { editTodoViewModel.onDescriptionChanged(it) },
+                    label = { Text(stringResource(R.string.todos_description_field_label)) },
+                    placeholder = { Text(stringResource(R.string.todos_description_placeholder)) },
+                    isError = todoUIState.descriptionError != null,
+                    supportingText = {
+                      todoUIState.descriptionError?.let {
+                        Text(it, modifier = Modifier.testTag(EditToDoScreenTestTags.ERROR_MESSAGE))
+                      }
+                    },
+                    colors = textFieldColors,
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .testTag(EditToDoScreenTestTags.INPUT_TODO_DESCRIPTION),
+                    minLines = integerResource(R.integer.todo_description_min_lines),
+                    maxLines = integerResource(R.integer.todo_description_max_lines))
+              }
 
               // Assignee Input
-              OutlinedTextField(
-                  value = todoUIState.assignee,
-                  onValueChange = { editTodoViewModel.onAssigneeChanged(it) },
-                  label = { Text(stringResource(R.string.todos_assignee_field_label)) },
-                  placeholder = { Text(stringResource(R.string.todos_assignee_placeholder)) },
-                  isError = todoUIState.assigneeError != null,
-                  supportingText = {
-                    todoUIState.assigneeError?.let {
-                      Text(it, modifier = Modifier.testTag(EditToDoScreenTestTags.ERROR_MESSAGE))
-                    }
-                  },
-                  colors = textFieldColors,
-                  modifier =
-                      Modifier.fillMaxWidth().testTag(EditToDoScreenTestTags.INPUT_TODO_ASSIGNEE))
+              item {
+                OutlinedTextField(
+                    value = todoUIState.assignee,
+                    onValueChange = { editTodoViewModel.onAssigneeChanged(it) },
+                    label = { Text(stringResource(R.string.todos_assignee_field_label)) },
+                    placeholder = { Text(stringResource(R.string.todos_assignee_placeholder)) },
+                    isError = todoUIState.assigneeError != null,
+                    supportingText = {
+                      todoUIState.assigneeError?.let {
+                        Text(it, modifier = Modifier.testTag(EditToDoScreenTestTags.ERROR_MESSAGE))
+                      }
+                    },
+                    colors = textFieldColors,
+                    modifier =
+                        Modifier.fillMaxWidth().testTag(EditToDoScreenTestTags.INPUT_TODO_ASSIGNEE))
+              }
 
               // Location Input with dropdown
-              LocationSuggestions(
-                  location = todoUIState.location,
-                  suggestions = todoUIState.suggestions,
-                  onLocationChanged = { editTodoViewModel.onLocationChanged(it) },
-                  onSelectLocation = { loc -> editTodoViewModel.selectLocation(loc) },
-                  modifier = Modifier.fillMaxWidth(),
-                  testTagInput = EditToDoScreenTestTags.INPUT_TODO_LOCATION,
-                  testTagDropdown = EditToDoScreenTestTags.LOCATION_MENU,
-              )
+              item {
+                LocationSuggestions(
+                    location = todoUIState.location,
+                    suggestions = todoUIState.suggestions,
+                    onLocationChanged = { editTodoViewModel.onLocationChanged(it) },
+                    onSelectLocation = { loc -> editTodoViewModel.selectLocation(loc) },
+                    modifier = Modifier.fillMaxWidth(),
+                    testTagInput = EditToDoScreenTestTags.INPUT_TODO_LOCATION,
+                    testTagDropdown = EditToDoScreenTestTags.LOCATION_MENU,
+                )
+              }
 
               // Due Date Input
-              OutlinedTextField(
-                  value = todoUIState.dueDate,
-                  onValueChange = { editTodoViewModel.onDateChanged(it) },
-                  label = { Text(stringResource(R.string.todos_date_field_label)) },
-                  placeholder = { Text(stringResource(R.string.todos_date_field_placeholder)) },
-                  isError = todoUIState.dueDateError != null,
-                  supportingText = {
-                    todoUIState.dueDateError?.let {
-                      Text(it, modifier = Modifier.testTag(EditToDoScreenTestTags.ERROR_MESSAGE))
-                    }
-                  },
-                  colors = textFieldColors,
-                  modifier =
-                      Modifier.fillMaxWidth().testTag(EditToDoScreenTestTags.INPUT_TODO_DATE))
+              item {
+                OutlinedTextField(
+                    value = todoUIState.dueDate,
+                    onValueChange = { editTodoViewModel.onDateChanged(it) },
+                    label = { Text(stringResource(R.string.todos_date_field_label)) },
+                    placeholder = { Text(stringResource(R.string.todos_date_field_placeholder)) },
+                    isError = todoUIState.dueDateError != null,
+                    supportingText = {
+                      todoUIState.dueDateError?.let {
+                        Text(it, modifier = Modifier.testTag(EditToDoScreenTestTags.ERROR_MESSAGE))
+                      }
+                    },
+                    colors = textFieldColors,
+                    modifier =
+                        Modifier.fillMaxWidth().testTag(EditToDoScreenTestTags.INPUT_TODO_DATE))
+              }
 
               // Due Time Input
-              OutlinedTextField(
-                  value = todoUIState.dueTime,
-                  onValueChange = { editTodoViewModel.onTimeChanged(it) },
-                  label = { Text(stringResource(R.string.todos_time_field_label)) },
-                  placeholder = { Text(stringResource(R.string.todos_time_field_placeholder)) },
-                  isError = todoUIState.dueTimeError != null,
-                  supportingText = {
-                    todoUIState.dueTimeError?.let {
-                      Text(it, modifier = Modifier.testTag(EditToDoScreenTestTags.ERROR_MESSAGE))
-                    }
-                  },
-                  colors = textFieldColors,
-                  modifier =
-                      Modifier.fillMaxWidth().testTag(EditToDoScreenTestTags.INPUT_TODO_TIME))
-
-              Spacer(modifier = Modifier.height(fieldSpacing))
-
-              // Observe save success
-              LaunchedEffect(todoUIState.saveSuccess) {
-                if (todoUIState.saveSuccess) {
-                  onSave()
-                  editTodoViewModel.clearSaveSuccess()
-                }
+              item {
+                OutlinedTextField(
+                    value = todoUIState.dueTime,
+                    onValueChange = { editTodoViewModel.onTimeChanged(it) },
+                    label = { Text(stringResource(R.string.todos_time_field_label)) },
+                    placeholder = { Text(stringResource(R.string.todos_time_field_placeholder)) },
+                    isError = todoUIState.dueTimeError != null,
+                    supportingText = {
+                      todoUIState.dueTimeError?.let {
+                        Text(it, modifier = Modifier.testTag(EditToDoScreenTestTags.ERROR_MESSAGE))
+                      }
+                    },
+                    colors = textFieldColors,
+                    modifier =
+                        Modifier.fillMaxWidth().testTag(EditToDoScreenTestTags.INPUT_TODO_TIME))
               }
-              // Save Button
-              Button(
-                  onClick = { editTodoViewModel.editTodo(todoUid) },
-                  modifier = Modifier.fillMaxWidth().testTag(EditToDoScreenTestTags.TODO_SAVE),
-                  colors =
-                      ButtonDefaults.buttonColors(
-                          containerColor = MaterialTheme.colorScheme.secondary),
-                  enabled =
-                      todoUIState.dueDateError == null &&
-                          todoUIState.assigneeError == null &&
-                          todoUIState.descriptionError == null &&
-                          todoUIState.titleError == null &&
-                          todoUIState.dueTimeError == null &&
-                          !todoUIState.isSaving) {
-                    Text(
-                        stringResource(R.string.todos_save_button_text),
-                        color = MaterialTheme.colorScheme.primary)
-                  }
 
-              Spacer(modifier = Modifier.height(buttonSpacing))
+              item { Spacer(modifier = Modifier.height(fieldSpacing)) }
+
+              // Save Button
+              item {
+                Button(
+                    onClick = { editTodoViewModel.editTodo(todoUid) },
+                    modifier = Modifier.fillMaxWidth().testTag(EditToDoScreenTestTags.TODO_SAVE),
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.secondary),
+                    enabled =
+                        todoUIState.dueDateError == null &&
+                            todoUIState.assigneeError == null &&
+                            todoUIState.descriptionError == null &&
+                            todoUIState.titleError == null &&
+                            todoUIState.dueTimeError == null &&
+                            !todoUIState.isSaving) {
+                      Text(
+                          stringResource(R.string.todos_save_button_text),
+                          color = MaterialTheme.colorScheme.primary)
+                    }
+              }
+
+              item { Spacer(modifier = Modifier.height(buttonSpacing)) }
 
               // Observe delete success
-              LaunchedEffect(todoUIState.deleteSuccess) {
-                if (todoUIState.deleteSuccess) {
-                  onDelete()
-                  editTodoViewModel.clearDeleteSuccess()
+
+              item {
+                LaunchedEffect(todoUIState.deleteSuccess) {
+                  if (todoUIState.deleteSuccess) {
+                    onDelete()
+                    editTodoViewModel.clearDeleteSuccess()
+                  }
                 }
               }
+
               // Delete Button
-              TextButton(
-                  onClick = { editTodoViewModel.deleteToDo(todoUid) },
-                  modifier = Modifier.fillMaxWidth().testTag(EditToDoScreenTestTags.TODO_DELETE),
-                  // TextButton has no background by default
-                  colors =
-                      ButtonDefaults.textButtonColors(
-                          contentColor = MaterialTheme.colorScheme.tertiary)) {
-                    Row {
-                      Icon(
-                          imageVector = Icons.Filled.DeleteForever,
-                          contentDescription = stringResource(R.string.todos_delete_button_text),
-                          tint = MaterialTheme.colorScheme.tertiary)
-                      Text(
-                          text = stringResource(R.string.todos_delete_button_text),
-                          color = MaterialTheme.colorScheme.tertiary,
-                          modifier = Modifier.padding(start = buttonSpacing))
+              item {
+                TextButton(
+                    onClick = { editTodoViewModel.deleteToDo(todoUid) },
+                    modifier = Modifier.fillMaxWidth().testTag(EditToDoScreenTestTags.TODO_DELETE),
+                    // TextButton has no background by default
+                    colors =
+                        ButtonDefaults.textButtonColors(
+                            contentColor = MaterialTheme.colorScheme.tertiary)) {
+                      Row {
+                        Icon(
+                            imageVector = Icons.Filled.DeleteForever,
+                            contentDescription = stringResource(R.string.todos_delete_button_text),
+                            tint = MaterialTheme.colorScheme.tertiary)
+                        Text(
+                            text = stringResource(R.string.todos_delete_button_text),
+                            color = MaterialTheme.colorScheme.tertiary,
+                            modifier = Modifier.padding(start = buttonSpacing))
+                      }
                     }
-                  }
+              }
             }
       })
 }
