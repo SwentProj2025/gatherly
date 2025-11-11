@@ -5,12 +5,12 @@ import android.content.pm.PackageManager
 import android.location.Location
 import androidx.core.content.ContextCompat
 import com.android.gatherly.model.event.Event
+import com.android.gatherly.model.event.EventsLocalRepository
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
+import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.ui.map.EPFL_LATLNG
 import com.android.gatherly.ui.map.MapViewModel
-import com.android.gatherly.model.event.EventsLocalRepository
-import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationResult
@@ -242,6 +242,9 @@ class MapViewModelTests {
     assertEquals(expectedList, actualList)
   }
 
+  // ----------------------------------View
+  // change---------------------------------------------------
+
   /** Verifies that [MapViewModel] correctly switches from an todo view to a event view and back. */
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
@@ -422,8 +425,8 @@ class MapViewModelTests {
   @Test
   fun fetchLocationToCenterOn_withLocationPermissionAndNoConsultedItem_returnsCurrentLocation() =
       runTest(UnconfinedTestDispatcher()) {
-        val todosRepo = FakeToDosRepositoryLocal()
-        val eventsRepo = FakeEventsRepositoryLocal()
+        val todosRepo = ToDosLocalRepository()
+        val eventsRepo = EventsLocalRepository()
         val mockContext = mockk<Context>()
         val mockClient = mockk<FusedLocationProviderClient>(relaxed = true)
         val mockTask = mockk<Task<Void>>(relaxed = true)
