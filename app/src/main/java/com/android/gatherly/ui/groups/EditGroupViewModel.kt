@@ -1,5 +1,6 @@
 package com.android.gatherly.ui.groups
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.group.Group
@@ -119,12 +120,14 @@ class EditGroupViewModel(
             try {
               profileRepository.getProfileByUid(memberId)
             } catch (e: Exception) {
+              Log.e("EditGroupViewModel", "Failed to fetch profile for $memberId", e)
               null // Skip members that can't be fetched
             }
           }
       _uiState.value = _uiState.value.copy(currentMemberProfiles = memberProfiles)
     } catch (e: Exception) {
-      // Silently fail - member profiles are not critical for editing
+      // 'Silently' fail - member profiles are not critical for editing
+      Log.e("EditGroupViewModel", "Failed to update member profiles UI state", e)
     }
   }
 
@@ -148,17 +151,19 @@ class EditGroupViewModel(
             try {
               profileRepository.getProfileByUid(friendId)
             } catch (e: Exception) {
+              Log.e("EditGroupViewModel", "Failed to fetch profile for friend $friendId", e)
               null // Skip friends that can't be fetched
             }
           }
-
+      // TODO: could convert to set for performance if friend list is large
       val availableFriends = friendProfiles.filter { it.uid !in currentMemberIds }
 
       _uiState.value =
           _uiState.value.copy(
               friendsList = friendProfiles, availableFriendsToAdd = availableFriends)
     } catch (e: Exception) {
-      // Silently fail - friends list is not critical for basic editing
+      Log.e("EditGroupViewModel", "Failed to load friends list", e)
+      // 'Silently' fail - friends list is not critical for basic editing
       _uiState.value =
           _uiState.value.copy(friendsList = emptyList(), availableFriendsToAdd = emptyList())
     }
