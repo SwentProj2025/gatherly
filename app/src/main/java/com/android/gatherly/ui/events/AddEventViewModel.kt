@@ -364,10 +364,13 @@ class AddEventViewModel(
               }
       val timestampEndTime = Timestamp(endTime)
 
+      // Create ID of the new event
+      val eventId = eventsRepository.getNewId()
+
       // Create new event
       val event =
           Event(
-              id = eventsRepository.getNewId(),
+              id = eventId,
               title = uiState.name,
               description = uiState.description,
               creatorName = uiState.creatorName,
@@ -384,6 +387,7 @@ class AddEventViewModel(
       // Save in event repository
       viewModelScope.launch {
         eventsRepository.addEvent(event)
+        profileRepository.createEvent(eventId, currentProfile.uid)
         uiState = uiState.copy(displayToast = true, toastString = "Saved")
       }
 

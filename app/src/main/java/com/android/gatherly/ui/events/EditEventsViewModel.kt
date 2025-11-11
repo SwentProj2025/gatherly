@@ -390,7 +390,10 @@ class EditEventsViewModel(
   /** Deletes the event from the events repository */
   fun deleteEvent() {
     // Call event repository
-    viewModelScope.launch { eventsRepository.deleteEvent(eventId) }
+    viewModelScope.launch {
+      eventsRepository.deleteEvent(eventId)
+      profileRepository.deleteEvent(eventId, creatorId)
+    }
     uiState = uiState.copy(backToOverview = true)
   }
 
