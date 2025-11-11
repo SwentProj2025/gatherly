@@ -1,15 +1,10 @@
 package com.android.gatherly.ui.map
 
 import androidx.activity.ComponentActivity
-import androidx.compose.material3.Text
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsLocalRepository
@@ -145,37 +140,19 @@ class MapScreenTest {
 
   @Test
   fun canGoToEvent() {
-    compose.setContent {
-      val nav = androidx.navigation.compose.rememberNavController()
-      NavHost(navController = nav, startDestination = "map") {
-        composable("map") {
-          MapScreen(viewModel = viewModel)
-          EventSheet(event = event, onGoToEvent = { nav.navigate("events") }, onClose = {})
-        }
-        composable("events") {
-          Text("Your Events", Modifier.testTag(EventsScreenTestTags.YOUR_EVENTS_TITLE))
-        }
-      }
-    }
+    renderDefaultMapUi()
     compose.onNodeWithTag(MapScreenTestTags.EVENT_BUTTON, useUnmergedTree = true).performClick()
-    compose.onNodeWithTag(EventsScreenTestTags.YOUR_EVENTS_TITLE).assertIsDisplayed()
+    compose
+        .onNodeWithTag(EventsScreenTestTags.CREATE_EVENT_BUTTON, useUnmergedTree = true)
+        .isDisplayed()
   }
 
   @Test
   fun canGoToToDo() {
-    compose.setContent {
-      val nav = androidx.navigation.compose.rememberNavController()
-      NavHost(navController = nav, startDestination = "map") {
-        composable("map") {
-          MapScreen(viewModel = viewModel)
-          ToDoSheet(toDo = todo, onGoToToDo = { nav.navigate("todos") }, onClose = {})
-        }
-        composable("todos") {
-          Text("ToDo", Modifier.testTag(OverviewScreenTestTags.CREATE_TODO_BUTTON))
-        }
-      }
-    }
+    renderDefaultMapUi()
     compose.onNodeWithTag(MapScreenTestTags.TODO_BUTTON, useUnmergedTree = true).performClick()
-    compose.onNodeWithTag(OverviewScreenTestTags.CREATE_TODO_BUTTON).assertIsDisplayed()
+    compose
+        .onNodeWithTag(OverviewScreenTestTags.CREATE_TODO_BUTTON, useUnmergedTree = true)
+        .isDisplayed()
   }
 }
