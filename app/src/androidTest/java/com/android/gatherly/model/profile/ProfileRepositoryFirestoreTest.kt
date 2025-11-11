@@ -449,7 +449,8 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   fun testCreateEvent() = runTest {
     val auth = FirebaseEmulator.auth
     val firestore = FirebaseEmulator.firestore
-    val repo = ProfileRepositoryFirestore(firestore)
+    val storage = FirebaseEmulator.storage
+    val repo = ProfileRepositoryFirestore(firestore, storage)
 
     // User B
     auth.signInAnonymously().await()
@@ -473,7 +474,8 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   fun testDeleteEvent() = runTest {
     val auth = FirebaseEmulator.auth
     val firestore = FirebaseEmulator.firestore
-    val repo = ProfileRepositoryFirestore(firestore)
+    val storage = FirebaseEmulator.storage
+    val repo = ProfileRepositoryFirestore(firestore, storage)
 
     // User B
     auth.signInAnonymously().await()
@@ -504,7 +506,8 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   fun testParticipateEvent() = runTest {
     val auth = FirebaseEmulator.auth
     val firestore = FirebaseEmulator.firestore
-    val repo = ProfileRepositoryFirestore(firestore)
+    val storage = FirebaseEmulator.storage
+    val repo = ProfileRepositoryFirestore(firestore, storage)
 
     // User A
     auth.signInAnonymously().await()
@@ -541,7 +544,8 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   fun testUnregisterEvent() = runTest {
     val auth = FirebaseEmulator.auth
     val firestore = FirebaseEmulator.firestore
-    val repo = ProfileRepositoryFirestore(firestore)
+    val storage = FirebaseEmulator.storage
+    val repo = ProfileRepositoryFirestore(firestore, storage)
 
     // User A
     auth.signInAnonymously().await()
