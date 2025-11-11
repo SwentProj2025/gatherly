@@ -560,8 +560,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     repository.registerUsername(uid, "testuser")
 
     // Add fake profile pic in storage
-    val storageRef = com.google.firebase.Firebase.storage
-      .reference.child("profile_pictures/$uid")
+    val storageRef = com.google.firebase.Firebase.storage.reference.child("profile_pictures/$uid")
     storageRef.putBytes(ByteArray(10)).await()
 
     // Delete full profile
@@ -581,5 +580,4 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
       assertTrue(e.message!!.contains("Object does not exist"))
     }
   }
-
 }

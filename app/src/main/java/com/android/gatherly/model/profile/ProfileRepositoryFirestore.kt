@@ -256,25 +256,25 @@ class ProfileRepositoryFirestore(
     return true
   }
 
-    override suspend fun deleteUserProfile(uid: String){
-        val profile = getProfileByUid(uid) ?: return
+  override suspend fun deleteUserProfile(uid: String) {
+    val profile = getProfileByUid(uid) ?: return
 
-        if(profile.username.isNotBlank()){
-            val usernameDoc = usernamesCollection.document(profile.username)
-            if(usernameDoc.get().await().exists()){
-                usernameDoc.delete().await()
-            }
-        }
-
-        try {
-            val storageRef = com.google.firebase.Firebase.storage.reference.child("profile_pictures/$uid")
-            storageRef.delete().await()
-        }catch (e: Exception){
-            //No profile pic was used.
-        }
-
-        profilesCollection.document(uid).delete().await()
+    if (profile.username.isNotBlank()) {
+      val usernameDoc = usernamesCollection.document(profile.username)
+      if (usernameDoc.get().await().exists()) {
+        usernameDoc.delete().await()
+      }
     }
+
+    try {
+      val storageRef = com.google.firebase.Firebase.storage.reference.child("profile_pictures/$uid")
+      storageRef.delete().await()
+    } catch (e: Exception) {
+      // No profile pic was used.
+    }
+
+    profilesCollection.document(uid).delete().await()
+  }
 
   /** Creates a profile. This is to be used only for testing purpose. */
   override suspend fun addProfile(profile: Profile) {
