@@ -22,6 +22,7 @@ class FakeGroupsRepositoryLocal(private val currentUserId: String = "testUser") 
 
   /** If true, addGroup will throw an exception (for testing error handling) */
   var shouldThrowOnAddGroup = false
+  var shouldThrowOnEditGroup = false
 
   override fun getNewId(): String {
     return "testGroupId${idCounter++}"
@@ -47,6 +48,9 @@ class FakeGroupsRepositoryLocal(private val currentUserId: String = "testUser") 
   }
 
   override suspend fun editGroup(groupId: String, newValue: Group) {
+    if (shouldThrowOnEditGroup) {
+      throw Exception("Test error")
+    }
     val existing = getGroup(groupId)
     if (currentUserId !in existing.adminIds) {
       throw SecurityException("Only admins can edit this group")
