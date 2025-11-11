@@ -126,5 +126,7 @@
     <string name="friends_follow_button_title">Follow</string>
     <string name="find_friends_search_bar_label">Search new friend by name</string>
     <string name="find_friends_empty_list_message">There are no users left.</string>
+    <string name="go_to_event_page_button">Go to Event</string>
+    <string name="go_to_todo_page_button">Go to ToDo</string>
 
 </resources>
