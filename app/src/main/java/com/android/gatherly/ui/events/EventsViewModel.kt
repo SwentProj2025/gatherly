@@ -3,11 +3,15 @@ package com.android.gatherly.ui.events
 import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsRepository
+import com.android.gatherly.model.event.EventsRepositoryFirestore
+import com.android.gatherly.utils.GenericViewModelFactory
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -150,6 +154,19 @@ class EventsViewModel(private val repository: EventsRepository, val currentUserI
       _uiState.value = _uiState.value.copy(signedOut = true)
       Firebase.auth.signOut()
       credentialManager.clearCredentialState(ClearCredentialStateRequest())
+    }
+  }
+
+  /**
+   * Companion Object used to encapsulate a static method to retrieve a ViewModelProvider.Factory
+   * and its default dependencies.
+   */
+  companion object {
+    fun provideFactory(
+        eventsRepository: EventsRepository = EventsRepositoryFirestore(Firebase.firestore),
+        currentUserId: String = Firebase.auth.currentUser?.uid ?: ""
+    ): ViewModelProvider.Factory {
+      return GenericViewModelFactory { EventsViewModel(eventsRepository, currentUserId) }
     }
   }
 }

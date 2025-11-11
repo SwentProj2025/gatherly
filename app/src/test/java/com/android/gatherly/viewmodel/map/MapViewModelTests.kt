@@ -160,11 +160,11 @@ class MapViewModelTests {
     val eventsRepo = EventsLocalRepository()
     val vm = MapViewModel(todosRepository = todosRepo, eventsRepository = eventsRepo)
 
-    assertNull(vm.uiState.value.expandedItemId)
+    assertNull(vm.uiState.value.selectedItemId)
 
-    vm.onMarkerTapped("todo1")
+    vm.onSelectedItem("todo1")
 
-    assertEquals("todo1", vm.uiState.value.expandedItemId)
+    assertEquals("todo1", vm.uiState.value.selectedItemId)
   }
 
   /**
@@ -179,12 +179,12 @@ class MapViewModelTests {
     val eventsRepo = EventsLocalRepository()
     val vm = MapViewModel(todosRepository = todosRepo, eventsRepository = eventsRepo)
 
-    vm.onMarkerTapped("todo1")
-    assertEquals("todo1", vm.uiState.value.expandedItemId)
+    vm.onSelectedItem("todo1")
+    assertEquals("todo1", vm.uiState.value.selectedItemId)
 
-    vm.onMarkerDismissed()
+    vm.clearSelection()
 
-    assertNull(vm.uiState.value.expandedItemId)
+    assertNull(vm.uiState.value.selectedItemId)
   }
 
   // ------------------------------------Events------------------------------------------------------
@@ -195,13 +195,13 @@ class MapViewModelTests {
     val eventsRepo = EventsLocalRepository()
     val vm = MapViewModel(todosRepository = todosRepo, eventsRepository = eventsRepo)
 
-    assertNull(vm.uiState.value.expandedItemId)
+    assertNull(vm.uiState.value.selectedItemId)
 
-    vm.onMarkerTapped("upcoming_location")
-    assertEquals("upcoming_location", vm.uiState.value.expandedItemId)
+    vm.onSelectedItem("upcoming_location")
+    assertEquals("upcoming_location", vm.uiState.value.selectedItemId)
 
-    vm.onMarkerDismissed()
-    assertEquals(null, vm.uiState.value.expandedItemId)
+    vm.clearSelection()
+    assertEquals(null, vm.uiState.value.selectedItemId)
   }
 
   /** Verifies that [MapViewModel] correctly filters and displays only drawable events. */
