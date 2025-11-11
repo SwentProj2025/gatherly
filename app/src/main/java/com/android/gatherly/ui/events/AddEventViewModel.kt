@@ -5,17 +5,23 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsRepository
+import com.android.gatherly.model.event.EventsRepositoryFirestore
 import com.android.gatherly.model.map.Location
 import com.android.gatherly.model.map.NominatimLocationRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
+import com.android.gatherly.model.profile.ProfileRepositoryFirestore
+import com.android.gatherly.utils.GenericViewModelFactory
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.auth
+import com.google.firebase.firestore.firestore
+import com.google.firebase.storage.storage
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import kotlin.collections.plus
@@ -83,16 +89,16 @@ private var client: OkHttpClient =
  * ViewModel responsible for managing the "Add Event" screen.
  *
  * Handles user input updates, field validation, and saving Event items to the Firestore repository
- * through [EventRepository].
+ * through [EventsRepository].
  *
- * @param eventRepository The repository responsible for persisting Event items.
+ * @param eventsRepository The repository responsible for persisting Event items.
  */
 @SuppressLint("SimpleDateFormat")
 class AddEventViewModel(
     private val profileRepository: ProfileRepository,
     private val eventsRepository: EventsRepository,
-    private val nominatimClient: NominatimLocationRepository = NominatimLocationRepository(client)
-    // private val eventRepository: EventsRepository = EventsRepositoryProvider.repository,
+    private val nominatimClient: NominatimLocationRepository = NominatimLocationRepository(client),
+    private val currentUser: String = Firebase.auth.currentUser?.uid ?: ""
 ) : ViewModel() {
   // State with a private set
   var uiState by mutableStateOf(AddEventUiState())
@@ -113,20 +119,14 @@ class AddEventViewModel(
     timeFormat.isLenient = false
 
     viewModelScope.launch {
-      Firebase.auth.currentUser?.uid?.let { userUid ->
-        val profile = profileRepository.getProfileByUid(userUid)
+      currentUser.let { userUid ->
+        val profile =
+            profileRepository.getProfileByUid(userUid)
+                ?: Profile(uid = userUid, name = "", username = "", profilePicture = "")
 
-        profile?.let { p ->
-          currentProfile = p
-          uiState = uiState.copy(participants = listOf(p))
-        }
-            ?: run {
-              val defaultProfile =
-                  Profile(uid = userUid, name = "", username = "", profilePicture = "")
-
-              currentProfile = defaultProfile
-            }
-      } ?: run {}
+        currentProfile = profile
+        uiState = uiState.copy(participants = listOf(currentProfile))
+      }
     }
   }
 
@@ -391,6 +391,20 @@ class AddEventViewModel(
       uiState = uiState.copy(backToOverview = true)
     } else {
       uiState = uiState.copy(displayToast = true, toastString = "Failed to save :(")
+    }
+  }
+
+  /**
+   * Companion Object used to encapsulate a static method to retrieve a ViewModelProvider.Factory
+   * and its default dependencies.
+   */
+  companion object {
+    fun provideFactory(
+        profileRepository: ProfileRepository =
+            ProfileRepositoryFirestore(Firebase.firestore, Firebase.storage),
+        eventsRepository: EventsRepository = EventsRepositoryFirestore(Firebase.firestore)
+    ): ViewModelProvider.Factory {
+      return GenericViewModelFactory { AddEventViewModel(profileRepository, eventsRepository) }
     }
   }
 }

@@ -19,7 +19,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
-/** UI tests for MapScreen */
+/** Tests for the MapScreen composable. */
 class MapScreenTest {
 
   @get:Rule val compose = createComposeRule()
@@ -69,7 +69,7 @@ class MapScreenTest {
       ToDoIcon(todo)
       ToDoExpandedIcon(todo)
       EventIcon(event)
-      EventExpandedIcon(event)
+      EventSheet(event, onGoToEvent = {}, onClose = {})
     }
 
     compose.waitUntil(timeoutMillis = 20_000) { viewModel.uiState.value.itemsList.isNotEmpty() }
@@ -116,18 +116,17 @@ class MapScreenTest {
     compose.onNodeWithTag(MapScreenTestTags.EVENT_TITLE, useUnmergedTree = true).assertExists()
   }
 
-  // Test Event_Expanded_Icon exists
+  // Test Event Sheet exists
   @Test
-  fun event_expanded_exists() {
-    compose
-        .onNodeWithTag(MapScreenTestTags.EVENT_EXPANDED_CARD, useUnmergedTree = true)
-        .assertExists()
+  fun event_sheet_exists() {
+    compose.onNodeWithTag(MapScreenTestTags.EVENT_SHEET, useUnmergedTree = true).assertExists()
     compose.onNodeWithTag(MapScreenTestTags.EVENT_DATE, useUnmergedTree = true).assertExists()
     compose
-        .onNodeWithTag(MapScreenTestTags.EVENT_TITLE_EXPANDED, useUnmergedTree = true)
+        .onNodeWithTag(MapScreenTestTags.EVENT_TITLE_SHEET, useUnmergedTree = true)
         .assertExists()
     compose
         .onNodeWithTag(MapScreenTestTags.EVENT_DESCRIPTION, useUnmergedTree = true)
         .assertExists()
+    compose.onNodeWithTag(MapScreenTestTags.EVENT_BUTTON, useUnmergedTree = true).assertExists()
   }
 }

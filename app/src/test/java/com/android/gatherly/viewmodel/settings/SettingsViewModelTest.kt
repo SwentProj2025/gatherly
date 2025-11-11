@@ -1,6 +1,7 @@
 package com.android.gatherly.viewmodel.settings
 
 import com.android.gatherly.model.profile.Profile
+import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.ui.settings.SettingsViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -21,19 +22,26 @@ import org.junit.Test
 class SettingsViewModelTest {
 
   private val testDispatcher = StandardTestDispatcher()
-  private lateinit var repo: ProfileRepositoryLocalForTests
+  private lateinit var repo: ProfileLocalRepository
   private lateinit var viewModel: SettingsViewModel
 
   @Before
   fun setup() {
     Dispatchers.setMain(testDispatcher)
-    repo = ProfileRepositoryLocalForTests()
-    viewModel = SettingsViewModel(repo)
+    repo = ProfileLocalRepository()
+    fill_repository()
+
+    viewModel = SettingsViewModel(repo, "currentUser")
   }
 
   @After
   fun tearDown() {
     Dispatchers.resetMain()
+  }
+
+  fun fill_repository() = runTest {
+    repo.initProfileIfMissing("currentUser", "")
+    advanceUntilIdle()
   }
 
   // ------------------------------------------------------------------------
@@ -290,5 +298,28 @@ class SettingsViewModelTest {
     assertEquals("Username is invalid or already taken.", state.errorMsg)
     assertFalse(state.saveSuccess)
     repo.shouldFailRegisterUsername = false
+  }
+
+  @Test
+  fun updateProfilePicture_WithValidUri_TriggersRepositoryUpdate() = runTest {
+    val profile =
+        Profile(uid = "u1", name = "Alice", username = "alice_ok", profilePicture = "old_url")
+    repo.addProfile(profile)
+    viewModel.loadProfile("u1")
+    advanceUntilIdle()
+
+    // Simulate user selecting a new local picture
+    val fakeContentUri = "content://media/external/images/media/1234"
+    viewModel.editProfilePictureUrl(fakeContentUri)
+
+    // Update the profile
+    viewModel.updateProfile("u1", isFirstTime = false)
+    advanceUntilIdle()
+
+    // Since repo mock doesn’t actually upload, we just verify UI state is updated
+    assertEquals(fakeContentUri, viewModel.uiState.value.profilePictureUrl)
+    // And that no error was set
+    advanceUntilIdle()
+    assertNull(viewModel.uiState.value.errorMsg)
   }
 }
