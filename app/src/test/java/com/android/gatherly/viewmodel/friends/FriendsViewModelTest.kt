@@ -94,7 +94,7 @@ class FriendsViewModelTest {
 
   @Test
   fun testFollowFriendCFromProfileA() = runTest {
-    viewModel.followFriend("C", "A")
+    viewModel.followFriend("charlie", "A")
 
     advanceUntilIdle()
 

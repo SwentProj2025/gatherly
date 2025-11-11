@@ -22,6 +22,7 @@ import com.android.gatherly.ui.events.AddEventScreen
 import com.android.gatherly.ui.events.EditEventsScreen
 import com.android.gatherly.ui.events.EventsScreen
 import com.android.gatherly.ui.focusTimer.TimerScreen
+import com.android.gatherly.ui.friends.FindFriendsScreen
 import com.android.gatherly.ui.friends.FriendsScreen
 import com.android.gatherly.ui.homePage.HomePageScreen
 import com.android.gatherly.ui.map.MapScreen
@@ -141,7 +142,8 @@ fun GatherlyApp(
         MapScreen(
             navigationActions = navigationActions,
             credentialManager = credentialManager,
-            onSignedOut = { navigationActions.navigateTo(Screen.SignIn) })
+            onSignedOut = { navigationActions.navigateTo(Screen.SignIn) },
+            goToEvent = { navigationActions.navigateTo(Screen.EventsScreen) })
       }
     }
 
@@ -231,7 +233,9 @@ fun GatherlyApp(
             goBack = { navigationActions.goBack() })
       }
 
-      composable(Screen.FindFriends.route) {}
+      composable(Screen.FindFriends.route) {
+        FindFriendsScreen(goBack = { navigationActions.goBack() })
+      }
     }
 
     // INIT PROFILE COMPOSABLE  ------------------------------
