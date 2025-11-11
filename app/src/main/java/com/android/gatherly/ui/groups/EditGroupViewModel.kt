@@ -155,9 +155,8 @@ class EditGroupViewModel(
               null // Skip friends that can't be fetched
             }
           }
-      // TODO: could convert to set for performance if friend list is large
-      val availableFriends = friendProfiles.filter { it.uid !in currentMemberIds }
-
+      val currentMemberIdSet = currentMemberIds.toSet()
+      val availableFriends = friendProfiles.filter { it.uid !in currentMemberIdSet }
       _uiState.value =
           _uiState.value.copy(
               friendsList = friendProfiles, availableFriendsToAdd = availableFriends)
