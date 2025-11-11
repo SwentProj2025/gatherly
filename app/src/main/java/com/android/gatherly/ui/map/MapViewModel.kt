@@ -41,16 +41,19 @@ val EPFL_LATLNG = LatLng(46.5197, 6.5663)
  *
  * @property itemsList of drawable items (incomplete todos or upcoming/current events with valid
  *   locations).
- * @property expandedItemId ID of the todo or event whose marker is currently expanded, or null if
+ * @property selectedItemId ID of the todo or event whose marker is currently selected, or null if
  *   none.
  * @property lastConsultedTodoId ID of the most recently consulted todo.
+ * @property lastConsultedEventId ID of the most recently consulted event.
  * @property cameraPos Current camera position on the map.
  * @property errorMsg Error message to display, or null if no error.
  * @property onSignedOut Flag indicating whether the user has signed out.
+ * @property displayEventsPage Flag indicating whether events are being displayed (vs todos).
+ * @property currentUserLocation The user's current location, if available.
  */
 data class UIState(
     val itemsList: List<DisplayedMapElement> = emptyList(),
-    val expandedItemId: String? = null,
+    val selectedItemId: String? = null,
     val lastConsultedTodoId: String? = null,
     val lastConsultedEventId: String? = null,
     val cameraPos: LatLng? = null,
@@ -87,11 +90,12 @@ private fun getDrawableEvents(events: List<Event>): List<Event> {
 /**
  * ViewModel for the Map screen.
  *
- * Manages the UI state for displaying todos on a map, including marker expansion and user sign-out
- * functionality.
+ * Manages the UI state for displaying todos and events on a map, including marker selection, camera
+ * positioning based on consulted items and user location, and user sign-out functionality.
  *
  * @property todosRepository Repository for accessing todo data.
  * @property eventsRepository Repository for accessing event data.
+ * @property fusedLocationClient Client for accessing device location services.
  */
 class MapViewModel(
     private val todosRepository: ToDosRepository = ToDosRepositoryFirestore(Firebase.firestore),
@@ -105,10 +109,6 @@ class MapViewModel(
 
   private lateinit var todoList: List<ToDo>
   private lateinit var eventsList: List<Event>
-
-  /** Default location coordinates for EPFL campus. */
-  private val EPFL_LOCATION =
-      Location(46.5191, 6.5668, "École Polytechnique Fédérale de Lausanne (EPFL), Switzerland")
 
   /** Job for tracking user location updates. */
   private var locationJob: Job? = null
@@ -153,8 +153,8 @@ class MapViewModel(
   }
 
   /**
-   * Initializes the ViewModel by loading all todos from the repository and filtering them to
-   * display only drawable todos.
+   * Initializes the ViewModel by loading all todos and events from the repositories and filtering
+   * them to display only drawable items.
    */
   init {
     viewModelScope.launch {
@@ -169,20 +169,25 @@ class MapViewModel(
   }
 
   /**
-   * Handles a tap on a todo marker by expanding it.
+   * Handles a tap on a marker by selecting it.
    *
-   * @param itemId The ID of the todo whose marker was tapped.
+   * @param itemId The ID of the item whose marker was tapped.
    */
-  fun onMarkerTapped(itemId: String) {
-    _uiState.value = _uiState.value.copy(expandedItemId = itemId)
+  fun onSelectedItem(itemId: String) {
+    _uiState.value = _uiState.value.copy(selectedItemId = itemId)
   }
 
-  /** Handles dismissal of an expanded marker by collapsing it. */
-  fun onMarkerDismissed() {
-    _uiState.value = _uiState.value.copy(expandedItemId = null)
+  /** Handles dismissal of the selected marker by clearing the selection. */
+  fun clearSelection() {
+    _uiState.value = _uiState.value.copy(selectedItemId = null)
   }
 
-  /** Handles when an item (todo or event) is consulted by updating the last consulted ID. */
+  /**
+   * Handles when an item (todo or event) is consulted by updating the last consulted ID and
+   * invalidating the camera position to trigger re-centering on return.
+   *
+   * @param itemId The ID of the item being consulted.
+   */
   fun onItemConsulted(itemId: String) {
     if (_uiState.value.displayEventsPage) {
       _uiState.value =
@@ -195,7 +200,7 @@ class MapViewModel(
     }
   }
 
-  /** Handles the switch from viewing todos to viewing events on the map */
+  /** Handles the switch from viewing todos to viewing events on the map. */
   fun changeView() {
     if (_uiState.value.displayEventsPage) {
       _uiState.value = _uiState.value.copy(itemsList = todoList, displayEventsPage = false)
@@ -204,6 +209,16 @@ class MapViewModel(
     }
   }
 
+  /**
+   * Fetches the location to center the map on based on a priority chain:
+   * 1. Last consulted todo (if any)
+   * 2. Last consulted event (if any)
+   * 3. User's current location (with 5-second timeout)
+   * 4. EPFL default location (fallback)
+   *
+   * @param context The context used to access location services.
+   * @return The LatLng position to center the camera on.
+   */
   suspend fun fetchLocationToCenterOn(context: Context): LatLng {
     // Check for last consulted todo
     if (_uiState.value.lastConsultedTodoId != null) {
@@ -232,6 +247,7 @@ class MapViewModel(
     // Fallback to EPFL
     return EPFL_LATLNG
   }
+
   /**
    * Signs out the current user and clears credential state.
    *
