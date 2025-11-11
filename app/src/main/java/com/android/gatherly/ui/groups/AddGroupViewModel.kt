@@ -1,5 +1,6 @@
 package com.android.gatherly.ui.groups
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.group.Group
@@ -115,6 +116,7 @@ class AddGroupViewModel(
               try {
                 profileRepository.getProfileByUid(friendId)
               } catch (e: Exception) {
+                Log.e("AddGroupViewModel", "Failed to fetch friend profile for id=$friendId", e)
                 null // Skip friends that can't be fetched
               }
             }
