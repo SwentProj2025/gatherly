@@ -13,8 +13,8 @@ import kotlinx.coroutines.withTimeout
 import org.junit.Assert.*
 import org.junit.Test
 
-private const val TIMEOUT = 30_000L
-private const val DELAY = 200L
+private const val TIMEOUT = 3000L
+private const val DELAY = 100L
 
 /**
  * Integration tests for [ProfileRepositoryFirestore] using the Firebase Emulators.
@@ -392,7 +392,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   @Test
   fun updateProfilePic_uploadsToStorageAndUpdatesFirestore() = runTest {
     val uid = FirebaseEmulator.auth.currentUser!!.uid
-    withTimeout(3000) { while (FirebaseEmulator.auth.currentUser == null) delay(50) }
+    withTimeout(TIMEOUT) { while (FirebaseEmulator.auth.currentUser == null) delay(DELAY) }
     repository.initProfileIfMissing(uid, "old_pic.png")
 
     // Prepare fake image file
@@ -419,7 +419,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   @Test
   fun updateProfilePic_overwritesExistingFile() = runTest {
     val uid = FirebaseEmulator.auth.currentUser!!.uid
-    withTimeout(3000) { while (FirebaseEmulator.auth.currentUser == null) delay(50) }
+    withTimeout(TIMEOUT) { while (FirebaseEmulator.auth.currentUser == null) delay(DELAY) }
     repository.initProfileIfMissing(uid, "pic.png")
 
     val file1 = kotlin.io.path.createTempFile("first").toFile()

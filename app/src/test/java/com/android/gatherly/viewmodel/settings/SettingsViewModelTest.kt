@@ -310,7 +310,7 @@ class SettingsViewModelTest {
 
     // Simulate user selecting a new local picture
     val fakeContentUri = "content://media/external/images/media/1234"
-    viewModel.editProfilePicture(fakeContentUri)
+    viewModel.editProfilePictureUrl(fakeContentUri)
 
     // Update the profile
     viewModel.updateProfile("u1", isFirstTime = false)

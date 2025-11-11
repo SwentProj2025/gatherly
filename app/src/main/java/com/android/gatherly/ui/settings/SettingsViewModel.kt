@@ -245,7 +245,7 @@ class SettingsViewModel(
     }
   }
 
-  fun editProfilePicture(newPhotoUrl: String) {
+  fun editProfilePictureUrl(newPhotoUrl: String) {
     _uiState.value = _uiState.value.copy(profilePictureUrl = newPhotoUrl)
   }
 
