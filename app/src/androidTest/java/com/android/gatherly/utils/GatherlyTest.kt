@@ -17,8 +17,8 @@ import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.android.gatherly.model.map.Location
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
+import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.model.todo.ToDosRepository
-import com.android.gatherly.model.todo.ToDosRepositoryProvider
 import com.android.gatherly.ui.todo.AddToDoScreenTestTags
 import com.android.gatherly.ui.todo.EditToDoScreenTestTags
 import com.android.gatherly.ui.todo.OverviewScreenTestTags
@@ -28,10 +28,7 @@ import java.util.Calendar
 import java.util.Locale
 import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
-import org.junit.After
-import org.junit.Before
 
 // Portions of the code in this file are copy-pasted from the Bootcamp solution provided by the
 // SwEnt staff.
@@ -41,12 +38,7 @@ const val UI_WAIT_TIMEOUT = 100_000L
 /** Base class for Gatherly tests, providing common setup and utility functions. */
 abstract class GatherlyTest() {
 
-  abstract fun createInitializedRepository(): ToDosRepository
-
-  val repository: ToDosRepository
-    get() = ToDosRepositoryProvider.repository
-
-  val shouldSignInAnounymously: Boolean = true
+  var repository: ToDosRepository = ToDosLocalRepository()
 
   open val todo1 =
       ToDo(
@@ -83,22 +75,6 @@ abstract class GatherlyTest() {
           dueTime = Timestamp.now(),
           status = ToDoStatus.ENDED,
           ownerId = "user")
-
-  @Before
-  open fun setUp() {
-    ToDosRepositoryProvider.repository = createInitializedRepository()
-    if (shouldSignInAnounymously) {
-      runTest { FirebaseEmulator.auth.signInAnonymously().await() }
-    }
-  }
-
-  @After
-  open fun tearDown() {
-    if (FirebaseEmulator.isRunning) {
-      FirebaseEmulator.auth.signOut()
-      FirebaseEmulator.clearAuthEmulator()
-    }
-  }
 
   fun ComposeTestRule.enterEditTodoTitle(title: String) {
     onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_TITLE).performTextClearance()

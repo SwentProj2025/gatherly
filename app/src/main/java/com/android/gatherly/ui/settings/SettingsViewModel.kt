@@ -1,5 +1,6 @@
 package com.android.gatherly.ui.settings
 
+import android.net.Uri
 import android.util.Log
 import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
@@ -43,7 +44,8 @@ data class SettingsUiState(
     val invalidUsernameMsg: String? = null,
     val invalidBirthdayMsg: String? = null,
     val isUsernameAvailable: Boolean? = null,
-    val isLoadingProfile: Boolean = false
+    val isLoadingProfile: Boolean = false,
+    val saveSuccess: Boolean = false
 ) {
   val isValid: Boolean
     get() =
@@ -52,7 +54,7 @@ data class SettingsUiState(
             invalidUsernameMsg == null &&
             name.isNotEmpty() &&
             username.isNotEmpty() &&
-            (isUsernameAvailable == true)
+            (isUsernameAvailable != false)
 }
 /**
  * ViewModel for the Settings screen. This ViewModel manages the state of input fields for the
@@ -60,6 +62,7 @@ data class SettingsUiState(
  */
 class SettingsViewModel(
     private val repository: ProfileRepository = ProfileRepositoryProvider.repository,
+    private val currentUser: String = Firebase.auth.currentUser?.uid ?: ""
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(SettingsUiState())
   val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
@@ -79,11 +82,19 @@ class SettingsViewModel(
     _uiState.value = _uiState.value.copy(errorMsg = null)
   }
 
+  /** Clears the save success flag in the UI state. */
+  fun clearSaveSuccess() {
+    _uiState.value = _uiState.value.copy(saveSuccess = false)
+  }
+
   /** Sets an error message in the UI state. */
   private fun setErrorMsg(errorMsg: String) {
     _uiState.value = _uiState.value.copy(errorMsg = errorMsg)
   }
 
+  init {
+    loadProfile(currentUser)
+  }
   /**
    * Loads a Profile by its ID and updates the UI state.
    *
@@ -122,7 +133,7 @@ class SettingsViewModel(
    *
    * @param id The id of the Profile to be updated.
    */
-  fun updateProfile(id: String, isFirstTime: Boolean) {
+  fun updateProfile(id: String = currentUser, isFirstTime: Boolean) {
     val state = _uiState.value
     if (!state.isValid) {
       setErrorMsg("At least one field is not valid.")
@@ -139,9 +150,12 @@ class SettingsViewModel(
 
     viewModelScope.launch {
       try {
+        val usernameChanged = state.username != originalProfile?.username
         val usernameSuccess =
             if (isFirstTime) {
               repository.registerUsername(id, state.username)
+            } else if (!usernameChanged) {
+              true
             } else {
               repository.updateUsername(id, originalProfile?.username, state.username)
             }
@@ -151,6 +165,19 @@ class SettingsViewModel(
           return@launch
         }
 
+        val newProfilePictureUrl =
+            if (state.profilePictureUrl.isNotBlank() &&
+                (state.profilePictureUrl != originalProfile?.profilePicture)) {
+              val parsedUri = Uri.parse(state.profilePictureUrl)
+              if (parsedUri?.scheme == "content") {
+                repository.updateProfilePic(id, parsedUri)
+              } else {
+                state.profilePictureUrl
+              }
+            } else {
+              originalProfile?.profilePicture.orEmpty()
+            }
+
         val updatedProfile =
             originalP.copy(
                 uid = id,
@@ -158,11 +185,12 @@ class SettingsViewModel(
                 username = state.username,
                 school = state.school,
                 schoolYear = state.schoolYear,
-                profilePicture = state.profilePictureUrl,
+                profilePicture = newProfilePictureUrl,
                 birthday = birthdayDate?.let { Timestamp(it) })
 
         repository.updateProfile(updatedProfile)
         clearErrorMsg()
+        _uiState.value = _uiState.value.copy(saveSuccess = true)
       } catch (e: Exception) {
         Log.e("SettingsViewModel", "Error saving profile", e)
         setErrorMsg("Failed to save profile: ${e.message}")
@@ -217,9 +245,17 @@ class SettingsViewModel(
     }
   }
 
+  fun editProfilePictureUrl(newPhotoUrl: String) {
+    _uiState.value = _uiState.value.copy(profilePictureUrl = newPhotoUrl)
+  }
+
   private fun checkUsernameAvailability(username: String) {
     viewModelScope.launch {
       try {
+        if (username == originalProfile?.username) {
+          _uiState.value.copy(isUsernameAvailable = true, invalidUsernameMsg = null)
+          return@launch
+        }
         val available = repository.isUsernameAvailable(username)
         _uiState.value =
             _uiState.value.copy(

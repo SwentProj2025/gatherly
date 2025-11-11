@@ -31,6 +31,8 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunnerArguments["timeout_msec"] = "30000"
+
         vectorDrawables {
             useSupportLibrary = true
         }
@@ -122,6 +124,22 @@ android {
                 java.srcDirs("src/test/java")
                 resources.srcDirs("src/test/resources")
             }   // TODO if we want to implement androidTest only tests just like bootcamp
+
+
+    signingConfigs {
+        getByName("debug").apply {
+            storeFile = file("${rootDir}/debug.keystore")
+            storePassword = System.getenv("DEBUG_STORE_PASSWORD") ?: "android"
+            keyAlias = System.getenv("DEBUG_KEY_ALIAS") ?: "androiddebugkey"
+            keyPassword = System.getenv("DEBUG_KEY_PASSWORD") ?: "android"
+        }
+    }
+
+    buildTypes {
+        getByName("debug") {
+            signingConfig = signingConfigs.getByName("debug")
+        }
+    }
 }
 
 
@@ -141,6 +159,7 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     testImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.kotlin.test)
     androidTestImplementation(libs.androidx.espresso.core)
     testImplementation(libs.androidx.espresso.core)
 
@@ -200,6 +219,7 @@ dependencies {
     implementation(libs.firebase.ui.auth)
     implementation(libs.firebase.auth.ktx)
     implementation(libs.firebase.auth)
+    implementation("com.google.firebase:firebase-storage-ktx:21.0.1")
 
     // Credential Manager (for Google Sign-In)
     implementation(libs.credentials)
@@ -222,6 +242,7 @@ dependencies {
     androidTestImplementation(libs.kaspresso.allure.support)
     testImplementation(libs.kotlinx.coroutines.test)
 
+    // Profile picture
     implementation("io.coil-kt:coil-compose:2.6.0")
 }
 

@@ -11,6 +11,7 @@ import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsRepository
 import com.android.gatherly.model.event.EventsRepositoryFirestore
 import com.android.gatherly.model.map.DisplayedMapElement
+import com.android.gatherly.model.map.Location
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosRepository
@@ -32,8 +33,7 @@ val EPFL_LATLNG = LatLng(46.5197, 6.5663)
  *
  * @property itemsList of drawable items (incomplete todos or upcoming/current events with valid
  *   locations).
- * @property expandedItemId ID of the todo or event whose marker is currently expanded, or null if
- *   none.
+ * @property selectedItemId ID of the item whose marker is currently selected, or null if none.
  * @property lastConsultedTodoId ID of the most recently consulted todo.
  * @property cameraPos Current camera position on the map.
  * @property errorMsg Error message to display, or null if no error.
@@ -41,7 +41,7 @@ val EPFL_LATLNG = LatLng(46.5197, 6.5663)
  */
 data class UIState(
     val itemsList: List<DisplayedMapElement> = emptyList(),
-    val expandedItemId: String? = null,
+    val selectedItemId: String? = null,
     val lastConsultedTodoId: String? = null,
     val cameraPos: LatLng = EPFL_LATLNG,
     val errorMsg: String? = null,
@@ -80,6 +80,7 @@ private fun getDrawableEvents(events: List<Event>): List<Event> {
  * functionality.
  *
  * @property todosRepository Repository for accessing todo data.
+ * @property eventsRepository Repository for accessing event data.
  */
 class MapViewModel(
     private val todosRepository: ToDosRepository = ToDosRepositoryFirestore(Firebase.firestore),
@@ -93,6 +94,14 @@ class MapViewModel(
   private lateinit var todoList: List<ToDo>
   private lateinit var eventsList: List<Event>
 
+  /** Default location coordinates for EPFL campus. */
+  private val EPFL_LOCATION =
+      Location(46.5191, 6.5668, "École Polytechnique Fédérale de Lausanne (EPFL), Switzerland")
+
+  private fun toLatLng(location: Location): LatLng {
+    return LatLng(location.latitude, location.longitude)
+  }
+
   /**
    * Initializes the ViewModel by loading all todos from the repository and filtering them to
    * display only drawable todos.
@@ -105,22 +114,23 @@ class MapViewModel(
       val events = eventsRepository.getAllEvents()
       eventsList = getDrawableEvents(events)
 
-      _uiState.value = _uiState.value.copy(itemsList = todoList)
+      val cameraPos = todoList.firstOrNull()?.location ?: EPFL_LOCATION
+      _uiState.value = _uiState.value.copy(cameraPos = toLatLng(cameraPos), itemsList = todoList)
     }
   }
 
   /**
-   * Handles a tap on a todo marker by expanding it.
+   * Handles a tap on a marker by expanding it.
    *
-   * @param itemId The ID of the todo whose marker was tapped.
+   * @param itemId The ID of the item whose marker was tapped.
    */
-  fun onTodoMarkerTapped(itemId: String) {
-    _uiState.value = _uiState.value.copy(expandedItemId = itemId)
+  fun onSelectedItem(itemId: String) {
+    _uiState.value = _uiState.value.copy(selectedItemId = itemId)
   }
 
-  /** Handles dismissal of an expanded marker by collapsing it. */
-  fun onTodoMarkerDismissed() {
-    _uiState.value = _uiState.value.copy(expandedItemId = null)
+  /** Handles dismissal of an opened modal sheet. */
+  fun clearSelection() {
+    _uiState.value = _uiState.value.copy(selectedItemId = null)
   }
 
   /** Handles the switch from viewing todos to viewing events on the map */

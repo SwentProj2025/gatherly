@@ -1,4 +1,4 @@
-package com.android.gatherly.ui.homepage
+package com.android.gatherly.viewmodel.homepage
 
 import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.event.EventStatus
@@ -10,18 +10,14 @@ import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
+import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.model.todo.ToDosRepository
-import com.android.gatherly.model.todo.ToDosRepositoryLocalMapTest
 import com.android.gatherly.ui.homePage.HomePageViewModel
-import com.android.gatherly.utils.FirebaseEmulator
-import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
-import com.google.firebase.auth.auth
 import java.text.SimpleDateFormat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.tasks.await
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -69,7 +65,7 @@ private val friend4Profile: Profile =
 
 private var currentProfile: Profile =
     Profile(
-        uid = "0+",
+        uid = "",
         name = "Current",
         focusSessionIds = emptyList(),
         eventIds = emptyList(),
@@ -79,7 +75,7 @@ private var currentProfile: Profile =
 
 private var friendlessProfile: Profile =
     Profile(
-        uid = "0-",
+        uid = "",
         name = "Current",
         focusSessionIds = emptyList(),
         eventIds = emptyList(),
@@ -187,44 +183,26 @@ class HomePageViewModelTest {
   private lateinit var upcomingTodos: List<ToDo>
 
   // initialize this so that tests control all coroutines and can wait on them
-  private val testDispatcher = UnconfinedTestDispatcher()
+  private val testDispatcher = StandardTestDispatcher()
 
   @Before
   fun setUp() {
     // so that tests can wait on coroutines
     Dispatchers.setMain(testDispatcher)
+    displayableTodos = listOf(todo1, todo2)
+    upcomingTodos = listOf(todo1, todo2, todo3)
 
-    if (!FirebaseEmulator.isRunning) {
-      error("Firebase emulator must be running! Use: firebase emulators:start")
-    }
+    // initialize repos and viewModel
+    profileRepository = ProfileLocalRepository()
+    eventsRepository = EventsLocalRepository()
+    toDosRepository = ToDosLocalRepository()
 
-    runTest {
-      FirebaseEmulator.auth.signInAnonymously().await()
-
-      todo1 = todo1.copy(ownerId = Firebase.auth.currentUser?.uid!!)
-      todo2 = todo2.copy(ownerId = Firebase.auth.currentUser?.uid!!)
-      todo3 = todo3.copy(ownerId = Firebase.auth.currentUser?.uid!!)
-      todo4 = todo4.copy(ownerId = Firebase.auth.currentUser?.uid!!)
-      currentProfile = currentProfile.copy(uid = Firebase.auth.currentUser?.uid!!)
-      friendlessProfile = friendlessProfile.copy(uid = Firebase.auth.currentUser?.uid!!)
-      displayableTodos = listOf(todo1, todo2)
-      upcomingTodos = listOf(todo1, todo2, todo3)
-
-      // initialize repos and viewModel
-      profileRepository = ProfileLocalRepository()
-      eventsRepository = EventsLocalRepository()
-      toDosRepository = ToDosRepositoryLocalMapTest()
-
-      // fill the profile and events repositories with profiles and event
-      fill_repositories()
-      advanceUntilIdle()
-    }
+    // fill the profile and events repositories with profiles and event
+    fill_repositories()
   }
 
   @After
   fun tearDown() {
-    FirebaseEmulator.clearAuthEmulator()
-    FirebaseEmulator.clearFirestoreEmulator()
     Dispatchers.resetMain()
   }
 
@@ -234,12 +212,14 @@ class HomePageViewModelTest {
   fun correctSetValuesForNormalUser() = runTest {
     addFriendsCurrentUser()
     addTodos()
+    advanceUntilIdle()
 
     homePageViewModel =
         HomePageViewModel(
             eventsRepository = eventsRepository,
             toDosRepository = toDosRepository,
-            profileRepository = profileRepository)
+            profileRepository = profileRepository,
+            currentUser = currentProfile.uid)
 
     advanceUntilIdle()
 
@@ -255,12 +235,14 @@ class HomePageViewModelTest {
   fun correctSetValuesForNoFriendsUser() = runTest {
     addFriendlessCurrentUser()
     addTodos()
+    advanceUntilIdle()
 
     homePageViewModel =
         HomePageViewModel(
             eventsRepository = eventsRepository,
             toDosRepository = toDosRepository,
-            profileRepository = profileRepository)
+            profileRepository = profileRepository,
+            currentUser = currentProfile.uid)
 
     advanceUntilIdle()
 
@@ -275,18 +257,23 @@ class HomePageViewModelTest {
   @Test
   fun correctSetValuesForNoTodosUser() = runTest {
     addFriendlessCurrentUser()
+    advanceUntilIdle()
+
     homePageViewModel =
         HomePageViewModel(
             eventsRepository = eventsRepository,
             toDosRepository = toDosRepository,
-            profileRepository = profileRepository)
+            profileRepository = profileRepository,
+            currentUser = currentProfile.uid)
 
     advanceUntilIdle()
 
-    assert(homePageViewModel.uiState.value.displayableTodos == emptyList<ToDo>()) {
+    assert(homePageViewModel.uiState.value.displayableTodos.isEmpty()) {
       "Actual : ${homePageViewModel.uiState.value.displayableTodos}"
     }
-    assert(homePageViewModel.uiState.value.displayableEvents == displayableEvents)
+    assert(homePageViewModel.uiState.value.displayableEvents == displayableEvents) {
+      "Actual : ${homePageViewModel.uiState.value.displayableEvents} : ${homePageViewModel.uiState.value}"
+    }
     assert(homePageViewModel.uiState.value.friends == emptyList<Profile>())
     assert(homePageViewModel.uiState.value.todos == emptyList<ToDo>())
   }
@@ -301,35 +288,24 @@ class HomePageViewModelTest {
       profileRepository.addProfile(friend4Profile)
       eventsRepository.addEvent(event1)
       eventsRepository.addEvent(event2)
-      toDosRepository.deleteTodo("1")
-      toDosRepository.deleteTodo("2")
       advanceUntilIdle()
     }
   }
 
   // Adds a user with the current firebase id and 4 friends
-  fun addFriendsCurrentUser() {
-    runTest {
-      profileRepository.addProfile(currentProfile)
-      advanceUntilIdle()
-    }
+  suspend fun addFriendsCurrentUser() {
+    profileRepository.addProfile(currentProfile)
   }
 
   // Adds a user with the current firebase id and no friends
-  fun addFriendlessCurrentUser() {
-    runTest {
-      profileRepository.addProfile(friendlessProfile)
-      advanceUntilIdle()
-    }
+  suspend fun addFriendlessCurrentUser() {
+    profileRepository.addProfile(friendlessProfile)
   }
 
-  fun addTodos() {
-    runTest {
-      toDosRepository.addTodo(todo1)
-      toDosRepository.addTodo(todo2)
-      toDosRepository.addTodo(todo3)
-      toDosRepository.addTodo(todo4)
-      advanceUntilIdle()
-    }
+  suspend fun addTodos() {
+    toDosRepository.addTodo(todo1)
+    toDosRepository.addTodo(todo2)
+    toDosRepository.addTodo(todo3)
+    toDosRepository.addTodo(todo4)
   }
 }

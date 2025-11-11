@@ -17,6 +17,10 @@ jobs:
     name: CI
     # Execute the CI on the course's runners
     runs-on: ubuntu-latest
+    env:
+      DEBUG_STORE_PASSWORD: ${{ secrets.DEBUG_STORE_PASSWORD }}
+      DEBUG_KEY_ALIAS: ${{ secrets.DEBUG_KEY_ALIAS }}
+      DEBUG_KEY_PASSWORD: ${{ secrets.DEBUG_KEY_PASSWORD }}
 
     steps:
       # First step : Checkout the repository on the runner
@@ -34,6 +38,7 @@ jobs:
         env:
           GOOGLE_SERVICES: ${{ secrets.GOOGLE_SERVICES }}
           LOCAL_PROPERTIES: ${{ secrets.LOCAL_PROPERTIES }}
+          ANDROID_DEBUG_KEYSTORE_BASE64: ${{ secrets.ANDROID_DEBUG_KEYSTORE_BASE64 }}
         run: |
           if [ -n "$GOOGLE_SERVICES" ]; then
             echo "$GOOGLE_SERVICES" | base64 --decode > ./app/google-services.json
@@ -45,6 +50,12 @@ jobs:
             echo "$LOCAL_PROPERTIES" | base64 --decode > ./local.properties
           else
             echo "::warning::LOCAL_PROPERTIES secret is not set. local.properties will not be created."
+          fi
+          
+          if [ -n "$ANDROID_DEBUG_KEYSTORE_BASE64" ]; then
+            echo "$ANDROID_DEBUG_KEYSTORE_BASE64" | base64 --decode > ./debug.keystore
+          else
+            echo "::warning::ANDROID_DEBUG_KEYSTORE_BASE64 secret is not set. debug.keystore will not be created."
           fi
 
 
@@ -136,6 +147,15 @@ jobs:
           else
             echo "(B3 Warning): Firestore rules file not found in firebase/firestore. Rules are setup in B3, you can ignore this warning in B2."
           fi
+          if [ -e "storage.rules" ]; then
+            jq -e '.storage.rules' firebase.json >/dev/null || {
+              echo "'firebase.json' is missing 'storage.rules'."
+              exit 1
+            }
+            echo "Storage rules found and referenced in firebase.json"
+          else
+            echo "(Warning): 'storage.rules' not found. The storage emulator will use default permissive rules."
+          fi
 
       # Check formatting
       - name: KTFmt Check
@@ -159,7 +179,7 @@ jobs:
         run: |
           if [ -e "firebase.json" ] && jq -e '.emulators' firebase.json >/dev/null; then
             echo "Starting Firebase emulators for instrumentation tests..."
-            firebase emulators:start --only auth,firestore --project demo-project &
+            firebase emulators:start --only auth,firestore,storage --project demo-project &
             echo "Firebase emulators started"
           else
             echo "Firebase emulators not configured, skipping emulator startup..."

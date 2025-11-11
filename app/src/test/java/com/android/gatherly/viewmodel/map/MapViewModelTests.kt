@@ -1,11 +1,11 @@
 package com.android.gatherly.viewmodel.map
 
 import com.android.gatherly.model.event.Event
+import com.android.gatherly.model.event.EventsLocalRepository
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
+import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.ui.map.MapViewModel
-import com.android.gatherly.viewmodel.FakeEventsRepositoryLocal
-import com.android.gatherly.viewmodel.FakeToDosRepositoryLocal
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -130,8 +130,8 @@ class MapViewModelTests {
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun getDrawableTodosRetrievesCorrectList() = runTest {
-    val todosRepo = FakeToDosRepositoryLocal()
-    val eventsRepo = FakeEventsRepositoryLocal()
+    val todosRepo = ToDosLocalRepository()
+    val eventsRepo = EventsLocalRepository()
     for (todo in testObjects) {
       todosRepo.addTodo(todo)
     }
@@ -156,15 +156,15 @@ class MapViewModelTests {
    */
   @Test
   fun onTodoMarkerTapped_UpdatesExpandedTodoId() = runTest {
-    val todosRepo = FakeToDosRepositoryLocal()
-    val eventsRepo = FakeEventsRepositoryLocal()
+    val todosRepo = ToDosLocalRepository()
+    val eventsRepo = EventsLocalRepository()
     val vm = MapViewModel(todosRepository = todosRepo, eventsRepository = eventsRepo)
 
-    assertNull(vm.uiState.value.expandedItemId)
+    assertNull(vm.uiState.value.selectedItemId)
 
-    vm.onTodoMarkerTapped("todo1")
+    vm.onSelectedItem("todo1")
 
-    assertEquals("todo1", vm.uiState.value.expandedItemId)
+    assertEquals("todo1", vm.uiState.value.selectedItemId)
   }
 
   /**
@@ -175,41 +175,41 @@ class MapViewModelTests {
    */
   @Test
   fun onTodoMarkerDismissed_ClearsExpandedTodoId() = runTest {
-    val todosRepo = FakeToDosRepositoryLocal()
-    val eventsRepo = FakeEventsRepositoryLocal()
+    val todosRepo = ToDosLocalRepository()
+    val eventsRepo = EventsLocalRepository()
     val vm = MapViewModel(todosRepository = todosRepo, eventsRepository = eventsRepo)
 
-    vm.onTodoMarkerTapped("todo1")
-    assertEquals("todo1", vm.uiState.value.expandedItemId)
+    vm.onSelectedItem("todo1")
+    assertEquals("todo1", vm.uiState.value.selectedItemId)
 
-    vm.onTodoMarkerDismissed()
+    vm.clearSelection()
 
-    assertNull(vm.uiState.value.expandedItemId)
+    assertNull(vm.uiState.value.selectedItemId)
   }
 
   // ------------------------------------Events------------------------------------------------------
   /** Verifies that tapping an event marker updates the expanded event ID in the UI state. */
   @Test
   fun onEventMarkerTappedDismissed_UpdateExpandedId() = runTest {
-    val todosRepo = FakeToDosRepositoryLocal()
-    val eventsRepo = FakeEventsRepositoryLocal()
+    val todosRepo = ToDosLocalRepository()
+    val eventsRepo = EventsLocalRepository()
     val vm = MapViewModel(todosRepository = todosRepo, eventsRepository = eventsRepo)
 
-    assertNull(vm.uiState.value.expandedItemId)
+    assertNull(vm.uiState.value.selectedItemId)
 
-    vm.onTodoMarkerTapped("upcoming_location")
-    assertEquals("upcoming_location", vm.uiState.value.expandedItemId)
+    vm.onSelectedItem("upcoming_location")
+    assertEquals("upcoming_location", vm.uiState.value.selectedItemId)
 
-    vm.onTodoMarkerDismissed()
-    assertEquals(null, vm.uiState.value.expandedItemId)
+    vm.clearSelection()
+    assertEquals(null, vm.uiState.value.selectedItemId)
   }
 
   /** Verifies that [MapViewModel] correctly filters and displays only drawable events. */
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun getDrawableEventsRetrievesCorrectList() = runTest {
-    val todosRepo = FakeToDosRepositoryLocal()
-    val eventsRepo = FakeEventsRepositoryLocal()
+    val todosRepo = ToDosLocalRepository()
+    val eventsRepo = EventsLocalRepository()
     for (event in MapViewModelTestsEvents.testEvents) {
       eventsRepo.addEvent(event)
     }
@@ -235,12 +235,12 @@ class MapViewModelTests {
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun canChangeViewBetweenTodosAndEvents() = runTest {
-    val todoRepo = FakeToDosRepositoryLocal()
+    val todoRepo = ToDosLocalRepository()
     for (todo in MapViewModelTestsTodos.testedTodos) {
       todoRepo.addTodo(todo)
     }
 
-    val eventRepo = FakeEventsRepositoryLocal()
+    val eventRepo = EventsLocalRepository()
     for (event in MapViewModelTestsEvents.testEvents) {
       eventRepo.addEvent(event)
     }

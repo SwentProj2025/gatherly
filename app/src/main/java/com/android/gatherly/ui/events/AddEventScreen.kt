@@ -40,14 +40,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
-import com.android.gatherly.model.event.EventsRepositoryFirestore
-import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
-import com.android.gatherly.utils.GenericViewModelFactory
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.delay
 
 object AddEventScreenTestTags {
@@ -75,20 +70,15 @@ object AddEventScreenTestTags {
 /**
  * Screen for adding an existing Event.
  *
+ * @param addEventViewModel The ViewModel managing the state and logic for the Add Event screen,
+ *   instantiated with a factory provider defined in the ViewModel's companion object.
  * @param onSave called after a successful save or deletion and navigation intent.
  * @param goBack called when back arrow is pressed.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddEventScreen(
-    addEventViewModel: AddEventViewModel =
-        viewModel(
-            factory =
-                GenericViewModelFactory {
-                  AddEventViewModel(
-                      profileRepository = ProfileLocalRepository(),
-                      eventsRepository = EventsRepositoryFirestore(Firebase.firestore))
-                }),
+    addEventViewModel: AddEventViewModel = viewModel(factory = AddEventViewModel.provideFactory()),
     onSave: () -> Unit = {},
     goBack: () -> Unit = {},
 ) {
