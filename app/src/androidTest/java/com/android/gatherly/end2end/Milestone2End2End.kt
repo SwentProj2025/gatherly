@@ -45,6 +45,8 @@ class Milestone2End2End : FirestoreGatherlyTest() {
     composeTestRule.setContent { GatherlyApp(credentialManager = fakeCredentialManager) }
   }
 
+  // this end to end test verifies that a user can sign in with google, create a profile and create
+  // an event successfully
   @Test
   fun createEvent() {
     // Sign in using google
@@ -153,6 +155,8 @@ class Milestone2End2End : FirestoreGatherlyTest() {
         .assertTextContains("My event")
   }
 
+  // this end to end test verifies that a user can sign in with google, create a profile and modify
+  // their profile successfully
   @Test
   fun changeProfileInformation() {
     // Sign in using google
