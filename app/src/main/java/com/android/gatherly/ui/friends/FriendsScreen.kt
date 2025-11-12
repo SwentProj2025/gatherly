@@ -67,8 +67,10 @@ object FriendsScreenTestTags {
   const val BUTTON_FIND_FRIENDS = "buttonFindFriends"
   const val SEARCH_FRIENDS_BAR = "searchBarFriends"
   const val EMPTY_LIST_MSG = "messageEmptyList"
-
   const val LOADING_ANIMATION = "loadingAnimation"
+  const val HEART_BREAK_ANIMATION = "heartBreakAnimation"
+
+  const val UNFOLLOWING_TEXT_ANIMATION = "unfollowingTextAnimation"
 
   /**
    * Returns a unique test tag for the card or container representing a given [Profile.username]
@@ -108,6 +110,7 @@ object FriendsScreenTestTags {
   fun getTestTagForFriendUnfollowButton(friend: String): String = "friendUnfollowingButton${friend}"
 }
 
+// Private values with the json animation files
 private val ANIMATION_BROKEN_HEART = R.raw.broken_heart
 private val ANIMATION_LOADING = R.raw.loading_profiles
 
@@ -119,12 +122,15 @@ fun FriendsScreen(
     onFindFriends: () -> Unit = {},
 ) {
 
+  // Retrieve the necessary values for the implementation from the ViewModel
   val currentUserIdFromVM = friendsViewModel.currentUserId
   val uiState by friendsViewModel.uiState.collectAsState()
   val friendsList = uiState.friends
 
+  // Holds the current text entered by the friend username in the search bar
   var searchQuery by remember { mutableStateOf("") }
 
+  // Update the list depending on whether the current user types something in the search bar
   val filteredFriends =
       if (searchQuery.isBlank()) {
         friendsList
@@ -132,16 +138,21 @@ fun FriendsScreen(
         friendsList.filter { friend -> friend.contains(searchQuery, ignoreCase = true) }
       }
 
+  // Refresh friends profile when there is an update in the current user profile
   LaunchedEffect(currentUserIdFromVM) {
     if (currentUserIdFromVM.isNotBlank()) {
       friendsViewModel.refreshFriends(currentUserIdFromVM)
     }
   }
 
+  // Holds the boolean that determines when to trigger the animation
+  // after the current user unfollows a profile
   var showUnfollowMessage by remember { mutableStateOf(false) }
 
+  // Holds the text displayed during the unfollow animation
   val messageText = stringResource(R.string.friends_unfollow_message)
 
+  // Triggers the temporary message box when needed
   LaunchedEffect(showUnfollowMessage) {
     if (showUnfollowMessage) {
       kotlinx.coroutines.delay(2000)
@@ -149,6 +160,7 @@ fun FriendsScreen(
     }
   }
 
+  // --- PART SCAFFOLD COMPOSE ---
   Scaffold(
       topBar = {
         TopNavigationMenu_Goback(
@@ -157,10 +169,12 @@ fun FriendsScreen(
             goBack = goBack)
       },
       content = { padding ->
-        val showHeartAnimation = showUnfollowMessage
-        val isLoading = uiState.isLoading && !showHeartAnimation
+        // Value used to determine when the profile loading animation should appear
+        val isLoading = uiState.isLoading && !showUnfollowMessage
 
         Box(modifier = Modifier.fillMaxSize()) {
+
+          // --- LOADING PROFILE ANIMATION ---
           if (isLoading) {
             val loadingComposition by
                 rememberLottieComposition(LottieCompositionSpec.RawRes(ANIMATION_LOADING))
@@ -173,12 +187,15 @@ fun FriendsScreen(
                         .testTag(FriendsScreenTestTags.LOADING_ANIMATION))
           } else {
 
+            // --- SHOWING FRIENDS PROFILES ITEMS ---
             LazyColumn(
                 contentPadding = PaddingValues(vertical = dimensionResource(R.dimen.padding_small)),
                 modifier =
                     Modifier.fillMaxWidth()
                         .padding(horizontal = dimensionResource(R.dimen.padding_screen))
                         .padding(padding)) {
+
+                  // --- NO PROFILE ITEM NEED TO BE DISPLAYED ---
                   if (filteredFriends.isEmpty()) {
                     item {
                       Text(
@@ -188,6 +205,8 @@ fun FriendsScreen(
                                   .testTag(FriendsScreenTestTags.EMPTY_LIST_MSG))
                     }
                   } else {
+
+                    // --- SEARCH BAR ---
                     item {
                       OutlinedTextField(
                           value = searchQuery,
@@ -209,6 +228,7 @@ fun FriendsScreen(
                                   dimensionResource(R.dimen.friends_item_rounded_corner_shape)))
                     }
 
+                    // --- FRIENDS' ITEM ---
                     items(items = filteredFriends, key = { it }) { friend ->
                       FriendItem(
                           friend = friend,
@@ -218,6 +238,7 @@ fun FriendsScreen(
 
                             showUnfollowMessage = true
                           },
+                          // -- Animation slide up when an item disappear
                           modifier =
                               Modifier.animateItemPlacement(
                                   animationSpec =
@@ -225,11 +246,13 @@ fun FriendsScreen(
                     }
                   }
 
+                  // -- BUTTON NAVIGATE TO FIND FRIENDS SCREEN
                   item {
                     Button(
                         onClick = { onFindFriends() },
                         modifier =
                             Modifier.fillMaxWidth()
+                                // -- Animation slide up when an item disappear
                                 .animateItemPlacement(
                                     animationSpec =
                                         tween(
@@ -254,7 +277,7 @@ fun FriendsScreen(
                   }
                 }
           }
-
+          // --- UNFOLLOW A FRIEND ANIMATION ---
           if (showUnfollowMessage) {
             FloatingMessage(text = messageText, modifier = Modifier.fillMaxSize().padding(padding))
           }
@@ -262,6 +285,13 @@ fun FriendsScreen(
       })
 }
 
+/**
+ * Helper function : Composable helper that displays a single user profile item in the friends list.
+ *
+ * @param friend Username of the friend to display.
+ * @param unfollow Callback triggered when the "Follow" button is clicked.
+ * @param modifier Optional [Modifier] for layout customization.
+ */
 @Composable
 private fun FriendItem(friend: String, unfollow: () -> Unit, modifier: Modifier = Modifier) {
   Card(
@@ -272,8 +302,8 @@ private fun FriendItem(friend: String, unfollow: () -> Unit, modifier: Modifier 
       shape = RoundedCornerShape(dimensionResource(R.dimen.friends_item_card_rounded_corner_shape)),
       colors =
           CardDefaults.cardColors(
-              containerColor = MaterialTheme.colorScheme.onSurface,
-              contentColor = MaterialTheme.colorScheme.primary),
+              containerColor = MaterialTheme.colorScheme.secondaryContainer,
+              contentColor = MaterialTheme.colorScheme.onSecondaryContainer),
       modifier =
           modifier
               .testTag(FriendsScreenTestTags.getTestTagForFriendItem(friend))
@@ -285,6 +315,8 @@ private fun FriendItem(friend: String, unfollow: () -> Unit, modifier: Modifier 
                     .padding(dimensionResource(R.dimen.friends_item_card_padding)),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+
+          // -- Placeholder Profile Picture --
           Image(
               painter =
                   painterResource(
@@ -295,11 +327,13 @@ private fun FriendItem(friend: String, unfollow: () -> Unit, modifier: Modifier 
                       .clip(CircleShape)
                       .testTag(FriendsScreenTestTags.getTestTagForFriendProfilePicture(friend)))
 
+          // -- SPACER
           Spacer(
               modifier =
                   Modifier.width(dimensionResource(R.dimen.spacing_between_fields_smaller_regular)))
 
           Column(modifier = Modifier.weight(1f)) {
+            // -- Username Text --
             Text(
                 text = friend,
                 style = MaterialTheme.typography.bodyLarge,
@@ -308,9 +342,11 @@ private fun FriendItem(friend: String, unfollow: () -> Unit, modifier: Modifier 
                 modifier =
                     Modifier.testTag(FriendsScreenTestTags.getTestTagForFriendUsername(friend)))
           }
+          // -- SPACER
           Spacer(
               modifier = Modifier.width(dimensionResource(R.dimen.spacing_between_fields_regular)))
 
+          // -- Unfollow button --
           Button(
               onClick = unfollow,
               modifier =
@@ -322,9 +358,22 @@ private fun FriendItem(friend: String, unfollow: () -> Unit, modifier: Modifier 
       }
 }
 
+// This function contains code generated by an AI (DeepSeek).
+
+/**
+ * Helper function: Composable helper that displays a floating message animation when the user
+ * follows a profile.
+ *
+ * The animation consists of a Lottie heart breaking animation followed by a message box.
+ *
+ * @param text Message to display inside the floating box.
+ * @param modifier Optional [Modifier] for layout customization.
+ */
 @Composable
 private fun FloatingMessage(text: String, modifier: Modifier = Modifier) {
   val composition by rememberLottieComposition(LottieCompositionSpec.RawRes(ANIMATION_BROKEN_HEART))
+
+  // Show animated message with fade and slide transitions
   AnimatedVisibility(
       visible = true,
       enter = slideInVertically(initialOffsetY = { -it / 2 }) + fadeIn(),
@@ -334,14 +383,19 @@ private fun FloatingMessage(text: String, modifier: Modifier = Modifier) {
           Column(
               horizontalAlignment = Alignment.CenterHorizontally,
               verticalArrangement = Arrangement.Center) {
+
+                // Heart breaking animation (played once)
                 LottieAnimation(
                     composition = composition,
                     iterations = 1,
                     speed = 1f,
-                    modifier = Modifier.size(dimensionResource(R.dimen.lottie_icon_size_medium)))
+                    modifier =
+                        Modifier.size(dimensionResource(R.dimen.lottie_icon_size_medium))
+                            .testTag(FriendsScreenTestTags.HEART_BREAK_ANIMATION))
 
                 Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_small)))
 
+                // Text message box displayed below the animation
                 Card(
                     colors =
                         CardDefaults.cardColors(
@@ -351,7 +405,8 @@ private fun FloatingMessage(text: String, modifier: Modifier = Modifier) {
                         CardDefaults.cardElevation(
                             defaultElevation = dimensionResource(R.dimen.padding_extra_small)),
                     modifier =
-                        Modifier.padding(bottom = dimensionResource(R.dimen.padding_large))) {
+                        Modifier.padding(bottom = dimensionResource(R.dimen.padding_large))
+                            .testTag(FriendsScreenTestTags.UNFOLLOWING_TEXT_ANIMATION)) {
                       Text(
                           text = text,
                           color = MaterialTheme.colorScheme.onSecondary,
