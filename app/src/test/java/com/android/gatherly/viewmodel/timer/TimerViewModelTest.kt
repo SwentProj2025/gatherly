@@ -1,18 +1,25 @@
-package com.android.gatherly.ui.focusTimer
+package com.android.gatherly.viewmodel.timer
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.gatherly.model.focusSession.FocusSessionsRepository
 import com.android.gatherly.model.focusSession.FocusSessionsRepositoryProvider
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
-import com.android.gatherly.utils.FirestoreGatherlyTest
+import com.android.gatherly.model.todo.ToDosLocalRepository
+import com.android.gatherly.model.todo.ToDosRepository
+import com.android.gatherly.ui.focusTimer.TimerViewModel
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -26,9 +33,11 @@ private const val TIMEOUT = 5000L
 private const val DELAY = 200L
 
 /** Test class to check that [TimerViewModel] functions correctly. */
+@OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
-class TimerViewModelTest : FirestoreGatherlyTest() {
+class TimerViewModelTest {
 
+  private lateinit var toDosRepository: ToDosRepository
   private lateinit var viewModel: TimerViewModel
   private lateinit var focusSessionsRepository: FocusSessionsRepository
 
@@ -40,7 +49,7 @@ class TimerViewModelTest : FirestoreGatherlyTest() {
   ): ToDo {
     val now = Timestamp.now()
     return ToDo(
-        uid = repository.getNewUid(),
+        uid = toDosRepository.getNewUid(),
         name = name,
         description = description,
         assigneeName = assignee,
@@ -51,20 +60,31 @@ class TimerViewModelTest : FirestoreGatherlyTest() {
         ownerId = ownerId)
   }
 
+  // initialize this so that tests control all coroutines and can wait on them
+  private val testDispatcher = StandardTestDispatcher()
+
   @Before
-  override fun setUp() {
-    super.setUp()
+  fun setUp() {
+    // so that tests can wait on coroutines
+    Dispatchers.setMain(testDispatcher)
+
+    toDosRepository = ToDosLocalRepository()
+
     focusSessionsRepository = FocusSessionsRepositoryProvider.repository
-    viewModel = TimerViewModel(repository, focusSessionsRepository)
+    viewModel = TimerViewModel(toDosRepository, focusSessionsRepository)
+  }
+
+  @After
+  fun tearDown() {
+    Dispatchers.resetMain()
   }
 
   /** Check that the timer counts down correctly from 5 seconds to 0. */
-  @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun timer_runs_out() = runTest {
     val hours = "00"
     val minutes = "00"
-    val seconds = "05"
+    val seconds = "03"
 
     viewModel.setHours(hours)
     viewModel.setMinutes(minutes)
@@ -166,21 +186,15 @@ class TimerViewModelTest : FirestoreGatherlyTest() {
     // Pre-populate repository
     val todo1 = makeTodo("Sample Todo 1")
     val todo2 = makeTodo("Sample Todo 2")
-    repository.addTodo(todo1)
-    repository.addTodo(todo2)
+    toDosRepository.addTodo(todo1)
+    toDosRepository.addTodo(todo2)
 
-    // Wait for repository load
-    withContext(Dispatchers.Default.limitedParallelism(1)) {
-      withTimeout(TIMEOUT) {
-        while (viewModel.uiState.value.allTodos.size < 2) {
-          delay(DELAY)
-          viewModel.getAllTodos()
-        }
-      }
-    }
+    advanceUntilIdle()
 
     // Trigger reload
     viewModel.getAllTodos()
+
+    advanceUntilIdle()
 
     val state = viewModel.uiState.value
     assertNull("errorMsg should be null on success", state.errorMsg)
@@ -326,11 +340,11 @@ class TimerViewModelTest : FirestoreGatherlyTest() {
   /** Check that the hours set function works correctly when given valid input. */
   @Test
   fun right_value_set_hours() = runTest {
-    val hours = "00"
+    val hours = "05"
     val minutes = "00"
     val seconds = "00"
 
-    viewModel.setHours("05")
+    viewModel.setHours(hours)
     viewModel.setMinutes(minutes)
     viewModel.setSeconds(seconds)
 
@@ -343,11 +357,11 @@ class TimerViewModelTest : FirestoreGatherlyTest() {
   @Test
   fun right_value_set_minutes() = runTest {
     val hours = "00"
-    val minutes = "00"
+    val minutes = "05"
     val seconds = "00"
 
     viewModel.setHours(hours)
-    viewModel.setMinutes("05")
+    viewModel.setMinutes(minutes)
     viewModel.setSeconds(seconds)
 
     val finalState = viewModel.uiState.value
@@ -360,11 +374,11 @@ class TimerViewModelTest : FirestoreGatherlyTest() {
   fun right_value_set_seconds() = runTest {
     val hours = "00"
     val minutes = "00"
-    val seconds = "00"
+    val seconds = "05"
 
     viewModel.setHours(hours)
     viewModel.setMinutes(minutes)
-    viewModel.setSeconds("05")
+    viewModel.setSeconds(seconds)
 
     val finalState = viewModel.uiState.value
 

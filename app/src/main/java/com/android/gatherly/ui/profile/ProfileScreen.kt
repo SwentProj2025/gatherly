@@ -34,6 +34,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
@@ -43,6 +44,7 @@ import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Profile
+import com.android.gatherly.ui.theme.GatherlyTheme
 
 /** Contains test tags used for UI testing on the Profile screen. */
 object ProfileScreenTestTags {
@@ -231,4 +233,11 @@ fun ProfileScreen(
               }
         }
       })
+}
+
+// Helper function to preview the timer screen
+@Preview
+@Composable
+fun ProfileScreenPreview() {
+  GatherlyTheme(darkTheme = false) { ProfileScreen() }
 }

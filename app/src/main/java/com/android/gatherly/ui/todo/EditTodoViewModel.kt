@@ -72,7 +72,8 @@ private var client: OkHttpClient =
  */
 class EditTodoViewModel(
     private val todoRepository: ToDosRepository = ToDosRepositoryProvider.repository,
-    private val nominatimClient: NominatimLocationRepository = NominatimLocationRepository(client)
+    private val nominatimClient: NominatimLocationRepository = NominatimLocationRepository(client),
+    private val currentUser: String = Firebase.auth.currentUser?.uid ?: ""
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(EditTodoUIState())
   /** Public immutable access to the Edit ToDo UI state. */
@@ -110,6 +111,7 @@ class EditTodoViewModel(
     viewModelScope.launch {
       try {
         val todo = todoRepository.getTodo(todoID)
+        chosenLocation = todo.location
         _uiState.value =
             EditTodoUIState(
                 title = todo.name,
@@ -120,6 +122,11 @@ class EditTodoViewModel(
                       val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
                       return@let dateFormat.format(todo.dueDate.toDate())
                     },
+                dueTime =
+                    todo.dueTime?.let {
+                      val dateFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+                      return@let dateFormat.format(it.toDate())
+                    } ?: "",
                 location = todo.location?.name ?: "",
             )
       } catch (e: Exception) {
@@ -165,7 +172,7 @@ class EditTodoViewModel(
           Timestamp(sdfTime.parse(state.dueTime)!!)
         } else null
 
-    val ownerId = Firebase.auth.currentUser?.uid ?: ""
+    val ownerId = currentUser
 
     editTodoToRepository(
         todoID = id,
@@ -196,8 +203,10 @@ class EditTodoViewModel(
       _uiState.value = _uiState.value.copy(isSaving = true, errorMsg = null)
       try {
         todoRepository.editTodo(todoID = todoID, newValue = todo)
+        _uiState.value = _uiState.value.copy(isSaving = false, saveSuccess = true)
       } catch (e: Exception) {
-        setErrorMsg("Failed to edit ToDo: ${e.message}")
+        _uiState.value =
+            _uiState.value.copy(isSaving = false, errorMsg = "Failed to edit ToDo: ${e.message}")
       }
     }
   }
@@ -209,10 +218,13 @@ class EditTodoViewModel(
    */
   fun deleteToDo(todoID: String) {
     viewModelScope.launch {
+      _uiState.value = _uiState.value.copy(isSaving = true, errorMsg = null)
       try {
         todoRepository.deleteTodo(todoID = todoID)
+        _uiState.value = _uiState.value.copy(isSaving = false, saveSuccess = true)
       } catch (e: Exception) {
-        setErrorMsg("Failed to delete ToDo: ${e.message}")
+        _uiState.value =
+            _uiState.value.copy(isSaving = false, errorMsg = "Failed to delete ToDo: ${e.message}")
       }
     }
   }

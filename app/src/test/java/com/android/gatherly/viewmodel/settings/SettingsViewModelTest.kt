@@ -1,6 +1,7 @@
 package com.android.gatherly.viewmodel.settings
 
 import com.android.gatherly.model.profile.Profile
+import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.ui.settings.SettingsViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -21,19 +22,26 @@ import org.junit.Test
 class SettingsViewModelTest {
 
   private val testDispatcher = StandardTestDispatcher()
-  private lateinit var repo: ProfileRepositoryLocalForTests
+  private lateinit var repo: ProfileLocalRepository
   private lateinit var viewModel: SettingsViewModel
 
   @Before
   fun setup() {
     Dispatchers.setMain(testDispatcher)
-    repo = ProfileRepositoryLocalForTests()
-    viewModel = SettingsViewModel(repo)
+    repo = ProfileLocalRepository()
+    fill_repository()
+
+    viewModel = SettingsViewModel(repo, "currentUser")
   }
 
   @After
   fun tearDown() {
     Dispatchers.resetMain()
+  }
+
+  fun fill_repository() = runTest {
+    repo.initProfileIfMissing("currentUser", "")
+    advanceUntilIdle()
   }
 
   // ------------------------------------------------------------------------
@@ -205,5 +213,113 @@ class SettingsViewModelTest {
     advanceUntilIdle()
 
     assertEquals("At least one field is not valid.", viewModel.uiState.value.errorMsg)
+  }
+
+  // ------------------------------------------------------------------------
+  // SAVE SUCCESS & USERNAME CHANGE BEHAVIOR
+  // ------------------------------------------------------------------------
+
+  @Test
+  fun updateProfile_WhenUsernameUnchanged_DoesNotTriggerError() = runTest {
+    val existing = Profile(uid = "u1", name = "Alice", username = "same_user")
+    repo.addProfile(existing)
+
+    viewModel.loadProfile("u1")
+    advanceUntilIdle()
+
+    // Change only name, keep username same
+    viewModel.editName("Alice Updated")
+    advanceUntilIdle()
+
+    viewModel.updateProfile("u1", isFirstTime = false)
+    advanceUntilIdle()
+
+    val state = viewModel.uiState.value
+    assertNull(state.errorMsg)
+    assertTrue("Expected saveSuccess to be true", state.saveSuccess)
+  }
+
+  @Test
+  fun updateProfile_WhenValid_ShowsSaveSuccessFlag() = runTest {
+    val profile = Profile(uid = "u1", name = "Alice", username = "user_ok")
+    repo.addProfile(profile)
+
+    viewModel.loadProfile("u1")
+    advanceUntilIdle()
+
+    viewModel.editName("Alice Updated")
+    viewModel.editUsername("user_ok_new")
+    advanceUntilIdle()
+
+    viewModel.updateProfile("u1", isFirstTime = false)
+    advanceUntilIdle()
+
+    val updated = repo.getProfileByUid("u1")
+    assertEquals("Alice Updated", updated?.name)
+    assertEquals("user_ok_new", updated?.username)
+    assertTrue(viewModel.uiState.value.saveSuccess)
+  }
+
+  @Test
+  fun clearSaveSuccess_ResetsFlag() = runTest {
+    viewModel.editName("Test")
+    viewModel.editUsername("valid_name")
+    advanceUntilIdle()
+    viewModel.updateProfile("id1", isFirstTime = true)
+    advanceUntilIdle()
+
+    viewModel.clearSaveSuccess()
+    assertFalse(viewModel.uiState.value.saveSuccess)
+  }
+
+  @Test
+  fun updateProfile_WhenRepositoryReturnsFalse_SetsUsernameTakenError() = runTest {
+    // GIVEN an existing valid profile
+    val existing = Profile(uid = "u1", name = "Alice", username = "old_name")
+    repo.addProfile(existing)
+
+    // Override repo behavior to simulate failure on username registration
+    repo.shouldFailRegisterUsername = true
+
+    viewModel.loadProfile("u1")
+    advanceUntilIdle()
+
+    // User edits to a new username
+    viewModel.editName("Alice Updated")
+    viewModel.editUsername("new_user")
+    advanceUntilIdle()
+
+    // WHEN updateProfile is called
+    viewModel.updateProfile("u1", isFirstTime = true)
+    advanceUntilIdle()
+
+    // THEN the ViewModel should report the username invalid/taken error
+    val state = viewModel.uiState.value
+    assertEquals("Username is invalid or already taken.", state.errorMsg)
+    assertFalse(state.saveSuccess)
+    repo.shouldFailRegisterUsername = false
+  }
+
+  @Test
+  fun updateProfilePicture_WithValidUri_TriggersRepositoryUpdate() = runTest {
+    val profile =
+        Profile(uid = "u1", name = "Alice", username = "alice_ok", profilePicture = "old_url")
+    repo.addProfile(profile)
+    viewModel.loadProfile("u1")
+    advanceUntilIdle()
+
+    // Simulate user selecting a new local picture
+    val fakeContentUri = "content://media/external/images/media/1234"
+    viewModel.editProfilePictureUrl(fakeContentUri)
+
+    // Update the profile
+    viewModel.updateProfile("u1", isFirstTime = false)
+    advanceUntilIdle()
+
+    // Since repo mock doesn’t actually upload, we just verify UI state is updated
+    assertEquals(fakeContentUri, viewModel.uiState.value.profilePictureUrl)
+    // And that no error was set
+    advanceUntilIdle()
+    assertNull(viewModel.uiState.value.errorMsg)
   }
 }

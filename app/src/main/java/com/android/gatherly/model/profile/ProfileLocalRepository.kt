@@ -1,5 +1,7 @@
 package com.android.gatherly.model.profile
 
+import android.net.Uri
+
 /**
  * Simplified in-memory local implementation of [ProfileRepository].
  *
@@ -9,6 +11,8 @@ package com.android.gatherly.model.profile
 class ProfileLocalRepository : ProfileRepository {
 
   private val profiles: MutableList<Profile> = mutableListOf()
+
+  var shouldFailRegisterUsername = false
 
   override suspend fun addProfile(profile: Profile) {
     if (!profiles.any { it.uid == profile.uid }) {
@@ -47,6 +51,7 @@ class ProfileLocalRepository : ProfileRepository {
   }
 
   override suspend fun registerUsername(uid: String, username: String): Boolean {
+    if (shouldFailRegisterUsername) return false
     if (!isUsernameAvailable(username)) return false
     val existing = getProfileByUid(uid)
     val updated = (existing ?: Profile(uid = uid)).copy(username = username)
@@ -67,6 +72,19 @@ class ProfileLocalRepository : ProfileRepository {
     val updated = (existing ?: Profile(uid = uid)).copy(username = newUsername)
     if (existing == null) addProfile(updated) else updateProfile(updated)
     return true
+  }
+
+  override suspend fun updateProfilePic(uid: String, uri: Uri): String {
+    val fakeUrl = "https://local.test.storage/$uid.jpg"
+    val index = profiles.indexOfFirst { it.uid == uid }
+    if (index == -1) {
+      throw NoSuchElementException("Profile not found for uid=$uid")
+    } else {
+      val existing = profiles[index]
+      val updated = existing.copy(profilePicture = fakeUrl)
+      profiles[index] = updated
+    }
+    return fakeUrl
   }
 
   override suspend fun getProfileByUsername(username: String): Profile? =
@@ -94,16 +112,18 @@ class ProfileLocalRepository : ProfileRepository {
 
   override suspend fun deleteFriend(friend: String, currentUserId: String) {
     val currentProfile = getProfileByUid(currentUserId) ?: return
-    val updatedFriends = currentProfile.friendUids.filter { it != friend }
+    val friendId = getProfileByUsername(friend)?.uid
+    val updatedFriends = currentProfile.friendUids.filter { it != friendId }
     val updatedProfile = currentProfile.copy(friendUids = updatedFriends)
     updateProfile(updatedProfile)
   }
 
   override suspend fun addFriend(friend: String, currentUserId: String) {
     val currentProfile = getProfileByUid(currentUserId) ?: return
-    if (!currentProfile.friendUids.contains(friend)) {
-      val updatedFriends = currentProfile.friendUids + friend
-      val updatedProfile = currentProfile.copy(friendUids = updatedFriends)
+    val friendId = getProfileByUsername(friend)?.uid
+    if (!currentProfile.friendUids.contains(friendId)) {
+      val updatedFriends = currentProfile.friendUids + friendId
+      val updatedProfile = currentProfile.copy(friendUids = updatedFriends as List<String>)
       updateProfile(updatedProfile)
     }
   }

@@ -33,8 +33,7 @@ val EPFL_LATLNG = LatLng(46.5197, 6.5663)
  *
  * @property itemsList of drawable items (incomplete todos or upcoming/current events with valid
  *   locations).
- * @property expandedItemId ID of the todo or event whose marker is currently expanded, or null if
- *   none.
+ * @property selectedItemId ID of the item whose marker is currently selected, or null if none.
  * @property lastConsultedTodoId ID of the most recently consulted todo.
  * @property cameraPos Current camera position on the map.
  * @property errorMsg Error message to display, or null if no error.
@@ -42,7 +41,7 @@ val EPFL_LATLNG = LatLng(46.5197, 6.5663)
  */
 data class UIState(
     val itemsList: List<DisplayedMapElement> = emptyList(),
-    val expandedItemId: String? = null,
+    val selectedItemId: String? = null,
     val lastConsultedTodoId: String? = null,
     val cameraPos: LatLng = EPFL_LATLNG,
     val errorMsg: String? = null,
@@ -121,17 +120,17 @@ class MapViewModel(
   }
 
   /**
-   * Handles a tap on a todo marker by expanding it.
+   * Handles a tap on a marker by expanding it.
    *
-   * @param itemId The ID of the todo whose marker was tapped.
+   * @param itemId The ID of the item whose marker was tapped.
    */
-  fun onMarkerTapped(itemId: String) {
-    _uiState.value = _uiState.value.copy(expandedItemId = itemId)
+  fun onSelectedItem(itemId: String) {
+    _uiState.value = _uiState.value.copy(selectedItemId = itemId)
   }
 
-  /** Handles dismissal of an expanded marker by collapsing it. */
-  fun onMarkerDismissed() {
-    _uiState.value = _uiState.value.copy(expandedItemId = null)
+  /** Handles dismissal of an opened modal sheet. */
+  fun clearSelection() {
+    _uiState.value = _uiState.value.copy(selectedItemId = null)
   }
 
   /** Handles the switch from viewing todos to viewing events on the map */

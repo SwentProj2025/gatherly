@@ -1,8 +1,9 @@
 package com.android.gatherly.viewmodel.event
 
 import com.android.gatherly.model.event.EventStatus
+import com.android.gatherly.model.event.EventsLocalRepository
+import com.android.gatherly.model.event.EventsRepository
 import com.android.gatherly.ui.events.EventsViewModel
-import com.android.gatherly.viewmodel.FakeEventsRepositoryLocal
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -24,35 +25,36 @@ import org.junit.Test
  * These tests verify event list categorization, user participation flows, and event editing
  * functionality.
  */
+@OptIn(ExperimentalCoroutinesApi::class)
 class EventsViewModelTests {
 
   private val testDispatcher = StandardTestDispatcher()
-  private val repo = FakeEventsRepositoryLocal()
+  private lateinit var repo: EventsRepository
+  private lateinit var vm: EventsViewModel
 
-  @OptIn(ExperimentalCoroutinesApi::class)
   @Before
   fun setup() {
     Dispatchers.setMain(testDispatcher)
+    repo = EventsLocalRepository()
+    fillRepository()
+    vm = EventsViewModel(repo, EventsViewModelTestsData.TEST_USER_ID)
   }
 
-  @OptIn(ExperimentalCoroutinesApi::class)
   @After
   fun tearDown() {
     Dispatchers.resetMain()
   }
 
-  /** Verifies that the ViewModel correctly categorizes events on initialization. */
-  @OptIn(ExperimentalCoroutinesApi::class)
-  @Test
-  fun init_CorrectlyPopulatesInitialState() = runTest {
-    // Repo + VM setup
+  private fun fillRepository() = runTest {
     for (event in EventsViewModelTestsData.allTestEvents) {
       repo.addEvent(event)
     }
-    val vm = EventsViewModel(repo, EventsViewModelTestsData.TEST_USER_ID)
-
     advanceUntilIdle()
+  }
 
+  /** Verifies that the ViewModel correctly categorizes events on initialization. */
+  @Test
+  fun init_CorrectlyPopulatesInitialState() = runTest {
     // Initial state verification
     assertEquals(1, vm.uiState.value.createdEventList.size)
     assertTrue(
@@ -78,19 +80,8 @@ class EventsViewModelTests {
   }
 
   /** Verifies that participating in an event moves it from global to participated list. */
-  @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun onParticipate_MovesEventFromGlobalToParticipated() = runTest {
-    // Repo + VM setup
-    val repo = FakeEventsRepositoryLocal()
-    for (event in EventsViewModelTestsData.allTestEvents) {
-      repo.addEvent(event)
-    }
-
-    val vm = EventsViewModel(repo, EventsViewModelTestsData.TEST_USER_ID)
-
-    advanceUntilIdle()
-
     // Initial state verification
     assertTrue(
         vm.uiState.value.globalEventList.any { it.id == EventsViewModelTestsData.globalEvent.id })
@@ -122,19 +113,8 @@ class EventsViewModelTests {
   }
 
   /** Verifies that unregistering from an event moves it from participated to global list. */
-  @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun onUnregister_MovesEventFromParticipatedToGlobal() = runTest {
-    // Repo + VM setup
-    val repo = FakeEventsRepositoryLocal()
-    for (event in EventsViewModelTestsData.allTestEvents) {
-      repo.addEvent(event)
-    }
-
-    val vm = EventsViewModel(repo, EventsViewModelTestsData.TEST_USER_ID)
-
-    advanceUntilIdle()
-
     // Initial state verification
     assertFalse(
         vm.uiState.value.globalEventList.any {
@@ -172,19 +152,8 @@ class EventsViewModelTests {
   }
 
   /** Verifies that requesting to edit an event updates the editEventRequest state. */
-  @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun requestEditEvent_UpdatesEditEventRequest() = runTest {
-    // Repo + VM setup
-    val repo = FakeEventsRepositoryLocal()
-    for (event in EventsViewModelTestsData.allTestEvents) {
-      repo.addEvent(event)
-    }
-
-    val vm = EventsViewModel(repo, EventsViewModelTestsData.TEST_USER_ID)
-
-    advanceUntilIdle()
-
     // Initial state verification
     assertNull(vm.editEventRequest.value)
 
@@ -196,18 +165,8 @@ class EventsViewModelTests {
   }
 
   /** Verifies that editing an event updates its properties and clears the edit request. */
-  @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun onEditEvent_UpdatesEventPropertiesAndClearsEditRequest() = runTest {
-    // Repo + VM setup
-    val repo = FakeEventsRepositoryLocal()
-    for (event in EventsViewModelTestsData.allTestEvents) {
-      repo.addEvent(event)
-    }
-
-    val vm = EventsViewModel(repo, EventsViewModelTestsData.TEST_USER_ID)
-
-    advanceUntilIdle()
     // Setting editEventRequest to non-null value
     vm.requestEditEvent(EventsViewModelTestsData.eventCreatedByTestUser)
 
@@ -277,19 +236,8 @@ class EventsViewModelTests {
   }
 
   /** Verifies that participating in an event the user is already in causes no state change. */
-  @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun onParticipate_WhenAlreadyParticipating_NoStateChange() = runTest {
-    // Repo + VM setup
-    val repo = FakeEventsRepositoryLocal()
-    for (event in EventsViewModelTestsData.allTestEvents) {
-      repo.addEvent(event)
-    }
-
-    val vm = EventsViewModel(repo, EventsViewModelTestsData.TEST_USER_ID)
-
-    advanceUntilIdle()
-
     // Initial state verification - user is already participating
     assertTrue(
         vm.uiState.value.participatedEventList.any {
@@ -319,19 +267,8 @@ class EventsViewModelTests {
   }
 
   /** Verifies that unregistering from an event the user is not in causes no state change. */
-  @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun onUnregister_WhenNotParticipating_NoStateChange() = runTest {
-    // Repo + VM setup
-    val repo = FakeEventsRepositoryLocal()
-    for (event in EventsViewModelTestsData.allTestEvents) {
-      repo.addEvent(event)
-    }
-
-    val vm = EventsViewModel(repo, EventsViewModelTestsData.TEST_USER_ID)
-
-    advanceUntilIdle()
-
     // Initial state verification - user is not participating in global event
     assertTrue(
         vm.uiState.value.globalEventList.any { it.id == EventsViewModelTestsData.globalEvent.id })

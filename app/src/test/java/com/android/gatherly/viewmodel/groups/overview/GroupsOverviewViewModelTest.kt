@@ -11,7 +11,7 @@ import com.android.gatherly.viewmodel.groups.overview.GroupsOverviewViewModelTes
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -35,7 +35,7 @@ import org.mockito.kotlin.any
 class GroupsOverviewViewModelTest {
 
   private lateinit var fakeRepository: FakeGroupsRepositoryLocal
-  private val testDispatcher = StandardTestDispatcher()
+  private val testDispatcher = UnconfinedTestDispatcher()
 
   @Before
   fun setUp() {

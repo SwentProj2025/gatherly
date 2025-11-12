@@ -1,4 +1,4 @@
-package com.android.gatherly.ui.events
+package com.android.gatherly.viewmodel.event
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.gatherly.model.event.Event
@@ -8,10 +8,11 @@ import com.android.gatherly.model.event.EventsRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
+import com.android.gatherly.ui.events.EditEventsViewModel
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -31,7 +32,7 @@ class EditEventsViewModelTest {
   private lateinit var profileRepository: ProfileRepository
 
   // initialize this so that tests control all couroutines and can wait on them
-  private val testDispatcher = UnconfinedTestDispatcher()
+  private val testDispatcher = StandardTestDispatcher()
 
   @Before
   fun setUp() {
@@ -41,13 +42,11 @@ class EditEventsViewModelTest {
     // initialize repos and viewModel
     profileRepository = ProfileLocalRepository()
     eventsRepository = EventsLocalRepository()
-    editEventsViewModel = EditEventsViewModel(profileRepository, eventsRepository)
 
     // fill the profile and events repositories with profiles and event
-    runTest {
-      fill_repositories()
-      advanceUntilIdle()
-    }
+    fill_repositories()
+
+    editEventsViewModel = EditEventsViewModel(profileRepository, eventsRepository)
 
     // set the event to edit
     editEventsViewModel.setEventValues(event.id)
@@ -469,7 +468,8 @@ class EditEventsViewModelTest {
       val modifiedEvent = event.copy(title = "Something else")
       editEventsViewModel.updateName(modifiedEvent.title)
       editEventsViewModel.saveEvent()
-      // wait
+      advanceUntilIdle()
+
       assert(eventsRepository.getEvent(event.id).title == modifiedEvent.title) {
         "The event is not modified"
       }
@@ -484,7 +484,8 @@ class EditEventsViewModelTest {
       val modifiedEvent = event.copy(creatorName = "creator nameeeee")
       editEventsViewModel.updateCreatorName(modifiedEvent.creatorName)
       editEventsViewModel.saveEvent()
-      // wait
+      advanceUntilIdle()
+
       assert(eventsRepository.getEvent(event.id).creatorName == modifiedEvent.creatorName) {
         "The event is not modified"
       }
@@ -515,6 +516,7 @@ class EditEventsViewModelTest {
       profileRepository.addProfile(participantProfile)
       profileRepository.addProfile(ownerProfile)
       eventsRepository.addEvent(event)
+      advanceUntilIdle()
     }
   }
 }

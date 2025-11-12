@@ -2,16 +2,14 @@ package com.android.gatherly.ui.todo
 
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -22,22 +20,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.integerResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.PopupProperties
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
+import com.android.gatherly.ui.theme.GatherlyTheme
 import kotlinx.coroutines.delay
 
 // Portions of the code in this file are copy-pasted from the Bootcamp solution provided by the
@@ -100,12 +95,9 @@ fun AddToDoScreen(
       TextFieldDefaults.colors(
           focusedContainerColor = MaterialTheme.colorScheme.background,
           unfocusedContainerColor = MaterialTheme.colorScheme.background,
-          unfocusedTextColor = MaterialTheme.colorScheme.primary,
-          focusedTextColor = MaterialTheme.colorScheme.primary,
-      )
-
-  // Local state for the dropdown visibility
-  var showLocationDropdown by remember { mutableStateOf(false) }
+          unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+          focusedTextColor = MaterialTheme.colorScheme.onBackground,
+          errorTextColor = MaterialTheme.colorScheme.onBackground)
 
   LaunchedEffect(errorMsg) {
     if (errorMsg != null) {
@@ -122,6 +114,14 @@ fun AddToDoScreen(
     }
   }
 
+  // Observe save success
+  LaunchedEffect(todoUIState.saveSuccess) {
+    if (todoUIState.saveSuccess) {
+      onAdd()
+      addTodoViewModel.clearSaveSuccess()
+    }
+  }
+
   Scaffold(
       topBar = {
         TopNavigationMenu_Goback(
@@ -130,155 +130,145 @@ fun AddToDoScreen(
             goBack = goBack)
       },
       content = { paddingValues ->
-        Column(
+        LazyColumn(
             modifier = Modifier.fillMaxSize().padding(paddingValues).padding(screenPadding),
             verticalArrangement = Arrangement.spacedBy(fieldSpacing)) {
               // Title Input
-              OutlinedTextField(
-                  value = todoUIState.title,
-                  onValueChange = { addTodoViewModel.onTitleChanged(it) },
-                  label = { Text(stringResource(R.string.todos_title_field_label)) },
-                  placeholder = { Text(stringResource(R.string.todos_title_field_placeholder)) },
-                  isError = todoUIState.titleError != null,
-                  supportingText = {
-                    todoUIState.titleError?.let {
-                      Text(it, modifier = Modifier.testTag(AddToDoScreenTestTags.ERROR_MESSAGE))
-                    }
-                  },
-                  colors = textFieldColors,
-                  modifier =
-                      Modifier.fillMaxWidth().testTag(AddToDoScreenTestTags.INPUT_TODO_TITLE))
+              item {
+                OutlinedTextField(
+                    value = todoUIState.title,
+                    onValueChange = { addTodoViewModel.onTitleChanged(it) },
+                    label = { Text(stringResource(R.string.todos_title_field_label)) },
+                    placeholder = { Text(stringResource(R.string.todos_title_field_placeholder)) },
+                    isError = todoUIState.titleError != null,
+                    supportingText = {
+                      todoUIState.titleError?.let {
+                        Text(it, modifier = Modifier.testTag(AddToDoScreenTestTags.ERROR_MESSAGE))
+                      }
+                    },
+                    colors = textFieldColors,
+                    modifier =
+                        Modifier.fillMaxWidth().testTag(AddToDoScreenTestTags.INPUT_TODO_TITLE))
+              }
 
               // Description Input
-              OutlinedTextField(
-                  value = todoUIState.description,
-                  onValueChange = { addTodoViewModel.onDescriptionChanged(it) },
-                  label = { Text(stringResource(R.string.todos_description_field_label)) },
-                  placeholder = { Text(stringResource(R.string.todos_description_placeholder)) },
-                  isError = todoUIState.descriptionError != null,
-                  supportingText = {
-                    todoUIState.descriptionError?.let {
-                      Text(it, modifier = Modifier.testTag(AddToDoScreenTestTags.ERROR_MESSAGE))
-                    }
-                  },
-                  colors = textFieldColors,
-                  modifier =
-                      Modifier.fillMaxWidth()
-                          .height(inputHeight)
-                          .testTag(AddToDoScreenTestTags.INPUT_TODO_DESCRIPTION),
-                  minLines = integerResource(R.integer.todo_description_min_lines),
-                  maxLines = integerResource(R.integer.todo_description_max_lines))
+              item {
+                OutlinedTextField(
+                    value = todoUIState.description,
+                    onValueChange = { addTodoViewModel.onDescriptionChanged(it) },
+                    label = { Text(stringResource(R.string.todos_description_field_label)) },
+                    placeholder = { Text(stringResource(R.string.todos_description_placeholder)) },
+                    isError = todoUIState.descriptionError != null,
+                    supportingText = {
+                      todoUIState.descriptionError?.let {
+                        Text(it, modifier = Modifier.testTag(AddToDoScreenTestTags.ERROR_MESSAGE))
+                      }
+                    },
+                    colors = textFieldColors,
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .height(inputHeight)
+                            .testTag(AddToDoScreenTestTags.INPUT_TODO_DESCRIPTION),
+                    minLines = integerResource(R.integer.todo_description_min_lines),
+                    maxLines = integerResource(R.integer.todo_description_max_lines))
+              }
 
               // Assignee Input
-              OutlinedTextField(
-                  value = todoUIState.assignee,
-                  onValueChange = { addTodoViewModel.onAssigneeChanged(it) },
-                  label = { Text(stringResource(R.string.todos_assignee_field_label)) },
-                  placeholder = { Text(stringResource(R.string.todos_assignee_placeholder)) },
-                  isError = todoUIState.assigneeError != null,
-                  supportingText = {
-                    todoUIState.assigneeError?.let {
-                      Text(it, modifier = Modifier.testTag(AddToDoScreenTestTags.ERROR_MESSAGE))
-                    }
-                  },
-                  colors = textFieldColors,
-                  modifier =
-                      Modifier.fillMaxWidth().testTag(AddToDoScreenTestTags.INPUT_TODO_ASSIGNEE))
+              item {
+                OutlinedTextField(
+                    value = todoUIState.assignee,
+                    onValueChange = { addTodoViewModel.onAssigneeChanged(it) },
+                    label = { Text(stringResource(R.string.todos_assignee_field_label)) },
+                    placeholder = { Text(stringResource(R.string.todos_assignee_placeholder)) },
+                    isError = todoUIState.assigneeError != null,
+                    supportingText = {
+                      todoUIState.assigneeError?.let {
+                        Text(it, modifier = Modifier.testTag(AddToDoScreenTestTags.ERROR_MESSAGE))
+                      }
+                    },
+                    colors = textFieldColors,
+                    modifier =
+                        Modifier.fillMaxWidth().testTag(AddToDoScreenTestTags.INPUT_TODO_ASSIGNEE))
+              }
 
-              // Location Input
-              OutlinedTextField(
-                  value = todoUIState.location,
-                  onValueChange = {
-                    addTodoViewModel.onLocationChanged(it)
-                    showLocationDropdown = it.isNotBlank()
-                  },
-                  label = { Text(stringResource(R.string.todos_location_field_label)) },
-                  placeholder = { Text(stringResource(R.string.todos_location_field_placeholder)) },
-                  colors = textFieldColors,
-                  modifier =
-                      Modifier.fillMaxWidth().testTag(AddToDoScreenTestTags.INPUT_TODO_LOCATION))
-
-              DropdownMenu(
-                  expanded = showLocationDropdown && todoUIState.suggestions.isNotEmpty(),
-                  onDismissRequest = { showLocationDropdown = false },
-                  properties = PopupProperties(focusable = false),
-                  modifier =
-                      Modifier.testTag(AddToDoScreenTestTags.LOCATION_MENU)
-                          .fillMaxWidth()
-                          .height(200.dp)) {
-                    todoUIState.suggestions.take(3).forEach { loc ->
-                      DropdownMenuItem(
-                          text = {
-                            Text(text = loc.name.take(40) + if (loc.name.length > 40) "..." else "")
-                          },
-                          onClick = {
-                            addTodoViewModel.selectLocation(loc)
-                            showLocationDropdown = false
-                          },
-                          modifier = Modifier.testTag(AddToDoScreenTestTags.INPUT_TODO_LOCATION))
-                    }
-                    if (todoUIState.suggestions.size > 3) {
-                      DropdownMenuItem(text = { Text("More...") }, onClick = {})
-                    }
-                  }
+              // Location Input with dropdown
+              item {
+                LocationSuggestions(
+                    location = todoUIState.location,
+                    suggestions = todoUIState.suggestions,
+                    onLocationChanged = { addTodoViewModel.onLocationChanged(it) },
+                    onSelectLocation = { loc -> addTodoViewModel.selectLocation(loc) },
+                    modifier = Modifier.fillMaxWidth(),
+                    testTagInput = AddToDoScreenTestTags.INPUT_TODO_LOCATION,
+                    testTagDropdown = AddToDoScreenTestTags.LOCATION_MENU,
+                )
+              }
 
               // Due Date Input
-              OutlinedTextField(
-                  value = todoUIState.dueDate,
-                  onValueChange = { addTodoViewModel.onDateChanged(it) },
-                  label = { Text(stringResource(R.string.todos_date_field_label)) },
-                  placeholder = { Text(stringResource(R.string.todos_date_field_placeholder)) },
-                  isError = todoUIState.dueDateError != null,
-                  supportingText = {
-                    todoUIState.dueDateError?.let {
-                      Text(it, modifier = Modifier.testTag(AddToDoScreenTestTags.ERROR_MESSAGE))
-                    }
-                  },
-                  colors = textFieldColors,
-                  modifier = Modifier.fillMaxWidth().testTag(AddToDoScreenTestTags.INPUT_TODO_DATE))
+              item {
+                OutlinedTextField(
+                    value = todoUIState.dueDate,
+                    onValueChange = { addTodoViewModel.onDateChanged(it) },
+                    label = { Text(stringResource(R.string.todos_date_field_label)) },
+                    placeholder = { Text(stringResource(R.string.todos_date_field_placeholder)) },
+                    isError = todoUIState.dueDateError != null,
+                    supportingText = {
+                      todoUIState.dueDateError?.let {
+                        Text(it, modifier = Modifier.testTag(AddToDoScreenTestTags.ERROR_MESSAGE))
+                      }
+                    },
+                    colors = textFieldColors,
+                    modifier =
+                        Modifier.fillMaxWidth().testTag(AddToDoScreenTestTags.INPUT_TODO_DATE))
+              }
 
               // Due Time Input
-              OutlinedTextField(
-                  value = todoUIState.dueTime,
-                  onValueChange = { addTodoViewModel.onTimeChanged(it) },
-                  label = { Text(stringResource(R.string.todos_time_field_label)) },
-                  placeholder = { Text(stringResource(R.string.todos_time_field_placeholder)) },
-                  isError = todoUIState.dueTimeError != null,
-                  supportingText = {
-                    todoUIState.dueTimeError?.let {
-                      Text(it, modifier = Modifier.testTag(AddToDoScreenTestTags.ERROR_MESSAGE))
-                    }
-                  },
-                  colors = textFieldColors,
-                  modifier = Modifier.fillMaxWidth().testTag(AddToDoScreenTestTags.INPUT_TODO_TIME))
-
-              Spacer(modifier = Modifier.height(fieldSpacing))
-
-              // Observe save success
-              LaunchedEffect(todoUIState.saveSuccess) {
-                if (todoUIState.saveSuccess) {
-                  onAdd()
-                  addTodoViewModel.clearSaveSuccess()
-                }
+              item {
+                OutlinedTextField(
+                    value = todoUIState.dueTime,
+                    onValueChange = { addTodoViewModel.onTimeChanged(it) },
+                    label = { Text(stringResource(R.string.todos_time_field_label)) },
+                    placeholder = { Text(stringResource(R.string.todos_time_field_placeholder)) },
+                    isError = todoUIState.dueTimeError != null,
+                    supportingText = {
+                      todoUIState.dueTimeError?.let {
+                        Text(it, modifier = Modifier.testTag(AddToDoScreenTestTags.ERROR_MESSAGE))
+                      }
+                    },
+                    colors = textFieldColors,
+                    modifier =
+                        Modifier.fillMaxWidth().testTag(AddToDoScreenTestTags.INPUT_TODO_TIME))
               }
+
+              item { Spacer(modifier = Modifier.height(fieldSpacing)) }
+
               // Save Button
-              Button(
-                  onClick = { addTodoViewModel.saveTodo() },
-                  modifier = Modifier.fillMaxWidth().testTag(AddToDoScreenTestTags.TODO_SAVE),
-                  colors =
-                      ButtonDefaults.buttonColors(
-                          containerColor = MaterialTheme.colorScheme.secondary),
-                  enabled =
-                      todoUIState.dueDateError == null &&
-                          todoUIState.assigneeError == null &&
-                          todoUIState.descriptionError == null &&
-                          todoUIState.titleError == null &&
-                          todoUIState.dueTimeError == null &&
-                          todoUIState.locationError == null) {
-                    Text(
-                        stringResource(R.string.todos_save_button_text),
-                        color = MaterialTheme.colorScheme.primary)
-                  }
+              item {
+                Button(
+                    onClick = { addTodoViewModel.saveTodo() },
+                    modifier = Modifier.fillMaxWidth().testTag(AddToDoScreenTestTags.TODO_SAVE),
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.secondary),
+                    enabled =
+                        todoUIState.dueDateError == null &&
+                            todoUIState.assigneeError == null &&
+                            todoUIState.descriptionError == null &&
+                            todoUIState.titleError == null &&
+                            todoUIState.dueTimeError == null &&
+                            todoUIState.locationError == null) {
+                      Text(
+                          stringResource(R.string.todos_save_button_text),
+                          color = MaterialTheme.colorScheme.onSecondary)
+                    }
+              }
             }
       })
+}
+
+// Helper function to preview the timer screen
+@Preview
+@Composable
+fun AddToDoScreenPreview() {
+  GatherlyTheme(darkTheme = true) { AddToDoScreen() }
 }

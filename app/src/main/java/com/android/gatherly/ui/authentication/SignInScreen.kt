@@ -10,35 +10,36 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
+import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.Screen
 import com.android.gatherly.ui.navigation.Tab
+import com.android.gatherly.ui.theme.GatherlyTheme
 
 object SignInScreenTestTags {
   const val WELCOME_TITLE = "welcomeTitle"
   const val WELCOME_SUBTITLE = "welcomeSubtitle"
   const val GOOGLE_BUTTON = "googleButton"
   const val ANONYMOUS_BUTTON = "anonymousButton"
-  const val SIGN_UP_BUTTON = "signUpButton"
 }
 
-// Temporary color definitions that should be moved to the theme once it's designed
-private val DarkBackground = Color(0xFF1A1D23)
-private val ButtonBackground = Color(0xFF2D3139)
-private val TextWhite = Color(0xFFFFFFFF)
-
-/** Main sign-in screen providing various authentication options (Google, anonymous...). */
+/**
+ * Main sign-in screen providing various authentication options (Google, anonymous...).
+ *
+ * @param authViewModel ViewModel managing authentication state and logic.
+ * @param credentialManager Used for Google Credential authentication.
+ * @param onSignedIn Callback invoked after a successful sign-in.
+ */
 @Composable
 fun SignInScreen(
     authViewModel: SignInViewModel = viewModel(),
@@ -59,66 +60,88 @@ fun SignInScreen(
   }
 
   Scaffold(
-      containerColor = DarkBackground,
+      containerColor = MaterialTheme.colorScheme.background,
       modifier = Modifier.fillMaxSize(),
       content = { innerPadding ->
         Column(
-            modifier = Modifier.fillMaxSize().padding(innerPadding).padding(horizontal = 16.dp),
+            modifier =
+                Modifier.fillMaxSize()
+                    .padding(innerPadding)
+                    .padding(horizontal = dimensionResource(id = R.dimen.padding_screen)),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween) {
-              Spacer(modifier = Modifier.height(80.dp))
+              Spacer(
+                  modifier = Modifier.height(dimensionResource(id = R.dimen.sign_in_top_spacing)))
 
               Column(
                   modifier = Modifier.weight(1f),
                   horizontalAlignment = Alignment.CenterHorizontally) {
                     WelcomeSection()
-                    Spacer(modifier = Modifier.height(60.dp))
+                    Spacer(
+                        modifier =
+                            Modifier.height(
+                                dimensionResource(id = R.dimen.sign_in_top_buttons_spacing)))
 
                     // Sign In Buttons Section
                     Column(
                         modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                        verticalArrangement =
+                            Arrangement.spacedBy(
+                                dimensionResource(id = R.dimen.spacing_between_fields_regular))) {
                           SignInButton(
-                              text = "Continue with Google",
+                              text = stringResource(id = R.string.sign_in_google_button_label),
                               onSignInClick = {
                                 authViewModel.signInWithGoogle(context, credentialManager)
                               },
                               iconResId = R.drawable.google_logo,
                               modifier = Modifier.testTag(SignInScreenTestTags.GOOGLE_BUTTON))
                           SignInButton(
-                              text = "Continue without account",
+                              text = stringResource(id = R.string.sign_in_anonymous_button_label),
                               onSignInClick = { authViewModel.signInAnonymously() },
                               modifier = Modifier.testTag(SignInScreenTestTags.ANONYMOUS_BUTTON))
                         }
                   }
-
-              Spacer(modifier = Modifier.height(32.dp))
             }
       })
 }
 
+/**
+ * Displays the welcome section of the sign-in screen.
+ *
+ * This section shows a main title and a subtitle that greet the user when they open the app.
+ */
 @Composable
 fun WelcomeSection() {
 
   Column(horizontalAlignment = Alignment.Start, modifier = Modifier.fillMaxWidth()) {
     Text(
-        text = "Welcome to Gatherly,",
-        color = TextWhite,
-        fontSize = 32.sp,
+        text = stringResource(id = R.string.sign_in_welcome_section_text0),
+        color = MaterialTheme.colorScheme.onBackground,
+        style = MaterialTheme.typography.headlineLarge,
         fontWeight = FontWeight.Bold,
         modifier = Modifier.fillMaxWidth().testTag(SignInScreenTestTags.WELCOME_TITLE))
 
-    Spacer(modifier = Modifier.height(20.dp))
+    Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.sign_in_welcome_text_spacing)))
 
     Text(
-        text = "Your workflow and social events app!",
-        color = TextWhite,
-        fontSize = 20.sp,
-        fontWeight = FontWeight.Normal,
+        text = stringResource(id = R.string.sign_in_welcome_section_text1),
+        color = MaterialTheme.colorScheme.onBackground,
+        style = MaterialTheme.typography.titleLarge,
         modifier = Modifier.fillMaxWidth().testTag(SignInScreenTestTags.WELCOME_SUBTITLE))
   }
 }
 
+/**
+ * A reusable button used for sign-in actions such as Google or anonymous authentication.
+ *
+ * The button supports an optional leading icon, customizable text, and an [onSignInClick] action
+ * callback. It uses the app's color scheme and rounded corners for consistent styling.
+ *
+ * @param text The label displayed on the button.
+ * @param onSignInClick Callback triggered when the button is clicked.
+ * @param modifier Optional [Modifier] for layout and styling customization.
+ * @param iconResId Optional drawable resource ID for an icon displayed to the left of the text.
+ */
 @Composable
 fun SignInButton(
     text: String,
@@ -128,10 +151,13 @@ fun SignInButton(
 ) {
   Button(
       onClick = onSignInClick,
-      modifier = modifier.fillMaxWidth().height(56.dp),
+      modifier =
+          modifier.fillMaxWidth().height(dimensionResource(id = R.dimen.sign_in_button_height)),
       colors =
-          ButtonDefaults.buttonColors(containerColor = ButtonBackground, contentColor = TextWhite),
-      shape = RoundedCornerShape(12.dp)) {
+          ButtonDefaults.buttonColors(
+              containerColor = MaterialTheme.colorScheme.surfaceVariant,
+              contentColor = MaterialTheme.colorScheme.primary),
+      shape = RoundedCornerShape(dimensionResource(id = R.dimen.rounded_corner_shape_medium))) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
@@ -140,9 +166,14 @@ fun SignInButton(
                 Image(
                     painter = painterResource(id = id),
                     contentDescription = null, // Action still clear with button text description
-                    modifier = Modifier.size(30.dp).padding(end = 8.dp))
+                    modifier =
+                        Modifier.size(dimensionResource(id = R.dimen.sign_in_button_icon_size))
+                            .padding(end = dimensionResource(R.dimen.padding_small)))
               }
-              Text(text = text, fontSize = 16.sp, fontWeight = FontWeight.Medium)
+              Text(
+                  text = text,
+                  style = MaterialTheme.typography.bodyLarge,
+                  fontWeight = FontWeight.Medium)
             }
       }
 }
@@ -150,5 +181,8 @@ fun SignInButton(
 @Preview(showBackground = true)
 @Composable
 fun SignInScreenPreview() {
-  SignInScreen()
+  GatherlyTheme(darkTheme = true) {
+    val fakeViewMod = SignInViewModel(ProfileLocalRepository())
+    SignInScreen(fakeViewMod)
+  }
 }
