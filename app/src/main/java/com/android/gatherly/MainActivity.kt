@@ -40,11 +40,7 @@ class MainActivity : ComponentActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContent {
-      GatherlyTheme(darkTheme = true) {
-        Surface(modifier = Modifier.fillMaxSize()) { GatherlyApp() }
-      }
-    }
+    setContent { GatherlyTheme() { Surface(modifier = Modifier.fillMaxSize()) { GatherlyApp() } } }
   }
 }
 
@@ -143,7 +139,8 @@ fun GatherlyApp(
             navigationActions = navigationActions,
             credentialManager = credentialManager,
             onSignedOut = { navigationActions.navigateTo(Screen.SignIn) },
-            goToEvent = { navigationActions.navigateTo(Screen.EventsScreen) })
+            goToEvent = { navigationActions.navigateTo(Screen.EventsScreen) },
+            goToToDo = { navigationActions.navigateTo(Screen.OverviewToDo) })
       }
     }
 

@@ -43,15 +43,18 @@ class FriendsViewModel(private val repository: ProfileRepository, val currentUse
    * @param currentUserId the ID of the current user
    */
   suspend fun refreshFriends(currentUserId: String) {
-    _uiState.value = _uiState.value.copy(isLoading = true)
-    val profile = repository.getProfileByUid(currentUserId)
-    _uiState.value =
-        _uiState.value.copy(
-            friends =
-                profile?.friendUids?.mapNotNull { repository.getProfileByUid(it)?.username }
-                    ?: throw Exception("FriendsVM: Profile not found"),
-            listNoFriends = repository.getListNoFriends(currentUserId),
-            isLoading = false)
+      _uiState.value = _uiState.value.copy(isLoading = true)
+    try {
+      val friendsData = repository.getFriendsAndNonFriendsUsernames(currentUserId)
+      _uiState.value =
+          _uiState.value.copy(
+              friends = friendsData.friendUsernames,
+              listNoFriends = friendsData.nonFriendUsernames,
+              errorMsg = null,
+              isLoading = false)
+    } catch (e: Exception) {
+      _uiState.value = _uiState.value.copy(errorMsg = "Failed to load friends: ${e.message}")
+    }
   }
 
   /**

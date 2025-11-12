@@ -128,7 +128,7 @@ fun OverviewScreen(
             onClick = { onAddTodo() },
             modifier = Modifier.testTag(OverviewScreenTestTags.CREATE_TODO_BUTTON),
             containerColor = MaterialTheme.colorScheme.secondary,
-            contentColor = MaterialTheme.colorScheme.primary) {
+            contentColor = MaterialTheme.colorScheme.onSecondary) {
               Icon(
                   imageVector = Icons.Default.Add,
                   contentDescription = stringResource(R.string.todos_add_button_text))
@@ -227,8 +227,8 @@ fun ToDoItem(
   Card(
       colors =
           CardDefaults.cardColors(
-              containerColor = MaterialTheme.colorScheme.onSurface,
-              contentColor = MaterialTheme.colorScheme.primary),
+              containerColor = MaterialTheme.colorScheme.surfaceVariant,
+              contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
       modifier =
           Modifier.clickable(onClick = onClick)
               .testTag(OverviewScreenTestTags.getTestTagForTodoItem(todo))
@@ -254,14 +254,14 @@ fun ToDoItem(
                 Text(
                     text = todo.name,
                     style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.primary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontWeight = FontWeight.Medium)
                 Text(
                     text =
                         SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
                             .format(todo.dueDate.toDate()),
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
               }
         }

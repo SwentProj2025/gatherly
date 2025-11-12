@@ -1,6 +1,7 @@
 package com.android.gatherly.model.profile
 
 import android.net.Uri
+import com.android.gatherly.model.friends.Friends
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
@@ -289,6 +290,19 @@ class ProfileRepositoryFirestore(
         "schoolYear" to profile.schoolYear,
         "birthday" to profile.birthday,
         "profilePicture" to profile.profilePicture)
+  }
+
+  override suspend fun getFriendsAndNonFriendsUsernames(currentUserId: String): Friends {
+    val currentProfile =
+        getProfileByUid(currentUserId)
+            ?: throw NoSuchElementException("Profile not found for uid=$currentUserId")
+
+    val friendUsernames =
+        currentProfile.friendUids.mapNotNull { friendUid -> getProfileByUid(friendUid)?.username }
+
+    val nonFriendUsernames = getListNoFriends(currentUserId)
+
+    return Friends(friendUsernames = friendUsernames, nonFriendUsernames = nonFriendUsernames)
   }
 
   override suspend fun getListNoFriends(currentUserId: String): List<String> {

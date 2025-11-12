@@ -104,9 +104,9 @@ fun EditEventsScreen(
       TextFieldDefaults.colors(
           focusedContainerColor = MaterialTheme.colorScheme.background,
           unfocusedContainerColor = MaterialTheme.colorScheme.background,
-          unfocusedTextColor = MaterialTheme.colorScheme.primary,
-          focusedTextColor = MaterialTheme.colorScheme.primary,
-      )
+          unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+          focusedTextColor = MaterialTheme.colorScheme.onBackground,
+          errorTextColor = MaterialTheme.colorScheme.onBackground)
 
   // Local state for the dropdown visibility
   var showLocationDropdown by remember { mutableStateOf(false) }
@@ -237,6 +237,7 @@ fun EditEventsScreen(
                       expanded = showProfilesDropdown && ui.suggestedProfiles.isNotEmpty(),
                       onDismissRequest = { showProfilesDropdown = false },
                       properties = PopupProperties(focusable = false),
+                      containerColor = MaterialTheme.colorScheme.surfaceVariant,
                       modifier =
                           Modifier.testTag(EditEventsScreenTestTags.PARTICIPANT_MENU)
                               .fillMaxWidth()
@@ -251,7 +252,9 @@ fun EditEventsScreen(
                                             .testTag(
                                                 EditEventsScreenTestTags.PROFILE_SUGGESTION_ITEM),
                                     horizontalArrangement = Arrangement.SpaceBetween) {
-                                      Text(profile.name)
+                                      Text(
+                                          profile.name,
+                                          color = MaterialTheme.colorScheme.onSurfaceVariant)
                                       if (isAlreadyParticipant) {
                                         IconButton(
                                             onClick = {
@@ -263,7 +266,8 @@ fun EditEventsScreen(
                                                         .PROFILE_SUGGESTION_REMOVE)) {
                                               Icon(
                                                   Icons.Filled.Remove,
-                                                  contentDescription = "Remove")
+                                                  contentDescription = "Remove",
+                                                  tint = MaterialTheme.colorScheme.error)
                                             }
                                       } else {
                                         IconButton(
@@ -274,7 +278,10 @@ fun EditEventsScreen(
                                                 Modifier.testTag(
                                                     EditEventsScreenTestTags
                                                         .PROFILE_SUGGESTION_ADD)) {
-                                              Icon(Icons.Filled.Add, contentDescription = "Add")
+                                              Icon(
+                                                  Icons.Filled.Add,
+                                                  contentDescription = "Add",
+                                                  tint = MaterialTheme.colorScheme.onSurfaceVariant)
                                             }
                                       }
                                     }
@@ -306,6 +313,7 @@ fun EditEventsScreen(
                       expanded = showLocationDropdown && ui.suggestedLocations.isNotEmpty(),
                       onDismissRequest = { showLocationDropdown = false },
                       properties = PopupProperties(focusable = false),
+                      containerColor = MaterialTheme.colorScheme.surfaceVariant,
                       modifier =
                           Modifier.testTag(EditEventsScreenTestTags.LOCATION_MENU)
                               .fillMaxWidth()
@@ -315,7 +323,8 @@ fun EditEventsScreen(
                               text = {
                                 Text(
                                     text =
-                                        loc.name.take(40) + if (loc.name.length > 40) "..." else "")
+                                        loc.name.take(40) + if (loc.name.length > 40) "..." else "",
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant)
                               },
                               onClick = {
                                 editEventsViewModel.selectLocation(loc)
@@ -324,7 +333,11 @@ fun EditEventsScreen(
                               modifier = Modifier.testTag(EditEventsScreenTestTags.INPUT_LOCATION))
                         }
                         if (ui.suggestedLocations.size > 3) {
-                          DropdownMenuItem(text = { Text("More...") }, onClick = {})
+                          DropdownMenuItem(
+                              text = {
+                                Text("More...", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                              },
+                              onClick = {})
                         }
                       }
                 }
@@ -405,7 +418,7 @@ fun EditEventsScreen(
                             !ui.dateError &&
                             !ui.startTimeError &&
                             !ui.endTimeError) {
-                      Text("Save", color = MaterialTheme.colorScheme.primary)
+                      Text("Save", color = MaterialTheme.colorScheme.onSecondary)
                     }
               }
 
@@ -419,15 +432,15 @@ fun EditEventsScreen(
                     modifier = Modifier.fillMaxWidth().testTag(EditEventsScreenTestTags.BTN_DELETE),
                     colors =
                         ButtonDefaults.textButtonColors(
-                            contentColor = MaterialTheme.colorScheme.tertiary)) {
+                            contentColor = MaterialTheme.colorScheme.error)) {
                       Icon(
                           imageVector = Icons.Filled.DeleteForever,
                           contentDescription = "Delete event",
-                          tint = MaterialTheme.colorScheme.tertiary)
+                          tint = MaterialTheme.colorScheme.error)
                       Text(
                           "Delete",
                           modifier = Modifier.padding(start = buttonSpacing),
-                          color = MaterialTheme.colorScheme.tertiary)
+                          color = MaterialTheme.colorScheme.error)
                     }
               }
             }
@@ -437,5 +450,5 @@ fun EditEventsScreen(
 @Preview
 @Composable
 fun EditEventsScreenPreview() {
-  GatherlyTheme { EditEventsScreen() }
+  GatherlyTheme(darkTheme = true) { EditEventsScreen() }
 }
