@@ -20,6 +20,8 @@ class FakeGroupsRepositoryLocal(private val currentUserId: String = "testUser") 
   private val groups = mutableMapOf<String, Group>()
   private var idCounter = 0
 
+  /** If true, addGroup will throw an exception (for testing error handling) */
+  var shouldThrowOnAddGroup = false
   var shouldThrowOnEditGroup = false
 
   override fun getNewId(): String {
@@ -39,6 +41,9 @@ class FakeGroupsRepositoryLocal(private val currentUserId: String = "testUser") 
   }
 
   override suspend fun addGroup(group: Group) {
+    if (shouldThrowOnAddGroup) {
+      throw Exception("Test error")
+    }
     groups[group.gid] = group
   }
 
