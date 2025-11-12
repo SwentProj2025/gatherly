@@ -2,6 +2,8 @@ package com.android.gatherly.model.profile
 
 import com.android.gatherly.utils.FirebaseEmulator
 import com.android.gatherly.utils.FirestoreGatherlyProfileTest
+import com.google.firebase.auth.auth
+import com.google.firebase.storage.storage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.tasks.await
@@ -11,8 +13,8 @@ import kotlinx.coroutines.withTimeout
 import org.junit.Assert.*
 import org.junit.Test
 
-private const val TIMEOUT = 30_000L
-private const val DELAY = 200L
+private const val TIMEOUT = 3000L
+private const val DELAY = 100L
 
 /**
  * Integration tests for [ProfileRepositoryFirestore] using the Firebase Emulators.
@@ -92,11 +94,12 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   fun searchProfilesByNamePrefix_returnsMatchingProfiles() = runTest {
     val auth = FirebaseEmulator.auth
     val firestore = FirebaseEmulator.firestore
+    val storage = FirebaseEmulator.storage
 
     // USER A
     auth.signInAnonymously().await()
     val userAUid = auth.currentUser!!.uid
-    val repoA = ProfileRepositoryFirestore(firestore)
+    val repoA = ProfileRepositoryFirestore(firestore, storage)
     repoA.initProfileIfMissing(userAUid, "defaultA.png")
     repoA.updateProfile(Profile(uid = userAUid, name = "Alice", profilePicture = "a.png"))
 
@@ -104,7 +107,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     auth.signOut()
     auth.signInAnonymously().await()
     val userBUid = auth.currentUser!!.uid
-    val repoB = ProfileRepositoryFirestore(firestore)
+    val repoB = ProfileRepositoryFirestore(firestore, storage)
     repoB.initProfileIfMissing(userBUid, "defaultB.png")
     repoB.updateProfile(Profile(uid = userBUid, name = "Alex", profilePicture = "b.png"))
 
@@ -169,18 +172,19 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   fun userCannotEditAnotherUserProfile_dueToRules() = runTest {
     val auth = FirebaseEmulator.auth
     val firestore = FirebaseEmulator.firestore
+    val storage = FirebaseEmulator.storage
 
     // User A creates a profile
     auth.signInAnonymously().await()
     val userAUid = auth.currentUser!!.uid
-    val repoA = ProfileRepositoryFirestore(firestore)
+    val repoA = ProfileRepositoryFirestore(firestore, storage)
     repoA.initProfileIfMissing(userAUid, "alice.png")
 
     // Switch to User B
     auth.signOut()
     auth.signInAnonymously().await()
     val userBUid = auth.currentUser!!.uid
-    val repoB = ProfileRepositoryFirestore(firestore)
+    val repoB = ProfileRepositoryFirestore(firestore, storage)
 
     // Attempt to edit Alice's profile should fail
     val unauthorized = Profile(uid = userAUid, name = "Hacked Alice", profilePicture = "evil.png")
@@ -196,17 +200,18 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   fun userCanReadOtherUserProfile_whenAuthenticated() = runTest {
     val auth = FirebaseEmulator.auth
     val firestore = FirebaseEmulator.firestore
+    val storage = FirebaseEmulator.storage
 
     // User A
     auth.signInAnonymously().await()
     val userAUid = auth.currentUser!!.uid
-    val repoA = ProfileRepositoryFirestore(firestore)
+    val repoA = ProfileRepositoryFirestore(firestore, storage)
     repoA.initProfileIfMissing(userAUid, "alice.png")
 
     // User B
     auth.signOut()
     auth.signInAnonymously().await()
-    val repoB = ProfileRepositoryFirestore(firestore)
+    val repoB = ProfileRepositoryFirestore(firestore, storage)
 
     val fetched = repoB.getProfileByUid(userAUid)
     assertNotNull(fetched)
@@ -233,7 +238,8 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   fun testGetListNoFriends() = runTest {
     val auth = FirebaseEmulator.auth
     val firestore = FirebaseEmulator.firestore
-    val repo = ProfileRepositoryFirestore(firestore)
+    val storage = FirebaseEmulator.storage
+    val repo = ProfileRepositoryFirestore(firestore, storage)
 
     // User B
     auth.signInAnonymously().await()
@@ -287,7 +293,8 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   fun testAddFriend() = runTest {
     val auth = FirebaseEmulator.auth
     val firestore = FirebaseEmulator.firestore
-    val repo = ProfileRepositoryFirestore(firestore)
+    val storage = FirebaseEmulator.storage
+    val repo = ProfileRepositoryFirestore(firestore, storage)
 
     // User B
     auth.signInAnonymously().await()
@@ -327,7 +334,8 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   fun deleteFriend_removesUidFromFriendList() = runTest {
     val auth = FirebaseEmulator.auth
     val firestore = FirebaseEmulator.firestore
-    val repo = ProfileRepositoryFirestore(firestore)
+    val storage = FirebaseEmulator.storage
+    val repo = ProfileRepositoryFirestore(firestore, storage)
 
     // User B
     auth.signInAnonymously().await()
@@ -379,5 +387,59 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     val profileA = repo.getProfileByUid(userAUid)
     assertNotNull(profileA)
     assertFalse(profileA!!.friendUids.contains(userBUid))
+  }
+
+  @Test
+  fun updateProfilePic_uploadsToStorageAndUpdatesFirestore() = runTest {
+    val uid = FirebaseEmulator.auth.currentUser!!.uid
+    withTimeout(TIMEOUT) { while (FirebaseEmulator.auth.currentUser == null) delay(DELAY) }
+    repository.initProfileIfMissing(uid, "old_pic.png")
+
+    // Prepare fake image file
+    val tmpFile = kotlin.io.path.createTempFile("test_image").toFile()
+    tmpFile.writeBytes(ByteArray(10) { 0x42 })
+    val uri = android.net.Uri.fromFile(tmpFile)
+
+    repository.updateProfilePic(uid, uri)
+
+    val updatedProfile = repository.getProfileByUid(uid)
+
+    assertNotNull("Profile is null", updatedProfile)
+
+    assertTrue(
+        "Unexpected profile picture URL: ${updatedProfile?.profilePicture}",
+        updatedProfile!!.profilePicture.startsWith("https://") ||
+            updatedProfile.profilePicture.startsWith("http://10.0.2.2"))
+
+    val storageRef = FirebaseEmulator.storage.reference.child("profile_pictures/$uid")
+    val metadata = storageRef.metadata.await()
+    assertNotNull("Storage metadata is null", metadata)
+  }
+
+  @Test
+  fun updateProfilePic_overwritesExistingFile() = runTest {
+    val uid = FirebaseEmulator.auth.currentUser!!.uid
+    withTimeout(TIMEOUT) { while (FirebaseEmulator.auth.currentUser == null) delay(DELAY) }
+    repository.initProfileIfMissing(uid, "pic.png")
+
+    val file1 = kotlin.io.path.createTempFile("first").toFile()
+    file1.writeBytes(ByteArray(20) { 1 })
+    val uri1 = android.net.Uri.fromFile(file1)
+
+    repository.updateProfilePic(uid, uri1)
+
+    val metadata1 =
+        FirebaseEmulator.storage.reference.child("profile_pictures/$uid").metadata.await()
+
+    val file2 = kotlin.io.path.createTempFile("second").toFile()
+    file2.writeBytes(ByteArray(30) { 2 })
+    val uri2 = android.net.Uri.fromFile(file2)
+
+    repository.updateProfilePic(uid, uri2)
+    val metadata2 =
+        FirebaseEmulator.storage.reference.child("profile_pictures/$uid").metadata.await()
+
+    // Both metadata should exist but may have different updated timestamps
+    assertTrue(metadata2.updatedTimeMillis >= metadata1.updatedTimeMillis)
   }
 }

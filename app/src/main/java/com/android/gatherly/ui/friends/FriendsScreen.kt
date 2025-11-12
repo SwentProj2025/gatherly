@@ -51,6 +51,7 @@ import com.android.gatherly.utils.GenericViewModelFactory
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
+import com.google.firebase.storage.storage
 
 object FriendsScreenTestTags {
   const val BUTTON_FIND_FRIENDS = "buttonFindFriends"
@@ -102,7 +103,7 @@ fun FriendsScreen(
             factory =
                 GenericViewModelFactory<FriendsViewModel> {
                   FriendsViewModel(
-                      repository = ProfileRepositoryFirestore(Firebase.firestore),
+                      repository = ProfileRepositoryFirestore(Firebase.firestore, Firebase.storage),
                       currentUserId = Firebase.auth.currentUser?.uid ?: "")
                 }),
     goBack: () -> Unit = {},

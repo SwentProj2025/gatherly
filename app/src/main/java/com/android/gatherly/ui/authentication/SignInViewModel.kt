@@ -21,6 +21,7 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
+import com.google.firebase.storage.storage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -36,7 +37,7 @@ import kotlinx.coroutines.tasks.await
  */
 class SignInViewModel(
     private val profileRepository: ProfileRepository =
-        ProfileRepositoryFirestore(Firebase.firestore)
+        ProfileRepositoryFirestore(Firebase.firestore, Firebase.storage)
 ) : ViewModel() {
   // UI State containing the user sign in status
   private val _uiState = MutableStateFlow<Boolean>(false)

@@ -49,6 +49,7 @@ import com.android.gatherly.utils.GenericViewModelFactory
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
+import com.google.firebase.storage.storage
 
 object FindFriendsScreenTestTags {
   const val SEARCH_FRIENDS_BAR = "searchBarFriends"
@@ -100,7 +101,7 @@ fun FindFriendsScreen(
             factory =
                 GenericViewModelFactory<FriendsViewModel> {
                   FriendsViewModel(
-                      repository = ProfileRepositoryFirestore(Firebase.firestore),
+                      repository = ProfileRepositoryFirestore(Firebase.firestore, Firebase.storage),
                       currentUserId = Firebase.auth.currentUser?.uid ?: "")
                 }),
     goBack: () -> Unit = {},
