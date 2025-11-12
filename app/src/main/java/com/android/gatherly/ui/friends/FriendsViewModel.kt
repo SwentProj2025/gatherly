@@ -3,6 +3,9 @@ package com.android.gatherly.ui.friends
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.profile.ProfileRepository
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,8 +17,10 @@ data class FriendsUIState(
     val listNoFriends: List<String> = emptyList()
 )
 
-class FriendsViewModel(private val repository: ProfileRepository, val currentUserId: String) :
-    ViewModel() {
+class FriendsViewModel(
+    private val repository: ProfileRepository,
+    private val authProvider: () -> FirebaseAuth = { Firebase.auth }
+) : ViewModel() {
 
   /** StateFlow that emits the current UI state for the Friends screen. */
   private val _uiState = MutableStateFlow(FriendsUIState())
@@ -26,7 +31,7 @@ class FriendsViewModel(private val repository: ProfileRepository, val currentUse
    * them to display only drawable todos.
    */
   init {
-    viewModelScope.launch { refreshFriends(currentUserId) }
+    viewModelScope.launch { refreshFriends(authProvider().currentUser?.uid ?: "") }
   }
 
   /**
