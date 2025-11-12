@@ -263,6 +263,13 @@ fun TopNavigationMenu_Profile(
       title = {
         Text(text = selectedTab.name, modifier = Modifier.testTag(NavigationTestTags.TOP_BAR_TITLE))
       },
+      navigationIcon = {
+        IconButton(
+            onClick = { onTabSelected(Tab.HomePage) },
+            modifier = Modifier.testTag(NavigationTestTags.HOMEPAGE_TAB)) {
+              Icon(imageVector = Tab.HomePage.icon, contentDescription = Tab.HomePage.name)
+            }
+      },
       actions = {
         TopDropdownMenuForProfile(onTabSelected = onTabSelected, onSignedOut = onSignedOut)
       },
