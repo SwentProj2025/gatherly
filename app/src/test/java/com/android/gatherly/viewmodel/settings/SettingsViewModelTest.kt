@@ -309,7 +309,8 @@ class SettingsViewModelTest {
     val repo = ProfileLocalRepository()
     val viewModel = SettingsViewModel(repository = repo, currentUser = uid)
 
-    val originalProfile = Profile(uid = uid, name = "Alice", username = "alice_ok", profilePicture = "same_url")
+    val originalProfile =
+        Profile(uid = uid, name = "Alice", username = "alice_ok", profilePicture = "same_url")
     repo.addProfile(originalProfile)
 
     viewModel.loadProfile(uid)
@@ -325,25 +326,22 @@ class SettingsViewModelTest {
     assertTrue(viewModel.uiState.value.saveSuccess)
   }
 
-  //Used ChatGpt for this test to implement Mockito and help use parse even though we are in unit tests.
+  // Used ChatGpt for this test to implement Mockito and help use parse even though we are in unit
+  // tests.
   @Test
   fun updateProfilePicture_WhenUrlChanged_CallsRepoAndUpdatesProfile() = runTest {
     val uid = "u1"
     val repo = ProfileLocalRepository()
     val viewModel = SettingsViewModel(repository = repo, currentUser = uid)
 
-    //Mock Uri.parse() to bypass Android runtime
+    // Mock Uri.parse() to bypass Android runtime
     val fakeUri = Mockito.mock(Uri::class.java)
     Mockito.mockStatic(Uri::class.java).use { mockedStatic ->
       mockedStatic.`when`<Uri> { Uri.parse(any()) }.thenReturn(fakeUri)
 
       // GIVEN an existing profile
-      val originalProfile = Profile(
-        uid = uid,
-        name = "Alice",
-        username = "alice_ok",
-        profilePicture = "old_url"
-      )
+      val originalProfile =
+          Profile(uid = uid, name = "Alice", username = "alice_ok", profilePicture = "old_url")
       repo.addProfile(originalProfile)
 
       // WHEN user changes profile picture
@@ -364,6 +362,4 @@ class SettingsViewModelTest {
       assertNull(viewModel.uiState.value.errorMsg)
     }
   }
-
-
 }
