@@ -397,26 +397,32 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     repository.initProfileIfMissing(uid, "pic.png")
 
     val file1 = kotlin.io.path.createTempFile("first").toFile()
-    val bytes1 = ByteArray(20) { 1 }
-    file1.writeBytes(bytes1)
-    val uri1 = Uri.fromFile(file1)
-
-    repository.updateProfilePic(uid, uri1)
-    val storageRef = FirebaseEmulator.storage.reference.child("profile_pictures/$uid")
-    val metadata1 = storageRef.metadata.await()
-    val downloaded1 = storageRef.getBytes(1024 * 1024).await()
-
     val file2 = kotlin.io.path.createTempFile("second").toFile()
-    val bytes2 = ByteArray(30) { 2 }
-    file2.writeBytes(bytes2)
-    val uri2 = Uri.fromFile(file2)
 
-    repository.updateProfilePic(uid, uri2)
-    val metadata2 = storageRef.metadata.await()
-    val downloaded2 = storageRef.getBytes(1024 * 1024).await()
+    try {
+      val bytes1 = ByteArray(20) { 1 }
+      file1.writeBytes(bytes1)
+      val uri1 = Uri.fromFile(file1)
 
-    assertTrue(metadata2.updatedTimeMillis >= metadata1.updatedTimeMillis)
-    assertFalse("Expected file content to change", downloaded1.contentEquals(downloaded2))
+      repository.updateProfilePic(uid, uri1)
+      val storageRef = FirebaseEmulator.storage.reference.child("profile_pictures/$uid")
+      val metadata1 = storageRef.metadata.await()
+      val downloaded1 = storageRef.getBytes(1024 * 1024).await()
+
+      val bytes2 = ByteArray(30) { 2 }
+      file2.writeBytes(bytes2)
+      val uri2 = Uri.fromFile(file2)
+
+      repository.updateProfilePic(uid, uri2)
+      val metadata2 = storageRef.metadata.await()
+      val downloaded2 = storageRef.getBytes(1024 * 1024).await()
+
+      assertTrue(metadata2.updatedTimeMillis >= metadata1.updatedTimeMillis)
+      assertFalse("Expected file content to change", downloaded1.contentEquals(downloaded2))
+    } finally {
+      file1.delete()
+      file2.delete()
+    }
   }
 
   @Test
@@ -425,18 +431,23 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     repository.initProfileIfMissing(uid, "")
 
     val tmpFile = kotlin.io.path.createTempFile("test_image").toFile()
-    val expectedBytes = ByteArray(20) { 0x42 }
-    tmpFile.writeBytes(expectedBytes)
-    val fileUri = Uri.fromFile(tmpFile)
 
-    val downloadUrl = repository.updateProfilePic(uid, fileUri)
-    assertTrue(downloadUrl.startsWith("http"))
+    try {
+      val expectedBytes = ByteArray(20) { 0x42 }
+      tmpFile.writeBytes(expectedBytes)
+      val fileUri = Uri.fromFile(tmpFile)
 
-    val storageRef = FirebaseEmulator.storage.reference.child("profile_pictures/$uid")
-    val metadata = storageRef.metadata.await()
-    assertTrue(metadata.sizeBytes > 0)
+      val downloadUrl = repository.updateProfilePic(uid, fileUri)
+      assertTrue(downloadUrl.startsWith("http"))
 
-    val actualBytes = storageRef.getBytes(1024 * 1024).await()
-    assertArrayEquals(expectedBytes, actualBytes.take(expectedBytes.size).toByteArray())
+      val storageRef = FirebaseEmulator.storage.reference.child("profile_pictures/$uid")
+      val metadata = storageRef.metadata.await()
+      assertTrue(metadata.sizeBytes > 0)
+
+      val actualBytes = storageRef.getBytes(1024 * 1024).await()
+      assertArrayEquals(expectedBytes, actualBytes.take(expectedBytes.size).toByteArray())
+    } finally {
+      tmpFile.delete()
+    }
   }
 }
