@@ -309,7 +309,9 @@ fun EditToDoScreen(
                         Text(
                             text = stringResource(R.string.todos_delete_button_text),
                             color = MaterialTheme.colorScheme.error,
-                            modifier = Modifier.padding(start = buttonSpacing).align(Alignment.CenterVertically))
+                            modifier =
+                                Modifier.padding(start = buttonSpacing)
+                                    .align(Alignment.CenterVertically))
                       }
                     }
               }
