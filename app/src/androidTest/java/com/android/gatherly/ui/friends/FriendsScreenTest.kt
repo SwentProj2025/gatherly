@@ -238,4 +238,23 @@ class FriendsScreenTest {
         .onNodeWithTag(FriendsScreenTestTags.getTestTagForFriendItem("charlie"))
         .assertIsNotDisplayed()
   }
+
+    @Test
+    fun testAnimation() {
+        runTest {
+            profileRepository = ProfileLocalRepository()
+
+            addProfiles()
+            profileRepository.addProfile(aliceProfile)
+
+            currentUserId = aliceProfile.uid
+
+            friendsViewModel = FriendsViewModel(profileRepository, currentUserId)
+            composeTestRule.waitForIdle()
+
+            if (friendsViewModel.uiState.value.isLoading){
+                composeTestRule.onNodeWithTag(FriendsScreenTestTags.LOADING_ANIMATION).assertIsDisplayed()
+            }
+        }
+    }
 }

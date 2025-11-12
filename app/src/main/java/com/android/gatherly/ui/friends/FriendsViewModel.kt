@@ -11,7 +11,8 @@ import kotlinx.coroutines.launch
 data class FriendsUIState(
     val errorMsg: String? = null,
     val friends: List<String> = emptyList(),
-    val listNoFriends: List<String> = emptyList()
+    val listNoFriends: List<String> = emptyList(),
+    val isLoading: Boolean = true
 )
 
 class FriendsViewModel(private val repository: ProfileRepository, val currentUserId: String) :
@@ -35,13 +36,15 @@ class FriendsViewModel(private val repository: ProfileRepository, val currentUse
    * @param currentUserId the ID of the current user
    */
   suspend fun refreshFriends(currentUserId: String) {
+    _uiState.value = _uiState.value.copy(isLoading = true)
     val profile = repository.getProfileByUid(currentUserId)
     _uiState.value =
         _uiState.value.copy(
             friends =
                 profile?.friendUids?.mapNotNull { repository.getProfileByUid(it)?.username }
                     ?: throw Exception("FriendsVM: Profile not found"),
-            listNoFriends = repository.getListNoFriends(currentUserId))
+            listNoFriends = repository.getListNoFriends(currentUserId),
+            isLoading = false)
   }
 
   /**
@@ -51,9 +54,17 @@ class FriendsViewModel(private val repository: ProfileRepository, val currentUse
    * @param currentUserId the ID of the current user
    */
   fun unfollowFriend(friend: String, currentUserId: String) {
+    val currentFriends = _uiState.value.friends
+    val updatedFriends = currentFriends.filter { it != friend }
+    _uiState.value = _uiState.value.copy(friends = updatedFriends)
     viewModelScope.launch {
-      repository.deleteFriend(friend, currentUserId)
-      refreshFriends(currentUserId)
+      try {
+        repository.deleteFriend(friend, currentUserId)
+        refreshFriends(currentUserId)
+      } catch (e: Exception) {
+        _uiState.value =
+            _uiState.value.copy(friends = currentFriends, errorMsg = "Error failed to unfollow.")
+      }
     }
   }
 
@@ -64,9 +75,17 @@ class FriendsViewModel(private val repository: ProfileRepository, val currentUse
    * @param currentUserId the ID of the current user
    */
   fun followFriend(friend: String, currentUserId: String) {
+    val currentFriends = _uiState.value.friends
+    val updatedFriends = currentFriends.filter { it != friend }
+    _uiState.value = _uiState.value.copy(friends = updatedFriends)
     viewModelScope.launch {
-      repository.addFriend(friend, currentUserId)
-      refreshFriends(currentUserId)
+      try {
+        repository.addFriend(friend, currentUserId)
+        refreshFriends(currentUserId)
+      } catch (e: Exception) {
+        _uiState.value =
+            _uiState.value.copy(friends = currentFriends, errorMsg = "Error failed to unfollow.")
+      }
     }
   }
 }

@@ -1,12 +1,24 @@
 package com.android.gatherly.ui.friends
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.LinearOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -38,7 +50,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.airbnb.lottie.compose.LottieAnimation
+import com.airbnb.lottie.compose.LottieCompositionSpec
+import com.airbnb.lottie.compose.LottieConstants
+import com.airbnb.lottie.compose.rememberLottieComposition
 import com.android.gatherly.R
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
@@ -94,6 +112,10 @@ object FindFriendsScreenTestTags {
   fun getTestTagForFriendFollowButton(username: String): String = "friendFollowingButton${username}"
 }
 
+private val LOTTIE_ANIMATION_RESOURCE = R.raw.heart
+private val ANIMATION_LOADING = R.raw.loading_profiles
+
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun FindFriendsScreen(
     friendsViewModel: FriendsViewModel =
@@ -126,6 +148,17 @@ fun FindFriendsScreen(
     }
   }
 
+  var showFollowMessage by remember { mutableStateOf(false) }
+
+  val messageText = stringResource(R.string.friends_follow_message)
+
+  LaunchedEffect(showFollowMessage) {
+    if (showFollowMessage) {
+      kotlinx.coroutines.delay(2000)
+      showFollowMessage = false
+    }
+  }
+
   Scaffold(
       topBar = {
         TopNavigationMenu_Goback(
@@ -134,57 +167,84 @@ fun FindFriendsScreen(
             goBack = goBack)
       },
       content = { padding ->
-        LazyColumn(
-            contentPadding = PaddingValues(vertical = dimensionResource(R.dimen.padding_small)),
-            modifier =
-                Modifier.fillMaxWidth()
-                    .padding(horizontal = dimensionResource(R.dimen.padding_screen))
-                    .padding(padding)) {
-              if (filteredNotFriends.isEmpty()) {
-                item {
-                  Text(
-                      text = stringResource(R.string.find_friends_empty_list_message),
-                      modifier =
-                          Modifier.padding(dimensionResource(R.dimen.padding_screen))
-                              .testTag(FindFriendsScreenTestTags.EMPTY_LIST_MSG))
-                }
-              } else {
-                item {
-                  OutlinedTextField(
-                      value = searchQuery,
-                      onValueChange = { searchQuery = it },
-                      modifier =
-                          Modifier.fillMaxWidth()
-                              .padding(vertical = dimensionResource(R.dimen.padding_small))
-                              .testTag(FindFriendsScreenTestTags.SEARCH_FRIENDS_BAR),
-                      placeholder = {
-                        Text(
-                            text = stringResource(R.string.find_friends_search_bar_label),
-                            modifier =
-                                Modifier.padding(
-                                    dimensionResource(R.dimen.find_friends_search_bar_width)))
-                      },
-                      singleLine = true,
-                      shape =
-                          RoundedCornerShape(
-                              dimensionResource(R.dimen.find_friends_item_rounded_corner_shape)))
-                }
+          val showHeartAnimation = showFollowMessage
+        val isLoading = uiState.isLoading && !showHeartAnimation
 
-                items(items = filteredNotFriends, key = { it }) { friend ->
-                  FriendItem(
-                      friend = friend,
-                      follow = {
-                        friendsViewModel.followFriend(
-                            currentUserId = currentUserIdFromVM, friend = friend)
-                      })
+        Box(modifier = Modifier.fillMaxSize()) {
+          if (isLoading ) {
+            val loadingComposition by
+                rememberLottieComposition(LottieCompositionSpec.RawRes(ANIMATION_LOADING))
+            LottieAnimation(
+                composition = loadingComposition,
+                iterations = LottieConstants.IterateForever,
+                modifier =
+                    Modifier.size(dimensionResource(R.dimen.lottie_icon_size_extra_large))
+                        .align(Alignment.Center))
+          } else {
+
+            LazyColumn(
+                contentPadding = PaddingValues(vertical = dimensionResource(R.dimen.padding_small)),
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .padding(horizontal = dimensionResource(R.dimen.padding_screen))
+                        .padding(padding)) {
+                  if (filteredNotFriends.isEmpty()) {
+                    item {
+                      Text(
+                          text = stringResource(R.string.find_friends_empty_list_message),
+                          modifier =
+                              Modifier.padding(dimensionResource(R.dimen.padding_screen))
+                                  .testTag(FindFriendsScreenTestTags.EMPTY_LIST_MSG))
+                    }
+                  } else {
+                    item {
+                      OutlinedTextField(
+                          value = searchQuery,
+                          onValueChange = { searchQuery = it },
+                          modifier =
+                              Modifier.fillMaxWidth()
+                                  .padding(vertical = dimensionResource(R.dimen.padding_small))
+                                  .testTag(FindFriendsScreenTestTags.SEARCH_FRIENDS_BAR),
+                          placeholder = {
+                            Text(
+                                text = stringResource(R.string.find_friends_search_bar_label),
+                                modifier =
+                                    Modifier.padding(
+                                        dimensionResource(R.dimen.find_friends_search_bar_width)))
+                          },
+                          singleLine = true,
+                          shape =
+                              RoundedCornerShape(
+                                  dimensionResource(
+                                      R.dimen.find_friends_item_rounded_corner_shape)))
+                    }
+
+                    items(items = filteredNotFriends, key = { it }) { friend ->
+                      FriendItem(
+                          friend = friend,
+                          follow = {
+                            friendsViewModel.followFriend(
+                                currentUserId = currentUserIdFromVM, friend = friend)
+                            showFollowMessage = true
+                          },
+                          modifier =
+                              Modifier.animateItemPlacement(
+                                  animationSpec =
+                                      tween(durationMillis = 3000, easing = LinearOutSlowInEasing)))
+                    }
+                  }
                 }
-              }
+            if (showFollowMessage) {
+              FloatingMessage(
+                  text = messageText, modifier = Modifier.fillMaxSize().padding(padding))
             }
+          }
+        }
       })
 }
 
 @Composable
-private fun FriendItem(friend: String, follow: () -> Unit) {
+private fun FriendItem(friend: String, follow: () -> Unit, modifier: Modifier = Modifier) {
   Card(
       border =
           BorderStroke(
@@ -198,7 +258,8 @@ private fun FriendItem(friend: String, follow: () -> Unit) {
               containerColor = MaterialTheme.colorScheme.onSurface,
               contentColor = MaterialTheme.colorScheme.primary),
       modifier =
-          Modifier.testTag(FindFriendsScreenTestTags.getTestTagForFriendItem(friend))
+          modifier
+              .testTag(FindFriendsScreenTestTags.getTestTagForFriendItem(friend))
               .fillMaxWidth()
               .padding(vertical = 4.dp)) {
         Row(
@@ -239,6 +300,55 @@ private fun FriendItem(friend: String, follow: () -> Unit) {
                   Modifier.wrapContentWidth()
                       .testTag(FindFriendsScreenTestTags.getTestTagForFriendFollowButton(friend))) {
                 Text(stringResource(R.string.friends_follow_button_title))
+              }
+        }
+      }
+}
+
+
+// This function contains code generated by an AI (DeepSeek).
+
+/**
+ * Helper function :
+ */
+@Composable
+private fun FloatingMessage(text: String, modifier: Modifier = Modifier) {
+  val composition by
+      rememberLottieComposition(LottieCompositionSpec.RawRes(LOTTIE_ANIMATION_RESOURCE))
+  AnimatedVisibility(
+      visible = true,
+      enter = slideInVertically(initialOffsetY = { -it / 2 }) + fadeIn(),
+      exit = slideOutVertically(targetOffsetY = { -it / 2 }) + fadeOut(),
+      modifier = modifier.zIndex(1f)) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+          Column(
+              horizontalAlignment = Alignment.CenterHorizontally,
+              verticalArrangement = Arrangement.Center) {
+                LottieAnimation(
+                    composition = composition,
+                    iterations = 1,
+                    speed = 1f,
+                    modifier = Modifier.size(dimensionResource(R.dimen.lottie_icon_size_large)))
+
+                Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_small)))
+
+                Card(
+                    colors =
+                        CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.secondary),
+                    shape = RoundedCornerShape(dimensionResource(R.dimen.padding_small)),
+                    elevation =
+                        CardDefaults.cardElevation(
+                            defaultElevation = dimensionResource(R.dimen.padding_extra_small)),
+                    modifier =
+                        Modifier.padding(bottom = dimensionResource(R.dimen.padding_large))) {
+                      Text(
+                          text = text,
+                          color = MaterialTheme.colorScheme.onSecondary,
+                          fontSize = 25.sp,
+                          fontWeight = FontWeight.Bold,
+                          modifier = Modifier.padding(dimensionResource(R.dimen.padding_regular)))
+                    }
               }
         }
       }

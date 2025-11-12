@@ -244,6 +244,9 @@ dependencies {
 
     // Profile picture
     implementation("io.coil-kt:coil-compose:2.6.0")
+
+    // Animation Lottie
+    implementation("com.airbnb.android:lottie-compose:6.1.0")
 }
 
 configurations.all {

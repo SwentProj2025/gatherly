@@ -125,5 +125,7 @@
     <string name="friends_follow_button_title">Follow</string>
     <string name="find_friends_search_bar_label">Search new friend by name</string>
     <string name="find_friends_empty_list_message">There are no users left.</string>
+    <string name="friends_unfollow_message">You just lose a friend</string>
+    <string name="friends_follow_message">You just got a new friend</string>
 
 </resources>
