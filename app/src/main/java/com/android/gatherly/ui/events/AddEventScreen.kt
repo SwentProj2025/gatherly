@@ -36,6 +36,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -43,6 +44,7 @@ import com.android.gatherly.R
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
+import com.android.gatherly.ui.theme.GatherlyTheme
 import kotlinx.coroutines.delay
 
 object AddEventScreenTestTags {
@@ -70,8 +72,6 @@ object AddEventScreenTestTags {
 /**
  * Screen for adding an existing Event.
  *
- * @param addEventViewModel The ViewModel managing the state and logic for the Add Event screen,
- *   instantiated with a factory provider defined in the ViewModel's companion object.
  * @param onSave called after a successful save or deletion and navigation intent.
  * @param goBack called when back arrow is pressed.
  */
@@ -94,9 +94,9 @@ fun AddEventScreen(
       TextFieldDefaults.colors(
           focusedContainerColor = MaterialTheme.colorScheme.background,
           unfocusedContainerColor = MaterialTheme.colorScheme.background,
-          unfocusedTextColor = MaterialTheme.colorScheme.primary,
-          focusedTextColor = MaterialTheme.colorScheme.primary,
-      )
+          unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+          focusedTextColor = MaterialTheme.colorScheme.onBackground,
+          errorTextColor = MaterialTheme.colorScheme.onBackground)
 
   // Local state for the dropdown visibility
   var showLocationDropdown by remember { mutableStateOf(false) }
@@ -226,6 +226,7 @@ fun AddEventScreen(
                       expanded = showProfilesDropdown && ui.suggestedProfiles.isNotEmpty(),
                       onDismissRequest = { showProfilesDropdown = false },
                       properties = PopupProperties(focusable = false),
+                      containerColor = MaterialTheme.colorScheme.surfaceVariant,
                       modifier =
                           Modifier.testTag(AddEventScreenTestTags.PARTICIPANT_MENU)
                               .fillMaxWidth()
@@ -240,7 +241,9 @@ fun AddEventScreen(
                                             .testTag(
                                                 AddEventScreenTestTags.PROFILE_SUGGESTION_ITEM),
                                     horizontalArrangement = Arrangement.SpaceBetween) {
-                                      Text(profile.name)
+                                      Text(
+                                          profile.name,
+                                          color = MaterialTheme.colorScheme.onSurfaceVariant)
                                       if (isAlreadyParticipant) {
                                         IconButton(
                                             onClick = {
@@ -252,7 +255,8 @@ fun AddEventScreen(
                                                         .PROFILE_SUGGESTION_REMOVE)) {
                                               Icon(
                                                   Icons.Filled.Remove,
-                                                  contentDescription = "Remove")
+                                                  contentDescription = "Remove",
+                                                  tint = MaterialTheme.colorScheme.error)
                                             }
                                       } else {
                                         IconButton(
@@ -261,7 +265,10 @@ fun AddEventScreen(
                                                 Modifier.testTag(
                                                     AddEventScreenTestTags
                                                         .PROFILE_SUGGESTION_ADD)) {
-                                              Icon(Icons.Filled.Add, contentDescription = "Add")
+                                              Icon(
+                                                  Icons.Filled.Add,
+                                                  contentDescription = "Add",
+                                                  tint = MaterialTheme.colorScheme.onSurfaceVariant)
                                             }
                                       }
                                     }
@@ -293,6 +300,7 @@ fun AddEventScreen(
                       expanded = showLocationDropdown && ui.suggestedLocations.isNotEmpty(),
                       onDismissRequest = { showLocationDropdown = false },
                       properties = PopupProperties(focusable = false),
+                      containerColor = MaterialTheme.colorScheme.surfaceVariant,
                       modifier =
                           Modifier.testTag(AddEventScreenTestTags.LOCATION_MENU)
                               .fillMaxWidth()
@@ -302,7 +310,8 @@ fun AddEventScreen(
                               text = {
                                 Text(
                                     text =
-                                        loc.name.take(40) + if (loc.name.length > 40) "..." else "")
+                                        loc.name.take(40) + if (loc.name.length > 40) "..." else "",
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant)
                               },
                               onClick = {
                                 addEventViewModel.selectLocation(loc)
@@ -311,7 +320,11 @@ fun AddEventScreen(
                               modifier = Modifier.testTag(AddEventScreenTestTags.INPUT_LOCATION))
                         }
                         if (ui.suggestedLocations.size > 3) {
-                          DropdownMenuItem(text = { Text("More...") }, onClick = {})
+                          DropdownMenuItem(
+                              text = {
+                                Text("More...", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                              },
+                              onClick = {})
                         }
                       }
                 }
@@ -391,9 +404,15 @@ fun AddEventScreen(
                             !ui.dateError &&
                             !ui.startTimeError &&
                             !ui.endTimeError) {
-                      Text("Save", color = MaterialTheme.colorScheme.primary)
+                      Text("Save", color = MaterialTheme.colorScheme.onSecondary)
                     }
               }
             }
       }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun AddEventScreenPreview() {
+  GatherlyTheme(darkTheme = true) { AddEventScreen() }
 }
