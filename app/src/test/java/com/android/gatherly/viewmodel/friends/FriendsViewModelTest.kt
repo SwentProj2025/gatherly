@@ -2,6 +2,7 @@ package com.android.gatherly.viewmodel.friends
 
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
+import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.ui.friends.FriendsViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -120,5 +121,75 @@ class FriendsViewModelTest {
       profileRepository.addProfile(userC)
       advanceUntilIdle()
     }
+  }
+
+  /** Test: Verifies if the function refreshFriends catch errors */
+  @Test
+  fun testRefreshFriends_CatchesExceptionAndSetsErrorMsg() = runTest {
+    val errorMessage = "Simulated Connection Failure"
+
+    val throwingRepository =
+        object : ProfileRepository {
+
+          // Surcharge la méthode à tester pour lancer une exception
+          override suspend fun getFriendsAndNonFriendsUsernames(
+              currentUserId: String
+          ): com.android.gatherly.model.friends.Friends {
+            throw Exception(errorMessage)
+          }
+
+          override suspend fun getProfileByUid(uid: String): Profile? = null
+
+          override suspend fun updateProfile(profile: Profile) {}
+
+          override suspend fun deleteProfile(uid: String) {}
+
+          override suspend fun isUidRegistered(uid: String): Boolean = false
+
+          override suspend fun searchProfilesByNamePrefix(prefix: String): List<Profile> =
+              emptyList()
+
+          override suspend fun isUsernameAvailable(username: String): Boolean = false
+
+          override suspend fun registerUsername(uid: String, username: String): Boolean = false
+
+          override suspend fun updateUsername(
+              uid: String,
+              oldUsername: String?,
+              newUsername: String
+          ): Boolean = false
+
+          override suspend fun updateProfilePic(uid: String, uri: android.net.Uri): String = ""
+
+          override suspend fun getProfileByUsername(username: String): Profile? = null
+
+          override suspend fun searchProfilesByUsernamePrefix(
+              prefix: String,
+              limit: Int
+          ): List<Profile> = emptyList()
+
+          override suspend fun initProfileIfMissing(uid: String, defaultPhotoUrl: String): Boolean =
+              false
+
+          override suspend fun addProfile(profile: Profile) {}
+
+          override suspend fun getListNoFriends(currentUserId: String): List<String> = emptyList()
+
+          override suspend fun addFriend(friend: String, currentUserId: String) {}
+
+          override suspend fun deleteFriend(friend: String, currentUserId: String) {}
+        }
+    val errorViewModel = FriendsViewModel(repository = throwingRepository, currentUserId = "A")
+    errorViewModel.refreshFriends("A")
+
+    advanceUntilIdle()
+    val state = errorViewModel.uiState.value
+
+    assertNotNull(state.errorMsg)
+
+    assertTrue(state.errorMsg!!.contains("Failed to load friends: $errorMessage"))
+
+    assertTrue(state.friends.isEmpty())
+    assertTrue(state.listNoFriends.isEmpty())
   }
 }
