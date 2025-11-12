@@ -3,7 +3,6 @@ package com.android.gatherly.model.profile
 import com.android.gatherly.utils.FirebaseEmulator
 import com.android.gatherly.utils.FirestoreGatherlyProfileTest
 import com.google.firebase.auth.auth
-import com.google.firebase.firestore.FieldValue
 import com.google.firebase.storage.storage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -444,10 +443,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     assertTrue(metadata2.updatedTimeMillis >= metadata1.updatedTimeMillis)
   }
 
-  /**
-   * Test: Verifies that the friendUsernames list and nonFriendUsernames list are correctly set.
-   */
-
+  /** Test: Verifies that the friendUsernames list and nonFriendUsernames list are correctly set. */
   @Test
   fun test_getFriendsAndNonFriendsUsernames_success() = runTest {
     val auth = FirebaseEmulator.auth
@@ -499,12 +495,9 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     assertFalse(friendsResult.nonFriendUsernames.contains("alice"))
   }
 
-  /**
-   * Test :
-   */
+  /** Test : */
   @Test(expected = NoSuchElementException::class)
   fun test_getFriendsAndNonFriendsUsernames_throwsIfProfileMissing() = runTest {
     repository.getFriendsAndNonFriendsUsernames("non_existent_uid")
   }
-
 }
