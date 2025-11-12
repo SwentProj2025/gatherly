@@ -280,6 +280,19 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.checkMapScreenIsDisplayed()
   }
 
+  /**
+   * Navigation Test: Verifies that when the user is on the profile screen, tapping the home icon
+   * navigates back to the home page.
+   */
+  @Test
+  fun NavigateFromProfileToHomePage() {
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
+    composeTestRule.checkProfileScreenIsDisplayed()
+    composeTestRule.onNodeWithTag(NavigationTestTags.HOMEPAGE_TAB).performClick()
+    composeTestRule.checkHomeScreenIsDisplayed()
+  }
+
   // TIMER PART
 
   /**
