@@ -59,22 +59,16 @@ import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.android.gatherly.R
 import com.android.gatherly.model.profile.Profile
-import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
-import com.android.gatherly.utils.GenericViewModelFactory
-import com.google.firebase.Firebase
-import com.google.firebase.auth.auth
-import com.google.firebase.firestore.firestore
-import com.google.firebase.storage.storage
 
 object FriendsScreenTestTags {
   const val BUTTON_FIND_FRIENDS = "buttonFindFriends"
   const val SEARCH_FRIENDS_BAR = "searchBarFriends"
   const val EMPTY_LIST_MSG = "messageEmptyList"
 
-    const val LOADING_ANIMATION = "loadingAnimation"
+  const val LOADING_ANIMATION = "loadingAnimation"
 
   /**
    * Returns a unique test tag for the card or container representing a given [Profile.username]
@@ -120,14 +114,7 @@ private val ANIMATION_LOADING = R.raw.loading_profiles
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun FriendsScreen(
-    friendsViewModel: FriendsViewModel =
-        viewModel(
-            factory =
-                GenericViewModelFactory<FriendsViewModel> {
-                  FriendsViewModel(
-                      repository = ProfileRepositoryFirestore(Firebase.firestore, Firebase.storage),
-                      currentUserId = Firebase.auth.currentUser?.uid ?: "")
-                }),
+    friendsViewModel: FriendsViewModel = viewModel(factory = FriendsViewModel.provideFactory()),
     goBack: () -> Unit = {},
     onFindFriends: () -> Unit = {},
 ) {
@@ -170,8 +157,8 @@ fun FriendsScreen(
             goBack = goBack)
       },
       content = { padding ->
-          val showHeartAnimation = showUnfollowMessage
-          val isLoading = uiState.isLoading && !showHeartAnimation
+        val showHeartAnimation = showUnfollowMessage
+        val isLoading = uiState.isLoading && !showHeartAnimation
 
         Box(modifier = Modifier.fillMaxSize()) {
           if (isLoading) {
@@ -182,7 +169,8 @@ fun FriendsScreen(
                 iterations = LottieConstants.IterateForever,
                 modifier =
                     Modifier.size(dimensionResource(R.dimen.lottie_icon_size_extra_large))
-                        .align(Alignment.Center).testTag(FriendsScreenTestTags.LOADING_ANIMATION))
+                        .align(Alignment.Center)
+                        .testTag(FriendsScreenTestTags.LOADING_ANIMATION))
           } else {
 
             LazyColumn(

@@ -1,8 +1,15 @@
 package com.android.gatherly.ui.friends
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.profile.ProfileRepository
+import com.android.gatherly.model.profile.ProfileRepositoryFirestore
+import com.android.gatherly.utils.GenericViewModelFactory
+import com.google.firebase.auth.auth
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.ktx.storage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -86,6 +93,20 @@ class FriendsViewModel(private val repository: ProfileRepository, val currentUse
         _uiState.value =
             _uiState.value.copy(friends = currentFriends, errorMsg = "Error failed to unfollow.")
       }
+    }
+  }
+
+  /**
+   * Companion Object used to encapsulate a static method to retrieve a ViewModelProvider.Factory
+   * and its default dependencies.
+   */
+  companion object {
+    fun provideFactory(
+        profileRepository: ProfileRepository =
+            ProfileRepositoryFirestore(Firebase.firestore, Firebase.storage),
+        currentUserId: String = com.google.firebase.Firebase.auth.currentUser?.uid ?: ""
+    ): ViewModelProvider.Factory {
+      return GenericViewModelFactory { FriendsViewModel(profileRepository, currentUserId) }
     }
   }
 }

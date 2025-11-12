@@ -73,7 +73,7 @@ sealed class Tab(val name: String, val icon: ImageVector, val destination: Scree
 
   object Friends : Tab("Friends", Icons.Outlined.Diversity1, Screen.FriendsScreen)
 
-  object FindFriends : Tab("Find Friends", Icons.Outlined.GroupAdd, Screen.FindFriends)
+  object FindFriends : Tab("Find Friends", Icons.Outlined.GroupAdd, Screen.FindFriendsScreen)
 
   object AddTodo : Tab("Add To-Do", Icons.Outlined.Add, Screen.AddToDo)
 

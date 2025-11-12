@@ -239,22 +239,22 @@ class FriendsScreenTest {
         .assertIsNotDisplayed()
   }
 
-    @Test
-    fun testAnimation() {
-        runTest {
-            profileRepository = ProfileLocalRepository()
+  @Test
+  fun testAnimation() {
+    runTest {
+      profileRepository = ProfileLocalRepository()
 
-            addProfiles()
-            profileRepository.addProfile(aliceProfile)
+      addProfiles()
+      profileRepository.addProfile(aliceProfile)
 
-            currentUserId = aliceProfile.uid
+      currentUserId = aliceProfile.uid
 
-            friendsViewModel = FriendsViewModel(profileRepository, currentUserId)
-            composeTestRule.waitForIdle()
+      friendsViewModel = FriendsViewModel(profileRepository, currentUserId)
+      composeTestRule.waitForIdle()
 
-            if (friendsViewModel.uiState.value.isLoading){
-                composeTestRule.onNodeWithTag(FriendsScreenTestTags.LOADING_ANIMATION).assertIsDisplayed()
-            }
-        }
+      if (friendsViewModel.uiState.value.isLoading) {
+        composeTestRule.onNodeWithTag(FriendsScreenTestTags.LOADING_ANIMATION).assertIsDisplayed()
+      }
     }
+  }
 }
