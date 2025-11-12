@@ -11,11 +11,15 @@ import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.ui.navigation.NavigationTestTags
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
 
 private const val TIMEOUT = 30_000L
 
@@ -25,6 +29,8 @@ class FindFriendsScreenTest {
   private lateinit var currentUserId: String
   private lateinit var friendsViewModel: FriendsViewModel
   private lateinit var profileRepository: ProfileRepository
+  private lateinit var mockAuth: FirebaseAuth
+  private lateinit var mockUser: FirebaseUser
 
   /**
    * Helper function: set the content of the composeTestRule with currentUserID Bob who have no
@@ -41,7 +47,14 @@ class FindFriendsScreenTest {
 
       currentUserId = bobProfile.uid
 
-      friendsViewModel = FriendsViewModel(profileRepository, currentUserId)
+      // Mock Firebase Auth
+      mockAuth = mock(FirebaseAuth::class.java)
+      mockUser = mock(FirebaseUser::class.java)
+      `when`(mockAuth.currentUser).thenReturn(mockUser)
+      `when`(mockUser.uid).thenReturn(currentUserId)
+      `when`(mockUser.isAnonymous).thenReturn(false)
+
+      friendsViewModel = FriendsViewModel(profileRepository, authProvider = { mockAuth })
 
       addProfiles()
 
@@ -64,7 +77,14 @@ class FindFriendsScreenTest {
 
       currentUserId = aliceProfile.uid
 
-      friendsViewModel = FriendsViewModel(profileRepository, currentUserId)
+      // Mock Firebase Auth
+      mockAuth = mock(FirebaseAuth::class.java)
+      mockUser = mock(FirebaseUser::class.java)
+      `when`(mockAuth.currentUser).thenReturn(mockUser)
+      `when`(mockUser.uid).thenReturn(currentUserId)
+      `when`(mockUser.isAnonymous).thenReturn(false)
+
+      friendsViewModel = FriendsViewModel(profileRepository, authProvider = { mockAuth })
 
       composeTestRule.setContent { FindFriendsScreen(friendsViewModel) }
     }
