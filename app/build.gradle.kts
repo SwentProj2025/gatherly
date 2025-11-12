@@ -155,6 +155,7 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.gms.play.services.maps)
+    implementation(libs.play.services.location)
     implementation(libs.firebase.storage)
 
     testImplementation(libs.junit)
