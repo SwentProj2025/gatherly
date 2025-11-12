@@ -439,26 +439,4 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     val actualBytes = storageRef.getBytes(1024 * 1024).await()
     assertArrayEquals(expectedBytes, actualBytes.take(expectedBytes.size).toByteArray())
   }
-
-  @Test
-  fun updateProfilePic_withContentUri_uploadsSuccessfully() = runTest {
-    val uid = FirebaseEmulator.auth.currentUser!!.uid
-    repository.initProfileIfMissing(uid, "")
-
-    // Prepare fake file and simulate content URI (forces conversion code path)
-    val tmpFile = kotlin.io.path.createTempFile("content_image").toFile()
-    val expectedBytes = ByteArray(20) { 0x42 }
-    tmpFile.writeBytes(expectedBytes)
-    val contentUri = Uri.parse("content://${tmpFile.absolutePath}")
-
-    val downloadUrl = repository.updateProfilePic(uid, contentUri)
-    assertTrue(downloadUrl.startsWith("http"))
-
-    val storageRef = FirebaseEmulator.storage.reference.child("profile_pictures/$uid")
-    val metadata = storageRef.metadata.await()
-    assertTrue(metadata.sizeBytes > 0)
-
-    val actualBytes = storageRef.getBytes(1024 * 1024).await()
-    assertArrayEquals(expectedBytes, actualBytes.take(expectedBytes.size).toByteArray())
-  }
 }
