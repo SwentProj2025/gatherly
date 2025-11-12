@@ -195,7 +195,7 @@ fun EventsAndFriendsSection(
               .height(dimensionResource(id = R.dimen.homepage_events_section_height))) {
         Spacer(modifier = Modifier.width(spacingRegular))
 
-        MiniMap(todos = todos, events = events)
+        MiniMap(todos = todos, events = events, modifier = Modifier.weight(1f))
 
         Spacer(modifier = Modifier.width(spacingRegular))
 
@@ -212,7 +212,7 @@ fun EventsAndFriendsSection(
  * campus if no locations are available.
  */
 @Composable
-fun MiniMap(todos: List<ToDo>, events: List<Event>) {
+fun MiniMap(todos: List<ToDo>, events: List<Event>, modifier: Modifier) {
   val defaultLoc = LatLng(46.5191, 6.5668) // EPFL campus loc
   val firstTodoLoc =
       todos.firstOrNull()?.location?.let { LatLng(it.latitude, it.longitude) } ?: defaultLoc
@@ -222,7 +222,7 @@ fun MiniMap(todos: List<ToDo>, events: List<Event>) {
   }
 
   Card(
-      modifier = Modifier.fillMaxSize().testTag(HomePageScreenTestTags.MINI_MAP_CARD),
+      modifier = modifier.fillMaxSize().testTag(HomePageScreenTestTags.MINI_MAP_CARD),
       shape = RoundedCornerShape(dimensionResource(id = R.dimen.rounded_corner_shape_medium)),
   ) {
     GoogleMap(

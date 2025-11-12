@@ -20,6 +20,7 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import androidx.credentials.CredentialManager
@@ -94,125 +95,138 @@ fun SettingsScreen(
       },
       containerColor = MaterialTheme.colorScheme.background,
       content = { paddingValues ->
-        Column(
-            modifier =
-                Modifier.fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(horizontal = paddingRegular, vertical = paddingMedium),
-            horizontalAlignment = Alignment.CenterHorizontally) {
-              Column(
-                  modifier =
-                      Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()),
-                  horizontalAlignment = Alignment.CenterHorizontally) {
-                    // Profile Picture
-                    Image(
-                        painter =
-                            painterResource(
-                                id =
-                                    R.drawable
-                                        .ic_launcher_foreground), // currently a placeholder image
-                        contentDescription =
-                            stringResource(R.string.settings_profile_picture_description),
-                        modifier =
-                            Modifier.size(dimensionResource(id = R.dimen.profile_pic_size))
-                                .clip(CircleShape)
-                                .testTag(SettingsScreenTestTags.PROFILE_PICTURE),
-                        contentScale = ContentScale.Crop)
-
-                    Spacer(modifier = Modifier.height(fieldSpacingRegular))
-
-                    // Username Field
-                    SettingsField(
-                        label = stringResource(R.string.settings_label_username),
-                        value = uiState.username,
-                        onValueChange = { settingsViewModel.editUsername(it) },
-                        testTag = SettingsScreenTestTags.USERNAME,
-                        errorMessage = uiState.invalidUsernameMsg)
-
-                    if (uiState.isUsernameAvailable == true && uiState.invalidUsernameMsg == null) {
-                      Text(
-                          text = stringResource(R.string.settings_valid_username),
-                          color = MaterialTheme.colorScheme.primary,
-                          fontSize = 14.sp,
+        if (uiState.isAnon) {
+          Box(
+              modifier = Modifier.fillMaxSize().padding(paddingValues),
+              contentAlignment = Alignment.Center) {
+                Text(
+                    text = stringResource(R.string.profile_anon_message),
+                    color = MaterialTheme.colorScheme.onBackground,
+                    textAlign = TextAlign.Center)
+              }
+        } else {
+          Column(
+              modifier =
+                  Modifier.fillMaxSize()
+                      .padding(paddingValues)
+                      .padding(horizontal = paddingRegular, vertical = paddingMedium),
+              horizontalAlignment = Alignment.CenterHorizontally) {
+                Column(
+                    modifier =
+                        Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()),
+                    horizontalAlignment = Alignment.CenterHorizontally) {
+                      // Profile Picture
+                      Image(
+                          painter =
+                              painterResource(
+                                  id =
+                                      R.drawable
+                                          .ic_launcher_foreground), // currently a placeholder image
+                          contentDescription =
+                              stringResource(R.string.settings_profile_picture_description),
                           modifier =
-                              Modifier.padding(
-                                  top = dimensionResource(id = R.dimen.padding_extra_small)))
+                              Modifier.size(dimensionResource(id = R.dimen.profile_pic_size))
+                                  .clip(CircleShape)
+                                  .testTag(SettingsScreenTestTags.PROFILE_PICTURE),
+                          contentScale = ContentScale.Crop)
+
+                      Spacer(modifier = Modifier.height(fieldSpacingRegular))
+
+                      // Username Field
+                      SettingsField(
+                          label = stringResource(R.string.settings_label_username),
+                          value = uiState.username,
+                          onValueChange = { settingsViewModel.editUsername(it) },
+                          testTag = SettingsScreenTestTags.USERNAME,
+                          errorMessage = uiState.invalidUsernameMsg)
+
+                      if (uiState.isUsernameAvailable == true &&
+                          uiState.invalidUsernameMsg == null) {
+                        Text(
+                            text = stringResource(R.string.settings_valid_username),
+                            color = MaterialTheme.colorScheme.primary,
+                            fontSize = 14.sp,
+                            modifier =
+                                Modifier.padding(
+                                    top = dimensionResource(id = R.dimen.padding_extra_small)))
+                      }
+
+                      Spacer(modifier = Modifier.height(fieldSpacingRegular))
+
+                      // Edit Photo Button currently non-functional, will be implemented in next
+                      // sprint
+                      Button(
+                          onClick = { /* Handle edit photo will be handled in next sprint*/},
+                          modifier =
+                              Modifier.fillMaxWidth()
+                                  .height(
+                                      dimensionResource(id = R.dimen.settings_text_field_height))
+                                  .testTag(SettingsScreenTestTags.EDIT_PHOTO_BUTTON),
+                          colors =
+                              ButtonDefaults.buttonColors(
+                                  containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                  contentColor = MaterialTheme.colorScheme.onSurface),
+                          shape =
+                              RoundedCornerShape(
+                                  dimensionResource(id = R.dimen.rounded_corner_shape_medium))) {
+                            Text(
+                                text = stringResource(id = R.string.settings_edit_photo),
+                                color = MaterialTheme.colorScheme.onBackground,
+                                fontSize = 16.sp)
+                          }
+
+                      Spacer(modifier = Modifier.height(fieldSpacingMedium))
+
+                      // Settings Fields
+                      SettingsField(
+                          label = stringResource(R.string.settings_label_name),
+                          value = uiState.name,
+                          onValueChange = { settingsViewModel.editName(it) },
+                          testTag = SettingsScreenTestTags.NAME_FIELD,
+                          errorMessage = uiState.invalidNameMsg)
+                      Spacer(modifier = Modifier.height(fieldSpacingRegular))
+                      SettingsField(
+                          label = stringResource(R.string.settings_label_birthday),
+                          value = uiState.birthday,
+                          onValueChange = { settingsViewModel.editBirthday(it) },
+                          testTag = SettingsScreenTestTags.BIRTHDAY_FIELD,
+                          errorMessage = uiState.invalidBirthdayMsg)
+                      Spacer(modifier = Modifier.height(fieldSpacingRegular))
+                      SettingsField(
+                          label = stringResource(R.string.settings_label_school),
+                          value = uiState.school,
+                          onValueChange = { settingsViewModel.editSchool(it) },
+                          testTag = SettingsScreenTestTags.SCHOOL_FIELD)
+                      Spacer(modifier = Modifier.height(fieldSpacingRegular))
+                      SettingsField(
+                          label = stringResource(R.string.settings_label_school_year),
+                          value = uiState.schoolYear,
+                          onValueChange = { settingsViewModel.editSchoolYear(it) },
+                          testTag = SettingsScreenTestTags.SCHOOL_YEAR_FIELD)
                     }
 
-                    Spacer(modifier = Modifier.height(fieldSpacingRegular))
+                Spacer(modifier = Modifier.height(fieldSpacingMedium))
 
-                    // Edit Photo Button currently non-functional, will be implemented in next
-                    // sprint
-                    Button(
-                        onClick = { /* Handle edit photo will be handled in next sprint*/},
-                        modifier =
-                            Modifier.fillMaxWidth()
-                                .height(dimensionResource(id = R.dimen.settings_text_field_height))
-                                .testTag(SettingsScreenTestTags.EDIT_PHOTO_BUTTON),
-                        colors =
-                            ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                                contentColor = MaterialTheme.colorScheme.onSurface),
-                        shape =
-                            RoundedCornerShape(
-                                dimensionResource(id = R.dimen.rounded_corner_shape_medium))) {
-                          Text(
-                              text = stringResource(id = R.string.settings_edit_photo),
-                              color = MaterialTheme.colorScheme.onBackground,
-                              fontSize = 16.sp)
-                        }
-
-                    Spacer(modifier = Modifier.height(fieldSpacingMedium))
-
-                    // Settings Fields
-                    SettingsField(
-                        label = stringResource(R.string.settings_label_name),
-                        value = uiState.name,
-                        onValueChange = { settingsViewModel.editName(it) },
-                        testTag = SettingsScreenTestTags.NAME_FIELD,
-                        errorMessage = uiState.invalidNameMsg)
-                    Spacer(modifier = Modifier.height(fieldSpacingRegular))
-                    SettingsField(
-                        label = stringResource(R.string.settings_label_birthday),
-                        value = uiState.birthday,
-                        onValueChange = { settingsViewModel.editBirthday(it) },
-                        testTag = SettingsScreenTestTags.BIRTHDAY_FIELD,
-                        errorMessage = uiState.invalidBirthdayMsg)
-                    Spacer(modifier = Modifier.height(fieldSpacingRegular))
-                    SettingsField(
-                        label = stringResource(R.string.settings_label_school),
-                        value = uiState.school,
-                        onValueChange = { settingsViewModel.editSchool(it) },
-                        testTag = SettingsScreenTestTags.SCHOOL_FIELD)
-                    Spacer(modifier = Modifier.height(fieldSpacingRegular))
-                    SettingsField(
-                        label = stringResource(R.string.settings_label_school_year),
-                        value = uiState.schoolYear,
-                        onValueChange = { settingsViewModel.editSchoolYear(it) },
-                        testTag = SettingsScreenTestTags.SCHOOL_YEAR_FIELD)
-                  }
-
-              Spacer(modifier = Modifier.height(fieldSpacingMedium))
-
-              // Save Button
-              Button(
-                  onClick = { settingsViewModel.updateProfile(isFirstTime = false) },
-                  modifier =
-                      Modifier.fillMaxWidth(0.8f)
-                          .height(dimensionResource(id = R.dimen.settings_save_button_height))
-                          .padding(bottom = paddingRegular)
-                          .testTag(SettingsScreenTestTags.SAVE_BUTTON),
-                  colors =
-                      ButtonDefaults.buttonColors(
-                          containerColor = MaterialTheme.colorScheme.primary,
-                          contentColor = MaterialTheme.colorScheme.onPrimary),
-                  enabled = uiState.isValid) {
-                    Text(
-                        text = stringResource(R.string.settings_save),
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium)
-                  }
-            }
+                // Save Button
+                Button(
+                    onClick = { settingsViewModel.updateProfile(isFirstTime = false) },
+                    modifier =
+                        Modifier.fillMaxWidth(0.8f)
+                            .height(dimensionResource(id = R.dimen.settings_save_button_height))
+                            .padding(bottom = paddingRegular)
+                            .testTag(SettingsScreenTestTags.SAVE_BUTTON),
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary),
+                    enabled = uiState.isValid) {
+                      Text(
+                          text = stringResource(R.string.settings_save),
+                          fontSize = 16.sp,
+                          fontWeight = FontWeight.Medium)
+                    }
+              }
+        }
       })
 }
 

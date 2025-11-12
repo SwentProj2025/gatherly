@@ -19,7 +19,8 @@ data class ProfileState(
     val profile: Profile? = null,
     val focusPoints: Int = 0,
     val errorMessage: String? = null,
-    val signedOut: Boolean = false
+    val signedOut: Boolean = false,
+    val isAnon: Boolean = true
 )
 
 /**
@@ -60,6 +61,8 @@ class ProfileViewModel(
             _uiState.value.copy(isLoading = false, errorMessage = "User not authenticated")
         return@launch
       }
+
+      _uiState.value = _uiState.value.copy(isAnon = Firebase.auth.currentUser?.isAnonymous ?: true)
 
       try {
         val profile = repository.getProfileByUid(currentUser!!)

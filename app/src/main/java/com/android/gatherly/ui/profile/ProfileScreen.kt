@@ -110,6 +110,15 @@ fun ProfileScreen(
               contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
               }
+        } else if (uiState.isAnon) {
+          Box(
+              modifier = Modifier.fillMaxSize().padding(padding),
+              contentAlignment = Alignment.Center) {
+                Text(
+                    text = stringResource(R.string.profile_anon_message),
+                    color = MaterialTheme.colorScheme.onBackground,
+                    textAlign = TextAlign.Center)
+              }
         } else {
           Column(
               modifier =

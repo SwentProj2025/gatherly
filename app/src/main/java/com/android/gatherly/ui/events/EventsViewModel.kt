@@ -33,7 +33,8 @@ data class UIState(
     val globalEventList: List<Event> =
         emptyList(), // Events neither created by nor participated in by current user
     val signedOut: Boolean = false,
-    val errorMsg: String? = null
+    val errorMsg: String? = null,
+    val isAnon: Boolean = true
 )
 /**
  * Function that retrieves "drawable" events, i.e. those which are not past, and have a valid
@@ -92,7 +93,8 @@ class EventsViewModel(private val repository: EventsRepository, val currentUserI
             globalEventList =
                 events.filter {
                   it.creatorId != currentUserId && !it.participants.contains(currentUserId)
-                })
+                },
+            isAnon = Firebase.auth.currentUser?.isAnonymous ?: true)
   }
 
   /**

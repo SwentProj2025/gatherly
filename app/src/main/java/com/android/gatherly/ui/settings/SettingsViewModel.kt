@@ -45,7 +45,8 @@ data class SettingsUiState(
     val invalidBirthdayMsg: String? = null,
     val isUsernameAvailable: Boolean? = null,
     val isLoadingProfile: Boolean = false,
-    val saveSuccess: Boolean = false
+    val saveSuccess: Boolean = false,
+    val isAnon: Boolean = true
 ) {
   val isValid: Boolean
     get() =
@@ -104,6 +105,8 @@ class SettingsViewModel(
     viewModelScope.launch {
       try {
         _uiState.value = _uiState.value.copy(isLoadingProfile = true)
+        _uiState.value =
+            _uiState.value.copy(isAnon = Firebase.auth.currentUser?.isAnonymous ?: true)
         val profile = repository.getProfileByUid(profileUID) ?: Profile(uid = profileUID, name = "")
         originalProfile = profile
         _uiState.value =
