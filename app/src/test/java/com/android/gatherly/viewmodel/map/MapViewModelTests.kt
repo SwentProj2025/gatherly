@@ -332,6 +332,7 @@ class MapViewModelTests {
         assertNull(vm.uiState.value.cameraPos)
       }
 
+  // ----------------------------------Camera Position--------------------------------------------
   /** Verifies that initializing the camera position updates the camera position in the UI state. */
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
