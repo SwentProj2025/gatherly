@@ -151,17 +151,7 @@ class SettingsViewModel(
 
     viewModelScope.launch {
       try {
-        val usernameChanged = state.username != originalProfile?.username
-        val usernameSuccess =
-            if (isFirstTime) {
-              repository.registerUsername(id, state.username)
-            } else if (!usernameChanged) {
-              true
-            } else {
-              repository.updateUsername(id, originalProfile?.username, state.username)
-            }
-
-        if (!usernameSuccess) {
+        if (!checkUsernameSuccess(state, id, isFirstTime)) {
           setErrorMsg("Username is invalid or already taken.")
           return@launch
         }
@@ -267,6 +257,21 @@ class SettingsViewModel(
         _uiState.value =
             _uiState.value.copy(invalidUsernameMsg = "Unable to verify username availability")
       }
+    }
+  }
+
+  private suspend fun checkUsernameSuccess(
+      state: SettingsUiState,
+      id: String,
+      isFirstTime: Boolean
+  ): Boolean {
+    val usernameChanged = state.username != originalProfile?.username
+    return if (isFirstTime) {
+      repository.registerUsername(id, state.username)
+    } else if (!usernameChanged) {
+      true
+    } else {
+      repository.updateUsername(id, originalProfile?.username, state.username)
     }
   }
 }
