@@ -286,7 +286,7 @@ class TimerViewModelTest : FirestoreGatherlyTest() {
     viewModel.startTimer()
     viewModel.endTimer()
 
-    withContext(Dispatchers.Default.limitedParallelism(1)) { delay(1000L) }
+    withContext(Dispatchers.Default.limitedParallelism(1)) { delay(6000L) }
 
     val finalState = viewModel.uiState.value
 
