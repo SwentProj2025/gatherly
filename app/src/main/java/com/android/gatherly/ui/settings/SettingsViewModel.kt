@@ -13,6 +13,7 @@ import com.android.gatherly.model.profile.Username
 import com.android.gatherly.utils.DateParser
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -62,7 +63,7 @@ data class SettingsUiState(
  */
 class SettingsViewModel(
     private val repository: ProfileRepository = ProfileRepositoryProvider.repository,
-    private val currentUser: String = Firebase.auth.currentUser?.uid ?: ""
+    private val authProvider: () -> FirebaseAuth = { Firebase.auth }
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(SettingsUiState())
   val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
@@ -93,7 +94,7 @@ class SettingsViewModel(
   }
 
   init {
-    loadProfile(currentUser)
+    loadProfile(authProvider().currentUser?.uid ?: "")
   }
   /**
    * Loads a Profile by its ID and updates the UI state.
@@ -133,7 +134,7 @@ class SettingsViewModel(
    *
    * @param id The id of the Profile to be updated.
    */
-  fun updateProfile(id: String = currentUser, isFirstTime: Boolean) {
+  fun updateProfile(id: String = authProvider().currentUser?.uid!!, isFirstTime: Boolean) {
     val state = _uiState.value
     if (!state.isValid) {
       setErrorMsg("At least one field is not valid.")
