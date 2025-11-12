@@ -8,7 +8,9 @@ import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryProvider
 import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
+import com.google.firebase.auth.ktx.auth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -36,7 +38,7 @@ data class ProfileState(
  */
 class ProfileViewModel(
     private val repository: ProfileRepository = ProfileRepositoryProvider.repository,
-    private val currentUser: String? = Firebase.auth.currentUser?.uid
+    private val authProvider: () -> FirebaseAuth = { Firebase.auth }
 ) : ViewModel() {
 
   private val _uiState = MutableStateFlow(ProfileState())
@@ -54,7 +56,7 @@ class ProfileViewModel(
     viewModelScope.launch {
       _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
 
-      val user = currentUser
+      val user = authProvider().currentUser
       if (user == null) {
         _uiState.value =
             _uiState.value.copy(isLoading = false, errorMessage = "User not authenticated")
@@ -62,7 +64,7 @@ class ProfileViewModel(
       }
 
       try {
-        val profile = repository.getProfileByUid(currentUser!!)
+        val profile = repository.getProfileByUid(authProvider().currentUser?.uid!!)
         if (profile == null) {
           _uiState.value =
               _uiState.value.copy(isLoading = false, errorMessage = "Profile not found")
