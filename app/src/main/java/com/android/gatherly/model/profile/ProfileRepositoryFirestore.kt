@@ -9,6 +9,7 @@ import com.google.firebase.ktx.app
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.storage
 import kotlinx.coroutines.tasks.await
+import java.io.File
 
 /**
  * Firestore-backed implementation of [ProfileRepository].
@@ -172,22 +173,27 @@ class ProfileRepositoryFirestore(
   }
 
   override suspend fun updateProfilePic(uid: String, uri: Uri): String {
-    val storageRef = storage.reference.child("profile_pictures/$uid")
-    val uploadUri =
-        if (uri.scheme == "content") {
-          val context = Firebase.app.applicationContext
-          val tempFile = kotlin.io.path.createTempFile("profile_$uid").toFile()
-          val inputStream = context.contentResolver.openInputStream(uri)
-          inputStream?.use { tempFile.outputStream().use { output -> inputStream.copyTo(output) } }
-          Uri.fromFile(tempFile)
-        } else {
-          uri
-        }
-    storageRef.putFile(uploadUri).await()
-    val downloadUrl = storageRef.downloadUrl.await().toString()
-    val doc = profilesCollection.document(uid)
-    doc.update("profilePicture", downloadUrl).await()
-    return downloadUrl
+      var tempFile: File? = null
+      try{
+          val storageRef = storage.reference.child("profile_pictures/$uid")
+          val uploadUri =
+              if (uri.scheme == "content") {
+                  val context = Firebase.app.applicationContext
+                  tempFile = kotlin.io.path.createTempFile("profile_$uid").toFile()
+                  val inputStream = context.contentResolver.openInputStream(uri)
+                  inputStream?.use { tempFile.outputStream().use { output -> inputStream.copyTo(output) } }
+                  Uri.fromFile(tempFile)
+              } else {
+                  uri
+              }
+          storageRef.putFile(uploadUri).await()
+          val downloadUrl = storageRef.downloadUrl.await().toString()
+          val doc = profilesCollection.document(uid)
+          doc.update("profilePicture", downloadUrl).await()
+          return downloadUrl
+      }finally{
+          tempFile?.delete()
+      }
   }
 
   /**
