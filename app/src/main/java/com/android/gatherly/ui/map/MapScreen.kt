@@ -34,15 +34,21 @@ import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
 import com.android.gatherly.model.event.Event
+import com.android.gatherly.model.event.EventsRepositoryFirestore
 import com.android.gatherly.model.todo.ToDo
+import com.android.gatherly.model.todo.ToDosRepositoryFirestore
 import com.android.gatherly.ui.navigation.BottomNavigationMenu
 import com.android.gatherly.ui.navigation.HandleSignedOutState
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu
+import com.android.gatherly.utils.GenericViewModelFactory
+import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MarkerComposable
 import com.google.maps.android.compose.rememberCameraPositionState
@@ -102,8 +108,6 @@ private object Dimensions {
 /**
  * A composable screen displaying ToDos and Events as interactive markers on a Google Map.
  *
- * @param viewModel The MapViewModel instance providing the list of ToDos, the current camera
- *   position, and marker interaction handlers.
  * @param credentialManager The CredentialManager for handling user sign-out.
  * @param onSignedOut Callback invoked when the user signs out.
  * @param navigationActions Navigation actions for switching between app sections.
@@ -111,13 +115,26 @@ private object Dimensions {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MapScreen(
-    viewModel: MapViewModel = viewModel(),
     credentialManager: CredentialManager = CredentialManager.create(LocalContext.current),
     onSignedOut: () -> Unit = {},
     navigationActions: NavigationActions? = null,
     goToEvent: () -> Unit = {},
     goToToDo: () -> Unit = {}
 ) {
+  /**
+   * MapViewModel is initialised within the body of the Composable to properly inject current
+   * context for LocationServices
+   */
+  val context = LocalContext.current
+  val viewModel: MapViewModel =
+      viewModel(
+          factory =
+              GenericViewModelFactory {
+                MapViewModel(
+                    todosRepository = ToDosRepositoryFirestore(Firebase.firestore),
+                    eventsRepository = EventsRepositoryFirestore(Firebase.firestore),
+                    LocationServices.getFusedLocationProviderClient(context))
+              })
 
   val uiState by viewModel.uiState.collectAsState()
   HandleSignedOutState(uiState.onSignedOut, onSignedOut)
@@ -174,11 +191,13 @@ fun MapScreen(
             modifier = Modifier.testTag(MapScreenTestTags.FILTER_TOGGLE))
       },
       content = { pd ->
-        // Camera position state, using the first ToDo location if available
+        // Camera position state
         val cameraPositionState = rememberCameraPositionState()
-
+        // TODO: Is this fine?
         LaunchedEffect(uiState.cameraPos) {
-          cameraPositionState.position = CameraPosition.fromLatLngZoom(uiState.cameraPos, 14f)
+          uiState.cameraPos?.let { pos ->
+            cameraPositionState.position = CameraPosition.fromLatLngZoom(pos, 14f)
+          }
         }
 
         GoogleMap(
