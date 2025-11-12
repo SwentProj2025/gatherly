@@ -1,5 +1,6 @@
 package com.android.gatherly.end2end
 
+import android.Manifest
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextContains
@@ -11,6 +12,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
+import androidx.test.rule.GrantPermissionRule
 import com.android.gatherly.GatherlyApp
 import com.android.gatherly.ui.authentication.InitProfileScreenTestTags
 import com.android.gatherly.ui.authentication.SignInScreenTestTags
@@ -30,6 +32,12 @@ import org.junit.Test
 
 class Milestone2End2End : FirestoreGatherlyTest() {
   @get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()
+
+  // Grant location permissions for the tests (required!)
+  @get:Rule
+  val permissionRule: GrantPermissionRule =
+      GrantPermissionRule.grant(
+          Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
 
   val TIMEOUT = 5000L
 
