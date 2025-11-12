@@ -20,13 +20,13 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
 import com.android.gatherly.ui.navigation.*
-import com.google.firebase.Firebase
-import com.google.firebase.auth.auth
+import com.android.gatherly.ui.theme.GatherlyTheme
 
 object SettingsScreenTestTags {
   const val PROFILE_PICTURE = "settings_profile_picture"
@@ -61,13 +61,7 @@ fun SettingsScreen(
   val paddingRegular = dimensionResource(id = R.dimen.padding_regular)
   val fieldSpacingRegular = dimensionResource(id = R.dimen.spacing_between_fields_regular)
   val paddingMedium = dimensionResource(id = R.dimen.padding_medium)
-  val currentUser = Firebase.auth.currentUser
   val fieldSpacingMedium = dimensionResource(id = R.dimen.spacing_between_fields_medium)
-
-  // Load the profile only once when the screen appears
-  LaunchedEffect(currentUser?.uid) {
-    currentUser?.uid?.let { uid -> settingsViewModel.loadProfile(uid) }
-  }
 
   val uiState by settingsViewModel.uiState.collectAsState()
   val context = LocalContext.current
@@ -164,7 +158,7 @@ fun SettingsScreen(
                                 dimensionResource(id = R.dimen.rounded_corner_shape_medium))) {
                           Text(
                               text = stringResource(id = R.string.settings_edit_photo),
-                              color = MaterialTheme.colorScheme.primary,
+                              color = MaterialTheme.colorScheme.onBackground,
                               fontSize = 16.sp)
                         }
 
@@ -202,11 +196,7 @@ fun SettingsScreen(
 
               // Save Button
               Button(
-                  onClick = {
-                    currentUser?.uid?.let { uid ->
-                      settingsViewModel.updateProfile(uid, isFirstTime = false)
-                    }
-                  },
+                  onClick = { settingsViewModel.updateProfile(isFirstTime = false) },
                   modifier =
                       Modifier.fillMaxWidth(0.8f)
                           .height(dimensionResource(id = R.dimen.settings_save_button_height))
@@ -246,7 +236,7 @@ fun SettingsField(
     errorMessage: String? = null,
 ) {
 
-  val fieldsTextColor = MaterialTheme.colorScheme.primary
+  val fieldsTextColor = MaterialTheme.colorScheme.onBackground
   Column(modifier = modifier.fillMaxWidth()) {
     Text(
         text = label,
@@ -283,4 +273,11 @@ fun SettingsField(
                   .testTag("${testTag}_error"))
     }
   }
+}
+
+// Helper function to preview the timer screen
+@Preview
+@Composable
+fun SettingsScreenPreview() {
+  GatherlyTheme(darkTheme = true) { SettingsScreen() }
 }

@@ -22,6 +22,7 @@ import com.android.gatherly.ui.events.AddEventScreen
 import com.android.gatherly.ui.events.EditEventsScreen
 import com.android.gatherly.ui.events.EventsScreen
 import com.android.gatherly.ui.focusTimer.TimerScreen
+import com.android.gatherly.ui.friends.FindFriendsScreen
 import com.android.gatherly.ui.friends.FriendsScreen
 import com.android.gatherly.ui.homePage.HomePageScreen
 import com.android.gatherly.ui.map.MapScreen
@@ -39,11 +40,7 @@ class MainActivity : ComponentActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContent {
-      GatherlyTheme(darkTheme = true) {
-        Surface(modifier = Modifier.fillMaxSize()) { GatherlyApp() }
-      }
-    }
+    setContent { GatherlyTheme() { Surface(modifier = Modifier.fillMaxSize()) { GatherlyApp() } } }
   }
 }
 
@@ -141,7 +138,9 @@ fun GatherlyApp(
         MapScreen(
             navigationActions = navigationActions,
             credentialManager = credentialManager,
-            onSignedOut = { navigationActions.navigateTo(Screen.SignIn) })
+            onSignedOut = { navigationActions.navigateTo(Screen.SignIn) },
+            goToEvent = { navigationActions.navigateTo(Screen.EventsScreen) },
+            goToToDo = { navigationActions.navigateTo(Screen.OverviewToDo) })
       }
     }
 
@@ -227,7 +226,12 @@ fun GatherlyApp(
     ) {
       composable(Screen.FriendsScreen.route) {
         FriendsScreen(
-            credentialManager = credentialManager, goBack = { navigationActions.goBack() })
+            onFindFriends = { navigationActions.navigateTo(Screen.FindFriends) },
+            goBack = { navigationActions.goBack() })
+      }
+
+      composable(Screen.FindFriends.route) {
+        FindFriendsScreen(goBack = { navigationActions.goBack() })
       }
     }
 

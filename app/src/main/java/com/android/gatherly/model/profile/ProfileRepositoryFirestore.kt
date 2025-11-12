@@ -1,9 +1,12 @@
 package com.android.gatherly.model.profile
 
 import com.android.gatherly.model.friends.Friends
+import android.net.Uri
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.storage
 import kotlinx.coroutines.tasks.await
 
 /**
@@ -13,7 +16,10 @@ import kotlinx.coroutines.tasks.await
  * - /profiles/{uid} : main [Profile] documents
  * - /usernames/{username} : mapping from usernames to UIDs
  */
-class ProfileRepositoryFirestore(private val db: FirebaseFirestore) : ProfileRepository {
+class ProfileRepositoryFirestore(
+    private val db: FirebaseFirestore,
+    private val storage: FirebaseStorage
+) : ProfileRepository {
 
   private val profilesCollection = db.collection("profiles")
   private val usernamesCollection = db.collection("usernames")
@@ -164,6 +170,15 @@ class ProfileRepositoryFirestore(private val db: FirebaseFirestore) : ProfileRep
         .await()
   }
 
+  override suspend fun updateProfilePic(uid: String, uri: Uri): String {
+    val storageRef = storage.reference.child("profile_pictures/$uid")
+    storageRef.putFile(uri).await()
+    val downloadUrl = storageRef.downloadUrl.await().toString()
+    val doc = profilesCollection.document(uid)
+    doc.update("profilePicture", downloadUrl).await()
+    return downloadUrl
+  }
+
   /**
    * Retrieves a [Profile] by its username.
    *
@@ -305,11 +320,13 @@ class ProfileRepositoryFirestore(private val db: FirebaseFirestore) : ProfileRep
 
   override suspend fun addFriend(friend: String, currentUserId: String) {
     val docRef = profilesCollection.document(currentUserId)
-    docRef.update("friendUids", FieldValue.arrayUnion(friend)).await()
+    val friendId = getProfileByUsername(friend)?.uid
+    docRef.update("friendUids", FieldValue.arrayUnion(friendId)).await()
   }
 
   override suspend fun deleteFriend(friend: String, currentUserId: String) {
     val docRef = profilesCollection.document(currentUserId)
-    docRef.update("friendUids", FieldValue.arrayRemove(friend)).await()
+    val friendId = getProfileByUsername(friend)?.uid
+    docRef.update("friendUids", FieldValue.arrayRemove(friendId)).await()
   }
 }

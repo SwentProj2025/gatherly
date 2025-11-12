@@ -39,6 +39,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -51,6 +52,7 @@ import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_HomePage
+import com.android.gatherly.ui.theme.GatherlyTheme
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
@@ -167,7 +169,10 @@ fun HomePageScreen(
 fun SectionTitle(text: String, modifier: Modifier = Modifier) {
 
   Text(
-      text = text, color = MaterialTheme.colorScheme.primary, fontSize = 20.sp, modifier = modifier)
+      text = text,
+      color = MaterialTheme.colorScheme.onBackground,
+      fontSize = 20.sp,
+      modifier = modifier)
 }
 
 /**
@@ -280,7 +285,7 @@ fun FriendsSection(onClickFriendsSection: () -> Unit) {
           Modifier.testTag(HomePageScreenTestTags.FRIENDS_SECTION)
               .border(
                   width = dimensionResource(id = R.dimen.homepage_friends_section_border_width),
-                  color = MaterialTheme.colorScheme.primary,
+                  color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f),
                   shape = RoundedCornerShape(percent = roundedCornerPercentage))
               .clip(
                   RoundedCornerShape(
@@ -300,7 +305,7 @@ fun FriendsSection(onClickFriendsSection: () -> Unit) {
 
         Text(
             text = stringResource(R.string.homepage_friends_section_label),
-            color = MaterialTheme.colorScheme.primary,
+            color = MaterialTheme.colorScheme.onBackground,
             style = MaterialTheme.typography.bodySmall)
       }
 }
@@ -336,13 +341,13 @@ fun TaskItem(modifier: Modifier = Modifier, text: String, onClick: () -> Unit) {
           Text(
               text = text,
               style = MaterialTheme.typography.bodyLarge,
-              color = MaterialTheme.colorScheme.primary,
+              color = MaterialTheme.colorScheme.onBackground,
               modifier = Modifier.weight(1f))
 
           Icon(
               imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
               contentDescription = stringResource(id = R.string.homepage_arrow_icon_description),
-              tint = MaterialTheme.colorScheme.primary,
+              tint = MaterialTheme.colorScheme.onBackground,
               modifier = Modifier.size(dimensionResource(R.dimen.homepage_arrow_icon_size)))
         }
   }
@@ -353,7 +358,7 @@ fun TaskItem(modifier: Modifier = Modifier, text: String, onClick: () -> Unit) {
 fun FocusSection(modifier: Modifier = Modifier, timerString: String = "", onClick: () -> Unit) {
   Text(
       text = timerString,
-      color = MaterialTheme.colorScheme.primary,
+      color = MaterialTheme.colorScheme.onBackground,
       style = MaterialTheme.typography.bodyLarge,
       modifier = modifier.testTag(HomePageScreenTestTags.FOCUS_TIMER_TEXT))
 
@@ -371,7 +376,13 @@ fun FocusSection(modifier: Modifier = Modifier, timerString: String = "", onClic
       colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)) {
         Text(
             text = stringResource(id = R.string.homepage_focus_button_text),
-            color = MaterialTheme.colorScheme.primary,
+            color = MaterialTheme.colorScheme.onSecondary,
             style = MaterialTheme.typography.titleMedium)
       }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun HomePageScreenPreview() {
+  GatherlyTheme(darkTheme = true) { HomePageScreen() }
 }

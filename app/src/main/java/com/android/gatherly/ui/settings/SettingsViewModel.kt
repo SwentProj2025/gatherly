@@ -1,5 +1,6 @@
 package com.android.gatherly.ui.settings
 
+import android.net.Uri
 import android.util.Log
 import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
@@ -61,6 +62,7 @@ data class SettingsUiState(
  */
 class SettingsViewModel(
     private val repository: ProfileRepository = ProfileRepositoryProvider.repository,
+    private val currentUser: String = Firebase.auth.currentUser?.uid ?: ""
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(SettingsUiState())
   val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
@@ -90,6 +92,9 @@ class SettingsViewModel(
     _uiState.value = _uiState.value.copy(errorMsg = errorMsg)
   }
 
+  init {
+    loadProfile(currentUser)
+  }
   /**
    * Loads a Profile by its ID and updates the UI state.
    *
@@ -128,7 +133,7 @@ class SettingsViewModel(
    *
    * @param id The id of the Profile to be updated.
    */
-  fun updateProfile(id: String, isFirstTime: Boolean) {
+  fun updateProfile(id: String = currentUser, isFirstTime: Boolean) {
     val state = _uiState.value
     if (!state.isValid) {
       setErrorMsg("At least one field is not valid.")
@@ -160,6 +165,19 @@ class SettingsViewModel(
           return@launch
         }
 
+        val newProfilePictureUrl =
+            if (state.profilePictureUrl.isNotBlank() &&
+                (state.profilePictureUrl != originalProfile?.profilePicture)) {
+              val parsedUri = Uri.parse(state.profilePictureUrl)
+              if (parsedUri?.scheme == "content") {
+                repository.updateProfilePic(id, parsedUri)
+              } else {
+                state.profilePictureUrl
+              }
+            } else {
+              originalProfile?.profilePicture.orEmpty()
+            }
+
         val updatedProfile =
             originalP.copy(
                 uid = id,
@@ -167,7 +185,7 @@ class SettingsViewModel(
                 username = state.username,
                 school = state.school,
                 schoolYear = state.schoolYear,
-                profilePicture = state.profilePictureUrl,
+                profilePicture = newProfilePictureUrl,
                 birthday = birthdayDate?.let { Timestamp(it) })
 
         repository.updateProfile(updatedProfile)
@@ -225,6 +243,10 @@ class SettingsViewModel(
     if (validFormat) {
       checkUsernameAvailability(normalized)
     }
+  }
+
+  fun editProfilePictureUrl(newPhotoUrl: String) {
+    _uiState.value = _uiState.value.copy(profilePictureUrl = newPhotoUrl)
   }
 
   private fun checkUsernameAvailability(username: String) {

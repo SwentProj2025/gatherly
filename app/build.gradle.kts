@@ -31,6 +31,8 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunnerArguments["timeout_msec"] = "30000"
+
         vectorDrawables {
             useSupportLibrary = true
         }
@@ -153,10 +155,13 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.gms.play.services.maps)
+    implementation(libs.play.services.location)
+    implementation(libs.firebase.storage)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     testImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.kotlin.test)
     androidTestImplementation(libs.androidx.espresso.core)
     testImplementation(libs.androidx.espresso.core)
 
@@ -216,6 +221,7 @@ dependencies {
     implementation(libs.firebase.ui.auth)
     implementation(libs.firebase.auth.ktx)
     implementation(libs.firebase.auth)
+    implementation("com.google.firebase:firebase-storage-ktx:21.0.1")
 
     // Credential Manager (for Google Sign-In)
     implementation(libs.credentials)
@@ -237,6 +243,9 @@ dependencies {
     androidTestImplementation(libs.mockito.android)
     androidTestImplementation(libs.kaspresso.allure.support)
     testImplementation(libs.kotlinx.coroutines.test)
+
+    // Profile picture
+    implementation("io.coil-kt:coil-compose:2.6.0")
 }
 
 configurations.all {

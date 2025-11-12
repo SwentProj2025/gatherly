@@ -6,6 +6,7 @@ import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.model.todo.ToDosRepositoryFirestore
 import com.google.firebase.Timestamp
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -37,13 +38,13 @@ open class FirestoreGatherlyTest {
   protected val todo3 = todo1.copy(uid = "3", name = "Read a book")
 
   @Before
-  open fun setUp() {
+  open fun setUp() = runBlocking {
     if (!FirebaseEmulator.isRunning) {
       error("Firebase emulator must be running! Use: firebase emulators:start")
     }
-    runTest { FirebaseEmulator.auth.signInAnonymously().await() }
+    FirebaseEmulator.auth.signInAnonymously().await()
     repository = ToDosRepositoryFirestore(FirebaseEmulator.firestore)
-    runTest { clearUserTodos() }
+    clearUserTodos()
   }
 
   @After

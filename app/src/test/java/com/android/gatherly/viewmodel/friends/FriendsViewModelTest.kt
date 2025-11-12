@@ -1,13 +1,16 @@
-package com.android.gatherly.ui.friends
+package com.android.gatherly.viewmodel.friends
 
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
+import com.android.gatherly.ui.friends.FriendsViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.test.setMain
+import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
@@ -26,8 +29,28 @@ private const val DELAY = 200L
 @OptIn(ExperimentalCoroutinesApi::class)
 class FriendsViewModelTest {
 
-  private lateinit var repository: ProfileLocalRepository
+  private lateinit var profileRepository: ProfileLocalRepository
   private lateinit var viewModel: FriendsViewModel
+
+  // initialize this so that tests control all coroutines and can wait on them
+  private val testDispatcher = StandardTestDispatcher()
+
+  @Before
+  fun setUp() {
+    // so that tests can wait on coroutines
+    Dispatchers.setMain(testDispatcher)
+    // initialize repos and viewModel
+    profileRepository = ProfileLocalRepository()
+
+    fill_repositories()
+
+    viewModel = FriendsViewModel(repository = profileRepository, currentUserId = "A")
+  }
+
+  @After
+  fun tearDown() {
+    Dispatchers.resetMain()
+  }
 
   private val userA: Profile =
       Profile(
@@ -62,16 +85,6 @@ class FriendsViewModelTest {
           friendUids = emptyList(),
           profilePicture = "profileC.png")
 
-  @Before
-  fun setup() = runTest {
-    repository = ProfileLocalRepository()
-    repository.addProfile(userA)
-    repository.addProfile(userB)
-    repository.addProfile(userC)
-
-    viewModel = FriendsViewModel(repository, "A")
-  }
-
   @Test
   fun testInitialStateShouldContainEachFriends() = runTest {
     val state = viewModel.uiState.value
@@ -81,16 +94,9 @@ class FriendsViewModelTest {
 
   @Test
   fun testFollowFriendCFromProfileA() = runTest {
-    viewModel.followFriend("C", "A")
+    viewModel.followFriend("charlie", "A")
 
-    // Wait until the friends list is updated
-    withContext(Dispatchers.Default.limitedParallelism(1)) {
-      withTimeout(TIMEOUT) {
-        while (viewModel.uiState.value.friends != listOf("bob", "charlie")) {
-          delay(DELAY)
-        }
-      }
-    }
+    advanceUntilIdle()
 
     val state = viewModel.uiState.value
     assertTrue(state.friends.contains("charlie"))
@@ -98,18 +104,21 @@ class FriendsViewModelTest {
 
   @Test
   fun testUnfollowFriendBFromProfileA() = runTest {
-    viewModel.unfollowFriend("B", "A")
+    viewModel.unfollowFriend("bob", "A")
 
-    // Wait until the friends list is updated
-    withContext(Dispatchers.Default.limitedParallelism(1)) {
-      withTimeout(TIMEOUT) {
-        while (viewModel.uiState.value.friends == listOf("charlie")) {
-          delay(DELAY)
-        }
-      }
-    }
+    advanceUntilIdle()
 
     val state = viewModel.uiState.value
     assertFalse(state.friends.contains("bob"))
+  }
+
+  // This function fills the profile repository with the created profiles
+  fun fill_repositories() {
+    runTest {
+      profileRepository.addProfile(userA)
+      profileRepository.addProfile(userB)
+      profileRepository.addProfile(userC)
+      advanceUntilIdle()
+    }
   }
 }
