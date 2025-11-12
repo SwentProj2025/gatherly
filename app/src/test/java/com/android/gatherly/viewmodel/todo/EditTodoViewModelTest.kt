@@ -58,7 +58,7 @@ class EditTodoViewModelTest {
     mockAuth = mock(FirebaseAuth::class.java)
     mockUser = mock(FirebaseUser::class.java)
     `when`(mockAuth.currentUser).thenReturn(mockUser)
-    `when`(mockUser.uid).thenReturn("currentUser")
+    `when`(mockUser.uid).thenReturn("owner")
     `when`(mockUser.isAnonymous).thenReturn(false)
 
     editTodoViewModel =

@@ -105,9 +105,7 @@ class ProfileViewModelIntegrationTest {
 
   @Test
   fun loadUserProfile_returnsErrorIfUserNotAuthenticated() = runTest {
-    `when`(mockAuth.currentUser).thenReturn(mockUser)
-    `when`(mockUser.uid).thenReturn(null)
-    `when`(mockUser.isAnonymous).thenReturn(false)
+    `when`(mockAuth.currentUser).thenReturn(null)
 
     profileViewModel = ProfileViewModel(repository = profileRepository, authProvider = { mockAuth })
     profileViewModel.loadUserProfile()
