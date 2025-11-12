@@ -83,6 +83,15 @@ fun SettingsScreen(
     }
   }
 
+  // If the anonymous user decides to upgrade their account to a signed in one, navigate to the init
+  // profile screen
+  val navigateToInit = uiState.navigateToInit
+  LaunchedEffect(navigateToInit) {
+    if (navigateToInit) {
+      navigationActions?.navigateTo(Screen.InitProfileScreen)
+    }
+  }
+
   HandleSignedOutState(uiState.signedOut, onSignedOut)
 
   Scaffold(
@@ -96,13 +105,60 @@ fun SettingsScreen(
       containerColor = MaterialTheme.colorScheme.background,
       content = { paddingValues ->
         if (uiState.isAnon) {
+
+          // If the user is anonymous, they do not have a profile
+
           Box(
-              modifier = Modifier.fillMaxSize().padding(paddingValues),
+              modifier =
+                  Modifier.fillMaxSize()
+                      .padding(paddingValues)
+                      .padding(horizontal = fieldSpacingMedium),
               contentAlignment = Alignment.Center) {
-                Text(
-                    text = stringResource(R.string.profile_anon_message),
-                    color = MaterialTheme.colorScheme.onBackground,
-                    textAlign = TextAlign.Center)
+                Column {
+                  // Inform the user that they are signed in anonymously
+                  Text(
+                      text = stringResource(R.string.profile_anon_message),
+                      color = MaterialTheme.colorScheme.onBackground,
+                      textAlign = TextAlign.Center)
+
+                  Spacer(Modifier.height(fieldSpacingMedium))
+
+                  // Sign in with google button
+                  Button(
+                      onClick = { settingsViewModel.upgradeWithGoogle(context, credentialManager) },
+                      modifier =
+                          Modifier.fillMaxWidth()
+                              .height(dimensionResource(id = R.dimen.sign_in_button_height)),
+                      colors =
+                          ButtonDefaults.buttonColors(
+                              containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                              contentColor = MaterialTheme.colorScheme.primary),
+                      shape =
+                          RoundedCornerShape(
+                              dimensionResource(id = R.dimen.rounded_corner_shape_medium))) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center,
+                            modifier = Modifier.fillMaxWidth()) {
+                              // Google image
+                              Image(
+                                  painter = painterResource(id = R.drawable.google_logo),
+                                  contentDescription =
+                                      null, // Action still clear with button text description
+                                  modifier =
+                                      Modifier.size(
+                                              dimensionResource(
+                                                  id = R.dimen.sign_in_button_icon_size))
+                                          .padding(end = dimensionResource(R.dimen.padding_small)))
+
+                              // Upgrade with google text
+                              Text(
+                                  text = stringResource(R.string.upgrade_to_google_button_label),
+                                  style = MaterialTheme.typography.bodyLarge,
+                                  fontWeight = FontWeight.Medium)
+                            }
+                      }
+                }
               }
         } else {
           Column(
