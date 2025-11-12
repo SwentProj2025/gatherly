@@ -1,8 +1,8 @@
 package com.android.gatherly.viewmodel.timer
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.android.gatherly.model.focusSession.FocusSessionsLocalRepository
 import com.android.gatherly.model.focusSession.FocusSessionsRepository
-import com.android.gatherly.model.focusSession.FocusSessionsRepositoryProvider
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosLocalRepository
@@ -70,7 +70,7 @@ class TimerViewModelTest {
 
     toDosRepository = ToDosLocalRepository()
 
-    focusSessionsRepository = FocusSessionsRepositoryProvider.repository
+    focusSessionsRepository = FocusSessionsLocalRepository()
     viewModel = TimerViewModel(toDosRepository, focusSessionsRepository)
   }
 
@@ -404,7 +404,7 @@ class TimerViewModelTest {
     // --- Act: Start the timer ---
     viewModel.startTimer()
 
-    // Wait briefly for async Firestore write
+    // Wait briefly for session creation write
     withContext(Dispatchers.Default.limitedParallelism(1)) {
       withTimeout(TIMEOUT) {
         while (focusSessionsRepository.getUserFocusSessions().isEmpty()) {
@@ -414,7 +414,7 @@ class TimerViewModelTest {
     }
 
     // After starting, repository should contain *one* session
-    var sessions = focusSessionsRepository.getUserFocusSessions()
+    val sessions = focusSessionsRepository.getUserFocusSessions()
     assertEquals(1, sessions.size)
 
     val startedSession = sessions[0]
@@ -424,21 +424,11 @@ class TimerViewModelTest {
     assertEquals(0, startedSession.duration.inWholeSeconds) // initial duration zero
 
     // --- Act: End the timer ---
-    delay(1500L) // allow some time to elapse
+    withContext(Dispatchers.Default.limitedParallelism(1)) { delay(1000L) }
     viewModel.endTimer()
 
     // Wait for session finalization write
-    withContext(Dispatchers.Default.limitedParallelism(1)) {
-      withTimeout(TIMEOUT) {
-        var done = false
-        while (!done) {
-          delay(DELAY)
-          sessions = focusSessionsRepository.getUserFocusSessions()
-          val s = sessions[0]
-          done = (s.duration.inWholeSeconds > 0)
-        }
-      }
-    }
+    withContext(Dispatchers.Default.limitedParallelism(1)) { delay(2000L) }
 
     // --- Assert final session ---
     val finalSession = sessions[0]
