@@ -17,6 +17,8 @@ import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.ui.todo.AddToDoScreenTestTags
 import com.google.firebase.Timestamp
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -24,6 +26,8 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
 
 /** Tests for the AddEventScreen */
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -35,6 +39,8 @@ class AddEventsScreenTest {
   private lateinit var addEventsViewModel: AddEventViewModel
   private lateinit var eventsRepository: EventsRepository
   private lateinit var profileRepository: ProfileRepository
+  private lateinit var mockAuth: FirebaseAuth
+  private lateinit var mockUser: FirebaseUser
 
   @Before
   fun setUp() {
@@ -44,11 +50,18 @@ class AddEventsScreenTest {
 
     fill_repositories()
 
+    // Mock Firebase Auth
+    mockAuth = mock(FirebaseAuth::class.java)
+    mockUser = mock(FirebaseUser::class.java)
+    `when`(mockAuth.currentUser).thenReturn(mockUser)
+    `when`(mockUser.uid).thenReturn("0")
+    `when`(mockUser.isAnonymous).thenReturn(false)
+
     addEventsViewModel =
         AddEventViewModel(
             profileRepository = profileRepository,
             eventsRepository = eventsRepository,
-            currentUser = "0")
+            authProvider = { mockAuth })
 
     composeTestRule.setContent { AddEventScreen(addEventsViewModel) }
   }

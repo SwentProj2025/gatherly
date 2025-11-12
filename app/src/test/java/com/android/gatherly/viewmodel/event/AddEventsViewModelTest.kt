@@ -10,6 +10,8 @@ import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.ui.events.AddEventViewModel
 import com.google.firebase.Timestamp
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import java.text.SimpleDateFormat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -22,6 +24,8 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
 
 @RunWith(AndroidJUnit4::class)
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -31,6 +35,8 @@ class AddEventsViewModelTest {
   private lateinit var addEventViewModel: AddEventViewModel
   private lateinit var eventsRepository: EventsRepository
   private lateinit var profileRepository: ProfileRepository
+  private lateinit var mockAuth: FirebaseAuth
+  private lateinit var mockUser: FirebaseUser
 
   // initialize this so that tests control all coroutines and can wait on them
   private val testDispatcher = StandardTestDispatcher()
@@ -46,11 +52,18 @@ class AddEventsViewModelTest {
     // fill the profile and events repositories with profiles and event
     fill_repositories()
 
+    // Mock Firebase Auth
+    mockAuth = mock(FirebaseAuth::class.java)
+    mockUser = mock(FirebaseUser::class.java)
+    `when`(mockAuth.currentUser).thenReturn(mockUser)
+    `when`(mockUser.uid).thenReturn("0")
+    `when`(mockUser.isAnonymous).thenReturn(false)
+
     addEventViewModel =
         AddEventViewModel(
             profileRepository = profileRepository,
             eventsRepository = eventsRepository,
-            currentUser = ownerProfile.uid)
+            authProvider = { mockAuth })
   }
 
   @After
