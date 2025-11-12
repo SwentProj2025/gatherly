@@ -319,7 +319,7 @@ fun EventSheet(event: Event, onGoToEvent: () -> Unit, onClose: () -> Unit) {
         Text(
             text = event.title.uppercase(),
             style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.primary,
+            color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.testTag(MapScreenTestTags.EVENT_TITLE_SHEET))
 
         Spacer(modifier = Modifier.size(Dimensions.spacerPadding))
@@ -329,14 +329,14 @@ fun EventSheet(event: Event, onGoToEvent: () -> Unit, onClose: () -> Unit) {
                 Modifier.padding(Dimensions.textPadding).testTag(MapScreenTestTags.EVENT_DATE),
             text = formattedDate,
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.primary)
+            color = MaterialTheme.colorScheme.onBackground)
         Text(
             modifier =
                 Modifier.padding(Dimensions.textPadding)
                     .testTag(MapScreenTestTags.EVENT_DESCRIPTION),
             text = event.description,
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.primary)
+            color = MaterialTheme.colorScheme.onBackground)
 
         Spacer(modifier = Modifier.size(Dimensions.spacerPadding))
 
@@ -413,7 +413,11 @@ fun ToDoSheet(toDo: ToDo, onGoToToDo: () -> Unit, onClose: () -> Unit) {
         sdf.format(toDo.dueDate.toDate())
       }
 
-  Column(
+  Card(
+      colors =
+          CardDefaults.cardColors(
+              containerColor = MaterialTheme.colorScheme.secondary,
+              contentColor = MaterialTheme.colorScheme.onSecondary),
       modifier =
           Modifier.fillMaxWidth()
               .padding(Dimensions.rowColPadding)
@@ -421,7 +425,7 @@ fun ToDoSheet(toDo: ToDo, onGoToToDo: () -> Unit, onClose: () -> Unit) {
         Text(
             text = toDo.name.uppercase(),
             style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.primary,
+            color = MaterialTheme.colorScheme.onSecondary,
             modifier = Modifier.testTag(MapScreenTestTags.TODO_TITLE_SHEET))
 
         Spacer(modifier = Modifier.size(Dimensions.spacerPadding))
@@ -431,14 +435,14 @@ fun ToDoSheet(toDo: ToDo, onGoToToDo: () -> Unit, onClose: () -> Unit) {
                 Modifier.padding(Dimensions.textPadding).testTag(MapScreenTestTags.TODO_DUE_DATE),
             text = formattedDate,
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.primary)
+            color = MaterialTheme.colorScheme.onSecondary)
         Text(
             modifier =
                 Modifier.padding(Dimensions.textPadding)
                     .testTag(MapScreenTestTags.TODO_DESCRIPTION),
             text = toDo.description,
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.primary)
+            color = MaterialTheme.colorScheme.onSecondary)
 
         Spacer(modifier = Modifier.size(Dimensions.spacerPadding))
 
