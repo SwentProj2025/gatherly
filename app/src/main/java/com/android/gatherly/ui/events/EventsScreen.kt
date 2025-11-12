@@ -127,7 +127,7 @@ fun EventsScreen(
     eventsViewModel: EventsViewModel = viewModel(factory = EventsViewModel.provideFactory())
 ) {
 
-  val currentUserIdFromVM = eventsViewModel.currentUserId
+  val currentUserIdFromVM = eventsViewModel.authProvider().currentUser?.uid ?: ""
   val coroutineScope = rememberCoroutineScope()
 
   val uiState by eventsViewModel.uiState.collectAsState()
@@ -317,7 +317,8 @@ fun EventsScreen(
               shouldShowDialog = isPopupOnBrowser,
               participate = {
                 eventsViewModel.onParticipate(
-                    eventId = event.id, currentUserId = eventsViewModel.currentUserId)
+                    eventId = event.id,
+                    currentUserId = eventsViewModel.authProvider().currentUser?.uid ?: "")
                 coroutineScope.launch { eventsViewModel.refreshEvents(currentUserIdFromVM) }
               })
           selectedBrowserEvent.value = if (isPopupOnBrowser.value) event else null
@@ -329,7 +330,8 @@ fun EventsScreen(
               shouldShowDialog = isPopupOnUpcoming,
               unparticipate = {
                 eventsViewModel.onUnregister(
-                    eventId = event.id, currentUserId = eventsViewModel.currentUserId)
+                    eventId = event.id,
+                    currentUserId = eventsViewModel.authProvider().currentUser?.uid ?: "")
 
                 coroutineScope.launch { eventsViewModel.refreshEvents(currentUserIdFromVM) }
               })

@@ -54,7 +54,7 @@ private fun getDrawableEvents(events: List<Event>): List<Event> {
  */
 class EventsViewModel(
     private val repository: EventsRepository,
-    private val authProvider: () -> FirebaseAuth = { Firebase.auth }
+    val authProvider: () -> FirebaseAuth = { Firebase.auth }
 ) : ViewModel() {
   private val _uiState: MutableStateFlow<UIState> = MutableStateFlow(UIState())
 

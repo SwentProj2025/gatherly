@@ -19,7 +19,7 @@ data class FriendsUIState(
 
 class FriendsViewModel(
     private val repository: ProfileRepository,
-    private val authProvider: () -> FirebaseAuth = { Firebase.auth }
+    val authProvider: () -> FirebaseAuth = { Firebase.auth }
 ) : ViewModel() {
 
   /** StateFlow that emits the current UI state for the Friends screen. */

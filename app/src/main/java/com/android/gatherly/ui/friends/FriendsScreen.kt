@@ -49,7 +49,6 @@ import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
 import com.android.gatherly.utils.GenericViewModelFactory
 import com.google.firebase.Firebase
-import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
 import com.google.firebase.storage.storage
 
@@ -103,14 +102,13 @@ fun FriendsScreen(
             factory =
                 GenericViewModelFactory<FriendsViewModel> {
                   FriendsViewModel(
-                      repository = ProfileRepositoryFirestore(Firebase.firestore, Firebase.storage),
-                      currentUserId = Firebase.auth.currentUser?.uid ?: "")
+                      repository = ProfileRepositoryFirestore(Firebase.firestore, Firebase.storage))
                 }),
     goBack: () -> Unit = {},
     onFindFriends: () -> Unit = {},
 ) {
 
-  val currentUserIdFromVM = friendsViewModel.currentUserId
+  val currentUserIdFromVM = friendsViewModel.authProvider().currentUser?.uid ?: ""
   val uiState by friendsViewModel.uiState.collectAsState()
   val friendsList = uiState.friends
 
