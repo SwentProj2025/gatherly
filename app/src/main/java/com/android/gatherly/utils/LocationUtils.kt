@@ -10,6 +10,7 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
+import com.google.android.gms.location.Priority
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 
@@ -23,7 +24,7 @@ import kotlinx.coroutines.flow.callbackFlow
 
 /** Creates a LocationRequest with high accuracy and a 10-second interval. */
 fun createLocationRequest(): LocationRequest {
-  return LocationRequest.Builder(10000L).setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY).build()
+  return LocationRequest.Builder(10000L).setPriority(Priority.PRIORITY_HIGH_ACCURACY).build()
 }
 
 /**

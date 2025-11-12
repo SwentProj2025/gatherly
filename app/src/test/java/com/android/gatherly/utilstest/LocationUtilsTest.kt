@@ -8,8 +8,8 @@ import com.android.gatherly.utils.createLocationRequest
 import com.android.gatherly.utils.locationFlow
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
-import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
+import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.Task
 import io.mockk.*
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -31,8 +31,8 @@ class LocationUtilsTest {
   fun createLocationRequest_hasCorrectConfiguration() {
     val request = createLocationRequest()
 
-    assertEquals(10000L, request.interval)
-    assertEquals(LocationRequest.PRIORITY_HIGH_ACCURACY, request.priority)
+    assertEquals(10000L, request.intervalMillis)
+    assertEquals(Priority.PRIORITY_HIGH_ACCURACY, request.priority)
   }
 
   /** Test that locationFlow throws SecurityException when location permission is not granted. */
