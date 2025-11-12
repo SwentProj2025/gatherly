@@ -2,6 +2,7 @@ package com.android.gatherly.model.profile
 
 import android.net.Uri
 import com.android.gatherly.model.friends.Friends
+
 /**
  * Interface for repositories managing user profiles.
  *

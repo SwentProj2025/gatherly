@@ -1,7 +1,7 @@
 package com.android.gatherly.model.profile
 
-import com.android.gatherly.model.friends.Friends
 import android.net.Uri
+import com.android.gatherly.model.friends.Friends
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
