@@ -368,6 +368,9 @@ class AddEventViewModel(
       // Create ID of the new event
       val eventId = eventsRepository.getNewId()
 
+      // List of the ID of every participants
+      val participants = uiState.participants.map { it.uid }
+
       // Create new event
       val event =
           Event(
@@ -380,7 +383,7 @@ class AddEventViewModel(
               startTime = timestampStartTime,
               endTime = timestampEndTime,
               creatorId = currentProfile.uid,
-              participants = uiState.participants.map { it.uid },
+              participants = participants,
               status = EventStatus.UPCOMING)
 
       uiState = uiState.copy(displayToast = true, toastString = "Saving...")
@@ -389,6 +392,8 @@ class AddEventViewModel(
       viewModelScope.launch {
         eventsRepository.addEvent(event)
         profileRepository.createEvent(eventId, currentProfile.uid)
+        profileRepository.allParticipateEvent(eventId, participants)
+
         uiState = uiState.copy(displayToast = true, toastString = "Saved")
       }
 

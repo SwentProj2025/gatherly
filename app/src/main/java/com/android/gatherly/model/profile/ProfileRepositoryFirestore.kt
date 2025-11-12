@@ -334,8 +334,16 @@ class ProfileRepositoryFirestore(
     docRef.update("eventIds", FieldValue.arrayUnion(eventId)).await()
   }
 
+  override suspend fun allParticipateEvent(eventId: String, participants: List<String>) {
+    participants.forEach { participant -> participateEvent(eventId, participant) }
+  }
+
   override suspend fun unregisterEvent(eventId: String, currentUserId: String) {
     val docRef = profilesCollection.document(currentUserId)
     docRef.update("eventIds", FieldValue.arrayRemove(eventId)).await()
+  }
+
+  override suspend fun allUnregisterEvent(eventId: String, participants: List<String>) {
+    participants.forEach { participant -> unregisterEvent(eventId, participant) }
   }
 }

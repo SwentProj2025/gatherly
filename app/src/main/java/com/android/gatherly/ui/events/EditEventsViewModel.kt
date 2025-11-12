@@ -104,6 +104,10 @@ class EditEventsViewModel(
   private lateinit var eventId: String
   private lateinit var creatorId: String
 
+  // The list of participants ID is needed in case
+  // if the event is canceled we have to unregister everybody
+  private lateinit var participants: List<String>
+
   // Selected Location
   private var chosenLocation: Location? = null
 
@@ -130,6 +134,7 @@ class EditEventsViewModel(
               participants = event.participants.map { profileRepository.getProfileByUid(it)!! })
       eventId = event.id
       creatorId = event.creatorId
+      participants = event.participants
     }
   }
 
@@ -253,6 +258,7 @@ class EditEventsViewModel(
         } else if (participant == creatorId) {
           uiState.copy(displayToast = true, toastString = "Cannot delete the owner")
         } else {
+          viewModelScope.launch { profileRepository.unregisterEvent(eventId, participant) }
           uiState.copy(
               participants = uiState.participants.filter { it.uid != participant },
               suggestedProfiles = emptyList())
@@ -271,6 +277,7 @@ class EditEventsViewModel(
               displayToast = true, toastString = "Cannot add a participant that is already added")
       return
     }
+    viewModelScope.launch { profileRepository.participateEvent(eventId, participant.uid) }
     uiState =
         uiState.copy(
             participants = uiState.participants + participant, suggestedProfiles = emptyList())
@@ -395,6 +402,7 @@ class EditEventsViewModel(
     viewModelScope.launch {
       eventsRepository.deleteEvent(eventId)
       profileRepository.deleteEvent(eventId, creatorId)
+      profileRepository.allUnregisterEvent(eventId, participants)
     }
     uiState = uiState.copy(backToOverview = true)
   }

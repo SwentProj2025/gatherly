@@ -154,6 +154,9 @@ class EditEventsScreenTest {
       profileRepository.addProfile(participantProfile)
       profileRepository.addProfile(ownerProfile)
       eventsRepository.addEvent(event)
+      profileRepository.createEvent(event.id, ownerProfile.uid)
+      profileRepository.participateEvent(event.id, participantProfile.uid)
+
       advanceUntilIdle()
     }
   }

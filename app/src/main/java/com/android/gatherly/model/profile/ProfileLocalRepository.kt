@@ -155,6 +155,10 @@ class ProfileLocalRepository : ProfileRepository {
     }
   }
 
+  override suspend fun allParticipateEvent(eventId: String, participants: List<String>) {
+    participants.forEach { participant -> participateEvent(eventId, participant) }
+  }
+
   override suspend fun unregisterEvent(eventId: String, currentUserId: String) {
     val currentProfile = getProfileByUid(currentUserId) ?: return
     if (currentProfile.eventIds.contains(eventId)) {
@@ -162,5 +166,9 @@ class ProfileLocalRepository : ProfileRepository {
       val updatedProfile = currentProfile.copy(eventIds = updatedEventIds)
       updateProfile(updatedProfile)
     }
+  }
+
+  override suspend fun allUnregisterEvent(eventId: String, participants: List<String>) {
+    participants.forEach { participant -> unregisterEvent(eventId, participant) }
   }
 }

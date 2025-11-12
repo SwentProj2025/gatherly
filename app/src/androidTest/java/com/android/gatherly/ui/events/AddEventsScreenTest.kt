@@ -157,6 +157,7 @@ class AddEventsScreenTest {
       profileRepository.addProfile(participantProfile)
       profileRepository.addProfile(ownerProfile)
       eventsRepository.addEvent(event)
+      profileRepository.createEvent(event.id, ownerProfile.uid)
       advanceUntilIdle()
     }
   }

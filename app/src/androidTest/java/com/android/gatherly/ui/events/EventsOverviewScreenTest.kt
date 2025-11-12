@@ -114,6 +114,7 @@ class EventsOverviewScreenTest {
     val bobId = "bobId"
     val eventByBob = createYourEvent(bobId)
     eventsRepository.addEvent(eventByBob)
+    profileRepository.createEvent(eventByBob.id, bobId)
 
     setContent(bobId)
 
@@ -146,6 +147,7 @@ class EventsOverviewScreenTest {
     // Create event by Alice
     val eventByAlice = createYourEvent(aliceId)
     eventsRepository.addEvent(eventByAlice)
+    profileRepository.createEvent(eventByAlice.id, aliceId)
 
     // Sign in as Bob
     val bobId = "bobId"
@@ -185,6 +187,7 @@ class EventsOverviewScreenTest {
     // Create event by Alice
     val eventByAlice = createYourEvent(aliceId)
     eventsRepository.addEvent(eventByAlice)
+    profileRepository.createEvent(eventByAlice.id, aliceId)
 
     // Sign in as Bob
     val bobId = "bobId"
@@ -261,6 +264,7 @@ class EventsOverviewScreenTest {
     // Create event by Alice
     val eventByAlice = createYourEvent(aliceId)
     eventsRepository.addEvent(eventByAlice)
+    profileRepository.createEvent(eventByAlice.id, aliceId)
 
     // Sign in as Bob
     val bobId = "bobId"
@@ -358,6 +362,7 @@ class EventsOverviewScreenTest {
     // Create event by Bob
     val eventByBob = createYourEvent(bobId)
     eventsRepository.addEvent(eventByBob)
+    profileRepository.createEvent(eventByBob.id, bobId)
 
     setContent(bobId)
 
@@ -396,6 +401,7 @@ class EventsOverviewScreenTest {
     // Create event by Bob
     val eventByBob = createYourEvent(bobId)
     eventsRepository.addEvent(eventByBob)
+    profileRepository.createEvent(eventByBob.id, bobId)
 
     setContent(bobId)
 
