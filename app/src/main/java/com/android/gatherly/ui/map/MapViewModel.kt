@@ -7,6 +7,7 @@ import android.location.Location as AndroidLocation
 import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.event.EventStatus
@@ -18,6 +19,7 @@ import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.model.todo.ToDosRepositoryFirestore
+import com.android.gatherly.utils.GenericViewModelFactory
 import com.android.gatherly.utils.locationFlow
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.maps.model.LatLng
@@ -258,6 +260,18 @@ class MapViewModel(
       _uiState.value = _uiState.value.copy(onSignedOut = true)
       Firebase.auth.signOut()
       credentialManager.clearCredentialState(ClearCredentialStateRequest())
+    }
+  }
+  /** Factory method to provide a MapViewModel with default dependencies. */
+  companion object {
+    fun provideFactory(
+        todosRepository: ToDosRepository = ToDosRepositoryFirestore(Firebase.firestore),
+        eventsRepository: EventsRepository = EventsRepositoryFirestore(Firebase.firestore),
+        fusedLocationClient: FusedLocationProviderClient? = null
+    ): ViewModelProvider.Factory {
+      return GenericViewModelFactory {
+        MapViewModel(todosRepository, eventsRepository, fusedLocationClient)
+      }
     }
   }
 }

@@ -1,5 +1,9 @@
 package com.android.gatherly.ui.map
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -30,26 +34,24 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
 import com.android.gatherly.model.event.Event
-import com.android.gatherly.model.event.EventsRepositoryFirestore
 import com.android.gatherly.model.todo.ToDo
-import com.android.gatherly.model.todo.ToDosRepositoryFirestore
 import com.android.gatherly.ui.navigation.BottomNavigationMenu
 import com.android.gatherly.ui.navigation.HandleSignedOutState
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu
-import com.android.gatherly.utils.GenericViewModelFactory
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
-import com.google.firebase.firestore.ktx.firestore
-import com.google.firebase.ktx.Firebase
 import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.MarkerComposable
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
@@ -108,36 +110,65 @@ private object Dimensions {
 /**
  * A composable screen displaying ToDos and Events as interactive markers on a Google Map.
  *
+ * @param viewModel An optional MapViewModel to manage the UI state, used for testing.
  * @param credentialManager The CredentialManager for handling user sign-out.
  * @param onSignedOut Callback invoked when the user signs out.
  * @param navigationActions Navigation actions for switching between app sections.
+ * @param goToEvent Callback to navigate to the Event detail page.
+ * @param goToToDo Callback to navigate to the ToDo detail page.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MapScreen(
+    viewModel: MapViewModel? = null,
     credentialManager: CredentialManager = CredentialManager.create(LocalContext.current),
     onSignedOut: () -> Unit = {},
     navigationActions: NavigationActions? = null,
     goToEvent: () -> Unit = {},
     goToToDo: () -> Unit = {}
 ) {
-  /**
-   * MapViewModel is initialised within the body of the Composable to properly inject current
-   * context for LocationServices
-   */
+  /** Location services setup * */
   val context = LocalContext.current
-  val viewModel: MapViewModel =
-      viewModel(
-          factory =
-              GenericViewModelFactory {
-                MapViewModel(
-                    todosRepository = ToDosRepositoryFirestore(Firebase.firestore),
-                    eventsRepository = EventsRepositoryFirestore(Firebase.firestore),
-                    LocationServices.getFusedLocationProviderClient(context))
-              })
+  val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
 
-  val uiState by viewModel.uiState.collectAsState()
+  /** ViewModel setup * */
+  val vm: MapViewModel =
+      viewModel
+          ?: viewModel(
+              factory = MapViewModel.provideFactory(fusedLocationClient = fusedLocationClient))
+
+  val uiState by vm.uiState.collectAsState()
+
   HandleSignedOutState(uiState.onSignedOut, onSignedOut)
+
+  // Initialize camera position on first composition
+  LaunchedEffect(Unit) { vm.initialiseCameraPosition(context) }
+
+  /** Handle permission request for location access * */
+  val permissionLauncher =
+      rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+        if (isGranted) {
+          vm.startLocationUpdates(context)
+        }
+      }
+
+  /** Check permission and start location updates * */
+  LaunchedEffect(Unit) {
+    val hasPermission =
+        ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) ==
+            PackageManager.PERMISSION_GRANTED
+
+    if (hasPermission) {
+      // Permission already granted - start updates
+      vm.startLocationUpdates(context)
+    } else {
+      // Ask user for permission (dialog box)
+      permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+    }
+  }
+
+  /** Stop location updates when the composable is disposed * */
+  DisposableEffect(Unit) { onDispose { vm.stopLocationUpdates() } }
 
   // Bottom sheet state for the selected event
   val selectedEvent =
@@ -162,7 +193,7 @@ fun MapScreen(
             selectedTab = Tab.Map,
             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
             modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
-            onSignedOut = { viewModel.signOut(credentialManager) })
+            onSignedOut = { vm.signOut(credentialManager) })
       },
       bottomBar = {
         BottomNavigationMenu(
@@ -175,7 +206,7 @@ fun MapScreen(
       floatingActionButton = {
         val isEvents = uiState.displayEventsPage
         ExtendedFloatingActionButton(
-            onClick = { viewModel.changeView() },
+            onClick = { vm.changeView() },
             icon = {},
             text = {
               Text(
@@ -193,10 +224,11 @@ fun MapScreen(
       content = { pd ->
         // Camera position state
         val cameraPositionState = rememberCameraPositionState()
-        // TODO: Is this fine?
+
+        // Handle nullable cameraPos with ?.let {}
         LaunchedEffect(uiState.cameraPos) {
           uiState.cameraPos?.let { pos ->
-            cameraPositionState.position = CameraPosition.fromLatLngZoom(pos, 14f)
+            cameraPositionState.position = CameraPosition.fromLatLngZoom(pos, 16f)
           }
         }
 
@@ -204,10 +236,9 @@ fun MapScreen(
             modifier =
                 Modifier.fillMaxSize().padding(pd).testTag(MapScreenTestTags.GOOGLE_MAP_SCREEN),
             cameraPositionState = cameraPositionState,
-            onMapClick = { _ ->
-              viewModel.clearSelection()
-              viewModel.clearSelection()
-            }) {
+            onMapClick = { _ -> vm.clearSelection() },
+            properties = MapProperties(isMyLocationEnabled = true),
+            uiSettings = MapUiSettings(myLocationButtonEnabled = true)) {
               uiState.itemsList.forEach { item ->
                 when (item) {
                   // -------------------------------- Todo Marker UI -------------------------------
@@ -224,7 +255,7 @@ fun MapScreen(
                           state = markerState,
                           zIndex = z,
                           onClick = {
-                            viewModel.onSelectedItem(item.uid)
+                            vm.onSelectedItem(item.uid)
                             true
                           }) {
                             ToDoIcon(item)
@@ -245,7 +276,7 @@ fun MapScreen(
                           state = markerState,
                           zIndex = z,
                           onClick = {
-                            viewModel.onSelectedItem(item.id)
+                            vm.onSelectedItem(item.id)
                             true
                           }) {
                             EventIcon(item)
@@ -257,27 +288,29 @@ fun MapScreen(
             }
 
         if (selectedEvent != null) {
-          ModalBottomSheet(
-              sheetState = sheetState, onDismissRequest = { viewModel.clearSelection() }) {
-                EventSheet(
-                    event = selectedEvent,
-                    onGoToEvent = {
-                      viewModel.clearSelection()
-                      goToEvent()
-                    },
-                    onClose = { viewModel.clearSelection() })
-              }
+          ModalBottomSheet(sheetState = sheetState, onDismissRequest = { vm.clearSelection() }) {
+            EventSheet(
+                event = selectedEvent,
+                onGoToEvent = {
+                  // Track consulted item before navigation
+                  vm.onItemConsulted(selectedEvent.id)
+                  vm.clearSelection()
+                  goToEvent()
+                },
+                onClose = { vm.clearSelection() })
+          }
         } else if (selectedToDo != null) {
-          ModalBottomSheet(
-              sheetState = sheetState, onDismissRequest = { viewModel.clearSelection() }) {
-                ToDoSheet(
-                    toDo = selectedToDo,
-                    onGoToToDo = {
-                      viewModel.clearSelection()
-                      goToToDo()
-                    },
-                    onClose = { viewModel.clearSelection() })
-              }
+          ModalBottomSheet(sheetState = sheetState, onDismissRequest = { vm.clearSelection() }) {
+            ToDoSheet(
+                toDo = selectedToDo,
+                onGoToToDo = {
+                  // Track consulted item before navigation
+                  vm.onItemConsulted(selectedToDo.uid)
+                  vm.clearSelection()
+                  goToToDo()
+                },
+                onClose = { vm.clearSelection() })
+          }
         }
       })
 }
@@ -338,7 +371,7 @@ fun EventSheet(event: Event, onGoToEvent: () -> Unit, onClose: () -> Unit) {
         Text(
             text = event.title.uppercase(),
             style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onBackground,
+            color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.testTag(MapScreenTestTags.EVENT_TITLE_SHEET))
 
         Spacer(modifier = Modifier.size(Dimensions.spacerPadding))
@@ -348,14 +381,14 @@ fun EventSheet(event: Event, onGoToEvent: () -> Unit, onClose: () -> Unit) {
                 Modifier.padding(Dimensions.textPadding).testTag(MapScreenTestTags.EVENT_DATE),
             text = formattedDate,
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onBackground)
+            color = MaterialTheme.colorScheme.primary)
         Text(
             modifier =
                 Modifier.padding(Dimensions.textPadding)
                     .testTag(MapScreenTestTags.EVENT_DESCRIPTION),
             text = event.description,
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onBackground)
+            color = MaterialTheme.colorScheme.primary)
 
         Spacer(modifier = Modifier.size(Dimensions.spacerPadding))
 
@@ -432,11 +465,7 @@ fun ToDoSheet(toDo: ToDo, onGoToToDo: () -> Unit, onClose: () -> Unit) {
         sdf.format(toDo.dueDate.toDate())
       }
 
-  Card(
-      colors =
-          CardDefaults.cardColors(
-              containerColor = MaterialTheme.colorScheme.secondary,
-              contentColor = MaterialTheme.colorScheme.onSecondary),
+  Column(
       modifier =
           Modifier.fillMaxWidth()
               .padding(Dimensions.rowColPadding)
@@ -444,7 +473,7 @@ fun ToDoSheet(toDo: ToDo, onGoToToDo: () -> Unit, onClose: () -> Unit) {
         Text(
             text = toDo.name.uppercase(),
             style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onSecondary,
+            color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.testTag(MapScreenTestTags.TODO_TITLE_SHEET))
 
         Spacer(modifier = Modifier.size(Dimensions.spacerPadding))
@@ -454,14 +483,14 @@ fun ToDoSheet(toDo: ToDo, onGoToToDo: () -> Unit, onClose: () -> Unit) {
                 Modifier.padding(Dimensions.textPadding).testTag(MapScreenTestTags.TODO_DUE_DATE),
             text = formattedDate,
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSecondary)
+            color = MaterialTheme.colorScheme.primary)
         Text(
             modifier =
                 Modifier.padding(Dimensions.textPadding)
                     .testTag(MapScreenTestTags.TODO_DESCRIPTION),
             text = toDo.description,
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSecondary)
+            color = MaterialTheme.colorScheme.primary)
 
         Spacer(modifier = Modifier.size(Dimensions.spacerPadding))
 

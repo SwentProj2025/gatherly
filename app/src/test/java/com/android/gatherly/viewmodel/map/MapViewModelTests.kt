@@ -285,7 +285,8 @@ class MapViewModelTests {
     val actualTodosListAgain: List<ToDo> = vm.uiState.value.itemsList.map { it as ToDo }
     assertEquals(expectedTodosList, actualTodosListAgain)
   }
-/**   * Verifies that consulting a todo item updates the last consulted todo ID and clears the camera
+  /**
+   * Verifies that consulting a todo item updates the last consulted todo ID and clears the camera
    * position in the UI state.
    */
   @OptIn(ExperimentalCoroutinesApi::class)
@@ -309,7 +310,8 @@ class MapViewModelTests {
         assertNull(vm.uiState.value.cameraPos)
       }
 
-  /** Verifies that consulting an event item updates the last consulted event ID and clears the
+  /**
+   * Verifies that consulting an event item updates the last consulted event ID and clears the
    * camera position in the UI state.
    */
   @OptIn(ExperimentalCoroutinesApi::class)
@@ -420,7 +422,10 @@ class MapViewModelTests {
         assertEquals(EPFL_LATLNG, result)
       }
 
-  /** Verifies that fetching location to center on with location permission and no consulted item returns current location. */
+  /**
+   * Verifies that fetching location to center on with location permission and no consulted item
+   * returns current location.
+   */
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun fetchLocationToCenterOn_withLocationPermissionAndNoConsultedItem_returnsCurrentLocation() =
@@ -477,7 +482,9 @@ class MapViewModelTests {
         job.cancel() // cleanup
       }
 
-  /** Verifies that starting and stopping location updates manages the location job without crashing. */
+  /**
+   * Verifies that starting and stopping location updates manages the location job without crashing.
+   */
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun startAndStopLocationUpdates_managesLocationJob() =
