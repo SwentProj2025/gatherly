@@ -14,6 +14,8 @@ import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.ui.homePage.HomePageViewModel
 import com.google.firebase.Timestamp
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import java.text.SimpleDateFormat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -25,6 +27,8 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
 
 /*----------------------------------------Profiles--------------------------------------------*/
 private val friend1Profile: Profile =
@@ -181,6 +185,8 @@ class HomePageViewModelTest {
   private lateinit var profileRepository: ProfileRepository
   private lateinit var displayableTodos: List<ToDo>
   private lateinit var upcomingTodos: List<ToDo>
+  private lateinit var mockAuth: FirebaseAuth
+  private lateinit var mockUser: FirebaseUser
 
   // initialize this so that tests control all coroutines and can wait on them
   private val testDispatcher = StandardTestDispatcher()
@@ -199,6 +205,10 @@ class HomePageViewModelTest {
 
     // fill the profile and events repositories with profiles and event
     fill_repositories()
+
+    // Mock Firebase Auth
+    mockAuth = mock(FirebaseAuth::class.java)
+    mockUser = mock(FirebaseUser::class.java)
   }
 
   @After
@@ -214,12 +224,16 @@ class HomePageViewModelTest {
     addTodos()
     advanceUntilIdle()
 
+    `when`(mockAuth.currentUser).thenReturn(mockUser)
+    `when`(mockUser.uid).thenReturn(currentProfile.uid)
+    `when`(mockUser.isAnonymous).thenReturn(false)
+
     homePageViewModel =
         HomePageViewModel(
             eventsRepository = eventsRepository,
             toDosRepository = toDosRepository,
             profileRepository = profileRepository,
-            currentUser = currentProfile.uid)
+            authProvider = { mockAuth })
 
     advanceUntilIdle()
 
@@ -237,12 +251,16 @@ class HomePageViewModelTest {
     addTodos()
     advanceUntilIdle()
 
+    `when`(mockAuth.currentUser).thenReturn(mockUser)
+    `when`(mockUser.uid).thenReturn(currentProfile.uid)
+    `when`(mockUser.isAnonymous).thenReturn(false)
+
     homePageViewModel =
         HomePageViewModel(
             eventsRepository = eventsRepository,
             toDosRepository = toDosRepository,
             profileRepository = profileRepository,
-            currentUser = currentProfile.uid)
+            authProvider = { mockAuth })
 
     advanceUntilIdle()
 
@@ -259,12 +277,16 @@ class HomePageViewModelTest {
     addFriendlessCurrentUser()
     advanceUntilIdle()
 
+    `when`(mockAuth.currentUser).thenReturn(mockUser)
+    `when`(mockUser.uid).thenReturn(currentProfile.uid)
+    `when`(mockUser.isAnonymous).thenReturn(false)
+
     homePageViewModel =
         HomePageViewModel(
             eventsRepository = eventsRepository,
             toDosRepository = toDosRepository,
             profileRepository = profileRepository,
-            currentUser = currentProfile.uid)
+            authProvider = { mockAuth })
 
     advanceUntilIdle()
 
