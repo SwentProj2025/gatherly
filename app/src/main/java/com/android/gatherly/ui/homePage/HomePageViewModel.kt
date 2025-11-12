@@ -31,7 +31,8 @@ data class HomePageUIState(
     val todos: List<ToDo> = emptyList(),
     val timerString: String = "Are you ready to focus?",
     val errorMsg: String? = null,
-    val signedOut: Boolean = false
+    val signedOut: Boolean = false,
+    val isAnon: Boolean = true
 )
 
 class HomePageViewModel(
@@ -56,13 +57,15 @@ class HomePageViewModel(
         val events = eventsRepository.getAllEvents()
         val profile = profileRepository.getProfileByUid(currentUser)!!
         val friends = profile.friendUids.take(3).map { profileRepository.getProfileByUid(it)!! }
+        val isAnon = Firebase.auth.currentUser?.isAnonymous ?: true
 
         _uiState.value =
             _uiState.value.copy(
                 displayableTodos = getDrawableTodos(todos),
                 displayableEvents = getDrawableEvents(events),
                 friends = friends,
-                todos = todos.take(3))
+                todos = todos.take(3),
+                isAnon = isAnon)
       } catch (e: Exception) {
         _uiState.value = _uiState.value.copy(errorMsg = "There was an error loading your home page")
         Log.e("Homepage loading", "Exception when loading lists for Homepage displaying: $e")

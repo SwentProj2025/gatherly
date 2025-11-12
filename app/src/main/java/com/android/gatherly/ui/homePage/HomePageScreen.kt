@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -135,7 +134,8 @@ fun HomePageScreen(
           EventsAndFriendsSection(
               todos = uiState.displayableTodos,
               events = uiState.displayableEvents,
-              onClickFriendsSection = onClickFriendsSection)
+              onClickFriendsSection = onClickFriendsSection,
+              isAnon = uiState.isAnon)
 
           Spacer(modifier = Modifier.height(verticalSpacing))
 
@@ -184,7 +184,8 @@ fun SectionTitle(text: String, modifier: Modifier = Modifier) {
 fun EventsAndFriendsSection(
     todos: List<ToDo>,
     events: List<Event>,
-    onClickFriendsSection: () -> Unit
+    onClickFriendsSection: () -> Unit,
+    isAnon: Boolean
 ) {
 
   val spacingRegular = dimensionResource(id = R.dimen.spacing_between_fields_regular)
@@ -198,9 +199,11 @@ fun EventsAndFriendsSection(
 
         Spacer(modifier = Modifier.width(spacingRegular))
 
-        FriendsSection(onClickFriendsSection = onClickFriendsSection)
+        if (!isAnon) {
+          FriendsSection(onClickFriendsSection = onClickFriendsSection)
 
-        Spacer(modifier = Modifier.width(spacingRegular))
+          Spacer(modifier = Modifier.width(spacingRegular))
+        }
       }
 }
 
@@ -219,10 +222,7 @@ fun MiniMap(todos: List<ToDo>, events: List<Event>) {
   }
 
   Card(
-      modifier =
-          Modifier.width(dimensionResource(id = R.dimen.homepage_minimap_width))
-              .fillMaxHeight()
-              .testTag(HomePageScreenTestTags.MINI_MAP_CARD),
+      modifier = Modifier.fillMaxSize().testTag(HomePageScreenTestTags.MINI_MAP_CARD),
       shape = RoundedCornerShape(dimensionResource(id = R.dimen.rounded_corner_shape_medium)),
   ) {
     GoogleMap(
