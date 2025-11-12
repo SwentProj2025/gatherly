@@ -200,7 +200,7 @@ class NavigationTest : FirestoreGatherlyTest() {
 
     composeTestRule.onNodeWithTag(NavigationTestTags.TOP_NAVIGATION_MENU).assertIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(NavigationTestTags.HOMEPAGE_TAB).assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag(NavigationTestTags.HOMEPAGE_TAB).assertIsDisplayed()
 
     composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.MAP_TAB).assertIsDisplayed()
