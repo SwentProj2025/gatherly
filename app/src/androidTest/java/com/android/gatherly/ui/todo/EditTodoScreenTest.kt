@@ -6,24 +6,38 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.utils.GatherlyTest
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class EditTodoScreenTest : GatherlyTest() {
   @get:Rule val composeTestRule = createComposeRule()
 
   private lateinit var editTodoViewModel: EditTodoViewModel
+  private lateinit var mockAuth: FirebaseAuth
+  private lateinit var mockUser: FirebaseUser
 
   @Before
   fun setUp() {
     repository = ToDosLocalRepository()
     fill_repository()
-    editTodoViewModel = EditTodoViewModel(todoRepository = repository, currentUser = "user")
+
+    // Mock Firebase Auth
+    mockAuth = mock(FirebaseAuth::class.java)
+    mockUser = mock(FirebaseUser::class.java)
+    `when`(mockAuth.currentUser).thenReturn(mockUser)
+    `when`(mockUser.uid).thenReturn("user")
+    `when`(mockUser.isAnonymous).thenReturn(false)
+
+    editTodoViewModel = EditTodoViewModel(todoRepository = repository, authProvider = { mockAuth })
     composeTestRule.setContent {
       EditToDoScreen(todoUid = todo1.uid, editTodoViewModel = editTodoViewModel)
     }
