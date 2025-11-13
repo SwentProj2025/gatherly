@@ -186,7 +186,8 @@ class FriendsViewModelTest {
 
           override suspend fun deleteFriend(friend: String, currentUserId: String) {}
         }
-    val errorViewModel = FriendsViewModel(repository = throwingRepository, currentUserId = "A")
+    val errorViewModel =
+        FriendsViewModel(repository = throwingRepository, authProvider = { mockitoUtils.mockAuth })
     errorViewModel.refreshFriends("A")
 
     advanceUntilIdle()
