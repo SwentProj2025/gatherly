@@ -296,4 +296,18 @@ class SettingsScreenTest {
         .performScrollTo()
         .assertIsDisplayed()
   }
+
+  /** Check that the anonymous user sees the "upgrade with google" button */
+  @Test
+  fun anonUserSeesGoogleButton() {
+    // Mock Firebase Auth
+    mockitoUtils = MockitoUtils()
+    mockitoUtils.chooseCurrentUser("currentUser", true)
+
+    settingsViewModel =
+        SettingsViewModel(repository = profileRepository, authProvider = { mockitoUtils.mockAuth })
+    composeRule.setContent { SettingsScreen(settingsViewModel) }
+
+    composeRule.onNodeWithTag(SettingsScreenTestTags.GOOGLE_BUTTON).assertIsDisplayed()
+  }
 }

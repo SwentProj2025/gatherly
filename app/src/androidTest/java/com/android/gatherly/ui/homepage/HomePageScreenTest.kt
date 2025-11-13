@@ -1,6 +1,7 @@
 package com.android.gatherly.ui.homepage
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -151,5 +152,22 @@ class HomePageScreenTest {
         .onNodeWithTag(HomePageScreenTestTags.MINI_MAP_CARD)
         .assertIsDisplayed()
         .performClick()
+  }
+
+  /** Verifies that an anonymous user has no friends section displayed */
+  @Test
+  fun anonUserHasNoFriends() {
+    // Create Screen with anonymous user
+    mockitoUtils.chooseCurrentUser(currentProfile.uid, true)
+    fakeViewModel =
+        HomePageViewModel(
+            toDosRepository = todosLocalRepo,
+            eventsRepository = eventsLocalRepo,
+            profileRepository = profileLocalRepo,
+            authProvider = { mockitoUtils.mockAuth })
+    composeRule.setContent { HomePageScreen(homePageViewModel = fakeViewModel) }
+
+    // Check that the friends section is not displayed
+    composeRule.onNodeWithTag(HomePageScreenTestTags.FRIENDS_SECTION).assertIsNotDisplayed()
   }
 }

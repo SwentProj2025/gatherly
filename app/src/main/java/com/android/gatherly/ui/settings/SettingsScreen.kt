@@ -41,6 +41,7 @@ object SettingsScreenTestTags {
   const val USERNAME_ERROR = "settings_username_error"
   const val NAME_FIELD_ERROR = "settings_name_field_error"
   const val BIRTHDAY_FIELD_ERROR = "settings_birthday_field_error"
+  const val GOOGLE_BUTTON = "google_button"
 }
 
 /**
@@ -128,7 +129,8 @@ fun SettingsScreen(
                       onClick = { settingsViewModel.upgradeWithGoogle(context, credentialManager) },
                       modifier =
                           Modifier.fillMaxWidth()
-                              .height(dimensionResource(id = R.dimen.sign_in_button_height)),
+                              .height(dimensionResource(id = R.dimen.sign_in_button_height))
+                              .testTag(SettingsScreenTestTags.GOOGLE_BUTTON),
                       colors =
                           ButtonDefaults.buttonColors(
                               containerColor = MaterialTheme.colorScheme.surfaceVariant,
