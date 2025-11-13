@@ -6,6 +6,7 @@ import android.provider.MediaStore
 import androidx.test.platform.app.InstrumentationRegistry
 import com.android.gatherly.utils.FirebaseEmulator
 import com.android.gatherly.utils.FirestoreGatherlyProfileTest
+import com.google.firebase.storage.storage
 import java.io.OutputStream
 import kotlin.io.use
 import kotlinx.coroutines.Dispatchers

@@ -104,11 +104,11 @@ class ProfileLocalRepository : ProfileRepository {
 
   override suspend fun getFriendsAndNonFriendsUsernames(currentUserId: String): Friends {
     val currentProfile =
-      getProfileByUid(currentUserId)
-        ?: throw NoSuchElementException("Profile not found for uid=$currentUserId")
+        getProfileByUid(currentUserId)
+            ?: throw NoSuchElementException("Profile not found for uid=$currentUserId")
 
     val friendUsernames =
-      currentProfile.friendUids.mapNotNull { friendUid -> getProfileByUid(friendUid)?.username }
+        currentProfile.friendUids.mapNotNull { friendUid -> getProfileByUid(friendUid)?.username }
     val nonFriendUsernames = getListNoFriends(currentUserId)
 
     return Friends(friendUsernames = friendUsernames, nonFriendUsernames = nonFriendUsernames)
