@@ -4,6 +4,7 @@ import android.Manifest
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.test.rule.GrantPermissionRule
@@ -99,7 +100,11 @@ class MapScreenTest {
       EventSheet(event, onGoToEvent = {}, onClose = {})
     }
   }
-
+    private fun renderMapScreenOnly() {
+        compose.setContent {
+            MapScreen(viewModel = viewModel)
+        }
+    }
   // Check that the Google Map is displayed
   @Test
   fun google_map_is_displayed() {
@@ -224,35 +229,49 @@ class MapScreenTest {
     assertEquals(todo.location!!.longitude, cameraPos.longitude, 0.0001)
   }
 
-  @Test
-  fun clicking_todo_marker_opens_sheet_and_navigates() {
-    renderDefaultMapUi()
-    compose.waitForIdle()
+    @Test
+    fun clicking_todo_marker_opens_sheet_and_calls_onItemConsulted() {
+        renderMapScreenOnly()
+        compose.waitForIdle()
 
-    compose.onNodeWithTag(MapScreenTestTags.TODO_CARD, useUnmergedTree = true).performClick()
-    compose.waitForIdle()
+        assertEquals(null, viewModel.uiState.value.lastConsultedTodoId)
 
-    compose.onNodeWithTag(MapScreenTestTags.TODO_SHEET, useUnmergedTree = true).assertExists()
-    compose.onNodeWithTag(MapScreenTestTags.TODO_BUTTON, useUnmergedTree = true).performClick()
+        // Simulate marker click by calling ViewModel directly
+        viewModel.onSelectedItem(todoId)
+        compose.waitForIdle()
 
-    compose
-        .onNodeWithTag(OverviewScreenTestTags.CREATE_TODO_BUTTON, useUnmergedTree = true)
-        .isDisplayed()
-  }
+        // Verify sheet opened
+        compose.onNodeWithTag(MapScreenTestTags.TODO_SHEET, useUnmergedTree = true).assertExists()
 
-  @Test
-  fun clicking_event_marker_opens_sheet_and_navigates() {
-    renderDefaultMapUi()
-    compose.waitForIdle()
+        // Click the navigation button
+        compose.onNodeWithTag(MapScreenTestTags.TODO_BUTTON, useUnmergedTree = true).performClick()
+        compose.waitForIdle()
 
-    compose.onNodeWithTag(MapScreenTestTags.EVENT_CARD, useUnmergedTree = true).performClick()
-    compose.waitForIdle()
+        // Verify onItemConsulted was called
+        assertEquals(todoId, viewModel.uiState.value.lastConsultedTodoId)
+    }
 
-    compose.onNodeWithTag(MapScreenTestTags.EVENT_SHEET, useUnmergedTree = true).assertExists()
-    compose.onNodeWithTag(MapScreenTestTags.EVENT_BUTTON, useUnmergedTree = true).performClick()
+    @Test
+    fun clicking_event_marker_opens_sheet_and_calls_onItemConsulted() {
+        viewModel.changeView()
+        renderMapScreenOnly()
+        compose.waitForIdle()
 
-    compose
-        .onNodeWithTag(EventsScreenTestTags.CREATE_EVENT_BUTTON, useUnmergedTree = true)
-        .isDisplayed()
-  }
+        assertEquals(null, viewModel.uiState.value.lastConsultedEventId)
+
+        // Simulate marker click
+        viewModel.onSelectedItem(eventId)
+        compose.waitForIdle()
+
+        // Verify sheet opened
+        compose.onNodeWithTag(MapScreenTestTags.EVENT_SHEET, useUnmergedTree = true).assertExists()
+
+        // Click button
+        compose.onNodeWithTag(MapScreenTestTags.EVENT_BUTTON, useUnmergedTree = true).performClick()
+        compose.waitForIdle()
+
+        // Verify onItemConsulted was called
+        assertEquals(eventId, viewModel.uiState.value.lastConsultedEventId)
+    }
+    
 }
