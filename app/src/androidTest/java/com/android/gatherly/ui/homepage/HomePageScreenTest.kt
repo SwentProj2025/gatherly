@@ -13,6 +13,7 @@ import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.ui.homePage.HomePageScreen
 import com.android.gatherly.ui.homePage.HomePageScreenTestTags
 import com.android.gatherly.ui.homePage.HomePageViewModel
+import com.android.gatherly.utils.MockitoUtils
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
@@ -45,6 +46,7 @@ class HomePageScreenTest {
   private lateinit var todosLocalRepo: ToDosLocalRepository
   private lateinit var eventsLocalRepo: EventsLocalRepository
   private lateinit var profileLocalRepo: ProfileLocalRepository
+  private lateinit var mockitoUtils: MockitoUtils
 
   @Before
   fun setUp() {
@@ -52,13 +54,19 @@ class HomePageScreenTest {
       todosLocalRepo = ToDosLocalRepository()
       eventsLocalRepo = EventsLocalRepository()
       profileLocalRepo = ProfileLocalRepository()
+
       populateRepositories()
+
+      // Mock Firebase Auth
+      mockitoUtils = MockitoUtils()
+      mockitoUtils.chooseCurrentUser(currentProfile.uid)
+
       fakeViewModel =
           HomePageViewModel(
               toDosRepository = todosLocalRepo,
               eventsRepository = eventsLocalRepo,
               profileRepository = profileLocalRepo,
-              currentUser = currentProfile.uid)
+              authProvider = { mockitoUtils.mockAuth })
       composeRule.setContent { HomePageScreen(homePageViewModel = fakeViewModel) }
     }
   }

@@ -19,6 +19,7 @@ import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.android.gatherly.utils.GenericViewModelFactory
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
 import com.google.firebase.storage.storage
@@ -98,7 +99,7 @@ class AddEventViewModel(
     private val profileRepository: ProfileRepository,
     private val eventsRepository: EventsRepository,
     private val nominatimClient: NominatimLocationRepository = NominatimLocationRepository(client),
-    private val currentUser: String = Firebase.auth.currentUser?.uid ?: ""
+    private val authProvider: () -> FirebaseAuth = { Firebase.auth }
 ) : ViewModel() {
   // State with a private set
   var uiState by mutableStateOf(AddEventUiState())
@@ -119,7 +120,7 @@ class AddEventViewModel(
     timeFormat.isLenient = false
 
     viewModelScope.launch {
-      currentUser.let { userUid ->
+      authProvider().currentUser?.uid?.let { userUid ->
         val profile =
             profileRepository.getProfileByUid(userUid)
                 ?: Profile(uid = userUid, name = "", username = "", profilePicture = "")

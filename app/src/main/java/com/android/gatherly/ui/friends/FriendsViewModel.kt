@@ -6,7 +6,9 @@ import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.android.gatherly.utils.GenericViewModelFactory
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
+import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
@@ -19,11 +21,14 @@ data class FriendsUIState(
     val errorMsg: String? = null,
     val friends: List<String> = emptyList(),
     val listNoFriends: List<String> = emptyList(),
+    val currentUserId: String = "",
     val isLoading: Boolean = true
 )
 
-class FriendsViewModel(private val repository: ProfileRepository, val currentUserId: String) :
-    ViewModel() {
+class FriendsViewModel(
+    private val repository: ProfileRepository,
+    private val authProvider: () -> FirebaseAuth = { Firebase.auth }
+) : ViewModel() {
 
   /** StateFlow that emits the current UI state for the Friends screen. */
   private val _uiState = MutableStateFlow(FriendsUIState())
@@ -34,7 +39,7 @@ class FriendsViewModel(private val repository: ProfileRepository, val currentUse
    * them to display only drawable todos.
    */
   init {
-    viewModelScope.launch { refreshFriends(currentUserId) }
+    viewModelScope.launch { refreshFriends(authProvider().currentUser?.uid ?: "") }
   }
 
   /**
@@ -46,11 +51,13 @@ class FriendsViewModel(private val repository: ProfileRepository, val currentUse
     _uiState.value = _uiState.value.copy(isLoading = true)
     try {
       val friendsData = repository.getFriendsAndNonFriendsUsernames(currentUserId)
+
       _uiState.value =
           _uiState.value.copy(
               friends = friendsData.friendUsernames,
               listNoFriends = friendsData.nonFriendUsernames,
               errorMsg = null,
+              currentUserId = currentUserId,
               isLoading = false)
     } catch (e: Exception) {
       _uiState.value = _uiState.value.copy(errorMsg = "Failed to load friends: ${e.message}")
@@ -109,7 +116,7 @@ class FriendsViewModel(private val repository: ProfileRepository, val currentUse
             ProfileRepositoryFirestore(Firebase.firestore, Firebase.storage),
         currentUserId: String = com.google.firebase.Firebase.auth.currentUser?.uid ?: ""
     ): ViewModelProvider.Factory {
-      return GenericViewModelFactory { FriendsViewModel(profileRepository, currentUserId) }
+      return GenericViewModelFactory { FriendsViewModel(profileRepository) }
     }
   }
 }
