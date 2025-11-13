@@ -43,7 +43,7 @@ class FriendsViewModel(private val repository: ProfileRepository, val currentUse
    * @param currentUserId the ID of the current user
    */
   suspend fun refreshFriends(currentUserId: String) {
-      _uiState.value = _uiState.value.copy(isLoading = true)
+    _uiState.value = _uiState.value.copy(isLoading = true)
     try {
       val friendsData = repository.getFriendsAndNonFriendsUsernames(currentUserId)
       _uiState.value =
