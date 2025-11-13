@@ -1,8 +1,5 @@
 package com.android.gatherly.ui.settings
 
-import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.ImageDecoder
 import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -36,10 +33,8 @@ import com.android.gatherly.R
 import com.android.gatherly.ui.navigation.*
 import com.android.gatherly.ui.theme.GatherlyTheme
 import java.io.File
-import java.io.FileOutputStream
 
 // Technical constants
-private const val PROFILE_PICTURE_FILENAME = "profile_picture.jpg"
 private const val MIME_TYPE_IMAGE = "image/*"
 
 object SettingsScreenTestTags {
@@ -85,7 +80,7 @@ fun SettingsScreen(
 
   var showPhotoPickerDialog by remember { mutableStateOf(false) }
 
-  val imageFile = remember { File(context.filesDir, PROFILE_PICTURE_FILENAME) }
+  val imageFile = remember { File(context.filesDir, SettingsViewModel.PROFILE_PIC_FILENAME) }
 
   val imageUri = FileProvider.getUriForFile(context, "${context.packageName}.provider", imageFile)
 
@@ -93,12 +88,7 @@ fun SettingsScreen(
   val pickImageLauncher =
       rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { uri: Uri?
         ->
-        uri?.let {
-          val source = ImageDecoder.createSource(context.contentResolver, it)
-          val bitmap = ImageDecoder.decodeBitmap(source)
-          saveProfilePicture(context, bitmap)
-          settingsViewModel.editPhoto("${imageFile.toURI()}?t=${System.currentTimeMillis()}")
-        }
+        uri?.let { settingsViewModel.onGalleryImagePicked(context, it, imageFile) }
       }
 
   // launcher to take a photo with the camera
@@ -194,8 +184,7 @@ fun SettingsScreen(
 
                     Spacer(modifier = Modifier.height(fieldSpacingRegular))
 
-                    // Edit Photo Button (currently firestore profile picture storage is not
-                    // implemented, photo is saved locally)
+                    // Edit Photo Button
                     Button(
                         onClick = { showPhotoPickerDialog = true },
                         modifier =
@@ -392,18 +381,4 @@ fun SettingsField(
 @Composable
 fun SettingsScreenPreview() {
   GatherlyTheme(darkTheme = true) { SettingsScreen() }
-}
-
-/**
- * Saves a [Bitmap] image to the app's internal storage as "profile_picture.jpg".
- *
- * @param context The [Context] used to access the app's internal files directory.
- * @param bitmap The [Bitmap] image to save.
- *
- * The image is compressed in JPEG format with 90% quality. The file will be overwritten if it
- * already exists.
- */
-fun saveProfilePicture(context: Context, bitmap: Bitmap) {
-  val file = File(context.filesDir, PROFILE_PICTURE_FILENAME)
-  FileOutputStream(file).use { out -> bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out) }
 }

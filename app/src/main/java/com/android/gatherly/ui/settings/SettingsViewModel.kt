@@ -1,5 +1,8 @@
 package com.android.gatherly.ui.settings
 
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.ImageDecoder
 import android.net.Uri
 import android.util.Log
 import androidx.credentials.ClearCredentialStateRequest
@@ -14,12 +17,16 @@ import com.android.gatherly.utils.DateParser
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.auth
+import java.io.File
+import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 import java.util.Locale
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 // Portions of the code in this file are adapted from the bootcamp solution provided by Swent staff
 
@@ -56,6 +63,7 @@ data class SettingsUiState(
             username.isNotEmpty() &&
             (isUsernameAvailable != false)
 }
+
 /**
  * ViewModel for the Settings screen. This ViewModel manages the state of input fields for the
  * Settings screen.
@@ -69,6 +77,10 @@ class SettingsViewModel(
 
   private var originalProfile: Profile? = null
 
+  companion object {
+    const val PROFILE_PIC_FILENAME = "profile_picture.jpg"
+  }
+
   /** Initiates sign-out */
   fun signOut(credentialManager: CredentialManager): Unit {
     viewModelScope.launch {
@@ -77,6 +89,7 @@ class SettingsViewModel(
       credentialManager.clearCredentialState(ClearCredentialStateRequest())
     }
   }
+
   /** Clears the error message in the UI state. */
   fun clearErrorMsg() {
     _uiState.value = _uiState.value.copy(errorMsg = null)
@@ -95,6 +108,7 @@ class SettingsViewModel(
   init {
     loadProfile(currentUser)
   }
+
   /**
    * Loads a Profile by its ID and updates the UI state.
    *
@@ -260,6 +274,45 @@ class SettingsViewModel(
         Log.e("SettingsViewModel", "Failed to check username", e)
         _uiState.value =
             _uiState.value.copy(invalidUsernameMsg = "Unable to verify username availability")
+      }
+    }
+  }
+
+  /**
+   * Decodes the selected gallery image, saves it to internal storage, and updates the UI state with
+   * the new photo URI. Logs errors if anything fails.
+   */
+  fun onGalleryImagePicked(context: Context, uri: Uri, imageFile: File) {
+    viewModelScope.launch {
+      try {
+        val source = ImageDecoder.createSource(context.contentResolver, uri)
+        val bitmap = ImageDecoder.decodeBitmap(source)
+        saveProfilePictureLocally(context, bitmap)
+        editPhoto("${imageFile.toURI()}?t=${System.currentTimeMillis()}")
+      } catch (e: Exception) {
+        Log.e("SettingsViewModel", "Failed to decode and save gallery image", e)
+      }
+    }
+  }
+
+  /**
+   * Saves a [Bitmap] image to the app's internal storage as "profile_picture.jpg".
+   *
+   * @param context The [Context] used to access the app's internal files directory.
+   * @param bitmap The [Bitmap] image to save.
+   *
+   * The image is compressed in JPEG format with 90% quality. The file will be overwritten if it
+   * already exists.
+   */
+  suspend fun saveProfilePictureLocally(context: Context, bitmap: Bitmap): Boolean {
+    return withContext(Dispatchers.IO) {
+      try {
+        val file = File(context.filesDir, PROFILE_PIC_FILENAME)
+        FileOutputStream(file).use { out -> bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out) }
+        true
+      } catch (e: Exception) {
+        Log.e("SettingsViewModel", "Failed to save picture to local file", e)
+        false
       }
     }
   }
