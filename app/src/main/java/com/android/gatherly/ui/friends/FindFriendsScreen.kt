@@ -62,6 +62,7 @@ import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
+import kotlinx.coroutines.delay
 
 object FindFriendsScreenTestTags {
   const val SEARCH_FRIENDS_BAR = "searchBarFriends"
@@ -115,6 +116,8 @@ object FindFriendsScreenTestTags {
 // Private values with the json animation files
 private val ANIMATION_HEART = R.raw.heart
 private val ANIMATION_LOADING = R.raw.loading_profiles
+private const val ANIMATION_TIME = 3000
+private const val ANIMATION_LOADING_DELAY: Long = 2000
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -132,6 +135,16 @@ fun FindFriendsScreen(
   // Holds the current text entered by the user username in the search bar
   var searchQuery by remember { mutableStateOf("") }
 
+  // Holds the boolean that determines when to trigger the animation
+  // after the current user follows a profile
+  var showFollowMessage by remember { mutableStateOf(false) }
+
+  // Holds the text displayed during the follow animation
+  val messageText = stringResource(R.string.friends_follow_message)
+
+  // Value used to determine when the profile loading animation should appear
+  val isLoading = uiState.isLoading && !showFollowMessage
+
   // Update the list depending on whether the current user types something in the search bar
   val filteredNotFriends =
       if (searchQuery.isBlank()) {
@@ -147,17 +160,10 @@ fun FindFriendsScreen(
     }
   }
 
-  // Holds the boolean that determines when to trigger the animation
-  // after the current user follows a profile
-  var showFollowMessage by remember { mutableStateOf(false) }
-
-  // Holds the text displayed during the follow animation
-  val messageText = stringResource(R.string.friends_follow_message)
-
   // Triggers the temporary message box when needed
   LaunchedEffect(showFollowMessage) {
     if (showFollowMessage) {
-      kotlinx.coroutines.delay(2000)
+      delay(ANIMATION_LOADING_DELAY)
       showFollowMessage = false
     }
   }
@@ -171,91 +177,28 @@ fun FindFriendsScreen(
             goBack = goBack)
       },
       content = { padding ->
-
-        // Value used to determine when the profile loading animation should appear
-        val isLoading = uiState.isLoading && !showFollowMessage
-
         Box(modifier = Modifier.fillMaxSize()) {
 
           // --- LOADING PROFILE ANIMATION ---
           if (isLoading) {
-            val loadingComposition by
-                rememberLottieComposition(LottieCompositionSpec.RawRes(ANIMATION_LOADING))
-            LottieAnimation(
-                composition = loadingComposition,
-                iterations = LottieConstants.IterateForever,
-                modifier =
-                    Modifier.size(dimensionResource(R.dimen.lottie_icon_size_extra_large))
-                        .align(Alignment.Center)
-                        .testTag(FindFriendsScreenTestTags.LOADING_ANIMATION))
+            LoadingAnimationContent(padding)
           } else {
-
             // --- SHOWING USERS' PROFILES ITEMS ---
-            LazyColumn(
-                contentPadding = PaddingValues(vertical = dimensionResource(R.dimen.padding_small)),
-                modifier =
-                    Modifier.fillMaxWidth()
-                        .padding(horizontal = dimensionResource(R.dimen.padding_screen))
-                        .padding(padding)) {
+            FriendsListContent(
+                padding = padding,
+                filteredNotFriends = filteredNotFriends,
+                searchQuery = searchQuery,
+                onSearchQueryChange = { searchQuery = it },
+                onFollowFriend = { friend ->
+                  friendsViewModel.followFriend(
+                      currentUserId = currentUserIdFromVM, friend = friend)
+                  showFollowMessage = true
+                })
+          }
 
-                  // --- NO PROFILE ITEM NEED TO BE DISPLAYED ---
-                  if (filteredNotFriends.isEmpty()) {
-                    item {
-                      Text(
-                          text = stringResource(R.string.find_friends_empty_list_message),
-                          modifier =
-                              Modifier.padding(dimensionResource(R.dimen.padding_screen))
-                                  .testTag(FindFriendsScreenTestTags.EMPTY_LIST_MSG))
-                    }
-                  } else {
-
-                    // --- SEARCH BAR ---
-                    item {
-                      OutlinedTextField(
-                          value = searchQuery,
-                          onValueChange = { searchQuery = it },
-                          modifier =
-                              Modifier.fillMaxWidth()
-                                  .padding(vertical = dimensionResource(R.dimen.padding_small))
-                                  .testTag(FindFriendsScreenTestTags.SEARCH_FRIENDS_BAR),
-                          placeholder = {
-                            Text(
-                                text = stringResource(R.string.find_friends_search_bar_label),
-                                modifier =
-                                    Modifier.padding(
-                                        dimensionResource(R.dimen.find_friends_search_bar_width)))
-                          },
-                          singleLine = true,
-                          shape =
-                              RoundedCornerShape(
-                                  dimensionResource(
-                                      R.dimen.find_friends_item_rounded_corner_shape)))
-                    }
-
-                    // --- USER' ITEM ---
-
-                    items(items = filteredNotFriends, key = { it }) { friend ->
-                      FriendItem(
-                          friend = friend,
-                          follow = {
-                            friendsViewModel.followFriend(
-                                currentUserId = currentUserIdFromVM, friend = friend)
-                            showFollowMessage = true
-                          },
-
-                          // -- Animation slide up when an item disappear
-                          modifier =
-                              Modifier.animateItemPlacement(
-                                  animationSpec =
-                                      tween(durationMillis = 3000, easing = LinearOutSlowInEasing)))
-                    }
-                  }
-                }
-            // --- FOLLOW A FRIEND ANIMATION ---
-            if (showFollowMessage) {
-              FloatingMessage(
-                  text = messageText, modifier = Modifier.fillMaxSize().padding(padding))
-            }
+          // --- FOLLOW A FRIEND ANIMATION ---
+          if (showFollowMessage) {
+            FloatingMessage(text = messageText, modifier = Modifier.fillMaxSize().padding(padding))
           }
         }
       })
@@ -398,4 +341,108 @@ private fun FloatingMessage(text: String, modifier: Modifier = Modifier) {
               }
         }
       }
+}
+
+/**
+ * Helper function: Composable helper that displays the animation when loading the needed profiles
+ * item
+ *
+ * The animation consists of a Lottie searching waiting screen.
+ *
+ * @param padding
+ */
+@Composable
+private fun LoadingAnimationContent(padding: PaddingValues) {
+  val loadingComposition by
+      rememberLottieComposition(LottieCompositionSpec.RawRes(ANIMATION_LOADING))
+  Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+    LottieAnimation(
+        composition = loadingComposition,
+        iterations = LottieConstants.IterateForever,
+        modifier =
+            Modifier.size(dimensionResource(R.dimen.lottie_icon_size_extra_large))
+                .testTag(FindFriendsScreenTestTags.LOADING_ANIMATION))
+  }
+}
+
+/**
+ * Helper function: Composable helper that display the different items when there exist user
+ * profiles to display, the search bar. If there is currently no user available this display a
+ * specific message instead.
+ *
+ * @param padding : PaddingValues from the LazyColumn
+ * @param filteredNotFriends : List of the profile username that can be friend with the current user
+ * @param searchQuery : value written in the search bar
+ * @param onSearchQueryChange : function will remember the value written in the search bar
+ * @param onFollowFriend : function to save the chosen profile as new friend to the current user
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun FriendsListContent(
+    padding: PaddingValues,
+    filteredNotFriends: List<String>,
+    searchQuery: String,
+    onSearchQueryChange: (String) -> Unit,
+    onFollowFriend: (String) -> Unit,
+) {
+  LazyColumn(
+      contentPadding = PaddingValues(vertical = dimensionResource(R.dimen.padding_small)),
+      modifier =
+          Modifier.fillMaxWidth()
+              .padding(horizontal = dimensionResource(R.dimen.padding_screen))
+              .padding(padding)) {
+
+        // --- NO PROFILE ITEM NEED TO BE DISPLAYED ---
+        if (filteredNotFriends.isEmpty()) {
+          item {
+            Text(
+                text = stringResource(R.string.find_friends_empty_list_message),
+                modifier =
+                    Modifier.padding(dimensionResource(R.dimen.padding_screen))
+                        .testTag(FindFriendsScreenTestTags.EMPTY_LIST_MSG))
+          }
+        } else {
+
+          // --- SEARCH BAR ---
+          item { SearchBarContent(searchQuery, onSearchQueryChange) }
+
+          // --- USER' ITEM ---
+
+          items(items = filteredNotFriends, key = { it }) { friend ->
+            FriendItem(
+                friend = friend,
+                follow = { onFollowFriend(friend) },
+
+                // -- Animation slide up when an item disappear
+                modifier =
+                    Modifier.animateItemPlacement(
+                        animationSpec =
+                            tween(durationMillis = ANIMATION_TIME, easing = LinearOutSlowInEasing)))
+          }
+        }
+      }
+}
+
+/**
+ * Helper function: Composable helps to display the search bar
+ *
+ * @param searchQuery : value written in the OutlinedTextField value
+ * @param onSearchQueryChange : remember the changement made in the value
+ */
+@Composable
+private fun SearchBarContent(searchQuery: String, onSearchQueryChange: (String) -> Unit) {
+  OutlinedTextField(
+      value = searchQuery,
+      onValueChange = onSearchQueryChange,
+      modifier =
+          Modifier.fillMaxWidth()
+              .padding(vertical = dimensionResource(R.dimen.padding_small))
+              .testTag(FindFriendsScreenTestTags.SEARCH_FRIENDS_BAR),
+      placeholder = {
+        Text(
+            text = stringResource(R.string.find_friends_search_bar_label),
+            modifier = Modifier.padding(dimensionResource(R.dimen.find_friends_search_bar_width)))
+      },
+      singleLine = true,
+      shape = RoundedCornerShape(dimensionResource(R.dimen.find_friends_item_rounded_corner_shape)))
 }

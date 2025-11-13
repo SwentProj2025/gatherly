@@ -113,6 +113,8 @@ object FriendsScreenTestTags {
 // Private values with the json animation files
 private val ANIMATION_BROKEN_HEART = R.raw.broken_heart
 private val ANIMATION_LOADING = R.raw.loading_profiles
+private const val ANIMATION_TIME = 3000
+private const val ANIMATION_LOADING_DELAY: Long = 2000
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -130,6 +132,16 @@ fun FriendsScreen(
   // Holds the current text entered by the friend username in the search bar
   var searchQuery by remember { mutableStateOf("") }
 
+  // Holds the boolean that determines when to trigger the animation
+  // after the current user unfollows a profile
+  var showUnfollowMessage by remember { mutableStateOf(false) }
+
+  // Holds the text displayed during the unfollow animation
+  val messageText = stringResource(R.string.friends_unfollow_message)
+
+  // Value used to determine when the profile loading animation should appear
+  val isLoading = uiState.isLoading && !showUnfollowMessage
+
   // Update the list depending on whether the current user types something in the search bar
   val filteredFriends =
       if (searchQuery.isBlank()) {
@@ -145,17 +157,10 @@ fun FriendsScreen(
     }
   }
 
-  // Holds the boolean that determines when to trigger the animation
-  // after the current user unfollows a profile
-  var showUnfollowMessage by remember { mutableStateOf(false) }
-
-  // Holds the text displayed during the unfollow animation
-  val messageText = stringResource(R.string.friends_unfollow_message)
-
   // Triggers the temporary message box when needed
   LaunchedEffect(showUnfollowMessage) {
     if (showUnfollowMessage) {
-      kotlinx.coroutines.delay(2000)
+      kotlinx.coroutines.delay(ANIMATION_LOADING_DELAY)
       showUnfollowMessage = false
     }
   }
@@ -169,113 +174,25 @@ fun FriendsScreen(
             goBack = goBack)
       },
       content = { padding ->
-        // Value used to determine when the profile loading animation should appear
-        val isLoading = uiState.isLoading && !showUnfollowMessage
-
         Box(modifier = Modifier.fillMaxSize()) {
 
           // --- LOADING PROFILE ANIMATION ---
           if (isLoading) {
-            val loadingComposition by
-                rememberLottieComposition(LottieCompositionSpec.RawRes(ANIMATION_LOADING))
-            LottieAnimation(
-                composition = loadingComposition,
-                iterations = LottieConstants.IterateForever,
-                modifier =
-                    Modifier.size(dimensionResource(R.dimen.lottie_icon_size_extra_large))
-                        .align(Alignment.Center)
-                        .testTag(FriendsScreenTestTags.LOADING_ANIMATION))
+            LoadingAnimationContent(padding)
           } else {
 
             // --- SHOWING FRIENDS PROFILES ITEMS ---
-            LazyColumn(
-                contentPadding = PaddingValues(vertical = dimensionResource(R.dimen.padding_small)),
-                modifier =
-                    Modifier.fillMaxWidth()
-                        .padding(horizontal = dimensionResource(R.dimen.padding_screen))
-                        .padding(padding)) {
-
-                  // --- NO PROFILE ITEM NEED TO BE DISPLAYED ---
-                  if (filteredFriends.isEmpty()) {
-                    item {
-                      Text(
-                          text = stringResource(R.string.friends_empty_list_msg),
-                          modifier =
-                              Modifier.padding(dimensionResource(R.dimen.padding_screen))
-                                  .testTag(FriendsScreenTestTags.EMPTY_LIST_MSG))
-                    }
-                  } else {
-
-                    // --- SEARCH BAR ---
-                    item {
-                      OutlinedTextField(
-                          value = searchQuery,
-                          onValueChange = { searchQuery = it },
-                          modifier =
-                              Modifier.fillMaxWidth()
-                                  .padding(vertical = dimensionResource(R.dimen.padding_small))
-                                  .testTag(FriendsScreenTestTags.SEARCH_FRIENDS_BAR),
-                          placeholder = {
-                            Text(
-                                text = stringResource(R.string.friends_search_bar_label),
-                                modifier =
-                                    Modifier.padding(
-                                        dimensionResource(R.dimen.friends_search_bar_width)))
-                          },
-                          singleLine = true,
-                          shape =
-                              RoundedCornerShape(
-                                  dimensionResource(R.dimen.friends_item_rounded_corner_shape)))
-                    }
-
-                    // --- FRIENDS' ITEM ---
-                    items(items = filteredFriends, key = { it }) { friend ->
-                      FriendItem(
-                          friend = friend,
-                          unfollow = {
-                            friendsViewModel.unfollowFriend(
-                                currentUserId = currentUserIdFromVM, friend = friend)
-
-                            showUnfollowMessage = true
-                          },
-                          // -- Animation slide up when an item disappear
-                          modifier =
-                              Modifier.animateItemPlacement(
-                                  animationSpec =
-                                      tween(durationMillis = 3000, easing = LinearOutSlowInEasing)))
-                    }
-                  }
-
-                  // -- BUTTON NAVIGATE TO FIND FRIENDS SCREEN
-                  item {
-                    Button(
-                        onClick = { onFindFriends() },
-                        modifier =
-                            Modifier.fillMaxWidth()
-                                // -- Animation slide up when an item disappear
-                                .animateItemPlacement(
-                                    animationSpec =
-                                        tween(
-                                            durationMillis = 3000, easing = LinearOutSlowInEasing))
-                                .height(dimensionResource(R.dimen.friends_find_button_height))
-                                .padding(
-                                    vertical =
-                                        dimensionResource(R.dimen.friends_find_button_vertical))
-                                .testTag(FriendsScreenTestTags.BUTTON_FIND_FRIENDS),
-                        shape =
-                            RoundedCornerShape(
-                                dimensionResource(R.dimen.friends_item_rounded_corner_shape)),
-                        colors =
-                            buttonColors(
-                                containerColor = MaterialTheme.colorScheme.inversePrimary)) {
-                          Text(
-                              text = stringResource(R.string.find_friends_button_label),
-                              fontSize = 16.sp,
-                              fontWeight = FontWeight.Medium,
-                              color = MaterialTheme.colorScheme.onPrimary)
-                        }
-                  }
-                }
+            FriendsListContent(
+                padding = padding,
+                filteredFriends = filteredFriends,
+                searchQuery = searchQuery,
+                onSearchQueryChange = { searchQuery = it },
+                onUnfollowFriend = { friend ->
+                  friendsViewModel.unfollowFriend(
+                      currentUserId = currentUserIdFromVM, friend = friend)
+                  showUnfollowMessage = true
+                },
+                onFindFriends = onFindFriends)
           }
           // --- UNFOLLOW A FRIEND ANIMATION ---
           if (showUnfollowMessage) {
@@ -289,7 +206,7 @@ fun FriendsScreen(
  * Helper function : Composable helper that displays a single user profile item in the friends list.
  *
  * @param friend Username of the friend to display.
- * @param unfollow Callback triggered when the "Follow" button is clicked.
+ * @param unfollow Callback triggered when the "Unfollow" button is clicked.
  * @param modifier Optional [Modifier] for layout customization.
  */
 @Composable
@@ -416,5 +333,136 @@ private fun FloatingMessage(text: String, modifier: Modifier = Modifier) {
                     }
               }
         }
+      }
+}
+
+/**
+ * Helper function: Composable helper that displays the animation when loading the needed profiles
+ * item
+ *
+ * The animation consists of a Lottie searching waiting screen.
+ *
+ * @param padding
+ */
+@Composable
+private fun LoadingAnimationContent(padding: PaddingValues) {
+  val loadingComposition by
+      rememberLottieComposition(LottieCompositionSpec.RawRes(ANIMATION_LOADING))
+  Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+    LottieAnimation(
+        composition = loadingComposition,
+        iterations = LottieConstants.IterateForever,
+        modifier =
+            Modifier.size(dimensionResource(R.dimen.lottie_icon_size_extra_large))
+                .testTag(FriendsScreenTestTags.LOADING_ANIMATION))
+  }
+}
+
+/**
+ * Helper function: Composable helper that display the different items when there exist user
+ * profiles to display, the search bar. If there is currently no user available this display a
+ * specific message instead.
+ *
+ * @param padding : PaddingValues from the LazyColumn
+ * @param filteredFriends : List of the friends username
+ * @param searchQuery : value written in the search bar
+ * @param onSearchQueryChange : function will remember the value written in the search bar
+ * @param onUnfollowFriend : function to unfollow a friend from current user pov
+ */
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun FriendsListContent(
+    padding: PaddingValues,
+    filteredFriends: List<String>,
+    searchQuery: String,
+    onSearchQueryChange: (String) -> Unit,
+    onUnfollowFriend: (String) -> Unit,
+    onFindFriends: () -> Unit
+) {
+  LazyColumn(
+      contentPadding = PaddingValues(vertical = dimensionResource(R.dimen.padding_small)),
+      modifier =
+          Modifier.fillMaxWidth()
+              .padding(horizontal = dimensionResource(R.dimen.padding_screen))
+              .padding(padding)) {
+
+        // --- NO PROFILE ITEM NEED TO BE DISPLAYED ---
+        if (filteredFriends.isEmpty()) {
+          item {
+            Text(
+                text = stringResource(R.string.friends_empty_list_msg),
+                modifier =
+                    Modifier.padding(dimensionResource(R.dimen.padding_screen))
+                        .testTag(FriendsScreenTestTags.EMPTY_LIST_MSG))
+          }
+        } else {
+
+          // --- SEARCH BAR ---
+          item { SearchBarContent(searchQuery, onSearchQueryChange) }
+
+          // --- FRIENDS' ITEM ---
+          items(items = filteredFriends, key = { it }) { friend ->
+            FriendItem(
+                friend = friend,
+                unfollow = { onUnfollowFriend(friend) },
+
+                // -- Animation slide up when an item disappear
+                modifier =
+                    Modifier.animateItemPlacement(
+                        animationSpec =
+                            tween(durationMillis = ANIMATION_TIME, easing = LinearOutSlowInEasing)))
+          }
+        }
+
+        // -- BUTTON NAVIGATE TO FIND FRIENDS SCREEN
+        item { FindFriendButton(onFindFriends) }
+      }
+}
+
+/**
+ * Helper function: Composable helps to display the search bar
+ *
+ * @param searchQuery : value written in the OutlinedTextField value
+ * @param onSearchQueryChange : remember the changement made in the value
+ */
+@Composable
+private fun SearchBarContent(searchQuery: String, onSearchQueryChange: (String) -> Unit) {
+  OutlinedTextField(
+      value = searchQuery,
+      onValueChange = onSearchQueryChange,
+      modifier =
+          Modifier.fillMaxWidth()
+              .padding(vertical = dimensionResource(R.dimen.padding_small))
+              .testTag(FriendsScreenTestTags.SEARCH_FRIENDS_BAR),
+      placeholder = {
+        Text(
+            text = stringResource(R.string.friends_search_bar_label),
+            modifier = Modifier.padding(dimensionResource(R.dimen.friends_search_bar_width)))
+      },
+      singleLine = true,
+      shape = RoundedCornerShape(dimensionResource(R.dimen.friends_item_rounded_corner_shape)))
+}
+
+/**
+ * Helper function: Composable helps to display the button to go to the FindFriends screen
+ *
+ * @param onFindFriends : function to navigate to the FindFriendsScreen
+ */
+@Composable
+private fun FindFriendButton(onFindFriends: () -> Unit) {
+  Button(
+      onClick = { onFindFriends() },
+      modifier =
+          Modifier.fillMaxWidth()
+              .height(dimensionResource(R.dimen.friends_find_button_height))
+              .padding(vertical = dimensionResource(R.dimen.friends_find_button_vertical))
+              .testTag(FriendsScreenTestTags.BUTTON_FIND_FRIENDS),
+      shape = RoundedCornerShape(dimensionResource(R.dimen.friends_item_rounded_corner_shape)),
+      colors = buttonColors(containerColor = MaterialTheme.colorScheme.inversePrimary)) {
+        Text(
+            text = stringResource(R.string.find_friends_button_label),
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Medium,
+            color = MaterialTheme.colorScheme.onPrimary)
       }
 }

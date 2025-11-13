@@ -148,6 +148,7 @@ fun DependencyHandlerScope.globalTestImplementation(dep: Any) {
     androidTestImplementation(dep)
     testImplementation(dep)
 }
+val lottieVersion = "6.1.0"
 
 dependencies {
     implementation(libs.androidx.core.ktx)
@@ -248,7 +249,7 @@ dependencies {
     implementation("io.coil-kt:coil-compose:2.6.0")
 
     // Animation Lottie
-    implementation("com.airbnb.android:lottie-compose:6.1.0")
+    implementation("com.airbnb.android:lottie-compose:$lottieVersion")
 }
 
 configurations.all {
