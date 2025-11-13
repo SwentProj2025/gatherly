@@ -26,6 +26,7 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
 import androidx.credentials.CredentialManager
@@ -33,6 +34,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.rememberAsyncImagePainter
 import com.android.gatherly.R
 import com.android.gatherly.ui.navigation.*
+import com.android.gatherly.ui.theme.GatherlyTheme
 import java.io.File
 import java.io.FileOutputStream
 
@@ -209,7 +211,7 @@ fun SettingsScreen(
                                 dimensionResource(id = R.dimen.rounded_corner_shape_medium))) {
                           Text(
                               text = stringResource(id = R.string.settings_edit_photo),
-                              color = MaterialTheme.colorScheme.primary,
+                              color = MaterialTheme.colorScheme.onBackground,
                               fontSize = 16.sp)
                         }
 
@@ -346,7 +348,7 @@ fun SettingsField(
     errorMessage: String? = null,
 ) {
 
-  val fieldsTextColor = MaterialTheme.colorScheme.primary
+  val fieldsTextColor = MaterialTheme.colorScheme.onBackground
   Column(modifier = modifier.fillMaxWidth()) {
     Text(
         text = label,
@@ -383,6 +385,13 @@ fun SettingsField(
                   .testTag("${testTag}_error"))
     }
   }
+}
+
+// Helper function to preview the timer screen
+@Preview
+@Composable
+fun SettingsScreenPreview() {
+  GatherlyTheme(darkTheme = true) { SettingsScreen() }
 }
 
 /**

@@ -25,17 +25,20 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.integerResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
+import com.android.gatherly.ui.theme.GatherlyTheme
 import kotlinx.coroutines.delay
 
 // Portions of the code in this file are copy-pasted from the Bootcamp solution provided by the
@@ -107,11 +110,9 @@ fun EditToDoScreen(
       TextFieldDefaults.colors(
           focusedContainerColor = MaterialTheme.colorScheme.background,
           unfocusedContainerColor = MaterialTheme.colorScheme.background,
-          unfocusedTextColor = MaterialTheme.colorScheme.primary,
-          focusedTextColor = MaterialTheme.colorScheme.primary,
-          errorTextColor = MaterialTheme.colorScheme.primary,
-          errorPlaceholderColor = MaterialTheme.colorScheme.primary,
-          errorLabelColor = MaterialTheme.colorScheme.primary,
+          unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+          focusedTextColor = MaterialTheme.colorScheme.onBackground,
+          errorTextColor = MaterialTheme.colorScheme.onBackground,
       )
 
   // Search location when input changes
@@ -274,7 +275,7 @@ fun EditToDoScreen(
                             !todoUIState.isSaving) {
                       Text(
                           stringResource(R.string.todos_save_button_text),
-                          color = MaterialTheme.colorScheme.primary)
+                          color = MaterialTheme.colorScheme.onSecondary)
                     }
               }
 
@@ -299,19 +300,28 @@ fun EditToDoScreen(
                     // TextButton has no background by default
                     colors =
                         ButtonDefaults.textButtonColors(
-                            contentColor = MaterialTheme.colorScheme.tertiary)) {
+                            contentColor = MaterialTheme.colorScheme.error)) {
                       Row {
                         Icon(
                             imageVector = Icons.Filled.DeleteForever,
                             contentDescription = stringResource(R.string.todos_delete_button_text),
-                            tint = MaterialTheme.colorScheme.tertiary)
+                            tint = MaterialTheme.colorScheme.error)
                         Text(
                             text = stringResource(R.string.todos_delete_button_text),
-                            color = MaterialTheme.colorScheme.tertiary,
-                            modifier = Modifier.padding(start = buttonSpacing))
+                            color = MaterialTheme.colorScheme.error,
+                            modifier =
+                                Modifier.padding(start = buttonSpacing)
+                                    .align(Alignment.CenterVertically))
                       }
                     }
               }
             }
       })
+}
+
+// Helper function to preview the timer screen
+@Preview
+@Composable
+fun EditToDoScreenPreview() {
+  GatherlyTheme(darkTheme = false) { EditToDoScreen(todoUid = "1") }
 }
