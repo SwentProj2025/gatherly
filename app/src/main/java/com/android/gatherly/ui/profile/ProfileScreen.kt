@@ -60,6 +60,7 @@ object ProfileScreenTestTags {
   const val PROFILE_FOCUS_POINTS_COUNT = "profileFocusPointsCount"
   const val PROFILE_FOCUS_SESSIONS = "profileFocusSessions"
   const val PROFILE_GROUPS = "profileGroups"
+  const val GOOGLE_BUTTON = "googleButton"
 }
 
 /**
@@ -146,7 +147,8 @@ fun ProfileScreen(
                       onClick = { profileViewModel.upgradeWithGoogle(context, credentialManager) },
                       modifier =
                           Modifier.fillMaxWidth()
-                              .height(dimensionResource(id = R.dimen.sign_in_button_height)),
+                              .height(dimensionResource(id = R.dimen.sign_in_button_height))
+                              .testTag(ProfileScreenTestTags.GOOGLE_BUTTON),
                       colors =
                           ButtonDefaults.buttonColors(
                               containerColor = MaterialTheme.colorScheme.surfaceVariant,

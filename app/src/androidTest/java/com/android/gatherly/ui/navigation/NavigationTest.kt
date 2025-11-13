@@ -11,9 +11,16 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import com.android.gatherly.GatherlyApp
+import com.android.gatherly.ui.authentication.InitProfileScreenTestTags
 import com.android.gatherly.ui.authentication.SignInScreenTestTags
+import com.android.gatherly.ui.homePage.HomePageScreenTestTags
+import com.android.gatherly.ui.profile.ProfileScreenTestTags
+import com.android.gatherly.utils.FakeCredentialManager
+import com.android.gatherly.utils.FakeJwtGenerator
 import com.android.gatherly.utils.FirebaseEmulator
 import com.android.gatherly.utils.FirestoreGatherlyTest
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -27,11 +34,17 @@ class NavigationTest : FirestoreGatherlyTest() {
     super.setUp()
     runTest {
       FirebaseEmulator.auth.signOut()
-      composeTestRule.setContent { GatherlyApp() }
+
+      // Create google user
+      val fakeGoogleIdToken =
+          FakeJwtGenerator.createFakeGoogleIdToken("12345", email = "test@example.com")
+      val fakeCredentialManager = FakeCredentialManager.create(fakeGoogleIdToken)
+
+      composeTestRule.setContent { GatherlyApp(credentialManager = fakeCredentialManager) }
       composeTestRule.waitUntil(10000L) {
         composeTestRule.onNodeWithTag(SignInScreenTestTags.WELCOME_TITLE).isDisplayed()
       }
-      composeTestRule.onNodeWithTag(SignInScreenTestTags.ANONYMOUS_BUTTON).performClick()
+      composeTestRule.onNodeWithTag(SignInScreenTestTags.GOOGLE_BUTTON).performClick()
       composeTestRule.waitUntil(10_000L) {
         composeTestRule.onNodeWithTag("initProfile_save_button").isDisplayed()
       }
@@ -53,6 +66,92 @@ class NavigationTest : FirestoreGatherlyTest() {
         }
       }
     }
+  }
+
+  /** Verifies that while signing in with google, the init profile screen appears. */
+  @Test
+  fun logInWithGoogleDisplaysInitProfile() {
+    val timeout = 10_000L
+
+    // sign out
+    Firebase.auth.signOut()
+
+    // Create google user
+    val fakeGoogleIdToken =
+        FakeJwtGenerator.createFakeGoogleIdToken("12345", email = "test@example.com")
+    val fakeCredentialManager = FakeCredentialManager.create(fakeGoogleIdToken)
+
+    composeTestRule.setContent { GatherlyApp(credentialManager = fakeCredentialManager) }
+
+    // Sign in with google
+    composeTestRule.checkSignInScreenIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(SignInScreenTestTags.GOOGLE_BUTTON)
+        .assertIsDisplayed()
+        .performClick()
+
+    // Check that we are redirected to the init profile page
+    composeTestRule.waitUntil(timeout) {
+      composeTestRule.onNodeWithTag(InitProfileScreenTestTags.USERNAME).isDisplayed()
+    }
+    composeTestRule.onNodeWithTag(InitProfileScreenTestTags.USERNAME).assertIsDisplayed()
+  }
+
+  /** Verifies that while signing in anonymously, the homepage screen appears. */
+  @Test
+  fun logInAnonymouslyDisplaysHomePage() {
+    val timeout = 10_000L
+
+    // sign out
+    Firebase.auth.signOut()
+
+    // Sign in with google
+    composeTestRule.checkSignInScreenIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(SignInScreenTestTags.ANONYMOUS_BUTTON)
+        .assertIsDisplayed()
+        .performClick()
+
+    // Check that we are redirected to the init profile page
+    composeTestRule.waitUntil(timeout) {
+      composeTestRule.onNodeWithTag(HomePageScreenTestTags.FOCUS_TIMER_TEXT).isDisplayed()
+    }
+    composeTestRule.onNodeWithTag(HomePageScreenTestTags.FOCUS_TIMER_TEXT).assertIsDisplayed()
+  }
+
+  /** Verifies that upgrading an anonymous account to google shows the init profile screen */
+  @Test
+  fun upgradeAccountOnProfileWorks() {
+    val timeout = 10_000L
+
+    // sign out
+    Firebase.auth.signOut()
+
+    // Sign in with google
+    composeTestRule.checkSignInScreenIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(SignInScreenTestTags.ANONYMOUS_BUTTON)
+        .assertIsDisplayed()
+        .performClick()
+
+    // Go to profile screen
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).assertIsDisplayed().performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).assertIsDisplayed().performClick()
+    composeTestRule.waitUntil(timeout) {
+      composeTestRule.onNodeWithTag(ProfileScreenTestTags.GOOGLE_BUTTON).isDisplayed()
+    }
+
+    // click to upgrade to google
+    composeTestRule
+        .onNodeWithTag(ProfileScreenTestTags.GOOGLE_BUTTON)
+        .assertIsDisplayed()
+        .performClick()
+
+    // Check that we are redirected to the init profile screen
+    composeTestRule.waitUntil(timeout) {
+      composeTestRule.onNodeWithTag(InitProfileScreenTestTags.USERNAME).isDisplayed()
+    }
+    composeTestRule.onNodeWithTag(InitProfileScreenTestTags.USERNAME).assertIsDisplayed()
   }
 
   // LOGOUT PART :
