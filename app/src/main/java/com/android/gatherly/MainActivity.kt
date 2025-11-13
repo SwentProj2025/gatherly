@@ -12,10 +12,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.credentials.CredentialManager
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import com.android.gatherly.model.profile.ProfileStatus
+import com.android.gatherly.model.profile.UserStatusManager
 import com.android.gatherly.ui.authentication.InitProfileScreen
 import com.android.gatherly.ui.authentication.SignInScreen
 import com.android.gatherly.ui.events.AddEventScreen
@@ -35,12 +38,26 @@ import com.android.gatherly.ui.todo.AddToDoScreen
 import com.android.gatherly.ui.todo.EditToDoScreen
 import com.android.gatherly.ui.todo.OverviewScreen
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContent { GatherlyTheme() { Surface(modifier = Modifier.fillMaxSize()) { GatherlyApp() } } }
+  }
+
+  private val userStatusManager = UserStatusManager()
+
+  override fun onStart() {
+    super.onStart()
+    lifecycleScope.launch(Dispatchers.IO) { userStatusManager.setStatus(ProfileStatus.ONLINE) }
+  }
+
+  override fun onStop() {
+    super.onStop()
+    lifecycleScope.launch(Dispatchers.IO) { userStatusManager.setStatus(ProfileStatus.OFFLINE) }
   }
 }
 
