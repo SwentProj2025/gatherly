@@ -6,10 +6,14 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.ui.settings.SettingsViewModel
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.`when`
 
 /** UI tests for the [InitProfileScreen]. */
 @RunWith(AndroidJUnit4::class)
@@ -19,12 +23,22 @@ class InitProfileScreenTest {
 
   private lateinit var profileRepository: ProfileRepository
   private lateinit var settingsViewModel: SettingsViewModel
+  private lateinit var mockAuth: FirebaseAuth
+  private lateinit var mockUser: FirebaseUser
 
   @Before
   fun setUp() {
     profileRepository = ProfileLocalRepository()
+
+    // Mock Firebase Auth
+    mockAuth = mock(FirebaseAuth::class.java)
+    mockUser = mock(FirebaseUser::class.java)
+    `when`(mockAuth.currentUser).thenReturn(mockUser)
+    `when`(mockUser.uid).thenReturn("currentUser")
+    `when`(mockUser.isAnonymous).thenReturn(false)
+
     settingsViewModel =
-        SettingsViewModel(repository = profileRepository, currentUser = "currentUser")
+        SettingsViewModel(repository = profileRepository, authProvider = { mockAuth })
     composeRule.setContent { InitProfileScreen(settingsViewModel = settingsViewModel) }
   }
 

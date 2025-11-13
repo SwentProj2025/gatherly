@@ -3,6 +3,9 @@ package com.android.gatherly.ui.friends
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.profile.ProfileRepository
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -11,11 +14,14 @@ import kotlinx.coroutines.launch
 data class FriendsUIState(
     val errorMsg: String? = null,
     val friends: List<String> = emptyList(),
-    val listNoFriends: List<String> = emptyList()
+    val listNoFriends: List<String> = emptyList(),
+    val currentUserId: String = ""
 )
 
-class FriendsViewModel(private val repository: ProfileRepository, val currentUserId: String) :
-    ViewModel() {
+class FriendsViewModel(
+    private val repository: ProfileRepository,
+    private val authProvider: () -> FirebaseAuth = { Firebase.auth }
+) : ViewModel() {
 
   /** StateFlow that emits the current UI state for the Friends screen. */
   private val _uiState = MutableStateFlow(FriendsUIState())
@@ -26,7 +32,7 @@ class FriendsViewModel(private val repository: ProfileRepository, val currentUse
    * them to display only drawable todos.
    */
   init {
-    viewModelScope.launch { refreshFriends(currentUserId) }
+    viewModelScope.launch { refreshFriends(authProvider().currentUser?.uid ?: "") }
   }
 
   /**
@@ -42,7 +48,8 @@ class FriendsViewModel(private val repository: ProfileRepository, val currentUse
           _uiState.value.copy(
               friends = friendsData.friendUsernames,
               listNoFriends = friendsData.nonFriendUsernames,
-              errorMsg = null)
+              errorMsg = null,
+              currentUserId = currentUserId)
     } catch (e: Exception) {
       _uiState.value = _uiState.value.copy(errorMsg = "Failed to load friends: ${e.message}")
     }

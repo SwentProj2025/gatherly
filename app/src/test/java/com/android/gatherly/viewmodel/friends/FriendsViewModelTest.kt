@@ -5,6 +5,7 @@ import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileStatus
 import com.android.gatherly.ui.friends.FriendsViewModel
+import com.android.gatherly.utilstest.MockitoUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -33,6 +34,7 @@ class FriendsViewModelTest {
 
   private lateinit var profileRepository: ProfileLocalRepository
   private lateinit var viewModel: FriendsViewModel
+  private lateinit var mockitoUtils: MockitoUtils
 
   // initialize this so that tests control all coroutines and can wait on them
   private val testDispatcher = StandardTestDispatcher()
@@ -46,7 +48,12 @@ class FriendsViewModelTest {
 
     fill_repositories()
 
-    viewModel = FriendsViewModel(repository = profileRepository, currentUserId = "A")
+    // Mock Firebase Auth
+    mockitoUtils = MockitoUtils()
+    mockitoUtils.chooseCurrentUser("A")
+
+    viewModel =
+        FriendsViewModel(repository = profileRepository, authProvider = { mockitoUtils.mockAuth })
   }
 
   @After
@@ -184,7 +191,8 @@ class FriendsViewModelTest {
 
           override suspend fun deleteFriend(friend: String, currentUserId: String) {}
         }
-    val errorViewModel = FriendsViewModel(repository = throwingRepository, currentUserId = "A")
+    val errorViewModel =
+        FriendsViewModel(repository = throwingRepository, authProvider = { mockitoUtils.mockAuth })
     errorViewModel.refreshFriends("A")
 
     advanceUntilIdle()
