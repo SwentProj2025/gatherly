@@ -48,10 +48,12 @@ import com.android.gatherly.ui.theme.GatherlyTheme
 import kotlinx.coroutines.delay
 
 object AddEventScreenTestTags {
+  const val LAZY_LIST = "LAZY_LIST"
   const val INPUT_NAME = "EVENT_NAME"
   const val INPUT_DESCRIPTION = "EVENT_DESCRIPTION"
   const val INPUT_CREATOR = "EVENT_CREATOR"
   const val INPUT_LOCATION = "EVENT_LOCATION"
+  const val LOCATION_SUGGESTION = "EVENT_LOCATION"
   const val INPUT_DATE = "EVENT_DATE"
   const val INPUT_START = "EVENT_START_TIME"
   const val INPUT_END = "EVENT_END_TIME"
@@ -143,7 +145,11 @@ fun AddEventScreen(
             goBack = goBack)
       }) { paddingVal ->
         LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(paddingVal).padding(screenPadding),
+            modifier =
+                Modifier.fillMaxSize()
+                    .padding(paddingVal)
+                    .padding(screenPadding)
+                    .testTag(AddEventScreenTestTags.LAZY_LIST),
             verticalArrangement = Arrangement.spacedBy(fieldSpacing)) {
               item {
                 // Name
@@ -317,7 +323,8 @@ fun AddEventScreen(
                                 addEventViewModel.selectLocation(loc)
                                 showLocationDropdown = false
                               },
-                              modifier = Modifier.testTag(AddEventScreenTestTags.INPUT_LOCATION))
+                              modifier =
+                                  Modifier.testTag(AddEventScreenTestTags.LOCATION_SUGGESTION))
                         }
                         if (ui.suggestedLocations.size > 3) {
                           DropdownMenuItem(

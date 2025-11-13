@@ -158,13 +158,8 @@ class SettingsViewModel(
 
         val newProfilePictureUrl =
             if (state.profilePictureUrl.isNotBlank() &&
-                (state.profilePictureUrl != originalProfile?.profilePicture)) {
-              val parsedUri = Uri.parse(state.profilePictureUrl)
-              if (parsedUri?.scheme == "content") {
-                repository.updateProfilePic(id, parsedUri)
-              } else {
-                state.profilePictureUrl
-              }
+                state.profilePictureUrl != originalProfile?.profilePicture) {
+              repository.updateProfilePic(id, Uri.parse(state.profilePictureUrl))
             } else {
               originalProfile?.profilePicture.orEmpty()
             }
