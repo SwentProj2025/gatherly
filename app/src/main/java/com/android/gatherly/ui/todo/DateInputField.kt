@@ -33,6 +33,7 @@ import com.android.gatherly.R
  */
 @Composable
 fun DateInputField(
+    initialDate: String = "",
     onDateChanged: (String) -> Unit = {},
     dueDateError: String? = null,
     textFieldColors: TextFieldColors,
@@ -40,6 +41,7 @@ fun DateInputField(
     testTagErrorMessage: String,
 ) {
   var dateFieldValue by remember { mutableStateOf(TextFieldValue("")) }
+  dateFieldValue = dateFieldValue.copy(text = initialDate)
   OutlinedTextField(
       value = dateFieldValue,
       onValueChange = { newValue ->

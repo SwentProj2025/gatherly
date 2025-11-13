@@ -223,6 +223,7 @@ fun EditToDoScreen(
               // Due Date Input
               item {
                 DateInputField(
+                    initialDate = todoUIState.dueDate,
                     onDateChanged = { editTodoViewModel.onDateChanged(it) },
                     dueDateError = todoUIState.dueDateError,
                     textFieldColors = textFieldColors,
@@ -234,6 +235,7 @@ fun EditToDoScreen(
               // Due Time Input
               item {
                 TimeInputField(
+                    initialTime = todoUIState.dueTime,
                     onTimeChanged = { editTodoViewModel.onTimeChanged(it) },
                     dueTimeError = todoUIState.dueTimeError,
                     textFieldColors = textFieldColors,

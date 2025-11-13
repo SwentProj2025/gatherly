@@ -33,6 +33,7 @@ import com.android.gatherly.R
  */
 @Composable
 fun TimeInputField(
+    initialTime: String = "",
     onTimeChanged: (String) -> Unit = {},
     dueTimeError: String? = null,
     textFieldColors: TextFieldColors,
@@ -40,6 +41,7 @@ fun TimeInputField(
     testTagErrorMessage: String,
 ) {
   var timeFieldValue by remember { mutableStateOf(TextFieldValue("")) }
+  timeFieldValue = timeFieldValue.copy(text = initialTime)
   OutlinedTextField(
       value = timeFieldValue,
       onValueChange = { newValue ->
