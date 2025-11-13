@@ -1,16 +1,17 @@
 package com.android.gatherly.model.profile
 
+import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.auth
 
 /**
  * Manages the online/offline status of the currently signed-in user.
  *
- * @property auth FirebaseAuth instance used to get the current user. Defaults to
- *   [FirebaseAuth.getInstance()].
+ * @property auth FirebaseAuth instance used to get the current user. Defaults to [Firebase.auth].
  * @property repo ProfileRepository used to update the user's status in the database.
  */
 class UserStatusManager(
-    private val auth: FirebaseAuth = FirebaseAuth.getInstance(),
+    private val auth: FirebaseAuth = Firebase.auth,
     private val repo: ProfileRepository = ProfileRepositoryProvider.repository
 ) {
 

@@ -1,9 +1,11 @@
 package com.android.gatherly.model.profile
 
 /**
- * Represents the online/offline status of a user.
+ * Represents the online/offline/focused status of a user. (focused is when the user uses the focus
+ * timer)
  *
- * @property value The string representation stored in Firestore ("online" or "offline").
+ * @property value The string representation stored in Firestore ("online" or "offline" or
+ *   "focused").
  */
 enum class ProfileStatus(val value: String) {
   ONLINE("online"),

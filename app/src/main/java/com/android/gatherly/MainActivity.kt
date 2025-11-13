@@ -38,7 +38,6 @@ import com.android.gatherly.ui.todo.AddToDoScreen
 import com.android.gatherly.ui.todo.EditToDoScreen
 import com.android.gatherly.ui.todo.OverviewScreen
 import com.google.firebase.auth.FirebaseAuth
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
@@ -52,12 +51,12 @@ class MainActivity : ComponentActivity() {
 
   override fun onStart() {
     super.onStart()
-    lifecycleScope.launch(Dispatchers.IO) { userStatusManager.setStatus(ProfileStatus.ONLINE) }
+    lifecycleScope.launch { userStatusManager.setStatus(ProfileStatus.ONLINE) }
   }
 
   override fun onStop() {
     super.onStop()
-    lifecycleScope.launch(Dispatchers.IO) { userStatusManager.setStatus(ProfileStatus.OFFLINE) }
+    lifecycleScope.launch { userStatusManager.setStatus(ProfileStatus.OFFLINE) }
   }
 }
 
