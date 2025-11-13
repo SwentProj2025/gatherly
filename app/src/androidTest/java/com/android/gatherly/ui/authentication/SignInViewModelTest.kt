@@ -79,6 +79,6 @@ class SignInViewModelTest : FirestoreGatherlyTest() {
     assert(userSignedIn.value)
     assert(FirebaseEmulator.auth.currentUser != null)
     assert(!profileRepository.initProfileIfMissing(FirebaseEmulator.auth.currentUser?.uid!!, ""))
-    assert(signInViewModel.destination.value == "init_profile")
+    assert(signInViewModel.destination.value == "home")
   }
 }

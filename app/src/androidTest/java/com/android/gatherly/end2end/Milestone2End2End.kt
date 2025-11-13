@@ -173,7 +173,7 @@ class Milestone2End2End : FirestoreGatherlyTest() {
         .assertIsDisplayed()
         .performClick()
     composeTestRule.waitUntil(TIMEOUT) {
-      composeTestRule.onNodeWithTag(InitProfileScreenTestTags.SAVE_BUTTON).isDisplayed()
+      composeTestRule.onNodeWithTag(InitProfileScreenTestTags.USERNAME).isDisplayed()
     }
 
     // Create a username, name then save
