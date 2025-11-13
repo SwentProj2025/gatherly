@@ -217,20 +217,13 @@ fun AddToDoScreen(
 
               // Due Time Input
               item {
-                OutlinedTextField(
-                    value = todoUIState.dueTime,
-                    onValueChange = { addTodoViewModel.onTimeChanged(it) },
-                    label = { Text(stringResource(R.string.todos_time_field_label)) },
-                    placeholder = { Text(stringResource(R.string.todos_time_field_placeholder)) },
-                    isError = todoUIState.dueTimeError != null,
-                    supportingText = {
-                      todoUIState.dueTimeError?.let {
-                        Text(it, modifier = Modifier.testTag(AddToDoScreenTestTags.ERROR_MESSAGE))
-                      }
-                    },
-                    colors = textFieldColors,
-                    modifier =
-                        Modifier.fillMaxWidth().testTag(AddToDoScreenTestTags.INPUT_TODO_TIME))
+                TimeInputField(
+                    onTimeChanged = { addTodoViewModel.onTimeChanged(it) },
+                    dueTimeError = todoUIState.dueTimeError,
+                    textFieldColors = textFieldColors,
+                    testTagInput = AddToDoScreenTestTags.INPUT_TODO_TIME,
+                    testTagErrorMessage = AddToDoScreenTestTags.ERROR_MESSAGE,
+                )
               }
 
               item { Spacer(modifier = Modifier.height(fieldSpacing)) }
