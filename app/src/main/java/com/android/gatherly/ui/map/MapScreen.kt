@@ -115,7 +115,7 @@ private object Dimensions {
  * @param onSignedOut Callback invoked when the user signs out.
  * @param navigationActions Navigation actions for switching between app sections.
  * @param goToEvent Callback to navigate to the Event detail page.
- * @param goToToDo Callback to navigate to the ToDo detail page.
+ * @param goToToDo Callback to navigate to the [ToDo] detail page.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -371,7 +371,7 @@ fun EventSheet(event: Event, onGoToEvent: () -> Unit, onClose: () -> Unit) {
         Text(
             text = event.title.uppercase(),
             style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.primary,
+            color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.testTag(MapScreenTestTags.EVENT_TITLE_SHEET))
 
         Spacer(modifier = Modifier.size(Dimensions.spacerPadding))
@@ -381,14 +381,14 @@ fun EventSheet(event: Event, onGoToEvent: () -> Unit, onClose: () -> Unit) {
                 Modifier.padding(Dimensions.textPadding).testTag(MapScreenTestTags.EVENT_DATE),
             text = formattedDate,
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.primary)
+            color = MaterialTheme.colorScheme.onBackground)
         Text(
             modifier =
                 Modifier.padding(Dimensions.textPadding)
                     .testTag(MapScreenTestTags.EVENT_DESCRIPTION),
             text = event.description,
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.primary)
+            color = MaterialTheme.colorScheme.onBackground)
 
         Spacer(modifier = Modifier.size(Dimensions.spacerPadding))
 
@@ -416,12 +416,12 @@ fun EventSheet(event: Event, onGoToEvent: () -> Unit, onClose: () -> Unit) {
       }
 }
 
-// -------------------------------- ToDo icons --------------------------------
+/** -------------------------------- [ToDo] icons -------------------------------- * */
 
 /**
- * Collapsed ToDo marker icon
+ * Collapsed [ToDo] marker icon
  *
- * @param toDo The ToDo data to display in the marker.
+ * @param toDo The [ToDo] data to display in the marker.
  */
 @Composable
 fun ToDoIcon(toDo: ToDo) {
@@ -451,10 +451,10 @@ fun ToDoIcon(toDo: ToDo) {
 }
 
 /**
- * ToDo Sheet displayed when a toDo marker is tapped
+ * [ToDo] Sheet displayed when a `toDo` marker is tapped
  *
- * @param toDo The todo data to display in the marker.
- * @param onGoToToDo Go to Todo Page when button is clicked.
+ * @param toDo The [ToDo] data to display in the marker.
+ * @param onGoToToDo Go to [ToDo] Page when button is clicked.
  * @param onClose closes the sheet when tapped outside.
  */
 @Composable
@@ -465,7 +465,11 @@ fun ToDoSheet(toDo: ToDo, onGoToToDo: () -> Unit, onClose: () -> Unit) {
         sdf.format(toDo.dueDate.toDate())
       }
 
-  Column(
+  Card(
+      colors =
+          CardDefaults.cardColors(
+              containerColor = MaterialTheme.colorScheme.secondary,
+              contentColor = MaterialTheme.colorScheme.onSecondary),
       modifier =
           Modifier.fillMaxWidth()
               .padding(Dimensions.rowColPadding)
@@ -473,7 +477,7 @@ fun ToDoSheet(toDo: ToDo, onGoToToDo: () -> Unit, onClose: () -> Unit) {
         Text(
             text = toDo.name.uppercase(),
             style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.primary,
+            color = MaterialTheme.colorScheme.onSecondary,
             modifier = Modifier.testTag(MapScreenTestTags.TODO_TITLE_SHEET))
 
         Spacer(modifier = Modifier.size(Dimensions.spacerPadding))
@@ -483,14 +487,14 @@ fun ToDoSheet(toDo: ToDo, onGoToToDo: () -> Unit, onClose: () -> Unit) {
                 Modifier.padding(Dimensions.textPadding).testTag(MapScreenTestTags.TODO_DUE_DATE),
             text = formattedDate,
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.primary)
+            color = MaterialTheme.colorScheme.onSecondary)
         Text(
             modifier =
                 Modifier.padding(Dimensions.textPadding)
                     .testTag(MapScreenTestTags.TODO_DESCRIPTION),
             text = toDo.description,
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.primary)
+            color = MaterialTheme.colorScheme.onSecondary)
 
         Spacer(modifier = Modifier.size(Dimensions.spacerPadding))
 

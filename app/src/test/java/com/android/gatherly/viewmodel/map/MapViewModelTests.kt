@@ -21,7 +21,6 @@ import io.mockk.mockk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -42,7 +41,7 @@ import org.junit.Test
  */
 class MapViewModelTests {
 
-  private val testDispatcher = StandardTestDispatcher()
+  @OptIn(ExperimentalCoroutinesApi::class) private val testDispatcher = UnconfinedTestDispatcher()
 
   /**
    * Sets up the test environment by replacing the main dispatcher with a test dispatcher. This
@@ -84,15 +83,16 @@ class MapViewModelTests {
    * consistently returns true for this category.
    */
   @Test
-  fun isDrawableWorksOn_IncompleteTodoWithLocation() = runTest {
-    val expectedResult1 = true
-    val actualResult1 = isDrawable(MapViewModelTestsTodos.incompleteTodoWithLocation1)
-    assertEquals(expectedResult1, actualResult1)
+  fun isDrawableWorksOn_IncompleteTodoWithLocation() =
+      runTest(testDispatcher) {
+        val expectedResult1 = true
+        val actualResult1 = isDrawable(MapViewModelTestsTodos.incompleteTodoWithLocation1)
+        assertEquals(expectedResult1, actualResult1)
 
-    val expectedResult2 = true
-    val actualResult2 = isDrawable(MapViewModelTestsTodos.incompleteTodoWithLocation2)
-    assertEquals(expectedResult2, actualResult2)
-  }
+        val expectedResult2 = true
+        val actualResult2 = isDrawable(MapViewModelTestsTodos.incompleteTodoWithLocation2)
+        assertEquals(expectedResult2, actualResult2)
+      }
 
   /**
    * Verifies that [isDrawable] correctly identifies complete todos as not drawable.
@@ -101,11 +101,12 @@ class MapViewModelTests {
    * complete.
    */
   @Test
-  fun isDrawableWorksOn_CompleteTodoWithLocation() = runTest {
-    val expectedResult = false
-    val actualResult = isDrawable(MapViewModelTestsTodos.completeTodoWithLocation)
-    assertEquals(expectedResult, actualResult)
-  }
+  fun isDrawableWorksOn_CompleteTodoWithLocation() =
+      runTest(testDispatcher) {
+        val expectedResult = false
+        val actualResult = isDrawable(MapViewModelTestsTodos.completeTodoWithLocation)
+        assertEquals(expectedResult, actualResult)
+      }
 
   /**
    * Verifies that [isDrawable] correctly identifies todos without locations as not drawable.
@@ -114,11 +115,12 @@ class MapViewModelTests {
    * to display on the map.
    */
   @Test
-  fun isDrawableWorksOn_IncompleteTodoWithoutLocation() = runTest {
-    val expectedResult = false
-    val actualResult = isDrawable(MapViewModelTestsTodos.incompleteTodoWithoutLocation)
-    assertEquals(expectedResult, actualResult)
-  }
+  fun isDrawableWorksOn_IncompleteTodoWithoutLocation() =
+      runTest(testDispatcher) {
+        val expectedResult = false
+        val actualResult = isDrawable(MapViewModelTestsTodos.incompleteTodoWithoutLocation)
+        assertEquals(expectedResult, actualResult)
+      }
 
   /**
    * Verifies that [isDrawable] correctly identifies complete todos without locations as not
@@ -128,11 +130,12 @@ class MapViewModelTests {
    * determines the todo is complete, without checking the location.
    */
   @Test
-  fun isDrawableWorksOn_CompleteTodoWithoutLocation() = runTest {
-    val expectedResult = false
-    val actualResult = isDrawable(MapViewModelTestsTodos.completeTodoWithoutLocation)
-    assertEquals(expectedResult, actualResult)
-  }
+  fun isDrawableWorksOn_CompleteTodoWithoutLocation() =
+      runTest(testDispatcher) {
+        val expectedResult = false
+        val actualResult = isDrawable(MapViewModelTestsTodos.completeTodoWithoutLocation)
+        assertEquals(expectedResult, actualResult)
+      }
 
   /**
    * Verifies that [MapViewModel] correctly filters and displays only drawable todos.
@@ -143,24 +146,25 @@ class MapViewModelTests {
    */
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
-  fun getDrawableTodosRetrievesCorrectList() = runTest {
-    val todosRepo = ToDosLocalRepository()
-    val eventsRepo = EventsLocalRepository()
-    for (todo in testObjects) {
-      todosRepo.addTodo(todo)
-    }
+  fun getDrawableTodosRetrievesCorrectList() =
+      runTest(testDispatcher) {
+        val todosRepo = ToDosLocalRepository()
+        val eventsRepo = EventsLocalRepository()
+        for (todo in testObjects) {
+          todosRepo.addTodo(todo)
+        }
 
-    val vm = MapViewModel(todosRepository = todosRepo, eventsRepository = eventsRepo)
-    advanceUntilIdle()
+        val vm = MapViewModel(todosRepository = todosRepo, eventsRepository = eventsRepo)
+        advanceUntilIdle()
 
-    val expectedList: List<ToDo> =
-        listOf(
-            MapViewModelTestsTodos.incompleteTodoWithLocation1,
-            MapViewModelTestsTodos.incompleteTodoWithLocation2)
+        val expectedList: List<ToDo> =
+            listOf(
+                MapViewModelTestsTodos.incompleteTodoWithLocation1,
+                MapViewModelTestsTodos.incompleteTodoWithLocation2)
 
-    val actualList: List<ToDo> = vm.uiState.value.itemsList.map { it as ToDo }
-    assertEquals(expectedList, actualList)
-  }
+        val actualList: List<ToDo> = vm.uiState.value.itemsList.map { it as ToDo }
+        assertEquals(expectedList, actualList)
+      }
 
   /**
    * Verifies that tapping a todo marker updates the expanded todo ID in the UI state.
@@ -169,17 +173,18 @@ class MapViewModelTests {
    * displaying additional information.
    */
   @Test
-  fun onTodoMarkerTapped_UpdatesExpandedTodoId() = runTest {
-    val todosRepo = ToDosLocalRepository()
-    val eventsRepo = EventsLocalRepository()
-    val vm = MapViewModel(todosRepository = todosRepo, eventsRepository = eventsRepo)
+  fun onTodoMarkerTapped_UpdatesExpandedTodoId() =
+      runTest(testDispatcher) {
+        val todosRepo = ToDosLocalRepository()
+        val eventsRepo = EventsLocalRepository()
+        val vm = MapViewModel(todosRepository = todosRepo, eventsRepository = eventsRepo)
 
-    assertNull(vm.uiState.value.selectedItemId)
+        assertNull(vm.uiState.value.selectedItemId)
 
-    vm.onSelectedItem("todo1")
+        vm.onSelectedItem("todo1")
 
-    assertEquals("todo1", vm.uiState.value.selectedItemId)
-  }
+        assertEquals("todo1", vm.uiState.value.selectedItemId)
+      }
 
   /**
    * Verifies that dismissing an expanded marker clears the expanded todo ID in the UI state.
@@ -188,59 +193,62 @@ class MapViewModelTests {
    * dismisses or closes the expanded view.
    */
   @Test
-  fun onTodoMarkerDismissed_ClearsExpandedTodoId() = runTest {
-    val todosRepo = ToDosLocalRepository()
-    val eventsRepo = EventsLocalRepository()
-    val vm = MapViewModel(todosRepository = todosRepo, eventsRepository = eventsRepo)
+  fun onTodoMarkerDismissed_ClearsExpandedTodoId() =
+      runTest(testDispatcher) {
+        val todosRepo = ToDosLocalRepository()
+        val eventsRepo = EventsLocalRepository()
+        val vm = MapViewModel(todosRepository = todosRepo, eventsRepository = eventsRepo)
 
-    vm.onSelectedItem("todo1")
-    assertEquals("todo1", vm.uiState.value.selectedItemId)
+        vm.onSelectedItem("todo1")
+        assertEquals("todo1", vm.uiState.value.selectedItemId)
 
-    vm.clearSelection()
+        vm.clearSelection()
 
-    assertNull(vm.uiState.value.selectedItemId)
-  }
+        assertNull(vm.uiState.value.selectedItemId)
+      }
 
   // ------------------------------------Events------------------------------------------------------
   /** Verifies that tapping an event marker updates the expanded event ID in the UI state. */
   @Test
-  fun onEventMarkerTappedDismissed_UpdateExpandedId() = runTest {
-    val todosRepo = ToDosLocalRepository()
-    val eventsRepo = EventsLocalRepository()
-    val vm = MapViewModel(todosRepository = todosRepo, eventsRepository = eventsRepo)
+  fun onEventMarkerTappedDismissed_UpdateExpandedId() =
+      runTest(testDispatcher) {
+        val todosRepo = ToDosLocalRepository()
+        val eventsRepo = EventsLocalRepository()
+        val vm = MapViewModel(todosRepository = todosRepo, eventsRepository = eventsRepo)
 
-    assertNull(vm.uiState.value.selectedItemId)
+        assertNull(vm.uiState.value.selectedItemId)
 
-    vm.onSelectedItem("upcoming_location")
-    assertEquals("upcoming_location", vm.uiState.value.selectedItemId)
+        vm.onSelectedItem("upcoming_location")
+        assertEquals("upcoming_location", vm.uiState.value.selectedItemId)
 
-    vm.clearSelection()
-    assertEquals(null, vm.uiState.value.selectedItemId)
-  }
+        vm.clearSelection()
+        assertEquals(null, vm.uiState.value.selectedItemId)
+      }
 
   /** Verifies that [MapViewModel] correctly filters and displays only drawable events. */
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
-  fun getDrawableEventsRetrievesCorrectList() = runTest {
-    val todosRepo = ToDosLocalRepository()
-    val eventsRepo = EventsLocalRepository()
-    for (event in MapViewModelTestsEvents.testEvents) {
-      eventsRepo.addEvent(event)
-    }
+  fun getDrawableEventsRetrievesCorrectList() =
+      runTest(testDispatcher) {
+        val todosRepo = ToDosLocalRepository()
+        val eventsRepo = EventsLocalRepository()
+        for (event in MapViewModelTestsEvents.testEvents) {
+          eventsRepo.addEvent(event)
+        }
 
-    val vm = MapViewModel(todosRepository = todosRepo, eventsRepository = eventsRepo)
-    advanceUntilIdle()
+        val vm = MapViewModel(todosRepository = todosRepo, eventsRepository = eventsRepo)
+        advanceUntilIdle()
 
-    vm.changeView()
+        vm.changeView()
 
-    val expectedList: List<Event> =
-        listOf(
-            MapViewModelTestsEvents.upcomingEventWithLocation1,
-            MapViewModelTestsEvents.upcomingEventWithLocation2)
+        val expectedList: List<Event> =
+            listOf(
+                MapViewModelTestsEvents.upcomingEventWithLocation1,
+                MapViewModelTestsEvents.upcomingEventWithLocation2)
 
-    val actualList: List<Event> = vm.uiState.value.itemsList.map { it as Event }
-    assertEquals(expectedList, actualList)
-  }
+        val actualList: List<Event> = vm.uiState.value.itemsList.map { it as Event }
+        assertEquals(expectedList, actualList)
+      }
 
   // ----------------------------------View
   // change---------------------------------------------------
@@ -248,43 +256,44 @@ class MapViewModelTests {
   /** Verifies that [MapViewModel] correctly switches from an todo view to a event view and back. */
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
-  fun canChangeViewBetweenTodosAndEvents() = runTest {
-    val todoRepo = ToDosLocalRepository()
-    for (todo in MapViewModelTestsTodos.testedTodos) {
-      todoRepo.addTodo(todo)
-    }
+  fun canChangeViewBetweenTodosAndEvents() =
+      runTest(testDispatcher) {
+        val todoRepo = ToDosLocalRepository()
+        for (todo in MapViewModelTestsTodos.testedTodos) {
+          todoRepo.addTodo(todo)
+        }
 
-    val eventRepo = EventsLocalRepository()
-    for (event in MapViewModelTestsEvents.testEvents) {
-      eventRepo.addEvent(event)
-    }
+        val eventRepo = EventsLocalRepository()
+        for (event in MapViewModelTestsEvents.testEvents) {
+          eventRepo.addEvent(event)
+        }
 
-    val vm = MapViewModel(todosRepository = todoRepo, eventsRepository = eventRepo)
-    advanceUntilIdle()
+        val vm = MapViewModel(todosRepository = todoRepo, eventsRepository = eventRepo)
+        advanceUntilIdle()
 
-    val expectedTodosList: List<ToDo> =
-        listOf(
-            MapViewModelTestsTodos.incompleteTodoWithLocation1,
-            MapViewModelTestsTodos.incompleteTodoWithLocation2)
+        val expectedTodosList: List<ToDo> =
+            listOf(
+                MapViewModelTestsTodos.incompleteTodoWithLocation1,
+                MapViewModelTestsTodos.incompleteTodoWithLocation2)
 
-    val expectedEventsList: List<Event> =
-        listOf(
-            MapViewModelTestsEvents.upcomingEventWithLocation1,
-            MapViewModelTestsEvents.upcomingEventWithLocation2)
+        val expectedEventsList: List<Event> =
+            listOf(
+                MapViewModelTestsEvents.upcomingEventWithLocation1,
+                MapViewModelTestsEvents.upcomingEventWithLocation2)
 
-    val actualTodosList: List<ToDo> = vm.uiState.value.itemsList.map { it as ToDo }
-    assertEquals(expectedTodosList, actualTodosList)
+        val actualTodosList: List<ToDo> = vm.uiState.value.itemsList.map { it as ToDo }
+        assertEquals(expectedTodosList, actualTodosList)
 
-    vm.changeView()
+        vm.changeView()
 
-    val actualEventsList: List<Event> = vm.uiState.value.itemsList.map { it as Event }
-    assertEquals(expectedEventsList, actualEventsList)
+        val actualEventsList: List<Event> = vm.uiState.value.itemsList.map { it as Event }
+        assertEquals(expectedEventsList, actualEventsList)
 
-    vm.changeView()
+        vm.changeView()
 
-    val actualTodosListAgain: List<ToDo> = vm.uiState.value.itemsList.map { it as ToDo }
-    assertEquals(expectedTodosList, actualTodosListAgain)
-  }
+        val actualTodosListAgain: List<ToDo> = vm.uiState.value.itemsList.map { it as ToDo }
+        assertEquals(expectedTodosList, actualTodosListAgain)
+      }
   /**
    * Verifies that consulting a todo item updates the last consulted todo ID and clears the camera
    * position in the UI state.
@@ -292,7 +301,7 @@ class MapViewModelTests {
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun onItemConsulted_withTodo_setsLastConsultedTodoIdAndNullsCameraPos() =
-      runTest(UnconfinedTestDispatcher()) {
+      runTest(testDispatcher) {
         val todosRepo = ToDosLocalRepository()
         val eventsRepo = EventsLocalRepository()
         val vm = MapViewModel(todosRepository = todosRepo, eventsRepository = eventsRepo)
@@ -317,7 +326,7 @@ class MapViewModelTests {
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun onItemConsulted_withEvent_setsLastConsultedEventIdAndNullsCameraPos() =
-      runTest(UnconfinedTestDispatcher()) {
+      runTest(testDispatcher) {
         val todosRepo = ToDosLocalRepository()
         val eventsRepo = EventsLocalRepository()
         val vm = MapViewModel(todosRepository = todosRepo, eventsRepository = eventsRepo)
@@ -337,7 +346,7 @@ class MapViewModelTests {
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun initializeCameraPosition_updatesCameraPosInUIState() =
-      runTest(UnconfinedTestDispatcher()) {
+      runTest(testDispatcher) {
         val todosRepo = ToDosLocalRepository()
         val eventsRepo = EventsLocalRepository()
         val mockContext = mockk<Context>(relaxed = true)
@@ -357,7 +366,7 @@ class MapViewModelTests {
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun fetchLocationToCenterOn_withLastConsultedTodo_returnsTodoLocation() =
-      runTest(UnconfinedTestDispatcher()) {
+      runTest(testDispatcher) {
         val todosRepo = ToDosLocalRepository()
         val eventsRepo = EventsLocalRepository()
         todosRepo.addTodo(MapViewModelTestsTodos.incompleteTodoWithLocation1)
@@ -381,7 +390,7 @@ class MapViewModelTests {
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun fetchLocationToCenterOn_withLastConsultedEvent_returnsEventLocation() =
-      runTest(UnconfinedTestDispatcher()) {
+      runTest(testDispatcher) {
         val todosRepo = ToDosLocalRepository()
         val eventsRepo = EventsLocalRepository()
         eventsRepo.addEvent(MapViewModelTestsEvents.upcomingEventWithLocation1)
@@ -406,7 +415,7 @@ class MapViewModelTests {
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun fetchLocationToCenterOn_withNoConsultedItem_returnsEPFL() =
-      runTest(UnconfinedTestDispatcher()) {
+      runTest(testDispatcher) {
         val todosRepo = ToDosLocalRepository()
         val eventsRepo = EventsLocalRepository()
         val mockContext = mockk<Context>(relaxed = true)
@@ -430,7 +439,7 @@ class MapViewModelTests {
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun fetchLocationToCenterOn_withLocationPermissionAndNoConsultedItem_returnsCurrentLocation() =
-      runTest(UnconfinedTestDispatcher()) {
+      runTest(testDispatcher) {
         val todosRepo = ToDosLocalRepository()
         val eventsRepo = EventsLocalRepository()
         val mockContext = mockk<Context>()
@@ -489,7 +498,7 @@ class MapViewModelTests {
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun startAndStopLocationUpdates_managesLocationJob() =
-      runTest(UnconfinedTestDispatcher()) {
+      runTest(testDispatcher) {
         val todosRepo = ToDosLocalRepository()
         val eventsRepo = EventsLocalRepository()
         val mockClient = mockk<FusedLocationProviderClient>(relaxed = true)

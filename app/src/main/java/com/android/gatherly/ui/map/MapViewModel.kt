@@ -38,15 +38,18 @@ import kotlinx.coroutines.withTimeoutOrNull
 /** Default location coordinates for EPFL campus. */
 val EPFL_LATLNG = LatLng(46.5197, 6.5663)
 
+/** Timeout duration for fetching user location. */
+const val LOCATION_FETCH_TIMEOUT = 5000L
+
 /**
  * UI state for the Map screen.
  *
  * @property itemsList of drawable items (incomplete todos or upcoming/current events with valid
  *   locations).
- * @property selectedItemId ID of the todo or event whose marker is currently selected, or null if
- *   none.
- * @property lastConsultedTodoId ID of the most recently consulted todo.
- * @property lastConsultedEventId ID of the most recently consulted event.
+ * @property selectedItemId ID of the `ToDo` or `Event` whose marker is currently selected, or null
+ *   if none.
+ * @property lastConsultedTodoId ID of the most recently consulted `ToDo`.
+ * @property lastConsultedEventId ID of the most recently consulted `Event`.
  * @property cameraPos Current camera position on the map.
  * @property errorMsg Error message to display, or null if no error.
  * @property onSignedOut Flag indicating whether the user has signed out.
@@ -149,6 +152,7 @@ class MapViewModel(
    *
    * @param context The context used to access location services.
    */
+  @Suppress("SuspendFunctionOnCoroutineScope")
   suspend fun initialiseCameraPosition(context: Context) {
     val pos = fetchLocationToCenterOn(context)
     _uiState.update { it.copy(cameraPos = pos) }
@@ -179,13 +183,13 @@ class MapViewModel(
     _uiState.value = _uiState.value.copy(selectedItemId = itemId)
   }
 
-  /** Handles dismissal of the selected marker by clearing the selection. */
+  /** Handles dismissal of an opened modal sheet. */
   fun clearSelection() {
     _uiState.value = _uiState.value.copy(selectedItemId = null)
   }
 
   /**
-   * Handles when an item (todo or event) is consulted by updating the last consulted ID and
+   * Handles when an item (`ToDo` or `Event`) is consulted by updating the last consulted ID and
    * invalidating the camera position to trigger re-centering on return.
    *
    * @param itemId The ID of the item being consulted.
@@ -213,16 +217,17 @@ class MapViewModel(
 
   /**
    * Fetches the location to center the map on based on a priority chain:
-   * 1. Last consulted todo (if any)
-   * 2. Last consulted event (if any)
+   * 1. Last consulted `ToDo` (if any)
+   * 2. Last consulted `Event` (if any)
    * 3. User's current location (with 5-second timeout)
    * 4. EPFL default location (fallback)
    *
    * @param context The context used to access location services.
    * @return The LatLng position to center the camera on.
    */
+  @Suppress("SuspendFunctionOnCoroutineScope")
   suspend fun fetchLocationToCenterOn(context: Context): LatLng {
-    // Check for last consulted todo
+    // Check for last consulted `ToDo`
     if (_uiState.value.lastConsultedTodoId != null) {
       val todo = todoList.find { it.uid == _uiState.value.lastConsultedTodoId }
       if (todo?.location != null) {
@@ -240,7 +245,9 @@ class MapViewModel(
 
     // Try current user location with timeout
     val currentLocation =
-        withTimeoutOrNull(5000L) { fusedLocationClient?.locationFlow(context)?.first() }
+        withTimeoutOrNull(LOCATION_FETCH_TIMEOUT) {
+          fusedLocationClient?.locationFlow(context)?.first()
+        }
 
     if (currentLocation != null) {
       return LatLng(currentLocation.latitude, currentLocation.longitude)
