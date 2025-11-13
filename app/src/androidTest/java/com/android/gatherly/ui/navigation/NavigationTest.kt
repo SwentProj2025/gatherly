@@ -208,7 +208,7 @@ class NavigationTest : FirestoreGatherlyTest() {
 
     composeTestRule.onNodeWithTag(NavigationTestTags.TOP_NAVIGATION_MENU).assertIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(NavigationTestTags.HOMEPAGE_TAB).assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag(NavigationTestTags.HOMEPAGE_TAB).assertIsDisplayed()
 
     composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.MAP_TAB).assertIsDisplayed()
@@ -286,6 +286,19 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.checkProfileScreenIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.MAP_TAB).performClick()
     composeTestRule.checkMapScreenIsDisplayed()
+  }
+
+  /**
+   * Navigation Test: Verifies that when the user is on the profile screen, tapping the home icon
+   * navigates back to the home page.
+   */
+  @Test
+  fun NavigateFromProfileToHomePage() {
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
+    composeTestRule.checkProfileScreenIsDisplayed()
+    composeTestRule.onNodeWithTag(NavigationTestTags.HOMEPAGE_TAB).performClick()
+    composeTestRule.checkHomeScreenIsDisplayed()
   }
 
   // TIMER PART
