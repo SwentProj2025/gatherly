@@ -222,20 +222,13 @@ fun EditToDoScreen(
 
               // Due Date Input
               item {
-                OutlinedTextField(
-                    value = todoUIState.dueDate,
-                    onValueChange = { editTodoViewModel.onDateChanged(it) },
-                    label = { Text(stringResource(R.string.todos_date_field_label)) },
-                    placeholder = { Text(stringResource(R.string.todos_date_field_placeholder)) },
-                    isError = todoUIState.dueDateError != null,
-                    supportingText = {
-                      todoUIState.dueDateError?.let {
-                        Text(it, modifier = Modifier.testTag(EditToDoScreenTestTags.ERROR_MESSAGE))
-                      }
-                    },
-                    colors = textFieldColors,
-                    modifier =
-                        Modifier.fillMaxWidth().testTag(EditToDoScreenTestTags.INPUT_TODO_DATE))
+                DateInputField(
+                    onDateChanged = { editTodoViewModel.onDateChanged(it) },
+                    dueDateError = todoUIState.dueDateError,
+                    textFieldColors = textFieldColors,
+                    testTagInput = EditToDoScreenTestTags.INPUT_TODO_DATE,
+                    testTagErrorMessage = EditToDoScreenTestTags.ERROR_MESSAGE,
+                )
               }
 
               // Due Time Input

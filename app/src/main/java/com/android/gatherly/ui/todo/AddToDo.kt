@@ -206,20 +206,13 @@ fun AddToDoScreen(
 
               // Due Date Input
               item {
-                OutlinedTextField(
-                    value = todoUIState.dueDate,
-                    onValueChange = { addTodoViewModel.onDateChanged(it) },
-                    label = { Text(stringResource(R.string.todos_date_field_label)) },
-                    placeholder = { Text(stringResource(R.string.todos_date_field_placeholder)) },
-                    isError = todoUIState.dueDateError != null,
-                    supportingText = {
-                      todoUIState.dueDateError?.let {
-                        Text(it, modifier = Modifier.testTag(AddToDoScreenTestTags.ERROR_MESSAGE))
-                      }
-                    },
-                    colors = textFieldColors,
-                    modifier =
-                        Modifier.fillMaxWidth().testTag(AddToDoScreenTestTags.INPUT_TODO_DATE))
+                DateInputField(
+                    onDateChanged = { addTodoViewModel.onDateChanged(it) },
+                    dueDateError = todoUIState.dueDateError,
+                    textFieldColors = textFieldColors,
+                    testTagInput = AddToDoScreenTestTags.INPUT_TODO_DATE,
+                    testTagErrorMessage = AddToDoScreenTestTags.ERROR_MESSAGE,
+                )
               }
 
               // Due Time Input
