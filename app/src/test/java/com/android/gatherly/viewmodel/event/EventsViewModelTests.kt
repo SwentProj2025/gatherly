@@ -48,7 +48,11 @@ class EventsViewModelTests {
     mockitoUtils = MockitoUtils()
     mockitoUtils.chooseCurrentUser(EventsViewModelTestsData.TEST_USER_ID)
 
-    vm = EventsViewModel(profileRepository = profileRepo, repository = repo, authProvider = { mockitoUtils.mockAuth })
+    vm =
+        EventsViewModel(
+            profileRepository = profileRepo,
+            repository = repo,
+            authProvider = { mockitoUtils.mockAuth })
   }
 
   @After

@@ -182,9 +182,7 @@ class EventsViewModel(
     ): ViewModelProvider.Factory {
 
       return GenericViewModelFactory {
-        EventsViewModel(
-            profileRepository = profileRepository,
-            repository = eventsRepository)
+        EventsViewModel(profileRepository = profileRepository, repository = eventsRepository)
       }
     }
   }

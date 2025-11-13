@@ -63,7 +63,7 @@ class EventsOverviewScreenTest {
   /** Helper function: set the content of the composeTestRule without initial events */
   private fun setContent(uid: String = currentUserId) {
     mockitoUtils.chooseCurrentUser(uid)
-currentUserId = ""
+    currentUserId = ""
     eventsViewModel =
         EventsViewModel(
             repository = eventsRepository,
