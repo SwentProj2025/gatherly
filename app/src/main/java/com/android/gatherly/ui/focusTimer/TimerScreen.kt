@@ -405,6 +405,8 @@ fun TimerTime(
   val timeRatio = 1.0 / 4.0
   val timeFontSize = 25.sp
 
+  val placeholderAlpha = LocalContext.current.resources.getFloat(R.dimen.alpha_placeholder)
+
   Column(modifier = Modifier.width((configuration.screenWidthDp * timeRatio).dp)) {
     // Text field displaying the chosen hours, minutes or seconds
     TextField(
@@ -417,8 +419,7 @@ fun TimerTime(
                 textAlign = TextAlign.Center,
                 fontWeight = FontWeight.Bold,
                 fontSize = timeFontSize,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f) // softer
-                )
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = placeholderAlpha))
           }
         },
         shape = RoundedCornerShape(corner),
