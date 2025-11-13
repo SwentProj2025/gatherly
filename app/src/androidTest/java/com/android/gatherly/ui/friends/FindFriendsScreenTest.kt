@@ -261,7 +261,11 @@ class FindFriendsScreenTest {
 
       currentUserId = aliceProfile.uid
 
-      friendsViewModel = FriendsViewModel(profileRepository, currentUserId)
+      // Mock Firebase Auth
+      mockitoUtils = MockitoUtils()
+      mockitoUtils.chooseCurrentUser(currentUserId)
+
+      friendsViewModel = FriendsViewModel(profileRepository, { mockitoUtils.mockAuth })
 
       composeTestRule.setContent { FindFriendsScreen(friendsViewModel) }
 
