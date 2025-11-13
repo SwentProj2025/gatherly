@@ -6,6 +6,7 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
+import com.android.gatherly.utils.MockitoUtils
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
@@ -25,10 +26,18 @@ class ProfileScreenTest {
   private lateinit var profileRepository: ProfileRepository
   private lateinit var profileViewModel: ProfileViewModel
 
+  private lateinit var mockitoUtils: MockitoUtils
+
   private fun setContent() {
     profileRepository = ProfileLocalRepository()
     fill_repository()
-    profileViewModel = ProfileViewModel(profileRepository)
+
+    // Mock Firebase Auth
+    mockitoUtils = MockitoUtils()
+    mockitoUtils.chooseCurrentUser("")
+
+    profileViewModel =
+        ProfileViewModel(repository = profileRepository, authProvider = { mockitoUtils.mockAuth })
     composeTestRule.setContent { ProfileScreen(profileViewModel = profileViewModel) }
   }
 
