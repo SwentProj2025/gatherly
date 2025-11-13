@@ -39,9 +39,9 @@ import kotlinx.coroutines.launch
 data class TimerState(
     val plannedDuration: Duration = Duration.ZERO,
     val remainingTime: Duration = Duration.ZERO,
-    val hours: String = "00",
-    val minutes: String = "00",
-    val seconds: String = "00",
+    val hours: String = "",
+    val minutes: String = "",
+    val seconds: String = "",
     val isPaused: Boolean = false,
     val isStarted: Boolean = false,
     val errorMsg: String? = null,
