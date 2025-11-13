@@ -99,7 +99,7 @@ class EventsViewModel(
                   it.creatorId != currentUserId && !it.participants.contains(currentUserId)
                 },
             currentUserId = currentUserId,
-            isAnon = Firebase.auth.currentUser?.isAnonymous ?: true)
+            isAnon = authProvider().currentUser?.isAnonymous ?: true)
   }
 
   /**

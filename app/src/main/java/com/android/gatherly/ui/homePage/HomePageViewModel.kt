@@ -58,7 +58,7 @@ class HomePageViewModel(
         val events = eventsRepository.getAllEvents()
         val profile = profileRepository.getProfileByUid(authProvider().currentUser?.uid!!)!!
         val friends = profile.friendUids.take(3).map { profileRepository.getProfileByUid(it)!! }
-        val isAnon = Firebase.auth.currentUser?.isAnonymous ?: true
+        val isAnon = authProvider().currentUser?.isAnonymous ?: true
 
         _uiState.value =
             _uiState.value.copy(

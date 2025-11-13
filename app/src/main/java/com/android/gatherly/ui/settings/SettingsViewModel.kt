@@ -119,7 +119,7 @@ class SettingsViewModel(
       try {
         _uiState.value = _uiState.value.copy(isLoadingProfile = true)
         _uiState.value =
-            _uiState.value.copy(isAnon = Firebase.auth.currentUser?.isAnonymous ?: true)
+            _uiState.value.copy(isAnon = authProvider().currentUser?.isAnonymous ?: true)
         val profile = repository.getProfileByUid(profileUID) ?: Profile(uid = profileUID, name = "")
         originalProfile = profile
         _uiState.value =

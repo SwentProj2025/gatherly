@@ -76,7 +76,7 @@ class ProfileViewModel(
         return@launch
       }
 
-      _uiState.value = _uiState.value.copy(isAnon = Firebase.auth.currentUser?.isAnonymous ?: true)
+      _uiState.value = _uiState.value.copy(isAnon = authProvider().currentUser?.isAnonymous ?: true)
 
       try {
         val profile = repository.getProfileByUid(authProvider().currentUser?.uid!!)
