@@ -1,6 +1,7 @@
 package com.android.gatherly.model.profile
 
 import android.net.Uri
+import android.util.Log
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
@@ -194,7 +195,9 @@ class ProfileRepositoryFirestore(
       doc.update("profilePicture", downloadUrl).await()
       return downloadUrl
     } finally {
-      tempFile?.delete()
+      if (tempFile != null && !tempFile.delete()) {
+        Log.w("ProfileRepository", "Temporary file ${tempFile.path} could not be deleted.")
+      }
     }
   }
 
