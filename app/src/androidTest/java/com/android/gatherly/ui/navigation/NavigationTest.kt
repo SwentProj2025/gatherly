@@ -753,7 +753,6 @@ class NavigationTest : FirestoreGatherlyTest() {
    * avoiding repetitive performClick calls.
    */
   fun ComposeTestRule.navigateFromHomeToOverview() {
-    setUpWithGoogle()
     onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
     onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
     onNodeWithTag(NavigationTestTags.OVERVIEW_TAB).performClick()

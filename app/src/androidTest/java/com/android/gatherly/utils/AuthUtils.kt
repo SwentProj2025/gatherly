@@ -140,7 +140,7 @@ class MockitoUtils {
   fun chooseCurrentUser(currentUser: String, isAnon: Boolean = false) {
     `when`(mockAuth.currentUser).thenReturn(mockUser)
     `when`(mockUser.uid).thenReturn(currentUser)
-    `when`(mockUser.isAnonymous).thenReturn(false)
+    `when`(mockUser.isAnonymous).thenReturn(isAnon)
   }
 
   /** For tests that want to test with an unauthenticated user */

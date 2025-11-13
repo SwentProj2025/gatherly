@@ -118,8 +118,6 @@ class SettingsViewModel(
     viewModelScope.launch {
       try {
         _uiState.value = _uiState.value.copy(isLoadingProfile = true)
-        _uiState.value =
-            _uiState.value.copy(isAnon = authProvider().currentUser?.isAnonymous ?: true)
         val profile = repository.getProfileByUid(profileUID) ?: Profile(uid = profileUID, name = "")
         originalProfile = profile
         _uiState.value =
@@ -136,7 +134,8 @@ class SettingsViewModel(
                           dateFormat.format(profile.birthday.toDate())
                       else ""
                     },
-                isLoadingProfile = false)
+                isLoadingProfile = false,
+                isAnon = authProvider().currentUser?.isAnonymous ?: true)
       } catch (e: Exception) {
         Log.e("SettingsViewModel", "Error loading Profile by uid: $profileUID", e)
         setErrorMsg("Failed to load Profile: ${e.message}")
