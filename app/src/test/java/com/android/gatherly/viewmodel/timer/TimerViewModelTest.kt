@@ -430,4 +430,33 @@ class TimerViewModelTest {
 
     verify(statusManagerMock, times(1)).setStatus(ProfileStatus.ONLINE)
   }
+
+  /**
+   * Check that when the timer naturally runs out (reaches 00:00:00), the user status is set back to
+   * ONLINE.
+   */
+  @Test
+  fun timer_runs_out_sets_status_online() = runTest {
+    viewModel.setHours("00")
+    viewModel.setMinutes("00")
+    viewModel.setSeconds("03")
+
+    viewModel.startTimer()
+    advanceUntilIdle()
+
+    withContext(Dispatchers.Default.limitedParallelism(1)) {
+      withTimeout(7000L) {
+        while (viewModel.uiState.value.let {
+          it.hours != "00" || it.minutes != "00" || it.seconds != "00"
+        }) {
+          delay(100)
+        }
+      }
+    }
+
+    advanceUntilIdle()
+
+    verify(statusManagerMock, times(1)).setStatus(ProfileStatus.FOCUSED)
+    verify(statusManagerMock, times(1)).setStatus(ProfileStatus.ONLINE)
+  }
 }
