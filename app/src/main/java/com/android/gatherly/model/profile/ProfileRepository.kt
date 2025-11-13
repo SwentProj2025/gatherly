@@ -1,6 +1,7 @@
 package com.android.gatherly.model.profile
 
 import android.net.Uri
+import com.android.gatherly.model.badge.Badge
 import com.android.gatherly.model.friends.Friends
 
 /**
@@ -115,6 +116,8 @@ interface ProfileRepository {
   /** Creates a profile. This is to be used only for testing purpose. */
   suspend fun addProfile(profile: Profile)
 
+  // -- FRIENDS GESTION PART --
+
   /**
    * Retrieves the list of current user's friends (as usernames) and the list of other users who are
    * not friends (as usernames).
@@ -145,4 +148,15 @@ interface ProfileRepository {
    * @param currentUserId the ID of the current user
    */
   suspend fun addFriend(friend: String, currentUserId: String)
+
+  // -- BADGES GESTION PART --
+
+  /**
+   * Triggers the badges that the user won
+   *
+   * @param userProfile corresponds to the profile of the user we want to know his badges
+   */
+  suspend fun updateBadges(userProfile : Profile)
+
+
 }

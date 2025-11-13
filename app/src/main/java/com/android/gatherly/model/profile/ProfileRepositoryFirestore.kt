@@ -1,6 +1,8 @@
 package com.android.gatherly.model.profile
 
 import android.net.Uri
+import com.android.gatherly.model.badge.Badge
+import com.android.gatherly.model.badge.Rank
 import com.android.gatherly.model.friends.Friends
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
@@ -256,6 +258,7 @@ class ProfileRepositoryFirestore(
     val schoolYear = doc.getString("schoolYear") ?: ""
     val birthday = doc.getTimestamp("birthday")
     val profilePicture = doc.getString("profilePicture") ?: return null
+      val badges = doc.get("badges") as? Badge ?: Badge.blank
 
     return Profile(
         uid = uid,
@@ -268,7 +271,8 @@ class ProfileRepositoryFirestore(
         school = school,
         schoolYear = schoolYear,
         birthday = birthday,
-        profilePicture = profilePicture)
+        profilePicture = profilePicture,
+        badges = badges)
   }
 
   /**
@@ -329,4 +333,25 @@ class ProfileRepositoryFirestore(
     val friendId = getProfileByUsername(friend)?.uid
     docRef.update("friendUids", FieldValue.arrayRemove(friendId)).await()
   }
+
+    override suspend fun updateBadges(userProfile: Profile) {
+        val docRef = profilesCollection.document(userProfile.uid)
+        val updateBadges = Badge(
+            addFriends = rank(userProfile.friendUids.size),
+            createTodo = Rank.BLANK,
+            createEvent = rank(userProfile.eventIds.size),
+            participateEvent = Rank.BLANK,
+            focusSessionPoint = rank(userProfile.focusSessionIds.size)
+        )
+        docRef.update("badges", updateBadges).await()
+    }
+
+    private fun rank(count: Int): Rank = when {
+        count >= 20 -> Rank.LEGEND
+        count >= 10 -> Rank.DIAMOND
+        count >= 5 -> Rank.GOLD
+        count >= 3 -> Rank.BRONZE
+        count >= 1 -> Rank.STARTING
+        else -> Rank.BLANK
+    }
 }
