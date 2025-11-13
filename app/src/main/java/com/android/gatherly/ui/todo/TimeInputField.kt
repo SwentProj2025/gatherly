@@ -77,6 +77,10 @@ fun TimeInputField(
   )
 }
 
+/**
+ * Formats the input string into "HH:mm" format as the user types. Non-digit characters are removed,
+ * and a delimiter is inserted at the appropriate position.
+ */
 private fun formatTimeInput(input: String): String {
   // Remove any non-digit characters
   val digits = input.filter { it.isDigit() }.take(4) // Limit to HHmm

@@ -77,6 +77,10 @@ fun DateInputField(
   )
 }
 
+/**
+ * Formats the input string into "dd/MM/yyyy" format as the user types. Non-digit characters are
+ * removed, and slashes are inserted at appropriate positions.
+ */
 private fun formatDateInput(input: String): String {
   // Remove any non-digit characters
   val digits = input.filter { it.isDigit() }.take(8) // Limit to ddMMyyyy
