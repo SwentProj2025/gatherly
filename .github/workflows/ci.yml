@@ -172,7 +172,7 @@ jobs:
       - name: Run tests
         run: |
           # To run the CI with debug information, add --info
-          ./gradlew check --parallel --build-cache
+          ./gradlew check --parallel --build-cache --stacktrace
 
       # Start Firebase emulators for instrumentation tests
       - name: Start Firebase emulators
@@ -196,7 +196,7 @@ jobs:
           force-avd-creation: false
           emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
-          script: ./gradlew connectedCheck --parallel --build-cache
+          script: ./gradlew connectedCheck --parallel --build-cache --stacktrace
 
       # This step generates the coverage report which will be uploaded to sonar
       - name: Generate Coverage Report

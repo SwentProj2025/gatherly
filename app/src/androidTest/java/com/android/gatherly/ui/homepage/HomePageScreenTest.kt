@@ -167,6 +167,8 @@ class HomePageScreenTest {
   @Test
   fun anonUserHasNoFriends() {
     // Create Screen with anonymous user
+    // Mock Firebase Auth
+    mockitoUtils = MockitoUtils()
     mockitoUtils.chooseCurrentUser(currentProfile.uid, true)
     fakeViewModel =
         HomePageViewModel(
