@@ -10,6 +10,7 @@ import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsRepository
 import com.android.gatherly.model.event.EventsRepositoryFirestore
 import com.android.gatherly.utils.GenericViewModelFactory
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
@@ -34,6 +35,7 @@ data class UIState(
         emptyList(), // Events neither created by nor participated in by current user
     val signedOut: Boolean = false,
     val errorMsg: String? = null,
+    val currentUserId: String = "",
     val isAnon: Boolean = true
 )
 /**
@@ -52,8 +54,10 @@ private fun getDrawableEvents(events: List<Event>): List<Event> {
  *
  * @param repository the repository to fetch events from
  */
-class EventsViewModel(private val repository: EventsRepository, val currentUserId: String) :
-    ViewModel() {
+class EventsViewModel(
+    private val repository: EventsRepository,
+    private val authProvider: () -> FirebaseAuth = { Firebase.auth }
+) : ViewModel() {
   private val _uiState: MutableStateFlow<UIState> = MutableStateFlow(UIState())
 
   /**
@@ -72,7 +76,7 @@ class EventsViewModel(private val repository: EventsRepository, val currentUserI
    * categorized into created, participated, and global lists.
    */
   init {
-    viewModelScope.launch { refreshEvents(currentUserId) }
+    viewModelScope.launch { refreshEvents(authProvider().currentUser?.uid ?: "") }
   }
 
   /**
@@ -94,6 +98,7 @@ class EventsViewModel(private val repository: EventsRepository, val currentUserI
                 events.filter {
                   it.creatorId != currentUserId && !it.participants.contains(currentUserId)
                 },
+            currentUserId = currentUserId,
             isAnon = Firebase.auth.currentUser?.isAnonymous ?: true)
   }
 
@@ -165,10 +170,9 @@ class EventsViewModel(private val repository: EventsRepository, val currentUserI
    */
   companion object {
     fun provideFactory(
-        eventsRepository: EventsRepository = EventsRepositoryFirestore(Firebase.firestore),
-        currentUserId: String = Firebase.auth.currentUser?.uid ?: ""
+        eventsRepository: EventsRepository = EventsRepositoryFirestore(Firebase.firestore)
     ): ViewModelProvider.Factory {
-      return GenericViewModelFactory { EventsViewModel(eventsRepository, currentUserId) }
+      return GenericViewModelFactory { EventsViewModel(eventsRepository) }
     }
   }
 }

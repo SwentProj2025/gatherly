@@ -7,6 +7,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
+import com.android.gatherly.utils.MockitoUtils
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -37,14 +38,19 @@ class SettingsScreenTest {
 
   private lateinit var profileRepository: ProfileRepository
   private lateinit var settingsViewModel: SettingsViewModel
+  private lateinit var mockitoUtils: MockitoUtils
 
   @Before
   fun setUp() {
     profileRepository = ProfileLocalRepository()
     fill_repository()
 
+    // Mock Firebase Auth
+    mockitoUtils = MockitoUtils()
+    mockitoUtils.chooseCurrentUser("currentUser")
+
     settingsViewModel =
-        SettingsViewModel(repository = profileRepository, currentUser = "currentUser")
+        SettingsViewModel(repository = profileRepository, authProvider = { mockitoUtils.mockAuth })
     composeRule.setContent { SettingsScreen(settingsViewModel) }
   }
 

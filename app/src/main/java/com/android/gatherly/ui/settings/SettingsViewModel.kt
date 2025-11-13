@@ -22,6 +22,7 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.Companion.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.auth
 import java.text.SimpleDateFormat
@@ -75,7 +76,7 @@ data class SettingsUiState(
  */
 class SettingsViewModel(
     private val repository: ProfileRepository = ProfileRepositoryProvider.repository,
-    private val currentUser: String = Firebase.auth.currentUser?.uid ?: ""
+    private val authProvider: () -> FirebaseAuth = { Firebase.auth }
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(SettingsUiState())
   val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
@@ -106,7 +107,7 @@ class SettingsViewModel(
   }
 
   init {
-    loadProfile(currentUser)
+    loadProfile(authProvider().currentUser?.uid ?: "")
   }
   /**
    * Loads a Profile by its ID and updates the UI state.
@@ -148,7 +149,7 @@ class SettingsViewModel(
    *
    * @param id The id of the Profile to be updated.
    */
-  fun updateProfile(id: String = currentUser, isFirstTime: Boolean) {
+  fun updateProfile(id: String = authProvider().currentUser?.uid!!, isFirstTime: Boolean) {
     val state = _uiState.value
     if (!state.isValid) {
       setErrorMsg("At least one field is not valid.")
@@ -165,30 +166,15 @@ class SettingsViewModel(
 
     viewModelScope.launch {
       try {
-        val usernameChanged = state.username != originalProfile?.username
-        val usernameSuccess =
-            if (isFirstTime) {
-              repository.registerUsername(id, state.username)
-            } else if (!usernameChanged) {
-              true
-            } else {
-              repository.updateUsername(id, originalProfile?.username, state.username)
-            }
-
-        if (!usernameSuccess) {
+        if (!checkUsernameSuccess(state, id, isFirstTime)) {
           setErrorMsg("Username is invalid or already taken.")
           return@launch
         }
 
         val newProfilePictureUrl =
             if (state.profilePictureUrl.isNotBlank() &&
-                (state.profilePictureUrl != originalProfile?.profilePicture)) {
-              val parsedUri = Uri.parse(state.profilePictureUrl)
-              if (parsedUri?.scheme == "content") {
-                repository.updateProfilePic(id, parsedUri)
-              } else {
-                state.profilePictureUrl
-              }
+                state.profilePictureUrl != originalProfile?.profilePicture) {
+              repository.updateProfilePic(id, Uri.parse(state.profilePictureUrl))
             } else {
               originalProfile?.profilePicture.orEmpty()
             }
@@ -329,6 +315,29 @@ class SettingsViewModel(
         _uiState.value =
             _uiState.value.copy(invalidUsernameMsg = "Unable to verify username availability")
       }
+    }
+  }
+
+  /**
+   * Checks the validity of a user's chosen username, true if the user can change to the new
+   * username, false otherwise
+   *
+   * @param state the state of the UI when the user pressed save
+   * @param id the users uid
+   * @param isFirstTime true if the user is new
+   */
+  private suspend fun checkUsernameSuccess(
+      state: SettingsUiState,
+      id: String,
+      isFirstTime: Boolean
+  ): Boolean {
+    val usernameChanged = state.username != originalProfile?.username
+    return if (isFirstTime) {
+      repository.registerUsername(id, state.username)
+    } else if (!usernameChanged) {
+      true
+    } else {
+      repository.updateUsername(id, originalProfile?.username, state.username)
     }
   }
 }

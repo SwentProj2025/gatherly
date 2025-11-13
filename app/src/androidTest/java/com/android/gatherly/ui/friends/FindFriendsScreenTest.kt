@@ -11,6 +11,7 @@ import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.ui.navigation.NavigationTestTags
+import com.android.gatherly.utils.MockitoUtils
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -25,6 +26,7 @@ class FindFriendsScreenTest {
   private lateinit var currentUserId: String
   private lateinit var friendsViewModel: FriendsViewModel
   private lateinit var profileRepository: ProfileRepository
+  private lateinit var mockitoUtils: MockitoUtils
 
   /**
    * Helper function: set the content of the composeTestRule with currentUserID Bob who have no
@@ -41,7 +43,12 @@ class FindFriendsScreenTest {
 
       currentUserId = bobProfile.uid
 
-      friendsViewModel = FriendsViewModel(profileRepository, currentUserId)
+      // Mock Firebase Auth
+      mockitoUtils = MockitoUtils()
+      mockitoUtils.chooseCurrentUser(currentUserId)
+
+      friendsViewModel =
+          FriendsViewModel(profileRepository, authProvider = { mockitoUtils.mockAuth })
 
       addProfiles()
 
@@ -64,7 +71,12 @@ class FindFriendsScreenTest {
 
       currentUserId = aliceProfile.uid
 
-      friendsViewModel = FriendsViewModel(profileRepository, currentUserId)
+      // Mock Firebase Auth
+      mockitoUtils = MockitoUtils()
+      mockitoUtils.chooseCurrentUser(currentUserId)
+
+      friendsViewModel =
+          FriendsViewModel(profileRepository, authProvider = { mockitoUtils.mockAuth })
 
       composeTestRule.setContent { FindFriendsScreen(friendsViewModel) }
     }
