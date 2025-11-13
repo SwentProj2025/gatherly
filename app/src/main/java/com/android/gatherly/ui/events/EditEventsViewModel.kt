@@ -17,6 +17,7 @@ import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.android.gatherly.utils.GenericViewModelFactory
+import com.android.gatherly.utils.cancelEvent
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.firestore
 import com.google.firebase.firestore.ktx.firestore
@@ -400,9 +401,7 @@ class EditEventsViewModel(
   fun deleteEvent() {
     // Call event repository
     viewModelScope.launch {
-      eventsRepository.deleteEvent(eventId)
-      profileRepository.deleteEvent(eventId, creatorId)
-      profileRepository.allUnregisterEvent(eventId, participants)
+      cancelEvent(eventsRepository, profileRepository, eventId, creatorId, participants)
     }
     uiState = uiState.copy(backToOverview = true)
   }

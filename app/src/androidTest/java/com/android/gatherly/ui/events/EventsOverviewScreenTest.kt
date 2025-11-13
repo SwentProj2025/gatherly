@@ -66,7 +66,7 @@ class EventsOverviewScreenTest {
     currentUserId = ""
     eventsViewModel =
         EventsViewModel(
-            repository = eventsRepository,
+            eventsRepository = eventsRepository,
             profileRepository = profileRepository,
             authProvider = { mockitoUtils.mockAuth })
     composeTestRule.setContent { EventsScreen(eventsViewModel = eventsViewModel) }

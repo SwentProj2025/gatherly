@@ -17,6 +17,7 @@ import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.android.gatherly.utils.GenericViewModelFactory
+import com.android.gatherly.utils.createEvent
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
@@ -391,10 +392,8 @@ class AddEventViewModel(
 
       // Save in event repository
       viewModelScope.launch {
-        eventsRepository.addEvent(event)
-        profileRepository.createEvent(eventId, currentProfile.uid)
-        profileRepository.allParticipateEvent(eventId, participants)
-
+        createEvent(
+            eventsRepository, profileRepository, event, currentProfile.uid, participants)
         uiState = uiState.copy(displayToast = true, toastString = "Saved")
       }
 

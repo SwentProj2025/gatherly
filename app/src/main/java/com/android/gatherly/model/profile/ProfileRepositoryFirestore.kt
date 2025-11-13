@@ -368,11 +368,17 @@ class ProfileRepositoryFirestore(
 
   override suspend fun participateEvent(eventId: String, currentUserId: String) {
     val docRef = profilesCollection.document(currentUserId)
+      Log.e("participateEvent", "ParticipateEvent ${currentUserId}")
     docRef.update("participatingEventIds", FieldValue.arrayUnion(eventId)).await()
+      Log.e("adncpwqdc", "participateEvent after ${currentUserId}")
   }
 
   override suspend fun allParticipateEvent(eventId: String, participants: List<String>) {
-    participants.forEach { participant -> participateEvent(eventId, participant) }
+    participants.forEach { participant ->
+        Log.e("profilerepofirestore", "permission denied in all participate event ${participant}")
+        participateEvent(eventId, participant)
+        Log.e("helpl", "help")
+    }
   }
 
   override suspend fun unregisterEvent(eventId: String, currentUserId: String) {

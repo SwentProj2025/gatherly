@@ -51,7 +51,7 @@ class EventsViewModelTests {
     vm =
         EventsViewModel(
             profileRepository = profileRepo,
-            repository = repo,
+            eventsRepository = repo,
             authProvider = { mockitoUtils.mockAuth })
   }
 
