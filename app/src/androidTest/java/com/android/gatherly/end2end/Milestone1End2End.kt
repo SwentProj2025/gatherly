@@ -31,12 +31,6 @@ class Milestone1End2End : FirestoreGatherlyTest() {
       GrantPermissionRule.grant(
           Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
 
-  // Grant location permissions for the tests (required!)
-  @get:Rule
-  val permissionRule: GrantPermissionRule =
-      GrantPermissionRule.grant(
-          Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
-
   val TIMEOUT = 5000L
 
   // set content
