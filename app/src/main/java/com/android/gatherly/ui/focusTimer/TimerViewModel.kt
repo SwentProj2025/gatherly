@@ -56,10 +56,11 @@ data class TimerState(
  * ViewModel that manages a focus countdown timer
  *
  * @param todoRepository The repository used to fetch and manage ToDos
+ * @param userStatusManager Updates the current user's online/offline status.
  */
 class TimerViewModel(
     private val todoRepository: ToDosRepository = ToDosRepositoryProvider.repository,
-    private val userStatusManager: UserStatusManager = UserStatusManager()
+    private val userStatusManager: UserStatusManager = UserStatusManager(),
 ) : ViewModel() {
 
   private val _uiState = MutableStateFlow(TimerState())
