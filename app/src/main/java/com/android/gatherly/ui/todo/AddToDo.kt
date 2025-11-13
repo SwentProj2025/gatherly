@@ -207,6 +207,7 @@ fun AddToDoScreen(
               // Due Date Input
               item {
                 DateInputField(
+                    initialDate = todoUIState.dueDate,
                     onDateChanged = { addTodoViewModel.onDateChanged(it) },
                     dueDateError = todoUIState.dueDateError,
                     textFieldColors = textFieldColors,
@@ -218,6 +219,7 @@ fun AddToDoScreen(
               // Due Time Input
               item {
                 TimeInputField(
+                    initialTime = todoUIState.dueTime,
                     onTimeChanged = { addTodoViewModel.onTimeChanged(it) },
                     dueTimeError = todoUIState.dueTimeError,
                     textFieldColors = textFieldColors,
