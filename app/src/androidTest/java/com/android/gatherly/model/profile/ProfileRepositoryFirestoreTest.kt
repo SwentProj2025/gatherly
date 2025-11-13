@@ -442,4 +442,58 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     // Both metadata should exist but may have different updated timestamps
     assertTrue(metadata2.updatedTimeMillis >= metadata1.updatedTimeMillis)
   }
+
+  @Test
+  fun initProfileIfMissing_setsDefaultStatusOffline() = runTest {
+    val uid = FirebaseEmulator.auth.currentUser!!.uid
+
+    repository.initProfileIfMissing(uid, defaultPhotoUrl = "default.png")
+    val profile = repository.getProfileByUid(uid)
+
+    assertNotNull(profile)
+    // New profiles should default to OFFLINE
+    assertEquals(ProfileStatus.OFFLINE, profile!!.status)
+  }
+
+  @Test
+  fun updateStatus_savesCorrectlyInFirestore() = runTest {
+    val uid = FirebaseEmulator.auth.currentUser!!.uid
+    repository.initProfileIfMissing(uid, defaultPhotoUrl = "default.png")
+
+    // Set status to ONLINE
+    repository.updateStatus(uid, ProfileStatus.ONLINE)
+
+    val profile = repository.getProfileByUid(uid)
+    assertEquals(ProfileStatus.ONLINE, profile!!.status)
+
+    // Set status back to OFFLINE
+    repository.updateStatus(uid, ProfileStatus.OFFLINE)
+    val updatedProfile = repository.getProfileByUid(uid)
+    assertEquals(ProfileStatus.OFFLINE, updatedProfile!!.status)
+  }
+
+  @Test
+  fun getProfileByUid_convertsStatusStringToEnum() = runTest {
+    val uid = FirebaseEmulator.auth.currentUser!!.uid
+    repository.initProfileIfMissing(uid, defaultPhotoUrl = "default.png")
+
+    // Directly update Firestore with a string
+    FirebaseEmulator.firestore
+        .collection("profiles")
+        .document(uid)
+        .update("status", "online")
+        .await()
+
+    val profile = repository.getProfileByUid(uid)
+    assertEquals(ProfileStatus.ONLINE, profile!!.status)
+
+    // Unknown string should default to OFFLINE
+    FirebaseEmulator.firestore
+        .collection("profiles")
+        .document(uid)
+        .update("status", "unknown")
+        .await()
+    val profile2 = repository.getProfileByUid(uid)
+    assertEquals(ProfileStatus.OFFLINE, profile2!!.status)
+  }
 }

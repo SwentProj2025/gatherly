@@ -255,6 +255,7 @@ class ProfileRepositoryFirestore(
     val schoolYear = doc.getString("schoolYear") ?: ""
     val birthday = doc.getTimestamp("birthday")
     val profilePicture = doc.getString("profilePicture") ?: return null
+    val status = ProfileStatus.fromString(doc.getString("status"))
 
     return Profile(
         uid = uid,
@@ -267,7 +268,8 @@ class ProfileRepositoryFirestore(
         school = school,
         schoolYear = schoolYear,
         birthday = birthday,
-        profilePicture = profilePicture)
+        profilePicture = profilePicture,
+        status = status)
   }
 
   /**
@@ -288,7 +290,8 @@ class ProfileRepositoryFirestore(
         "school" to profile.school,
         "schoolYear" to profile.schoolYear,
         "birthday" to profile.birthday,
-        "profilePicture" to profile.profilePicture)
+        "profilePicture" to profile.profilePicture,
+        "status" to profile.status.value)
   }
 
   override suspend fun getListNoFriends(currentUserId: String): List<String> {
@@ -314,5 +317,9 @@ class ProfileRepositoryFirestore(
     val docRef = profilesCollection.document(currentUserId)
     val friendId = getProfileByUsername(friend)?.uid
     docRef.update("friendUids", FieldValue.arrayRemove(friendId)).await()
+  }
+
+  override suspend fun updateStatus(uid: String, status: ProfileStatus) {
+    profilesCollection.document(uid).update("status", status.value).await()
   }
 }

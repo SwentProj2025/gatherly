@@ -127,4 +127,12 @@ class ProfileLocalRepository : ProfileRepository {
       updateProfile(updatedProfile)
     }
   }
+
+  override suspend fun updateStatus(uid: String, status: ProfileStatus) {
+    val index = profiles.indexOfFirst { it.uid == uid }
+    if (index != -1) {
+      val existing = profiles[index]
+      profiles[index] = existing.copy(status = status)
+    }
+  }
 }
