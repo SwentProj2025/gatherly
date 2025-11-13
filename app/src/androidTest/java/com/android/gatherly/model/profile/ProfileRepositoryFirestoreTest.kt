@@ -494,4 +494,62 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
 
     assertArrayEquals(expectedBytes, uploadedBytes.take(expectedBytes.size).toByteArray())
   }
+
+  /** Test: Verifies that the friendUsernames list and nonFriendUsernames list are correctly set. */
+  @Test
+  fun test_getFriendsAndNonFriendsUsernames_success() = runTest {
+    val auth = FirebaseEmulator.auth
+    val firestore = FirebaseEmulator.firestore
+    val storage = FirebaseEmulator.storage
+    val repo = ProfileRepositoryFirestore(firestore, storage)
+
+    // User B
+    auth.signInAnonymously().await()
+    val userBUid = auth.currentUser!!.uid
+    repo.initProfileIfMissing(userBUid, "bob.png")
+    repo.registerUsername(userBUid, "bob")
+    auth.signOut()
+
+    //  User C
+    auth.signInAnonymously().await()
+    val userCUid = auth.currentUser!!.uid
+    repo.initProfileIfMissing(userCUid, "charlie.png")
+    repo.registerUsername(userCUid, "charlie")
+    auth.signOut()
+
+    // User A current user
+    auth.signInAnonymously().await()
+    val userAUid = auth.currentUser!!.uid
+    repo.initProfileIfMissing(userAUid, "alice.png")
+    repo.registerUsername(userAUid, "alice")
+
+    repo.addFriend("bob", userAUid)
+
+    var updatedProfileA: Profile? = repo.getProfileByUid(userAUid)
+    withContext(Dispatchers.Default.limitedParallelism(1)) {
+      withTimeout(TIMEOUT) {
+        while (updatedProfileA?.friendUids?.contains(userBUid) != true) {
+          updatedProfileA = repo.getProfileByUid(userAUid)
+          delay(DELAY)
+        }
+      }
+    }
+
+    val friendsResult = repo.getFriendsAndNonFriendsUsernames(userAUid)
+
+    assertEquals(1, friendsResult.friendUsernames.size)
+    assertTrue(friendsResult.friendUsernames.contains("bob"))
+
+    assertEquals(1, friendsResult.nonFriendUsernames.size)
+    assertTrue(friendsResult.nonFriendUsernames.contains("charlie"))
+
+    assertFalse(friendsResult.friendUsernames.contains("alice"))
+    assertFalse(friendsResult.nonFriendUsernames.contains("alice"))
+  }
+
+  /** Test : */
+  @Test(expected = NoSuchElementException::class)
+  fun test_getFriendsAndNonFriendsUsernames_throwsIfProfileMissing() = runTest {
+    repository.getFriendsAndNonFriendsUsernames("non_existent_uid")
+  }
 }
