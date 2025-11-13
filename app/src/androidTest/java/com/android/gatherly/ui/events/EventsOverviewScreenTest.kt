@@ -19,6 +19,7 @@ import com.android.gatherly.model.event.EventsRepository
 import com.android.gatherly.model.map.Location
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.utils.GatherlyTest.Companion.fromDate
+import com.android.gatherly.utils.MockitoUtils
 import com.android.gatherly.utils.UI_WAIT_TIMEOUT
 import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
@@ -37,11 +38,15 @@ class EventsOverviewScreenTest {
   private lateinit var currentUserId: String
   private lateinit var eventsRepository: EventsRepository
   private lateinit var eventsViewModel: EventsViewModel
+  private lateinit var mockitoUtils: MockitoUtils
 
   @Before
   fun setUp() {
     eventsRepository = EventsLocalRepository()
     currentUserId = ""
+
+    // Mock Firebase Auth
+    mockitoUtils = MockitoUtils()
   }
 
   private val dateB = Timestamp.Companion.fromDate(2025, Calendar.OCTOBER, 25)
@@ -52,8 +57,10 @@ class EventsOverviewScreenTest {
 
   /** Helper function: set the content of the composeTestRule without initial events */
   private fun setContent(uid: String = currentUserId) {
-    currentUserId = ""
-    eventsViewModel = EventsViewModel(repository = eventsRepository, currentUserId = uid)
+    mockitoUtils.chooseCurrentUser(uid)
+
+    eventsViewModel =
+        EventsViewModel(repository = eventsRepository, authProvider = { mockitoUtils.mockAuth })
     composeTestRule.setContent { EventsScreen(eventsViewModel = eventsViewModel) }
   }
 
