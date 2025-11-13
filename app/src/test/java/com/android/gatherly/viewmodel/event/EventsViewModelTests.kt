@@ -5,6 +5,7 @@ import com.android.gatherly.model.event.EventsLocalRepository
 import com.android.gatherly.model.event.EventsRepository
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.ui.events.EventsViewModel
+import com.android.gatherly.utilstest.MockitoUtils
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -34,6 +35,7 @@ class EventsViewModelTests {
 
   private lateinit var profileRepo: ProfileLocalRepository
   private lateinit var vm: EventsViewModel
+  private lateinit var mockitoUtils: MockitoUtils
 
   @Before
   fun setup() {
@@ -41,7 +43,12 @@ class EventsViewModelTests {
     repo = EventsLocalRepository()
     profileRepo = ProfileLocalRepository()
     fillRepository()
-    vm = EventsViewModel(profileRepo, repo, EventsViewModelTestsData.TEST_USER_ID)
+
+    // Mock Firebase Auth
+    mockitoUtils = MockitoUtils()
+    mockitoUtils.chooseCurrentUser(EventsViewModelTestsData.TEST_USER_ID)
+
+    vm = EventsViewModel(profileRepository = profileRepo, repository = repo, authProvider = { mockitoUtils.mockAuth })
   }
 
   @After

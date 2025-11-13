@@ -21,6 +21,7 @@ import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.utils.GatherlyTest.Companion.fromDate
+import com.android.gatherly.utils.MockitoUtils
 import com.android.gatherly.utils.UI_WAIT_TIMEOUT
 import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
@@ -41,12 +42,16 @@ class EventsOverviewScreenTest {
 
   private lateinit var profileRepository: ProfileRepository
   private lateinit var eventsViewModel: EventsViewModel
+  private lateinit var mockitoUtils: MockitoUtils
 
   @Before
   fun setUp() {
     eventsRepository = EventsLocalRepository()
     profileRepository = ProfileLocalRepository()
     currentUserId = ""
+
+    // Mock Firebase Auth
+    mockitoUtils = MockitoUtils()
   }
 
   private val dateB = Timestamp.Companion.fromDate(2025, Calendar.OCTOBER, 25)
@@ -57,12 +62,13 @@ class EventsOverviewScreenTest {
 
   /** Helper function: set the content of the composeTestRule without initial events */
   private fun setContent(uid: String = currentUserId) {
-    currentUserId = ""
+    mockitoUtils.chooseCurrentUser(uid)
+currentUserId = ""
     eventsViewModel =
         EventsViewModel(
             repository = eventsRepository,
             profileRepository = profileRepository,
-            currentUserId = uid)
+            authProvider = { mockitoUtils.mockAuth })
     composeTestRule.setContent { EventsScreen(eventsViewModel = eventsViewModel) }
   }
 
@@ -114,7 +120,6 @@ class EventsOverviewScreenTest {
     val bobId = "bobId"
     val eventByBob = createYourEvent(bobId)
     eventsRepository.addEvent(eventByBob)
-    profileRepository.createEvent(eventByBob.id, bobId)
 
     setContent(bobId)
 
@@ -147,7 +152,6 @@ class EventsOverviewScreenTest {
     // Create event by Alice
     val eventByAlice = createYourEvent(aliceId)
     eventsRepository.addEvent(eventByAlice)
-    profileRepository.createEvent(eventByAlice.id, aliceId)
 
     // Sign in as Bob
     val bobId = "bobId"
@@ -187,7 +191,6 @@ class EventsOverviewScreenTest {
     // Create event by Alice
     val eventByAlice = createYourEvent(aliceId)
     eventsRepository.addEvent(eventByAlice)
-    profileRepository.createEvent(eventByAlice.id, aliceId)
 
     // Sign in as Bob
     val bobId = "bobId"
@@ -264,7 +267,6 @@ class EventsOverviewScreenTest {
     // Create event by Alice
     val eventByAlice = createYourEvent(aliceId)
     eventsRepository.addEvent(eventByAlice)
-    profileRepository.createEvent(eventByAlice.id, aliceId)
 
     // Sign in as Bob
     val bobId = "bobId"
@@ -362,7 +364,6 @@ class EventsOverviewScreenTest {
     // Create event by Bob
     val eventByBob = createYourEvent(bobId)
     eventsRepository.addEvent(eventByBob)
-    profileRepository.createEvent(eventByBob.id, bobId)
 
     setContent(bobId)
 
@@ -401,7 +402,6 @@ class EventsOverviewScreenTest {
     // Create event by Bob
     val eventByBob = createYourEvent(bobId)
     eventsRepository.addEvent(eventByBob)
-    profileRepository.createEvent(eventByBob.id, bobId)
 
     setContent(bobId)
 

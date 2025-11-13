@@ -12,6 +12,7 @@ import com.android.gatherly.model.event.EventsRepositoryFirestore
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.android.gatherly.utils.GenericViewModelFactory
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.firestore
 import com.google.firebase.firestore.ktx.firestore
@@ -37,7 +38,8 @@ data class UIState(
     val globalEventList: List<Event> =
         emptyList(), // Events neither created by nor participated in by current user
     val signedOut: Boolean = false,
-    val errorMsg: String? = null
+    val errorMsg: String? = null,
+    val currentUserId: String = ""
 )
 /**
  * Function that retrieves "drawable" events, i.e. those which are not past, and have a valid
@@ -58,7 +60,7 @@ private fun getDrawableEvents(events: List<Event>): List<Event> {
 class EventsViewModel(
     private val profileRepository: ProfileRepository,
     private val repository: EventsRepository,
-    val currentUserId: String
+    private val authProvider: () -> FirebaseAuth = { Firebase.auth }
 ) : ViewModel() {
   private val _uiState: MutableStateFlow<UIState> = MutableStateFlow(UIState())
 
@@ -78,7 +80,7 @@ class EventsViewModel(
    * categorized into created, participated, and global lists.
    */
   init {
-    viewModelScope.launch { refreshEvents(currentUserId) }
+    viewModelScope.launch { refreshEvents(authProvider().currentUser?.uid ?: "") }
   }
 
   /**
@@ -99,7 +101,8 @@ class EventsViewModel(
             globalEventList =
                 events.filter {
                   it.creatorId != currentUserId && !it.participants.contains(currentUserId)
-                })
+                },
+            currentUserId = currentUserId)
   }
 
   /**
@@ -173,7 +176,6 @@ class EventsViewModel(
   companion object {
     fun provideFactory(
         eventsRepository: EventsRepository = EventsRepositoryFirestore(Firebase.firestore),
-        currentUserId: String = Firebase.auth.currentUser?.uid ?: "",
         profileRepository: ProfileRepository =
             ProfileRepositoryFirestore(
                 com.google.firebase.Firebase.firestore, com.google.firebase.Firebase.storage)
@@ -182,8 +184,7 @@ class EventsViewModel(
       return GenericViewModelFactory {
         EventsViewModel(
             profileRepository = profileRepository,
-            repository = eventsRepository,
-            currentUserId = currentUserId)
+            repository = eventsRepository)
       }
     }
   }

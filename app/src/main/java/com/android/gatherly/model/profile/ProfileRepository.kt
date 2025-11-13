@@ -1,6 +1,7 @@
 package com.android.gatherly.model.profile
 
 import android.net.Uri
+import com.android.gatherly.model.friends.Friends
 
 /**
  * Interface for repositories managing user profiles.
@@ -113,6 +114,15 @@ interface ProfileRepository {
 
   /** Creates a profile. This is to be used only for testing purpose. */
   suspend fun addProfile(profile: Profile)
+
+  /**
+   * Retrieves the list of current user's friends (as usernames) and the list of other users who are
+   * not friends (as usernames).
+   *
+   * @param currentUserId The ID of the current user.
+   * @return A Friends object containing the two processed lists of usernames.
+   */
+  suspend fun getFriendsAndNonFriendsUsernames(currentUserId: String): Friends
 
   /**
    * Retrieves all the profiles username that the user is not friends with.

@@ -6,6 +6,7 @@ import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.ui.todo.EditTodoViewModel
+import com.android.gatherly.utilstest.MockitoUtils
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -36,6 +37,7 @@ class EditTodoViewModelTest {
   private lateinit var editTodoViewModel: EditTodoViewModel
   private lateinit var toDosRepository: ToDosRepository
   private lateinit var baseTodo: ToDo
+  private lateinit var mockitoUtils: MockitoUtils
 
   // initialize this so that tests control all coroutines and can wait on them
   private val testDispatcher = StandardTestDispatcher()
@@ -48,7 +50,13 @@ class EditTodoViewModelTest {
     toDosRepository = ToDosLocalRepository()
     fillRepository()
 
-    editTodoViewModel = EditTodoViewModel(todoRepository = toDosRepository, currentUser = "owner")
+    // Mock Firebase Auth
+    mockitoUtils = MockitoUtils()
+    mockitoUtils.chooseCurrentUser("owner")
+
+    editTodoViewModel =
+        EditTodoViewModel(
+            todoRepository = toDosRepository, authProvider = { mockitoUtils.mockAuth })
   }
 
   @After
@@ -204,7 +212,7 @@ class EditTodoViewModelTest {
           override suspend fun toggleStatus(todoID: String) = Unit
         }
 
-    val viewModel = EditTodoViewModel(failingRepo, currentUser = "")
+    val viewModel = EditTodoViewModel(failingRepo, authProvider = { mockitoUtils.mockAuth })
     viewModel.deleteToDo("anything")
 
     advanceUntilIdle()
