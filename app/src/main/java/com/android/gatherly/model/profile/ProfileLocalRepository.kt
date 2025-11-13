@@ -130,27 +130,27 @@ class ProfileLocalRepository : ProfileRepository {
 
   override suspend fun createEvent(eventId: String, currentUserId: String) {
     val currentProfile = getProfileByUid(currentUserId) ?: return
-    if (!currentProfile.eventOwnerIds.contains(eventId)) {
-      val updateEventOwnerIds = currentProfile.eventOwnerIds + eventId
-      val updatedProfile = currentProfile.copy(eventOwnerIds = updateEventOwnerIds)
+    if (!currentProfile.ownedEventIds.contains(eventId)) {
+      val updateEventOwnerIds = currentProfile.ownedEventIds + eventId
+      val updatedProfile = currentProfile.copy(ownedEventIds = updateEventOwnerIds)
       updateProfile(updatedProfile)
     }
   }
 
   override suspend fun deleteEvent(eventId: String, currentUserId: String) {
     val currentProfile = getProfileByUid(currentUserId) ?: return
-    if (currentProfile.eventOwnerIds.contains(eventId)) {
-      val updateEventOwnerIds = currentProfile.eventOwnerIds.filter { it != eventId }
-      val updatedProfile = currentProfile.copy(eventOwnerIds = updateEventOwnerIds)
+    if (currentProfile.ownedEventIds.contains(eventId)) {
+      val updateEventOwnerIds = currentProfile.ownedEventIds.filter { it != eventId }
+      val updatedProfile = currentProfile.copy(ownedEventIds = updateEventOwnerIds)
       updateProfile(updatedProfile)
     }
   }
 
   override suspend fun participateEvent(eventId: String, currentUserId: String) {
     val currentProfile = getProfileByUid(currentUserId) ?: return
-    if (!currentProfile.eventIds.contains(eventId)) {
-      val updateEventIds = currentProfile.eventIds + eventId
-      val updatedProfile = currentProfile.copy(eventIds = updateEventIds)
+    if (!currentProfile.participatingEventIds.contains(eventId)) {
+      val updateEventIds = currentProfile.participatingEventIds + eventId
+      val updatedProfile = currentProfile.copy(participatingEventIds = updateEventIds)
       updateProfile(updatedProfile)
     }
   }
@@ -161,9 +161,9 @@ class ProfileLocalRepository : ProfileRepository {
 
   override suspend fun unregisterEvent(eventId: String, currentUserId: String) {
     val currentProfile = getProfileByUid(currentUserId) ?: return
-    if (currentProfile.eventIds.contains(eventId)) {
-      val updatedEventIds = currentProfile.eventIds.filter { it != eventId }
-      val updatedProfile = currentProfile.copy(eventIds = updatedEventIds)
+    if (currentProfile.participatingEventIds.contains(eventId)) {
+      val updatedEventIds = currentProfile.participatingEventIds.filter { it != eventId }
+      val updatedProfile = currentProfile.copy(participatingEventIds = updatedEventIds)
       updateProfile(updatedProfile)
     }
   }

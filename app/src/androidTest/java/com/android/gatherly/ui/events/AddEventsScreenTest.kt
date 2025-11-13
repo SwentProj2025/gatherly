@@ -59,7 +59,7 @@ class AddEventsScreenTest {
           uid = "1",
           name = "Profile1",
           focusSessionIds = emptyList(),
-          eventIds = emptyList(),
+          participatingEventIds = emptyList(),
           groupIds = emptyList(),
           friendUids = emptyList())
 
@@ -68,7 +68,7 @@ class AddEventsScreenTest {
           uid = "2",
           name = "Profile2",
           focusSessionIds = emptyList(),
-          eventIds = emptyList(),
+          participatingEventIds = emptyList(),
           groupIds = emptyList(),
           friendUids = emptyList())
 
@@ -77,7 +77,7 @@ class AddEventsScreenTest {
           uid = "3",
           name = "Profile3",
           focusSessionIds = emptyList(),
-          eventIds = emptyList(),
+          participatingEventIds = emptyList(),
           groupIds = emptyList(),
           friendUids = emptyList())
 
@@ -86,7 +86,7 @@ class AddEventsScreenTest {
           uid = "4",
           name = "Participant",
           focusSessionIds = emptyList(),
-          eventIds = emptyList(),
+          participatingEventIds = emptyList(),
           groupIds = emptyList(),
           friendUids = emptyList())
 
@@ -95,7 +95,7 @@ class AddEventsScreenTest {
           uid = "0",
           name = "Owner",
           focusSessionIds = emptyList(),
-          eventIds = emptyList(),
+          participatingEventIds = emptyList(),
           groupIds = emptyList(),
           friendUids = emptyList())
 

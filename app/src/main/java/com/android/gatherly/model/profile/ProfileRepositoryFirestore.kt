@@ -5,7 +5,6 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
-import com.google.firebase.storage.storage
 import kotlinx.coroutines.tasks.await
 
 /**
@@ -262,8 +261,8 @@ class ProfileRepositoryFirestore(
         name = name,
         username = username,
         focusSessionIds = focusSessionIds,
-        eventIds = eventIds,
-        eventOwnerIds = eventOwnerIds,
+        participatingEventIds = eventIds,
+        ownedEventIds = eventOwnerIds,
         groupIds = groupIds,
         friendUids = friendUids,
         school = school,
@@ -284,8 +283,8 @@ class ProfileRepositoryFirestore(
         "name" to profile.name,
         "username" to profile.username,
         "focusSessionIds" to profile.focusSessionIds,
-        "eventIds" to profile.eventIds,
-        "eventOwnerIds" to profile.eventOwnerIds,
+        "eventIds" to profile.participatingEventIds,
+        "eventOwnerIds" to profile.ownedEventIds,
         "groupIds" to profile.groupIds,
         "friendUids" to profile.friendUids,
         "school" to profile.school,

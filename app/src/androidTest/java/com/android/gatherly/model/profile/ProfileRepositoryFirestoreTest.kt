@@ -2,8 +2,6 @@ package com.android.gatherly.model.profile
 
 import com.android.gatherly.utils.FirebaseEmulator
 import com.android.gatherly.utils.FirestoreGatherlyProfileTest
-import com.google.firebase.auth.auth
-import com.google.firebase.storage.storage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -466,7 +464,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     // Verify that the event is in the User B profile's events list
     val profileB = repo.getProfileByUid(userBUid)
     assertNotNull(profileB)
-    assertTrue(profileB!!.eventOwnerIds.contains(eventId))
+    assertTrue(profileB!!.ownedEventIds.contains(eventId))
   }
 
   @OptIn(ExperimentalCoroutinesApi::class)
@@ -491,7 +489,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     // Verify that the event is in the User B profile's events list
     val profileB = repo.getProfileByUid(userBUid)
     assertNotNull(profileB)
-    assertTrue(profileB!!.eventOwnerIds.contains(eventId))
+    assertTrue(profileB!!.ownedEventIds.contains(eventId))
 
     // UserB delete this event
     repo.deleteEvent(eventId, userBUid)
@@ -499,7 +497,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     // Verify that the event is not in the User B profile's events list
     val profile = repo.getProfileByUid(userBUid)
     assertNotNull(profile)
-    assertFalse(profile!!.eventOwnerIds.contains(eventId))
+    assertFalse(profile!!.ownedEventIds.contains(eventId))
   }
 
   @Test
@@ -523,7 +521,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     // Verify that the event is in the User B profile's events list
     val profileA = repo.getProfileByUid(userAUid)
     assertNotNull(profileA)
-    assertTrue(profileA!!.eventOwnerIds.contains(eventId))
+    assertTrue(profileA!!.ownedEventIds.contains(eventId))
 
     auth.signOut()
 
@@ -537,7 +535,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     // Verify that the event is in the User B profile's events list
     val profileB = repo.getProfileByUid(userBUid)
     assertNotNull(profileB)
-    assertTrue(profileB!!.eventIds.contains(eventId))
+    assertTrue(profileB!!.participatingEventIds.contains(eventId))
   }
 
   @Test
@@ -561,7 +559,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     // Verify that the event is in the User B profile's events list
     val profileA = repo.getProfileByUid(userAUid)
     assertNotNull(profileA)
-    assertTrue(profileA!!.eventOwnerIds.contains(eventId))
+    assertTrue(profileA!!.ownedEventIds.contains(eventId))
 
     auth.signOut()
 
@@ -575,13 +573,13 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     // Verify that the event is in the User B profile's events list
     val profileB = repo.getProfileByUid(userBUid)
     assertNotNull(profileB)
-    assertTrue(profileB!!.eventIds.contains(eventId))
+    assertTrue(profileB!!.participatingEventIds.contains(eventId))
 
     repo.unregisterEvent(eventId, userBUid)
 
     // Verify that the event is not in te User B profile's events list
     val profile = repo.getProfileByUid(userBUid)
     assertNotNull(profile)
-    assertFalse(profile!!.eventIds.contains(eventId))
+    assertFalse(profile!!.participatingEventIds.contains(eventId))
   }
 }

@@ -58,7 +58,7 @@ class FriendsViewModelTest {
           username = "alice",
           name = "ProfileA",
           focusSessionIds = emptyList(),
-          eventIds = emptyList(),
+          participatingEventIds = emptyList(),
           groupIds = emptyList(),
           friendUids = listOf("B"),
           profilePicture = "profileA.png")
@@ -69,7 +69,7 @@ class FriendsViewModelTest {
           username = "bob",
           name = "ProfileB",
           focusSessionIds = emptyList(),
-          eventIds = emptyList(),
+          participatingEventIds = emptyList(),
           groupIds = emptyList(),
           friendUids = listOf("A"),
           profilePicture = "profileB.png")
@@ -80,7 +80,7 @@ class FriendsViewModelTest {
           username = "charlie",
           name = "ProfileC",
           focusSessionIds = emptyList(),
-          eventIds = emptyList(),
+          participatingEventIds = emptyList(),
           groupIds = emptyList(),
           friendUids = emptyList(),
           profilePicture = "profileC.png")
