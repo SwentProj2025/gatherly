@@ -9,7 +9,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.ktx.app
 import com.google.firebase.storage.FirebaseStorage
-import com.google.firebase.storage.storage
+import com.google.firebase.storage.ktx.storage
 import java.io.File
 import kotlinx.coroutines.tasks.await
 
@@ -259,21 +259,20 @@ class ProfileRepositoryFirestore(
   override suspend fun deleteUserProfile(uid: String) {
     val profile = getProfileByUid(uid) ?: return
 
-    if (profile.username.isNotBlank()) {
-      val usernameDoc = usernamesCollection.document(profile.username)
-      if (usernameDoc.get().await().exists()) {
-        usernameDoc.delete().await()
-      }
-    }
+    db.runBatch { batch ->
+          if (profile.username.isNotBlank()) {
+            batch.delete(usernamesCollection.document(profile.username))
+          }
+          batch.delete(profilesCollection.document(uid))
+        }
+        .await()
 
     try {
-      val storageRef = com.google.firebase.Firebase.storage.reference.child("profile_pictures/$uid")
+      val storageRef = Firebase.storage.reference.child("profile_pictures/$uid")
       storageRef.delete().await()
     } catch (e: Exception) {
-      // No profile pic was used.
+      Log.d("ProfileRepository", "No profile picture to delete: ${e.message}")
     }
-
-    profilesCollection.document(uid).delete().await()
   }
 
   /** Creates a profile. This is to be used only for testing purpose. */
