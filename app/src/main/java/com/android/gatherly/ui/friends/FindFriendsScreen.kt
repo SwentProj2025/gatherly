@@ -105,9 +105,9 @@ fun FindFriendsScreen(
     goBack: () -> Unit = {},
 ) {
 
-  val currentUserIdFromVM = friendsViewModel.authProvider().currentUser?.uid ?: ""
   val uiState by friendsViewModel.uiState.collectAsState()
   val notFriendsList = uiState.listNoFriends
+  val currentUserIdFromVM = uiState.currentUserId
 
   var searchQuery by remember { mutableStateOf("") }
 

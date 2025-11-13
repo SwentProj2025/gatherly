@@ -34,7 +34,8 @@ data class UIState(
     val globalEventList: List<Event> =
         emptyList(), // Events neither created by nor participated in by current user
     val signedOut: Boolean = false,
-    val errorMsg: String? = null
+    val errorMsg: String? = null,
+    val currentUserId: String = ""
 )
 /**
  * Function that retrieves "drawable" events, i.e. those which are not past, and have a valid
@@ -54,7 +55,7 @@ private fun getDrawableEvents(events: List<Event>): List<Event> {
  */
 class EventsViewModel(
     private val repository: EventsRepository,
-    val authProvider: () -> FirebaseAuth = { Firebase.auth }
+    private val authProvider: () -> FirebaseAuth = { Firebase.auth }
 ) : ViewModel() {
   private val _uiState: MutableStateFlow<UIState> = MutableStateFlow(UIState())
 
@@ -95,7 +96,8 @@ class EventsViewModel(
             globalEventList =
                 events.filter {
                   it.creatorId != currentUserId && !it.participants.contains(currentUserId)
-                })
+                },
+            currentUserId = currentUserId)
   }
 
   /**

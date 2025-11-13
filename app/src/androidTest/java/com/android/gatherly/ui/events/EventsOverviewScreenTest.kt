@@ -19,10 +19,9 @@ import com.android.gatherly.model.event.EventsRepository
 import com.android.gatherly.model.map.Location
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.utils.GatherlyTest.Companion.fromDate
+import com.android.gatherly.utils.MockitoUtils
 import com.android.gatherly.utils.UI_WAIT_TIMEOUT
 import com.google.firebase.Timestamp
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.NoSuchElementException
@@ -31,8 +30,6 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.mockito.Mockito.mock
-import org.mockito.Mockito.`when`
 
 class EventsOverviewScreenTest {
 
@@ -41,8 +38,7 @@ class EventsOverviewScreenTest {
   private lateinit var currentUserId: String
   private lateinit var eventsRepository: EventsRepository
   private lateinit var eventsViewModel: EventsViewModel
-  private lateinit var mockAuth: FirebaseAuth
-  private lateinit var mockUser: FirebaseUser
+  private lateinit var mockitoUtils: MockitoUtils
 
   @Before
   fun setUp() {
@@ -50,8 +46,7 @@ class EventsOverviewScreenTest {
     currentUserId = ""
 
     // Mock Firebase Auth
-    mockAuth = mock(FirebaseAuth::class.java)
-    mockUser = mock(FirebaseUser::class.java)
+    mockitoUtils = MockitoUtils()
   }
 
   private val dateB = Timestamp.Companion.fromDate(2025, Calendar.OCTOBER, 25)
@@ -62,11 +57,10 @@ class EventsOverviewScreenTest {
 
   /** Helper function: set the content of the composeTestRule without initial events */
   private fun setContent(uid: String = currentUserId) {
-    `when`(mockAuth.currentUser).thenReturn(mockUser)
-    `when`(mockUser.uid).thenReturn(uid)
-    `when`(mockUser.isAnonymous).thenReturn(false)
+    mockitoUtils.chooseCurrentUser(uid)
 
-    eventsViewModel = EventsViewModel(repository = eventsRepository, authProvider = { mockAuth })
+    eventsViewModel =
+        EventsViewModel(repository = eventsRepository, authProvider = { mockitoUtils.mockAuth })
     composeTestRule.setContent { EventsScreen(eventsViewModel = eventsViewModel) }
   }
 

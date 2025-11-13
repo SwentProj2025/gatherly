@@ -3,8 +3,7 @@ package com.android.gatherly.viewmodel.friends
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.ui.friends.FriendsViewModel
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
+import com.android.gatherly.utilstest.MockitoUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -16,8 +15,6 @@ import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
-import org.mockito.Mockito.mock
-import org.mockito.Mockito.`when`
 
 private const val TIMEOUT = 30_000L
 private const val DELAY = 200L
@@ -35,8 +32,7 @@ class FriendsViewModelTest {
 
   private lateinit var profileRepository: ProfileLocalRepository
   private lateinit var viewModel: FriendsViewModel
-  private lateinit var mockAuth: FirebaseAuth
-  private lateinit var mockUser: FirebaseUser
+  private lateinit var mockitoUtils: MockitoUtils
 
   // initialize this so that tests control all coroutines and can wait on them
   private val testDispatcher = StandardTestDispatcher()
@@ -51,13 +47,11 @@ class FriendsViewModelTest {
     fill_repositories()
 
     // Mock Firebase Auth
-    mockAuth = mock(FirebaseAuth::class.java)
-    mockUser = mock(FirebaseUser::class.java)
-    `when`(mockAuth.currentUser).thenReturn(mockUser)
-    `when`(mockUser.uid).thenReturn("A")
-    `when`(mockUser.isAnonymous).thenReturn(false)
+    mockitoUtils = MockitoUtils()
+    mockitoUtils.chooseCurrentUser("A")
 
-    viewModel = FriendsViewModel(repository = profileRepository, authProvider = { mockAuth })
+    viewModel =
+        FriendsViewModel(repository = profileRepository, authProvider = { mockitoUtils.mockAuth })
   }
 
   @After

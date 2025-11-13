@@ -260,6 +260,14 @@ class SettingsViewModel(
     }
   }
 
+  /**
+   * Checks the validity of a user's chosen username, true if the user can change to the new
+   * username, false otherwise
+   *
+   * @param state the state of the UI when the user pressed save
+   * @param id the users uid
+   * @param isFirstTime true if the user is new
+   */
   private suspend fun checkUsernameSuccess(
       state: SettingsUiState,
       id: String,

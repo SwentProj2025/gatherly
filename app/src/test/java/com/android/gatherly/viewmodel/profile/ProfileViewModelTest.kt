@@ -4,8 +4,7 @@ import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.ui.profile.ProfileViewModel
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
+import com.android.gatherly.utilstest.MockitoUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -17,8 +16,6 @@ import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
-import org.mockito.Mockito.mock
-import org.mockito.Mockito.`when`
 
 /**
  * Integration tests for [com.android.gatherly.ui.profile.ProfileViewModel] using the Firebase
@@ -35,8 +32,7 @@ class ProfileViewModelIntegrationTest {
 
   private lateinit var profileViewModel: ProfileViewModel
   private lateinit var profileRepository: ProfileRepository
-  private lateinit var mockAuth: FirebaseAuth
-  private lateinit var mockUser: FirebaseUser
+  private lateinit var mockitoUtils: MockitoUtils
 
   // initialize this so that tests control all coroutines and can wait on them
   private val testDispatcher = StandardTestDispatcher()
@@ -47,8 +43,7 @@ class ProfileViewModelIntegrationTest {
     Dispatchers.setMain(testDispatcher)
 
     // Mock Firebase Auth
-    mockAuth = mock(FirebaseAuth::class.java)
-    mockUser = mock(FirebaseUser::class.java)
+    mockitoUtils = MockitoUtils()
 
     // initialize repos and profileViewModel
     profileRepository = ProfileLocalRepository()
@@ -67,11 +62,10 @@ class ProfileViewModelIntegrationTest {
     val profile = Profile(uid = uid, name = "Alice", school = "EPFL", profilePicture = "alice.png")
     profileRepository.updateProfile(profile)
 
-    `when`(mockAuth.currentUser).thenReturn(mockUser)
-    `when`(mockUser.uid).thenReturn(uid)
-    `when`(mockUser.isAnonymous).thenReturn(false)
+    mockitoUtils.chooseCurrentUser(uid)
 
-    profileViewModel = ProfileViewModel(repository = profileRepository, authProvider = { mockAuth })
+    profileViewModel =
+        ProfileViewModel(repository = profileRepository, authProvider = { mockitoUtils.mockAuth })
     profileViewModel.loadUserProfile()
 
     // Wait until loading completes and profile is available
@@ -88,11 +82,10 @@ class ProfileViewModelIntegrationTest {
   fun loadUserProfile_returnsErrorIfProfileMissing() = runTest {
     val uid = "currentUser"
 
-    `when`(mockAuth.currentUser).thenReturn(mockUser)
-    `when`(mockUser.uid).thenReturn(uid)
-    `when`(mockUser.isAnonymous).thenReturn(false)
+    mockitoUtils.chooseCurrentUser(uid)
 
-    profileViewModel = ProfileViewModel(repository = profileRepository, authProvider = { mockAuth })
+    profileViewModel =
+        ProfileViewModel(repository = profileRepository, authProvider = { mockitoUtils.mockAuth })
     profileViewModel.loadUserProfile()
 
     // Wait until loading completes and an error appears
@@ -105,9 +98,10 @@ class ProfileViewModelIntegrationTest {
 
   @Test
   fun loadUserProfile_returnsErrorIfUserNotAuthenticated() = runTest {
-    `when`(mockAuth.currentUser).thenReturn(null)
+    mockitoUtils.unauthenticatedCurrentUser()
 
-    profileViewModel = ProfileViewModel(repository = profileRepository, authProvider = { mockAuth })
+    profileViewModel =
+        ProfileViewModel(repository = profileRepository, authProvider = { mockitoUtils.mockAuth })
     profileViewModel.loadUserProfile()
 
     // Wait until loading completes and an error appears

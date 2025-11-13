@@ -14,12 +14,13 @@ import kotlinx.coroutines.launch
 data class FriendsUIState(
     val errorMsg: String? = null,
     val friends: List<String> = emptyList(),
-    val listNoFriends: List<String> = emptyList()
+    val listNoFriends: List<String> = emptyList(),
+    val currentUserId: String = ""
 )
 
 class FriendsViewModel(
     private val repository: ProfileRepository,
-    val authProvider: () -> FirebaseAuth = { Firebase.auth }
+    private val authProvider: () -> FirebaseAuth = { Firebase.auth }
 ) : ViewModel() {
 
   /** StateFlow that emits the current UI state for the Friends screen. */
@@ -46,7 +47,8 @@ class FriendsViewModel(
             friends =
                 profile?.friendUids?.mapNotNull { repository.getProfileByUid(it)?.username }
                     ?: throw Exception("FriendsVM: Profile not found"),
-            listNoFriends = repository.getListNoFriends(currentUserId))
+            listNoFriends = repository.getListNoFriends(currentUserId),
+            currentUserId = currentUserId)
   }
 
   /**

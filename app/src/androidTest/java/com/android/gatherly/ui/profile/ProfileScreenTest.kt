@@ -6,13 +6,10 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
+import com.android.gatherly.utils.MockitoUtils
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
-import org.mockito.Mockito.mock
-import org.mockito.Mockito.`when`
 
 class ProfileScreenTest {
 
@@ -29,21 +26,18 @@ class ProfileScreenTest {
   private lateinit var profileRepository: ProfileRepository
   private lateinit var profileViewModel: ProfileViewModel
 
-  private lateinit var mockAuth: FirebaseAuth
-  private lateinit var mockUser: FirebaseUser
+  private lateinit var mockitoUtils: MockitoUtils
 
   private fun setContent() {
     profileRepository = ProfileLocalRepository()
     fill_repository()
 
     // Mock Firebase Auth
-    mockAuth = mock(FirebaseAuth::class.java)
-    mockUser = mock(FirebaseUser::class.java)
-    `when`(mockAuth.currentUser).thenReturn(mockUser)
-    `when`(mockUser.uid).thenReturn("")
-    `when`(mockUser.isAnonymous).thenReturn(false)
+    mockitoUtils = MockitoUtils()
+    mockitoUtils.chooseCurrentUser("")
 
-    profileViewModel = ProfileViewModel(repository = profileRepository, authProvider = { mockAuth })
+    profileViewModel =
+        ProfileViewModel(repository = profileRepository, authProvider = { mockitoUtils.mockAuth })
     composeTestRule.setContent { ProfileScreen(profileViewModel = profileViewModel) }
   }
 
