@@ -3,17 +3,25 @@ package com.android.gatherly.ui.authentication
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
@@ -112,12 +120,69 @@ fun InitProfileScreen(
               modifier =
                   Modifier.height(dimensionResource(id = R.dimen.spacing_between_fields_regular)))
 
-          SettingsField(
-              label = stringResource(R.string.settings_label_birthday),
-              value = uiState.birthday,
-              onValueChange = { settingsViewModel.editBirthday(it) },
-              testTag = InitProfileScreenTestTags.BIRTHDAY_FIELD,
-              errorMessage = uiState.invalidBirthdayMsg)
+          // Birthday Field
+          Column(modifier = Modifier.fillMaxWidth()) {
+            Text(
+                text = stringResource(R.string.settings_label_birthday),
+                color = MaterialTheme.colorScheme.onBackground,
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(bottom = dimensionResource(id = R.dimen.padding_small)))
+            var dateFieldValue by remember { mutableStateOf(TextFieldValue("")) }
+            dateFieldValue = dateFieldValue.copy(text = uiState.birthday)
+            OutlinedTextField(
+                value = dateFieldValue,
+                onValueChange = { newValue ->
+                  val oldText = dateFieldValue.text
+                  val newText = newValue.text
+
+                  // Detect if user is deleting (backspace)
+                  val isDeleting = newText.length < oldText.length
+
+                  val formatted = formatDateInput(newText)
+
+                  // Calculate new cursor position
+                  val newCursorPos =
+                      when {
+                        isDeleting -> newValue.selection.start.coerceAtMost(formatted.length)
+                        else -> formatted.length // keep cursor at end when typing
+                      }
+
+                  dateFieldValue =
+                      newValue.copy(text = formatted, selection = TextRange(newCursorPos))
+                  settingsViewModel.editBirthday(formatted)
+                },
+                modifier =
+                    Modifier.fillMaxWidth().testTag(InitProfileScreenTestTags.BIRTHDAY_FIELD),
+                colors =
+                    OutlinedTextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+                        cursorColor = MaterialTheme.colorScheme.primary,
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
+                        unfocusedBorderColor = Color.Transparent),
+                shape =
+                    RoundedCornerShape(dimensionResource(id = R.dimen.rounded_corner_shape_medium)),
+                singleLine = true,
+                keyboardOptions =
+                    KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
+                textStyle =
+                    LocalTextStyle.current.copy(
+                        fontSize = dimensionResource(id = R.dimen.font_size_medium).value.sp))
+
+            // Show error message if not null
+            if (!uiState.invalidBirthdayMsg.isNullOrEmpty()) {
+              Text(
+                  text = uiState.invalidBirthdayMsg!!,
+                  color = MaterialTheme.colorScheme.error,
+                  fontSize = dimensionResource(id = R.dimen.font_size_regular).value.sp,
+                  modifier =
+                      Modifier.padding(top = dimensionResource(id = R.dimen.padding_extra_small))
+                          .testTag("${InitProfileScreenTestTags.BIRTHDAY_FIELD}_error"))
+            }
+          }
 
           Spacer(
               modifier =
@@ -165,5 +230,16 @@ fun InitProfileScreen(
 
           Spacer(modifier = Modifier.weight(1f))
         }
+  }
+}
+
+private fun formatDateInput(input: String): String {
+  // Remove any non-digit characters
+  val digits = input.filter { it.isDigit() }.take(8) // Limit to ddMMyyyy
+  return buildString {
+    for (i in digits.indices) {
+      append(digits[i])
+      if (i == 1 || i == 3) append('/')
+    }
   }
 }

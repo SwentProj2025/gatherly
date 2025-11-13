@@ -7,6 +7,13 @@
     <dimen name="padding_medium">24dp</dimen>
     <dimen name="padding_large">32dp</dimen>
 
+    <!-- Font Size -->
+    <dimen name="font_size_extra_small">4.sp</dimen>
+    <dimen name="font_size_small">8.sp</dimen>
+    <dimen name="font_size_regular">14.sp</dimen>
+    <dimen name="font_size_medium">16.sp</dimen>
+    <dimen name="font_size_large">32.sp</dimen>
+
     <!-- Spacing -->
     <dimen name="spacing_between_buttons">4dp</dimen>
     <dimen name="spacing_between_fields">8dp</dimen>
