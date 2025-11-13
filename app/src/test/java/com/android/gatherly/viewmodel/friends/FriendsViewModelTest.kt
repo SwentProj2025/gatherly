@@ -3,6 +3,7 @@ package com.android.gatherly.viewmodel.friends
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
+import com.android.gatherly.model.profile.ProfileStatus
 import com.android.gatherly.ui.friends.FriendsViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -176,6 +177,10 @@ class FriendsViewModelTest {
           override suspend fun getListNoFriends(currentUserId: String): List<String> = emptyList()
 
           override suspend fun addFriend(friend: String, currentUserId: String) {}
+
+          override suspend fun updateStatus(uid: String, status: ProfileStatus) {
+            TODO("Not Used")
+          }
 
           override suspend fun deleteFriend(friend: String, currentUserId: String) {}
         }

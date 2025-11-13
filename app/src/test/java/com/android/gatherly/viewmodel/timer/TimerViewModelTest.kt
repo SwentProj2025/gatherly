@@ -1,6 +1,8 @@
 package com.android.gatherly.viewmodel.timer
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.android.gatherly.model.profile.ProfileStatus
+import com.android.gatherly.model.profile.UserStatusManager
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosLocalRepository
@@ -25,6 +27,9 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.mock
+import org.mockito.Mockito.times
+import org.mockito.kotlin.verify
 
 /** Test class to check that [TimerViewModel] functions correctly. */
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -33,6 +38,7 @@ class TimerViewModelTest {
 
   private lateinit var toDosRepository: ToDosRepository
   private lateinit var viewModel: TimerViewModel
+  private lateinit var statusManagerMock: UserStatusManager
 
   private fun makeTodo(
       name: String,
@@ -63,7 +69,8 @@ class TimerViewModelTest {
 
     toDosRepository = ToDosLocalRepository()
 
-    viewModel = TimerViewModel(toDosRepository)
+    statusManagerMock = mock()
+    viewModel = TimerViewModel(toDosRepository, statusManagerMock)
   }
 
   @After
@@ -375,5 +382,52 @@ class TimerViewModelTest {
     val finalState = viewModel.uiState.value
 
     assertEquals("05", finalState.seconds)
+  }
+
+  /** Check that starting the timer sets the user status to FOCUSED. */
+  @Test
+  fun timer_start_sets_status_focused() = runTest {
+    viewModel.setHours("00")
+    viewModel.setMinutes("00")
+    viewModel.setSeconds("10")
+
+    viewModel.startTimer()
+
+    // Let any coroutines launched in startTimer() run
+    advanceUntilIdle()
+
+    verify(statusManagerMock, times(1)).setStatus(ProfileStatus.FOCUSED)
+  }
+
+  /** Check that pausing the timer sets the user status to ONLINE. */
+  @Test
+  fun timer_pause_sets_status_online() = runTest {
+    viewModel.setHours("00")
+    viewModel.setMinutes("00")
+    viewModel.setSeconds("10")
+
+    viewModel.startTimer()
+    advanceUntilIdle() // ensure start coroutine runs
+
+    viewModel.pauseTimer()
+    advanceUntilIdle() // ensure pause coroutine runs
+
+    verify(statusManagerMock, times(1)).setStatus(ProfileStatus.ONLINE)
+  }
+
+  /** Check that ending the timer sets the user status to ONLINE. */
+  @Test
+  fun timer_end_sets_status_online() = runTest {
+    viewModel.setHours("00")
+    viewModel.setMinutes("00")
+    viewModel.setSeconds("10")
+
+    viewModel.startTimer()
+    advanceUntilIdle() // ensure start coroutine runs
+
+    viewModel.endTimer()
+    advanceUntilIdle() // ensure end coroutine runs
+
+    verify(statusManagerMock, times(1)).setStatus(ProfileStatus.ONLINE)
   }
 }

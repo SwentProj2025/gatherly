@@ -6,6 +6,8 @@ import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.android.gatherly.model.profile.ProfileStatus
+import com.android.gatherly.model.profile.UserStatusManager
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.model.todo.ToDosRepositoryProvider
@@ -56,7 +58,8 @@ data class TimerState(
  * @param todoRepository The repository used to fetch and manage ToDos
  */
 class TimerViewModel(
-    private val todoRepository: ToDosRepository = ToDosRepositoryProvider.repository
+    private val todoRepository: ToDosRepository = ToDosRepositoryProvider.repository,
+    private val userStatusManager: UserStatusManager = UserStatusManager()
 ) : ViewModel() {
 
   private val _uiState = MutableStateFlow(TimerState())
@@ -157,6 +160,9 @@ class TimerViewModel(
             isStarted = true,
             isPaused = false,
             errorMsg = null)
+
+    viewModelScope.launch { userStatusManager.setStatus(ProfileStatus.FOCUSED) }
+
     updateClock(planned)
     startTicking()
   }
@@ -177,6 +183,7 @@ class TimerViewModel(
     _uiState.value =
         state.copy(
             remainingTime = Duration.ZERO, isStarted = false, isPaused = false, errorMsg = null)
+    viewModelScope.launch { userStatusManager.setStatus(ProfileStatus.ONLINE) }
     updateClock(Duration.ZERO)
   }
 
@@ -193,6 +200,7 @@ class TimerViewModel(
     val remaining = max(0, (state.plannedDuration - elapsedTime).inWholeSeconds).seconds
     cancelTicking()
     _uiState.value = state.copy(remainingTime = remaining, isPaused = true, errorMsg = null)
+    viewModelScope.launch { userStatusManager.setStatus(ProfileStatus.ONLINE) }
     updateClock(remaining)
   }
 

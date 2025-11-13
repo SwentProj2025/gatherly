@@ -7,7 +7,8 @@ package com.android.gatherly.model.profile
  */
 enum class ProfileStatus(val value: String) {
   ONLINE("online"),
-  OFFLINE("offline");
+  OFFLINE("offline"),
+  FOCUSED("focused");
 
   companion object {
 
