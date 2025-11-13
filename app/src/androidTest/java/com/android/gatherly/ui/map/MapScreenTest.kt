@@ -157,7 +157,7 @@ class MapScreenTest {
     compose.onNodeWithTag(MapScreenTestTags.TODO_DESCRIPTION, useUnmergedTree = true).assertExists()
     compose.onNodeWithTag(MapScreenTestTags.TODO_BUTTON, useUnmergedTree = true).assertExists()
   }
-  //
+  // Navigation tests
   @Test
   fun canGoToEvent() {
     renderDefaultMapUi()
