@@ -157,7 +157,7 @@ class MapScreenTest {
     compose.onNodeWithTag(MapScreenTestTags.TODO_DESCRIPTION, useUnmergedTree = true).assertExists()
     compose.onNodeWithTag(MapScreenTestTags.TODO_BUTTON, useUnmergedTree = true).assertExists()
   }
-
+    // 
   @Test
   fun canGoToEvent() {
     renderDefaultMapUi()
@@ -222,5 +222,37 @@ class MapScreenTest {
     assert(cameraPos != null)
     assertEquals(todo.location!!.latitude, cameraPos!!.latitude, 0.0001)
     assertEquals(todo.location!!.longitude, cameraPos.longitude, 0.0001)
+  }
+
+  @Test
+  fun clicking_todo_marker_opens_sheet_and_navigates() {
+    renderDefaultMapUi()
+    compose.waitForIdle()
+
+    compose.onNodeWithTag(MapScreenTestTags.TODO_CARD, useUnmergedTree = true).performClick()
+    compose.waitForIdle()
+
+    compose.onNodeWithTag(MapScreenTestTags.TODO_SHEET, useUnmergedTree = true).assertExists()
+    compose.onNodeWithTag(MapScreenTestTags.TODO_BUTTON, useUnmergedTree = true).performClick()
+
+    compose
+        .onNodeWithTag(OverviewScreenTestTags.CREATE_TODO_BUTTON, useUnmergedTree = true)
+        .isDisplayed()
+  }
+
+  @Test
+  fun clicking_event_marker_opens_sheet_and_navigates() {
+    renderDefaultMapUi()
+    compose.waitForIdle()
+
+    compose.onNodeWithTag(MapScreenTestTags.EVENT_CARD, useUnmergedTree = true).performClick()
+    compose.waitForIdle()
+
+    compose.onNodeWithTag(MapScreenTestTags.EVENT_SHEET, useUnmergedTree = true).assertExists()
+    compose.onNodeWithTag(MapScreenTestTags.EVENT_BUTTON, useUnmergedTree = true).performClick()
+
+    compose
+        .onNodeWithTag(EventsScreenTestTags.CREATE_EVENT_BUTTON, useUnmergedTree = true)
+        .isDisplayed()
   }
 }
