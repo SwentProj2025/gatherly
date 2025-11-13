@@ -52,6 +52,7 @@ object SettingsScreenTestTags {
   const val PHOTO_PICKER_CAMERA_BUTTON = "settings_photo_picker_camera_button"
   const val PHOTO_PICKER_GALLERY_BUTTON = "settings_photo_picker_gallery_button"
   const val PHOTO_PICKER_CANCEL_BUTTON = "settings_photo_picker_cancel_button"
+  const val PROFILE_PICTURE_URL_NOT_EMPTY = "settings_profile_picture_url_not_empty"
 }
 
 /**
@@ -148,7 +149,7 @@ fun SettingsScreen(
                           modifier =
                               Modifier.size(dimensionResource(id = R.dimen.profile_pic_size))
                                   .clip(CircleShape)
-                                  .testTag(SettingsScreenTestTags.PROFILE_PICTURE),
+                                  .testTag(SettingsScreenTestTags.PROFILE_PICTURE_URL_NOT_EMPTY),
                           contentScale = ContentScale.Crop)
                     } else {
                       Image(

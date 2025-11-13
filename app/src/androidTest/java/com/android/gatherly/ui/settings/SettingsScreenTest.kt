@@ -331,4 +331,18 @@ class SettingsScreenTest {
         .onNodeWithTag(SettingsScreenTestTags.PHOTO_PICKER_GALLERY_BUTTON)
         .assertDoesNotExist()
   }
+
+  /** Verifies that a non-empty profilePictureUrl displays the profile picture Image. */
+  @Test
+  fun settingsScreen_showsCustomProfilePicture_whenUrlIsNotEmpty() {
+    val testUrl = "https://example.com/profile.jpg"
+    settingsViewModel.editProfilePictureUrl(testUrl)
+
+    composeRule.waitForIdle()
+
+    composeRule
+        .onNodeWithTag(SettingsScreenTestTags.PROFILE_PICTURE_URL_NOT_EMPTY)
+        .assertExists()
+        .assertIsDisplayed()
+  }
 }
