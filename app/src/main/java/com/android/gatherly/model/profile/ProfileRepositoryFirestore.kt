@@ -1,11 +1,16 @@
 package com.android.gatherly.model.profile
 
 import android.net.Uri
+import android.util.Log
+import com.android.gatherly.model.friends.Friends
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.ktx.app
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.storage
+import java.io.File
 import kotlinx.coroutines.tasks.await
 
 /**
@@ -170,12 +175,31 @@ class ProfileRepositoryFirestore(
   }
 
   override suspend fun updateProfilePic(uid: String, uri: Uri): String {
-    val storageRef = storage.reference.child("profile_pictures/$uid")
-    storageRef.putFile(uri).await()
-    val downloadUrl = storageRef.downloadUrl.await().toString()
-    val doc = profilesCollection.document(uid)
-    doc.update("profilePicture", downloadUrl).await()
-    return downloadUrl
+    var tempFile: File? = null
+    try {
+      val storageRef = storage.reference.child("profile_pictures/$uid")
+      val uploadUri =
+          if (uri.scheme == "content") {
+            val context = Firebase.app.applicationContext
+            tempFile = kotlin.io.path.createTempFile("profile_$uid").toFile()
+            val inputStream = context.contentResolver.openInputStream(uri)
+            inputStream?.use {
+              tempFile.outputStream().use { output -> inputStream.copyTo(output) }
+            }
+            Uri.fromFile(tempFile)
+          } else {
+            uri
+          }
+      storageRef.putFile(uploadUri).await()
+      val downloadUrl = storageRef.downloadUrl.await().toString()
+      val doc = profilesCollection.document(uid)
+      doc.update("profilePicture", downloadUrl).await()
+      return downloadUrl
+    } finally {
+      if (tempFile != null && !tempFile.delete()) {
+        Log.w("ProfileRepository", "Temporary file ${tempFile.path} could not be deleted.")
+      }
+    }
   }
 
   /**
@@ -292,6 +316,19 @@ class ProfileRepositoryFirestore(
         "birthday" to profile.birthday,
         "profilePicture" to profile.profilePicture,
         "status" to profile.status.value)
+  }
+
+  override suspend fun getFriendsAndNonFriendsUsernames(currentUserId: String): Friends {
+    val currentProfile =
+        getProfileByUid(currentUserId)
+            ?: throw NoSuchElementException("Profile not found for uid=$currentUserId")
+
+    val friendUsernames =
+        currentProfile.friendUids.mapNotNull { friendUid -> getProfileByUid(friendUid)?.username }
+
+    val nonFriendUsernames = getListNoFriends(currentUserId)
+
+    return Friends(friendUsernames = friendUsernames, nonFriendUsernames = nonFriendUsernames)
   }
 
   override suspend fun getListNoFriends(currentUserId: String): List<String> {
