@@ -46,6 +46,8 @@ class OverviewViewModel(
   private val _uiState = MutableStateFlow(OverviewUIState())
   val uiState: StateFlow<OverviewUIState> = _uiState.asStateFlow()
 
+  private var allTodosCache: List<ToDo> = emptyList()
+
   init {
     getAllTodos()
   }
@@ -61,6 +63,7 @@ class OverviewViewModel(
       _uiState.value = _uiState.value.copy(isLoading = true, errorMsg = null)
       try {
         val todos = todoRepository.getAllTodos()
+        allTodosCache = todos
         _uiState.value = OverviewUIState(todos = todos, isLoading = false)
       } catch (e: Exception) {
         _uiState.value =
@@ -86,7 +89,7 @@ class OverviewViewModel(
       return
     }
     val filtered =
-        allTodos.filter {
+        allTodosCache.filter {
           it.name.lowercase().contains(normalized) ||
               it.description.lowercase().contains(normalized)
         }
