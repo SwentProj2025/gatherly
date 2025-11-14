@@ -61,6 +61,17 @@ fun InitProfileScreen(
   val uiState by settingsViewModel.uiState.collectAsState()
   val currentUser = Firebase.auth.currentUser
 
+  val birthdayFieldColors =
+      OutlinedTextFieldDefaults.colors(
+          focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+          unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+          disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+          focusedTextColor = MaterialTheme.colorScheme.onBackground,
+          unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+          cursorColor = MaterialTheme.colorScheme.primary,
+          focusedBorderColor = MaterialTheme.colorScheme.primary,
+          unfocusedBorderColor = Color.Transparent)
+
   LaunchedEffect(currentUser?.uid) { currentUser?.uid?.let { settingsViewModel.loadProfile(it) } }
 
   Scaffold(containerColor = MaterialTheme.colorScheme.background) { paddingValues ->
@@ -132,37 +143,17 @@ fun InitProfileScreen(
             OutlinedTextField(
                 value = dateFieldValue,
                 onValueChange = { newValue ->
-                  val oldText = dateFieldValue.text
-                  val newText = newValue.text
-
-                  // Detect if user is deleting (backspace)
-                  val isDeleting = newText.length < oldText.length
-
-                  val formatted = formatDateInput(newText)
-
-                  // Calculate new cursor position
-                  val newCursorPos =
-                      when {
-                        isDeleting -> newValue.selection.start.coerceAtMost(formatted.length)
-                        else -> formatted.length // keep cursor at end when typing
-                      }
-
-                  dateFieldValue =
-                      newValue.copy(text = formatted, selection = TextRange(newCursorPos))
-                  settingsViewModel.editBirthday(formatted)
+                  updateBirthdayField(
+                      newValue = newValue,
+                      currentValue = dateFieldValue,
+                      onFormattedChange = { formatted ->
+                        dateFieldValue = formatted
+                        settingsViewModel.editBirthday(formatted.text)
+                      })
                 },
                 modifier =
                     Modifier.fillMaxWidth().testTag(InitProfileScreenTestTags.BIRTHDAY_FIELD),
-                colors =
-                    OutlinedTextFieldDefaults.colors(
-                        focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                        disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                        focusedTextColor = MaterialTheme.colorScheme.onBackground,
-                        unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-                        cursorColor = MaterialTheme.colorScheme.primary,
-                        focusedBorderColor = MaterialTheme.colorScheme.primary,
-                        unfocusedBorderColor = Color.Transparent),
+                colors = birthdayFieldColors,
                 shape =
                     RoundedCornerShape(dimensionResource(id = R.dimen.rounded_corner_shape_medium)),
                 singleLine = true,
@@ -233,6 +224,10 @@ fun InitProfileScreen(
   }
 }
 
+/**
+ * Formats the input string into "dd/MM/yyyy" format as the user types. Non-digit characters are
+ * removed, and slashes are inserted at appropriate positions.
+ */
 private fun formatDateInput(input: String): String {
   // Remove any non-digit characters
   val digits = input.filter { it.isDigit() }.take(8) // Limit to ddMMyyyy
@@ -242,4 +237,28 @@ private fun formatDateInput(input: String): String {
       if (i == 1 || i == 3) append('/')
     }
   }
+}
+
+/** Updates the birthday field with formatted text and correct cursor position. */
+private fun updateBirthdayField(
+    newValue: TextFieldValue,
+    currentValue: TextFieldValue,
+    onFormattedChange: (TextFieldValue) -> Unit
+) {
+  val oldText = currentValue.text
+  val newText = newValue.text
+
+  // Detect if user is deleting (backspace)
+  val isDeleting = newText.length < oldText.length
+
+  val formatted = formatDateInput(newText)
+
+  // Calculate new cursor position
+  val newCursorPos =
+      when {
+        isDeleting -> newValue.selection.start.coerceAtMost(formatted.length)
+        else -> formatted.length // keep cursor at end when typing
+      }
+
+  onFormattedChange(newValue.copy(text = formatted, selection = TextRange(newCursorPos)))
 }
