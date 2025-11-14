@@ -134,7 +134,12 @@ class NavigationTest : FirestoreGatherlyTest() {
     // sign out
     Firebase.auth.signOut()
 
-    composeTestRule.setContent { GatherlyApp() }
+    // Create google user
+    val fakeGoogleIdToken =
+        FakeJwtGenerator.createFakeGoogleIdToken("12345", email = "test@example.com")
+    val fakeCredentialManager = FakeCredentialManager.create(fakeGoogleIdToken)
+
+    composeTestRule.setContent { GatherlyApp(credentialManager = fakeCredentialManager) }
 
     // Sign in with google
     composeTestRule.checkSignInScreenIsDisplayed()
@@ -142,6 +147,9 @@ class NavigationTest : FirestoreGatherlyTest() {
         .onNodeWithTag(SignInScreenTestTags.ANONYMOUS_BUTTON)
         .assertIsDisplayed()
         .performClick()
+    composeTestRule.waitUntil(timeout) {
+      composeTestRule.onNodeWithTag(HomePageScreenTestTags.FOCUS_BUTTON).isDisplayed()
+    }
 
     // Go to profile screen
     composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).assertIsDisplayed().performClick()
