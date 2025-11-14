@@ -67,9 +67,12 @@ class TimerScreenTest {
     mockitoUtils = MockitoUtils()
     mockitoUtils.chooseCurrentUser(fakeUid)
     userStatusManager = UserStatusManager(auth = mockitoUtils.mockAuth, repo = profileRepository)
+
     timerViewModel =
-        TimerViewModel(todoRepository = toDosRepository, userStatusManager = userStatusManager)
-    timerViewModel = TimerViewModel(toDosRepository, focusSessionsRepository)
+        TimerViewModel(
+            todoRepository = toDosRepository,
+            userStatusManager = userStatusManager,
+            focusSessionsRepository = focusSessionsRepository)
 
     composeTestRule.setContent { TimerScreen(timerViewModel) }
   }
