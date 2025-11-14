@@ -161,7 +161,7 @@ class TimerViewModel(
     currentSessionId = sessionId
     elapsedTime = Duration.ZERO
     startedAt = Timestamp.now()
-    sessionStartedAt = Timestamp.now()
+    sessionStartedAt = startedAt
 
     val newSession =
         FocusSession(

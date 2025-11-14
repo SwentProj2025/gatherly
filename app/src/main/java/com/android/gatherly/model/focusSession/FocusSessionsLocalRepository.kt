@@ -28,7 +28,7 @@ class FocusSessionsLocalRepository : FocusSessionsRepository {
 
   override suspend fun getFocusSession(focusSessionId: String): FocusSession {
     return focusSessions.find { it.focusSessionId == focusSessionId }
-        ?: throw Exception("FocusSessionsLocalRepository: Focus Session not found")
+        ?: throw NoSuchElementException("FocusSessionsLocalRepository: Focus Session not found")
   }
 
   override suspend fun addFocusSession(focusSession: FocusSession) {
@@ -43,7 +43,7 @@ class FocusSessionsLocalRepository : FocusSessionsRepository {
     if (index != -1) {
       focusSessions[index] = updatedFocusSession
     } else {
-      throw Exception("FocusSessionsLocalRepository: Focus Session not found")
+      throw NoSuchElementException("FocusSessionsLocalRepository: Focus Session not found")
     }
   }
 
@@ -52,7 +52,7 @@ class FocusSessionsLocalRepository : FocusSessionsRepository {
     if (index != -1) {
       focusSessions.removeAt(index)
     } else {
-      throw Exception("FocusSessionsLocalRepository: Focus Session not found")
+      throw NoSuchElementException("FocusSessionsLocalRepository: Focus Session not found")
     }
   }
 }
