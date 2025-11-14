@@ -91,7 +91,7 @@ class FocusSessionsRepositoryFirestoreTest : FirestoreFocusSessionsGatherlyTest(
 
   /** Verifies that a session can be edited by its creator. */
   @Test
-  fun editFocusSessionLinkedTodo_updates_existing_session() = runTest {
+  fun updateFocusSession_updates_existing_session() = runTest {
     repository.addFocusSession(session1)
 
     val updatedFocusSession = session1.copy(linkedTodoId = "updated_todo")
