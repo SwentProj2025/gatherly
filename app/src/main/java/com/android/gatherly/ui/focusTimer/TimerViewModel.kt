@@ -6,6 +6,9 @@ import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.android.gatherly.model.focusSession.FocusSession
+import com.android.gatherly.model.focusSession.FocusSessionsRepository
+import com.android.gatherly.model.focusSession.FocusSessionsRepositoryProvider
 import com.android.gatherly.model.profile.ProfileStatus
 import com.android.gatherly.model.profile.UserStatusManager
 import com.android.gatherly.model.todo.ToDo
@@ -61,6 +64,9 @@ data class TimerState(
 class TimerViewModel(
     private val todoRepository: ToDosRepository = ToDosRepositoryProvider.repository,
     private val userStatusManager: UserStatusManager = UserStatusManager(),
+    private val todoRepository: ToDosRepository = ToDosRepositoryProvider.repository,
+    private val focusSessionsRepository: FocusSessionsRepository =
+        FocusSessionsRepositoryProvider.repository,
 ) : ViewModel() {
 
   private val _uiState = MutableStateFlow(TimerState())
@@ -69,6 +75,11 @@ class TimerViewModel(
   private var startedAt: Timestamp? = null
   private var elapsedTime: Duration = Duration.ZERO
   private var timer: Timer? = null
+
+  // This is different from startedAt: it marks when the session was created, whereas startedAt
+  // resets on pause/resume
+  private var sessionStartedAt: Timestamp? = null
+  private var currentSessionId: String? = null
 
   init {
     getAllTodos()
@@ -151,8 +162,11 @@ class TimerViewModel(
       return setError("Planned duration must be greater than 0.")
     }
 
+    val sessionId = focusSessionsRepository.getNewId()
+    currentSessionId = sessionId
     elapsedTime = Duration.ZERO
     startedAt = Timestamp.now()
+    sessionStartedAt = startedAt
 
     _uiState.value =
         _uiState.value.copy(
@@ -163,6 +177,30 @@ class TimerViewModel(
             errorMsg = null)
 
     viewModelScope.launch { userStatusManager.setStatus(ProfileStatus.FOCUSED) }
+
+    val newSession =
+        FocusSession(
+            focusSessionId = sessionId,
+            creatorId = "", // Will be overwritten by repository using currentUserId()
+            linkedTodoId = _uiState.value.linkedTodo?.uid,
+            duration = Duration.ZERO,
+            startedAt = sessionStartedAt,
+            endedAt = null)
+
+    viewModelScope.launch {
+      try {
+        focusSessionsRepository.addFocusSession(newSession)
+        _uiState.value =
+            _uiState.value.copy(
+                plannedDuration = planned,
+                remainingTime = planned,
+                isStarted = true,
+                isPaused = false,
+                errorMsg = null)
+      } catch (_: Exception) {
+        setError("Failed to create focus session")
+      }
+    }
 
     updateClock(planned)
     startTicking()
@@ -178,6 +216,10 @@ class TimerViewModel(
         if (!state.isPaused) startedAt?.let { difference(it, now) } ?: Duration.ZERO
         else Duration.ZERO
     elapsedTime += sinceStart
+    val sessionId = currentSessionId ?: return
+    val started = sessionStartedAt ?: return
+    val endedAt = Timestamp.now()
+    val totalDurationSeconds = (elapsedTime.inWholeSeconds).coerceAtLeast(0)
 
     cancelTicking()
     startedAt = null
@@ -186,6 +228,23 @@ class TimerViewModel(
             remainingTime = Duration.ZERO, isStarted = false, isPaused = false, errorMsg = null)
     viewModelScope.launch { userStatusManager.setStatus(ProfileStatus.ONLINE) }
     updateClock(Duration.ZERO)
+    val updatedSession =
+        FocusSession(
+            focusSessionId = sessionId,
+            creatorId = "", // repo will overwrite
+            linkedTodoId = state.linkedTodo?.uid,
+            duration = totalDurationSeconds.seconds,
+            startedAt = started,
+            endedAt = endedAt)
+    viewModelScope.launch {
+      try {
+        focusSessionsRepository.updateFocusSession(sessionId, updatedSession)
+      } catch (_: Exception) {
+        setError("Failed to finalize focus session")
+      }
+    }
+
+    resetTimer()
   }
 
   /** Pauses the timer if it is currently running. */
@@ -205,8 +264,21 @@ class TimerViewModel(
     updateClock(remaining)
   }
 
-  /** Resets the timer display to 00:00:00. */
-  fun resetTimerTime() {
+  /** Resets the timer. */
+  fun resetTimer() {
+    cancelTicking()
+    startedAt = null
+    currentSessionId = null
+    sessionStartedAt = null
+    timer = null
+    elapsedTime = Duration.ZERO
+    _uiState.value =
+        _uiState.value.copy(
+            plannedDuration = Duration.ZERO,
+            remainingTime = Duration.ZERO,
+            isStarted = false,
+            isPaused = false,
+            errorMsg = null)
     updateClock(Duration.ZERO)
   }
 
@@ -227,12 +299,11 @@ class TimerViewModel(
           updateClock(remaining)
 
           if (remaining <= Duration.ZERO) {
-            cancelTicking()
-            startedAt = null
             elapsedTime = state.plannedDuration
             _uiState.value = _uiState.value.copy(isStarted = false, isPaused = false)
             updateClock(Duration.ZERO)
             viewModelScope.launch { userStatusManager.setStatus(ProfileStatus.ONLINE) }
+            endTimer()
           }
         }
   }

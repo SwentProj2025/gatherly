@@ -181,7 +181,7 @@ fun TimerScreenContent(timerViewModel: TimerViewModel) {
 
             // Reset button
             TimerButton(
-                { timerViewModel.resetTimerTime() },
+                { timerViewModel.resetTimer() },
                 MaterialTheme.colorScheme.surfaceVariant,
                 MaterialTheme.colorScheme.onSurfaceVariant,
                 stringResource(R.string.timer_reset),

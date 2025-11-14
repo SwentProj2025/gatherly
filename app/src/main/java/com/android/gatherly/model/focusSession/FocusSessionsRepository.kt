@@ -46,13 +46,13 @@ interface FocusSessionsRepository {
   suspend fun addFocusSession(focusSession: FocusSession)
 
   /**
-   * Edits the linked todo of a [FocusSession] with the given ID.
+   * Updates the [FocusSession] with the given ID.
    *
-   * @param focusSessionId The unique identifier of the focus session to edit.
-   * @param newLinkedTodoId The if of the new linked todo.
+   * @param focusSessionId The unique identifier of the focus session to update.
+   * @param updatedFocusSession The updated focus session.
    * @throws SecurityException if the current user is not the creator of the focus session.
    */
-  suspend fun editFocusSessionLinkedTodo(focusSessionId: String, newLinkedTodoId: String)
+  suspend fun updateFocusSession(focusSessionId: String, updatedFocusSession: FocusSession)
 
   /**
    * Deletes the [FocusSession] with the given ID.

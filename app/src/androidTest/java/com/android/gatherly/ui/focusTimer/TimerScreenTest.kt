@@ -10,6 +10,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.android.gatherly.model.focusSession.FocusSessionsLocalRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
@@ -47,6 +48,7 @@ class TimerScreenTest {
           ownerId = "test-user")
 
   private lateinit var toDosRepository: ToDosRepository
+  private lateinit var focusSessionsRepository: FocusSessionsLocalRepository
   private lateinit var timerViewModel: TimerViewModel
 
   private lateinit var mockitoUtils: MockitoUtils
@@ -57,6 +59,7 @@ class TimerScreenTest {
   @Before
   fun setUp() {
     toDosRepository = ToDosLocalRepository()
+    focusSessionsRepository = FocusSessionsLocalRepository()
     // Add a todo in the repository to test linking
     profileRepository = ProfileLocalRepository()
     fill_repository()
@@ -66,6 +69,7 @@ class TimerScreenTest {
     userStatusManager = UserStatusManager(auth = mockitoUtils.mockAuth, repo = profileRepository)
     timerViewModel =
         TimerViewModel(todoRepository = toDosRepository, userStatusManager = userStatusManager)
+    timerViewModel = TimerViewModel(toDosRepository, focusSessionsRepository)
 
     composeTestRule.setContent { TimerScreen(timerViewModel) }
   }

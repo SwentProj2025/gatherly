@@ -221,7 +221,6 @@ dependencies {
     implementation(libs.firebase.ui.auth)
     implementation(libs.firebase.auth.ktx)
     implementation(libs.firebase.auth)
-    implementation("com.google.firebase:firebase-storage-ktx:21.0.1")
 
     // Credential Manager (for Google Sign-In)
     implementation(libs.credentials)

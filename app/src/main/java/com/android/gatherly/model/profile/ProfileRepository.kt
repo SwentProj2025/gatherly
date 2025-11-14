@@ -112,6 +112,16 @@ interface ProfileRepository {
    */
   suspend fun initProfileIfMissing(uid: String, defaultPhotoUrl: String): Boolean
 
+  /**
+   * Deletes a user's entire profile, including:
+   * - Their document in /profiles/{uid}
+   * - Their username in /usernames/{username}
+   * - Their profile picture in Firebase Storage
+   *
+   * After this call, the username becomes available again for reuse.
+   */
+  suspend fun deleteUserProfile(uid: String)
+
   /** Creates a profile. This is to be used only for testing purpose. */
   suspend fun addProfile(profile: Profile)
 
