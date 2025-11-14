@@ -3,6 +3,7 @@ package com.android.gatherly.ui.settings
 import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
@@ -139,27 +140,7 @@ fun SettingsScreen(
                   horizontalAlignment = Alignment.CenterHorizontally) {
 
                     // Profile Picture
-                    if (uiState.profilePictureUrl.isNotEmpty()) {
-                      Image(
-                          painter = rememberAsyncImagePainter(uiState.profilePictureUrl),
-                          contentDescription =
-                              stringResource(R.string.settings_profile_picture_description),
-                          modifier =
-                              Modifier.size(dimensionResource(id = R.dimen.profile_pic_size))
-                                  .clip(CircleShape)
-                                  .testTag(SettingsScreenTestTags.PROFILE_PICTURE_URL_NOT_EMPTY),
-                          contentScale = ContentScale.Crop)
-                    } else {
-                      Image(
-                          painter = painterResource(R.drawable.ic_launcher_foreground),
-                          contentDescription =
-                              stringResource(R.string.settings_profile_picture_description),
-                          modifier =
-                              Modifier.size(dimensionResource(id = R.dimen.profile_pic_size))
-                                  .clip(CircleShape)
-                                  .testTag(SettingsScreenTestTags.PROFILE_PICTURE),
-                          contentScale = ContentScale.Crop)
-                    }
+                    ProfilePictureImage(uiState.profilePictureUrl)
 
                     Spacer(modifier = Modifier.height(fieldSpacingRegular))
 
@@ -204,62 +185,12 @@ fun SettingsScreen(
                         }
 
                     if (showPhotoPickerDialog) {
-                      AlertDialog(
-                          onDismissRequest = { showPhotoPickerDialog = false },
-                          title = {
-                            Text(
-                                color = MaterialTheme.colorScheme.primary,
-                                text = stringResource(id = R.string.settings_alert_dialog_title))
-                          },
-                          text = {
-                            Text(
-                                color = MaterialTheme.colorScheme.primary,
-                                text = stringResource(id = R.string.settings_alert_dialog_text))
-                          },
-                          confirmButton = {
-                            Column {
-                              TextButton(
-                                  onClick = {
-                                    takePhotoLauncher.launch(imageUri)
-                                    showPhotoPickerDialog = false
-                                  },
-                                  modifier =
-                                      Modifier.testTag(
-                                          SettingsScreenTestTags.PHOTO_PICKER_CAMERA_BUTTON)) {
-                                    Text(
-                                        color = MaterialTheme.colorScheme.primary,
-                                        text =
-                                            stringResource(
-                                                id = R.string.settings_alert_dialog_option_camera))
-                                  }
-
-                              TextButton(
-                                  onClick = {
-                                    pickImageLauncher.launch(MIME_TYPE_IMAGE)
-                                    showPhotoPickerDialog = false
-                                  },
-                                  modifier =
-                                      Modifier.testTag(
-                                          SettingsScreenTestTags.PHOTO_PICKER_GALLERY_BUTTON)) {
-                                    Text(
-                                        color = MaterialTheme.colorScheme.primary,
-                                        text =
-                                            stringResource(
-                                                id = R.string.settings_alert_dialog_option_gallery))
-                                  }
-                            }
-                          },
-                          dismissButton = {
-                            TextButton(
-                                onClick = { showPhotoPickerDialog = false },
-                                modifier =
-                                    Modifier.testTag(
-                                        SettingsScreenTestTags.PHOTO_PICKER_CANCEL_BUTTON)) {
-                                  Text(
-                                      stringResource(
-                                          id = R.string.settings_alert_dialog_option_cancel))
-                                }
-                          })
+                      PhotoPickerDialog(
+                          imageUri = imageUri,
+                          takePhotoLauncher = takePhotoLauncher,
+                          pickImageLauncher = pickImageLauncher) {
+                            showPhotoPickerDialog = false
+                          }
                     }
 
                     Spacer(modifier = Modifier.height(fieldSpacingMedium))
@@ -373,4 +304,118 @@ fun SettingsField(
                   .testTag("${testTag}_error"))
     }
   }
+}
+
+/**
+ * Displays a circular profile picture.
+ * - If [pictureUrl] is non-empty, loads the image from the URL using Coil.
+ * - If [pictureUrl] is empty, shows a default placeholder image.
+ * - Adds a test tag for UI testing:
+ *     - [SettingsScreenTestTags.PROFILE_PICTURE_URL_NOT_EMPTY] if URL is provided
+ *     - [SettingsScreenTestTags.PROFILE_PICTURE] otherwise
+ *
+ * @param pictureUrl The URL of the profile picture. Can be empty to show a placeholder.
+ */
+@Composable
+fun ProfilePictureImage(pictureUrl: String) {
+  val painter =
+      if (pictureUrl.isNotEmpty()) {
+        rememberAsyncImagePainter(pictureUrl)
+      } else {
+        painterResource(R.drawable.ic_launcher_foreground)
+      }
+
+  Image(
+      painter = painter,
+      contentDescription = stringResource(R.string.settings_profile_picture_description),
+      modifier =
+          Modifier.size(dimensionResource(id = R.dimen.profile_pic_size))
+              .clip(CircleShape)
+              .testTag(
+                  if (pictureUrl.isNotEmpty()) SettingsScreenTestTags.PROFILE_PICTURE_URL_NOT_EMPTY
+                  else SettingsScreenTestTags.PROFILE_PICTURE),
+      contentScale = ContentScale.Crop)
+}
+
+/**
+ * Internal content of the [PhotoPickerDialog] showing the camera and gallery buttons.
+ *
+ * @param imageUri The Uri where a new photo will be saved when using the camera option.
+ * @param takePhotoLauncher Launcher for taking a new photo with the camera.
+ * @param pickImageLauncher Launcher for picking an image from the gallery.
+ * @param onDismiss Lambda called when a button is clicked or the dialog should close.
+ */
+@Composable
+private fun PhotoPickerDialogContent(
+    imageUri: Uri,
+    takePhotoLauncher: ActivityResultLauncher<Uri>,
+    pickImageLauncher: ActivityResultLauncher<String>,
+    onDismiss: () -> Unit
+) {
+  Column {
+    TextButton(
+        onClick = {
+          takePhotoLauncher.launch(imageUri)
+          onDismiss()
+        },
+        modifier = Modifier.testTag(SettingsScreenTestTags.PHOTO_PICKER_CAMERA_BUTTON)) {
+          Text(
+              color = MaterialTheme.colorScheme.primary,
+              text = stringResource(id = R.string.settings_alert_dialog_option_camera))
+        }
+
+    TextButton(
+        onClick = {
+          pickImageLauncher.launch(MIME_TYPE_IMAGE)
+          onDismiss()
+        },
+        modifier = Modifier.testTag(SettingsScreenTestTags.PHOTO_PICKER_GALLERY_BUTTON)) {
+          Text(
+              color = MaterialTheme.colorScheme.primary,
+              text = stringResource(id = R.string.settings_alert_dialog_option_gallery))
+        }
+  }
+}
+
+/**
+ * Displays a photo picker AlertDialog
+ *
+ * The dialog allows the user to either take a new photo or pick an existing image from the gallery.
+ * It also provides a cancel button to dismiss the dialog.
+ *
+ * @param imageUri The Uri where a new photo will be saved when using the camera option.
+ * @param takePhotoLauncher Launcher for taking a new photo with the camera.
+ * @param pickImageLauncher Launcher for picking an image from the gallery.
+ * @param onDismiss Lambda called when the dialog is dismissed.
+ */
+@Composable
+fun PhotoPickerDialog(
+    imageUri: Uri,
+    takePhotoLauncher: ActivityResultLauncher<Uri>,
+    pickImageLauncher: ActivityResultLauncher<String>,
+    onDismiss: () -> Unit
+) {
+
+  AlertDialog(
+      onDismissRequest = onDismiss,
+      title = {
+        Text(
+            color = MaterialTheme.colorScheme.primary,
+            text = stringResource(id = R.string.settings_alert_dialog_title))
+      },
+      text = {
+        Text(
+            color = MaterialTheme.colorScheme.primary,
+            text = stringResource(id = R.string.settings_alert_dialog_text))
+      },
+      confirmButton = {
+        PhotoPickerDialogContent(imageUri, takePhotoLauncher, pickImageLauncher, onDismiss)
+      },
+      dismissButton = {
+        TextButton(
+            onClick = onDismiss,
+            modifier = Modifier.testTag(SettingsScreenTestTags.PHOTO_PICKER_CANCEL_BUTTON)) {
+              Text(stringResource(id = R.string.settings_alert_dialog_option_cancel))
+            }
+      })
 }
