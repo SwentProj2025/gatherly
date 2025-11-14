@@ -64,7 +64,6 @@ data class TimerState(
 class TimerViewModel(
     private val todoRepository: ToDosRepository = ToDosRepositoryProvider.repository,
     private val userStatusManager: UserStatusManager = UserStatusManager(),
-    private val todoRepository: ToDosRepository = ToDosRepositoryProvider.repository,
     private val focusSessionsRepository: FocusSessionsRepository =
         FocusSessionsRepositoryProvider.repository,
 ) : ViewModel() {

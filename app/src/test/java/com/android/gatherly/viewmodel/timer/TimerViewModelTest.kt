@@ -78,9 +78,12 @@ class TimerViewModelTest {
     toDosRepository = ToDosLocalRepository()
 
     statusManagerMock = mock()
-    viewModel = TimerViewModel(toDosRepository, statusManagerMock)
     focusSessionsRepository = FocusSessionsLocalRepository()
-    viewModel = TimerViewModel(toDosRepository, focusSessionsRepository)
+    viewModel =
+        TimerViewModel(
+            todoRepository = toDosRepository,
+            userStatusManager = statusManagerMock,
+            focusSessionsRepository = focusSessionsRepository)
   }
 
   @After
