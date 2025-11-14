@@ -3,7 +3,6 @@ package com.android.gatherly.model.profile
 import android.content.ContentValues
 import android.net.Uri
 import android.provider.MediaStore
-import android.util.Log
 import androidx.test.platform.app.InstrumentationRegistry
 import com.android.gatherly.utils.FirebaseEmulator
 import com.android.gatherly.utils.FirestoreGatherlyProfileTest
@@ -707,13 +706,64 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     auth.signInAnonymously().await()
     val userBUid = auth.currentUser!!.uid
     repo.initProfileIfMissing(userBUid, "bob.png")
+    auth.signOut()
+
+    // User C
+    auth.signInAnonymously().await()
+    val userCUid = auth.currentUser!!.uid
+    repo.initProfileIfMissing(userCUid, "charlie.png")
+    auth.signOut()
+
+    // User A
+    auth.signInAnonymously().await()
+    val userAUid = auth.currentUser!!.uid
+    repo.initProfileIfMissing(userAUid, "alice.png")
+
+    // Create a fictional event ID
+    val eventId = "AliceEventID"
+
+    // UserB create a new event
+    repo.createEvent(eventId, userAUid)
+
+    // Verify that the event is in the User B profile's events list
+    val profileA = repo.getProfileByUid(userAUid)
+    assertNotNull(profileA)
+    assertTrue(profileA!!.ownedEventIds.contains(eventId))
+
+    val participants = listOf(userAUid, userBUid, userCUid)
+
+    repo.allParticipateEvent(eventId, participants)
+
+    val updatedProfileA = repo.getProfileByUid(userAUid)
+    val updatedProfileB = repo.getProfileByUid(userBUid)
+    val updatedProfileC = repo.getProfileByUid(userCUid)
+
+    assertNotNull(updatedProfileA)
+    assertNotNull(updatedProfileB)
+    assertNotNull(updatedProfileC)
+    assertTrue(updatedProfileA!!.participatingEventIds.contains(eventId))
+    assertTrue(updatedProfileB!!.participatingEventIds.contains(eventId))
+    assertTrue(updatedProfileC!!.participatingEventIds.contains(eventId))
+  }
+
+  @Test
+  fun testAllUnregisterEvent() = runTest {
+    val auth = FirebaseEmulator.auth
+    val firestore = FirebaseEmulator.firestore
+    val storage = FirebaseEmulator.storage
+    val repo = ProfileRepositoryFirestore(firestore, storage)
+
+    // User B
+    auth.signInAnonymously().await()
+    val userBUid = auth.currentUser!!.uid
+    repo.initProfileIfMissing(userBUid, "bob.png")
     val profileB = repo.getProfileByUid(userBUid)
     auth.signOut()
 
     // User C
     auth.signInAnonymously().await()
     val userCUid = auth.currentUser!!.uid
-    repo.initProfileIfMissing(userBUid, "charlie.png")
+    repo.initProfileIfMissing(userCUid, "charlie.png")
     val profileC = repo.getProfileByUid(userCUid)
     auth.signOut()
 
@@ -733,13 +783,9 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     assertNotNull(profileA)
     assertTrue(profileA!!.ownedEventIds.contains(eventId))
 
-    auth.signOut()
+    val participants = listOf(userAUid, userBUid, userCUid)
 
-    val participants = listOf(userBUid, userAUid, userCUid)
-
-    Log.e("test", "PERMISSION DENIED ? BEFORE ALL PARTICIPATE EVENT ")
     repo.allParticipateEvent(eventId, participants)
-    Log.e("test", "PERMISSION DENIED ? AFTER ALL PARTICIPATE EVENT")
 
     val updatedProfileA = repo.getProfileByUid(userAUid)
     val updatedProfileB = repo.getProfileByUid(userBUid)
@@ -751,10 +797,18 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     assertTrue(updatedProfileA!!.participatingEventIds.contains(eventId))
     assertTrue(updatedProfileB!!.participatingEventIds.contains(eventId))
     assertTrue(updatedProfileC!!.participatingEventIds.contains(eventId))
-  }
 
-  @Test
-  fun testAllUnregisterEvent() = runTest{
+    repo.allUnregisterEvent(eventId, participants)
 
+    val updated2ProfileA = repo.getProfileByUid(userAUid)
+    val updated2ProfileB = repo.getProfileByUid(userBUid)
+    val updated2ProfileC = repo.getProfileByUid(userCUid)
+
+    assertNotNull(updated2ProfileA)
+    assertNotNull(updated2ProfileB)
+    assertNotNull(updated2ProfileC)
+    assertFalse(updated2ProfileA!!.participatingEventIds.contains(eventId))
+    assertFalse(updated2ProfileB!!.participatingEventIds.contains(eventId))
+    assertFalse(updated2ProfileC!!.participatingEventIds.contains(eventId))
   }
 }

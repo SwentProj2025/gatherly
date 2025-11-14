@@ -392,8 +392,7 @@ class AddEventViewModel(
 
       // Save in event repository
       viewModelScope.launch {
-        createEvent(
-            eventsRepository, profileRepository, event, currentProfile.uid, participants)
+        createEvent(eventsRepository, profileRepository, event, currentProfile.uid, participants)
         uiState = uiState.copy(displayToast = true, toastString = "Saved")
       }
 

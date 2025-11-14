@@ -9,13 +9,10 @@ import com.android.gatherly.model.profile.ProfileRepository
  * by this functions.
  */
 
-
-
-
 /**
  * Function util: register the user to this event:
  * * from eventsRepository pov : Add the userId to the event participants list
- * * from profileRepository pov :  Add the event to the profile participantEvents list  of the user
+ * * from profileRepository pov : Add the event to the profile participantEvents list of the user
  *
  * @param eventsRepository : EventsRepository
  * @param profileRepository : ProfileRepository
@@ -32,11 +29,11 @@ suspend fun userParticipate(
   profileRepository.participateEvent(eventId, userId)
 }
 
-
 /**
  * Function util: unregister the user from this event:
  * * from eventsRepository pov : Delete the userId from the event participants list
- * * from profileRepository pov :  Delete the event from the profile participantEvents list of the user
+ * * from profileRepository pov : Delete the event from the profile participantEvents list of the
+ *   user
  *
  * @param eventsRepository : EventsRepository
  * @param profileRepository : ProfileRepository
@@ -53,12 +50,11 @@ suspend fun userUnregister(
   profileRepository.unregisterEvent(eventId, userId)
 }
 
-
 /**
  * Function util: create a new event:
  * * from eventsRepository pov : create this event
- * * from profileRepository pov : register all the participants chosen by the creator
- * and create the event into the ownerEvents list of the creator
+ * * from profileRepository pov : register all the participants chosen by the creator and create the
+ *   event into the ownerEvents list of the creator
  *
  * @param eventsRepository : EventsRepository
  * @param profileRepository : ProfileRepository
@@ -81,8 +77,8 @@ suspend fun createEvent(
 /**
  * Function util: that will cancel the event:
  * * from eventsRepository pov : delete this event
- * * from profileRepository pov : unregister all the participants and
- * delete the event from the ownerEvents list of the creator
+ * * from profileRepository pov : unregister all the participants and delete the event from the
+ *   ownerEvents list of the creator
  *
  * @param eventsRepository : EventsRepository
  * @param profileRepository : ProfileRepository
