@@ -1,7 +1,5 @@
 package com.android.gatherly.ui.settings
 
-import android.content.Context
-import android.graphics.ImageDecoder
 import android.net.Uri
 import android.util.Log
 import androidx.credentials.ClearCredentialStateRequest
@@ -13,15 +11,12 @@ import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryProvider
 import com.android.gatherly.model.profile.Username
 import com.android.gatherly.utils.DateParser
-import com.android.gatherly.utils.saveProfilePictureLocally
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
-import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Locale
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -287,23 +282,6 @@ class SettingsViewModel(
       true
     } else {
       repository.updateUsername(id, originalProfile?.username, state.username)
-    }
-  }
-
-  /**
-   * Decodes the selected gallery image, saves it to internal storage, and updates the UI state with
-   * the new photo URI. Logs errors if anything fails.
-   */
-  fun onGalleryImagePicked(context: Context, uri: Uri, imageFile: File) {
-    viewModelScope.launch {
-      try {
-        val source = ImageDecoder.createSource(context.contentResolver, uri)
-        val bitmap = ImageDecoder.decodeBitmap(source)
-        saveProfilePictureLocally(context, bitmap, Dispatchers.IO)
-        editPhoto("${imageFile.toURI()}?t=${System.currentTimeMillis()}")
-      } catch (e: Exception) {
-        Log.e("SettingsViewModel", "Failed to decode and save gallery image", e)
-      }
     }
   }
 }

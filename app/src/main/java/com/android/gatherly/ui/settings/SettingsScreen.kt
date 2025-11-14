@@ -88,7 +88,7 @@ fun SettingsScreen(
   val pickImageLauncher =
       rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { uri: Uri?
         ->
-        uri?.let { settingsViewModel.onGalleryImagePicked(context, it, imageFile) }
+        uri?.let { settingsViewModel.editPhoto(uri.toString()) }
       }
 
   // launcher to take a photo with the camera
