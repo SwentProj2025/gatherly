@@ -114,6 +114,10 @@ class ProfileLocalRepository : ProfileRepository {
     return Friends(friendUsernames = friendUsernames, nonFriendUsernames = nonFriendUsernames)
   }
 
+  override suspend fun deleteUserProfile(uid: String) {
+    profiles.removeIf { it.uid == uid }
+  }
+
   override suspend fun getListNoFriends(currentUserId: String): List<String> {
     val currentProfile = getProfileByUid(currentUserId) ?: return emptyList()
     val friendUids = currentProfile.friendUids.toSet()

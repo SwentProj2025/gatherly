@@ -197,6 +197,8 @@ class FriendsViewModelTest {
           override suspend fun unregisterEvent(eventId: String, currentUserId: String) {}
 
           override suspend fun allUnregisterEvent(eventId: String, participants: List<String>) {}
+
+          override suspend fun deleteUserProfile(uid: String) {}
         }
     val errorViewModel =
         FriendsViewModel(repository = throwingRepository, authProvider = { mockitoUtils.mockAuth })
