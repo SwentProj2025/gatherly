@@ -129,14 +129,15 @@ class NavigationTest : FirestoreGatherlyTest() {
   /** Verifies that upgrading an anonymous account to google shows the init profile screen */
   @Test
   fun upgradeAccountOnProfileWorks() {
-    val timeout = 60_000L
+    val timeout = 10_000L
 
     // sign out
     Firebase.auth.signOut()
 
     // Create google user
     val fakeGoogleIdToken =
-        FakeJwtGenerator.createFakeGoogleIdToken("12345", email = "test@example.com")
+        FakeJwtGenerator.createFakeGoogleIdToken(
+            "test_user1", email = "test_profile_upgrade@example.com")
     val fakeCredentialManager = FakeCredentialManager.create(fakeGoogleIdToken)
 
     composeTestRule.setContent { GatherlyApp(credentialManager = fakeCredentialManager) }
