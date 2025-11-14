@@ -93,7 +93,12 @@ class FriendsViewModel(
    */
   fun followFriend(friend: String, currentUserId: String) {
     val currentFriends = _uiState.value.friends
-    val updatedFriends = currentFriends.filter { it != friend }
+    val updatedFriends =
+        if (currentFriends.contains(friend)) {
+          currentFriends
+        } else {
+          currentFriends + friend
+        }
     _uiState.value = _uiState.value.copy(friends = updatedFriends)
     viewModelScope.launch {
       try {
@@ -101,7 +106,7 @@ class FriendsViewModel(
         refreshFriends(currentUserId)
       } catch (e: Exception) {
         _uiState.value =
-            _uiState.value.copy(friends = currentFriends, errorMsg = "Error failed to unfollow.")
+            _uiState.value.copy(friends = currentFriends, errorMsg = "Error failed to follow.")
       }
     }
   }
@@ -114,7 +119,7 @@ class FriendsViewModel(
     fun provideFactory(
         profileRepository: ProfileRepository =
             ProfileRepositoryFirestore(Firebase.firestore, Firebase.storage),
-        currentUserId: String = com.google.firebase.Firebase.auth.currentUser?.uid ?: ""
+        currentUserId: String = Firebase.auth.currentUser?.uid ?: ""
     ): ViewModelProvider.Factory {
       return GenericViewModelFactory { FriendsViewModel(profileRepository) }
     }
