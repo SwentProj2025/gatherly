@@ -140,6 +140,12 @@ class TimerViewModel(
 
   /** Starts or resumes the timer based on the current state. */
   fun startTimer() {
+    if (!_uiState.value.isStarted) {
+      if (_uiState.value.hours.isEmpty()) _uiState.value = uiState.value.copy(hours = "00")
+      if (_uiState.value.minutes.isEmpty()) _uiState.value = uiState.value.copy(minutes = "00")
+      if (_uiState.value.seconds.isEmpty()) _uiState.value = uiState.value.copy(seconds = "00")
+    }
+
     // If resuming from pause
     if (_uiState.value.isStarted && _uiState.value.isPaused) {
       startedAt = Timestamp.now()

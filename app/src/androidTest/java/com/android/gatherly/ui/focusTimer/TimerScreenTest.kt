@@ -11,6 +11,7 @@ import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.gatherly.model.focusSession.FocusSessionsLocalRepository
+import com.android.gatherly.model.focusSession.FocusSessionsRepository
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosLocalRepository
@@ -43,7 +44,7 @@ class TimerScreenTest {
           ownerId = "test-user")
 
   private lateinit var toDosRepository: ToDosRepository
-  private lateinit var focusSessionsRepository: FocusSessionsLocalRepository
+  private lateinit var focusSessionsRepository: FocusSessionsRepository
   private lateinit var timerViewModel: TimerViewModel
 
   @Before
