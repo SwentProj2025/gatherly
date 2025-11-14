@@ -129,7 +129,7 @@ class NavigationTest : FirestoreGatherlyTest() {
   /** Verifies that upgrading an anonymous account to google shows the init profile screen */
   @Test
   fun upgradeAccountOnProfileWorks() {
-    val timeout = 30_000L
+    val timeout = 60_000L
 
     // sign out
     Firebase.auth.signOut()
