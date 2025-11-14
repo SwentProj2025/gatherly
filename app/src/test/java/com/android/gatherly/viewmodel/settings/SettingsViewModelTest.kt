@@ -1,13 +1,11 @@
 package com.android.gatherly.viewmodel.settings
 
 import android.content.Context
-import android.graphics.Bitmap
 import android.net.Uri
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.ui.settings.SettingsViewModel
 import com.android.gatherly.utilstest.MockitoUtils
-import kotlin.io.path.createTempDirectory
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -379,40 +377,5 @@ class SettingsViewModelTest {
       assertTrue(viewModel.uiState.value.saveSuccess)
       assertNull(viewModel.uiState.value.errorMsg)
     }
-  }
-
-  /**
-   * Verifies that saveProfilePictureLocally successfully writes the bitmap to a temporary files
-   * directory and returns true when no errors occur.
-   */
-  @Test
-  fun saveProfilePictureLocally_returnsTrue_whenSuccessful() = runTest {
-    val bitmap = Mockito.mock(Bitmap::class.java)
-    val filesDir = createTempDirectory("testFiles").toFile() // safer temp dir
-    Mockito.`when`(context.filesDir).thenReturn(filesDir)
-
-    val result = viewModel.saveProfilePictureLocally(context, bitmap)
-    assertTrue(result)
-
-    filesDir.deleteRecursively()
-  }
-
-  /**
-   * Verifies that saveProfilePictureLocally returns false if bitmap.compress throws an exception,
-   * simulating a failure during saving.
-   */
-  @Test
-  fun saveProfilePictureLocally_returnsFalse_whenBitmapCompressFails() = runTest {
-    val bitmap = Mockito.mock(Bitmap::class.java)
-    Mockito.`when`(bitmap.compress(Mockito.any(), Mockito.anyInt(), Mockito.any()))
-        .thenThrow(RuntimeException("compress failed"))
-
-    val filesDir = createTempDirectory("testFiles").toFile() // safer temp dir
-    Mockito.`when`(context.filesDir).thenReturn(filesDir)
-
-    val result = viewModel.saveProfilePictureLocally(context, bitmap)
-    assertFalse(result)
-
-    filesDir.deleteRecursively()
   }
 }

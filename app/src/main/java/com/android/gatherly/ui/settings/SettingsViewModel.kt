@@ -1,7 +1,6 @@
 package com.android.gatherly.ui.settings
 
 import android.content.Context
-import android.graphics.Bitmap
 import android.graphics.ImageDecoder
 import android.net.Uri
 import android.util.Log
@@ -14,12 +13,12 @@ import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryProvider
 import com.android.gatherly.model.profile.Username
 import com.android.gatherly.utils.DateParser
+import com.android.gatherly.utils.saveProfilePictureLocally
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import java.io.File
-import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 import java.util.Locale
 import kotlinx.coroutines.Dispatchers
@@ -27,7 +26,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 
 // Portions of the code in this file are adapted from the bootcamp solution provided by Swent staff
 
@@ -301,32 +299,10 @@ class SettingsViewModel(
       try {
         val source = ImageDecoder.createSource(context.contentResolver, uri)
         val bitmap = ImageDecoder.decodeBitmap(source)
-        saveProfilePictureLocally(context, bitmap)
+        saveProfilePictureLocally(context, bitmap, Dispatchers.IO)
         editPhoto("${imageFile.toURI()}?t=${System.currentTimeMillis()}")
       } catch (e: Exception) {
         Log.e("SettingsViewModel", "Failed to decode and save gallery image", e)
-      }
-    }
-  }
-
-  /**
-   * Saves a [Bitmap] image to the app's internal storage as "profile_picture.jpg".
-   *
-   * @param context The [Context] used to access the app's internal files directory.
-   * @param bitmap The [Bitmap] image to save.
-   *
-   * The image is compressed in JPEG format with 90% quality. The file will be overwritten if it
-   * already exists.
-   */
-  suspend fun saveProfilePictureLocally(context: Context, bitmap: Bitmap): Boolean {
-    return withContext(Dispatchers.IO) {
-      try {
-        val file = File(context.filesDir, PROFILE_PIC_FILENAME)
-        FileOutputStream(file).use { out -> bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out) }
-        true
-      } catch (e: Exception) {
-        Log.e("SettingsViewModel", "Failed to save picture to local file", e)
-        false
       }
     }
   }
