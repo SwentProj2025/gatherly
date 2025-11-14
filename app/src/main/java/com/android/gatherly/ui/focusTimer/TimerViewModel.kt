@@ -9,6 +9,8 @@ import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.focusSession.FocusSession
 import com.android.gatherly.model.focusSession.FocusSessionsRepository
 import com.android.gatherly.model.focusSession.FocusSessionsRepositoryProvider
+import com.android.gatherly.model.profile.ProfileStatus
+import com.android.gatherly.model.profile.UserStatusManager
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.model.todo.ToDosRepositoryProvider
@@ -57,9 +59,11 @@ data class TimerState(
  * ViewModel that manages a focus countdown timer
  *
  * @param todoRepository The repository used to fetch and manage ToDos
+ * @param userStatusManager Updates the current user's online/offline status.
  */
 class TimerViewModel(
     private val todoRepository: ToDosRepository = ToDosRepositoryProvider.repository,
+    private val userStatusManager: UserStatusManager = UserStatusManager(),
     private val focusSessionsRepository: FocusSessionsRepository =
         FocusSessionsRepositoryProvider.repository,
 ) : ViewModel() {
@@ -169,6 +173,16 @@ class TimerViewModel(
     startedAt = Timestamp.now()
     sessionStartedAt = startedAt
 
+    _uiState.value =
+        _uiState.value.copy(
+            plannedDuration = planned,
+            remainingTime = planned,
+            isStarted = true,
+            isPaused = false,
+            errorMsg = null)
+
+    viewModelScope.launch { userStatusManager.setStatus(ProfileStatus.FOCUSED) }
+
     val newSession =
         FocusSession(
             focusSessionId = sessionId,
@@ -212,6 +226,13 @@ class TimerViewModel(
     val endedAt = Timestamp.now()
     val totalDurationSeconds = (elapsedTime.inWholeSeconds).coerceAtLeast(0)
 
+    cancelTicking()
+    startedAt = null
+    _uiState.value =
+        state.copy(
+            remainingTime = Duration.ZERO, isStarted = false, isPaused = false, errorMsg = null)
+    viewModelScope.launch { userStatusManager.setStatus(ProfileStatus.ONLINE) }
+    updateClock(Duration.ZERO)
     val updatedSession =
         FocusSession(
             focusSessionId = sessionId,
@@ -244,6 +265,7 @@ class TimerViewModel(
     val remaining = max(0, (state.plannedDuration - elapsedTime).inWholeSeconds).seconds
     cancelTicking()
     _uiState.value = state.copy(remainingTime = remaining, isPaused = true, errorMsg = null)
+    viewModelScope.launch { userStatusManager.setStatus(ProfileStatus.ONLINE) }
     updateClock(remaining)
   }
 
@@ -283,6 +305,9 @@ class TimerViewModel(
 
           if (remaining <= Duration.ZERO) {
             elapsedTime = state.plannedDuration
+            _uiState.value = _uiState.value.copy(isStarted = false, isPaused = false)
+            updateClock(Duration.ZERO)
+            viewModelScope.launch { userStatusManager.setStatus(ProfileStatus.ONLINE) }
             endTimer()
           }
         }

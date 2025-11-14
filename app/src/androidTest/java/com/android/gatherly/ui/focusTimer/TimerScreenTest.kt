@@ -12,10 +12,15 @@ import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.gatherly.model.focusSession.FocusSessionsLocalRepository
 import com.android.gatherly.model.focusSession.FocusSessionsRepository
+import com.android.gatherly.model.profile.Profile
+import com.android.gatherly.model.profile.ProfileLocalRepository
+import com.android.gatherly.model.profile.ProfileRepository
+import com.android.gatherly.model.profile.UserStatusManager
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.model.todo.ToDosRepository
+import com.android.gatherly.utils.MockitoUtils
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -47,19 +52,36 @@ class TimerScreenTest {
   private lateinit var focusSessionsRepository: FocusSessionsRepository
   private lateinit var timerViewModel: TimerViewModel
 
+  private lateinit var mockitoUtils: MockitoUtils
+  private lateinit var profileRepository: ProfileRepository
+  private lateinit var userStatusManager: UserStatusManager
+  private val fakeUid = "test-user"
+
   @Before
   fun setUp() {
     toDosRepository = ToDosLocalRepository()
     focusSessionsRepository = FocusSessionsLocalRepository()
     // Add a todo in the repository to test linking
+    profileRepository = ProfileLocalRepository()
     fill_repository()
-    timerViewModel = TimerViewModel(toDosRepository, focusSessionsRepository)
+
+    mockitoUtils = MockitoUtils()
+    mockitoUtils.chooseCurrentUser(fakeUid)
+    userStatusManager = UserStatusManager(auth = mockitoUtils.mockAuth, repo = profileRepository)
+
+    timerViewModel =
+        TimerViewModel(
+            todoRepository = toDosRepository,
+            userStatusManager = userStatusManager,
+            focusSessionsRepository = focusSessionsRepository)
 
     composeTestRule.setContent { TimerScreen(timerViewModel) }
   }
 
   fun fill_repository() = runTest {
     toDosRepository.addTodo(todo1)
+    profileRepository.addProfile(Profile(uid = fakeUid, name = "Test", profilePicture = ""))
+
     advanceUntilIdle()
   }
 
