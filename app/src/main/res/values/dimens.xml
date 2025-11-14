@@ -8,16 +8,11 @@
     <dimen name="padding_large">32dp</dimen>
 
     <!-- Font Size -->
-    <dimen name="font_size_extra_small">4.sp</dimen>
-    <dimen name="font_size_small">8.sp</dimen>
     <dimen name="font_size_regular">14.sp</dimen>
     <dimen name="font_size_medium">16.sp</dimen>
-    <dimen name="font_size_large">32.sp</dimen>
 
     <!-- Alpha Levels -->
     <dimen name="alpha_placeholder">0.4</dimen>
-    <dimen name="alpha_focused">0.8</dimen>
-    <dimen name="alpha_enabled">1.0</dimen>
 
     <!-- Spacing -->
     <dimen name="spacing_between_buttons">4dp</dimen>
