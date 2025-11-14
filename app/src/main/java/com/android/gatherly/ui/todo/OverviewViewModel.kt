@@ -78,6 +78,21 @@ class OverviewViewModel(
     }
   }
 
+  fun searchTodos(query: String) {
+    val normalized = query.trim().lowercase()
+    val allTodos = _uiState.value.todos
+    if (normalized.isEmpty()) {
+      refreshUIState()
+      return
+    }
+    val filtered =
+        allTodos.filter {
+          it.name.lowercase().contains(normalized) ||
+              it.description.lowercase().contains(normalized)
+        }
+    _uiState.value = _uiState.value.copy(todos = filtered)
+  }
+
   /** Initiates sign-out */
   fun onSignedOut(credentialManager: CredentialManager): Unit {
     viewModelScope.launch {
