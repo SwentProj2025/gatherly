@@ -310,7 +310,9 @@ class TimerViewModelTest {
     viewModel.setSeconds(seconds)
 
     viewModel.startTimer()
+    advanceUntilIdle()
     viewModel.endTimer()
+    advanceUntilIdle()
 
     withContext(Dispatchers.Default.limitedParallelism(1)) { delay(6000L) }
 
