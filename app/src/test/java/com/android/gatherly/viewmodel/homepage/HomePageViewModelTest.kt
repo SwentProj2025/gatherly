@@ -13,6 +13,7 @@ import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.ui.homePage.HomePageViewModel
+import com.android.gatherly.utilstest.MockitoUtils
 import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
 import kotlinx.coroutines.Dispatchers
@@ -181,6 +182,7 @@ class HomePageViewModelTest {
   private lateinit var profileRepository: ProfileRepository
   private lateinit var displayableTodos: List<ToDo>
   private lateinit var upcomingTodos: List<ToDo>
+  private lateinit var mockitoUtils: MockitoUtils
 
   // initialize this so that tests control all coroutines and can wait on them
   private val testDispatcher = StandardTestDispatcher()
@@ -199,6 +201,9 @@ class HomePageViewModelTest {
 
     // fill the profile and events repositories with profiles and event
     fill_repositories()
+
+    // Mock Firebase Auth
+    mockitoUtils = MockitoUtils()
   }
 
   @After
@@ -214,12 +219,14 @@ class HomePageViewModelTest {
     addTodos()
     advanceUntilIdle()
 
+    mockitoUtils.chooseCurrentUser(currentProfile.uid)
+
     homePageViewModel =
         HomePageViewModel(
             eventsRepository = eventsRepository,
             toDosRepository = toDosRepository,
             profileRepository = profileRepository,
-            currentUser = currentProfile.uid)
+            authProvider = { mockitoUtils.mockAuth })
 
     advanceUntilIdle()
 
@@ -237,12 +244,14 @@ class HomePageViewModelTest {
     addTodos()
     advanceUntilIdle()
 
+    mockitoUtils.chooseCurrentUser(currentProfile.uid)
+
     homePageViewModel =
         HomePageViewModel(
             eventsRepository = eventsRepository,
             toDosRepository = toDosRepository,
             profileRepository = profileRepository,
-            currentUser = currentProfile.uid)
+            authProvider = { mockitoUtils.mockAuth })
 
     advanceUntilIdle()
 
@@ -259,12 +268,14 @@ class HomePageViewModelTest {
     addFriendlessCurrentUser()
     advanceUntilIdle()
 
+    mockitoUtils.chooseCurrentUser(currentProfile.uid)
+
     homePageViewModel =
         HomePageViewModel(
             eventsRepository = eventsRepository,
             toDosRepository = toDosRepository,
             profileRepository = profileRepository,
-            currentUser = currentProfile.uid)
+            authProvider = { mockitoUtils.mockAuth })
 
     advanceUntilIdle()
 

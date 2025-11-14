@@ -1,6 +1,7 @@
 package com.android.gatherly.model.profile
 
 import android.net.Uri
+import com.android.gatherly.model.friends.Friends
 
 /**
  * Simplified in-memory local implementation of [ProfileRepository].
@@ -99,6 +100,22 @@ class ProfileLocalRepository : ProfileRepository {
       return true
     }
     return false
+  }
+
+  override suspend fun getFriendsAndNonFriendsUsernames(currentUserId: String): Friends {
+    val currentProfile =
+        getProfileByUid(currentUserId)
+            ?: throw NoSuchElementException("Profile not found for uid=$currentUserId")
+
+    val friendUsernames =
+        currentProfile.friendUids.mapNotNull { friendUid -> getProfileByUid(friendUid)?.username }
+    val nonFriendUsernames = getListNoFriends(currentUserId)
+
+    return Friends(friendUsernames = friendUsernames, nonFriendUsernames = nonFriendUsernames)
+  }
+
+  override suspend fun deleteUserProfile(uid: String) {
+    profiles.removeIf { it.uid == uid }
   }
 
   override suspend fun getListNoFriends(currentUserId: String): List<String> {

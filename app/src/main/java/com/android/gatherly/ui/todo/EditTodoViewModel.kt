@@ -10,6 +10,7 @@ import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.model.todo.ToDosRepositoryProvider
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -73,7 +74,7 @@ private var client: OkHttpClient =
 class EditTodoViewModel(
     private val todoRepository: ToDosRepository = ToDosRepositoryProvider.repository,
     private val nominatimClient: NominatimLocationRepository = NominatimLocationRepository(client),
-    private val currentUser: String = Firebase.auth.currentUser?.uid ?: ""
+    private val authProvider: () -> FirebaseAuth = { Firebase.auth }
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(EditTodoUIState())
   /** Public immutable access to the Edit ToDo UI state. */
@@ -172,7 +173,7 @@ class EditTodoViewModel(
           Timestamp(sdfTime.parse(state.dueTime)!!)
         } else null
 
-    val ownerId = currentUser
+    val ownerId = authProvider().currentUser?.uid ?: ""
 
     editTodoToRepository(
         todoID = id,

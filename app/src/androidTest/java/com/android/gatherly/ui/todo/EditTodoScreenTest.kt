@@ -6,6 +6,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.utils.GatherlyTest
+import com.android.gatherly.utils.MockitoUtils
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -18,12 +19,19 @@ class EditTodoScreenTest : GatherlyTest() {
   @get:Rule val composeTestRule = createComposeRule()
 
   private lateinit var editTodoViewModel: EditTodoViewModel
+  private lateinit var mockitoUtils: MockitoUtils
 
   @Before
   fun setUp() {
     repository = ToDosLocalRepository()
     fill_repository()
-    editTodoViewModel = EditTodoViewModel(todoRepository = repository, currentUser = "user")
+
+    // Mock Firebase Auth
+    mockitoUtils = MockitoUtils()
+    mockitoUtils.chooseCurrentUser("user")
+
+    editTodoViewModel =
+        EditTodoViewModel(todoRepository = repository, authProvider = { mockitoUtils.mockAuth })
     composeTestRule.setContent {
       EditToDoScreen(todoUid = todo1.uid, editTodoViewModel = editTodoViewModel)
     }
