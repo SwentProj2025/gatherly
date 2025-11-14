@@ -74,6 +74,9 @@
     <dimen name="friends_item_card_padding_vertical">4.dp</dimen>
     <dimen name="friends_item_card_padding">12.dp</dimen>
     <dimen name="friends_item_profile_picture_size">56.dp</dimen>
+    <dimen name="lottie_icon_size_medium">120.dp</dimen>
+    <dimen name="lottie_icon_size_large">220.dp</dimen>
+    <dimen name="lottie_icon_size_extra_large">250.dp</dimen>
 
     <!-- Find Friends Screen -->
     <dimen name="find_friends_search_bar_width">10.dp</dimen>
