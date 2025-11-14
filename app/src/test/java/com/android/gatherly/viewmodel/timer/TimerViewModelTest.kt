@@ -31,6 +31,7 @@ import org.junit.runner.RunWith
 
 private const val TIMEOUT = 5000L
 private const val DELAY = 200L
+private const val SESSION_DELAY = 1000L
 
 /** Test class to check that [TimerViewModel] functions correctly. */
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -424,11 +425,11 @@ class TimerViewModelTest {
     assertEquals(0, startedSession.duration.inWholeSeconds) // initial duration zero
 
     // --- Act: End the timer ---
-    withContext(Dispatchers.Default.limitedParallelism(1)) { delay(1000L) }
+    withContext(Dispatchers.Default.limitedParallelism(1)) { delay(SESSION_DELAY) }
     viewModel.endTimer()
 
     // Wait for session finalization write
-    withContext(Dispatchers.Default.limitedParallelism(1)) { delay(2000L) }
+    withContext(Dispatchers.Default.limitedParallelism(1)) { delay(SESSION_DELAY) }
 
     // --- Assert final session ---
     val finalSession = sessions[0]
