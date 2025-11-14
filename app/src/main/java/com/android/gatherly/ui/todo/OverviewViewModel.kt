@@ -81,9 +81,9 @@ class OverviewViewModel(
     }
   }
 
+  /** Invoked when users type in the search bar to filter todos according to the typed query. */
   fun searchTodos(query: String) {
     val normalized = query.trim().lowercase()
-    val allTodos = _uiState.value.todos
     if (normalized.isEmpty()) {
       refreshUIState()
       return

@@ -170,7 +170,7 @@ fun OverviewScreen(
                             .padding(
                                 bottom = dimensionResource(R.dimen.todos_overview_vertical_padding))
                             .testTag(OverviewScreenTestTags.SEARCH_BAR),
-                    label = { Text(text = "Search todos...") },
+                    label = { Text(text = stringResource(R.string.todos_search_bar_label)) },
                     singleLine = true,
                     colors =
                         OutlinedTextFieldDefaults.colors(
