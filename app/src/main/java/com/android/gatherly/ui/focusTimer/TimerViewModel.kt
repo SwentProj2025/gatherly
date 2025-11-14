@@ -44,9 +44,9 @@ import kotlinx.coroutines.launch
 data class TimerState(
     val plannedDuration: Duration = Duration.ZERO,
     val remainingTime: Duration = Duration.ZERO,
-    val hours: String = "00",
-    val minutes: String = "00",
-    val seconds: String = "00",
+    val hours: String = "",
+    val minutes: String = "",
+    val seconds: String = "",
     val isPaused: Boolean = false,
     val isStarted: Boolean = false,
     val errorMsg: String? = null,
@@ -144,6 +144,12 @@ class TimerViewModel(
 
   /** Starts or resumes the timer based on the current state. */
   fun startTimer() {
+    if (!_uiState.value.isStarted) {
+      if (_uiState.value.hours.isEmpty()) _uiState.value = uiState.value.copy(hours = "00")
+      if (_uiState.value.minutes.isEmpty()) _uiState.value = uiState.value.copy(minutes = "00")
+      if (_uiState.value.seconds.isEmpty()) _uiState.value = uiState.value.copy(seconds = "00")
+    }
+
     // If resuming from pause
     if (_uiState.value.isStarted && _uiState.value.isPaused) {
       startedAt = Timestamp.now()
