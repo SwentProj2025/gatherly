@@ -1,6 +1,10 @@
 package com.android.gatherly.ui.settings
 
+import android.net.Uri
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.ActivityResultLauncher
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -20,13 +24,17 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
+import androidx.core.content.FileProvider
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.rememberAsyncImagePainter
 import com.android.gatherly.R
 import com.android.gatherly.ui.navigation.*
-import com.android.gatherly.ui.theme.GatherlyTheme
+import java.io.File
+
+// Technical constants
+private const val MIME_TYPE_IMAGE = "image/*"
 
 object SettingsScreenTestTags {
   const val PROFILE_PICTURE = "settings_profile_picture"
@@ -40,6 +48,10 @@ object SettingsScreenTestTags {
   const val USERNAME_ERROR = "settings_username_error"
   const val NAME_FIELD_ERROR = "settings_name_field_error"
   const val BIRTHDAY_FIELD_ERROR = "settings_birthday_field_error"
+  const val PHOTO_PICKER_CAMERA_BUTTON = "settings_photo_picker_camera_button"
+  const val PHOTO_PICKER_GALLERY_BUTTON = "settings_photo_picker_gallery_button"
+  const val PHOTO_PICKER_CANCEL_BUTTON = "settings_photo_picker_cancel_button"
+  const val PROFILE_PICTURE_URL_NOT_EMPTY = "settings_profile_picture_url_not_empty"
 }
 
 /**
@@ -65,6 +77,28 @@ fun SettingsScreen(
 
   val uiState by settingsViewModel.uiState.collectAsState()
   val context = LocalContext.current
+
+  var showPhotoPickerDialog by remember { mutableStateOf(false) }
+
+  val imageFile = remember { File(context.filesDir, SettingsViewModel.PROFILE_PIC_FILENAME) }
+
+  val imageUri = FileProvider.getUriForFile(context, "${context.packageName}.provider", imageFile)
+
+  // launcher to pick from gallery
+  val pickImageLauncher =
+      rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { uri: Uri?
+        ->
+        uri?.let { settingsViewModel.editPhoto(uri.toString()) }
+      }
+
+  // launcher to take a photo with the camera
+  val takePhotoLauncher =
+      rememberLauncherForActivityResult(contract = ActivityResultContracts.TakePicture()) { success
+        ->
+        if (success) {
+          settingsViewModel.editPhoto("${imageFile.toURI()}?t=${System.currentTimeMillis()}")
+        }
+      }
 
   val errorMsg = uiState.errorMsg
   LaunchedEffect(errorMsg) {
@@ -104,20 +138,9 @@ fun SettingsScreen(
                   modifier =
                       Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()),
                   horizontalAlignment = Alignment.CenterHorizontally) {
+
                     // Profile Picture
-                    Image(
-                        painter =
-                            painterResource(
-                                id =
-                                    R.drawable
-                                        .ic_launcher_foreground), // currently a placeholder image
-                        contentDescription =
-                            stringResource(R.string.settings_profile_picture_description),
-                        modifier =
-                            Modifier.size(dimensionResource(id = R.dimen.profile_pic_size))
-                                .clip(CircleShape)
-                                .testTag(SettingsScreenTestTags.PROFILE_PICTURE),
-                        contentScale = ContentScale.Crop)
+                    ProfilePictureImage(uiState.profilePictureUrl)
 
                     Spacer(modifier = Modifier.height(fieldSpacingRegular))
 
@@ -141,10 +164,9 @@ fun SettingsScreen(
 
                     Spacer(modifier = Modifier.height(fieldSpacingRegular))
 
-                    // Edit Photo Button currently non-functional, will be implemented in next
-                    // sprint
+                    // Edit Photo Button
                     Button(
-                        onClick = { /* Handle edit photo will be handled in next sprint*/},
+                        onClick = { showPhotoPickerDialog = true },
                         modifier =
                             Modifier.fillMaxWidth()
                                 .height(dimensionResource(id = R.dimen.settings_text_field_height))
@@ -161,6 +183,15 @@ fun SettingsScreen(
                               color = MaterialTheme.colorScheme.onBackground,
                               fontSize = 16.sp)
                         }
+
+                    if (showPhotoPickerDialog) {
+                      PhotoPickerDialog(
+                          imageUri = imageUri,
+                          takePhotoLauncher = takePhotoLauncher,
+                          pickImageLauncher = pickImageLauncher) {
+                            showPhotoPickerDialog = false
+                          }
+                    }
 
                     Spacer(modifier = Modifier.height(fieldSpacingMedium))
 
@@ -275,9 +306,116 @@ fun SettingsField(
   }
 }
 
-// Helper function to preview the timer screen
-@Preview
+/**
+ * Displays a circular profile picture.
+ * - If [pictureUrl] is non-empty, loads the image from the URL using Coil.
+ * - If [pictureUrl] is empty, shows a default placeholder image.
+ * - Adds a test tag for UI testing:
+ *     - [SettingsScreenTestTags.PROFILE_PICTURE_URL_NOT_EMPTY] if URL is provided
+ *     - [SettingsScreenTestTags.PROFILE_PICTURE] otherwise
+ *
+ * @param pictureUrl The URL of the profile picture. Can be empty to show a placeholder.
+ */
 @Composable
-fun SettingsScreenPreview() {
-  GatherlyTheme(darkTheme = true) { SettingsScreen() }
+fun ProfilePictureImage(pictureUrl: String) {
+  val painter =
+      if (pictureUrl.isNotEmpty()) {
+        rememberAsyncImagePainter(pictureUrl)
+      } else {
+        painterResource(R.drawable.ic_launcher_foreground)
+      }
+
+  Image(
+      painter = painter,
+      contentDescription = stringResource(R.string.settings_profile_picture_description),
+      modifier =
+          Modifier.size(dimensionResource(id = R.dimen.profile_pic_size))
+              .clip(CircleShape)
+              .testTag(
+                  if (pictureUrl.isNotEmpty()) SettingsScreenTestTags.PROFILE_PICTURE_URL_NOT_EMPTY
+                  else SettingsScreenTestTags.PROFILE_PICTURE),
+      contentScale = ContentScale.Crop)
+}
+
+/**
+ * Internal content of the [PhotoPickerDialog] showing the camera and gallery buttons.
+ *
+ * @param imageUri The Uri where a new photo will be saved when using the camera option.
+ * @param takePhotoLauncher Launcher for taking a new photo with the camera.
+ * @param pickImageLauncher Launcher for picking an image from the gallery.
+ * @param onDismiss Lambda called when a button is clicked or the dialog should close.
+ */
+@Composable
+private fun PhotoPickerDialogContent(
+    imageUri: Uri,
+    takePhotoLauncher: ActivityResultLauncher<Uri>,
+    pickImageLauncher: ActivityResultLauncher<String>,
+    onDismiss: () -> Unit
+) {
+  Column {
+    TextButton(
+        onClick = {
+          takePhotoLauncher.launch(imageUri)
+          onDismiss()
+        },
+        modifier = Modifier.testTag(SettingsScreenTestTags.PHOTO_PICKER_CAMERA_BUTTON)) {
+          Text(
+              color = MaterialTheme.colorScheme.primary,
+              text = stringResource(id = R.string.settings_alert_dialog_option_camera))
+        }
+
+    TextButton(
+        onClick = {
+          pickImageLauncher.launch(MIME_TYPE_IMAGE)
+          onDismiss()
+        },
+        modifier = Modifier.testTag(SettingsScreenTestTags.PHOTO_PICKER_GALLERY_BUTTON)) {
+          Text(
+              color = MaterialTheme.colorScheme.primary,
+              text = stringResource(id = R.string.settings_alert_dialog_option_gallery))
+        }
+  }
+}
+
+/**
+ * Displays a photo picker AlertDialog
+ *
+ * The dialog allows the user to either take a new photo or pick an existing image from the gallery.
+ * It also provides a cancel button to dismiss the dialog.
+ *
+ * @param imageUri The Uri where a new photo will be saved when using the camera option.
+ * @param takePhotoLauncher Launcher for taking a new photo with the camera.
+ * @param pickImageLauncher Launcher for picking an image from the gallery.
+ * @param onDismiss Lambda called when the dialog is dismissed.
+ */
+@Composable
+fun PhotoPickerDialog(
+    imageUri: Uri,
+    takePhotoLauncher: ActivityResultLauncher<Uri>,
+    pickImageLauncher: ActivityResultLauncher<String>,
+    onDismiss: () -> Unit
+) {
+
+  AlertDialog(
+      onDismissRequest = onDismiss,
+      title = {
+        Text(
+            color = MaterialTheme.colorScheme.primary,
+            text = stringResource(id = R.string.settings_alert_dialog_title))
+      },
+      text = {
+        Text(
+            color = MaterialTheme.colorScheme.primary,
+            text = stringResource(id = R.string.settings_alert_dialog_text))
+      },
+      confirmButton = {
+        PhotoPickerDialogContent(imageUri, takePhotoLauncher, pickImageLauncher, onDismiss)
+      },
+      dismissButton = {
+        TextButton(
+            onClick = onDismiss,
+            modifier = Modifier.testTag(SettingsScreenTestTags.PHOTO_PICKER_CANCEL_BUTTON)) {
+              Text(stringResource(id = R.string.settings_alert_dialog_option_cancel))
+            }
+      })
 }
