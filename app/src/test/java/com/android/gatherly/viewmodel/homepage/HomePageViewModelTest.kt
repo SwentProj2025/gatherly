@@ -33,7 +33,7 @@ private val friend1Profile: Profile =
         uid = "1",
         name = "Friend1",
         focusSessionIds = emptyList(),
-        eventIds = emptyList(),
+        participatingEventIds = emptyList(),
         groupIds = emptyList(),
         friendUids = emptyList())
 
@@ -42,7 +42,7 @@ private val friend2Profile: Profile =
         uid = "2",
         name = "Friend2",
         focusSessionIds = emptyList(),
-        eventIds = emptyList(),
+        participatingEventIds = emptyList(),
         groupIds = emptyList(),
         friendUids = emptyList())
 
@@ -51,7 +51,7 @@ private val friend3Profile: Profile =
         uid = "3",
         name = "Friend3",
         focusSessionIds = emptyList(),
-        eventIds = emptyList(),
+        participatingEventIds = emptyList(),
         groupIds = emptyList(),
         friendUids = emptyList())
 
@@ -60,7 +60,7 @@ private val friend4Profile: Profile =
         uid = "4",
         name = "Friend4",
         focusSessionIds = emptyList(),
-        eventIds = emptyList(),
+        participatingEventIds = emptyList(),
         groupIds = emptyList(),
         friendUids = emptyList())
 
@@ -69,7 +69,7 @@ private var currentProfile: Profile =
         uid = "",
         name = "Current",
         focusSessionIds = emptyList(),
-        eventIds = emptyList(),
+        participatingEventIds = emptyList(),
         groupIds = emptyList(),
         friendUids =
             listOf(friend1Profile.uid, friend2Profile.uid, friend3Profile.uid, friend4Profile.uid))
@@ -79,7 +79,7 @@ private var friendlessProfile: Profile =
         uid = "",
         name = "Current",
         focusSessionIds = emptyList(),
-        eventIds = emptyList(),
+        participatingEventIds = emptyList(),
         groupIds = emptyList(),
         friendUids = emptyList())
 

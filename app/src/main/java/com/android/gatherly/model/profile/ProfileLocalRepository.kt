@@ -152,4 +152,48 @@ class ProfileLocalRepository : ProfileRepository {
       profiles[index] = existing.copy(status = status)
     }
   }
+
+  override suspend fun createEvent(eventId: String, currentUserId: String) {
+    val currentProfile = getProfileByUid(currentUserId) ?: return
+    if (!currentProfile.ownedEventIds.contains(eventId)) {
+      val updateEventOwnerIds = currentProfile.ownedEventIds + eventId
+      val updatedProfile = currentProfile.copy(ownedEventIds = updateEventOwnerIds)
+      updateProfile(updatedProfile)
+    }
+  }
+
+  override suspend fun deleteEvent(eventId: String, currentUserId: String) {
+    val currentProfile = getProfileByUid(currentUserId) ?: return
+    if (currentProfile.ownedEventIds.contains(eventId)) {
+      val updateEventOwnerIds = currentProfile.ownedEventIds.filter { it != eventId }
+      val updatedProfile = currentProfile.copy(ownedEventIds = updateEventOwnerIds)
+      updateProfile(updatedProfile)
+    }
+  }
+
+  override suspend fun participateEvent(eventId: String, currentUserId: String) {
+    val currentProfile = getProfileByUid(currentUserId) ?: return
+    if (!currentProfile.participatingEventIds.contains(eventId)) {
+      val updateEventIds = currentProfile.participatingEventIds + eventId
+      val updatedProfile = currentProfile.copy(participatingEventIds = updateEventIds)
+      updateProfile(updatedProfile)
+    }
+  }
+
+  override suspend fun allParticipateEvent(eventId: String, participants: List<String>) {
+    participants.forEach { participant -> participateEvent(eventId, participant) }
+  }
+
+  override suspend fun unregisterEvent(eventId: String, currentUserId: String) {
+    val currentProfile = getProfileByUid(currentUserId) ?: return
+    if (currentProfile.participatingEventIds.contains(eventId)) {
+      val updatedEventIds = currentProfile.participatingEventIds.filter { it != eventId }
+      val updatedProfile = currentProfile.copy(participatingEventIds = updatedEventIds)
+      updateProfile(updatedProfile)
+    }
+  }
+
+  override suspend fun allUnregisterEvent(eventId: String, participants: List<String>) {
+    participants.forEach { participant -> unregisterEvent(eventId, participant) }
+  }
 }
