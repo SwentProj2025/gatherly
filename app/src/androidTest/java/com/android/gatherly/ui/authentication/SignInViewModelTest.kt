@@ -82,7 +82,7 @@ class SignInViewModelTest : FirestoreGatherlyTest() {
     assert(userSignedIn.value)
     assert(FirebaseEmulator.auth.currentUser != null)
     assert(!profileRepository.initProfileIfMissing(FirebaseEmulator.auth.currentUser?.uid!!, ""))
-    assert(signInViewModel.destination.value == "init_profile")
+    assert(signInViewModel.destination.value == "home")
   }
 
   /** Test that after Google sign-in, the user's profile status is updated to ONLINE. */

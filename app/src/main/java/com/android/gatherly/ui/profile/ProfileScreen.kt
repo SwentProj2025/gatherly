@@ -14,7 +14,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -42,6 +45,7 @@ import com.android.gatherly.ui.navigation.BottomNavigationMenu
 import com.android.gatherly.ui.navigation.HandleSignedOutState
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.NavigationTestTags
+import com.android.gatherly.ui.navigation.Screen
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Profile
 import com.android.gatherly.ui.theme.GatherlyTheme
@@ -56,6 +60,7 @@ object ProfileScreenTestTags {
   const val PROFILE_FOCUS_POINTS_COUNT = "profileFocusPointsCount"
   const val PROFILE_FOCUS_SESSIONS = "profileFocusSessions"
   const val PROFILE_GROUPS = "profileGroups"
+  const val GOOGLE_BUTTON = "googleButton"
 }
 
 /**
@@ -75,9 +80,19 @@ fun ProfileScreen(
 ) {
   val uiState by profileViewModel.uiState.collectAsState()
   val profile = uiState.profile
+  val context = LocalContext.current
 
   // Fetch profile when the screen is recomposed
   LaunchedEffect(Unit) { profileViewModel.loadUserProfile() }
+
+  // If the anonymous user decides to upgrade their account to a signed in one, navigate to the init
+  // profile screen
+  val navigateToInit = uiState.navigateToInit
+  LaunchedEffect(navigateToInit) {
+    if (navigateToInit) {
+      navigationActions?.navigateTo(Screen.InitProfileScreen)
+    }
+  }
 
   val paddingRegular = dimensionResource(id = R.dimen.padding_regular)
   val paddingMedium = dimensionResource(id = R.dimen.padding_medium)
@@ -109,6 +124,61 @@ fun ProfileScreen(
               modifier = Modifier.fillMaxSize().padding(padding),
               contentAlignment = Alignment.Center) {
                 CircularProgressIndicator()
+              }
+        } else if (uiState.isAnon) {
+
+          // If the user is anonymous, they do not have a profile
+
+          Box(
+              modifier =
+                  Modifier.fillMaxSize().padding(padding).padding(horizontal = fieldSpacingMedium),
+              contentAlignment = Alignment.Center) {
+                Column {
+                  // Inform the user that they are signed in anonymously
+                  Text(
+                      text = stringResource(R.string.profile_anon_message),
+                      color = MaterialTheme.colorScheme.onBackground,
+                      textAlign = TextAlign.Center)
+
+                  Spacer(Modifier.height(fieldSpacingMedium))
+
+                  // Google sign in button
+                  Button(
+                      onClick = { profileViewModel.upgradeWithGoogle(context, credentialManager) },
+                      modifier =
+                          Modifier.fillMaxWidth()
+                              .height(dimensionResource(id = R.dimen.sign_in_button_height))
+                              .testTag(ProfileScreenTestTags.GOOGLE_BUTTON),
+                      colors =
+                          ButtonDefaults.buttonColors(
+                              containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                              contentColor = MaterialTheme.colorScheme.primary),
+                      shape =
+                          RoundedCornerShape(
+                              dimensionResource(id = R.dimen.rounded_corner_shape_medium))) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center,
+                            modifier = Modifier.fillMaxWidth()) {
+                              // Google image
+                              Image(
+                                  painter = painterResource(id = R.drawable.google_logo),
+                                  contentDescription =
+                                      null, // Action still clear with button text description
+                                  modifier =
+                                      Modifier.size(
+                                              dimensionResource(
+                                                  id = R.dimen.sign_in_button_icon_size))
+                                          .padding(end = dimensionResource(R.dimen.padding_small)))
+
+                              // Upgrade with google text
+                              Text(
+                                  text = stringResource(R.string.upgrade_to_google_button_label),
+                                  style = MaterialTheme.typography.bodyLarge,
+                                  fontWeight = FontWeight.Medium)
+                            }
+                      }
+                }
               }
         } else {
           Column(

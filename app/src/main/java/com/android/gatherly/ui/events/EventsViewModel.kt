@@ -35,7 +35,8 @@ data class UIState(
         emptyList(), // Events neither created by nor participated in by current user
     val signedOut: Boolean = false,
     val errorMsg: String? = null,
-    val currentUserId: String = ""
+    val currentUserId: String = "",
+    val isAnon: Boolean = true
 )
 /**
  * Function that retrieves "drawable" events, i.e. those which are not past, and have a valid
@@ -97,7 +98,8 @@ class EventsViewModel(
                 events.filter {
                   it.creatorId != currentUserId && !it.participants.contains(currentUserId)
                 },
-            currentUserId = currentUserId)
+            currentUserId = currentUserId,
+            isAnon = authProvider().currentUser?.isAnonymous ?: true)
   }
 
   /**
