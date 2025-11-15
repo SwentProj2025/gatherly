@@ -6,7 +6,10 @@ interface NotificationsRepository {
   /** Returns a new unique ID for a notification. */
   fun getNewId(): String
 
-  /** Returns a list of all notifications for the specified user, ordered by emission time. */
+  /**
+   * Returns a list of all notifications for the specified user, ordered by emission time
+   * (decreasing).
+   */
   suspend fun getUserNotifications(userId: String): List<Notification>
 
   /** Returns the notification with the given ID, or throws NoSuchElementException if not found. */
