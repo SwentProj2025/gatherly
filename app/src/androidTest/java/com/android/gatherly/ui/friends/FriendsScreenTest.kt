@@ -5,6 +5,7 @@ import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import com.android.gatherly.model.profile.Profile
@@ -249,5 +250,70 @@ class FriendsScreenTest {
     composeTestRule
         .onNodeWithTag(FriendsScreenTestTags.getTestTagForFriendItem("charlie"))
         .assertIsNotDisplayed()
+  }
+
+  /**
+   * Test: Verifies when the screen is currently loading all the profiles item, a special animation
+   * is displayed.
+   */
+  @Test
+  fun testLoadingAnimation() {
+    runTest {
+      profileRepository = ProfileLocalRepository()
+
+      addProfiles()
+      profileRepository.addProfile(aliceProfile)
+
+      currentUserId = aliceProfile.uid
+
+      // Mock Firebase Auth
+      mockitoUtils = MockitoUtils()
+      mockitoUtils.chooseCurrentUser(currentUserId)
+
+      friendsViewModel = FriendsViewModel(profileRepository, { mockitoUtils.mockAuth })
+
+      composeTestRule.setContent { FriendsScreen(friendsViewModel) }
+
+      composeTestRule.waitForIdle()
+
+      if (friendsViewModel.uiState.value.isLoading) {
+        composeTestRule.onNodeWithTag(FriendsScreenTestTags.LOADING_ANIMATION).assertIsDisplayed()
+      }
+    }
+  }
+
+  /**
+   * Test: Verifies that when the current user wants to unfollow a friend, a special animation is
+   * displayed.
+   */
+  @Test
+  fun testHeartBreakingAnimation() {
+    runTest {
+      setContentwithAliceUID()
+      composeTestRule.waitForIdle()
+
+      composeTestRule.mainClock.autoAdvance = false
+      val animationDelay = 2000L
+
+      val friendToUnfollow = "francis"
+      val unfollowButtonTag =
+          FriendsScreenTestTags.getTestTagForFriendUnfollowButton(friendToUnfollow)
+      val unfollowMessage = FriendsScreenTestTags.UNFOLLOWING_TEXT_ANIMATION
+      val heartBreakAnimation = FriendsScreenTestTags.HEART_BREAK_ANIMATION
+
+      composeTestRule.onNodeWithTag(unfollowButtonTag).performClick()
+      composeTestRule.mainClock.advanceTimeBy(100)
+      composeTestRule.onNodeWithTag(unfollowMessage).assertIsDisplayed()
+      composeTestRule.onNodeWithTag(heartBreakAnimation).assertIsDisplayed()
+
+      composeTestRule.mainClock.advanceTimeBy(animationDelay)
+      composeTestRule.onNodeWithText(unfollowMessage, ignoreCase = true).assertIsNotDisplayed()
+      composeTestRule.onNodeWithText(heartBreakAnimation, ignoreCase = true).assertIsNotDisplayed()
+
+      composeTestRule
+          .onNodeWithTag(FriendsScreenTestTags.getTestTagForFriendItem(friendToUnfollow))
+          .assertIsNotDisplayed()
+      composeTestRule.mainClock.autoAdvance = true
+    }
   }
 }

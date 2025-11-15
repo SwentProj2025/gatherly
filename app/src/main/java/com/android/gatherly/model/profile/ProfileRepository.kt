@@ -157,6 +157,14 @@ interface ProfileRepository {
   suspend fun addFriend(friend: String, currentUserId: String)
 
   /**
+   * Updates the online/offline status of a user.
+   *
+   * @param uid The user ID whose status to update.
+   * @param status The new [ProfileStatus] to set.
+   */
+  suspend fun updateStatus(uid: String, status: ProfileStatus)
+
+  /**
    * The user creates a new event
    *
    * @param eventId the ID of the event created

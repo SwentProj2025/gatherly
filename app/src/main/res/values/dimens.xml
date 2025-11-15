@@ -7,6 +7,13 @@
     <dimen name="padding_medium">24dp</dimen>
     <dimen name="padding_large">32dp</dimen>
 
+    <!-- Font Size -->
+    <dimen name="font_size_regular">14.sp</dimen>
+    <dimen name="font_size_medium">16.sp</dimen>
+
+    <!-- Alpha Levels -->
+    <dimen name="alpha_placeholder">0.4</dimen>
+
     <!-- Spacing -->
     <dimen name="spacing_between_buttons">4dp</dimen>
     <dimen name="spacing_between_fields">8dp</dimen>
@@ -67,6 +74,9 @@
     <dimen name="friends_item_card_padding_vertical">4.dp</dimen>
     <dimen name="friends_item_card_padding">12.dp</dimen>
     <dimen name="friends_item_profile_picture_size">56.dp</dimen>
+    <dimen name="lottie_icon_size_medium">120.dp</dimen>
+    <dimen name="lottie_icon_size_large">220.dp</dimen>
+    <dimen name="lottie_icon_size_extra_large">250.dp</dimen>
 
     <!-- Find Friends Screen -->
     <dimen name="find_friends_search_bar_width">10.dp</dimen>

@@ -94,21 +94,21 @@ class AddTodoScreenTest : GatherlyTest() {
 
   @Test
   fun canEnterAnInvalidDate() {
-    val text = "This date is not valid"
+    val text = "13/13/2023"
     composeTestRule.enterAddTodoDate(text)
     composeTestRule.onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_DATE).assertTextContains(text)
   }
 
   @Test
   fun canEnterAValidTime() {
-    val text = "14:00"
+    val text = "14:01"
     composeTestRule.enterAddTodoTime(text)
     composeTestRule.onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_TIME).assertTextContains(text)
   }
 
   @Test
   fun canEnterAnInvalidTime() {
-    val text = "This time is not valid"
+    val text = "13:99"
     composeTestRule.enterAddTodoTime(text)
     composeTestRule.onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_TIME).assertTextContains(text)
   }
@@ -140,7 +140,7 @@ class AddTodoScreenTest : GatherlyTest() {
   @Test
   fun savingWithInvalidDateShouldDoNothing() = checkNoTodoWereAdded {
     composeTestRule.enterAddTodoDetails(
-        todo = todo1, date = "This is not a date" // Invalid date format
+        todo = todo1, date = "13/13/2023" // Invalid date format
         )
     composeTestRule.clickOnSaveForAddTodo()
     composeTestRule.waitForIdle()
@@ -170,14 +170,14 @@ class AddTodoScreenTest : GatherlyTest() {
 
   @Test
   fun enteringInvalidDateShowsErrorMessage() {
-    val invalidDate = "This is not a date" // Invalid date format
+    val invalidDate = "13/13/2023" // Invalid date format
     composeTestRule.enterAddTodoDate(invalidDate)
     composeTestRule.checkErrorMessageIsDisplayedForAddTodo()
   }
 
   @Test
   fun enteringInvalidTimeShowsErrorMessage() {
-    val invalidTime = "This is not a time" // Invalid time format
+    val invalidTime = "14:61" // Invalid time format
     composeTestRule.enterAddTodoTime(invalidTime)
     composeTestRule.checkErrorMessageIsDisplayedForAddTodo()
   }

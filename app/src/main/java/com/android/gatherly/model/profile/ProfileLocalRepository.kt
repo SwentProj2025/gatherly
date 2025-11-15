@@ -145,6 +145,14 @@ class ProfileLocalRepository : ProfileRepository {
     }
   }
 
+  override suspend fun updateStatus(uid: String, status: ProfileStatus) {
+    val index = profiles.indexOfFirst { it.uid == uid }
+    if (index != -1) {
+      val existing = profiles[index]
+      profiles[index] = existing.copy(status = status)
+    }
+  }
+
   override suspend fun createEvent(eventId: String, currentUserId: String) {
     val currentProfile = getProfileByUid(currentUserId) ?: return
     if (!currentProfile.ownedEventIds.contains(eventId)) {
