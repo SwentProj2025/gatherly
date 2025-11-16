@@ -117,6 +117,10 @@ class ProfileLocalRepository : ProfileRepository {
     return Friends(friendUsernames = friendUsernames, nonFriendUsernames = nonFriendUsernames)
   }
 
+  override suspend fun deleteUserProfile(uid: String) {
+    profiles.removeIf { it.uid == uid }
+  }
+
   override suspend fun getListNoFriends(currentUserId: String): List<String> {
     val currentProfile = getProfileByUid(currentUserId) ?: return emptyList()
     val friendUids = currentProfile.friendUids.toSet()
@@ -144,28 +148,38 @@ class ProfileLocalRepository : ProfileRepository {
     }
   }
 
+  override suspend fun updateStatus(uid: String, status: ProfileStatus) {
+    val index = profiles.indexOfFirst { it.uid == uid }
+    if (index != -1) {
+      val existing = profiles[index]
+      profiles[index] = existing.copy(status = status)
+    }
+  }
+
   // ---- BADGE GESTION PART ----
 
   override suspend fun updateBadges(userProfile: Profile) {
 
-    val updatedBadges = Badge(
-      addFriends = rank(userProfile.friendUids.size),
-      createTodo = Rank.BLANK,
-      createEvent = rank(userProfile.eventIds.size),
-      participateEvent = Rank.BLANK,
-      focusSessionPoint = rank(userProfile.focusSessionIds.size)
-    )
+    val updatedBadges =
+        Badge(
+            addFriends = rank(userProfile.friendUids.size),
+            createTodo = Rank.BLANK,
+          //participateEvent = rank(userProfile.participatingEventsIds.size), TODO
+          //createEvent = rank(userProfile.OwnerEventsIds.size), TODO
+            createEvent = Rank.BLANK,
+            participateEvent = Rank.BLANK,
+            focusSessionPoint = rank(userProfile.focusSessionIds.size))
     val updatedProfile = userProfile.copy(badges = updatedBadges)
     updateProfile(updatedProfile)
-
   }
 
-  private fun rank(count: Int): Rank = when {
-    count >= 20 -> Rank.LEGEND
-    count >= 10 -> Rank.DIAMOND
-    count >= 5 -> Rank.GOLD
-    count >= 3 -> Rank.BRONZE
-    count >= 1 -> Rank.STARTING
-    else -> Rank.BLANK
-  }
+  private fun rank(count: Int): Rank =
+      when {
+        count >= 20 -> Rank.LEGEND
+        count >= 10 -> Rank.DIAMOND
+        count >= 5 -> Rank.GOLD
+        count >= 3 -> Rank.BRONZE
+        count >= 1 -> Rank.STARTING
+        else -> Rank.BLANK
+      }
 }

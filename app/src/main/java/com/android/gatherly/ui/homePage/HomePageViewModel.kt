@@ -17,6 +17,7 @@ import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.model.todo.ToDosRepositoryProvider
 import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,7 +39,7 @@ class HomePageViewModel(
     private val eventsRepository: EventsRepository = EventsRepositoryFirestore(Firebase.firestore),
     private val toDosRepository: ToDosRepository = ToDosRepositoryProvider.repository,
     private val profileRepository: ProfileRepository = ProfileRepositoryProvider.repository,
-    private val currentUser: String = Firebase.auth.currentUser?.uid ?: ""
+    private val authProvider: () -> FirebaseAuth = { Firebase.auth }
 ) : ViewModel() {
 
   private val _uiState = MutableStateFlow(HomePageUIState())
@@ -54,7 +55,7 @@ class HomePageViewModel(
       try {
         val todos = toDosRepository.getAllTodos()
         val events = eventsRepository.getAllEvents()
-        val profile = profileRepository.getProfileByUid(currentUser)!!
+        val profile = profileRepository.getProfileByUid(authProvider().currentUser?.uid!!)!!
         val friends = profile.friendUids.take(3).map { profileRepository.getProfileByUid(it)!! }
 
         _uiState.value =

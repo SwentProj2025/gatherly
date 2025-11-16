@@ -26,16 +26,14 @@ data class Badge(
     val participateEvent: Rank,
     val focusSessionPoint: Rank,
 ) {
-    /**
-     * object : default Badge where every badges are set to blank rank.
-     */
-    companion object {
-        val blank = Badge(
+  /** object : default Badge where every badges are set to blank rank. */
+  companion object {
+    val blank =
+        Badge(
             addFriends = Rank.BLANK,
             createTodo = Rank.BLANK,
             createEvent = Rank.BLANK,
             participateEvent = Rank.BLANK,
-            focusSessionPoint = Rank.BLANK
-        )
-    }
+            focusSessionPoint = Rank.BLANK)
+  }
 }

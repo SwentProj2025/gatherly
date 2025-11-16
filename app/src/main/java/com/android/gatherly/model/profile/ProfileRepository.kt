@@ -1,7 +1,6 @@
 package com.android.gatherly.model.profile
 
 import android.net.Uri
-import com.android.gatherly.model.badge.Badge
 import com.android.gatherly.model.friends.Friends
 
 /**
@@ -113,6 +112,16 @@ interface ProfileRepository {
    */
   suspend fun initProfileIfMissing(uid: String, defaultPhotoUrl: String): Boolean
 
+  /**
+   * Deletes a user's entire profile, including:
+   * - Their document in /profiles/{uid}
+   * - Their username in /usernames/{username}
+   * - Their profile picture in Firebase Storage
+   *
+   * After this call, the username becomes available again for reuse.
+   */
+  suspend fun deleteUserProfile(uid: String)
+
   /** Creates a profile. This is to be used only for testing purpose. */
   suspend fun addProfile(profile: Profile)
 
@@ -156,7 +165,13 @@ interface ProfileRepository {
    *
    * @param userProfile corresponds to the profile of the user we want to know his badges
    */
-  suspend fun updateBadges(userProfile : Profile)
+  suspend fun updateBadges(userProfile: Profile)
 
-
+  /**
+   * Updates the online/offline status of a user.
+   *
+   * @param uid The user ID whose status to update.
+   * @param status The new [ProfileStatus] to set.
+   */
+  suspend fun updateStatus(uid: String, status: ProfileStatus)
 }

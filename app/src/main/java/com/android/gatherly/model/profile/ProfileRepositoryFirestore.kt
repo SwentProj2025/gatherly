@@ -1,14 +1,18 @@
 package com.android.gatherly.model.profile
 
 import android.net.Uri
+import android.util.Log
 import com.android.gatherly.model.badge.Badge
 import com.android.gatherly.model.badge.Rank
 import com.android.gatherly.model.friends.Friends
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.ktx.app
 import com.google.firebase.storage.FirebaseStorage
-import com.google.firebase.storage.storage
+import com.google.firebase.storage.ktx.storage
+import java.io.File
 import kotlinx.coroutines.tasks.await
 
 /**
@@ -173,12 +177,31 @@ class ProfileRepositoryFirestore(
   }
 
   override suspend fun updateProfilePic(uid: String, uri: Uri): String {
-    val storageRef = storage.reference.child("profile_pictures/$uid")
-    storageRef.putFile(uri).await()
-    val downloadUrl = storageRef.downloadUrl.await().toString()
-    val doc = profilesCollection.document(uid)
-    doc.update("profilePicture", downloadUrl).await()
-    return downloadUrl
+    var tempFile: File? = null
+    try {
+      val storageRef = storage.reference.child("profile_pictures/$uid")
+      val uploadUri =
+          if (uri.scheme == "content") {
+            val context = Firebase.app.applicationContext
+            tempFile = kotlin.io.path.createTempFile("profile_$uid").toFile()
+            val inputStream = context.contentResolver.openInputStream(uri)
+            inputStream?.use {
+              tempFile.outputStream().use { output -> inputStream.copyTo(output) }
+            }
+            Uri.fromFile(tempFile)
+          } else {
+            uri
+          }
+      storageRef.putFile(uploadUri).await()
+      val downloadUrl = storageRef.downloadUrl.await().toString()
+      val doc = profilesCollection.document(uid)
+      doc.update("profilePicture", downloadUrl).await()
+      return downloadUrl
+    } finally {
+      if (tempFile != null && !tempFile.delete()) {
+        Log.w("ProfileRepository", "Temporary file ${tempFile.path} could not be deleted.")
+      }
+    }
   }
 
   /**
@@ -235,6 +258,25 @@ class ProfileRepositoryFirestore(
     return true
   }
 
+  override suspend fun deleteUserProfile(uid: String) {
+    val profile = getProfileByUid(uid) ?: return
+
+    db.runBatch { batch ->
+          if (profile.username.isNotBlank()) {
+            batch.delete(usernamesCollection.document(profile.username))
+          }
+          batch.delete(profilesCollection.document(uid))
+        }
+        .await()
+
+    try {
+      val storageRef = Firebase.storage.reference.child("profile_pictures/$uid")
+      storageRef.delete().await()
+    } catch (e: Exception) {
+      Log.d("ProfileRepository", "No profile picture to delete: ${e.message}")
+    }
+  }
+
   /** Creates a profile. This is to be used only for testing purpose. */
   override suspend fun addProfile(profile: Profile) {
     // Empty because this function is never used, it is here for test purposes only.
@@ -258,7 +300,8 @@ class ProfileRepositoryFirestore(
     val schoolYear = doc.getString("schoolYear") ?: ""
     val birthday = doc.getTimestamp("birthday")
     val profilePicture = doc.getString("profilePicture") ?: return null
-      val badges = doc.get("badges") as? Badge ?: Badge.blank
+    val status = ProfileStatus.fromString(doc.getString("status"))
+    val badges = doc.get("badges") as? Badge ?: Badge.blank
 
     return Profile(
         uid = uid,
@@ -272,6 +315,7 @@ class ProfileRepositoryFirestore(
         schoolYear = schoolYear,
         birthday = birthday,
         profilePicture = profilePicture,
+        status = status,
         badges = badges)
   }
 
@@ -293,7 +337,9 @@ class ProfileRepositoryFirestore(
         "school" to profile.school,
         "schoolYear" to profile.schoolYear,
         "birthday" to profile.birthday,
-        "profilePicture" to profile.profilePicture)
+        "profilePicture" to profile.profilePicture,
+        "status" to profile.status.value,
+        "badges" to profile.badges)
   }
 
   override suspend fun getFriendsAndNonFriendsUsernames(currentUserId: String): Friends {
@@ -334,24 +380,31 @@ class ProfileRepositoryFirestore(
     docRef.update("friendUids", FieldValue.arrayRemove(friendId)).await()
   }
 
-    override suspend fun updateBadges(userProfile: Profile) {
-        val docRef = profilesCollection.document(userProfile.uid)
-        val updateBadges = Badge(
+  override suspend fun updateStatus(uid: String, status: ProfileStatus) {
+    profilesCollection.document(uid).update("status", status.value).await()
+  }
+
+  override suspend fun updateBadges(userProfile: Profile) {
+    val docRef = profilesCollection.document(userProfile.uid)
+    val updateBadges =
+        Badge(
             addFriends = rank(userProfile.friendUids.size),
             createTodo = Rank.BLANK,
-            createEvent = rank(userProfile.eventIds.size),
+            createEvent = Rank.BLANK,
+            //participateEvent = rank(userProfile.participatingEventsIds.size), TODO
+            //createEvent = rank(userProfile.OwnerEventsIds.size), TODO
             participateEvent = Rank.BLANK,
-            focusSessionPoint = rank(userProfile.focusSessionIds.size)
-        )
-        docRef.update("badges", updateBadges).await()
-    }
+            focusSessionPoint = rank(userProfile.focusSessionIds.size))
+    docRef.update("badges", updateBadges).await()
+  }
 
-    private fun rank(count: Int): Rank = when {
+  private fun rank(count: Int): Rank =
+      when {
         count >= 20 -> Rank.LEGEND
         count >= 10 -> Rank.DIAMOND
         count >= 5 -> Rank.GOLD
         count >= 3 -> Rank.BRONZE
         count >= 1 -> Rank.STARTING
         else -> Rank.BLANK
-    }
+      }
 }
