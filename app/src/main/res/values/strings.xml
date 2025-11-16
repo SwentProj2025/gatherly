@@ -118,6 +118,7 @@
     <string name="show_todos_button_title">Show toDos</string>
     <string name="go_to_event_page_button">Go to Event</string>
     <string name="go_to_todo_page_button">Go to ToDo</string>
+    <string name="loading_map">Loading…</string>
 
     <!-- Friends Screen -->
     <string name="friends_empty_list_msg">You have no friends added yet.</string>

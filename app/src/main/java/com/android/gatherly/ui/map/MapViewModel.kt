@@ -206,6 +206,11 @@ class MapViewModel(
     }
   }
 
+  /** Handles navigation away from the map screen by clearing the camera's position. */
+  fun onNavigationToDifferentScreen() {
+    _uiState.update { it.copy(cameraPos = null) }
+  }
+
   /** Handles the switch from viewing todos to viewing events on the map. */
   fun changeView() {
     if (_uiState.value.displayEventsPage) {

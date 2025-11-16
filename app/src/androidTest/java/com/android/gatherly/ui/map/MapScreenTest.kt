@@ -31,6 +31,8 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
+// This file contains code written by an LLM (Claude.ai, Gemini Pro, GitHub Copilot).
+
 /** Tests for the MapScreen composable. */
 class MapScreenTest {
 
@@ -101,11 +103,32 @@ class MapScreenTest {
       EventIcon(event)
       EventSheet(event, onGoToEvent = {}, onClose = {})
     }
+
+    // Wait for camera position to initialize
+    compose.waitForIdle()
+    runBlocking {
+      while (viewModel.uiState.value.cameraPos == null) {
+        kotlinx.coroutines.delay(10)
+      }
+    }
   }
 
   private fun renderMapScreenOnly() {
     compose.setContent { MapScreen(viewModel = viewModel) }
+
+    // Wait for camera position to initialize
+    compose.waitForIdle()
+    runBlocking {
+      while (viewModel.uiState.value.cameraPos == null) {
+        kotlinx.coroutines.delay(10)
+      }
+    }
   }
+
+  private fun renderMapScreenWithoutInitialisation() {
+    compose.setContent { MapScreen(viewModel = viewModel, runInitialisation = false) }
+  }
+
   // Check that the Google Map is displayed
   @Test
   fun google_map_is_displayed() {
@@ -328,5 +351,42 @@ class MapScreenTest {
     compose.waitForIdle()
 
     assertNull(viewModel.uiState.value.selectedItemId)
+  }
+
+  @Test
+  fun loading_screen_displayed_when_camera_position_null() {
+    // Set the viewModel state to null
+    viewModel.onNavigationToDifferentScreen()
+
+    // Render the composable, but *tell it not* to run the LaunchedEffect that fixes the state.
+    renderMapScreenWithoutInitialisation()
+
+    // The UI is now stable in its loading state.
+    compose.onNodeWithTag(MapScreenTestTags.LOADING_SCREEN, useUnmergedTree = true).assertExists()
+    compose.onNodeWithTag(MapScreenTestTags.LOADING_SPINNER, useUnmergedTree = true).assertExists()
+    compose.onNodeWithTag(MapScreenTestTags.LOADING_TEXT, useUnmergedTree = true).assertExists()
+
+    // Sanity check: Map not displayed
+    compose
+        .onNodeWithTag(MapScreenTestTags.GOOGLE_MAP_SCREEN, useUnmergedTree = true)
+        .assertDoesNotExist()
+  }
+
+  @Test
+  fun google_map_not_displayed_when_loading() {
+    renderMapScreenWithoutInitialisation()
+
+    compose
+        .onNodeWithTag(MapScreenTestTags.GOOGLE_MAP_SCREEN, useUnmergedTree = true)
+        .assertDoesNotExist()
+  }
+
+  @Test
+  fun filter_toggle_not_displayed_when_loading() {
+    renderMapScreenWithoutInitialisation()
+
+    compose
+        .onNodeWithTag(MapScreenTestTags.FILTER_TOGGLE, useUnmergedTree = true)
+        .assertDoesNotExist()
   }
 }
