@@ -2,6 +2,7 @@ package com.android.gatherly.ui.todo
 
 import android.icu.text.SimpleDateFormat
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -60,6 +61,9 @@ object OverviewScreenTestTags {
 
   /** Test tag for the LazyColumn that displays the list of ToDo items. */
   const val TODO_LIST = "todoList"
+
+  /** Test tag for loading Todos. */
+  const val TODO_LOADING = "todoLoading"
 
   /**
    * Returns a unique test tag for the checkbox associated with a given [ToDo] item.
@@ -135,7 +139,13 @@ fun OverviewScreen(
             }
       },
       content = { pd ->
-        if (todos.isNotEmpty()) {
+        if (uiState.isLoading) {
+          Box(contentAlignment = Alignment.Center) {
+            Text(
+                modifier = Modifier.padding(pd).testTag(OverviewScreenTestTags.TODO_LOADING),
+                text = stringResource(R.string.todos_loading))
+          }
+        } else if (todos.isNotEmpty()) {
           LazyColumn(
               contentPadding =
                   PaddingValues(

@@ -15,10 +15,12 @@ import androidx.compose.ui.test.performScrollToNode
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosLocalRepository
+import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.utils.GatherlyTest
 import com.google.firebase.Timestamp
 import java.util.Calendar
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -150,5 +152,51 @@ class OverviewScreenTest : GatherlyTest() {
     }
 
     composeTestRule.onNodeWithTag(checkboxTag).assertIsOff()
+  }
+
+  /** If todos take a long time to load, the loading message appears */
+  @Test
+  fun loadingTodosShowsCorrectly() {
+    class SlowTodosRepo() : ToDosRepository {
+      override fun getNewUid(): String {
+        TODO("Not yet implemented")
+      }
+
+      override suspend fun getAllTodos(): List<ToDo> {
+        delay(2_000L)
+        return emptyList()
+      }
+
+      override suspend fun getTodo(todoID: String): ToDo {
+        TODO("Not yet implemented")
+      }
+
+      override suspend fun addTodo(toDo: ToDo) {
+        TODO("Not yet implemented")
+      }
+
+      override suspend fun editTodo(todoID: String, newValue: ToDo) {
+        TODO("Not yet implemented")
+      }
+
+      override suspend fun deleteTodo(todoID: String) {
+        TODO("Not yet implemented")
+      }
+
+      override suspend fun getAllEndedTodos(): List<ToDo> {
+        TODO("Not yet implemented")
+      }
+
+      override suspend fun toggleStatus(todoID: String) {
+        TODO("Not yet implemented")
+      }
+    }
+
+    composeTestRule.setContent {
+      OverviewScreen(overviewViewModel = OverviewViewModel(todoRepository = SlowTodosRepo()))
+    }
+
+    // Check that when loading, the loading text is displayed
+    composeTestRule.onNodeWithTag(OverviewScreenTestTags.TODO_LOADING).assertIsDisplayed()
   }
 }
