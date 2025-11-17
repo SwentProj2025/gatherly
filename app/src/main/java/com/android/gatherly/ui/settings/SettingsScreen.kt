@@ -34,6 +34,7 @@ import com.android.gatherly.ui.navigation.*
 import java.io.File
 
 // Technical constants
+private const val PROFILE_PIC_FILENAME = "profile_picture.jpg"
 private const val MIME_TYPE_IMAGE = "image/*"
 
 object SettingsScreenTestTags {
@@ -80,7 +81,7 @@ fun SettingsScreen(
 
   var showPhotoPickerDialog by remember { mutableStateOf(false) }
 
-  val imageFile = remember { File(context.filesDir, SettingsViewModel.PROFILE_PIC_FILENAME) }
+  val imageFile = remember { File(context.filesDir, PROFILE_PIC_FILENAME) }
 
   val imageUri = FileProvider.getUriForFile(context, "${context.packageName}.provider", imageFile)
 

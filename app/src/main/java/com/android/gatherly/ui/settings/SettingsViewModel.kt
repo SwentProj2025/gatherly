@@ -71,10 +71,6 @@ class SettingsViewModel(
 
   private var originalProfile: Profile? = null
 
-  companion object {
-    const val PROFILE_PIC_FILENAME = "profile_picture.jpg"
-  }
-
   /** Initiates sign-out */
   fun signOut(credentialManager: CredentialManager): Unit {
     viewModelScope.launch {
