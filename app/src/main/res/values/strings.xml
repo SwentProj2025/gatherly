@@ -16,6 +16,7 @@
     <string name="todos_assignee_field_label">Assignee</string>
     <string name="todos_assignee_placeholder">Assign a person</string>
     <string name="todos_location_field_label">Location</string>
+    <string name="todos_search_bar_label">Search todos…</string>
     <string name="todos_location_field_placeholder">Enter an Address or Location</string>
     <string name="todos_location_suggestions_more">More…</string>
     <string name="todos_location_text_etc">…</string>
