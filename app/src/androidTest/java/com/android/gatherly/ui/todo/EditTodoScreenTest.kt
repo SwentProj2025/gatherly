@@ -4,6 +4,7 @@ import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.utils.GatherlyTest
@@ -26,6 +27,7 @@ class EditTodoScreenTest : GatherlyTest() {
   @Before
   fun setUp() {
     repository = ToDosLocalRepository()
+    profileRepository = ProfileLocalRepository()
     fill_repository()
 
     // Mock Firebase Auth
