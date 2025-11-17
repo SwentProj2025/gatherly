@@ -37,7 +37,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
@@ -45,7 +44,11 @@ import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
 import com.android.gatherly.model.event.Event
+import com.android.gatherly.model.event.EventsLocalRepository
+import com.android.gatherly.model.profile.Profile
+import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.todo.ToDo
+import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.ui.navigation.BottomNavigationMenu
 import com.android.gatherly.ui.navigation.HandleSignedOutState
 import com.android.gatherly.ui.navigation.NavigationActions
@@ -53,6 +56,7 @@ import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_HomePage
 import com.android.gatherly.ui.theme.GatherlyTheme
+import com.android.gatherly.utils.profilePicturePainter
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
@@ -135,7 +139,8 @@ fun HomePageScreen(
           EventsAndFriendsSection(
               todos = uiState.displayableTodos,
               events = uiState.displayableEvents,
-              onClickFriendsSection = onClickFriendsSection)
+              onClickFriendsSection = onClickFriendsSection,
+              friends = uiState.friends)
 
           Spacer(modifier = Modifier.height(verticalSpacing))
 
@@ -184,7 +189,8 @@ fun SectionTitle(text: String, modifier: Modifier = Modifier) {
 fun EventsAndFriendsSection(
     todos: List<ToDo>,
     events: List<Event>,
-    onClickFriendsSection: () -> Unit
+    onClickFriendsSection: () -> Unit,
+    friends: List<Profile>
 ) {
 
   val spacingRegular = dimensionResource(id = R.dimen.spacing_between_fields_regular)
@@ -198,7 +204,7 @@ fun EventsAndFriendsSection(
 
         Spacer(modifier = Modifier.width(spacingRegular))
 
-        FriendsSection(onClickFriendsSection = onClickFriendsSection)
+        FriendsSection(onClickFriendsSection = onClickFriendsSection, friends)
 
         Spacer(modifier = Modifier.width(spacingRegular))
       }
@@ -261,12 +267,12 @@ fun MiniMap(todos: List<ToDo>, events: List<Event>) {
 @Composable
 fun FriendAvatar(
     modifier: Modifier = Modifier,
+    profilePicUrl: String? = null,
 ) {
   val size = dimensionResource(id = R.dimen.homepage_friend_profile_pic_size)
   Box(modifier = modifier.size(size)) {
-    Image( // Currently a placeholder image, will be implemented when profile picture storage is
-        // merged to main
-        painter = painterResource(id = R.drawable.default_profile_picture),
+    Image(
+        painter = profilePicturePainter(profilePicUrl),
         contentDescription = stringResource(id = R.string.homepage_profile_image_description),
         modifier = Modifier.fillMaxSize().clip(CircleShape),
         contentScale = ContentScale.Crop)
@@ -275,12 +281,12 @@ fun FriendAvatar(
 
 /** Displays a bordered section with friend avatars and a label. The entire section is clickable. */
 @Composable
-fun FriendsSection(onClickFriendsSection: () -> Unit) {
+fun FriendsSection(onClickFriendsSection: () -> Unit, friends: List<Profile>) {
 
-  val friendCount = 3
   val roundedCornerPercentage = 50
   Column(
       horizontalAlignment = Alignment.CenterHorizontally,
+      verticalArrangement = Arrangement.SpaceBetween,
       modifier =
           Modifier.testTag(HomePageScreenTestTags.FRIENDS_SECTION)
               .border(
@@ -296,11 +302,12 @@ fun FriendsSection(onClickFriendsSection: () -> Unit) {
                   vertical =
                       dimensionResource(
                           id = R.dimen.homepage_friends_section_vertical_border_padding),
-                  horizontal = dimensionResource(id = R.dimen.padding_small))) {
+                  horizontal = dimensionResource(id = R.dimen.padding_small))
+              .fillMaxHeight()) {
         Column(
             verticalArrangement =
                 Arrangement.spacedBy(dimensionResource(id = R.dimen.spacing_between_fields))) {
-              repeat(friendCount) { FriendAvatar() }
+              friends.forEach { friend -> FriendAvatar(profilePicUrl = friend.profilePicture) }
             }
 
         Text(
@@ -384,5 +391,11 @@ fun FocusSection(modifier: Modifier = Modifier, timerString: String = "", onClic
 @Preview(showBackground = true)
 @Composable
 fun HomePageScreenPreview() {
-  GatherlyTheme(darkTheme = true) { HomePageScreen() }
+  val fakeViewModel =
+      HomePageViewModel(
+          eventsRepository = EventsLocalRepository(),
+          toDosRepository = ToDosLocalRepository(),
+          profileRepository = ProfileLocalRepository())
+
+  GatherlyTheme(darkTheme = true) { HomePageScreen(fakeViewModel) }
 }

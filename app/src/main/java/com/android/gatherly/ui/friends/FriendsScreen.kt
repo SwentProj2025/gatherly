@@ -34,20 +34,23 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
 import com.android.gatherly.model.profile.Profile
+import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
 import com.android.gatherly.utils.GenericViewModelFactory
+import com.android.gatherly.utils.profilePicturePainter
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 import com.google.firebase.storage.storage
@@ -177,7 +180,8 @@ fun FriendsScreen(
                       unfollow = {
                         friendsViewModel.unfollowFriend(
                             currentUserId = currentUserIdFromVM, friend = friend)
-                      })
+                      },
+                      profilePicUrl = uiState.profiles[friend]?.profilePicture)
                 }
               }
 
@@ -207,7 +211,7 @@ fun FriendsScreen(
 }
 
 @Composable
-private fun FriendItem(friend: String, unfollow: () -> Unit) {
+private fun FriendItem(friend: String, unfollow: () -> Unit, profilePicUrl: String? = null) {
   Card(
       border =
           BorderStroke(
@@ -229,10 +233,9 @@ private fun FriendItem(friend: String, unfollow: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
           Image(
-              painter =
-                  painterResource(
-                      id = R.drawable.ic_launcher_foreground), // currently a placeholder image
+              painter = profilePicturePainter(profilePicUrl),
               contentDescription = "Profile picture of ${friend}",
+              contentScale = ContentScale.Crop,
               modifier =
                   Modifier.size(dimensionResource(R.dimen.friends_item_profile_picture_size))
                       .clip(CircleShape)
@@ -263,4 +266,11 @@ private fun FriendItem(friend: String, unfollow: () -> Unit) {
               }
         }
       }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun FriendScreenPreview() {
+  val fakeViewModel = FriendsViewModel(repository = ProfileLocalRepository())
+  FriendsScreen(fakeViewModel)
 }
