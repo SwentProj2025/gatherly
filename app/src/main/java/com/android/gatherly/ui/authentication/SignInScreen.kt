@@ -30,6 +30,8 @@ object SignInScreenTestTags {
   const val WELCOME_SUBTITLE = "welcomeSubtitle"
   const val GOOGLE_BUTTON = "googleButton"
   const val ANONYMOUS_BUTTON = "anonymousButton"
+  const val LOADING_TEXT = "loadingText"
+  const val SNACKBAR = "snackbar"
 }
 
 /**
@@ -49,7 +51,7 @@ fun SignInScreen(
   val uiState = authViewModel.uiState
   val signedIn = uiState.signedIn
   val errorMessage = uiState.errorMessage
-  val snackbarHostState = remember { SnackbarHostState() }
+  val snackBarHostState = remember { SnackbarHostState() }
 
   // Navigate to home page screen on successful login
   LaunchedEffect(signedIn) {
@@ -64,7 +66,7 @@ fun SignInScreen(
 
   LaunchedEffect(errorMessage) {
     if (errorMessage != null) {
-      snackbarHostState.showSnackbar(message = errorMessage, withDismissAction = true)
+      snackBarHostState.showSnackbar(message = errorMessage, withDismissAction = true)
       authViewModel.resetErrorMessage()
     }
   }
@@ -72,7 +74,11 @@ fun SignInScreen(
   Scaffold(
       containerColor = MaterialTheme.colorScheme.background,
       modifier = Modifier.fillMaxSize(),
-      snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
+      snackbarHost = {
+        SnackbarHost(
+            hostState = snackBarHostState,
+            modifier = Modifier.testTag(SignInScreenTestTags.SNACKBAR))
+      },
       content = { innerPadding ->
         if (uiState.isLoading) {
           Box(
@@ -80,7 +86,8 @@ fun SignInScreen(
               contentAlignment = Alignment.Center) {
                 Text(
                     text = stringResource(R.string.sign_in_logging_in),
-                    color = MaterialTheme.colorScheme.onBackground)
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.testTag(SignInScreenTestTags.LOADING_TEXT))
               }
         } else {
           Column(

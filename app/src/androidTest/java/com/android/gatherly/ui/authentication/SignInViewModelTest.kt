@@ -52,16 +52,16 @@ class SignInViewModelTest : FirestoreGatherlyTest() {
 
     withContext(Dispatchers.Default.limitedParallelism(1)) {
       withTimeout(5000L) {
-        while (!signInViewModel.uiState.value) {
+        while (!signInViewModel.uiState.signedIn) {
           delay(50)
         }
       }
     }
 
-    assert(userSignedIn.value)
+    assert(userSignedIn.signedIn)
     assert(FirebaseEmulator.auth.currentUser != null)
     assert(!profileRepository.initProfileIfMissing(FirebaseEmulator.auth.currentUser?.uid!!, ""))
-    assert(signInViewModel.destination.value == "init_profile")
+    assert(signInViewModel.uiState.destinationScreen == "init_profile")
   }
 
   @Test
@@ -73,16 +73,16 @@ class SignInViewModelTest : FirestoreGatherlyTest() {
 
     withContext(Dispatchers.Default.limitedParallelism(1)) {
       withTimeout(5000L) {
-        while (!signInViewModel.uiState.value) {
+        while (!signInViewModel.uiState.signedIn) {
           delay(50)
         }
       }
     }
 
-    assert(userSignedIn.value)
+    assert(userSignedIn.signedIn)
     assert(FirebaseEmulator.auth.currentUser != null)
     assert(!profileRepository.initProfileIfMissing(FirebaseEmulator.auth.currentUser?.uid!!, ""))
-    assert(signInViewModel.destination.value == "init_profile")
+    assert(signInViewModel.uiState.destinationScreen == "init_profile")
   }
 
   /** Test that after Google sign-in, the user's profile status is updated to ONLINE. */
@@ -97,7 +97,7 @@ class SignInViewModelTest : FirestoreGatherlyTest() {
 
     // Wait for coroutine to finish
     withContext(Dispatchers.Default.limitedParallelism(1)) {
-      while (!signInViewModel.uiState.value) delay(50)
+      while (!signInViewModel.uiState.signedIn) delay(50)
     }
 
     val uid = FirebaseEmulator.auth.currentUser!!.uid
@@ -111,7 +111,7 @@ class SignInViewModelTest : FirestoreGatherlyTest() {
     signInViewModel.signInAnonymously()
 
     withContext(Dispatchers.Default.limitedParallelism(1)) {
-      while (!signInViewModel.uiState.value) delay(50)
+      while (!signInViewModel.uiState.signedIn) delay(50)
     }
 
     val uid = FirebaseEmulator.auth.currentUser!!.uid
