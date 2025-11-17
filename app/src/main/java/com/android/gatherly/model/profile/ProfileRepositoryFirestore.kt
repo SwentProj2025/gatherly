@@ -5,6 +5,7 @@ import android.util.Log
 import com.android.gatherly.model.badge.Badge
 import com.android.gatherly.model.badge.Rank
 import com.android.gatherly.model.friends.Friends
+import com.android.gatherly.model.todo.ToDoStatus
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
@@ -292,8 +293,8 @@ class ProfileRepositoryFirestore(
     val uid = doc.getString("uid") ?: return null
     val name = doc.getString("name") ?: ""
     val username = doc.getString("username") ?: ""
-    val focusSessionIds = doc.get("focusSessions") as? List<String> ?: emptyList()
-    val eventIds = doc.get("events") as? List<String> ?: emptyList()
+    val focusSessionIds = doc.get("focusSessionIds") as? List<String> ?: emptyList()
+    val eventIds = doc.get("eventIds") as? List<String> ?: emptyList()
     val groupIds = doc.get("groups") as? List<String> ?: emptyList()
     val friendUids = doc.get("friendUids") as? List<String> ?: emptyList()
     val school = doc.getString("school") ?: ""
@@ -301,7 +302,7 @@ class ProfileRepositoryFirestore(
     val birthday = doc.getTimestamp("birthday")
     val profilePicture = doc.getString("profilePicture") ?: return null
     val status = ProfileStatus.fromString(doc.getString("status"))
-    val badges = doc.get("badges") as? Badge ?: Badge.blank
+      val badges: Badge = doc.get("badges", Badge::class.java) ?: Badge.blank
 
     return Profile(
         uid = uid,
@@ -339,9 +340,11 @@ class ProfileRepositoryFirestore(
         "birthday" to profile.birthday,
         "profilePicture" to profile.profilePicture,
         "status" to profile.status.value,
-        "badges" to profile.badges)
+        "badges" to profile.badges
+    )
   }
 
+  // -- FRIENDS GESTION PART --
   override suspend fun getFriendsAndNonFriendsUsernames(currentUserId: String): Friends {
     val currentProfile =
         getProfileByUid(currentUserId)
@@ -380,19 +383,37 @@ class ProfileRepositoryFirestore(
     docRef.update("friendUids", FieldValue.arrayRemove(friendId)).await()
   }
 
+  // -- STATUS GESTION PART --
   override suspend fun updateStatus(uid: String, status: ProfileStatus) {
     profilesCollection.document(uid).update("status", status.value).await()
   }
 
-  override suspend fun updateBadges(userProfile: Profile) {
+  // -- BADGES GESTION PART --
+
+  /**
+   * @param createdTodosCount will not be used in this implementation
+   * @param completedTodosCount will not be used in this implementation
+   */
+  override suspend fun updateBadges(
+      userProfile: Profile,
+      createdTodosCount: Int?,
+      completedTodosCount: Int?
+  ) {
     val docRef = profilesCollection.document(userProfile.uid)
+    val todoDocRef = db.collection("users").document(userProfile.uid).collection("todos")
+    val createdTodosCount = todoDocRef.get().await().size()
+
+    val completedTodosCount =
+        todoDocRef.whereEqualTo("status", ToDoStatus.ENDED.name).get().await().size()
+
     val updateBadges =
         Badge(
             addFriends = rank(userProfile.friendUids.size),
-            createTodo = Rank.BLANK,
-            createEvent = Rank.BLANK,
-            //participateEvent = rank(userProfile.participatingEventsIds.size), TODO
-            //createEvent = rank(userProfile.OwnerEventsIds.size), TODO
+            createdTodos = rank(createdTodosCount),
+            completedTodos = rank(completedTodosCount),
+            createEvent = rank(userProfile.eventIds.size),
+            // participateEvent = rank(userProfile.participatingEventsIds.size), TODO
+            // createEvent = rank(userProfile.OwnerEventsIds.size), TODO
             participateEvent = Rank.BLANK,
             focusSessionPoint = rank(userProfile.focusSessionIds.size))
     docRef.update("badges", updateBadges).await()

@@ -1,11 +1,15 @@
 package com.android.gatherly.viewmodel.todo
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.android.gatherly.model.profile.Profile
+import com.android.gatherly.model.profile.ProfileLocalRepository
+import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.ui.todo.AddTodoViewModel
+import com.android.gatherly.utilstest.MockitoUtils
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -37,8 +41,20 @@ class AddTodoViewModelTest {
 
   private lateinit var addToDoViewModel: AddTodoViewModel
   private lateinit var toDosRepository: ToDosRepository
+  private lateinit var profileRepository: ProfileRepository
+  private lateinit var mockitoUtils: MockitoUtils
+
   // initialize this so that tests control all coroutines and can wait on them
   private val testDispatcher = StandardTestDispatcher()
+
+  private var ownerProfile: Profile =
+      Profile(
+          uid = "0",
+          name = "Owner",
+          focusSessionIds = emptyList(),
+          eventIds = emptyList(),
+          groupIds = emptyList(),
+          friendUids = emptyList())
 
   @Before
   fun setUp() {
@@ -46,7 +62,20 @@ class AddTodoViewModelTest {
     Dispatchers.setMain(testDispatcher)
 
     toDosRepository = ToDosLocalRepository()
-    addToDoViewModel = AddTodoViewModel(toDosRepository)
+    profileRepository = ProfileLocalRepository()
+
+    // Add owner profile to repo
+    runTest { profileRepository.addProfile(ownerProfile) }
+
+    // Mock Firebase Auth
+    mockitoUtils = MockitoUtils()
+    mockitoUtils.chooseCurrentUser("0")
+
+    addToDoViewModel =
+        AddTodoViewModel(
+            todoRepository = toDosRepository,
+            profileRepository = profileRepository,
+            authProvider = { mockitoUtils.mockAuth })
   }
 
   @After
@@ -134,7 +163,9 @@ class AddTodoViewModelTest {
     waitForTodosCount(toDosRepository, expectedCount = 1)
 
     // Reset VM for next add
-    addToDoViewModel = AddTodoViewModel(toDosRepository)
+    addToDoViewModel =
+        AddTodoViewModel(
+            toDosRepository, profileRepository, authProvider = { mockitoUtils.mockAuth })
 
     // Second ToDo
     addToDoViewModel.onTitleChanged("Do groceries")
@@ -246,7 +277,7 @@ class AddTodoViewModelTest {
           override suspend fun toggleStatus(todoID: String) {}
         }
 
-    val viewModel = AddTodoViewModel(failingRepo)
+    val viewModel = AddTodoViewModel(failingRepo, profileRepository, { mockitoUtils.mockAuth })
 
     viewModel.onTitleChanged("Some task")
     viewModel.onDescriptionChanged("Should fail to save")

@@ -84,6 +84,7 @@ interface ProfileRepository {
    * @param url The new profile picture link.
    */
   suspend fun updateProfilePic(uid: String, uri: Uri): String
+
   /**
    * Retrieves a [Profile] by its username.
    *
@@ -142,6 +143,7 @@ interface ProfileRepository {
    * @param currentUserId the ID of the current user
    */
   suspend fun getListNoFriends(currentUserId: String): List<String>
+
   /**
    * Deletes a Friend from the friend list from the repository.
    *
@@ -158,15 +160,7 @@ interface ProfileRepository {
    */
   suspend fun addFriend(friend: String, currentUserId: String)
 
-  // -- BADGES GESTION PART --
-
-  /**
-   * Triggers the badges that the user won
-   *
-   * @param userProfile corresponds to the profile of the user we want to know his badges
-   */
-  suspend fun updateBadges(userProfile: Profile)
-
+  //
   /**
    * Updates the online/offline status of a user.
    *
@@ -174,4 +168,21 @@ interface ProfileRepository {
    * @param status The new [ProfileStatus] to set.
    */
   suspend fun updateStatus(uid: String, status: ProfileStatus)
+
+  // -- BADGES GESTION PART --
+
+  /**
+   * Triggers the badges that the user won
+   *
+   * @param userProfile corresponds to the profile of the user we want to know his badges
+   * @param createdTodosCount number of todos created by the user, null for the
+   *   ProfileRepositoryFirestore but can be set for testing purposes with ProfileLocalRepository
+   * @param completedTodosCount number of todos completed by the user, null for the
+   *   ProfileRepositoryFirestore but can be set for testing purposes with ProfileLocalRepository
+   */
+  suspend fun updateBadges(
+      userProfile: Profile,
+      createdTodosCount: Int? = null,
+      completedTodosCount: Int? = null
+  )
 }

@@ -184,16 +184,18 @@ class FriendsViewModelTest {
           override suspend fun getListNoFriends(currentUserId: String): List<String> = emptyList()
 
           override suspend fun addFriend(friend: String, currentUserId: String) {}
-            override suspend fun updateBadges(userProfile: Profile) {
-            }
-
-            override suspend fun updateStatus(uid: String, status: ProfileStatus) {
-
-          }
 
           override suspend fun deleteFriend(friend: String, currentUserId: String) {}
 
           override suspend fun deleteUserProfile(uid: String) {}
+
+          override suspend fun updateStatus(uid: String, status: ProfileStatus) {}
+
+          override suspend fun updateBadges(
+              userProfile: Profile,
+              createdTodosCount: Int?,
+              completedTodosCount: Int?
+          ) {}
         }
     val errorViewModel =
         FriendsViewModel(repository = throwingRepository, authProvider = { mockitoUtils.mockAuth })

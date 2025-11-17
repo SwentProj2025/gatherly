@@ -121,6 +121,8 @@ class ProfileLocalRepository : ProfileRepository {
     profiles.removeIf { it.uid == uid }
   }
 
+  // ---- FRIENDS GESTION PART ----
+
   override suspend fun getListNoFriends(currentUserId: String): List<String> {
     val currentProfile = getProfileByUid(currentUserId) ?: return emptyList()
     val friendUids = currentProfile.friendUids.toSet()
@@ -148,6 +150,8 @@ class ProfileLocalRepository : ProfileRepository {
     }
   }
 
+  // ---- STATUS GESTION PART ----
+
   override suspend fun updateStatus(uid: String, status: ProfileStatus) {
     val index = profiles.indexOfFirst { it.uid == uid }
     if (index != -1) {
@@ -158,16 +162,22 @@ class ProfileLocalRepository : ProfileRepository {
 
   // ---- BADGE GESTION PART ----
 
-  override suspend fun updateBadges(userProfile: Profile) {
+  override suspend fun updateBadges(
+      userProfile: Profile,
+      createdTodosCount: Int?,
+      completedTodosCount: Int?
+  ) {
 
+    if (createdTodosCount == null || completedTodosCount == null) {
+      return
+    }
     val updatedBadges =
         Badge(
             addFriends = rank(userProfile.friendUids.size),
-            createTodo = Rank.BLANK,
-          //participateEvent = rank(userProfile.participatingEventsIds.size), TODO
-          //createEvent = rank(userProfile.OwnerEventsIds.size), TODO
-            createEvent = Rank.BLANK,
-            participateEvent = Rank.BLANK,
+            createdTodos = rank(createdTodosCount),
+            completedTodos = rank(completedTodosCount),
+            createEvent = Rank.BLANK,  //rank(userProfile.OwnerEventsIds.size), TODO
+            participateEvent = Rank.BLANK, //  rank(userProfile.participatingEventsIds.size), TODO
             focusSessionPoint = rank(userProfile.focusSessionIds.size))
     val updatedProfile = userProfile.copy(badges = updatedBadges)
     updateProfile(updatedProfile)

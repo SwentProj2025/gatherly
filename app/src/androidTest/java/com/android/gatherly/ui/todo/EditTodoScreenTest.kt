@@ -4,6 +4,7 @@ import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.utils.GatherlyTest
 import com.android.gatherly.utils.MockitoUtils
@@ -19,6 +20,7 @@ class EditTodoScreenTest : GatherlyTest() {
   @get:Rule val composeTestRule = createComposeRule()
 
   private lateinit var editTodoViewModel: EditTodoViewModel
+  private lateinit var profileRepository: ProfileRepository
   private lateinit var mockitoUtils: MockitoUtils
 
   @Before
@@ -31,7 +33,7 @@ class EditTodoScreenTest : GatherlyTest() {
     mockitoUtils.chooseCurrentUser("user")
 
     editTodoViewModel =
-        EditTodoViewModel(todoRepository = repository, authProvider = { mockitoUtils.mockAuth })
+        EditTodoViewModel(todoRepository = repository, profileRepository = profileRepository )
     composeTestRule.setContent {
       EditToDoScreen(todoUid = todo1.uid, editTodoViewModel = editTodoViewModel)
     }

@@ -20,18 +20,20 @@ enum class Rank {
 
 /** Represent all the different [Badges] that an user can win during his evolution */
 data class Badge(
-    val addFriends: Rank,
-    val createTodo: Rank,
-    val createEvent: Rank,
-    val participateEvent: Rank,
-    val focusSessionPoint: Rank,
+    val addFriends: Rank = Rank.BLANK,
+    val createdTodos: Rank = Rank.BLANK,
+    val completedTodos: Rank = Rank.BLANK,
+    val createEvent: Rank = Rank.BLANK,
+    val participateEvent: Rank = Rank.BLANK,
+    val focusSessionPoint: Rank = Rank.BLANK,
 ) {
   /** object : default Badge where every badges are set to blank rank. */
   companion object {
     val blank =
         Badge(
             addFriends = Rank.BLANK,
-            createTodo = Rank.BLANK,
+            createdTodos = Rank.BLANK,
+            completedTodos = Rank.BLANK,
             createEvent = Rank.BLANK,
             participateEvent = Rank.BLANK,
             focusSessionPoint = Rank.BLANK)
