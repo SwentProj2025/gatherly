@@ -127,14 +127,19 @@ class ProfileViewModel(
             // Navigate to init profile
             _uiState.value = _uiState.value.copy(navigateToInit = true)
           } catch (e: Exception) {
+            _uiState.value = _uiState.value.copy(errorMessage = "Google sign-in failed")
             Log.e("SignInViewModel", "Google sign-in failed", e)
           }
         } else {
+          _uiState.value =
+              _uiState.value.copy(errorMessage = "Failed to recognize Google credentials")
           Log.e("Google credentials", "Failed to recognize Google credentials")
         }
       } catch (e: NoCredentialException) {
+        _uiState.value = _uiState.value.copy(errorMessage = "No Google credentials")
         Log.e("Google authentication", e.message.orEmpty())
       } catch (e: GetCredentialException) {
+        _uiState.value = _uiState.value.copy(errorMessage = "Failed to get Google credentials")
         Log.e("Google authentication", e.message.orEmpty())
       }
     }

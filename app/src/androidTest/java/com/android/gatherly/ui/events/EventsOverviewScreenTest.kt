@@ -488,7 +488,7 @@ class EventsOverviewScreenTest {
 
   /** Check that the anonymous user sees only the browse events section */
   @Test
-  fun anonUserSeesGoogleButton() {
+  fun anonUserSeesOnlyBrowseSection() {
     mockitoUtils.chooseCurrentUser("anon", true)
 
     eventsViewModel =
