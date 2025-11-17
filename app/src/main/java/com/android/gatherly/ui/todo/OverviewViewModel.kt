@@ -85,6 +85,7 @@ class OverviewViewModel(
   fun searchTodos(query: String) {
     val normalized = query.trim().lowercase()
     if (normalized.isEmpty()) {
+      // When query is empty in the search bar, we display the full list:
       refreshUIState()
       return
     }
