@@ -663,7 +663,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   }
 
   @Test
-  fun testUpdateBadgeCorrectly_addFriends() = runTest {
+  fun testUpdateBadgeCorrectlyAddFriends() = runTest {
     val uid = FirebaseEmulator.auth.currentUser!!.uid
     repository.initProfileIfMissing(uid, "bob.png")
 
@@ -687,7 +687,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   }
 
   @Test
-  fun testUpdateBadgeCorrectly_focusSessionPoints() = runTest {
+  fun testUpdateBadgeCorrectlyFocusSessionPoints() = runTest {
     val uid = FirebaseEmulator.auth.currentUser!!.uid
     repository.initProfileIfMissing(uid, "bob.png")
 
@@ -709,7 +709,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   }
 
   @Test
-  fun testUpdateBadgeCorrectly_createdEvent_participatingEvent() = runTest {
+  fun testUpdateBadgeCorrectlyCreatedEventParticipatingEvent() = runTest {
     val uid = FirebaseEmulator.auth.currentUser!!.uid
     repository.initProfileIfMissing(uid, "bob.png")
 
@@ -739,7 +739,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   }
 
   @Test
-  fun testUpdateBadgeCorrectly_createdTodos_completedTodos() = runTest {
+  fun testUpdateBadgeCorrectlyCreatedTodosCompletedTodos() = runTest {
     val uid = FirebaseEmulator.auth.currentUser!!.uid
     repository.initProfileIfMissing(uid, "tester.png")
 
@@ -763,7 +763,6 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     val updatedProfile = repository.getProfileByUid(uid)!!
 
     assertEquals(Rank.GOLD, updatedProfile.badges.createdTodos)
-
     assertEquals(Rank.BRONZE, updatedProfile.badges.completedTodos)
   }
 
