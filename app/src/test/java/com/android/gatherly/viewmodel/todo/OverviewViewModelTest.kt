@@ -59,9 +59,7 @@ class OverviewViewModelTest {
     mockitoUtils = MockitoUtils()
     mockitoUtils.chooseCurrentUser("0")
 
-    overviewViewModel =
-        OverviewViewModel(
-            toDosRepository, profileRepository)
+    overviewViewModel = OverviewViewModel(toDosRepository, profileRepository)
   }
 
   @After

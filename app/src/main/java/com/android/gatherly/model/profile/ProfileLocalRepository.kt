@@ -176,7 +176,7 @@ class ProfileLocalRepository : ProfileRepository {
             addFriends = rank(userProfile.friendUids.size),
             createdTodos = rank(createdTodosCount),
             completedTodos = rank(completedTodosCount),
-            createEvent = Rank.BLANK,  //rank(userProfile.OwnerEventsIds.size), TODO
+            createEvent = Rank.BLANK, // rank(userProfile.OwnerEventsIds.size), TODO
             participateEvent = Rank.BLANK, //  rank(userProfile.participatingEventsIds.size), TODO
             focusSessionPoint = rank(userProfile.focusSessionIds.size))
     val updatedProfile = userProfile.copy(badges = updatedBadges)

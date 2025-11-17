@@ -33,7 +33,7 @@ class EditTodoScreenTest : GatherlyTest() {
     mockitoUtils.chooseCurrentUser("user")
 
     editTodoViewModel =
-        EditTodoViewModel(todoRepository = repository, profileRepository = profileRepository )
+        EditTodoViewModel(todoRepository = repository, profileRepository = profileRepository)
     composeTestRule.setContent {
       EditToDoScreen(todoUid = todo1.uid, editTodoViewModel = editTodoViewModel)
     }

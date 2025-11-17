@@ -671,9 +671,10 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     val fakeFriendUids = List(massiveFriendCount) { "fakeUid$it" }
 
     val initialProfile = repository.getProfileByUid(uid)!!
-    val profileWithFakeFriends = initialProfile.copy(
-      friendUids = fakeFriendUids,
-    )
+    val profileWithFakeFriends =
+        initialProfile.copy(
+            friendUids = fakeFriendUids,
+        )
     repository.updateProfile(profileWithFakeFriends)
 
     val profileToUpdate = repository.getProfileByUid(uid)!!
@@ -691,9 +692,10 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     repository.initProfileIfMissing(uid, "bob.png")
 
     val initialProfile = repository.getProfileByUid(uid)!!
-    val profileWithFakeFocusSession = initialProfile.copy(
-      focusSessionIds = listOf("fakeFocusSessionIds"),
-    )
+    val profileWithFakeFocusSession =
+        initialProfile.copy(
+            focusSessionIds = listOf("fakeFocusSessionIds"),
+        )
 
     repository.updateProfile(profileWithFakeFocusSession)
 
@@ -718,10 +720,11 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     val fakeParticipatingEventsUids = List(participatingEventCount) { "participatingFakeUid$it" }
 
     val initialProfile = repository.getProfileByUid(uid)!!
-    val profileWithFakeEvents = initialProfile.copy(
-      eventIds = fakeEventUids,
-      //participatingEventIds = fakeParticipatingEventsUids
-    )
+    val profileWithFakeEvents =
+        initialProfile.copy(
+            eventIds = fakeEventUids,
+            // participatingEventIds = fakeParticipatingEventsUids
+        )
     repository.updateProfile(profileWithFakeEvents)
 
     val profileToUpdate = repository.getProfileByUid(uid)!!
@@ -730,9 +733,9 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     val updatedProfile = repository.getProfileByUid(uid)!!
 
     assertEquals(3, updatedProfile.eventIds.size)
-    //assertEquals(11, updatedProfile.participatingEventIds.size)
+    // assertEquals(11, updatedProfile.participatingEventIds.size)
     assertEquals(Rank.BRONZE, updatedProfile.badges.createEvent)
-    //assertEquals(Rank.DIAMOND, updatedProfile.badges.participateEvent)
+    // assertEquals(Rank.DIAMOND, updatedProfile.badges.participateEvent)
   }
 
   @Test
@@ -764,37 +767,24 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     assertEquals(Rank.BRONZE, updatedProfile.badges.completedTodos)
   }
 
-
-
-
-  /**
-   * Helper function to write a ToDo document in Firestore for testing.
-   */
+  /** Helper function to write a ToDo document in Firestore for testing. */
   private fun writeTodo(
-    db: FirebaseFirestore,
-    userId: String,
-    todoId: String,
-    status: ToDoStatus,
-    ownerId: String = userId
+      db: FirebaseFirestore,
+      userId: String,
+      todoId: String,
+      status: ToDoStatus,
+      ownerId: String = userId
   ) {
-    val todoData = mapOf(
-      "uid" to todoId,
-      "name" to "Test ToDo $todoId",
-      "description" to "Description",
-      "assigneeName" to "Assignee",
-      "dueDate" to com.google.firebase.Timestamp.now(),
-      "ownerId" to ownerId,
-      "status" to status.name
-    )
+    val todoData =
+        mapOf(
+            "uid" to todoId,
+            "name" to "Test ToDo $todoId",
+            "description" to "Description",
+            "assigneeName" to "Assignee",
+            "dueDate" to com.google.firebase.Timestamp.now(),
+            "ownerId" to ownerId,
+            "status" to status.name)
 
-    db.collection("users")
-      .document(userId)
-      .collection("todos")
-      .document(todoId)
-      .set(todoData)
+    db.collection("users").document(userId).collection("todos").document(todoId).set(todoData)
   }
-
-
-
-
 }

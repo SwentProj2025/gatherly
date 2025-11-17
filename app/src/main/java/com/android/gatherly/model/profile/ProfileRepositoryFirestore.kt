@@ -302,7 +302,7 @@ class ProfileRepositoryFirestore(
     val birthday = doc.getTimestamp("birthday")
     val profilePicture = doc.getString("profilePicture") ?: return null
     val status = ProfileStatus.fromString(doc.getString("status"))
-      val badges: Badge = doc.get("badges", Badge::class.java) ?: Badge.blank
+    val badges: Badge = doc.get("badges", Badge::class.java) ?: Badge.blank
 
     return Profile(
         uid = uid,
@@ -340,8 +340,7 @@ class ProfileRepositoryFirestore(
         "birthday" to profile.birthday,
         "profilePicture" to profile.profilePicture,
         "status" to profile.status.value,
-        "badges" to profile.badges
-    )
+        "badges" to profile.badges)
   }
 
   // -- FRIENDS GESTION PART --

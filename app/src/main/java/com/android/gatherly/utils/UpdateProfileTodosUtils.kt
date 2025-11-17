@@ -6,9 +6,9 @@ import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosRepository
 
-
 /**
  * Function to add a ToDo and update the user's badges accordingly.
+ *
  * @param todoRepository The repository to manage ToDos.
  * @param profileRepository The repository to manage Profiles.
  * @param todo The ToDo to be added.
@@ -28,6 +28,7 @@ suspend fun addTodo_updateBadges(
 
 /**
  * Function to delete a ToDo and update the user's badges accordingly.
+ *
  * @param todoRepository The repository to manage ToDos.
  * @param profileRepository The repository to manage Profiles.
  * @param todoID The ID of the ToDo to be deleted.
@@ -44,9 +45,9 @@ suspend fun deleteTodo_updateBadges(
   profileRepository.updateBadges(currentProfile)
 }
 
-
 /**
  * Function to edit a ToDo's status and update the user's badges accordingly.
+ *
  * @param todoRepository The repository to manage ToDos.
  * @param profileRepository The repository to manage Profiles.
  * @param todoID The ID of the ToDo to be edited.
