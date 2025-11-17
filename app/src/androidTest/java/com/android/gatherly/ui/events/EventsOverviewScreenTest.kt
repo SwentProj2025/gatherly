@@ -25,6 +25,7 @@ import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.NoSuchElementException
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -484,5 +485,51 @@ class EventsOverviewScreenTest {
                 .and(hasAnyDescendant(matcher)),
             useUnmergedTree = true)
         .assertIsDisplayed()
+  }
+
+  /** When events are slow to load the loading text appears */
+  @Test
+  fun slowLoadingShowsLoadingMessage() {
+    class SlowEventsRepo() : EventsRepository {
+      override suspend fun addEvent(event: Event) {
+        TODO("Not yet implemented")
+      }
+
+      override suspend fun addParticipant(eventId: String, userId: String) {
+        TODO("Not yet implemented")
+      }
+
+      override suspend fun deleteEvent(eventId: String) {
+        TODO("Not yet implemented")
+      }
+
+      override suspend fun editEvent(eventId: String, newValue: Event) {
+        TODO("Not yet implemented")
+      }
+
+      override suspend fun getAllEvents(): List<Event> {
+        delay(2_000L)
+        return emptyList()
+      }
+
+      override suspend fun getEvent(eventId: String): Event {
+        TODO("Not yet implemented")
+      }
+
+      override fun getNewId(): String {
+        TODO("Not yet implemented")
+      }
+
+      override suspend fun removeParticipant(eventId: String, userId: String) {
+        TODO("Not yet implemented")
+      }
+    }
+
+    composeTestRule.setContent {
+      EventsScreen(eventsViewModel = EventsViewModel(repository = SlowEventsRepo()))
+    }
+    composeTestRule.onNodeWithTag(EventsScreenTestTags.BROWSE_EVENTS_LOADING).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(EventsScreenTestTags.UPCOMING_EVENTS_LOADING).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(EventsScreenTestTags.MY_EVENTS_LOADING).assertIsDisplayed()
   }
 }

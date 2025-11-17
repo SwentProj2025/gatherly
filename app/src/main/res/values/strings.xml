@@ -89,6 +89,7 @@
     <string name="events_location_field_placeholder">Enter an Address or Location</string>
     <string name="events_participant_field_label">Participant</string>
     <string name="events_participant_placeholder">Add or remove a participant</string>
+    <string name="events_loading">Loading events …</string>
 
     <!-- HomePage -->
     <string name="homepage_arrow_icon_description">Navigate</string>

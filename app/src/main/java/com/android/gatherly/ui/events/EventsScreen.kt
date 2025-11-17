@@ -89,6 +89,9 @@ object EventsScreenTestTags {
   const val POPUP_DESCRIPTION = "EventDescription"
 
   const val POPUP_TITLE = "EventTitle"
+  const val BROWSE_EVENTS_LOADING = "browseEventsLoading"
+  const val UPCOMING_EVENTS_LOADING = "upcomingEventsLoading"
+  const val MY_EVENTS_LOADING = "myEventsLoading"
 
   /**
    * Returns a unique test tag for the card or container representing a given [Event] item.
@@ -186,7 +189,21 @@ fun EventsScreen(
                     color = MaterialTheme.colorScheme.onBackground)
               }
 
-              if (browserEvents.isNotEmpty()) {
+              if (uiState.isLoading) {
+                // Events are loading so display that text
+                item {
+                  Text(
+                      stringResource(R.string.events_loading),
+                      modifier =
+                          Modifier.fillMaxWidth()
+                              .padding(8.dp)
+                              .testTag(EventsScreenTestTags.BROWSE_EVENTS_LOADING),
+                      textAlign = TextAlign.Center,
+                      style = MaterialTheme.typography.titleMedium,
+                      fontWeight = FontWeight.Bold,
+                      color = MaterialTheme.colorScheme.onBackground)
+                }
+              } else if (browserEvents.isNotEmpty()) {
                 items(browserEvents.size) { index ->
                   BrowserEventsItem(
                       event = browserEvents[index],
@@ -225,7 +242,21 @@ fun EventsScreen(
                     color = MaterialTheme.colorScheme.onBackground)
               }
 
-              if (upcomingEvents.isNotEmpty()) {
+              if (uiState.isLoading) {
+                // Events are loading so display that text
+                item {
+                  Text(
+                      stringResource(R.string.events_loading),
+                      modifier =
+                          Modifier.fillMaxWidth()
+                              .padding(8.dp)
+                              .testTag(EventsScreenTestTags.UPCOMING_EVENTS_LOADING),
+                      textAlign = TextAlign.Center,
+                      style = MaterialTheme.typography.titleMedium,
+                      fontWeight = FontWeight.Bold,
+                      color = MaterialTheme.colorScheme.onBackground)
+                }
+              } else if (upcomingEvents.isNotEmpty()) {
                 items(upcomingEvents.size) { index ->
                   UpcomingEventsItem(
                       event = upcomingEvents[index],
@@ -264,7 +295,21 @@ fun EventsScreen(
                     color = MaterialTheme.colorScheme.onBackground)
               }
 
-              if (myOwnEvents.isNotEmpty()) {
+              if (uiState.isLoading) {
+                // Events are loading so display that text
+                item {
+                  Text(
+                      stringResource(R.string.events_loading),
+                      modifier =
+                          Modifier.fillMaxWidth()
+                              .padding(8.dp)
+                              .testTag(EventsScreenTestTags.MY_EVENTS_LOADING),
+                      textAlign = TextAlign.Center,
+                      style = MaterialTheme.typography.titleMedium,
+                      fontWeight = FontWeight.Bold,
+                      color = MaterialTheme.colorScheme.onBackground)
+                }
+              } else if (myOwnEvents.isNotEmpty()) {
                 items(myOwnEvents.size) { index ->
                   MyOwnEventsItem(
                       event = myOwnEvents[index],

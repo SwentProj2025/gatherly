@@ -6,7 +6,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.event.Event
-import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsRepository
 import com.android.gatherly.model.event.EventsRepositoryFirestore
 import com.android.gatherly.utils.GenericViewModelFactory
@@ -35,18 +34,9 @@ data class UIState(
         emptyList(), // Events neither created by nor participated in by current user
     val signedOut: Boolean = false,
     val errorMsg: String? = null,
-    val currentUserId: String = ""
+    val currentUserId: String = "",
+    val isLoading: Boolean = false
 )
-/**
- * Function that retrieves "drawable" events, i.e. those which are not past, and have a valid
- * location.
- *
- * @param events input list of events to filter from
- * @return list of drawable events
- */
-private fun getDrawableEvents(events: List<Event>): List<Event> {
-  return events.filter { it.status != EventStatus.PAST && it.location != null }
-}
 
 /**
  * ViewModel for the Events screen.
@@ -84,6 +74,7 @@ class EventsViewModel(
    * @param currentUserId the ID of the current user
    */
   suspend fun refreshEvents(currentUserId: String) {
+    _uiState.value = _uiState.value.copy(isLoading = true)
     val events = repository.getAllEvents()
     _uiState.value =
         _uiState.value.copy(
@@ -98,6 +89,7 @@ class EventsViewModel(
                   it.creatorId != currentUserId && !it.participants.contains(currentUserId)
                 },
             currentUserId = currentUserId)
+    _uiState.value = _uiState.value.copy(isLoading = false)
   }
 
   /**
