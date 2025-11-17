@@ -42,6 +42,7 @@ object SettingsScreenTestTags {
   const val NAME_FIELD_ERROR = "settings_name_field_error"
   const val BIRTHDAY_FIELD_ERROR = "settings_birthday_field_error"
   const val GOOGLE_BUTTON = "google_button"
+  const val LOADING = "loading"
 }
 
 /**
@@ -105,7 +106,14 @@ fun SettingsScreen(
       },
       containerColor = MaterialTheme.colorScheme.background,
       content = { paddingValues ->
-        if (uiState.isAnon) {
+        if (uiState.isLoadingProfile) {
+          Box(
+              modifier = Modifier.fillMaxSize().padding(paddingValues),
+              contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(
+                    modifier = Modifier.testTag(SettingsScreenTestTags.LOADING))
+              }
+        } else if (uiState.isAnon) {
 
           // If the user is anonymous, they do not have a profile
 

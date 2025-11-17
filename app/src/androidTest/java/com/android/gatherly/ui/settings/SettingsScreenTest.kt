@@ -1,14 +1,19 @@
 package com.android.gatherly.ui.settings
 
+import android.net.Uri
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.android.gatherly.model.friends.Friends
+import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
+import com.android.gatherly.model.profile.ProfileStatus
 import com.android.gatherly.utils.MockitoUtils
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -327,5 +332,105 @@ class SettingsScreenTest {
     composeRule.setContent { SettingsScreen(settingsViewModel) }
 
     composeRule.onNodeWithTag(SettingsScreenTestTags.GOOGLE_BUTTON).assertIsDisplayed()
+  }
+
+  /** Check that loading screen shows progress indicator */
+  @Test
+  fun slowLoadingShowsProgressIndicator() {
+    class SlowProfileRepo() : ProfileRepository {
+      override suspend fun addFriend(friend: String, currentUserId: String) {
+        TODO("Not yet implemented")
+      }
+
+      override suspend fun addProfile(profile: Profile) {
+        TODO("Not yet implemented")
+      }
+
+      override suspend fun deleteFriend(friend: String, currentUserId: String) {
+        TODO("Not yet implemented")
+      }
+
+      override suspend fun deleteProfile(uid: String) {
+        TODO("Not yet implemented")
+      }
+
+      override suspend fun deleteUserProfile(uid: String) {
+        TODO("Not yet implemented")
+      }
+
+      override suspend fun getFriendsAndNonFriendsUsernames(currentUserId: String): Friends {
+        TODO("Not yet implemented")
+      }
+
+      override suspend fun getListNoFriends(currentUserId: String): List<String> {
+        TODO("Not yet implemented")
+      }
+
+      override suspend fun getProfileByUid(uid: String): Profile? {
+        delay(2_000L)
+        return Profile()
+      }
+
+      override suspend fun getProfileByUsername(username: String): Profile? {
+        TODO("Not yet implemented")
+      }
+
+      override suspend fun initProfileIfMissing(uid: String, defaultPhotoUrl: String): Boolean {
+        TODO("Not yet implemented")
+      }
+
+      override suspend fun isUidRegistered(uid: String): Boolean {
+        TODO("Not yet implemented")
+      }
+
+      override suspend fun isUsernameAvailable(username: String): Boolean {
+        TODO("Not yet implemented")
+      }
+
+      override suspend fun registerUsername(uid: String, username: String): Boolean {
+        TODO("Not yet implemented")
+      }
+
+      override suspend fun searchProfilesByNamePrefix(prefix: String): List<Profile> {
+        TODO("Not yet implemented")
+      }
+
+      override suspend fun searchProfilesByUsernamePrefix(
+          prefix: String,
+          limit: Int
+      ): List<Profile> {
+        TODO("Not yet implemented")
+      }
+
+      override suspend fun updateProfile(profile: Profile) {
+        TODO("Not yet implemented")
+      }
+
+      override suspend fun updateProfilePic(uid: String, uri: Uri): String {
+        TODO("Not yet implemented")
+      }
+
+      override suspend fun updateStatus(uid: String, status: ProfileStatus) {
+        TODO("Not yet implemented")
+      }
+
+      override suspend fun updateUsername(
+          uid: String,
+          oldUsername: String?,
+          newUsername: String
+      ): Boolean {
+        TODO("Not yet implemented")
+      }
+    }
+
+    // Mock Firebase Auth
+    mockitoUtils = MockitoUtils()
+    mockitoUtils.chooseCurrentUser("currentUser")
+
+    settingsViewModel =
+        SettingsViewModel(repository = SlowProfileRepo(), authProvider = { mockitoUtils.mockAuth })
+    composeRule.setContent { SettingsScreen(settingsViewModel) }
+
+    composeRule.onNodeWithTag(SettingsScreenTestTags.LOADING).assertIsDisplayed()
   }
 }
