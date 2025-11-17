@@ -73,6 +73,7 @@
     <string name="profile_groups_section_title">Your Groups</string>
     <string name="profile_empty_focus_sessions_message">Focus session data not available yet.</string>
     <string name="profile_empty_groups_message">You currently have no groups.</string>
+    <string name="profile_anon_message">You are currently signed in anonymously, create an account to have a profile.</string>
 
     <!-- Events -->
     <string name="events_title_field_label">Title</string>
@@ -110,6 +111,7 @@
     <string name="create_event_button_title">Create an event</string>
 
     <string name="sign_in_google_button_label">Continue with Google</string>
+    <string name="upgrade_to_google_button_label">Upgrade account using Google</string>
     <string name="sign_in_anonymous_button_label">Continue without account</string>
     <string name="sign_in_welcome_section_text0">Welcome to Gatherly,</string>
     <string name="sign_in_welcome_section_text1">Your workflow and social events app!</string>
