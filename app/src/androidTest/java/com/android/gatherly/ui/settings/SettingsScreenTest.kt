@@ -317,6 +317,7 @@ class SettingsScreenTest {
 
   @Test
   fun settings_screen_profilePicture_isDisplayedInitially() {
+    setContentWithGoogle()
     /** Verifies the profile picture Image composable is visible at startup. */
     composeRule
         .onNodeWithTag(SettingsScreenTestTags.PROFILE_PICTURE)
@@ -326,6 +327,7 @@ class SettingsScreenTest {
 
   @Test
   fun settings_screen_editPhotoButton_opensPhotoPickerDialog() {
+    setContentWithGoogle()
     /** Ensures clicking "Edit Photo" opens the dialog with all three buttons. */
     composeRule.onNodeWithTag(SettingsScreenTestTags.EDIT_PHOTO_BUTTON).performClick()
 
@@ -338,6 +340,7 @@ class SettingsScreenTest {
 
   @Test
   fun settings_screen_photoPicker_cancelButton_closesDialog() {
+    setContentWithGoogle()
     /** Tests that pressing "Cancel" closes the dialog and hides all options. */
     composeRule.onNodeWithTag(SettingsScreenTestTags.EDIT_PHOTO_BUTTON).performClick()
     composeRule.onNodeWithTag(SettingsScreenTestTags.PHOTO_PICKER_CANCEL_BUTTON).performClick()
@@ -353,6 +356,7 @@ class SettingsScreenTest {
   /** Verifies that a non-empty profilePictureUrl displays the profile picture Image. */
   @Test
   fun settingsScreen_showsCustomProfilePicture_whenUrlIsNotEmpty() {
+    setContentWithGoogle()
     val testUrl = "https://example.com/profile.jpg"
     settingsViewModel.editProfilePictureUrl(testUrl)
 
