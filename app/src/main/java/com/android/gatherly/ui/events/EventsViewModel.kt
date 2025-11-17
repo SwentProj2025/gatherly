@@ -35,6 +35,7 @@ data class UIState(
     val signedOut: Boolean = false,
     val errorMsg: String? = null,
     val currentUserId: String = "",
+    val isAnon: Boolean = true,
     val isLoading: Boolean = false
 )
 
@@ -88,7 +89,8 @@ class EventsViewModel(
                 events.filter {
                   it.creatorId != currentUserId && !it.participants.contains(currentUserId)
                 },
-            currentUserId = currentUserId)
+            currentUserId = currentUserId,
+            isAnon = authProvider().currentUser?.isAnonymous ?: true)
     _uiState.value = _uiState.value.copy(isLoading = false)
   }
 

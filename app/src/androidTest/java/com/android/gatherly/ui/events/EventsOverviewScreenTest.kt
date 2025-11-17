@@ -487,6 +487,21 @@ class EventsOverviewScreenTest {
         .assertIsDisplayed()
   }
 
+  /** Check that the anonymous user sees only the browse events section */
+  @Test
+  fun anonUserSeesOnlyBrowseSection() {
+    mockitoUtils.chooseCurrentUser("anon", true)
+
+    eventsViewModel =
+        EventsViewModel(repository = eventsRepository, authProvider = { mockitoUtils.mockAuth })
+    composeTestRule.setContent { EventsScreen(eventsViewModel = eventsViewModel) }
+
+    composeTestRule.onNodeWithTag(EventsScreenTestTags.BROWSE_TITLE).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(EventsScreenTestTags.UPCOMING_TITLE).assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag(EventsScreenTestTags.YOUR_EVENTS_TITLE).assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag(EventsScreenTestTags.CREATE_EVENT_BUTTON).assertIsNotDisplayed()
+  }
+
   /** When events are slow to load the loading text appears */
   @Test
   fun slowLoadingShowsLoadingMessage() {
