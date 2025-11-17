@@ -124,7 +124,8 @@ fun EventsScreen(
     onAddEvent: () -> Unit = {},
     navigateToEditEvent: (Event) -> Unit = {},
     navigationActions: NavigationActions? = null,
-    eventsViewModel: EventsViewModel = viewModel(factory = EventsViewModel.provideFactory())
+    eventsViewModel: EventsViewModel = viewModel(factory = EventsViewModel.provideFactory()),
+    eventId: String? = null,
 ) {
 
   val coroutineScope = rememberCoroutineScope()
@@ -142,6 +143,39 @@ fun EventsScreen(
   val isPopupOnBrowser = remember { mutableStateOf(false) }
   val isPopupOnUpcoming = remember { mutableStateOf(false) }
   val isPopupOnYourE = remember { mutableStateOf(false) }
+
+    // Handle deep linking to a specific event if eventId is provided
+    val eventIdAlreadyProcessed = remember(eventId) { mutableStateOf(false) }
+    if (eventId != null && !eventIdAlreadyProcessed.value) {
+
+        // Check if the eventId exists in any of the event lists
+        val eventIdIsBrowser = browserEvents.find { it.id == eventId }
+        val eventIdIsUpcoming = upcomingEvents.find { it.id == eventId }
+        val eventIdIsYourEvent = myOwnEvents.find { it.id == eventId }
+
+        // Open the corresponding pop-up based on where the event was found
+        val eventFound =
+            if (eventIdIsBrowser != null) {
+                selectedBrowserEvent.value = eventIdIsBrowser
+                isPopupOnBrowser.value = true
+                true
+            } else if (eventIdIsUpcoming != null) {
+                selectedUpcomingEvent.value = eventIdIsUpcoming
+                isPopupOnUpcoming.value = true
+                true
+            } else if (eventIdIsYourEvent != null) {
+                selectedYourEvent.value = eventIdIsYourEvent
+                isPopupOnYourE.value = true
+                true
+            } else {
+                false
+            }
+
+        // Mark the eventId as processed to avoid reopening the pop-up on recomposition
+        if (eventFound) {
+            eventIdAlreadyProcessed.value = true
+        }
+    }
 
   LaunchedEffect(Unit, currentUserIdFromVM) {
     if (currentUserIdFromVM.isNotBlank()) {
@@ -311,6 +345,9 @@ fun EventsScreen(
                     }
               }
             }
+
+          // -- EVENT POP UPS --
+
         selectedBrowserEvent.value?.let { event ->
           BrowserEventsPopUp(
               event = event,
