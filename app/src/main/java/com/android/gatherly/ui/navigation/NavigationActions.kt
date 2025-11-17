@@ -46,7 +46,7 @@ sealed class Screen(
 
   object FriendsScreen : Screen(route = "friends_screen", name = "Your friends")
 
-  object FindFriends : Screen(route = "find_friends_screen", name = "Find new friends")
+  object FindFriendsScreen : Screen(route = "find_friends_screen", name = "Find new friends")
 
   object SettingsScreen : Screen(route = "settings_screen", name = "Settings")
 

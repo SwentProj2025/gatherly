@@ -24,6 +24,7 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
 import androidx.credentials.CredentialManager
@@ -53,6 +54,7 @@ object SettingsScreenTestTags {
   const val PHOTO_PICKER_GALLERY_BUTTON = "settings_photo_picker_gallery_button"
   const val PHOTO_PICKER_CANCEL_BUTTON = "settings_photo_picker_cancel_button"
   const val PROFILE_PICTURE_URL_NOT_EMPTY = "settings_profile_picture_url_not_empty"
+  const val GOOGLE_BUTTON = "google_button"
 }
 
 /**
@@ -117,6 +119,15 @@ fun SettingsScreen(
     }
   }
 
+  // If the anonymous user decides to upgrade their account to a signed in one, navigate to the init
+  // profile screen
+  val navigateToInit = uiState.navigateToInit
+  LaunchedEffect(navigateToInit) {
+    if (navigateToInit) {
+      navigationActions?.navigateTo(Screen.InitProfileScreen)
+    }
+  }
+
   HandleSignedOutState(uiState.signedOut, onSignedOut)
 
   Scaffold(
@@ -129,122 +140,183 @@ fun SettingsScreen(
       },
       containerColor = MaterialTheme.colorScheme.background,
       content = { paddingValues ->
-        Column(
-            modifier =
-                Modifier.fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(horizontal = paddingRegular, vertical = paddingMedium),
-            horizontalAlignment = Alignment.CenterHorizontally) {
-              Column(
-                  modifier =
-                      Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()),
-                  horizontalAlignment = Alignment.CenterHorizontally) {
+        if (uiState.isAnon) {
 
-                    // Profile Picture
-                    ProfilePictureImage(uiState.profilePictureUrl)
+          // If the user is anonymous, they do not have a profile
 
-                    Spacer(modifier = Modifier.height(fieldSpacingRegular))
+          Box(
+              modifier =
+                  Modifier.fillMaxSize()
+                      .padding(paddingValues)
+                      .padding(horizontal = fieldSpacingMedium),
+              contentAlignment = Alignment.Center) {
+                Column {
+                  // Inform the user that they are signed in anonymously
+                  Text(
+                      text = stringResource(R.string.profile_anon_message),
+                      color = MaterialTheme.colorScheme.onBackground,
+                      textAlign = TextAlign.Center)
 
-                    // Username Field
-                    SettingsField(
-                        label = stringResource(R.string.settings_label_username),
-                        value = uiState.username,
-                        onValueChange = { settingsViewModel.editUsername(it) },
-                        testTag = SettingsScreenTestTags.USERNAME,
-                        errorMessage = uiState.invalidUsernameMsg)
+                  Spacer(Modifier.height(fieldSpacingMedium))
 
-                    if (uiState.isUsernameAvailable == true && uiState.invalidUsernameMsg == null) {
-                      Text(
-                          text = stringResource(R.string.settings_valid_username),
-                          color = MaterialTheme.colorScheme.primary,
-                          fontSize = 14.sp,
+                  // Sign in with google button
+                  Button(
+                      onClick = { settingsViewModel.upgradeWithGoogle(context, credentialManager) },
+                      modifier =
+                          Modifier.fillMaxWidth()
+                              .height(dimensionResource(id = R.dimen.sign_in_button_height))
+                              .testTag(SettingsScreenTestTags.GOOGLE_BUTTON),
+                      colors =
+                          ButtonDefaults.buttonColors(
+                              containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                              contentColor = MaterialTheme.colorScheme.primary),
+                      shape =
+                          RoundedCornerShape(
+                              dimensionResource(id = R.dimen.rounded_corner_shape_medium))) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center,
+                            modifier = Modifier.fillMaxWidth()) {
+                              // Google image
+                              Image(
+                                  painter = painterResource(id = R.drawable.google_logo),
+                                  contentDescription =
+                                      null, // Action still clear with button text description
+                                  modifier =
+                                      Modifier.size(
+                                              dimensionResource(
+                                                  id = R.dimen.sign_in_button_icon_size))
+                                          .padding(end = dimensionResource(R.dimen.padding_small)))
+
+                              // Upgrade with google text
+                              Text(
+                                  text = stringResource(R.string.upgrade_to_google_button_label),
+                                  style = MaterialTheme.typography.bodyLarge,
+                                  fontWeight = FontWeight.Medium)
+                            }
+                      }
+                }
+              }
+        } else {
+          Column(
+              modifier =
+                  Modifier.fillMaxSize()
+                      .padding(paddingValues)
+                      .padding(horizontal = paddingRegular, vertical = paddingMedium),
+              horizontalAlignment = Alignment.CenterHorizontally) {
+                Column(
+                    modifier =
+                        Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()),
+                    horizontalAlignment = Alignment.CenterHorizontally) {
+
+                      // Profile Picture
+                      ProfilePictureImage(uiState.profilePictureUrl)
+
+                      Spacer(modifier = Modifier.height(fieldSpacingRegular))
+
+                      // Username Field
+                      SettingsField(
+                          label = stringResource(R.string.settings_label_username),
+                          value = uiState.username,
+                          onValueChange = { settingsViewModel.editUsername(it) },
+                          testTag = SettingsScreenTestTags.USERNAME,
+                          errorMessage = uiState.invalidUsernameMsg)
+
+                      if (uiState.isUsernameAvailable == true &&
+                          uiState.invalidUsernameMsg == null) {
+                        Text(
+                            text = stringResource(R.string.settings_valid_username),
+                            color = MaterialTheme.colorScheme.primary,
+                            fontSize = 14.sp,
+                            modifier =
+                                Modifier.padding(
+                                    top = dimensionResource(id = R.dimen.padding_extra_small)))
+                      }
+
+                      Spacer(modifier = Modifier.height(fieldSpacingRegular))
+
+                      // Edit Photo Button
+                      Button(
+                          onClick = { showPhotoPickerDialog = true },
                           modifier =
-                              Modifier.padding(
-                                  top = dimensionResource(id = R.dimen.padding_extra_small)))
-                    }
-
-                    Spacer(modifier = Modifier.height(fieldSpacingRegular))
-
-                    // Edit Photo Button
-                    Button(
-                        onClick = { showPhotoPickerDialog = true },
-                        modifier =
-                            Modifier.fillMaxWidth()
-                                .height(dimensionResource(id = R.dimen.settings_text_field_height))
-                                .testTag(SettingsScreenTestTags.EDIT_PHOTO_BUTTON),
-                        colors =
-                            ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                                contentColor = MaterialTheme.colorScheme.onSurface),
-                        shape =
-                            RoundedCornerShape(
-                                dimensionResource(id = R.dimen.rounded_corner_shape_medium))) {
-                          Text(
-                              text = stringResource(id = R.string.settings_edit_photo),
-                              color = MaterialTheme.colorScheme.onBackground,
-                              fontSize = 16.sp)
-                        }
-
-                    if (showPhotoPickerDialog) {
-                      PhotoPickerDialog(
-                          imageUri = imageUri,
-                          takePhotoLauncher = takePhotoLauncher,
-                          pickImageLauncher = pickImageLauncher) {
-                            showPhotoPickerDialog = false
+                              Modifier.fillMaxWidth()
+                                  .height(
+                                      dimensionResource(id = R.dimen.settings_text_field_height))
+                                  .testTag(SettingsScreenTestTags.EDIT_PHOTO_BUTTON),
+                          colors =
+                              ButtonDefaults.buttonColors(
+                                  containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                  contentColor = MaterialTheme.colorScheme.onSurface),
+                          shape =
+                              RoundedCornerShape(
+                                  dimensionResource(id = R.dimen.rounded_corner_shape_medium))) {
+                            Text(
+                                text = stringResource(id = R.string.settings_edit_photo),
+                                color = MaterialTheme.colorScheme.onBackground,
+                                fontSize = 16.sp)
                           }
+
+                      if (showPhotoPickerDialog) {
+                        PhotoPickerDialog(
+                            imageUri = imageUri,
+                            takePhotoLauncher = takePhotoLauncher,
+                            pickImageLauncher = pickImageLauncher) {
+                              showPhotoPickerDialog = false
+                            }
+                      }
+
+                      Spacer(modifier = Modifier.height(fieldSpacingMedium))
+
+                      // Settings Fields
+                      SettingsField(
+                          label = stringResource(R.string.settings_label_name),
+                          value = uiState.name,
+                          onValueChange = { settingsViewModel.editName(it) },
+                          testTag = SettingsScreenTestTags.NAME_FIELD,
+                          errorMessage = uiState.invalidNameMsg)
+                      Spacer(modifier = Modifier.height(fieldSpacingRegular))
+                      SettingsField(
+                          label = stringResource(R.string.settings_label_birthday),
+                          value = uiState.birthday,
+                          onValueChange = { settingsViewModel.editBirthday(it) },
+                          testTag = SettingsScreenTestTags.BIRTHDAY_FIELD,
+                          errorMessage = uiState.invalidBirthdayMsg)
+                      Spacer(modifier = Modifier.height(fieldSpacingRegular))
+                      SettingsField(
+                          label = stringResource(R.string.settings_label_school),
+                          value = uiState.school,
+                          onValueChange = { settingsViewModel.editSchool(it) },
+                          testTag = SettingsScreenTestTags.SCHOOL_FIELD)
+                      Spacer(modifier = Modifier.height(fieldSpacingRegular))
+                      SettingsField(
+                          label = stringResource(R.string.settings_label_school_year),
+                          value = uiState.schoolYear,
+                          onValueChange = { settingsViewModel.editSchoolYear(it) },
+                          testTag = SettingsScreenTestTags.SCHOOL_YEAR_FIELD)
                     }
 
-                    Spacer(modifier = Modifier.height(fieldSpacingMedium))
+                Spacer(modifier = Modifier.height(fieldSpacingMedium))
 
-                    // Settings Fields
-                    SettingsField(
-                        label = stringResource(R.string.settings_label_name),
-                        value = uiState.name,
-                        onValueChange = { settingsViewModel.editName(it) },
-                        testTag = SettingsScreenTestTags.NAME_FIELD,
-                        errorMessage = uiState.invalidNameMsg)
-                    Spacer(modifier = Modifier.height(fieldSpacingRegular))
-                    SettingsField(
-                        label = stringResource(R.string.settings_label_birthday),
-                        value = uiState.birthday,
-                        onValueChange = { settingsViewModel.editBirthday(it) },
-                        testTag = SettingsScreenTestTags.BIRTHDAY_FIELD,
-                        errorMessage = uiState.invalidBirthdayMsg)
-                    Spacer(modifier = Modifier.height(fieldSpacingRegular))
-                    SettingsField(
-                        label = stringResource(R.string.settings_label_school),
-                        value = uiState.school,
-                        onValueChange = { settingsViewModel.editSchool(it) },
-                        testTag = SettingsScreenTestTags.SCHOOL_FIELD)
-                    Spacer(modifier = Modifier.height(fieldSpacingRegular))
-                    SettingsField(
-                        label = stringResource(R.string.settings_label_school_year),
-                        value = uiState.schoolYear,
-                        onValueChange = { settingsViewModel.editSchoolYear(it) },
-                        testTag = SettingsScreenTestTags.SCHOOL_YEAR_FIELD)
-                  }
-
-              Spacer(modifier = Modifier.height(fieldSpacingMedium))
-
-              // Save Button
-              Button(
-                  onClick = { settingsViewModel.updateProfile(isFirstTime = false) },
-                  modifier =
-                      Modifier.fillMaxWidth(0.8f)
-                          .height(dimensionResource(id = R.dimen.settings_save_button_height))
-                          .padding(bottom = paddingRegular)
-                          .testTag(SettingsScreenTestTags.SAVE_BUTTON),
-                  colors =
-                      ButtonDefaults.buttonColors(
-                          containerColor = MaterialTheme.colorScheme.primary,
-                          contentColor = MaterialTheme.colorScheme.onPrimary),
-                  enabled = uiState.isValid) {
-                    Text(
-                        text = stringResource(R.string.settings_save),
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Medium)
-                  }
-            }
+                // Save Button
+                Button(
+                    onClick = { settingsViewModel.updateProfile(isFirstTime = false) },
+                    modifier =
+                        Modifier.fillMaxWidth(0.8f)
+                            .height(dimensionResource(id = R.dimen.settings_save_button_height))
+                            .padding(bottom = paddingRegular)
+                            .testTag(SettingsScreenTestTags.SAVE_BUTTON),
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primary,
+                            contentColor = MaterialTheme.colorScheme.onPrimary),
+                    enabled = uiState.isValid) {
+                      Text(
+                          text = stringResource(R.string.settings_save),
+                          fontSize = 16.sp,
+                          fontWeight = FontWeight.Medium)
+                    }
+              }
+        }
       })
 }
 

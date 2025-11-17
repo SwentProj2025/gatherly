@@ -63,13 +63,16 @@ class FocusSessionsRepositoryFirestore(private val db: FirebaseFirestore) :
         .await()
   }
 
-  override suspend fun editFocusSessionLinkedTodo(focusSessionId: String, newLinkedTodoId: String) {
+  override suspend fun updateFocusSession(
+      focusSessionId: String,
+      updatedFocusSession: FocusSession
+  ) {
     val existing = getFocusSession(focusSessionId)
     if (currentUserId() != existing.creatorId) {
       throw SecurityException("Only the creator of this focus session can edit it")
     }
-    // Update the linked todo, but keep the rest of the fields
-    val updated = existing.copy(linkedTodoId = newLinkedTodoId)
+    // Preserve the original creatorId
+    val updated = updatedFocusSession.copy(creatorId = existing.creatorId)
     collection.document(focusSessionId).set(focusSessionToMap(updated)).await()
   }
 

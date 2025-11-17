@@ -91,19 +91,20 @@ class FocusSessionsRepositoryFirestoreTest : FirestoreFocusSessionsGatherlyTest(
 
   /** Verifies that a session can be edited by its creator. */
   @Test
-  fun editFocusSessionLinkedTodo_updates_existing_session() = runTest {
+  fun updateFocusSession_updates_existing_session() = runTest {
     repository.addFocusSession(session1)
 
-    repository.editFocusSessionLinkedTodo(session1.focusSessionId, "updated_todo")
+    val updatedFocusSession = session1.copy(linkedTodoId = "updated_todo")
+    repository.updateFocusSession(session1.focusSessionId, updatedFocusSession)
     val retrieved = repository.getFocusSession(session1.focusSessionId)
 
-    assertEquals(session1.focusSessionId, retrieved.focusSessionId)
+    assertEquals(updatedFocusSession.focusSessionId, retrieved.focusSessionId)
     assertEquals(user1Id, retrieved.creatorId)
-    assertEquals("updated_todo", retrieved.linkedTodoId)
-    assertEquals(session1.duration, retrieved.duration)
-    assertEquals(session1.focusSessionId, retrieved.focusSessionId)
-    assertEquals(session1.startedAt, retrieved.startedAt)
-    assertEquals(session1.endedAt, retrieved.endedAt)
+    assertEquals(updatedFocusSession.linkedTodoId, retrieved.linkedTodoId)
+    assertEquals(updatedFocusSession.duration, retrieved.duration)
+    assertEquals(updatedFocusSession.focusSessionId, retrieved.focusSessionId)
+    assertEquals(updatedFocusSession.startedAt, retrieved.startedAt)
+    assertEquals(updatedFocusSession.endedAt, retrieved.endedAt)
   }
 
   /** Verifies that only the creator can edit their focus session. */
@@ -111,9 +112,10 @@ class FocusSessionsRepositoryFirestoreTest : FirestoreFocusSessionsGatherlyTest(
   fun editFocusSessionLinkedTodo_throws_security_exception_when_not_creator() = runTest {
     repository.addFocusSession(session1)
 
+    val updatedFocusSession = session1.copy(linkedTodoId = "updated_todo")
     signInWithToken(user2Token)
     try {
-      repository.editFocusSessionLinkedTodo(session1.focusSessionId, "updated_todo")
+      repository.updateFocusSession(session1.focusSessionId, updatedFocusSession)
       fail("Expected SecurityException")
     } catch (_: SecurityException) {
       // Expected

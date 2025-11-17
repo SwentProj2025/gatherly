@@ -6,6 +6,7 @@ import android.provider.MediaStore
 import androidx.test.platform.app.InstrumentationRegistry
 import com.android.gatherly.utils.FirebaseEmulator
 import com.android.gatherly.utils.FirestoreGatherlyProfileTest
+import com.google.firebase.storage.storage
 import java.io.OutputStream
 import kotlin.io.use
 import kotlinx.coroutines.Dispatchers
@@ -551,5 +552,87 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   @Test(expected = NoSuchElementException::class)
   fun test_getFriendsAndNonFriendsUsernames_throwsIfProfileMissing() = runTest {
     repository.getFriendsAndNonFriendsUsernames("non_existent_uid")
+  }
+
+  @Test
+  fun deleteUserProfile_removesAllDataAndFreesUsername() = runTest {
+    val uid = FirebaseEmulator.auth.currentUser!!.uid
+    repository.initProfileIfMissing(uid, "pic.png")
+    repository.registerUsername(uid, "testuser")
+
+    // Add fake profile pic in storage
+    val storageRef = com.google.firebase.Firebase.storage.reference.child("profile_pictures/$uid")
+    storageRef.putBytes(ByteArray(10)).await()
+
+    // Delete full profile
+    repository.deleteUserProfile(uid)
+
+    // Profile document should be gone
+    assertFalse(repository.isUidRegistered(uid))
+
+    // Username should be available again
+    assertTrue(repository.isUsernameAvailable("testuser"))
+
+    // Picture should no longer exist
+    try {
+      storageRef.metadata.await()
+      fail("Expected picture to be deleted")
+    } catch (e: Exception) {
+      assertTrue(e.message!!.contains("Object does not exist"))
+    }
+  }
+
+  @Test
+  fun initProfileIfMissing_setsDefaultStatusOffline() = runTest {
+    val uid = FirebaseEmulator.auth.currentUser!!.uid
+
+    repository.initProfileIfMissing(uid, defaultPhotoUrl = "default.png")
+    val profile = repository.getProfileByUid(uid)
+
+    assertNotNull(profile)
+    // New profiles should default to OFFLINE
+    assertEquals(ProfileStatus.OFFLINE, profile!!.status)
+  }
+
+  @Test
+  fun updateStatus_savesCorrectlyInFirestore() = runTest {
+    val uid = FirebaseEmulator.auth.currentUser!!.uid
+    repository.initProfileIfMissing(uid, defaultPhotoUrl = "default.png")
+
+    // Set status to ONLINE
+    repository.updateStatus(uid, ProfileStatus.ONLINE)
+
+    val profile = repository.getProfileByUid(uid)
+    assertEquals(ProfileStatus.ONLINE, profile!!.status)
+
+    // Set status back to OFFLINE
+    repository.updateStatus(uid, ProfileStatus.OFFLINE)
+    val updatedProfile = repository.getProfileByUid(uid)
+    assertEquals(ProfileStatus.OFFLINE, updatedProfile!!.status)
+  }
+
+  @Test
+  fun getProfileByUid_convertsStatusStringToEnum() = runTest {
+    val uid = FirebaseEmulator.auth.currentUser!!.uid
+    repository.initProfileIfMissing(uid, defaultPhotoUrl = "default.png")
+
+    // Directly update Firestore with a string
+    FirebaseEmulator.firestore
+        .collection("profiles")
+        .document(uid)
+        .update("status", "online")
+        .await()
+
+    val profile = repository.getProfileByUid(uid)
+    assertEquals(ProfileStatus.ONLINE, profile!!.status)
+
+    // Unknown string should default to OFFLINE
+    FirebaseEmulator.firestore
+        .collection("profiles")
+        .document(uid)
+        .update("status", "unknown")
+        .await()
+    val profile2 = repository.getProfileByUid(uid)
+    assertEquals(ProfileStatus.OFFLINE, profile2!!.status)
   }
 }

@@ -114,6 +114,10 @@ class ProfileLocalRepository : ProfileRepository {
     return Friends(friendUsernames = friendUsernames, nonFriendUsernames = nonFriendUsernames)
   }
 
+  override suspend fun deleteUserProfile(uid: String) {
+    profiles.removeIf { it.uid == uid }
+  }
+
   override suspend fun getListNoFriends(currentUserId: String): List<String> {
     val currentProfile = getProfileByUid(currentUserId) ?: return emptyList()
     val friendUids = currentProfile.friendUids.toSet()
@@ -138,6 +142,14 @@ class ProfileLocalRepository : ProfileRepository {
       val updatedFriends = currentProfile.friendUids + friendId
       val updatedProfile = currentProfile.copy(friendUids = updatedFriends as List<String>)
       updateProfile(updatedProfile)
+    }
+  }
+
+  override suspend fun updateStatus(uid: String, status: ProfileStatus) {
+    val index = profiles.indexOfFirst { it.uid == uid }
+    if (index != -1) {
+      val existing = profiles[index]
+      profiles[index] = existing.copy(status = status)
     }
   }
 }
