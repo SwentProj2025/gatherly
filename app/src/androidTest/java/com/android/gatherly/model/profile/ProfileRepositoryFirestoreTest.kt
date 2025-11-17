@@ -1032,15 +1032,140 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
       ownerId: String = userId
   ) {
     val todoData =
-        mapOf(
-            "uid" to todoId,
-            "name" to "Test ToDo $todoId",
-            "description" to "Description",
-            "assigneeName" to "Assignee",
-            "dueDate" to com.google.firebase.Timestamp.now(),
-            "ownerId" to ownerId,
-            "status" to status.name)
+      mapOf(
+        "uid" to todoId,
+        "name" to "Test ToDo $todoId",
+        "description" to "Description",
+        "assigneeName" to "Assignee",
+        "dueDate" to com.google.firebase.Timestamp.now(),
+        "ownerId" to ownerId,
+        "status" to status.name
+      )
 
     db.collection("users").document(userId).collection("todos").document(todoId).set(todoData)
+
+  }
+
+  @Test
+  fun deleteUserProfile_removesUserFromAllGroups() = runTest {
+    val firestore = FirebaseEmulator.firestore
+    val storage = FirebaseEmulator.storage
+    val auth = FirebaseEmulator.auth
+
+    // USER B (normal member)
+    auth.signOut()
+    auth.signInAnonymously().await()
+    val userBUid = auth.currentUser!!.uid
+    val repoB = ProfileRepositoryFirestore(firestore, storage)
+    repoB.initProfileIfMissing(userBUid, "picB.png")
+    auth.signOut()
+
+    // USER A (to be deleted)
+    auth.signInAnonymously().await()
+    val userAUid = auth.currentUser!!.uid
+    val repoA = ProfileRepositoryFirestore(firestore, storage)
+    repoA.initProfileIfMissing(userAUid, "picA.png")
+
+    val group1 = firestore.collection("groups").document()
+    group1
+        .set(
+            mapOf(
+                "name" to "Group 1",
+                "creatorId" to userAUid,
+                "adminIds" to listOf(userAUid),
+                "memberIds" to listOf(userAUid, userBUid)))
+        .await()
+
+    val group2 = firestore.collection("groups").document()
+    group2
+        .set(
+            mapOf(
+                "name" to "Group 2",
+                "creatorId" to userAUid,
+                "adminIds" to listOf(userAUid),
+                "memberIds" to listOf(userAUid)))
+        .await()
+
+    // Now delete user A fully
+    repoA.deleteUserProfile(userAUid)
+
+    // Reload groups
+    val g1 = group1.get().await().data!!
+    val g1Members = g1["memberIds"] as List<*>
+    val g1Admins = g1["adminIds"] as List<*>
+
+    val g2 = group2.get().await().data!!
+    val g2Members = g2["memberIds"] as List<*>
+    val g2Admins = g2["adminIds"] as List<*>
+
+    // Assertions
+    assertFalse(g1Members.contains(userAUid))
+    assertTrue(g1Admins.isEmpty()) // A was the only admin
+
+    assertFalse(g2Members.contains(userAUid))
+    assertTrue(g2Admins.isEmpty()) // A removed from adminIds
+  }
+
+  @Test
+  fun deleteUserProfile_deletesAllUserOwnedDocuments() = runTest {
+    val firestore = FirebaseEmulator.firestore
+    val storage = FirebaseEmulator.storage
+    val auth = FirebaseEmulator.auth
+    val repo = ProfileRepositoryFirestore(firestore, storage)
+
+    auth.signInAnonymously().await()
+    val uid = auth.currentUser!!.uid
+    repo.initProfileIfMissing(uid, "pic.png")
+
+    // Add a todo
+    val todoRef = firestore.collection("users").document(uid).collection("todos").document()
+    todoRef.set(mapOf("text" to "test todo")).await()
+
+    // Add an event
+    val eventRef = firestore.collection("events").document()
+    eventRef.set(mapOf("creatorId" to uid, "name" to "Test Event")).await()
+
+    // Add a focus session
+    val focusRef = firestore.collection("focusSessions").document()
+    focusRef.set(mapOf("creatorId" to uid, "duration" to 25)).await()
+
+    // Now delete user
+    repo.deleteUserProfile(uid)
+
+    // All should be gone
+    assertFalse(todoRef.get().await().exists())
+    assertFalse(eventRef.get().await().exists())
+    assertFalse(focusRef.get().await().exists())
+  }
+
+  @Test
+  fun deleteUserProfile_doesNotAffectOtherUsersData() = runTest {
+    val firestore = FirebaseEmulator.firestore
+    val storage = FirebaseEmulator.storage
+    val auth = FirebaseEmulator.auth
+
+    // USER B (must create their own profile)
+    auth.signOut()
+    auth.signInAnonymously().await()
+    val userBUid = auth.currentUser!!.uid
+    val repoB = ProfileRepositoryFirestore(firestore, storage)
+    repoB.initProfileIfMissing(userBUid, "b.png")
+    repoB.registerUsername(userBUid, "bob")
+
+    auth.signOut()
+    // USER A (to be deleted)
+    auth.signInAnonymously().await()
+    val userAUid = auth.currentUser!!.uid
+    val repoA = ProfileRepositoryFirestore(firestore, storage)
+    repoA.initProfileIfMissing(userAUid, "a.png")
+    repoA.registerUsername(userAUid, "alice")
+
+    repoA.deleteUserProfile(userAUid)
+
+    // USER B's data must remain
+    val profileB = repoB.getProfileByUid(userBUid)
+    assertNotNull(profileB)
+    assertEquals("bob", profileB!!.username)
+
   }
 }
