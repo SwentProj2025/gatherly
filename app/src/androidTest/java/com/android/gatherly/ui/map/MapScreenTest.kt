@@ -2,6 +2,9 @@ package com.android.gatherly.ui.map
 
 import android.Manifest
 import androidx.activity.ComponentActivity
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -16,9 +19,13 @@ import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.model.todo.ToDosRepository
+import com.android.gatherly.ui.events.EventsScreen
 import com.android.gatherly.ui.events.EventsScreenTestTags
+import com.android.gatherly.ui.events.EventsViewModel
 import com.android.gatherly.ui.todo.OverviewScreenTestTags
+import com.android.gatherly.utils.MockitoUtils
 import com.google.firebase.Timestamp
+import kotlinx.coroutines.delay
 import java.util.Date
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
@@ -43,6 +50,7 @@ class MapScreenTest {
           Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
   private lateinit var toDosRepository: ToDosRepository
   private lateinit var eventsRepository: EventsRepository
+  private lateinit var mockitoUtils: MockitoUtils
   private lateinit var viewModel: MapViewModel
 
   private val todoId = "t1"
@@ -82,7 +90,7 @@ class MapScreenTest {
 
     // Wait for ViewModel init to complete
     while (viewModel.uiState.value.itemsList.isEmpty()) {
-      kotlinx.coroutines.delay(10)
+      delay(10)
     }
   }
 
@@ -328,5 +336,63 @@ class MapScreenTest {
     compose.waitForIdle()
 
     assertNull(viewModel.uiState.value.selectedItemId)
+  }
+
+
+  /**
+   * Tests navigation from the MapScreen to the EventScreen when an event marker is clicked,
+   * including the display of the AlertDialog with event details.
+   */
+  @Test
+  fun testMapScreenToEventScreenWithAlertDialog() {
+    var navigatedEventId: String? = null
+    val isMapScreenActive = mutableStateOf(true)
+
+    val goToEvent: (String) -> Unit = { id ->
+      navigatedEventId = id
+      isMapScreenActive.value = false
+    }
+
+    mockitoUtils = MockitoUtils()
+
+    compose.setContent {
+      if (isMapScreenActive.value) {
+        viewModel.changeView()
+        MapScreen(viewModel = viewModel, goToEvent = goToEvent)
+      } else {
+        val eventsVM = EventsViewModel(
+          repository = eventsRepository,
+          authProvider = { mockitoUtils.mockAuth }
+        )
+        EventsScreen(
+          eventsViewModel = eventsVM,
+          eventId = navigatedEventId,
+          onSignedOut = {},
+          onAddEvent = {},
+          navigateToEditEvent = {}
+        )
+      }
+    }
+    compose.waitForIdle()
+
+    viewModel.onSelectedItem(eventId)
+    compose.waitForIdle()
+
+    compose.onNodeWithTag(MapScreenTestTags.EVENT_BUTTON, useUnmergedTree = true).performClick()
+    compose.waitForIdle()
+
+    assertEquals(eventId, navigatedEventId)
+    compose.onNodeWithTag(EventsScreenTestTags.EVENT_POPUP, useUnmergedTree = true).assertIsDisplayed()
+
+    compose.onNodeWithTag(EventsScreenTestTags.POPUP_TITLE, useUnmergedTree = true)
+      .assertIsDisplayed()
+      .assertTextEquals(event.title)
+
+    compose.onNodeWithTag(EventsScreenTestTags.POPUP_DESCRIPTION, useUnmergedTree = true)
+      .assertIsDisplayed()
+      .assertTextEquals(event.description)
+
+    compose.onNodeWithTag(EventsScreenTestTags.PARTICIPATE_BUTTON, useUnmergedTree = true).assertIsDisplayed()
+    compose.onNodeWithTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON, useUnmergedTree = true).assertIsDisplayed()
   }
 }

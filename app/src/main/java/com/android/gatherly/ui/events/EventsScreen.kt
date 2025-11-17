@@ -88,7 +88,7 @@ object EventsScreenTestTags {
 
   const val POPUP_DESCRIPTION = "EventDescription"
 
-  const val POPUP_TITLE = "EventTitle"
+  const val POPUP_TITLE = "PopupTitle"
 
   /**
    * Returns a unique test tag for the card or container representing a given [Event] item.
