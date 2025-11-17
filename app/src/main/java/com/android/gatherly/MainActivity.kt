@@ -155,7 +155,9 @@ fun GatherlyApp(
             navigationActions = navigationActions,
             credentialManager = credentialManager,
             onSignedOut = { navigationActions.navigateTo(Screen.SignIn) },
-            goToEvent = { event -> navigationActions.navigateTo(Screen.EventsDetailsScreen(event)) },
+            goToEvent = { event ->
+              navigationActions.navigateTo(Screen.EventsDetailsScreen(event))
+            },
             goToToDo = { navigationActions.navigateTo(Screen.OverviewToDo) })
       }
     }
@@ -189,20 +191,20 @@ fun GatherlyApp(
             })
       }
 
-        composable(Screen.EventsDetailsScreen.route) { navBackStackEntry ->
-            val uid = navBackStackEntry.arguments?.getString("uid")
-            uid?.let{
-            EventsScreen(
-                navigationActions = navigationActions,
-                credentialManager = credentialManager,
-                onSignedOut = { navigationActions.navigateTo(Screen.SignIn) },
-                onAddEvent = { navigationActions.navigateTo(Screen.AddEventScreen) },
-                navigateToEditEvent = { event ->
-                    navigationActions.navigateTo(Screen.EditEvent(event.id))
-                },
-                eventId = it
-                )}
+      composable(Screen.EventsDetailsScreen.route) { navBackStackEntry ->
+        val uid = navBackStackEntry.arguments?.getString("uid")
+        uid?.let {
+          EventsScreen(
+              navigationActions = navigationActions,
+              credentialManager = credentialManager,
+              onSignedOut = { navigationActions.navigateTo(Screen.SignIn) },
+              onAddEvent = { navigationActions.navigateTo(Screen.AddEventScreen) },
+              navigateToEditEvent = { event ->
+                navigationActions.navigateTo(Screen.EditEvent(event.id))
+              },
+              eventId = it)
         }
+      }
 
       composable(Screen.AddEventScreen.route) {
         AddEventScreen(

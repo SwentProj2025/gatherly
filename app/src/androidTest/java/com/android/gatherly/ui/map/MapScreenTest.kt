@@ -25,13 +25,13 @@ import com.android.gatherly.ui.events.EventsViewModel
 import com.android.gatherly.ui.todo.OverviewScreenTestTags
 import com.android.gatherly.utils.MockitoUtils
 import com.google.firebase.Timestamp
-import kotlinx.coroutines.delay
 import java.util.Date
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Before
@@ -338,7 +338,6 @@ class MapScreenTest {
     assertNull(viewModel.uiState.value.selectedItemId)
   }
 
-
   /**
    * Tests navigation from the MapScreen to the EventScreen when an event marker is clicked,
    * including the display of the AlertDialog with event details.
@@ -360,17 +359,14 @@ class MapScreenTest {
         viewModel.changeView()
         MapScreen(viewModel = viewModel, goToEvent = goToEvent)
       } else {
-        val eventsVM = EventsViewModel(
-          repository = eventsRepository,
-          authProvider = { mockitoUtils.mockAuth }
-        )
+        val eventsVM =
+            EventsViewModel(repository = eventsRepository, authProvider = { mockitoUtils.mockAuth })
         EventsScreen(
-          eventsViewModel = eventsVM,
-          eventId = navigatedEventId,
-          onSignedOut = {},
-          onAddEvent = {},
-          navigateToEditEvent = {}
-        )
+            eventsViewModel = eventsVM,
+            eventId = navigatedEventId,
+            onSignedOut = {},
+            onAddEvent = {},
+            navigateToEditEvent = {})
       }
     }
     compose.waitForIdle()
@@ -382,17 +378,25 @@ class MapScreenTest {
     compose.waitForIdle()
 
     assertEquals(eventId, navigatedEventId)
-    compose.onNodeWithTag(EventsScreenTestTags.EVENT_POPUP, useUnmergedTree = true).assertIsDisplayed()
+    compose
+        .onNodeWithTag(EventsScreenTestTags.EVENT_POPUP, useUnmergedTree = true)
+        .assertIsDisplayed()
 
-    compose.onNodeWithTag(EventsScreenTestTags.POPUP_TITLE, useUnmergedTree = true)
-      .assertIsDisplayed()
-      .assertTextEquals(event.title)
+    compose
+        .onNodeWithTag(EventsScreenTestTags.POPUP_TITLE, useUnmergedTree = true)
+        .assertIsDisplayed()
+        .assertTextEquals(event.title)
 
-    compose.onNodeWithTag(EventsScreenTestTags.POPUP_DESCRIPTION, useUnmergedTree = true)
-      .assertIsDisplayed()
-      .assertTextEquals(event.description)
+    compose
+        .onNodeWithTag(EventsScreenTestTags.POPUP_DESCRIPTION, useUnmergedTree = true)
+        .assertIsDisplayed()
+        .assertTextEquals(event.description)
 
-    compose.onNodeWithTag(EventsScreenTestTags.PARTICIPATE_BUTTON, useUnmergedTree = true).assertIsDisplayed()
-    compose.onNodeWithTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON, useUnmergedTree = true).assertIsDisplayed()
+    compose
+        .onNodeWithTag(EventsScreenTestTags.PARTICIPATE_BUTTON, useUnmergedTree = true)
+        .assertIsDisplayed()
+    compose
+        .onNodeWithTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON, useUnmergedTree = true)
+        .assertIsDisplayed()
   }
 }
