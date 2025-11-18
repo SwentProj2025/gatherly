@@ -67,7 +67,7 @@ class FriendsViewModelTest {
           username = "alice",
           name = "ProfileA",
           focusSessionIds = emptyList(),
-          eventIds = emptyList(),
+          participatingEventIds = emptyList(),
           groupIds = emptyList(),
           friendUids = listOf("B"),
           profilePicture = "profileA.png")
@@ -78,7 +78,7 @@ class FriendsViewModelTest {
           username = "bob",
           name = "ProfileB",
           focusSessionIds = emptyList(),
-          eventIds = emptyList(),
+          participatingEventIds = emptyList(),
           groupIds = emptyList(),
           friendUids = listOf("A"),
           profilePicture = "profileB.png")
@@ -89,7 +89,7 @@ class FriendsViewModelTest {
           username = "charlie",
           name = "ProfileC",
           focusSessionIds = emptyList(),
-          eventIds = emptyList(),
+          participatingEventIds = emptyList(),
           groupIds = emptyList(),
           friendUids = emptyList(),
           profilePicture = "profileC.png")
@@ -185,11 +185,21 @@ class FriendsViewModelTest {
 
           override suspend fun addFriend(friend: String, currentUserId: String) {}
 
-          override suspend fun updateStatus(uid: String, status: ProfileStatus) {
-            TODO("Not Used")
-          }
+          override suspend fun updateStatus(uid: String, status: ProfileStatus) {}
+
+          override suspend fun createEvent(eventId: String, currentUserId: String) {}
+
+          override suspend fun deleteEvent(eventId: String, currentUserId: String) {}
+
+          override suspend fun participateEvent(eventId: String, currentUserId: String) {}
 
           override suspend fun deleteFriend(friend: String, currentUserId: String) {}
+
+          override suspend fun allParticipateEvent(eventId: String, participants: List<String>) {}
+
+          override suspend fun unregisterEvent(eventId: String, currentUserId: String) {}
+
+          override suspend fun allUnregisterEvent(eventId: String, participants: List<String>) {}
 
           override suspend fun deleteUserProfile(uid: String) {}
         }

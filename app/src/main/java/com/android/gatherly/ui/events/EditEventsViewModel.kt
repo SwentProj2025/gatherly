@@ -17,6 +17,7 @@ import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.android.gatherly.utils.GenericViewModelFactory
+import com.android.gatherly.utils.cancelEvent
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.firestore
 import com.google.firebase.firestore.ktx.firestore
@@ -104,6 +105,10 @@ class EditEventsViewModel(
   private lateinit var eventId: String
   private lateinit var creatorId: String
 
+  // The list of participants ID is needed in case
+  // if the event is canceled we have to unregister everybody
+  private lateinit var participants: List<String>
+
   // Selected Location
   private var chosenLocation: Location? = null
 
@@ -130,6 +135,7 @@ class EditEventsViewModel(
               participants = event.participants.map { profileRepository.getProfileByUid(it)!! })
       eventId = event.id
       creatorId = event.creatorId
+      participants = event.participants
     }
   }
 
@@ -253,6 +259,7 @@ class EditEventsViewModel(
         } else if (participant == creatorId) {
           uiState.copy(displayToast = true, toastString = "Cannot delete the owner")
         } else {
+          viewModelScope.launch { profileRepository.unregisterEvent(eventId, participant) }
           uiState.copy(
               participants = uiState.participants.filter { it.uid != participant },
               suggestedProfiles = emptyList())
@@ -271,6 +278,7 @@ class EditEventsViewModel(
               displayToast = true, toastString = "Cannot add a participant that is already added")
       return
     }
+    viewModelScope.launch { profileRepository.participateEvent(eventId, participant.uid) }
     uiState =
         uiState.copy(
             participants = uiState.participants + participant, suggestedProfiles = emptyList())
@@ -392,7 +400,9 @@ class EditEventsViewModel(
   /** Deletes the event from the events repository */
   fun deleteEvent() {
     // Call event repository
-    viewModelScope.launch { eventsRepository.deleteEvent(eventId) }
+    viewModelScope.launch {
+      cancelEvent(eventsRepository, profileRepository, eventId, creatorId, participants)
+    }
     uiState = uiState.copy(backToOverview = true)
   }
 

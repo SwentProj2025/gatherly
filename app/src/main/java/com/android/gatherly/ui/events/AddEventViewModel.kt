@@ -17,6 +17,7 @@ import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.android.gatherly.utils.GenericViewModelFactory
+import com.android.gatherly.utils.createEvent
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
@@ -366,10 +367,16 @@ class AddEventViewModel(
               }
       val timestampEndTime = Timestamp(endTime)
 
+      // Create ID of the new event
+      val eventId = eventsRepository.getNewId()
+
+      // List of the ID of every participants
+      val participants = uiState.participants.map { it.uid }
+
       // Create new event
       val event =
           Event(
-              id = eventsRepository.getNewId(),
+              id = eventId,
               title = uiState.name,
               description = uiState.description,
               creatorName = uiState.creatorName,
@@ -378,14 +385,14 @@ class AddEventViewModel(
               startTime = timestampStartTime,
               endTime = timestampEndTime,
               creatorId = currentProfile.uid,
-              participants = uiState.participants.map { it.uid },
+              participants = participants,
               status = EventStatus.UPCOMING)
 
       uiState = uiState.copy(displayToast = true, toastString = "Saving...")
 
       // Save in event repository
       viewModelScope.launch {
-        eventsRepository.addEvent(event)
+        createEvent(eventsRepository, profileRepository, event, currentProfile.uid, participants)
         uiState = uiState.copy(displayToast = true, toastString = "Saved")
       }
 
