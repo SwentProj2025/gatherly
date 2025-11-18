@@ -981,9 +981,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     val initialProfile = repository.getProfileByUid(uid)!!
     val profileWithFakeEvents =
         initialProfile.copy(
-            eventIds = fakeEventUids,
-            // participatingEventIds = fakeParticipatingEventsUids
-        )
+            ownedEventIds = fakeEventUids, participatingEventIds = fakeParticipatingEventsUids)
     repository.updateProfile(profileWithFakeEvents)
 
     val profileToUpdate = repository.getProfileByUid(uid)!!
@@ -991,10 +989,10 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     repository.updateBadges(profileToUpdate)
     val updatedProfile = repository.getProfileByUid(uid)!!
 
-    assertEquals(3, updatedProfile.eventIds.size)
-    // assertEquals(11, updatedProfile.participatingEventIds.size)
+    assertEquals(3, updatedProfile.ownedEventIds.size)
+    assertEquals(11, updatedProfile.participatingEventIds.size)
     assertEquals(Rank.BRONZE, updatedProfile.badges.createEvent)
-    // assertEquals(Rank.DIAMOND, updatedProfile.badges.participateEvent)
+    assertEquals(Rank.DIAMOND, updatedProfile.badges.participateEvent)
   }
 
   @Test
