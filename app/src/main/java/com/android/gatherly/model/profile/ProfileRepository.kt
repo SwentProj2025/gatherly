@@ -224,8 +224,8 @@ interface ProfileRepository {
    *   ProfileRepositoryFirestore but can be set for testing purposes with ProfileLocalRepository
    */
   suspend fun updateBadges(
-    userProfile: Profile,
-    createdTodosCount: Int? = null,
-    completedTodosCount: Int? = null
+      userProfile: Profile,
+      createdTodosCount: Int? = null,
+      completedTodosCount: Int? = null
   )
 }
