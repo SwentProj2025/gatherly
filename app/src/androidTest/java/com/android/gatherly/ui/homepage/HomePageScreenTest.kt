@@ -1,6 +1,7 @@
 package com.android.gatherly.ui.homepage
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -36,7 +37,7 @@ class HomePageScreenTest {
           uid = "0+",
           name = "Current",
           focusSessionIds = emptyList(),
-          eventIds = emptyList(),
+          participatingEventIds = emptyList(),
           groupIds = emptyList(),
           friendUids = emptyList())
 
@@ -56,19 +57,21 @@ class HomePageScreenTest {
       profileLocalRepo = ProfileLocalRepository()
 
       populateRepositories()
-
-      // Mock Firebase Auth
-      mockitoUtils = MockitoUtils()
-      mockitoUtils.chooseCurrentUser(currentProfile.uid)
-
-      fakeViewModel =
-          HomePageViewModel(
-              toDosRepository = todosLocalRepo,
-              eventsRepository = eventsLocalRepo,
-              profileRepository = profileLocalRepo,
-              authProvider = { mockitoUtils.mockAuth })
-      composeRule.setContent { HomePageScreen(homePageViewModel = fakeViewModel) }
     }
+  }
+
+  private fun setContentWithGoogle() {
+    // Mock Firebase Auth
+    mockitoUtils = MockitoUtils()
+    mockitoUtils.chooseCurrentUser(currentProfile.uid)
+
+    fakeViewModel =
+        HomePageViewModel(
+            toDosRepository = todosLocalRepo,
+            eventsRepository = eventsLocalRepo,
+            profileRepository = profileLocalRepo,
+            authProvider = { mockitoUtils.mockAuth })
+    composeRule.setContent { HomePageScreen(homePageViewModel = fakeViewModel) }
   }
 
   /** Populates local repositories with fake data for testing. */
@@ -91,6 +94,7 @@ class HomePageScreenTest {
   /** Verifies that all main UI components are visible and interactable. */
   @Test
   fun componentsAreDisplayed() {
+    setContentWithGoogle()
     composeRule.onNodeWithTag(HomePageScreenTestTags.UPCOMING_EVENTS_TITLE).assertIsDisplayed()
     composeRule.onNodeWithTag(HomePageScreenTestTags.UPCOMING_TASKS_TITLE).assertIsDisplayed()
     composeRule.onNodeWithTag(HomePageScreenTestTags.FOCUS_TIMER_TEXT).assertIsDisplayed()
@@ -101,6 +105,7 @@ class HomePageScreenTest {
   /** Ensures that the focus button is visible and can be clicked without crashing. */
   @Test
   fun focusButton_isClickable() {
+    setContentWithGoogle()
     composeRule
         .onNodeWithTag(HomePageScreenTestTags.FOCUS_BUTTON)
         .assertIsDisplayed()
@@ -110,6 +115,7 @@ class HomePageScreenTest {
   /** Verifies that task items from the ViewModel’s state are rendered in the UI. */
   @Test
   fun taskItemsAreDisplayed() {
+    setContentWithGoogle()
     fakeViewModel.uiState.value.todos.forEach { todo ->
       composeRule
           .onNodeWithTag("${HomePageScreenTestTags.TASK_ITEM_PREFIX}${todo.uid}")
@@ -120,6 +126,7 @@ class HomePageScreenTest {
   /** Confirms that task items exist in the composition tree for each todo in the state. */
   @Test
   fun taskItemsTextMatchesUiState() {
+    setContentWithGoogle()
     fakeViewModel.uiState.value.todos.forEach { todo ->
       composeRule
           .onNodeWithTag("${HomePageScreenTestTags.TASK_ITEM_PREFIX}${todo.uid}")
@@ -130,6 +137,7 @@ class HomePageScreenTest {
   /** Checks that each task item can be clicked without causing errors. */
   @Test
   fun taskItem_isClickable() {
+    setContentWithGoogle()
     fakeViewModel.uiState.value.todos.forEach { todo ->
       composeRule
           .onNodeWithTag("${HomePageScreenTestTags.TASK_ITEM_PREFIX}${todo.uid}")
@@ -141,15 +149,36 @@ class HomePageScreenTest {
   /** Ensures the friends section is visible on the screen. */
   @Test
   fun friendsSection_isDisplayed_withAvatars() {
+    setContentWithGoogle()
     composeRule.onNodeWithTag(HomePageScreenTestTags.FRIENDS_SECTION).assertIsDisplayed()
   }
 
   /** Verifies that the mini map is rendered and responds to click interactions. */
   @Test
   fun miniMap_isDisplayed_andClickable() {
+    setContentWithGoogle()
     composeRule
         .onNodeWithTag(HomePageScreenTestTags.MINI_MAP_CARD)
         .assertIsDisplayed()
         .performClick()
+  }
+
+  /** Verifies that an anonymous user has no friends section displayed */
+  @Test
+  fun anonUserHasNoFriends() {
+    // Create Screen with anonymous user
+    // Mock Firebase Auth
+    mockitoUtils = MockitoUtils()
+    mockitoUtils.chooseCurrentUser(currentProfile.uid, true)
+    fakeViewModel =
+        HomePageViewModel(
+            toDosRepository = todosLocalRepo,
+            eventsRepository = eventsLocalRepo,
+            profileRepository = profileLocalRepo,
+            authProvider = { mockitoUtils.mockAuth })
+    composeRule.setContent { HomePageScreen(homePageViewModel = fakeViewModel) }
+
+    // Check that the friends section is not displayed
+    composeRule.onNodeWithTag(HomePageScreenTestTags.FRIENDS_SECTION).assertIsNotDisplayed()
   }
 }

@@ -294,7 +294,8 @@ class ProfileRepositoryFirestore(
     val name = doc.getString("name") ?: ""
     val username = doc.getString("username") ?: ""
     val focusSessionIds = doc.get("focusSessionIds") as? List<String> ?: emptyList()
-    val eventIds = doc.get("eventIds") as? List<String> ?: emptyList()
+    val eventIds = doc.get("participatingEventIds") as? List<String> ?: emptyList()
+    val eventOwnerIds = doc.get("ownedEventIds") as? List<String> ?: emptyList()
     val groupIds = doc.get("groups") as? List<String> ?: emptyList()
     val friendUids = doc.get("friendUids") as? List<String> ?: emptyList()
     val school = doc.getString("school") ?: ""
@@ -309,7 +310,8 @@ class ProfileRepositoryFirestore(
         name = name,
         username = username,
         focusSessionIds = focusSessionIds,
-        eventIds = eventIds,
+        participatingEventIds = eventIds,
+        ownedEventIds = eventOwnerIds,
         groupIds = groupIds,
         friendUids = friendUids,
         school = school,
@@ -332,7 +334,8 @@ class ProfileRepositoryFirestore(
         "name" to profile.name,
         "username" to profile.username,
         "focusSessionIds" to profile.focusSessionIds,
-        "eventIds" to profile.eventIds,
+        "participatingEventIds" to profile.participatingEventIds,
+        "ownedEventIds" to profile.ownedEventIds,
         "groupIds" to profile.groupIds,
         "friendUids" to profile.friendUids,
         "school" to profile.school,
@@ -387,6 +390,34 @@ class ProfileRepositoryFirestore(
     profilesCollection.document(uid).update("status", status.value).await()
   }
 
+  override suspend fun createEvent(eventId: String, currentUserId: String) {
+    val docRef = profilesCollection.document(currentUserId)
+    docRef.update("ownedEventIds", FieldValue.arrayUnion(eventId)).await()
+  }
+
+  override suspend fun deleteEvent(eventId: String, currentUserId: String) {
+    val docRef = profilesCollection.document(currentUserId)
+    docRef.update("ownedEventIds", FieldValue.arrayRemove(eventId)).await()
+  }
+
+  override suspend fun participateEvent(eventId: String, currentUserId: String) {
+    val docRef = profilesCollection.document(currentUserId)
+    docRef.update("participatingEventIds", FieldValue.arrayUnion(eventId)).await()
+  }
+
+  override suspend fun allParticipateEvent(eventId: String, participants: List<String>) {
+    participants.forEach { participant -> participateEvent(eventId, participant) }
+  }
+
+  override suspend fun unregisterEvent(eventId: String, currentUserId: String) {
+    val docRef = profilesCollection.document(currentUserId)
+    docRef.update("participatingEventIds", FieldValue.arrayRemove(eventId)).await()
+  }
+
+  override suspend fun allUnregisterEvent(eventId: String, participants: List<String>) {
+    participants.forEach { participant -> unregisterEvent(eventId, participant) }
+  }
+
   // -- BADGES GESTION PART --
 
   /**
@@ -410,10 +441,8 @@ class ProfileRepositoryFirestore(
             addFriends = rank(userProfile.friendUids.size),
             createdTodos = rank(createdTodosCount),
             completedTodos = rank(completedTodosCount),
-            createEvent = rank(userProfile.eventIds.size),
-            // participateEvent = rank(userProfile.participatingEventsIds.size), TODO
-            // createEvent = rank(userProfile.OwnerEventsIds.size), TODO
-            participateEvent = Rank.BLANK,
+            participateEvent = rank(userProfile.participatingEventIds.size),
+            createEvent = rank(userProfile.ownedEventIds.size),
             focusSessionPoint = rank(userProfile.focusSessionIds.size))
     docRef.update("badges", updateBadges).await()
   }

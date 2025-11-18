@@ -199,6 +199,95 @@ class OverviewViewModelTest {
             "Expected todo status to be updated to ENDED", ToDoStatus.ENDED, updatedTodo.status)
       }
 
+  @Test
+  fun searchTodos_filtersResultsCorrectly() =
+      runTest(testDispatcher) {
+        val todoA = makeTodo("Lunch with Claire", description = "meet at EPFL")
+        val todoB = makeTodo("Buy groceries", description = "milk and bread")
+        val todoC = makeTodo("Running", description = "morning run")
+
+        toDosRepository.addTodo(todoA)
+        toDosRepository.addTodo(todoB)
+        toDosRepository.addTodo(todoC)
+
+        advanceUntilIdle()
+
+        overviewViewModel.refreshUIState()
+        waitUntilLoaded(overviewViewModel)
+
+        // WHEN searching for "lunch"
+        overviewViewModel.searchTodos("lunch")
+        advanceUntilIdle()
+
+        val filtered = overviewViewModel.uiState.value.todos
+        assertEquals(1, filtered.size)
+        assertEquals(todoA.uid, filtered.first().uid)
+      }
+
+  @Test
+  fun searchTodos_restoreFullList_whenQueryCleared() =
+      runTest(testDispatcher) {
+        val todoA = makeTodo("Lunch with Claire")
+        val todoB = makeTodo("Buy groceries")
+
+        toDosRepository.addTodo(todoA)
+        toDosRepository.addTodo(todoB)
+
+        advanceUntilIdle()
+        overviewViewModel.refreshUIState()
+        waitUntilLoaded(overviewViewModel)
+
+        // Ensure we start with 2 todos
+        assertEquals(2, overviewViewModel.uiState.value.todos.size)
+
+        // WHEN searching something that yields no result
+        overviewViewModel.searchTodos("zzzz")
+        advanceUntilIdle()
+        assertEquals(0, overviewViewModel.uiState.value.todos.size)
+
+        // WHEN clearing the query
+        overviewViewModel.searchTodos("")
+        advanceUntilIdle()
+
+        // THEN full list should be restored
+        val restored = overviewViewModel.uiState.value.todos
+        assertEquals(2, restored.size)
+      }
+
+  @Test
+  fun searchTodos_filtersAgainstFullList_notFilteredResults() =
+      runTest(testDispatcher) {
+        val todoA = makeTodo("Lunch with Claire")
+        val todoB = makeTodo("Lundry")
+        val todoC = makeTodo("Groceries")
+
+        toDosRepository.addTodo(todoA)
+        toDosRepository.addTodo(todoB)
+        toDosRepository.addTodo(todoC)
+
+        advanceUntilIdle()
+        overviewViewModel.refreshUIState()
+        waitUntilLoaded(overviewViewModel)
+
+        // First search returns Lunch + Laundry
+        overviewViewModel.searchTodos("lun")
+        advanceUntilIdle()
+        assertEquals(2, overviewViewModel.uiState.value.todos.size)
+
+        // Now type something that returns no result
+        overviewViewModel.searchTodos("lunx")
+        advanceUntilIdle()
+        assertEquals(0, overviewViewModel.uiState.value.todos.size)
+
+        // Backspace: "lun"
+        overviewViewModel.searchTodos("lun")
+        advanceUntilIdle()
+
+        // Should again return Lunch + Laundry — not stay empty
+        val results = overviewViewModel.uiState.value.todos
+        assertEquals(2, results.size)
+      }
+
   private suspend fun waitUntilLoaded(viewModel: OverviewViewModel) {
     withContext(Dispatchers.Default.limitedParallelism(1)) {
       withTimeout(TIMEOUT) {

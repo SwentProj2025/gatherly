@@ -160,6 +160,50 @@ class ProfileLocalRepository : ProfileRepository {
     }
   }
 
+  override suspend fun createEvent(eventId: String, currentUserId: String) {
+    val currentProfile = getProfileByUid(currentUserId) ?: return
+    if (!currentProfile.ownedEventIds.contains(eventId)) {
+      val updateEventOwnerIds = currentProfile.ownedEventIds + eventId
+      val updatedProfile = currentProfile.copy(ownedEventIds = updateEventOwnerIds)
+      updateProfile(updatedProfile)
+    }
+  }
+
+  override suspend fun deleteEvent(eventId: String, currentUserId: String) {
+    val currentProfile = getProfileByUid(currentUserId) ?: return
+    if (currentProfile.ownedEventIds.contains(eventId)) {
+      val updateEventOwnerIds = currentProfile.ownedEventIds.filter { it != eventId }
+      val updatedProfile = currentProfile.copy(ownedEventIds = updateEventOwnerIds)
+      updateProfile(updatedProfile)
+    }
+  }
+
+  override suspend fun participateEvent(eventId: String, currentUserId: String) {
+    val currentProfile = getProfileByUid(currentUserId) ?: return
+    if (!currentProfile.participatingEventIds.contains(eventId)) {
+      val updateEventIds = currentProfile.participatingEventIds + eventId
+      val updatedProfile = currentProfile.copy(participatingEventIds = updateEventIds)
+      updateProfile(updatedProfile)
+    }
+  }
+
+  override suspend fun allParticipateEvent(eventId: String, participants: List<String>) {
+    participants.forEach { participant -> participateEvent(eventId, participant) }
+  }
+
+  override suspend fun unregisterEvent(eventId: String, currentUserId: String) {
+    val currentProfile = getProfileByUid(currentUserId) ?: return
+    if (currentProfile.participatingEventIds.contains(eventId)) {
+      val updatedEventIds = currentProfile.participatingEventIds.filter { it != eventId }
+      val updatedProfile = currentProfile.copy(participatingEventIds = updatedEventIds)
+      updateProfile(updatedProfile)
+    }
+  }
+
+  override suspend fun allUnregisterEvent(eventId: String, participants: List<String>) {
+    participants.forEach { participant -> unregisterEvent(eventId, participant) }
+  }
+
   // ---- BADGE GESTION PART ----
 
   override suspend fun updateBadges(
@@ -176,8 +220,8 @@ class ProfileLocalRepository : ProfileRepository {
             addFriends = rank(userProfile.friendUids.size),
             createdTodos = rank(createdTodosCount),
             completedTodos = rank(completedTodosCount),
-            createEvent = Rank.BLANK, // rank(userProfile.OwnerEventsIds.size), TODO
-            participateEvent = Rank.BLANK, //  rank(userProfile.participatingEventsIds.size), TODO
+            createEvent = rank(userProfile.ownedEventIds.size),
+            participateEvent = rank(userProfile.participatingEventIds.size),
             focusSessionPoint = rank(userProfile.focusSessionIds.size))
     val updatedProfile = userProfile.copy(badges = updatedBadges)
     updateProfile(updatedProfile)

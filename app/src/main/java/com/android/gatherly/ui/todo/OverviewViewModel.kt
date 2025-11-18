@@ -50,6 +50,8 @@ class OverviewViewModel(
   private val _uiState = MutableStateFlow(OverviewUIState())
   val uiState: StateFlow<OverviewUIState> = _uiState.asStateFlow()
 
+  private var allTodosCache: List<ToDo> = emptyList()
+
   init {
     getAllTodos()
   }
@@ -65,6 +67,7 @@ class OverviewViewModel(
       _uiState.value = _uiState.value.copy(isLoading = true, errorMsg = null)
       try {
         val todos = todoRepository.getAllTodos()
+        allTodosCache = todos
         _uiState.value = OverviewUIState(todos = todos, isLoading = false)
       } catch (e: Exception) {
         _uiState.value =
@@ -80,6 +83,22 @@ class OverviewViewModel(
       editTodo_updateBadges(todoRepository, profileRepository, uid, newStatus, ownerId)
       refreshUIState()
     }
+  }
+
+  /** Invoked when users type in the search bar to filter todos according to the typed query. */
+  fun searchTodos(query: String) {
+    val normalized = query.trim().lowercase()
+    if (normalized.isEmpty()) {
+      // When query is empty in the search bar, we display the full list:
+      refreshUIState()
+      return
+    }
+    val filtered =
+        allTodosCache.filter {
+          it.name.lowercase().contains(normalized) ||
+              it.description.lowercase().contains(normalized)
+        }
+    _uiState.value = _uiState.value.copy(todos = filtered)
   }
 
   /** Initiates sign-out */
