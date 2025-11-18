@@ -222,16 +222,9 @@ fun SettingsScreen(
                           testTag = SettingsScreenTestTags.USERNAME,
                           errorMessage = uiState.invalidUsernameMsg)
 
-                      if (uiState.isUsernameAvailable == true &&
-                          uiState.invalidUsernameMsg == null) {
-                        Text(
-                            text = stringResource(R.string.settings_valid_username),
-                            color = MaterialTheme.colorScheme.primary,
-                            fontSize = 14.sp,
-                            modifier =
-                                Modifier.padding(
-                                    top = dimensionResource(id = R.dimen.padding_extra_small)))
-                      }
+                      UsernameValidationMessage(
+                          isAvailable = uiState.isUsernameAvailable,
+                          invalidMessage = uiState.invalidUsernameMsg)
 
                       Spacer(modifier = Modifier.height(fieldSpacingRegular))
 
@@ -256,14 +249,12 @@ fun SettingsScreen(
                                 fontSize = 16.sp)
                           }
 
-                      if (showPhotoPickerDialog) {
-                        PhotoPickerDialog(
-                            imageUri = imageUri,
-                            takePhotoLauncher = takePhotoLauncher,
-                            pickImageLauncher = pickImageLauncher) {
-                              showPhotoPickerDialog = false
-                            }
-                      }
+                      PhotoPicker(
+                          visible = showPhotoPickerDialog,
+                          imageUri = imageUri,
+                          takePhotoLauncher = takePhotoLauncher,
+                          pickImageLauncher = pickImageLauncher,
+                          onDismiss = { showPhotoPickerDialog = false })
 
                       Spacer(modifier = Modifier.height(fieldSpacingMedium))
 
@@ -491,4 +482,51 @@ fun PhotoPickerDialog(
               Text(stringResource(id = R.string.settings_alert_dialog_option_cancel))
             }
       })
+}
+
+/**
+ * Displays a small confirmation message indicating that the chosen username is valid.
+ *
+ * This message appears only when:
+ * - `isAvailable` is true (the username is not taken), and
+ * - `invalidMessage` is null (the username passes all validation rules).
+ *
+ * @param isAvailable Whether the username is available.
+ * @param invalidMessage A validation error message, if any.
+ */
+@Composable
+private fun UsernameValidationMessage(isAvailable: Boolean?, invalidMessage: String?) {
+  if (isAvailable == true && invalidMessage == null) {
+    Text(
+        text = stringResource(R.string.settings_valid_username),
+        color = MaterialTheme.colorScheme.primary,
+        fontSize = 14.sp,
+        modifier = Modifier.padding(top = dimensionResource(id = R.dimen.padding_extra_small)))
+  }
+}
+
+/**
+ * Hosts the PhotoPickerDialog when it should be visible.
+ *
+ * @param visible Whether the photo picker dialog should be displayed.
+ * @param imageUri The URI used for capturing a photo.
+ * @param takePhotoLauncher Launcher for the TakePicture() contract.
+ * @param pickImageLauncher Launcher for the GetContent() contract.
+ * @param onDismiss Callback invoked when the dialog is dismissed.
+ */
+@Composable
+private fun PhotoPicker(
+    visible: Boolean,
+    imageUri: Uri,
+    takePhotoLauncher: ActivityResultLauncher<Uri>,
+    pickImageLauncher: ActivityResultLauncher<String>,
+    onDismiss: () -> Unit
+) {
+  if (visible) {
+    PhotoPickerDialog(
+        imageUri = imageUri,
+        takePhotoLauncher = takePhotoLauncher,
+        pickImageLauncher = pickImageLauncher,
+        onDismiss = onDismiss)
+  }
 }
