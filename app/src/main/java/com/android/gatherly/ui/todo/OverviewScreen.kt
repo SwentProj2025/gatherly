@@ -7,13 +7,17 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Sort
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -170,6 +174,7 @@ fun OverviewScreen(
                 Row(
                     modifier =
                         Modifier.fillMaxWidth()
+                            .height(dimensionResource(R.dimen.todo_overview_top_row_height))
                             .padding(
                                 bottom =
                                     dimensionResource(R.dimen.todos_overview_vertical_padding))) {
@@ -189,8 +194,9 @@ fun OverviewScreen(
                                   unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
                                   focusedTextColor = MaterialTheme.colorScheme.onBackground,
                               ))
-
-                      SortMenu(onSortSelected = { overviewViewModel.setSortOrder(it) })
+                      SortMenu(
+                          currentOrder = uiState.sortOrder,
+                          onSortSelected = { overviewViewModel.setSortOrder(it) })
                     }
 
                 if (todos.isNotEmpty()) {
@@ -289,36 +295,65 @@ fun OverviewScreen(
  * @param onSortSelected Callback invoked when the user selects a new [TodoSortOrder].
  */
 @Composable
-fun SortMenu(onSortSelected: (TodoSortOrder) -> Unit) {
+fun SortMenu(currentOrder: TodoSortOrder, onSortSelected: (TodoSortOrder) -> Unit) {
   var expanded by remember { mutableStateOf(false) }
 
-  Box {
+  Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxHeight()) {
     IconButton(
-        modifier =
-            Modifier.align(Alignment.Center).testTag(OverviewScreenTestTags.SORT_MENU_BUTTON),
-        onClick = { expanded = true }) {
-          Icon(imageVector = Icons.AutoMirrored.Filled.Sort, contentDescription = "Sort todos")
-        }
-    DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-      DropdownMenuItem(
-          text = { Text("Date descending") },
-          onClick = {
-            onSortSelected(TodoSortOrder.DATE_DESC)
-            expanded = false
-          })
-      DropdownMenuItem(
-          text = { Text("Date ascending") },
-          onClick = {
-            onSortSelected(TodoSortOrder.DATE_ASC)
-            expanded = false
-          })
-      DropdownMenuItem(
-          text = { Text("Alphabetical") },
-          onClick = {
-            onSortSelected(TodoSortOrder.ALPHABETICAL)
-            expanded = false
-          })
+        modifier = Modifier.fillMaxHeight().testTag(OverviewScreenTestTags.SORT_MENU_BUTTON),
+        onClick = { expanded = true },
+    ) {
+      Icon(
+          imageVector = Icons.AutoMirrored.Filled.Sort,
+          modifier =
+              Modifier.size(dimensionResource(R.dimen.todo_overview_sort_icon_size)).fillMaxSize(),
+          contentDescription = "Sort todos",
+          tint = MaterialTheme.colorScheme.onSurfaceVariant)
     }
+    DropdownMenu(
+        expanded = expanded,
+        onDismissRequest = { expanded = false },
+        containerColor = MaterialTheme.colorScheme.surfaceVariant) {
+          DropdownMenuItem(
+              text = {
+                Text(text = "Date descending", color = MaterialTheme.colorScheme.onSurfaceVariant)
+              },
+              onClick = {
+                onSortSelected(TodoSortOrder.DATE_DESC)
+                expanded = false
+              },
+              trailingIcon = {
+                if (currentOrder == TodoSortOrder.DATE_DESC) {
+                  Icon(Icons.Default.Check, contentDescription = "Selected")
+                }
+              })
+          DropdownMenuItem(
+              text = {
+                Text(text = "Date ascending", color = MaterialTheme.colorScheme.onSurfaceVariant)
+              },
+              onClick = {
+                onSortSelected(TodoSortOrder.DATE_ASC)
+                expanded = false
+              },
+              trailingIcon = {
+                if (currentOrder == TodoSortOrder.DATE_ASC) {
+                  Icon(Icons.Default.Check, contentDescription = "Selected")
+                }
+              })
+          DropdownMenuItem(
+              text = {
+                Text(text = "Alphabetical", color = MaterialTheme.colorScheme.onSurfaceVariant)
+              },
+              onClick = {
+                onSortSelected(TodoSortOrder.ALPHABETICAL)
+                expanded = false
+              },
+              trailingIcon = {
+                if (currentOrder == TodoSortOrder.ALPHABETICAL) {
+                  Icon(Icons.Default.Check, contentDescription = "Selected")
+                }
+              })
+        }
   }
 }
 
