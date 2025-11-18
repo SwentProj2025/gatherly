@@ -156,22 +156,22 @@ fun EventsScreen(
     // Open the corresponding pop-up based on where the event was found
     val eventFound =
         when {
-            eventIdIsBrowser != null -> {
-                selectedBrowserEvent.value = eventIdIsBrowser
-                isPopupOnBrowser.value = true
-                true
-            }
-            eventIdIsUpcoming != null -> {
-                selectedUpcomingEvent.value = eventIdIsUpcoming
-                isPopupOnUpcoming.value = true
-                true
-            }
-            eventIdIsYourEvent != null -> {
-                selectedYourEvent.value = eventIdIsYourEvent
-                isPopupOnYourE.value = true
-                true
-            }
-            else -> false
+          eventIdIsBrowser != null -> {
+            selectedBrowserEvent.value = eventIdIsBrowser
+            isPopupOnBrowser.value = true
+            true
+          }
+          eventIdIsUpcoming != null -> {
+            selectedUpcomingEvent.value = eventIdIsUpcoming
+            isPopupOnUpcoming.value = true
+            true
+          }
+          eventIdIsYourEvent != null -> {
+            selectedYourEvent.value = eventIdIsYourEvent
+            isPopupOnYourE.value = true
+            true
+          }
+          else -> false
         }
 
     // Mark the eventId as processed to avoid reopening the pop-up on recomposition
