@@ -1,6 +1,5 @@
 package com.android.gatherly.ui.settings
 
-import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -48,6 +47,7 @@ object SettingsScreenTestTags {
   const val LOADING = "loading"
   const val DELETE_BTN = "deleteButton"
   const val DELETE_POP_UP = "deletePopUp"
+  const val SNACKBAR = "snackbar"
 }
 
 /**
@@ -74,20 +74,13 @@ fun SettingsScreen(
   val uiState by settingsViewModel.uiState.collectAsState()
   val context = LocalContext.current
   val shouldShowDialog = remember { mutableStateOf(false) }
+  val snackBarHostState = remember { SnackbarHostState() }
 
   val errorMsg = uiState.errorMsg
   LaunchedEffect(errorMsg) {
     if (errorMsg != null) {
-      Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
+      snackBarHostState.showSnackbar(message = errorMsg, withDismissAction = true)
       settingsViewModel.clearErrorMsg()
-    }
-  }
-
-  val saveSuccess = uiState.saveSuccess
-  LaunchedEffect(saveSuccess) {
-    if (saveSuccess) {
-      Toast.makeText(context, "Profile saved successfully!", Toast.LENGTH_SHORT).show()
-      settingsViewModel.clearSaveSuccess()
     }
   }
 
@@ -109,6 +102,11 @@ fun SettingsScreen(
             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
             modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
             onSignedOut = { settingsViewModel.signOut(credentialManager) })
+      },
+      snackbarHost = {
+        SnackbarHost(
+            hostState = snackBarHostState,
+            modifier = Modifier.testTag(SettingsScreenTestTags.SNACKBAR))
       },
       containerColor = MaterialTheme.colorScheme.background,
       content = { paddingValues ->
@@ -291,9 +289,14 @@ fun SettingsScreen(
                         ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary,
                             contentColor = MaterialTheme.colorScheme.onPrimary),
-                    enabled = uiState.isValid) {
+                    enabled = uiState.isValid && !uiState.isSaving) {
                       Text(
-                          text = stringResource(R.string.settings_save),
+                          text =
+                              if (uiState.isSaving) {
+                                stringResource(R.string.saving)
+                              } else {
+                                stringResource(R.string.settings_save)
+                              },
                           fontSize = 16.sp,
                           fontWeight = FontWeight.Medium)
                     }

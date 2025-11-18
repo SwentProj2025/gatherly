@@ -428,8 +428,16 @@ fun EditEventsScreen(
                             !ui.creatorNameError &&
                             !ui.dateError &&
                             !ui.startTimeError &&
-                            !ui.endTimeError) {
-                      Text("Save", color = MaterialTheme.colorScheme.onSecondary)
+                            !ui.endTimeError &&
+                            !ui.isLoading) {
+                      Text(
+                          text =
+                              if (ui.isLoading) {
+                                stringResource(R.string.saving)
+                              } else {
+                                stringResource(R.string.settings_save)
+                              },
+                          color = MaterialTheme.colorScheme.onSecondary)
                     }
               }
 

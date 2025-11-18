@@ -395,7 +395,8 @@ class SettingsViewModelTest {
     viewModel.deleteProfile()
     advanceUntilIdle()
 
-    // Check that it is no longer in the repository
+    // Check that it is no longer in the repository and the screen navigates to sign in
     assert(repo.getProfileByUid(uid) == null)
+    assert(viewModel.uiState.value.signedOut)
   }
 }
