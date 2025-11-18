@@ -52,7 +52,6 @@ class AddTodoViewModelTest {
           uid = "0",
           name = "Owner",
           focusSessionIds = emptyList(),
-          eventIds = emptyList(),
           groupIds = emptyList(),
           friendUids = emptyList())
 
