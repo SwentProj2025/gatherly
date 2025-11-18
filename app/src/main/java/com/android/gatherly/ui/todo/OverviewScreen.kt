@@ -184,7 +184,13 @@ fun OverviewScreen(
                             searchQuery = newText
                             overviewViewModel.searchTodos(newText)
                           },
-                          modifier = Modifier.weight(1f).testTag(OverviewScreenTestTags.SEARCH_BAR),
+                          modifier =
+                              Modifier.weight(1f)
+                                  .padding(
+                                      horizontal =
+                                          dimensionResource(
+                                              R.dimen.todos_overview_horizontal_padding))
+                                  .testTag(OverviewScreenTestTags.SEARCH_BAR),
                           label = { Text(stringResource(R.string.todos_search_bar_label)) },
                           singleLine = true,
                           colors =
