@@ -433,4 +433,11 @@ class SettingsScreenTest {
 
     composeRule.onNodeWithTag(SettingsScreenTestTags.LOADING).assertIsDisplayed()
   }
+
+  @Test
+  fun deleteButtonShowsAlert() {
+    setContentWithGoogle()
+    composeRule.onNodeWithTag(SettingsScreenTestTags.DELETE_BTN).assertIsDisplayed().performClick()
+    composeRule.onNodeWithTag(SettingsScreenTestTags.DELETE_POP_UP).assertIsDisplayed()
+  }
 }

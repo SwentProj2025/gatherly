@@ -27,6 +27,8 @@
     <string name="todos_save_button_text">Save</string>
     <string name="todos_back_button_desc">Back</string>
     <string name="todos_delete_button_text">Delete</string>
+    <string name="todos_delete_warning">Warning! You are deleting a todo</string>
+    <string name="todos_delete_warning_text">This action cannot be reversed. Are you sure?</string>
 
     <!-- Sign In Page. -->
     <string name="web_client_id">854490974901-rc0seqlo7nbm1net10ujpte2ckkrsgn2.apps.googleusercontent.com</string>
@@ -58,6 +60,8 @@
     <string name="settings_label_school">School :</string>
     <string name="settings_label_school_year">School year :</string>
     <string name="settings_valid_username">This username is available!</string>
+    <string name="settings_delete_warning">Warning! You are deleting your</string>
+    <string name="settings_delete_warning_text">This action cannot be reversed. Are you sure?</string>
 
     <!-- Profile Page -->
     <string name="profile_screen_title">Profile</string>
@@ -91,6 +95,10 @@
     <string name="events_participant_field_label">Participant</string>
     <string name="events_participant_placeholder">Add or remove a participant</string>
     <string name="events_loading">Loading events …</string>
+    <string name="events_delete_warning">Warning! You are deleting an event</string>
+    <string name="events_delete_warning_text">This action cannot be reversed. Are you sure?</string>
+    <string name="delete">Yes, Delete</string>
+    <string name="cancel">No, Cancel</string>
 
     <!-- HomePage -->
     <string name="homepage_arrow_icon_description">Navigate</string>

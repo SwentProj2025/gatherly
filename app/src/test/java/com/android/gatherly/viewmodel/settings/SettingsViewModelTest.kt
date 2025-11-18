@@ -372,4 +372,30 @@ class SettingsViewModelTest {
       assertNull(viewModel.uiState.value.errorMsg)
     }
   }
+
+  // Checks that deleting the profile indeed works and deletes the profile from the repo
+  @Test
+  fun deleteProfileWorksCorrectly() = runTest {
+    // Create repo with a profile in it
+    val uid = "u1"
+    val repo = ProfileLocalRepository()
+    mockitoUtils.chooseCurrentUser(uid)
+
+    val originalProfile =
+        Profile(uid = uid, name = "Alice", username = "alice_ok", profilePicture = "same_url")
+    repo.addProfile(originalProfile)
+
+    val viewModel = SettingsViewModel(repository = repo, authProvider = { mockitoUtils.mockAuth })
+    advanceUntilIdle()
+
+    // Check that the profile exists
+    assert(repo.getProfileByUid(uid) != null)
+
+    // Delete profile
+    viewModel.deleteProfile()
+    advanceUntilIdle()
+
+    // Check that it is no longer in the repository
+    assert(repo.getProfileByUid(uid) == null)
+  }
 }

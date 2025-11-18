@@ -11,8 +11,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DeleteForever
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ButtonDefaults.buttonColors
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -23,8 +25,11 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -32,6 +37,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.integerResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
@@ -75,6 +81,7 @@ object EditToDoScreenTestTags {
 
   /** Tag for displaying error messages under text fields. */
   const val LOCATION_MENU = "locationMenu"
+  const val DELETE_POP_UP = "deletePopUp"
 }
 
 private const val DELAY = 1000L
@@ -101,6 +108,7 @@ fun EditToDoScreen(
   val todoUIState by editTodoViewModel.uiState.collectAsState()
   val errorMsg = todoUIState.errorMsg
   val context = LocalContext.current
+  val shouldShowDialog = remember { mutableStateOf(false) }
 
   val screenPadding = dimensionResource(id = R.dimen.padding_screen)
   val fieldSpacing = dimensionResource(id = R.dimen.spacing_between_fields)
@@ -283,7 +291,7 @@ fun EditToDoScreen(
               // Delete Button
               item {
                 TextButton(
-                    onClick = { editTodoViewModel.deleteToDo(todoUid) },
+                    onClick = { shouldShowDialog.value = true },
                     modifier = Modifier.fillMaxWidth().testTag(EditToDoScreenTestTags.TODO_DELETE),
                     // TextButton has no background by default
                     colors =
@@ -304,7 +312,61 @@ fun EditToDoScreen(
                     }
               }
             }
+
+        if (shouldShowDialog.value) {
+          DeletePopUp(
+              viewModel = editTodoViewModel, shouldShowDialog = shouldShowDialog, todoID = todoUid)
+        }
       })
+}
+
+@Composable
+fun DeletePopUp(
+    viewModel: EditTodoViewModel,
+    shouldShowDialog: MutableState<Boolean>,
+    todoID: String
+) {
+  AlertDialog(
+      containerColor = MaterialTheme.colorScheme.surfaceVariant,
+      titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+      textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+      modifier = Modifier.testTag(EditToDoScreenTestTags.DELETE_POP_UP),
+      title = {
+        Text(text = stringResource(R.string.todos_delete_warning), textAlign = TextAlign.Center)
+      },
+      text = {
+        Text(
+            text = stringResource(R.string.todos_delete_warning_text),
+            textAlign = TextAlign.Center,
+        )
+      },
+      dismissButton = {
+        Button(
+            colors =
+                buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
+            onClick = { shouldShowDialog.value = false }) {
+              Text(
+                  text = stringResource(R.string.cancel),
+                  color = MaterialTheme.colorScheme.onPrimaryContainer)
+            }
+      },
+      onDismissRequest = { shouldShowDialog.value = false },
+      confirmButton = {
+        Button(
+            colors =
+                buttonColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor = MaterialTheme.colorScheme.error),
+            onClick = {
+              viewModel.deleteToDo(todoID = todoID)
+              shouldShowDialog.value = false
+            }) {
+              Text(text = stringResource(R.string.delete), color = MaterialTheme.colorScheme.error)
+            }
+      },
+  )
 }
 
 // Helper function to preview the timer screen

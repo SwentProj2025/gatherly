@@ -1,9 +1,11 @@
 package com.android.gatherly.ui.todo
 
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
 import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.utils.GatherlyTest
 import com.android.gatherly.utils.MockitoUtils
@@ -134,5 +136,14 @@ class EditTodoScreenTest : GatherlyTest() {
     val invalidTime = "invalid time" // Invalid time format
     composeTestRule.enterEditTodoTime(invalidTime)
     composeTestRule.checkErrorMessageIsDisplayedForEditTodo()
+  }
+
+  @Test
+  fun deleteShowsAlert() {
+    composeTestRule
+        .onNodeWithTag(EditToDoScreenTestTags.TODO_DELETE)
+        .assertIsDisplayed()
+        .performClick()
+    composeTestRule.onNodeWithTag(EditToDoScreenTestTags.DELETE_POP_UP).assertIsDisplayed()
   }
 }

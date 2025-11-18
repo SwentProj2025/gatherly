@@ -343,4 +343,8 @@ class SettingsViewModel(
       repository.updateUsername(id, originalProfile?.username, state.username)
     }
   }
+
+  fun deleteProfile() {
+    viewModelScope.launch { repository.deleteProfile(authProvider().currentUser?.uid!!) }
+  }
 }

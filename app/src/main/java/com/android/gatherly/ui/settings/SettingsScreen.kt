@@ -7,7 +7,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material3.*
+import androidx.compose.material3.ButtonDefaults.buttonColors
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,6 +46,8 @@ object SettingsScreenTestTags {
   const val BIRTHDAY_FIELD_ERROR = "settings_birthday_field_error"
   const val GOOGLE_BUTTON = "google_button"
   const val LOADING = "loading"
+  const val DELETE_BTN = "deleteButton"
+  const val DELETE_POP_UP = "deletePopUp"
 }
 
 /**
@@ -68,6 +73,7 @@ fun SettingsScreen(
 
   val uiState by settingsViewModel.uiState.collectAsState()
   val context = LocalContext.current
+  val shouldShowDialog = remember { mutableStateOf(false) }
 
   val errorMsg = uiState.errorMsg
   LaunchedEffect(errorMsg) {
@@ -291,7 +297,26 @@ fun SettingsScreen(
                           fontSize = 16.sp,
                           fontWeight = FontWeight.Medium)
                     }
+
+                // Delete account
+                TextButton(
+                    onClick = { shouldShowDialog.value = true },
+                    modifier = Modifier.fillMaxWidth().testTag(SettingsScreenTestTags.DELETE_BTN),
+                    colors =
+                        ButtonDefaults.textButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error)) {
+                      Icon(
+                          imageVector = Icons.Filled.DeleteForever,
+                          contentDescription = "",
+                          tint = MaterialTheme.colorScheme.error)
+                      Text(
+                          stringResource(R.string.todos_delete_button_text),
+                          color = MaterialTheme.colorScheme.error)
+                    }
               }
+          if (shouldShowDialog.value) {
+            DeletePopUp(viewModel = settingsViewModel, shouldShowDialog = shouldShowDialog)
+          }
         }
       })
 }
@@ -353,6 +378,51 @@ fun SettingsField(
                   .testTag("${testTag}_error"))
     }
   }
+}
+
+@Composable
+fun DeletePopUp(viewModel: SettingsViewModel, shouldShowDialog: MutableState<Boolean>) {
+  AlertDialog(
+      containerColor = MaterialTheme.colorScheme.surfaceVariant,
+      titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+      textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+      modifier = Modifier.testTag(SettingsScreenTestTags.DELETE_POP_UP),
+      title = {
+        Text(text = stringResource(R.string.settings_delete_warning), textAlign = TextAlign.Center)
+      },
+      text = {
+        Text(
+            text = stringResource(R.string.settings_delete_warning_text),
+            textAlign = TextAlign.Center,
+        )
+      },
+      dismissButton = {
+        Button(
+            colors =
+                buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
+            onClick = { shouldShowDialog.value = false }) {
+              Text(
+                  text = stringResource(R.string.cancel),
+                  color = MaterialTheme.colorScheme.onPrimaryContainer)
+            }
+      },
+      onDismissRequest = { shouldShowDialog.value = false },
+      confirmButton = {
+        Button(
+            colors =
+                buttonColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor = MaterialTheme.colorScheme.error),
+            onClick = {
+              viewModel.deleteProfile()
+              shouldShowDialog.value = false
+            }) {
+              Text(text = stringResource(R.string.delete), color = MaterialTheme.colorScheme.error)
+            }
+      },
+  )
 }
 
 // Helper function to preview the timer screen

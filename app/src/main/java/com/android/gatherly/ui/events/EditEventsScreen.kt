@@ -14,8 +14,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ButtonDefaults.buttonColors
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -29,6 +31,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,6 +41,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
@@ -70,6 +74,8 @@ object EditEventsScreenTestTags {
   const val PROFILE_SUGGESTION_ITEM = "EVENT_PROFILE_SUGGESTION_ITEM"
   const val PROFILE_SUGGESTION_ADD = "EVENT_PROFILE_SUGGESTION_ADD"
   const val PROFILE_SUGGESTION_REMOVE = "EVENT_PROFILE_SUGGESTION_REMOVE"
+  const val DELETE_POP_UP = "DELETE_POP_UP"
+  const val LIST = "LIST"
 }
 
 /**
@@ -95,6 +101,7 @@ fun EditEventsScreen(
 
   val ui = editEventsViewModel.uiState
   val context = LocalContext.current
+  val shouldShowDialog = remember { mutableStateOf(false) }
 
   val screenPadding = dimensionResource(id = R.dimen.padding_screen)
   val fieldSpacing = dimensionResource(id = R.dimen.spacing_between_fields)
@@ -153,7 +160,11 @@ fun EditEventsScreen(
             goBack = goBack)
       }) { paddingVal ->
         LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(paddingVal).padding(screenPadding),
+            modifier =
+                Modifier.fillMaxSize()
+                    .padding(paddingVal)
+                    .padding(screenPadding)
+                    .testTag(EditEventsScreenTestTags.LIST),
             verticalArrangement = Arrangement.spacedBy(fieldSpacing)) {
               item {
                 // Name
@@ -425,10 +436,7 @@ fun EditEventsScreen(
               item {
                 // Delete
                 TextButton(
-                    onClick = {
-                      editEventsViewModel.deleteEvent()
-                      onSave()
-                    },
+                    onClick = { shouldShowDialog.value = true },
                     modifier = Modifier.fillMaxWidth().testTag(EditEventsScreenTestTags.BTN_DELETE),
                     colors =
                         ButtonDefaults.textButtonColors(
@@ -444,7 +452,56 @@ fun EditEventsScreen(
                     }
               }
             }
+
+        if (shouldShowDialog.value) {
+          DeletePopUp(viewModel = editEventsViewModel, shouldShowDialog = shouldShowDialog)
+        }
       }
+}
+
+@Composable
+fun DeletePopUp(viewModel: EditEventsViewModel, shouldShowDialog: MutableState<Boolean>) {
+  AlertDialog(
+      containerColor = MaterialTheme.colorScheme.surfaceVariant,
+      titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+      textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+      modifier = Modifier.testTag(EditEventsScreenTestTags.DELETE_POP_UP),
+      title = {
+        Text(text = stringResource(R.string.events_delete_warning), textAlign = TextAlign.Center)
+      },
+      text = {
+        Text(
+            text = stringResource(R.string.events_delete_warning_text),
+            textAlign = TextAlign.Center,
+        )
+      },
+      dismissButton = {
+        Button(
+            colors =
+                buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
+            onClick = { shouldShowDialog.value = false }) {
+              Text(
+                  text = stringResource(R.string.cancel),
+                  color = MaterialTheme.colorScheme.onPrimaryContainer)
+            }
+      },
+      onDismissRequest = { shouldShowDialog.value = false },
+      confirmButton = {
+        Button(
+            colors =
+                buttonColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor = MaterialTheme.colorScheme.error),
+            onClick = {
+              viewModel.deleteEvent()
+              shouldShowDialog.value = false
+            }) {
+              Text(text = stringResource(R.string.delete), color = MaterialTheme.colorScheme.error)
+            }
+      },
+  )
 }
 
 @Preview
