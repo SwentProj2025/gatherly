@@ -4,14 +4,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.map.Location
 import com.android.gatherly.model.map.NominatimLocationRepository
+import com.android.gatherly.model.profile.ProfileRepository
+import com.android.gatherly.model.profile.ProfileRepositoryProvider
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.model.todo.ToDosRepositoryProvider
-import com.google.firebase.Firebase
+import com.android.gatherly.utils.deleteTodo_updateBadges
 import com.google.firebase.Timestamp
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.auth
 import java.text.SimpleDateFormat
 import java.util.Locale
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -75,7 +75,7 @@ private var client: OkHttpClient =
 class EditTodoViewModel(
     private val todoRepository: ToDosRepository = ToDosRepositoryProvider.repository,
     private val nominatimClient: NominatimLocationRepository = NominatimLocationRepository(client),
-    private val authProvider: () -> FirebaseAuth = { Firebase.auth }
+    private val profileRepository: ProfileRepository = ProfileRepositoryProvider.repository
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(EditTodoUIState())
   /** Public immutable access to the Edit ToDo UI state. */
@@ -196,21 +196,23 @@ class EditTodoViewModel(
           Timestamp(sdfTime.parse(uiState.value.dueTime)!!)
         } else null
 
-    val ownerId = authProvider().currentUser?.uid ?: ""
+    viewModelScope.launch {
+      val ownerId = todoRepository.getTodo(id).ownerId
 
-    editTodoToRepository(
-        todoID = id,
-        todo =
-            ToDo(
-                name = uiState.value.title,
-                description = uiState.value.description,
-                assigneeName = uiState.value.assignee,
-                dueDate = Timestamp(date),
-                dueTime = time,
-                location = chosenLocation,
-                status = uiState.value.status,
-                uid = id,
-                ownerId = ownerId))
+      editTodoToRepository(
+          todoID = id,
+          todo =
+              ToDo(
+                  name = uiState.value.title,
+                  description = uiState.value.description,
+                  assigneeName = uiState.value.assignee,
+                  dueDate = Timestamp(date),
+                  dueTime = time,
+                  location = chosenLocation,
+                  status = uiState.value.status,
+                  uid = id,
+                  ownerId = ownerId))
+    }
     clearErrorMsg()
     return true
   }
@@ -244,7 +246,8 @@ class EditTodoViewModel(
     viewModelScope.launch {
       _uiState.value = _uiState.value.copy(isSaving = true, errorMsg = null)
       try {
-        todoRepository.deleteTodo(todoID = todoID)
+        val ownerId = todoRepository.getTodo(todoID).ownerId
+        deleteTodo_updateBadges(todoRepository, profileRepository, todoID, ownerId)
         _uiState.value = _uiState.value.copy(isSaving = false, saveSuccess = true)
       } catch (e: Exception) {
         _uiState.value =
