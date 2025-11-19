@@ -211,4 +211,21 @@ interface ProfileRepository {
    * @param participants list of all the ID of profiles register for this event
    */
   suspend fun allUnregisterEvent(eventId: String, participants: List<String>)
+
+  // -- BADGES GESTION PART --
+
+  /**
+   * Triggers the badges that the user won
+   *
+   * @param userProfile corresponds to the profile of the user we want to know his badges
+   * @param createdTodosCount number of todos created by the user, null for the
+   *   ProfileRepositoryFirestore but can be set for testing purposes with ProfileLocalRepository
+   * @param completedTodosCount number of todos completed by the user, null for the
+   *   ProfileRepositoryFirestore but can be set for testing purposes with ProfileLocalRepository
+   */
+  suspend fun updateBadges(
+      userProfile: Profile,
+      createdTodosCount: Int? = null,
+      completedTodosCount: Int? = null
+  )
 }
