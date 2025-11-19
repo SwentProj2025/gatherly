@@ -98,7 +98,6 @@ fun GatherlyApp(
     ) {
       composable(Screen.HomePage.route) {
         HomePageScreen(
-            credentialManager = credentialManager,
             navigationActions = navigationActions,
             onSignedOut = { navigationActions.navigateTo(Screen.SignIn) },
             onClickFocusButton = { navigationActions.navigateTo(Screen.FocusTimerScreen) },
@@ -153,7 +152,6 @@ fun GatherlyApp(
       composable(Screen.Map.route) {
         MapScreen(
             navigationActions = navigationActions,
-            credentialManager = credentialManager,
             onSignedOut = { navigationActions.navigateTo(Screen.SignIn) },
             goToEvent = { navigationActions.navigateTo(Screen.EventsScreen) },
             goToToDo = { navigationActions.navigateTo(Screen.OverviewToDo) })
@@ -168,7 +166,6 @@ fun GatherlyApp(
       composable(Screen.FocusTimerScreen.route) {
         TimerScreen(
             navigationActions = navigationActions,
-            credentialManager = credentialManager,
             onSignedOut = { navigationActions.navigateTo(Screen.SignIn) })
       }
     }
@@ -181,7 +178,6 @@ fun GatherlyApp(
       composable(Screen.EventsScreen.route) {
         EventsScreen(
             navigationActions = navigationActions,
-            credentialManager = credentialManager,
             onSignedOut = { navigationActions.navigateTo(Screen.SignIn) },
             onAddEvent = { navigationActions.navigateTo(Screen.AddEventScreen) },
             navigateToEditEvent = { event ->
