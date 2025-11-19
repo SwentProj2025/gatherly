@@ -7,6 +7,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import com.android.gatherly.model.todo.ToDosLocalRepository
+import com.android.gatherly.utils.AlertDialogTestTags
 import com.android.gatherly.utils.GatherlyTest
 import com.android.gatherly.utils.MockitoUtils
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -144,6 +145,6 @@ class EditTodoScreenTest : GatherlyTest() {
         .onNodeWithTag(EditToDoScreenTestTags.TODO_DELETE)
         .assertIsDisplayed()
         .performClick()
-    composeTestRule.onNodeWithTag(EditToDoScreenTestTags.DELETE_POP_UP).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.ALERT).assertIsDisplayed()
   }
 }

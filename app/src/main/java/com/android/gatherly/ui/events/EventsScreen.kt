@@ -52,20 +52,9 @@ import java.util.Locale
 import kotlinx.coroutines.launch
 
 object EventsScreenTestTags {
-
-  const val EVENT_POPUP = "EventPopUp"
-
   const val ALL_LISTS = "EventsLists"
 
   const val CREATE_EVENT_BUTTON = "CreateANewEvent"
-
-  const val EDIT_EVENT_BUTTON = "EditEvent"
-
-  const val GOBACK_EVENT_BUTTON = "GoBackOverview"
-
-  const val PARTICIPATE_BUTTON = "Participate"
-
-  const val UNREGISTER_BUTTON = "Unregister"
 
   const val EMPTY_BROWSER_LIST_MSG = "EmptyBrowserEvents"
 
@@ -82,10 +71,6 @@ object EventsScreenTestTags {
   const val EVENT_DATE = "EventDate"
 
   const val EVENT_TITLE = "EventTitle"
-
-  const val POPUP_DESCRIPTION = "EventDescription"
-
-  const val POPUP_TITLE = "EventTitle"
   const val BROWSE_EVENTS_LOADING = "browseEventsLoading"
   const val UPCOMING_EVENTS_LOADING = "upcomingEventsLoading"
   const val MY_EVENTS_LOADING = "myEventsLoading"

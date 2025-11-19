@@ -11,6 +11,7 @@ import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileStatus
+import com.android.gatherly.utils.AlertDialogTestTags
 import com.android.gatherly.utils.MockitoUtils
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -438,6 +439,6 @@ class SettingsScreenTest {
   fun deleteButtonShowsAlert() {
     setContentWithGoogle()
     composeRule.onNodeWithTag(SettingsScreenTestTags.DELETE_BTN).assertIsDisplayed().performClick()
-    composeRule.onNodeWithTag(SettingsScreenTestTags.DELETE_POP_UP).assertIsDisplayed()
+    composeRule.onNodeWithTag(AlertDialogTestTags.ALERT).assertIsDisplayed()
   }
 }

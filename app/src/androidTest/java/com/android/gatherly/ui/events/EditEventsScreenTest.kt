@@ -19,6 +19,7 @@ import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.ui.todo.AddToDoScreenTestTags
+import com.android.gatherly.utils.AlertDialogTestTags
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -156,7 +157,7 @@ class EditEventsScreenTest {
         .onNodeWithTag(EditEventsScreenTestTags.BTN_DELETE)
         .assertIsDisplayed()
         .performClick()
-    composeTestRule.onNodeWithTag(EditEventsScreenTestTags.DELETE_POP_UP).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.ALERT).assertIsDisplayed()
   }
 
   // This function fills the profile repository with the created profiles, and the event repository

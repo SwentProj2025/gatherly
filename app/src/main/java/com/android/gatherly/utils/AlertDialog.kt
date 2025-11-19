@@ -6,6 +6,8 @@ import androidx.compose.material3.ButtonDefaults.buttonColors
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 
 @Composable
@@ -23,12 +25,18 @@ fun GatherlyAlertDialog(
       containerColor = MaterialTheme.colorScheme.surfaceVariant,
       titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
       textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-      title = { Text(text = titleText, textAlign = TextAlign.Center) },
+      modifier = Modifier.testTag(AlertDialogTestTags.ALERT),
+      title = {
+        Text(
+            text = titleText,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.testTag(AlertDialogTestTags.TITLE))
+      },
       text = {
         Text(
             text = bodyText,
             textAlign = TextAlign.Center,
-        )
+            modifier = Modifier.testTag(AlertDialogTestTags.BODY))
       },
       dismissButton = {
         Button(
@@ -36,7 +44,8 @@ fun GatherlyAlertDialog(
                 buttonColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
-            onClick = onDismiss) {
+            onClick = onDismiss,
+            modifier = Modifier.testTag(AlertDialogTestTags.DISMISS_BTN)) {
               Text(text = dismissText, color = MaterialTheme.colorScheme.onPrimaryContainer)
             }
       },
@@ -58,7 +67,8 @@ fun GatherlyAlertDialog(
                           MaterialTheme.colorScheme.onPrimaryContainer
                         }),
             enabled = confirmEnabled,
-            onClick = onConfirm) {
+            onClick = onConfirm,
+            modifier = Modifier.testTag(AlertDialogTestTags.CONFIRM_BTN)) {
               Text(
                   text = confirmText,
                   color =
@@ -70,4 +80,12 @@ fun GatherlyAlertDialog(
             }
       },
   )
+}
+
+object AlertDialogTestTags {
+  const val ALERT = "alert"
+  const val TITLE = "title"
+  const val BODY = "body"
+  const val DISMISS_BTN = "dismissButton"
+  const val CONFIRM_BTN = "confirmButton"
 }
