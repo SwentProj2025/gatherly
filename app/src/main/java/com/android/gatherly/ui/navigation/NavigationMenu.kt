@@ -145,16 +145,13 @@ fun BottomNavigationMenu(
  * @param onTabSelected A callback function that is invoked when a tab is selected. It takes a [Tab]
  *   as a parameter.
  * @param modifier A [Modifier] for this component. Default is [Modifier].
- * @param onSignedOut A callback function that is invoked when the user chooses to sign out. Default
- *   is an empty function.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopNavigationMenu(
     selectedTab: Tab,
     onTabSelected: (Tab) -> Unit,
-    modifier: Modifier = Modifier,
-    onSignedOut: () -> Unit = {}
+    modifier: Modifier = Modifier
 ) {
   CenterAlignedTopAppBar(
       title = {
@@ -167,7 +164,7 @@ fun TopNavigationMenu(
               Icon(imageVector = Tab.HomePage.icon, contentDescription = Tab.HomePage.name)
             }
       },
-      actions = { TopDropdownMenu(onTabSelected = onTabSelected, onSignedOut = onSignedOut) },
+      actions = { TopDropdownMenu(onTabSelected = onTabSelected) },
       modifier =
           modifier.fillMaxWidth().height(60.dp).testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
       colors = topAppColor())
@@ -219,22 +216,19 @@ fun TopNavigationMenuSettings(
  * @param onTabSelected A callback function that is invoked when a tab is selected. It takes a [Tab]
  *   as a parameter.
  * @param modifier A [Modifier] for this component. Default is [Modifier].
- * @param onSignedOut A callback function that is invoked when the user chooses to sign out. Default
- *   is an empty function.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopNavigationMenu_HomePage(
     selectedTab: Tab,
     onTabSelected: (Tab) -> Unit,
-    modifier: Modifier = Modifier,
-    onSignedOut: () -> Unit = {}
+    modifier: Modifier = Modifier
 ) {
   CenterAlignedTopAppBar(
       title = {
         Text(text = selectedTab.name, modifier = Modifier.testTag(NavigationTestTags.TOP_BAR_TITLE))
       },
-      actions = { TopDropdownMenu(onTabSelected = onTabSelected, onSignedOut = onSignedOut) },
+      actions = { TopDropdownMenu(onTabSelected = onTabSelected) },
       modifier =
           modifier.fillMaxWidth().height(60.dp).testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
       colors = topAppColor())
@@ -320,11 +314,9 @@ fun TopNavigationMenu_Goback(
  *
  * @param onTabSelected A callback function that is invoked when a tab is selected. It takes a [Tab]
  *   as a parameter.
- * @param onSignedOut A callback function that is invoked when the user chooses to sign out. Default
- *   is an empty function.
  */
 @Composable
-fun TopDropdownMenu(onTabSelected: (Tab) -> Unit, onSignedOut: () -> Unit = {}) {
+fun TopDropdownMenu(onTabSelected: (Tab) -> Unit) {
   var expanded by remember { mutableStateOf(false) }
 
   Box {
@@ -362,18 +354,6 @@ fun TopDropdownMenu(onTabSelected: (Tab) -> Unit, onSignedOut: () -> Unit = {}) 
               },
               onClick = { onTabSelected(Tab.Settings) },
               modifier = Modifier.testTag(NavigationTestTags.SETTINGS_TAB))
-
-          // Logout section
-          DropdownMenuItem(
-              text = { Text(Tab.SignOut.name, color = MaterialTheme.colorScheme.onSurfaceVariant) },
-              leadingIcon = {
-                Icon(
-                    Icons.Outlined.Logout,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant)
-              },
-              onClick = { onSignedOut() },
-              modifier = Modifier.testTag(NavigationTestTags.LOGOUT_TAB))
         }
   }
 }

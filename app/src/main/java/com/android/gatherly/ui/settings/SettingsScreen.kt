@@ -75,6 +75,7 @@ fun SettingsScreen(
   val context = LocalContext.current
   val shouldShowDialog = remember { mutableStateOf(false) }
   val snackBarHostState = remember { SnackbarHostState() }
+  val shouldShowLogOutWarning = remember { mutableStateOf(false) }
 
   val errorMsg = uiState.errorMsg
   LaunchedEffect(errorMsg) {
@@ -101,7 +102,13 @@ fun SettingsScreen(
             selectedTab = Tab.Settings,
             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
             modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
-            onSignedOut = { settingsViewModel.signOut(credentialManager) })
+            onSignedOut = {
+              if (uiState.isAnon) {
+                shouldShowLogOutWarning.value = true
+              } else {
+                settingsViewModel.signOut(credentialManager)
+              }
+            })
       },
       snackbarHost = {
         SnackbarHost(
@@ -317,8 +324,16 @@ fun SettingsScreen(
                           color = MaterialTheme.colorScheme.error)
                     }
               }
+
           if (shouldShowDialog.value) {
             DeletePopUp(viewModel = settingsViewModel, shouldShowDialog = shouldShowDialog)
+          }
+
+          if (shouldShowLogOutWarning.value) {
+            LogOutPopUp(
+                viewModel = settingsViewModel,
+                shouldShowDialog = shouldShowLogOutWarning,
+                credentialManager = credentialManager)
           }
         }
       })
@@ -423,6 +438,52 @@ fun DeletePopUp(viewModel: SettingsViewModel, shouldShowDialog: MutableState<Boo
               shouldShowDialog.value = false
             }) {
               Text(text = stringResource(R.string.delete), color = MaterialTheme.colorScheme.error)
+            }
+      },
+  )
+}
+
+@Composable
+fun LogOutPopUp(
+    viewModel: SettingsViewModel,
+    shouldShowDialog: MutableState<Boolean>,
+    credentialManager: CredentialManager
+) {
+  AlertDialog(
+      containerColor = MaterialTheme.colorScheme.surfaceVariant,
+      titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+      textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+      title = { Text(text = stringResource(R.string.anon_log_out), textAlign = TextAlign.Center) },
+      text = {
+        Text(
+            text = stringResource(R.string.anon_log_out_text),
+            textAlign = TextAlign.Center,
+        )
+      },
+      dismissButton = {
+        Button(
+            colors =
+                buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
+            onClick = { shouldShowDialog.value = false }) {
+              Text(
+                  text = stringResource(R.string.cancel),
+                  color = MaterialTheme.colorScheme.onPrimaryContainer)
+            }
+      },
+      onDismissRequest = { shouldShowDialog.value = false },
+      confirmButton = {
+        Button(
+            colors =
+                buttonColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor = MaterialTheme.colorScheme.error),
+            onClick = {
+              viewModel.signOut(credentialManager)
+              shouldShowDialog.value = false
+            }) {
+              Text(text = stringResource(R.string.log_out), color = MaterialTheme.colorScheme.error)
             }
       },
   )

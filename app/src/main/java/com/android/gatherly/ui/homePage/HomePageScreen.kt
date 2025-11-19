@@ -110,8 +110,7 @@ fun HomePageScreen(
       topBar = {
         TopNavigationMenu_HomePage(
             selectedTab = Tab.HomePage,
-            onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
-            onSignedOut = { homePageViewModel.signOut(credentialManager) })
+            onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) })
       },
       bottomBar = {
         BottomNavigationMenu(

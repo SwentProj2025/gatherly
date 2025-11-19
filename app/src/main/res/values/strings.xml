@@ -101,7 +101,10 @@
     <!-- General -->
     <string name="delete">Yes, Delete</string>
     <string name="cancel">No, Cancel</string>
+    <string name="log_out">Yes, Sign out</string>
     <string name="saving">Saving…</string>
+    <string name="anon_log_out">You are logging out</string>
+    <string name="anon_log_out_text">Because you are signed in anonymously, signing out will cause you to lose all your current data. Are you sure?</string>
 
     <!-- HomePage -->
     <string name="homepage_arrow_icon_description">Navigate</string>

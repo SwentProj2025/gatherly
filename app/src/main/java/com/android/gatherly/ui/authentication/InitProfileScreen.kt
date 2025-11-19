@@ -107,7 +107,7 @@ fun InitProfileScreen(
               testTag = InitProfileScreenTestTags.USERNAME,
               errorMessage = uiState.invalidUsernameMsg)
 
-          if (uiState.isUsernameAvailable == true && uiState.invalidUsernameMsg == null) {
+          if (uiState.isUsernameAvailable != false && uiState.invalidUsernameMsg == null) {
             Text(
                 text = stringResource(R.string.settings_valid_username),
                 color = MaterialTheme.colorScheme.primary,

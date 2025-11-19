@@ -55,7 +55,7 @@ data class SettingsUiState(
     val invalidNameMsg: String? = null,
     val invalidUsernameMsg: String? = null,
     val invalidBirthdayMsg: String? = null,
-    val isUsernameAvailable: Boolean? = null,
+    val isUsernameAvailable: Boolean? = false,
     val isLoadingProfile: Boolean = false,
     val navigateToInit: Boolean = false,
     val isSaving: Boolean = false,
