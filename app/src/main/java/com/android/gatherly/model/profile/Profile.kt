@@ -20,5 +20,6 @@ data class Profile(
     val birthday: Timestamp? = null,
     val profilePicture: String = "",
     val status: ProfileStatus = ProfileStatus.OFFLINE,
-    val badges: ProfileBadges = ProfileBadges.blank
+    val badges: ProfileBadges = ProfileBadges.blank,
+    val badgeIds: List<String> = emptyList()
 )
