@@ -80,7 +80,7 @@ object HomePageScreenTestTags {
   const val FRIENDS_SECTION = "friendsSection"
   const val MINI_MAP_CARD = "miniMapCard"
   const val FRIEND_AVATAR_PREFIX = "friendAvatar_"
-  const val FRIEND_STATUS_PREFIX = "friendAvatar_"
+  const val FRIEND_STATUS_PREFIX = "friendStatus_"
 }
 
 /**

@@ -219,8 +219,12 @@ class HomePageScreenTest {
   fun friendStatusIndicators_areDisplayed() {
     setContentWithGoogle()
     composeRule.waitForIdle()
-    composeRule.onNodeWithTag(getFriendStatusTestTag(friend1.uid)).assertIsDisplayed()
+    composeRule
+        .onNodeWithTag(testTag = getFriendStatusTestTag(friend1.uid), useUnmergedTree = true)
+        .assertIsDisplayed()
 
-    composeRule.onNodeWithTag(getFriendStatusTestTag(friend2.uid)).assertIsDisplayed()
+    composeRule
+        .onNodeWithTag(getFriendStatusTestTag(friend2.uid), useUnmergedTree = true)
+        .assertIsDisplayed()
   }
 }
