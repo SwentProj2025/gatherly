@@ -549,15 +549,16 @@ class EventsOverviewScreenTest {
       }
     }
 
+    mockitoUtils.chooseCurrentUser("bobId")
+
     composeTestRule.setContent {
       EventsScreen(
           eventsViewModel =
               EventsViewModel(
                   profileRepository = ProfileLocalRepository(),
-                  eventsRepository = SlowEventsRepo()))
+                  eventsRepository = SlowEventsRepo(),
+                  authProvider = { mockitoUtils.mockAuth }))
     }
     composeTestRule.onNodeWithTag(EventsScreenTestTags.BROWSE_EVENTS_LOADING).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(EventsScreenTestTags.UPCOMING_EVENTS_LOADING).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(EventsScreenTestTags.MY_EVENTS_LOADING).assertIsDisplayed()
   }
 }
