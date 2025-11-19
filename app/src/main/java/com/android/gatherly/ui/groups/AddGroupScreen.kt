@@ -52,17 +52,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
-import com.android.gatherly.model.group.GroupsRepositoryFirestore
 import com.android.gatherly.model.profile.Profile
-import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
-import com.android.gatherly.utils.GenericViewModelFactory
-import com.google.firebase.Firebase
-import com.google.firebase.auth.auth
-import com.google.firebase.firestore.firestore
-import com.google.firebase.storage.storage
 
 /** Object containing test tags for the AddGroupScreen and its components. */
 object AddGroupScreenTestTags {
@@ -123,17 +116,7 @@ object AddGroupScreenTestTags {
  */
 @Composable
 fun AddGroupScreen(
-    addGroupViewModel: AddGroupViewModel =
-        viewModel(
-            factory =
-                GenericViewModelFactory {
-                  AddGroupViewModel(
-                      profileRepository =
-                          ProfileRepositoryFirestore(Firebase.firestore, Firebase.storage),
-                      groupsRepository = GroupsRepositoryFirestore(Firebase.firestore),
-                      authProvider = { Firebase.auth },
-                  )
-                }),
+    addGroupViewModel: AddGroupViewModel = viewModel(factory = AddGroupViewModel.provideFactory()),
     goBack: () -> Unit = {},
     onCreate: () -> Unit = {},
 ) {
