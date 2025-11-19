@@ -13,7 +13,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenu
@@ -25,7 +24,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -43,7 +41,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
-import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
@@ -86,7 +83,6 @@ fun AddEventScreen(
     addEventViewModel: AddEventViewModel = viewModel(factory = AddEventViewModel.provideFactory()),
     onSave: () -> Unit = {},
     goBack: () -> Unit = {},
-    onEdit: (String) -> Unit = {},
 ) {
 
   val ui = addEventViewModel.uiState
@@ -140,22 +136,6 @@ fun AddEventScreen(
       addEventViewModel.searchProfileByString(ui.participant)
     }
   }
-
-    // Alert dialog when the event saved is past or ongoing
-    if (ui.eventIDAlertStatus.first != null) {
-        StatusAlert(
-            status = ui.eventIDAlertStatus.second,
-            eventId = ui.eventIDAlertStatus.first,
-            onDismiss = {
-                addEventViewModel.clearEventIDAlertStatus()
-                onSave()
-            },
-            onEdit = { id ->
-                addEventViewModel.clearEventIDAlertStatus()
-                onEdit(id!!)
-            }
-        )
-    }
 
   Scaffold(
       topBar = {
@@ -442,41 +422,4 @@ fun AddEventScreen(
 @Composable
 fun AddEventScreenPreview() {
   GatherlyTheme(darkTheme = true) { AddEventScreen() }
-}
-
-@Composable
-private fun StatusAlert(
-    status: EventStatus?,
-    eventId: String?,
-    onDismiss: () -> Unit,
-    onEdit: (String) -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            if (status == EventStatus.ONGOING) {
-                Text("Event is ongoing")
-            } else Text("Event is Already Passed")
-        },
-        text = {
-            if (status == EventStatus.ONGOING) {
-                Text("Event is currently ongoing. Do you want to edit the date, or keep the event as is?")
-            } else Text("Event is already past. Do you want to edit the date, or keep the event as is?")
-               
-               },
-        confirmButton = {
-            TextButton(
-                onClick = { onEdit(eventId!!) }
-            ) {
-                Text("Edit Event")
-            }
-        },
-        dismissButton = {
-            TextButton(
-                onClick = onDismiss
-            ) {
-                Text("Keep Event")
-            }
-        }
-    )
 }

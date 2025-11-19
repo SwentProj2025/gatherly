@@ -115,20 +115,21 @@ class EventsRepositoryFirestore(private val db: FirebaseFirestore) : EventsRepos
         (doc.get("participants") as? List<*>)?.filterIsInstance<String>() ?: emptyList()
     val status = EventStatus.valueOf(statusStr)
 
-    val event =  Event(
-        id,
-        title,
-        description,
-        creatorName,
-        location,
-        date,
-        startTime,
-        endTime,
-        creatorId,
-        participants,
-        status)
+    val event =
+        Event(
+            id,
+            title,
+            description,
+            creatorName,
+            location,
+            date,
+            startTime,
+            endTime,
+            creatorId,
+            participants,
+            status)
 
-      return updateEventStatus(event)
+    return updateEventStatus(event)
   }
 
   /**
