@@ -1,7 +1,7 @@
 package com.android.gatherly.model.profile
 
 import android.net.Uri
-import com.android.gatherly.model.badge.Badge
+import com.android.gatherly.model.badge.ProfileBadges
 import com.android.gatherly.model.badge.Rank
 import com.android.gatherly.model.friends.Friends
 
@@ -216,7 +216,7 @@ class ProfileLocalRepository : ProfileRepository {
       return
     }
     val updatedBadges =
-        Badge(
+        ProfileBadges(
             addFriends = rank(userProfile.friendUids.size),
             createdTodos = rank(createdTodosCount),
             completedTodos = rank(completedTodosCount),

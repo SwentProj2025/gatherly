@@ -2,7 +2,7 @@ package com.android.gatherly.model.profile
 
 import android.net.Uri
 import android.util.Log
-import com.android.gatherly.model.badge.Badge
+import com.android.gatherly.model.badge.ProfileBadges
 import com.android.gatherly.model.badge.Rank
 import com.android.gatherly.model.friends.Friends
 import com.android.gatherly.model.todo.ToDoStatus
@@ -303,7 +303,7 @@ class ProfileRepositoryFirestore(
     val birthday = doc.getTimestamp("birthday")
     val profilePicture = doc.getString("profilePicture") ?: return null
     val status = ProfileStatus.fromString(doc.getString("status"))
-    val badges: Badge = doc.get("badges", Badge::class.java) ?: Badge.blank
+    val badges: ProfileBadges = doc.get("badges", ProfileBadges::class.java) ?: ProfileBadges.blank
 
     return Profile(
         uid = uid,
@@ -437,7 +437,7 @@ class ProfileRepositoryFirestore(
         todoDocRef.whereEqualTo("status", ToDoStatus.ENDED.name).get().await().size()
 
     val updateBadges =
-        Badge(
+        ProfileBadges(
             addFriends = rank(userProfile.friendUids.size),
             createdTodos = rank(createdTodosCount),
             completedTodos = rank(completedTodosCount),
