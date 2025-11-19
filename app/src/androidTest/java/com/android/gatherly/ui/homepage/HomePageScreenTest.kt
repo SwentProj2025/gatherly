@@ -8,6 +8,7 @@ import androidx.compose.ui.test.performClick
 import com.android.gatherly.model.event.EventsLocalRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
+import com.android.gatherly.model.profile.ProfileStatus
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosLocalRepository
@@ -15,6 +16,7 @@ import com.android.gatherly.ui.homePage.HomePageScreen
 import com.android.gatherly.ui.homePage.HomePageScreenTestTags
 import com.android.gatherly.ui.homePage.HomePageViewModel
 import com.android.gatherly.ui.homePage.getFriendAvatarTestTag
+import com.android.gatherly.ui.homePage.getFriendStatusTestTag
 import com.android.gatherly.utils.MockitoUtils
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.runBlocking
@@ -40,7 +42,8 @@ class HomePageScreenTest {
           focusSessionIds = emptyList(),
           participatingEventIds = emptyList(),
           groupIds = emptyList(),
-          friendUids = emptyList())
+          friendUids = emptyList(),
+          status = ProfileStatus.ONLINE)
   val friend2 =
       Profile(
           uid = "homePageTests_friend2",
@@ -48,7 +51,8 @@ class HomePageScreenTest {
           focusSessionIds = emptyList(),
           participatingEventIds = emptyList(),
           groupIds = emptyList(),
-          friendUids = emptyList())
+          friendUids = emptyList(),
+          status = ProfileStatus.FOCUSED)
 
   private var currentProfile: Profile =
       Profile(
@@ -208,5 +212,15 @@ class HomePageScreenTest {
     currentProfile.friendUids.forEach { uid ->
       composeRule.onNodeWithTag(getFriendAvatarTestTag(uid))
     }
+  }
+
+  /** Ensures that each friend has a visible status indicator. */
+  @Test
+  fun friendStatusIndicators_areDisplayed() {
+    setContentWithGoogle()
+    composeRule.waitForIdle()
+    composeRule.onNodeWithTag(getFriendStatusTestTag(friend1.uid)).assertIsDisplayed()
+
+    composeRule.onNodeWithTag(getFriendStatusTestTag(friend2.uid)).assertIsDisplayed()
   }
 }

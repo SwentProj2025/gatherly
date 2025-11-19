@@ -1,6 +1,7 @@
 package com.android.gatherly.ui.homePage
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -33,17 +34,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
 import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.profile.Profile
+import com.android.gatherly.model.profile.ProfileStatus
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.ui.navigation.BottomNavigationMenu
 import com.android.gatherly.ui.navigation.HandleSignedOutState
@@ -76,7 +80,17 @@ object HomePageScreenTestTags {
   const val FRIENDS_SECTION = "friendsSection"
   const val MINI_MAP_CARD = "miniMapCard"
   const val FRIEND_AVATAR_PREFIX = "friendAvatar_"
+  const val FRIEND_STATUS_PREFIX = "friendAvatar_"
 }
+
+/**
+ * Generates a unique test tag for a friend's status
+ *
+ * @param friendUid The unique identifier of the friend.
+ * @return The generated test tag for the friend's status.
+ */
+fun getFriendStatusTestTag(friendUid: String) =
+    "${HomePageScreenTestTags.FRIEND_STATUS_PREFIX}$friendUid"
 
 /**
  * Main Home Page screen composable.
@@ -264,6 +278,8 @@ fun MiniMap(todos: List<ToDo>, events: List<Event>, modifier: Modifier) {
 fun FriendAvatar(
     modifier: Modifier = Modifier,
     profilePicUrl: String? = null,
+    status: ProfileStatus,
+    statusTag: String
 ) {
   val size = dimensionResource(id = R.dimen.homepage_friend_profile_pic_size)
   Box(modifier = modifier.size(size)) {
@@ -272,6 +288,11 @@ fun FriendAvatar(
         contentDescription = stringResource(id = R.string.homepage_profile_image_description),
         modifier = Modifier.fillMaxSize().clip(CircleShape),
         contentScale = ContentScale.Crop)
+
+    StatusIndicator(
+        status = status,
+        modifier = Modifier.align(Alignment.BottomEnd).testTag(statusTag),
+        size = size * 0.25f)
   }
 }
 
@@ -306,7 +327,9 @@ fun FriendsSection(onClickFriendsSection: () -> Unit, friends: List<Profile>) {
               friends.forEach { friend ->
                 FriendAvatar(
                     profilePicUrl = friend.profilePicture,
-                    modifier = Modifier.testTag(getFriendAvatarTestTag(friend.uid)))
+                    modifier = Modifier.testTag(getFriendAvatarTestTag(friend.uid)),
+                    status = friend.status,
+                    statusTag = getFriendStatusTestTag(friend.uid))
               }
             }
 
@@ -396,3 +419,23 @@ fun FocusSection(modifier: Modifier = Modifier, timerString: String = "", onClic
  */
 fun getFriendAvatarTestTag(friendUid: String) =
     "${HomePageScreenTestTags.FRIEND_AVATAR_PREFIX}$friendUid"
+
+/**
+ * Small colored status dot used to represent a user's presence state. (Green = Online, Red =
+ * Offline, Blue = Focused)
+ *
+ * @param status The current [ProfileStatus] to display.
+ * @param modifier Optional modifier for positioning.
+ * @param size The diameter of the indicator.
+ */
+@Composable
+fun StatusIndicator(status: ProfileStatus, modifier: Modifier = Modifier, size: Dp) {
+  val color =
+      when (status) {
+        ProfileStatus.ONLINE -> Color.Green
+        ProfileStatus.FOCUSED -> Color.Blue
+        ProfileStatus.OFFLINE -> Color.Red
+      }
+
+  Box(modifier = modifier.size(size).clip(CircleShape).background(color))
+}
