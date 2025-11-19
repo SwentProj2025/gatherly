@@ -1,6 +1,7 @@
 package com.android.gatherly.model.event
 
 import com.android.gatherly.model.map.Location
+import com.android.gatherly.utils.updateEventStatus
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
@@ -114,7 +115,7 @@ class EventsRepositoryFirestore(private val db: FirebaseFirestore) : EventsRepos
         (doc.get("participants") as? List<*>)?.filterIsInstance<String>() ?: emptyList()
     val status = EventStatus.valueOf(statusStr)
 
-    return Event(
+    val event =  Event(
         id,
         title,
         description,
@@ -126,6 +127,8 @@ class EventsRepositoryFirestore(private val db: FirebaseFirestore) : EventsRepos
         creatorId,
         participants,
         status)
+
+      return updateEventStatus(event)
   }
 
   /**
@@ -150,7 +153,6 @@ class EventsRepositoryFirestore(private val db: FirebaseFirestore) : EventsRepos
               mapOf("latitude" to loc.latitude, "longitude" to loc.longitude, "name" to loc.name)
             },
         "creatorId" to event.creatorId,
-        "participants" to event.participants,
-        "status" to event.status.name)
+        "participants" to event.participants)
   }
 }

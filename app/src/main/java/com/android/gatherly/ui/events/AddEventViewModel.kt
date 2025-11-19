@@ -18,6 +18,7 @@ import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.android.gatherly.utils.GenericViewModelFactory
 import com.android.gatherly.utils.createEvent
+import com.android.gatherly.utils.updateEventStatus
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
@@ -70,7 +71,9 @@ data class AddEventUiState(
     // the string the toast should display
     val toastString: String? = null,
     // when the event is edited or deleted, return to event overview
-    val backToOverview: Boolean = false
+    val backToOverview: Boolean = false,
+    // the event ID useful to create an alert dialog if the status is not upcoming
+    val eventIDAlertStatus: Pair<String?, EventStatus?> = Pair(null, null)
 )
 
 // create a HTTP Client for Nominatim
@@ -136,6 +139,11 @@ class AddEventViewModel(
   fun clearErrorMsg() {
     uiState = uiState.copy(displayToast = false, toastString = null)
   }
+
+    // Clears the event ID alert status once the alert dialog is closed
+    fun clearEventIDAlertStatus() {
+        uiState = uiState.copy(eventIDAlertStatus = Pair(null, null))
+    }
 
   /*----------------------------------Update strings--------------------------------------------*/
 
@@ -388,14 +396,23 @@ class AddEventViewModel(
               participants = participants,
               status = EventStatus.UPCOMING)
 
+        val updatedEvent = updateEventStatus(event)
+
       uiState = uiState.copy(displayToast = true, toastString = "Saving...")
 
       // Save in event repository
       viewModelScope.launch {
         createEvent(eventsRepository, profileRepository, event, currentProfile.uid, participants)
-        uiState = uiState.copy(displayToast = true, toastString = "Saved")
+          if (updatedEvent.status != EventStatus.UPCOMING) {
+              uiState = uiState.copy(
+                  displayToast = true,
+                  toastString = "Event saved as $updatedEvent. Please check the date.",
+                  eventIDAlertStatus = Pair(eventId, updatedEvent.status)
+              )
+            } else {
+              uiState = uiState.copy(displayToast = true, toastString = "Saved")
+          }
       }
-
       uiState = uiState.copy(backToOverview = true)
     } else {
       uiState = uiState.copy(displayToast = true, toastString = "Failed to save :(")
