@@ -2,10 +2,12 @@ package com.android.gatherly.ui.todo
 
 import android.icu.text.SimpleDateFormat
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -18,15 +20,22 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.integerResource
@@ -61,6 +70,9 @@ object OverviewScreenTestTags {
 
   /** Test tag for the LazyColumn that displays the list of ToDo items. */
   const val TODO_LIST = "todoList"
+
+  /** Test tag for the search bar used to search for todos */
+  const val SEARCH_BAR = "searchBar"
 
   /** Test tag for loading Todos. */
   const val TODO_LOADING = "todoLoading"
@@ -104,6 +116,7 @@ fun OverviewScreen(
 
   val uiState by overviewViewModel.uiState.collectAsState()
   val todos = uiState.todos
+  val focusManager: FocusManager = LocalFocusManager.current
 
   // Fetch todos when the screen is recomposed
   LaunchedEffect(Unit) { overviewViewModel.refreshUIState() }
@@ -144,73 +157,122 @@ fun OverviewScreen(
                 modifier = Modifier.padding(pd).testTag(OverviewScreenTestTags.TODO_LOADING),
                 text = stringResource(R.string.todos_loading))
           }
-        } else if (todos.isNotEmpty()) {
-          LazyColumn(
-              contentPadding =
-                  PaddingValues(
-                      vertical = dimensionResource(id = R.dimen.todos_overview_vertical_padding)),
+        } else {
+          Box(
               modifier =
-                  Modifier.fillMaxWidth()
-                      .padding(
-                          horizontal =
-                              dimensionResource(id = R.dimen.todos_overview_horizontal_padding))
-                      .padding(pd)
-                      .testTag(OverviewScreenTestTags.TODO_LIST)) {
+                  Modifier.fillMaxSize().clickable(
+                      interactionSource = remember { MutableInteractionSource() },
+                      indication = null) {
+                        focusManager.clearFocus()
+                      }) {
+                var searchQuery by remember { mutableStateOf("") }
 
-                // ONGOING SECTION
-                if (ongoingTodos.isNotEmpty()) {
-                  item {
-                    Text(
-                        text = stringResource(R.string.todos_ongoing_section_label),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        modifier =
-                            Modifier.padding(
+                Column(modifier = Modifier.padding(pd)) {
+                  OutlinedTextField(
+                      value = searchQuery,
+                      onValueChange = { newText ->
+                        searchQuery = newText
+                        overviewViewModel.searchTodos(newText)
+                      },
+                      modifier =
+                          Modifier.fillMaxWidth()
+                              .padding(
+                                  bottom =
+                                      dimensionResource(R.dimen.todos_overview_vertical_padding))
+                              .testTag(OverviewScreenTestTags.SEARCH_BAR),
+                      label = { Text(text = stringResource(R.string.todos_search_bar_label)) },
+                      singleLine = true,
+                      colors =
+                          OutlinedTextFieldDefaults.colors(
+                              focusedContainerColor = MaterialTheme.colorScheme.background,
+                              unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                              unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+                              focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                          ))
+
+                  if (todos.isNotEmpty()) {
+                    LazyColumn(
+                        contentPadding =
+                            PaddingValues(
                                 vertical =
                                     dimensionResource(
-                                        id = R.dimen.todos_overview_section_text_vertical_padding)))
-                  }
-                  items(ongoingTodos.size) { index ->
-                    ToDoItem(
-                        todo = ongoingTodos[index],
-                        onClick = { onSelectTodo(ongoingTodos[index]) },
-                        isChecked = false,
-                        onCheckedChange = { checked ->
-                          val newStatus = if (checked) ToDoStatus.ENDED else ToDoStatus.ONGOING
-                          overviewViewModel.onCheckboxChanged(ongoingTodos[index].uid, newStatus)
-                        })
-                  }
-                }
-
-                // COMPLETED SECTION
-                if (completedTodos.isNotEmpty()) {
-                  item {
-                    Text(
-                        text = stringResource(R.string.todos_completed_section_label),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
+                                        id = R.dimen.todos_overview_vertical_padding)),
                         modifier =
-                            Modifier.padding(
-                                vertical =
-                                    dimensionResource(
-                                        id = R.dimen.todos_overview_section_text_vertical_padding)))
-                  }
-                  items(completedTodos.size) { index ->
-                    ToDoItem(
-                        todo = completedTodos[index],
-                        onClick = { onSelectTodo(completedTodos[index]) },
-                        isChecked = true,
-                        onCheckedChange = { checked ->
-                          val newStatus = if (checked) ToDoStatus.ENDED else ToDoStatus.ONGOING
-                          overviewViewModel.onCheckboxChanged(completedTodos[index].uid, newStatus)
-                        })
+                            Modifier.fillMaxWidth()
+                                .padding(
+                                    horizontal =
+                                        dimensionResource(
+                                            id = R.dimen.todos_overview_horizontal_padding))
+                                .padding(pd)
+                                .testTag(OverviewScreenTestTags.TODO_LIST)) {
+
+                          // ONGOING SECTION
+                          if (ongoingTodos.isNotEmpty()) {
+                            item {
+                              Text(
+                                  text = stringResource(R.string.todos_ongoing_section_label),
+                                  style = MaterialTheme.typography.titleMedium,
+                                  fontWeight = FontWeight.Bold,
+                                  modifier =
+                                      Modifier.padding(
+                                          vertical =
+                                              dimensionResource(
+                                                  id =
+                                                      R.dimen
+                                                          .todos_overview_section_text_vertical_padding)))
+                            }
+                            items(ongoingTodos.size) { index ->
+                              ToDoItem(
+                                  todo = ongoingTodos[index],
+                                  onClick = { onSelectTodo(ongoingTodos[index]) },
+                                  isChecked = false,
+                                  onCheckedChange = { checked ->
+                                    val newStatus =
+                                        if (checked) ToDoStatus.ENDED else ToDoStatus.ONGOING
+                                    overviewViewModel.onCheckboxChanged(
+                                        ongoingTodos[index].uid, newStatus)
+                                  })
+                            }
+                          }
+
+                          // COMPLETED SECTION
+                          if (completedTodos.isNotEmpty()) {
+                            item {
+                              Text(
+                                  text = stringResource(R.string.todos_completed_section_label),
+                                  style = MaterialTheme.typography.titleMedium,
+                                  fontWeight = FontWeight.Bold,
+                                  modifier =
+                                      Modifier.padding(
+                                          vertical =
+                                              dimensionResource(
+                                                  id =
+                                                      R.dimen
+                                                          .todos_overview_section_text_vertical_padding)))
+                            }
+                            items(completedTodos.size) { index ->
+                              ToDoItem(
+                                  todo = completedTodos[index],
+                                  onClick = { onSelectTodo(completedTodos[index]) },
+                                  isChecked = true,
+                                  onCheckedChange = { checked ->
+                                    val newStatus =
+                                        if (checked) ToDoStatus.ENDED else ToDoStatus.ONGOING
+                                    overviewViewModel.onCheckboxChanged(
+                                        completedTodos[index].uid, newStatus)
+                                  })
+                            }
+                          }
+                        }
+                  } else {
+                    Text(
+                        modifier =
+                            Modifier.padding(pd)
+                                .testTag(OverviewScreenTestTags.EMPTY_TODO_LIST_MSG),
+                        text = stringResource(R.string.no_todos_text))
                   }
                 }
               }
-        } else {
-          Text(
-              modifier = Modifier.padding(pd).testTag(OverviewScreenTestTags.EMPTY_TODO_LIST_MSG),
-              text = stringResource(R.string.no_todos_text))
         }
       })
 }

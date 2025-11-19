@@ -12,6 +12,8 @@ import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.performTextClearance
+import androidx.compose.ui.test.performTextInput
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosLocalRepository
@@ -48,22 +50,28 @@ class OverviewScreenTest : GatherlyTest() {
   @Test
   fun testTagsCorrectlySetWhenListIsEmpty() {
     setContent()
-    composeTestRule.onNodeWithTag(OverviewScreenTestTags.TODO_LIST).assertIsNotDisplayed()
-    composeTestRule.onNodeWithTag(OverviewScreenTestTags.EMPTY_TODO_LIST_MSG).assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(OverviewScreenTestTags.TODO_LIST, useUnmergedTree = true)
+        .assertIsNotDisplayed()
+    composeTestRule
+        .onNodeWithTag(OverviewScreenTestTags.EMPTY_TODO_LIST_MSG, useUnmergedTree = true)
+        .assertIsDisplayed()
   }
 
   @Test
   fun testTagsCorrectlySetWhenListIsNotEmpty() {
     setContent(withInitialTodos = listOf(todo1, todo2, todo3))
-    composeTestRule.onNodeWithTag(OverviewScreenTestTags.TODO_LIST).assertIsDisplayed()
     composeTestRule
-        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todo1))
+        .onNodeWithTag(OverviewScreenTestTags.TODO_LIST, useUnmergedTree = true)
         .assertIsDisplayed()
     composeTestRule
-        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todo2))
+        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todo1), useUnmergedTree = true)
         .assertIsDisplayed()
     composeTestRule
-        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todo3))
+        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todo2), useUnmergedTree = true)
+        .assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todo3), useUnmergedTree = true)
         .assertIsDisplayed()
   }
 
@@ -107,13 +115,15 @@ class OverviewScreenTest : GatherlyTest() {
         (1..50).toList<Int>().map { todo1.copy(uid = it.toString(), name = "${todo1.name} #$it") }
     setContent(withInitialTodos = todos)
     composeTestRule
-        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todos.first()))
+        .onNodeWithTag(
+            OverviewScreenTestTags.getTestTagForTodoItem(todos.first()), useUnmergedTree = true)
         .assertIsDisplayed()
     val lastNode =
-        composeTestRule.onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todos.last()))
+        composeTestRule.onNodeWithTag(
+            OverviewScreenTestTags.getTestTagForTodoItem(todos.last()), useUnmergedTree = true)
     lastNode.assertIsNotDisplayed()
     composeTestRule
-        .onNodeWithTag(OverviewScreenTestTags.TODO_LIST)
+        .onNodeWithTag(OverviewScreenTestTags.TODO_LIST, useUnmergedTree = true)
         .performScrollToNode(hasTestTag(OverviewScreenTestTags.getTestTagForTodoItem(todos.last())))
     lastNode.assertIsDisplayed()
   }
@@ -152,6 +162,84 @@ class OverviewScreenTest : GatherlyTest() {
     }
 
     composeTestRule.onNodeWithTag(checkboxTag).assertIsOff()
+  }
+
+  @Test
+  fun searchBarFiltersTodosByName() = runTest {
+    val todos =
+        listOf(
+            todo1.copy(name = "Buy milk"),
+            todo2.copy(name = "Walk dog"),
+            todo3.copy(name = "Read book"))
+
+    setContent(withInitialTodos = todos)
+
+    // Type a query that matches only one item
+    composeTestRule
+        .onNodeWithTag(OverviewScreenTestTags.SEARCH_BAR)
+        .performClick()
+        .performTextInput("dog")
+
+    // Only "Walk dog" should remain visible
+    composeTestRule
+        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todos[1]))
+        .assertIsDisplayed()
+
+    composeTestRule
+        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todos[0]))
+        .assertIsNotDisplayed()
+
+    composeTestRule
+        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todos[2]))
+        .assertIsNotDisplayed()
+  }
+
+  @Test
+  fun searchMatchesTodoDescription() = runTest {
+    val todos =
+        listOf(
+            todo1.copy(name = "Test", description = "Important meeting"),
+            todo2.copy(name = "Another", description = "Just chilling"))
+
+    setContent(withInitialTodos = todos)
+
+    // Search a word found only in the description of todo1
+    composeTestRule
+        .onNodeWithTag(OverviewScreenTestTags.SEARCH_BAR)
+        .performClick()
+        .performTextInput("meeting")
+
+    composeTestRule
+        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todos[0]))
+        .assertIsDisplayed()
+
+    composeTestRule
+        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todos[1]))
+        .assertIsNotDisplayed()
+  }
+
+  @Test
+  fun clearingSearchRestoresFullList() = runTest {
+    val todos = listOf(todo1, todo2, todo3)
+
+    setContent(withInitialTodos = todos)
+
+    val searchBar = composeTestRule.onNodeWithTag(OverviewScreenTestTags.SEARCH_BAR)
+
+    // Filter down to a single match
+    searchBar.performClick().performTextInput("abc")
+    advanceUntilIdle()
+
+    // Now clear the search
+    searchBar.performTextClearance()
+    advanceUntilIdle()
+
+    // All todos should reappear
+    todos.forEach { todo ->
+      composeTestRule
+          .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todo))
+          .assertIsDisplayed()
+    }
   }
 
   /** If todos take a long time to load, the loading message appears */

@@ -17,6 +17,8 @@ import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsLocalRepository
 import com.android.gatherly.model.event.EventsRepository
 import com.android.gatherly.model.map.Location
+import com.android.gatherly.model.profile.ProfileLocalRepository
+import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.utils.AlertDialogTestTags
 import com.android.gatherly.utils.GatherlyTest.Companion.fromDate
@@ -39,12 +41,15 @@ class EventsOverviewScreenTest {
 
   private lateinit var currentUserId: String
   private lateinit var eventsRepository: EventsRepository
+
+  private lateinit var profileRepository: ProfileRepository
   private lateinit var eventsViewModel: EventsViewModel
   private lateinit var mockitoUtils: MockitoUtils
 
   @Before
   fun setUp() {
     eventsRepository = EventsLocalRepository()
+    profileRepository = ProfileLocalRepository()
     currentUserId = ""
 
     // Mock Firebase Auth
@@ -60,9 +65,12 @@ class EventsOverviewScreenTest {
   /** Helper function: set the content of the composeTestRule without initial events */
   private fun setContent(uid: String = currentUserId) {
     mockitoUtils.chooseCurrentUser(uid)
-
+    currentUserId = ""
     eventsViewModel =
-        EventsViewModel(repository = eventsRepository, authProvider = { mockitoUtils.mockAuth })
+        EventsViewModel(
+            eventsRepository = eventsRepository,
+            profileRepository = profileRepository,
+            authProvider = { mockitoUtils.mockAuth })
     composeTestRule.setContent { EventsScreen(eventsViewModel = eventsViewModel) }
   }
 
@@ -491,7 +499,10 @@ class EventsOverviewScreenTest {
     mockitoUtils.chooseCurrentUser("anon", true)
 
     eventsViewModel =
-        EventsViewModel(repository = eventsRepository, authProvider = { mockitoUtils.mockAuth })
+        EventsViewModel(
+            eventsRepository = eventsRepository,
+            profileRepository = profileRepository,
+            authProvider = { mockitoUtils.mockAuth })
     composeTestRule.setContent { EventsScreen(eventsViewModel = eventsViewModel) }
 
     composeTestRule.onNodeWithTag(EventsScreenTestTags.BROWSE_TITLE).assertIsDisplayed()

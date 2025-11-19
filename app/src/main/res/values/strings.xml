@@ -17,6 +17,7 @@
     <string name="todos_assignee_field_label">Assignee</string>
     <string name="todos_assignee_placeholder">Assign a person</string>
     <string name="todos_location_field_label">Location</string>
+    <string name="todos_search_bar_label">Search todos…</string>
     <string name="todos_location_field_placeholder">Enter an Address or Location</string>
     <string name="todos_location_suggestions_more">More…</string>
     <string name="todos_location_text_etc">…</string>
@@ -65,6 +66,11 @@
     <string name="settings_valid_username">This username is available!</string>
     <string name="settings_delete_warning">Warning! You are deleting your</string>
     <string name="settings_delete_warning_text">This action cannot be reversed. Are you sure?</string>
+    <string name="settings_alert_dialog_title">Choose Photo Source</string>
+    <string name="settings_alert_dialog_text">Select where to get your new profile picture.</string>
+    <string name="settings_alert_dialog_option_camera">Take Photo</string>
+    <string name="settings_alert_dialog_option_gallery">Choose from Gallery</string>
+    <string name="settings_alert_dialog_option_cancel">Cancel</string>
 
     <!-- Profile Page -->
     <string name="profile_screen_title">Profile</string>

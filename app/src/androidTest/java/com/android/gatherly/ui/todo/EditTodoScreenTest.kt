@@ -134,7 +134,7 @@ class EditTodoScreenTest : GatherlyTest() {
 
   @Test
   fun canEnterAnInvalidTime() {
-    val invalidTime = "invalid time" // Invalid time format
+    val invalidTime = "25:80" // Invalid time format
     composeTestRule.enterEditTodoTime(invalidTime)
     composeTestRule.checkErrorMessageIsDisplayedForEditTodo()
   }

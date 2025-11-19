@@ -340,6 +340,7 @@ class EditTodoViewModel(
    * @return `true` if the format and time are valid, `false` otherwise.
    */
   private fun isValidTime(time: String): Boolean {
+    if (time.isBlank()) return true
     val regex = Regex("""\d{2}:\d{2}""")
     if (!regex.matches(time)) return false
     try {

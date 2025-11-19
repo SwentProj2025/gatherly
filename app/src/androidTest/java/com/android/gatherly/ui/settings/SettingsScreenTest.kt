@@ -321,6 +321,59 @@ class SettingsScreenTest {
         .assertIsDisplayed()
   }
 
+  @Test
+  fun settings_screen_profilePicture_isDisplayedInitially() {
+    setContentWithGoogle()
+    /** Verifies the profile picture Image composable is visible at startup. */
+    composeRule
+        .onNodeWithTag(SettingsScreenTestTags.PROFILE_PICTURE)
+        .assertExists()
+        .assertIsDisplayed()
+  }
+
+  @Test
+  fun settings_screen_editPhotoButton_opensPhotoPickerDialog() {
+    setContentWithGoogle()
+    /** Ensures clicking "Edit Photo" opens the dialog with all three buttons. */
+    composeRule.onNodeWithTag(SettingsScreenTestTags.EDIT_PHOTO_BUTTON).performClick()
+
+    composeRule.onNodeWithTag(SettingsScreenTestTags.PHOTO_PICKER_CAMERA_BUTTON).assertIsDisplayed()
+    composeRule
+        .onNodeWithTag(SettingsScreenTestTags.PHOTO_PICKER_GALLERY_BUTTON)
+        .assertIsDisplayed()
+    composeRule.onNodeWithTag(SettingsScreenTestTags.PHOTO_PICKER_CANCEL_BUTTON).assertIsDisplayed()
+  }
+
+  @Test
+  fun settings_screen_photoPicker_cancelButton_closesDialog() {
+    setContentWithGoogle()
+    /** Tests that pressing "Cancel" closes the dialog and hides all options. */
+    composeRule.onNodeWithTag(SettingsScreenTestTags.EDIT_PHOTO_BUTTON).performClick()
+    composeRule.onNodeWithTag(SettingsScreenTestTags.PHOTO_PICKER_CANCEL_BUTTON).performClick()
+
+    composeRule
+        .onNodeWithTag(SettingsScreenTestTags.PHOTO_PICKER_CAMERA_BUTTON)
+        .assertDoesNotExist()
+    composeRule
+        .onNodeWithTag(SettingsScreenTestTags.PHOTO_PICKER_GALLERY_BUTTON)
+        .assertDoesNotExist()
+  }
+
+  /** Verifies that a non-empty profilePictureUrl displays the profile picture Image. */
+  @Test
+  fun settingsScreen_showsCustomProfilePicture_whenUrlIsNotEmpty() {
+    setContentWithGoogle()
+    val testUrl = "https://example.com/profile.jpg"
+    settingsViewModel.editProfilePictureUrl(testUrl)
+
+    composeRule.waitForIdle()
+
+    composeRule
+        .onNodeWithTag(SettingsScreenTestTags.PROFILE_PICTURE_URL_NOT_EMPTY)
+        .assertExists()
+        .assertIsDisplayed()
+  }
+
   /** Check that the anonymous user sees the "upgrade with google" button */
   @Test
   fun anonUserSeesGoogleButton() {

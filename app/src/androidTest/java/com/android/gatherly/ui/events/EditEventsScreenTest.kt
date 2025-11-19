@@ -59,7 +59,7 @@ class EditEventsScreenTest {
           uid = "1",
           name = "Profile1",
           focusSessionIds = emptyList(),
-          eventIds = emptyList(),
+          participatingEventIds = emptyList(),
           groupIds = emptyList(),
           friendUids = emptyList())
 
@@ -68,7 +68,7 @@ class EditEventsScreenTest {
           uid = "2",
           name = "Profile2",
           focusSessionIds = emptyList(),
-          eventIds = emptyList(),
+          participatingEventIds = emptyList(),
           groupIds = emptyList(),
           friendUids = emptyList())
 
@@ -77,7 +77,7 @@ class EditEventsScreenTest {
           uid = "3",
           name = "Profile3",
           focusSessionIds = emptyList(),
-          eventIds = emptyList(),
+          participatingEventIds = emptyList(),
           groupIds = emptyList(),
           friendUids = emptyList())
 
@@ -86,7 +86,7 @@ class EditEventsScreenTest {
           uid = "4",
           name = "Participant",
           focusSessionIds = emptyList(),
-          eventIds = emptyList(),
+          participatingEventIds = emptyList(),
           groupIds = emptyList(),
           friendUids = emptyList())
 
@@ -95,7 +95,7 @@ class EditEventsScreenTest {
           uid = "0",
           name = "Owner",
           focusSessionIds = emptyList(),
-          eventIds = emptyList(),
+          participatingEventIds = emptyList(),
           groupIds = emptyList(),
           friendUids = emptyList())
 
@@ -170,6 +170,9 @@ class EditEventsScreenTest {
       profileRepository.addProfile(participantProfile)
       profileRepository.addProfile(ownerProfile)
       eventsRepository.addEvent(event)
+      profileRepository.createEvent(event.id, ownerProfile.uid)
+      profileRepository.participateEvent(event.id, participantProfile.uid)
+
       advanceUntilIdle()
     }
   }

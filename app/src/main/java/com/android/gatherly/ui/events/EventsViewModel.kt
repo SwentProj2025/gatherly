@@ -8,11 +8,17 @@ import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.event.EventsRepository
 import com.android.gatherly.model.event.EventsRepositoryFirestore
+import com.android.gatherly.model.profile.ProfileRepository
+import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.android.gatherly.utils.GenericViewModelFactory
+import com.android.gatherly.utils.userParticipate
+import com.android.gatherly.utils.userUnregister
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.firestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.storage
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -42,10 +48,11 @@ data class UIState(
 /**
  * ViewModel for the Events screen.
  *
- * @param repository the repository to fetch events from
+ * @param eventsRepository the repository to fetch events from
  */
 class EventsViewModel(
-    private val repository: EventsRepository,
+    private val profileRepository: ProfileRepository,
+    private val eventsRepository: EventsRepository,
     private val authProvider: () -> FirebaseAuth = { Firebase.auth }
 ) : ViewModel() {
   private val _uiState: MutableStateFlow<UIState> = MutableStateFlow(UIState())
@@ -76,7 +83,7 @@ class EventsViewModel(
    */
   suspend fun refreshEvents(currentUserId: String) {
     _uiState.value = _uiState.value.copy(isLoading = true)
-    val events = repository.getAllEvents()
+    val events = eventsRepository.getAllEvents()
     _uiState.value =
         _uiState.value.copy(
             fullEventList = events,
@@ -102,7 +109,7 @@ class EventsViewModel(
    */
   fun onParticipate(eventId: String, currentUserId: String) {
     viewModelScope.launch {
-      repository.addParticipant(eventId, currentUserId)
+      userParticipate(eventsRepository, profileRepository, eventId, currentUserId)
       refreshEvents(currentUserId)
     }
   }
@@ -115,7 +122,7 @@ class EventsViewModel(
    */
   fun onUnregister(eventId: String, currentUserId: String) {
     viewModelScope.launch {
-      repository.removeParticipant(eventId, currentUserId)
+      userUnregister(eventsRepository, profileRepository, eventId, currentUserId)
       refreshEvents(currentUserId)
     }
   }
@@ -137,7 +144,7 @@ class EventsViewModel(
    */
   fun onEditEvent(eventId: String, newEvent: Event, currentUserId: String) {
     viewModelScope.launch {
-      repository.editEvent(eventId, newEvent)
+      eventsRepository.editEvent(eventId, newEvent)
       refreshEvents(currentUserId)
     }
     _editEventRequest.value = null
@@ -162,9 +169,15 @@ class EventsViewModel(
    */
   companion object {
     fun provideFactory(
-        eventsRepository: EventsRepository = EventsRepositoryFirestore(Firebase.firestore)
+        eventsRepository: EventsRepository = EventsRepositoryFirestore(Firebase.firestore),
+        profileRepository: ProfileRepository =
+            ProfileRepositoryFirestore(
+                com.google.firebase.Firebase.firestore, com.google.firebase.Firebase.storage)
     ): ViewModelProvider.Factory {
-      return GenericViewModelFactory { EventsViewModel(eventsRepository) }
+
+      return GenericViewModelFactory {
+        EventsViewModel(profileRepository = profileRepository, eventsRepository = eventsRepository)
+      }
     }
   }
 }

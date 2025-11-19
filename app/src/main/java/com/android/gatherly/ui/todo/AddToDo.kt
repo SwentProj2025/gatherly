@@ -246,7 +246,6 @@ fun AddToDoScreen(
                             todoUIState.descriptionError == null &&
                             todoUIState.titleError == null &&
                             todoUIState.dueTimeError == null &&
-                            todoUIState.locationError == null &&
                             !todoUIState.isSaving) {
                       Text(
                           text =
