@@ -401,7 +401,7 @@ fun TopDropdownMenuForSettings(onTabSelected: (Tab) -> Unit, onSignedOut: () -> 
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.onSurfaceVariant)
               },
-              onClick = { onSignedOut() },
+              onClick = onSignedOut,
               modifier = Modifier.testTag(NavigationTestTags.LOGOUT_TAB))
         }
   }

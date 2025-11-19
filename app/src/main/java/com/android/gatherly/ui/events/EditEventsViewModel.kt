@@ -26,7 +26,6 @@ import com.google.firebase.storage.ktx.storage
 import com.google.firebase.storage.storage
 import java.text.ParseException
 import java.text.SimpleDateFormat
-import java.util.Locale
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 
@@ -195,22 +194,18 @@ class EditEventsViewModel(
    * @param updatedDate the string with which to update
    */
   fun updateDate(updatedDate: String) {
-    var dateError =
+    val dateError =
         try {
           dateFormat.parse(updatedDate)
-          true
+          val date = dateFormat.parse(uiState.date) ?: throw IllegalArgumentException()
+          val dateTimestamp = Timestamp(date)
+
+          val currentTimestamp = Timestamp.now()
+
+          dateTimestamp >= currentTimestamp
         } catch (_: ParseException) {
           false
         }
-
-    val date = dateFormat.parse(uiState.date) ?: throw IllegalArgumentException("Invalid date")
-    val dateTimestamp = Timestamp(date)
-
-    val currentTimestamp = Timestamp.now()
-
-    if (dateTimestamp < currentTimestamp) {
-      dateError = true
-    }
 
     uiState = uiState.copy(date = updatedDate, dateError = !dateError)
   }
@@ -237,32 +232,41 @@ class EditEventsViewModel(
    * @param updatedEndTime the string with which to update
    */
   fun updateEndTime(updatedEndTime: String) {
-    var endTimeError =
+    val endTimeError =
         try {
-          timeFormat.parse(updatedEndTime)
-          true
+          val endTime = timeFormat.parse(updatedEndTime) ?: throw IllegalArgumentException()
+
+          val dateCheck =
+              if (!uiState.dateError && uiState.date.isNotBlank()) {
+                val currentTimestamp = Timestamp.now()
+                val sdfDateAndTime = SimpleDateFormat("dd/MM/yyyy HH:mm")
+                val dateAndTime =
+                    sdfDateAndTime.parse(uiState.date + " " + updatedEndTime)
+                        ?: throw IllegalArgumentException()
+                val dateAndTimeTimestamp = Timestamp(dateAndTime)
+
+                dateAndTimeTimestamp < currentTimestamp
+              } else {
+                false
+              }
+
+          val startTimeCheck =
+              if (!uiState.startTimeError && uiState.startTime.isNotBlank()) {
+                val endTimeTimestamp = Timestamp(endTime)
+
+                val startTime =
+                    timeFormat.parse(uiState.startTime) ?: throw IllegalArgumentException()
+                val startTimeTimestamp = Timestamp(startTime)
+
+                endTimeTimestamp <= startTimeTimestamp
+              } else {
+                false
+              }
+
+          !(startTimeCheck || dateCheck)
         } catch (_: ParseException) {
           false
         }
-    val sdfDateAndTime = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
-    val dateAndTime =
-        sdfDateAndTime.parse(uiState.date + " " + uiState.endTime)
-            ?: throw IllegalArgumentException("Invalid date or time")
-    val dateAndTimeTimestamp = Timestamp(dateAndTime)
-
-    val currentTimestamp = Timestamp.now()
-
-    val endTime =
-        timeFormat.parse(uiState.endTime) ?: throw IllegalArgumentException("Invalid time")
-    val endTimeTimestamp = Timestamp(endTime)
-
-    val startTime =
-        timeFormat.parse(uiState.startTime) ?: throw IllegalArgumentException("Invalid time")
-    val startTimeTimestamp = Timestamp(startTime)
-
-    if (dateAndTimeTimestamp < currentTimestamp || endTimeTimestamp <= startTimeTimestamp) {
-      endTimeError = true
-    }
 
     uiState = uiState.copy(endTime = updatedEndTime, endTimeError = !endTimeError)
   }

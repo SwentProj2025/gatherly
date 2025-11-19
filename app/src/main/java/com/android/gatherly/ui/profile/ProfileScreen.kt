@@ -312,20 +312,20 @@ fun ProfileScreen(
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center)
               }
+        }
 
-          if (shouldShowLogOutWarning.value) {
-            GatherlyAlertDialog(
-                titleText = stringResource(R.string.anon_log_out),
-                bodyText = stringResource(R.string.anon_log_out_text),
-                dismissText = stringResource(R.string.cancel),
-                confirmText = stringResource(R.string.log_out),
-                onDismiss = { shouldShowLogOutWarning.value = false },
-                onConfirm = {
-                  profileViewModel.signOut(credentialManager)
-                  shouldShowLogOutWarning.value = false
-                },
-                isImportantWarning = true)
-          }
+        if (shouldShowLogOutWarning.value) {
+          GatherlyAlertDialog(
+              titleText = stringResource(R.string.anon_log_out),
+              bodyText = stringResource(R.string.anon_log_out_text),
+              dismissText = stringResource(R.string.cancel),
+              confirmText = stringResource(R.string.log_out),
+              onDismiss = { shouldShowLogOutWarning.value = false },
+              onConfirm = {
+                profileViewModel.signOut(credentialManager)
+                shouldShowLogOutWarning.value = false
+              },
+              isImportantWarning = true)
         }
       })
 }

@@ -347,34 +347,34 @@ fun SettingsScreen(
                           color = MaterialTheme.colorScheme.error)
                     }
               }
+        }
 
-          if (shouldShowDialog.value) {
-            GatherlyAlertDialog(
-                titleText = stringResource(R.string.settings_delete_warning),
-                bodyText = stringResource(R.string.settings_delete_warning_text),
-                dismissText = stringResource(R.string.cancel),
-                confirmText = stringResource(R.string.delete),
-                onDismiss = { shouldShowDialog.value = false },
-                onConfirm = {
-                  settingsViewModel.deleteProfile()
-                  shouldShowDialog.value = false
-                },
-                isImportantWarning = true)
-          }
+        if (shouldShowDialog.value) {
+          GatherlyAlertDialog(
+              titleText = stringResource(R.string.settings_delete_warning),
+              bodyText = stringResource(R.string.settings_delete_warning_text),
+              dismissText = stringResource(R.string.cancel),
+              confirmText = stringResource(R.string.delete),
+              onDismiss = { shouldShowDialog.value = false },
+              onConfirm = {
+                settingsViewModel.deleteProfile()
+                shouldShowDialog.value = false
+              },
+              isImportantWarning = true)
+        }
 
-          if (shouldShowLogOutWarning.value) {
-            GatherlyAlertDialog(
-                titleText = stringResource(R.string.anon_log_out),
-                bodyText = stringResource(R.string.anon_log_out_text),
-                dismissText = stringResource(R.string.cancel),
-                confirmText = stringResource(R.string.log_out),
-                onDismiss = { shouldShowLogOutWarning.value = false },
-                onConfirm = {
-                  settingsViewModel.signOut(credentialManager)
-                  shouldShowLogOutWarning.value = false
-                },
-                isImportantWarning = true)
-          }
+        if (shouldShowLogOutWarning.value) {
+          GatherlyAlertDialog(
+              titleText = stringResource(R.string.anon_log_out),
+              bodyText = stringResource(R.string.anon_log_out_text),
+              dismissText = stringResource(R.string.cancel),
+              confirmText = stringResource(R.string.log_out),
+              onDismiss = { shouldShowLogOutWarning.value = false },
+              onConfirm = {
+                settingsViewModel.signOut(credentialManager)
+                shouldShowLogOutWarning.value = false
+              },
+              isImportantWarning = true)
         }
       })
 }
