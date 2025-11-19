@@ -1,6 +1,8 @@
 package com.android.gatherly.model.profile
 
 import android.net.Uri
+import com.android.gatherly.model.badge.ProfileBadges
+import com.android.gatherly.model.badge.Rank
 import com.android.gatherly.model.friends.Friends
 
 /**
@@ -102,6 +104,7 @@ class ProfileLocalRepository : ProfileRepository {
     return false
   }
 
+  // ---- FRIENDS GESTION PART ----
   override suspend fun getFriendsAndNonFriendsUsernames(currentUserId: String): Friends {
     val currentProfile =
         getProfileByUid(currentUserId)
@@ -117,6 +120,8 @@ class ProfileLocalRepository : ProfileRepository {
   override suspend fun deleteUserProfile(uid: String) {
     profiles.removeIf { it.uid == uid }
   }
+
+  // ---- FRIENDS GESTION PART ----
 
   override suspend fun getListNoFriends(currentUserId: String): List<String> {
     val currentProfile = getProfileByUid(currentUserId) ?: return emptyList()
@@ -144,6 +149,8 @@ class ProfileLocalRepository : ProfileRepository {
       updateProfile(updatedProfile)
     }
   }
+
+  // ---- STATUS GESTION PART ----
 
   override suspend fun updateStatus(uid: String, status: ProfileStatus) {
     val index = profiles.indexOfFirst { it.uid == uid }
@@ -196,4 +203,37 @@ class ProfileLocalRepository : ProfileRepository {
   override suspend fun allUnregisterEvent(eventId: String, participants: List<String>) {
     participants.forEach { participant -> unregisterEvent(eventId, participant) }
   }
+
+  // ---- BADGE GESTION PART ----
+
+  override suspend fun updateBadges(
+      userProfile: Profile,
+      createdTodosCount: Int?,
+      completedTodosCount: Int?
+  ) {
+
+    if (createdTodosCount == null || completedTodosCount == null) {
+      return
+    }
+    val updatedBadges =
+        ProfileBadges(
+            addFriends = rank(userProfile.friendUids.size),
+            createdTodos = rank(createdTodosCount),
+            completedTodos = rank(completedTodosCount),
+            createEvent = rank(userProfile.ownedEventIds.size),
+            participateEvent = rank(userProfile.participatingEventIds.size),
+            focusSessionPoint = rank(userProfile.focusSessionIds.size))
+    val updatedProfile = userProfile.copy(badges = updatedBadges)
+    updateProfile(updatedProfile)
+  }
+
+  private fun rank(count: Int): Rank =
+      when {
+        count >= 20 -> Rank.LEGEND
+        count >= 10 -> Rank.DIAMOND
+        count >= 5 -> Rank.GOLD
+        count >= 3 -> Rank.BRONZE
+        count >= 1 -> Rank.STARTING
+        else -> Rank.BLANK
+      }
 }

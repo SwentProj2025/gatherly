@@ -500,7 +500,10 @@ class EventsOverviewScreenTest {
     mockitoUtils.chooseCurrentUser("anon", true)
 
     eventsViewModel =
-        EventsViewModel(repository = eventsRepository, authProvider = { mockitoUtils.mockAuth })
+        EventsViewModel(
+            eventsRepository = eventsRepository,
+            profileRepository = profileRepository,
+            authProvider = { mockitoUtils.mockAuth })
     composeTestRule.setContent { EventsScreen(eventsViewModel = eventsViewModel) }
 
     composeTestRule.onNodeWithTag(EventsScreenTestTags.BROWSE_TITLE).assertIsDisplayed()
