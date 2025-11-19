@@ -38,24 +38,19 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
 import com.android.gatherly.model.event.Event
-import com.android.gatherly.model.event.EventsLocalRepository
 import com.android.gatherly.model.profile.Profile
-import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.todo.ToDo
-import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.ui.navigation.BottomNavigationMenu
 import com.android.gatherly.ui.navigation.HandleSignedOutState
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_HomePage
-import com.android.gatherly.ui.theme.GatherlyTheme
 import com.android.gatherly.utils.profilePicturePainter
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -80,6 +75,7 @@ object HomePageScreenTestTags {
   const val TASK_ITEM_PREFIX = "taskItem_"
   const val FRIENDS_SECTION = "friendsSection"
   const val MINI_MAP_CARD = "miniMapCard"
+  const val FRIEND_AVATAR_PREFIX = "friendAvatar_"
 }
 
 /**
@@ -307,7 +303,11 @@ fun FriendsSection(onClickFriendsSection: () -> Unit, friends: List<Profile>) {
         Column(
             verticalArrangement =
                 Arrangement.spacedBy(dimensionResource(id = R.dimen.spacing_between_fields))) {
-              friends.forEach { friend -> FriendAvatar(profilePicUrl = friend.profilePicture) }
+              friends.forEach { friend ->
+                FriendAvatar(
+                    profilePicUrl = friend.profilePicture,
+                    modifier = Modifier.testTag(getFriendAvatarTestTag(friend.uid)))
+              }
             }
 
         Text(
@@ -388,14 +388,11 @@ fun FocusSection(modifier: Modifier = Modifier, timerString: String = "", onClic
       }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun HomePageScreenPreview() {
-  val fakeViewModel =
-      HomePageViewModel(
-          eventsRepository = EventsLocalRepository(),
-          toDosRepository = ToDosLocalRepository(),
-          profileRepository = ProfileLocalRepository())
-
-  GatherlyTheme(darkTheme = true) { HomePageScreen(fakeViewModel) }
-}
+/**
+ * Generates a unique test tag for a friend's avatar.
+ *
+ * @param friendUid The unique identifier of the friend.
+ * @return The generated test tag for the friend's avatar.
+ */
+fun getFriendAvatarTestTag(friendUid: String) =
+    "${HomePageScreenTestTags.FRIEND_AVATAR_PREFIX}$friendUid"
