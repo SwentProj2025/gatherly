@@ -475,6 +475,38 @@ class SettingsScreenTest {
       ): Boolean {
         TODO("Not yet implemented")
       }
+
+      override suspend fun allParticipateEvent(eventId: String, participants: List<String>) {
+        TODO("Not yet implemented")
+      }
+
+      override suspend fun allUnregisterEvent(eventId: String, participants: List<String>) {
+        TODO("Not yet implemented")
+      }
+
+      override suspend fun createEvent(eventId: String, currentUserId: String) {
+        TODO("Not yet implemented")
+      }
+
+      override suspend fun deleteEvent(eventId: String, currentUserId: String) {
+        TODO("Not yet implemented")
+      }
+
+      override suspend fun participateEvent(eventId: String, currentUserId: String) {
+        TODO("Not yet implemented")
+      }
+
+      override suspend fun unregisterEvent(eventId: String, currentUserId: String) {
+        TODO("Not yet implemented")
+      }
+
+      override suspend fun updateBadges(
+          userProfile: Profile,
+          createdTodosCount: Int?,
+          completedTodosCount: Int?
+      ) {
+        TODO("Not yet implemented")
+      }
     }
 
     // Mock Firebase Auth
