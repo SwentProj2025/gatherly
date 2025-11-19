@@ -154,6 +154,7 @@ class EventsRepositoryFirestore(private val db: FirebaseFirestore) : EventsRepos
               mapOf("latitude" to loc.latitude, "longitude" to loc.longitude, "name" to loc.name)
             },
         "creatorId" to event.creatorId,
-        "participants" to event.participants)
+        "participants" to event.participants,
+        "status" to event.status.name)
   }
 }
