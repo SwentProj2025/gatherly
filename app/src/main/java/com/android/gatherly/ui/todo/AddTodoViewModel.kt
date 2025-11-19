@@ -32,13 +32,11 @@ import okhttp3.OkHttpClient
 data class AddTodoUiState(
     val title: String = "",
     val description: String = "",
-    val assignee: String = "",
     val location: String = "",
     val dueDate: String = "",
     val dueTime: String = "",
     val titleError: String? = null,
     val descriptionError: String? = null,
-    val assigneeError: String? = null,
     val dueDateError: String? = null,
     val dueTimeError: String? = null,
     val locationError: String? = null,
@@ -87,7 +85,6 @@ class AddTodoViewModel(
 
   // Chosen location
   private var chosenLocation: Location? = null
-  private lateinit var ownerId: String
 
   /** Clears the error message in the UI state. */
   fun clearErrorMsg() {
@@ -121,18 +118,6 @@ class AddTodoViewModel(
         _uiState.value.copy(
             description = newValue,
             descriptionError = if (newValue.isBlank()) "Description cannot be empty" else null)
-  }
-
-  /**
-   * Updates the assignee field and validates that it is not blank.
-   *
-   * @param newValue The new assignee name entered by the user. If blank, a validation error is set.
-   */
-  fun onAssigneeChanged(newValue: String) {
-    _uiState.value =
-        _uiState.value.copy(
-            assignee = newValue,
-            assigneeError = if (newValue.isBlank()) "Assignee cannot be empty" else null)
   }
 
   /**
@@ -182,7 +167,7 @@ class AddTodoViewModel(
       sdf.isLenient = false
       sdf.parse(date)
       true
-    } catch (e: Exception) {
+    } catch (_: Exception) {
       false
     }
   }
@@ -202,7 +187,7 @@ class AddTodoViewModel(
       sdf.isLenient = false
       sdf.parse(time)
       true
-    } catch (e: Exception) {
+    } catch (_: Exception) {
       false
     }
   }
@@ -247,8 +232,6 @@ class AddTodoViewModel(
             titleError = if (_uiState.value.title.isBlank()) "Title cannot be empty" else null,
             descriptionError =
                 if (_uiState.value.description.isBlank()) "Description cannot be empty" else null,
-            assigneeError =
-                if (_uiState.value.assignee.isBlank()) "Assignee cannot be empty" else null,
             locationError =
                 if (_uiState.value.location.isBlank()) "Location cannot be empty" else null,
             dueDateError =
@@ -260,7 +243,6 @@ class AddTodoViewModel(
     // Abort if validation failed
     if (_uiState.value.titleError != null ||
         _uiState.value.descriptionError != null ||
-        _uiState.value.assigneeError != null ||
         _uiState.value.dueDateError != null ||
         _uiState.value.dueTimeError != null) {
       return
@@ -290,7 +272,6 @@ class AddTodoViewModel(
                 uid = uid,
                 name = validated.title,
                 description = validated.description,
-                assigneeName = validated.assignee,
                 dueDate = dueDateTimestamp,
                 dueTime = dueTimeTimestamp,
                 location = chosenLocation,

@@ -89,18 +89,6 @@ class EditTodoScreenTest : GatherlyTest() {
   }
 
   @Test
-  fun canEnterAssigneeName() {
-    val text = "testAssignee"
-    composeTestRule.enterEditTodoAssignee(text)
-    composeTestRule
-        .onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_ASSIGNEE)
-        .assertTextContains(text)
-    composeTestRule
-        .onNodeWithTag(EditToDoScreenTestTags.ERROR_MESSAGE, useUnmergedTree = true)
-        .assertIsNotDisplayed()
-  }
-
-  @Test
   fun canEnterLocation() {
     val text = "testLocation"
     composeTestRule.enterEditTodoLocation(text)

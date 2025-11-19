@@ -73,7 +73,6 @@ class EditTodoViewModelTest {
             uid = toDosRepository.getNewUid(),
             name = "Initial task",
             description = "Original description",
-            assigneeName = "John",
             dueDate = Timestamp.now(),
             dueTime = null,
             location = null,
@@ -93,7 +92,6 @@ class EditTodoViewModelTest {
     assertNull(state.errorMsg)
     assertEquals("Initial task", state.title)
     assertEquals("Original description", state.description)
-    assertEquals("John", state.assignee)
     assertNull(state.errorMsg)
   }
 
@@ -115,7 +113,6 @@ class EditTodoViewModelTest {
     // Provide valid values for all required fields
     editTodoViewModel.onTitleChanged("Updated title")
     editTodoViewModel.onDescriptionChanged("Updated description")
-    editTodoViewModel.onAssigneeChanged("Mary")
     editTodoViewModel.onDateChanged("10/10/2025")
     editTodoViewModel.onTimeChanged("14:00")
     editTodoViewModel.onLocationChanged("Place")
@@ -129,7 +126,6 @@ class EditTodoViewModelTest {
     val updated = toDosRepository.getTodo(baseTodo.uid)
     assertEquals("Updated title", updated.name)
     assertEquals("Updated description", updated.description)
-    assertEquals("Mary", updated.assigneeName)
     assertEquals(ToDoStatus.ONGOING, updated.status)
     assertEquals(baseTodo.uid, updated.uid)
 
@@ -141,7 +137,6 @@ class EditTodoViewModelTest {
   fun editTodo_withInvalidDate_doesNotSave() = runTest {
     editTodoViewModel.onTitleChanged("Invalid edit")
     editTodoViewModel.onDescriptionChanged("Bad date")
-    editTodoViewModel.onAssigneeChanged("User")
     editTodoViewModel.onDateChanged("15-10-2025") // Wrong format
     editTodoViewModel.onTimeChanged("14:00")
     editTodoViewModel.onLocationChanged("Place")
@@ -158,7 +153,6 @@ class EditTodoViewModelTest {
   fun editTodo_withEmptyFields_doesNotProceed() = runTest {
     editTodoViewModel.onTitleChanged("") // Missing title
     editTodoViewModel.onDescriptionChanged("Desc")
-    editTodoViewModel.onAssigneeChanged("A")
     editTodoViewModel.onDateChanged("10/10/2025")
     editTodoViewModel.onTimeChanged("14:00")
     editTodoViewModel.onLocationChanged("Place")
@@ -177,7 +171,6 @@ class EditTodoViewModelTest {
             uid = "delete-me",
             name = "To delete",
             description = "temporary",
-            assigneeName = "Someone",
             dueDate = Timestamp.now(),
             dueTime = null,
             location = null,

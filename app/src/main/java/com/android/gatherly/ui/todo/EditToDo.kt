@@ -189,24 +189,6 @@ fun EditToDoScreen(
                     maxLines = integerResource(R.integer.todo_description_max_lines))
               }
 
-              // Assignee Input
-              item {
-                OutlinedTextField(
-                    value = todoUIState.assignee,
-                    onValueChange = { editTodoViewModel.onAssigneeChanged(it) },
-                    label = { Text(stringResource(R.string.todos_assignee_field_label)) },
-                    placeholder = { Text(stringResource(R.string.todos_assignee_placeholder)) },
-                    isError = todoUIState.assigneeError != null,
-                    supportingText = {
-                      todoUIState.assigneeError?.let {
-                        Text(it, modifier = Modifier.testTag(EditToDoScreenTestTags.ERROR_MESSAGE))
-                      }
-                    },
-                    colors = textFieldColors,
-                    modifier =
-                        Modifier.fillMaxWidth().testTag(EditToDoScreenTestTags.INPUT_TODO_ASSIGNEE))
-              }
-
               // Location Input with dropdown
               item {
                 LocationSuggestions(
@@ -256,7 +238,6 @@ fun EditToDoScreen(
                             containerColor = MaterialTheme.colorScheme.secondary),
                     enabled =
                         todoUIState.dueDateError == null &&
-                            todoUIState.assigneeError == null &&
                             todoUIState.descriptionError == null &&
                             todoUIState.titleError == null &&
                             todoUIState.dueTimeError == null &&

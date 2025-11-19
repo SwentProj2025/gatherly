@@ -78,7 +78,6 @@ class OverviewViewModelTest {
         uid = toDosRepository.getNewUid(),
         name = name,
         description = description,
-        assigneeName = assignee,
         dueDate = now,
         dueTime = null,
         location = null,

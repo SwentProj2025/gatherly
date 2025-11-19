@@ -29,7 +29,6 @@ import okhttp3.OkHttpClient
 data class EditTodoUIState(
     val title: String = "",
     val description: String = "",
-    val assignee: String = "",
     val dueDate: String = "",
     val dueTime: String = "",
     val location: String = "",
@@ -37,7 +36,6 @@ data class EditTodoUIState(
     val errorMsg: String? = null,
     val titleError: String? = null,
     val descriptionError: String? = null,
-    val assigneeError: String? = null,
     val dueDateError: String? = null,
     val dueTimeError: String? = null,
     val isSaving: Boolean = false,
@@ -117,7 +115,6 @@ class EditTodoViewModel(
             EditTodoUIState(
                 title = todo.name,
                 description = todo.description,
-                assignee = todo.assigneeName,
                 dueDate =
                     todo.dueDate.let {
                       val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
@@ -147,8 +144,6 @@ class EditTodoViewModel(
             titleError = if (_uiState.value.title.isBlank()) "Title cannot be empty" else null,
             descriptionError =
                 if (_uiState.value.description.isBlank()) "Description cannot be empty" else null,
-            assigneeError =
-                if (_uiState.value.assignee.isBlank()) "Assignee cannot be empty" else null,
             dueDateError =
                 if (!isValidDate(_uiState.value.dueDate)) "Invalid format (dd/MM/yyyy)" else null,
             dueTimeError =
@@ -158,7 +153,6 @@ class EditTodoViewModel(
     // Abort if validation failed
     if (state.titleError != null ||
         state.descriptionError != null ||
-        state.assigneeError != null ||
         state.dueDateError != null ||
         state.dueTimeError != null) {
       setErrorMsg("At least one field is not valid")
@@ -182,7 +176,6 @@ class EditTodoViewModel(
               ToDo(
                   name = state.title,
                   description = state.description,
-                  assigneeName = state.assignee,
                   dueDate = Timestamp(date),
                   dueTime = time,
                   location = chosenLocation,
@@ -252,17 +245,6 @@ class EditTodoViewModel(
   fun onDescriptionChanged(newDescription: String) {
     val errMsg = if (newDescription.isBlank()) "Description cannot be empty" else null
     _uiState.value = _uiState.value.copy(descriptionError = errMsg, description = newDescription)
-  }
-
-  /**
-   * Updates the assignee field and validates that it is not blank.
-   *
-   * @param newAssignee The new assignee name entered by the user. If blank, a validation error is
-   *   set.
-   */
-  fun onAssigneeChanged(newAssignee: String) {
-    val errMsg = if (newAssignee.isBlank()) "Assignee cannot be empty" else null
-    _uiState.value = _uiState.value.copy(assigneeError = errMsg, assignee = newAssignee)
   }
 
   /**

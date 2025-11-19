@@ -45,7 +45,6 @@ class AddTodoScreenTest : GatherlyTest() {
         .assertTextContains("Save", substring = true, ignoreCase = true)
     composeTestRule.onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_TITLE).assertIsDisplayed()
     composeTestRule.onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_DESCRIPTION).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_ASSIGNEE).assertIsDisplayed()
     composeTestRule.onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_LOCATION).assertIsDisplayed()
     composeTestRule.onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_DATE).assertIsDisplayed()
     composeTestRule.onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_TIME).assertIsDisplayed()
@@ -70,18 +69,6 @@ class AddTodoScreenTest : GatherlyTest() {
     composeTestRule.enterAddTodoDescription(text)
     composeTestRule
         .onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_DESCRIPTION)
-        .assertTextContains(text)
-    composeTestRule
-        .onNodeWithTag(AddToDoScreenTestTags.ERROR_MESSAGE, useUnmergedTree = true)
-        .assertIsNotDisplayed()
-  }
-
-  @Test
-  fun canEnterAssigneeName() {
-    val text = "assignee"
-    composeTestRule.enterAddTodoAssignee(text)
-    composeTestRule
-        .onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_ASSIGNEE)
         .assertTextContains(text)
     composeTestRule
         .onNodeWithTag(AddToDoScreenTestTags.ERROR_MESSAGE, useUnmergedTree = true)
@@ -139,14 +126,6 @@ class AddTodoScreenTest : GatherlyTest() {
   @Test
   fun savingWithInvalidDescriptionShouldDoNothing() = checkNoTodoWereAdded {
     composeTestRule.enterAddTodoDetails(todo = todo1.copy(description = " "))
-    composeTestRule.clickOnSaveForAddTodo()
-    composeTestRule.waitForIdle()
-    composeTestRule.onNodeWithTag(AddToDoScreenTestTags.TODO_SAVE).assertExists()
-  }
-
-  @Test
-  fun savingWithInvalidAssigneeShouldDoNothing() = checkNoTodoWereAdded {
-    composeTestRule.enterAddTodoDetails(todo = todo1.copy(assigneeName = " "))
     composeTestRule.clickOnSaveForAddTodo()
     composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag(AddToDoScreenTestTags.TODO_SAVE).assertExists()

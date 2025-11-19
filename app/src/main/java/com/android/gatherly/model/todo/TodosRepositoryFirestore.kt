@@ -185,7 +185,7 @@ class ToDosRepositoryFirestore(private val db: FirebaseFirestore) : ToDosReposit
     val statusStr = doc.getString("status") ?: ToDoStatus.ONGOING.name
     val status = ToDoStatus.valueOf(statusStr)
 
-    return ToDo(uid, name, description, assigneeName, dueDate, dueTime, location, status, ownerId)
+    return ToDo(uid, name, description, dueDate, dueTime, location, status, ownerId)
   }
 
   /**
@@ -201,7 +201,6 @@ class ToDosRepositoryFirestore(private val db: FirebaseFirestore) : ToDosReposit
         "uid" to todo.uid,
         "name" to todo.name,
         "description" to todo.description,
-        "assigneeName" to todo.assigneeName,
         "dueDate" to todo.dueDate,
         "dueTime" to todo.dueTime,
         "location" to

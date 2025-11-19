@@ -86,7 +86,6 @@ class AddTodoViewModelTest {
   fun saveTodo_withValidFields_savesToFirestore() = runTest {
     addToDoViewModel.onTitleChanged("Study session")
     addToDoViewModel.onDescriptionChanged("Revise for algorithms exam")
-    addToDoViewModel.onAssigneeChanged("Claud")
     addToDoViewModel.onDateChanged("10/10/2025")
     addToDoViewModel.onTimeChanged("13:30")
 
@@ -106,7 +105,6 @@ class AddTodoViewModelTest {
 
     assertEquals("Study session", saved.name)
     assertEquals("Revise for algorithms exam", saved.description)
-    assertEquals("Claud", saved.assigneeName)
     assertEquals(ToDoStatus.ONGOING, saved.status)
     assertNotNull(saved.dueDate)
   }
@@ -115,7 +113,6 @@ class AddTodoViewModelTest {
   fun saveTodo_withInvalidDate_doesNotSave() = runTest {
     addToDoViewModel.onTitleChanged("Invalid date task")
     addToDoViewModel.onDescriptionChanged("Desc")
-    addToDoViewModel.onAssigneeChanged("Someone")
     addToDoViewModel.onDateChanged("10-10-2025") // Wrong format
 
     addToDoViewModel.saveTodo()
@@ -134,7 +131,6 @@ class AddTodoViewModelTest {
   fun saveTodo_withMissingFields_doesNotSave() = runTest {
     addToDoViewModel.onTitleChanged("") // Missing title
     addToDoViewModel.onDescriptionChanged("Some description")
-    addToDoViewModel.onAssigneeChanged("User")
     addToDoViewModel.onDateChanged("10/10/2025")
 
     addToDoViewModel.saveTodo()
@@ -153,7 +149,6 @@ class AddTodoViewModelTest {
     // First ToDo
     addToDoViewModel.onTitleChanged("Walk dog")
     addToDoViewModel.onDescriptionChanged("30 mins around block")
-    addToDoViewModel.onAssigneeChanged("Alice")
     addToDoViewModel.onDateChanged("10/10/2025")
     addToDoViewModel.onTimeChanged("18:00")
     addToDoViewModel.saveTodo()
@@ -169,7 +164,6 @@ class AddTodoViewModelTest {
     // Second ToDo
     addToDoViewModel.onTitleChanged("Do groceries")
     addToDoViewModel.onDescriptionChanged("Buy milk and eggs")
-    addToDoViewModel.onAssigneeChanged("Bob")
     addToDoViewModel.onDateChanged("11/10/2025")
     addToDoViewModel.saveTodo()
 
@@ -188,7 +182,6 @@ class AddTodoViewModelTest {
   fun dueTime_optional_isHandledCorrectly() = runTest {
     addToDoViewModel.onTitleChanged("No time field")
     addToDoViewModel.onDescriptionChanged("Task without time")
-    addToDoViewModel.onAssigneeChanged("User")
     addToDoViewModel.onDateChanged("15/10/2025")
     addToDoViewModel.onTimeChanged("")
 
@@ -205,7 +198,6 @@ class AddTodoViewModelTest {
   fun invalidTimeFormat_triggersErrorAndPreventsSave1() = runTest {
     addToDoViewModel.onTitleChanged("Bad time")
     addToDoViewModel.onDescriptionChanged("Should not save")
-    addToDoViewModel.onAssigneeChanged("User")
     addToDoViewModel.onDateChanged("10/10/2025")
     addToDoViewModel.onTimeChanged("25:99") // invalid time
 
@@ -222,7 +214,6 @@ class AddTodoViewModelTest {
   fun invalidTimeFormat_triggersErrorAndPreventsSave2() = runTest {
     addToDoViewModel.onTitleChanged("Bad time")
     addToDoViewModel.onDescriptionChanged("Should not save")
-    addToDoViewModel.onAssigneeChanged("User")
     addToDoViewModel.onDateChanged("10/10/2025")
     addToDoViewModel.onTimeChanged("25:04") // invalid time
 
@@ -239,7 +230,6 @@ class AddTodoViewModelTest {
   fun invalidTimeFormat_triggersErrorAndPreventsSave3() = runTest {
     addToDoViewModel.onTitleChanged("Bad time")
     addToDoViewModel.onDescriptionChanged("Should not save")
-    addToDoViewModel.onAssigneeChanged("User")
     addToDoViewModel.onDateChanged("10/10/2025")
     addToDoViewModel.onTimeChanged("14:001") // invalid time
 
@@ -280,7 +270,6 @@ class AddTodoViewModelTest {
 
     viewModel.onTitleChanged("Some task")
     viewModel.onDescriptionChanged("Should fail to save")
-    viewModel.onAssigneeChanged("A")
     viewModel.onDateChanged("10/10/2025")
 
     viewModel.saveTodo()
