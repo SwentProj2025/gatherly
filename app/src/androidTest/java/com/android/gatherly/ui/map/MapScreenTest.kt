@@ -15,6 +15,8 @@ import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsLocalRepository
 import com.android.gatherly.model.event.EventsRepository
 import com.android.gatherly.model.map.Location
+import com.android.gatherly.model.profile.ProfileLocalRepository
+import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosLocalRepository
@@ -50,6 +52,7 @@ class MapScreenTest {
           Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
   private lateinit var toDosRepository: ToDosRepository
   private lateinit var eventsRepository: EventsRepository
+  private lateinit var profileRepository: ProfileRepository
   private lateinit var mockitoUtils: MockitoUtils
   private lateinit var viewModel: MapViewModel
 
@@ -118,6 +121,7 @@ class MapScreenTest {
   @Before
   fun setUp() = runBlocking {
     toDosRepository = ToDosLocalRepository().apply { addTodo(todo) }
+    profileRepository = ProfileLocalRepository()
     eventsRepository =
         EventsLocalRepository().apply {
           addEvent(event)
@@ -399,7 +403,10 @@ class MapScreenTest {
         MapScreen(viewModel = viewModel, goToEvent = goToEvent)
       } else {
         val eventsVM =
-            EventsViewModel(repository = eventsRepository, authProvider = { mockitoUtils.mockAuth })
+            EventsViewModel(
+                eventsRepository = eventsRepository,
+                profileRepository = profileRepository,
+                authProvider = { mockitoUtils.mockAuth })
         EventsScreen(
             eventsViewModel = eventsVM,
             eventId = navigatedEventId,
@@ -462,7 +469,10 @@ class MapScreenTest {
         MapScreen(viewModel = viewModel, goToEvent = goToEvent)
       } else {
         val eventsVM =
-            EventsViewModel(repository = eventsRepository, authProvider = { mockitoUtils.mockAuth })
+            EventsViewModel(
+                eventsRepository = eventsRepository,
+                profileRepository = profileRepository,
+                authProvider = { mockitoUtils.mockAuth })
         EventsScreen(
             eventsViewModel = eventsVM,
             eventId = navigatedEventId,
@@ -520,7 +530,10 @@ class MapScreenTest {
         MapScreen(viewModel = viewModel, goToEvent = goToEvent)
       } else {
         val eventsVM =
-            EventsViewModel(repository = eventsRepository, authProvider = { mockitoUtils.mockAuth })
+            EventsViewModel(
+                eventsRepository = eventsRepository,
+                profileRepository = profileRepository,
+                authProvider = { mockitoUtils.mockAuth })
         EventsScreen(
             eventsViewModel = eventsVM,
             eventId = navigatedEventId,
