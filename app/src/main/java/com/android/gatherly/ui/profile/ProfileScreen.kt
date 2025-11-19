@@ -16,7 +16,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonDefaults.buttonColors
@@ -26,7 +25,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -54,6 +52,7 @@ import com.android.gatherly.ui.navigation.Screen
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Profile
 import com.android.gatherly.ui.theme.GatherlyTheme
+import com.android.gatherly.utils.GatherlyAlertDialog
 
 /** Contains test tags used for UI testing on the Profile screen. */
 object ProfileScreenTestTags {
@@ -315,59 +314,20 @@ fun ProfileScreen(
               }
 
           if (shouldShowLogOutWarning.value) {
-            LogOutPopUp(
-                viewModel = profileViewModel,
-                shouldShowDialog = shouldShowLogOutWarning,
-                credentialManager = credentialManager)
+            GatherlyAlertDialog(
+                titleText = stringResource(R.string.anon_log_out),
+                bodyText = stringResource(R.string.anon_log_out_text),
+                dismissText = stringResource(R.string.cancel),
+                confirmText = stringResource(R.string.log_out),
+                onDismiss = { shouldShowLogOutWarning.value = false },
+                onConfirm = {
+                  profileViewModel.signOut(credentialManager)
+                  shouldShowLogOutWarning.value = false
+                },
+                isImportantWarning = true)
           }
         }
       })
-}
-
-@Composable
-fun LogOutPopUp(
-    viewModel: ProfileViewModel,
-    shouldShowDialog: MutableState<Boolean>,
-    credentialManager: CredentialManager
-) {
-  AlertDialog(
-      containerColor = MaterialTheme.colorScheme.surfaceVariant,
-      titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-      textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-      title = { Text(text = stringResource(R.string.anon_log_out), textAlign = TextAlign.Center) },
-      text = {
-        Text(
-            text = stringResource(R.string.anon_log_out_text),
-            textAlign = TextAlign.Center,
-        )
-      },
-      dismissButton = {
-        Button(
-            colors =
-                buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
-            onClick = { shouldShowDialog.value = false }) {
-              Text(
-                  text = stringResource(R.string.cancel),
-                  color = MaterialTheme.colorScheme.onPrimaryContainer)
-            }
-      },
-      onDismissRequest = { shouldShowDialog.value = false },
-      confirmButton = {
-        Button(
-            colors =
-                buttonColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    contentColor = MaterialTheme.colorScheme.error),
-            onClick = {
-              viewModel.signOut(credentialManager)
-              shouldShowDialog.value = false
-            }) {
-              Text(text = stringResource(R.string.log_out), color = MaterialTheme.colorScheme.error)
-            }
-      },
-  )
 }
 
 // Helper function to preview the timer screen

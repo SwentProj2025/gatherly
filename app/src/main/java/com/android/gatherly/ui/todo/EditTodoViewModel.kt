@@ -43,7 +43,8 @@ data class EditTodoUIState(
     val isSaving: Boolean = false,
     val saveSuccess: Boolean = false,
     val deleteSuccess: Boolean = false,
-    val suggestions: List<Location> = emptyList()
+    val suggestions: List<Location> = emptyList(),
+    val pastTime: Boolean = false
 )
 
 // create a HTTP Client for Nominatim
@@ -83,6 +84,9 @@ class EditTodoViewModel(
   // Selected Location
   private var chosenLocation: Location? = null
 
+  // Todo ID
+  private lateinit var editTodoId: String
+
   /** Clears the error message in the UI state. */
   fun clearErrorMsg() {
     _uiState.value = _uiState.value.copy(errorMsg = null)
@@ -111,6 +115,7 @@ class EditTodoViewModel(
   fun loadTodo(todoID: String) {
     viewModelScope.launch {
       try {
+        editTodoId = todoID
         val todo = todoRepository.getTodo(todoID)
         chosenLocation = todo.location
         _uiState.value =
@@ -136,13 +141,8 @@ class EditTodoViewModel(
     }
   }
 
-  /**
-   * Edits a ToDo document.
-   *
-   * @param id id of The ToDo document to be edited.
-   */
-  fun editTodo(id: String): Boolean {
-    _uiState.value =
+  fun checkPastTime() {
+    val validated =
         _uiState.value.copy(
             titleError = if (_uiState.value.title.isBlank()) "Title cannot be empty" else null,
             descriptionError =
@@ -153,24 +153,47 @@ class EditTodoViewModel(
                 if (!isValidDate(_uiState.value.dueDate)) "Invalid format (dd/MM/yyyy)" else null,
             dueTimeError =
                 if (!isValidTime(_uiState.value.dueTime)) "Invalid time (HH:mm)" else null)
-    val state = _uiState.value
+    _uiState.value = validated
 
     // Abort if validation failed
-    if (state.titleError != null ||
-        state.descriptionError != null ||
-        state.assigneeError != null ||
-        state.dueDateError != null ||
-        state.dueTimeError != null) {
+    if (_uiState.value.titleError != null ||
+        _uiState.value.descriptionError != null ||
+        _uiState.value.assigneeError != null ||
+        _uiState.value.dueDateError != null ||
+        _uiState.value.dueTimeError != null) {
       setErrorMsg("At least one field is not valid")
-      return false
+      return
     }
+
+    val sdfDateAndTime = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+    val dateAndTime =
+        sdfDateAndTime.parse(validated.dueDate + " " + validated.dueTime)
+            ?: throw IllegalArgumentException("Invalid date or time")
+    val dueDateAndTime = Timestamp(dateAndTime)
+
+    val currentTimestamp = Timestamp.now()
+
+    if (dueDateAndTime < currentTimestamp) {
+      _uiState.value = _uiState.value.copy(pastTime = true)
+    } else {
+      editTodo(editTodoId)
+    }
+  }
+
+  /**
+   * Edits a ToDo document.
+   *
+   * @param id id of The ToDo document to be edited.
+   */
+  fun editTodo(id: String): Boolean {
     val sdfDate = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-    val date = sdfDate.parse(state.dueDate) ?: throw IllegalArgumentException("Invalid date")
+    val date =
+        sdfDate.parse(uiState.value.dueDate) ?: throw IllegalArgumentException("Invalid date")
 
     val time =
-        if (state.dueTime.isNotBlank()) {
+        if (uiState.value.dueTime.isNotBlank()) {
           val sdfTime = SimpleDateFormat("HH:mm", Locale.getDefault())
-          Timestamp(sdfTime.parse(state.dueTime)!!)
+          Timestamp(sdfTime.parse(uiState.value.dueTime)!!)
         } else null
 
     val ownerId = authProvider().currentUser?.uid ?: ""
@@ -179,13 +202,13 @@ class EditTodoViewModel(
         todoID = id,
         todo =
             ToDo(
-                name = state.title,
-                description = state.description,
-                assigneeName = state.assignee,
+                name = uiState.value.title,
+                description = uiState.value.description,
+                assigneeName = uiState.value.assignee,
                 dueDate = Timestamp(date),
                 dueTime = time,
                 location = chosenLocation,
-                status = state.status,
+                status = uiState.value.status,
                 uid = id,
                 ownerId = ownerId))
     clearErrorMsg()

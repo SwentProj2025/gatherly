@@ -29,6 +29,9 @@
     <string name="todos_delete_button_text">Delete</string>
     <string name="todos_delete_warning">Warning! You are deleting a todo</string>
     <string name="todos_delete_warning_text">This action cannot be reversed. Are you sure?</string>
+    <string name="todos_past_warning">Warning! You are creating a todo in the past</string>
+    <string name="todos_past_warning_text">Are you sure you want to create a todo with a past deadline?</string>
+    <string name="todos_create">Yes, Create</string>
 
     <!-- Sign In Page. -->
     <string name="web_client_id">854490974901-rc0seqlo7nbm1net10ujpte2ckkrsgn2.apps.googleusercontent.com</string>

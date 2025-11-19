@@ -35,12 +35,12 @@ data class AddTodoUiState(
     val assigneeError: String? = null,
     val dueDateError: String? = null,
     val dueTimeError: String? = null,
-    val locationError: String? = null,
     val isSaving: Boolean = false,
     val saveError: String? = null,
     val saveSuccess: Boolean = false,
     val isLocLoading: Boolean = false,
-    val suggestions: List<Location> = emptyList()
+    val suggestions: List<Location> = emptyList(),
+    val pastTime: Boolean = false
 )
 
 // create a HTTP Client for Nominatim
@@ -88,6 +88,10 @@ class AddTodoViewModel(
   /** Clears the save success flag in the UI state. */
   fun clearSaveSuccess() {
     _uiState.value = _uiState.value.copy(saveSuccess = false)
+  }
+
+  fun clearPastTime() {
+    _uiState.value = _uiState.value.copy(pastTime = false)
   }
 
   /**
@@ -224,15 +228,7 @@ class AddTodoViewModel(
     }
   }
 
-  /**
-   * Attempts to create and save a new [ToDo] entry to the repository.
-   *
-   * Performs field validation before saving, and updates the UI state to reflect loading, success,
-   * and error states.
-   *
-   * @throws IllegalArgumentException If the provided date or time format is invalid.
-   */
-  fun saveTodo() {
+  fun checkTodoTime() {
     val validated =
         _uiState.value.copy(
             titleError = if (_uiState.value.title.isBlank()) "Title cannot be empty" else null,
@@ -240,8 +236,6 @@ class AddTodoViewModel(
                 if (_uiState.value.description.isBlank()) "Description cannot be empty" else null,
             assigneeError =
                 if (_uiState.value.assignee.isBlank()) "Assignee cannot be empty" else null,
-            locationError =
-                if (_uiState.value.location.isBlank()) "Location cannot be empty" else null,
             dueDateError =
                 if (!isValidDate(_uiState.value.dueDate)) "Invalid format (dd/MM/yyyy)" else null,
             dueTimeError =
@@ -257,27 +251,52 @@ class AddTodoViewModel(
       return
     }
 
+    val sdfDateAndTime = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+    val dateAndTime =
+        sdfDateAndTime.parse(validated.dueDate + " " + validated.dueTime)
+            ?: throw IllegalArgumentException("Invalid date or time")
+    val dueDateAndTime = Timestamp(dateAndTime)
+
+    val currentTimestamp = Timestamp.now()
+
+    if (dueDateAndTime < currentTimestamp) {
+      _uiState.value = _uiState.value.copy(pastTime = true)
+    } else {
+      saveTodo()
+    }
+  }
+
+  /**
+   * Attempts to create and save a new [ToDo] entry to the repository.
+   *
+   * Performs field validation before saving, and updates the UI state to reflect loading, success,
+   * and error states.
+   *
+   * @throws IllegalArgumentException If the provided date or time format is invalid.
+   */
+  fun saveTodo() {
+
     viewModelScope.launch {
       _uiState.value = _uiState.value.copy(isSaving = true, saveError = null)
       try {
         val uid = todoRepository.getNewUid()
         val sdfDate = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
         val date =
-            sdfDate.parse(validated.dueDate) ?: throw IllegalArgumentException("Invalid date")
+            sdfDate.parse(uiState.value.dueDate) ?: throw IllegalArgumentException("Invalid date")
 
         val dueDateTimestamp = Timestamp(date)
         val dueTimeTimestamp =
-            if (validated.dueTime.isNotBlank()) {
+            if (uiState.value.dueTime.isNotBlank()) {
               val sdfTime = SimpleDateFormat("HH:mm", Locale.getDefault())
-              Timestamp(sdfTime.parse(validated.dueTime)!!)
+              Timestamp(sdfTime.parse(uiState.value.dueTime)!!)
             } else null
 
         val todo =
             ToDo(
                 uid = uid,
-                name = validated.title,
-                description = validated.description,
-                assigneeName = validated.assignee,
+                name = uiState.value.title,
+                description = uiState.value.description,
+                assigneeName = uiState.value.assignee,
                 dueDate = dueDateTimestamp,
                 dueTime = dueTimeTimestamp,
                 location = chosenLocation,

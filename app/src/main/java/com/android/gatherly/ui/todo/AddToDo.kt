@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ButtonDefaults.buttonColors
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -33,6 +34,7 @@ import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
 import com.android.gatherly.ui.theme.GatherlyTheme
+import com.android.gatherly.utils.GatherlyAlertDialog
 import kotlinx.coroutines.delay
 
 // Portions of the code in this file are copy-pasted from the Bootcamp solution provided by the
@@ -233,7 +235,7 @@ fun AddToDoScreen(
               // Save Button
               item {
                 Button(
-                    onClick = { addTodoViewModel.saveTodo() },
+                    onClick = { addTodoViewModel.checkTodoTime() },
                     modifier = Modifier.fillMaxWidth().testTag(AddToDoScreenTestTags.TODO_SAVE),
                     colors =
                         ButtonDefaults.buttonColors(
@@ -257,6 +259,19 @@ fun AddToDoScreen(
                     }
               }
             }
+
+        if (todoUIState.pastTime) {
+          GatherlyAlertDialog(
+              titleText = stringResource(R.string.todos_past_warning),
+              bodyText = stringResource(R.string.todos_past_warning_text),
+              dismissText = stringResource(R.string.cancel),
+              confirmText = stringResource(R.string.todos_create),
+              onDismiss = { addTodoViewModel.clearPastTime() },
+              onConfirm = {
+                addTodoViewModel.saveTodo()
+                addTodoViewModel.clearPastTime()
+              })
+        }
       })
 }
 

@@ -14,7 +14,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonDefaults.buttonColors
@@ -31,7 +30,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -41,7 +39,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
@@ -51,6 +48,7 @@ import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
 import com.android.gatherly.ui.theme.GatherlyTheme
+import com.android.gatherly.utils.GatherlyAlertDialog
 import kotlinx.coroutines.delay
 
 object EditEventsScreenTestTags {
@@ -365,7 +363,7 @@ fun EditEventsScreen(
                     supportingText = {
                       if (ui.dateError) {
                         Text(
-                            "Use format dd/MM/yyyy",
+                            "Invalid format or past date",
                             modifier = Modifier.testTag(EditEventsScreenTestTags.ERROR_MESSAGE))
                       }
                     },
@@ -404,7 +402,7 @@ fun EditEventsScreen(
                     supportingText = {
                       if (ui.endTimeError) {
                         Text(
-                            "Use format HH:mm",
+                            "Invalid format, past date or ending time before starting time",
                             modifier = Modifier.testTag(EditEventsScreenTestTags.ERROR_MESSAGE))
                       }
                     },
@@ -462,54 +460,19 @@ fun EditEventsScreen(
             }
 
         if (shouldShowDialog.value) {
-          DeletePopUp(viewModel = editEventsViewModel, shouldShowDialog = shouldShowDialog)
+          GatherlyAlertDialog(
+              titleText = stringResource(R.string.events_delete_warning),
+              bodyText = stringResource(R.string.events_delete_warning_text),
+              dismissText = stringResource(R.string.cancel),
+              confirmText = stringResource(R.string.delete),
+              onDismiss = { shouldShowDialog.value = false },
+              onConfirm = {
+                editEventsViewModel.deleteEvent()
+                shouldShowDialog.value = false
+              },
+              isImportantWarning = true)
         }
       }
-}
-
-@Composable
-fun DeletePopUp(viewModel: EditEventsViewModel, shouldShowDialog: MutableState<Boolean>) {
-  AlertDialog(
-      containerColor = MaterialTheme.colorScheme.surfaceVariant,
-      titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-      textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-      modifier = Modifier.testTag(EditEventsScreenTestTags.DELETE_POP_UP),
-      title = {
-        Text(text = stringResource(R.string.events_delete_warning), textAlign = TextAlign.Center)
-      },
-      text = {
-        Text(
-            text = stringResource(R.string.events_delete_warning_text),
-            textAlign = TextAlign.Center,
-        )
-      },
-      dismissButton = {
-        Button(
-            colors =
-                buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
-            onClick = { shouldShowDialog.value = false }) {
-              Text(
-                  text = stringResource(R.string.cancel),
-                  color = MaterialTheme.colorScheme.onPrimaryContainer)
-            }
-      },
-      onDismissRequest = { shouldShowDialog.value = false },
-      confirmButton = {
-        Button(
-            colors =
-                buttonColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    contentColor = MaterialTheme.colorScheme.error),
-            onClick = {
-              viewModel.deleteEvent()
-              shouldShowDialog.value = false
-            }) {
-              Text(text = stringResource(R.string.delete), color = MaterialTheme.colorScheme.error)
-            }
-      },
-  )
 }
 
 @Preview

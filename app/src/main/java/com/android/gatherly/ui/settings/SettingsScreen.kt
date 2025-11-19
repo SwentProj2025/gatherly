@@ -30,6 +30,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
 import com.android.gatherly.ui.navigation.*
 import com.android.gatherly.ui.theme.GatherlyTheme
+import com.android.gatherly.utils.GatherlyAlertDialog
 
 object SettingsScreenTestTags {
   const val PROFILE_PICTURE = "settings_profile_picture"
@@ -46,7 +47,6 @@ object SettingsScreenTestTags {
   const val GOOGLE_BUTTON = "google_button"
   const val LOADING = "loading"
   const val DELETE_BTN = "deleteButton"
-  const val DELETE_POP_UP = "deletePopUp"
   const val SNACKBAR = "snackbar"
 }
 
@@ -326,14 +326,31 @@ fun SettingsScreen(
               }
 
           if (shouldShowDialog.value) {
-            DeletePopUp(viewModel = settingsViewModel, shouldShowDialog = shouldShowDialog)
+            GatherlyAlertDialog(
+                titleText = stringResource(R.string.settings_delete_warning),
+                bodyText = stringResource(R.string.settings_delete_warning_text),
+                dismissText = stringResource(R.string.cancel),
+                confirmText = stringResource(R.string.delete),
+                onDismiss = { shouldShowDialog.value = false },
+                onConfirm = {
+                  settingsViewModel.deleteProfile()
+                  shouldShowDialog.value = false
+                },
+                isImportantWarning = true)
           }
 
           if (shouldShowLogOutWarning.value) {
-            LogOutPopUp(
-                viewModel = settingsViewModel,
-                shouldShowDialog = shouldShowLogOutWarning,
-                credentialManager = credentialManager)
+            GatherlyAlertDialog(
+                titleText = stringResource(R.string.anon_log_out),
+                bodyText = stringResource(R.string.anon_log_out_text),
+                dismissText = stringResource(R.string.cancel),
+                confirmText = stringResource(R.string.log_out),
+                onDismiss = { shouldShowLogOutWarning.value = false },
+                onConfirm = {
+                  settingsViewModel.signOut(credentialManager)
+                  shouldShowLogOutWarning.value = false
+                },
+                isImportantWarning = true)
           }
         }
       })
@@ -396,97 +413,6 @@ fun SettingsField(
                   .testTag("${testTag}_error"))
     }
   }
-}
-
-@Composable
-fun DeletePopUp(viewModel: SettingsViewModel, shouldShowDialog: MutableState<Boolean>) {
-  AlertDialog(
-      containerColor = MaterialTheme.colorScheme.surfaceVariant,
-      titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-      textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-      modifier = Modifier.testTag(SettingsScreenTestTags.DELETE_POP_UP),
-      title = {
-        Text(text = stringResource(R.string.settings_delete_warning), textAlign = TextAlign.Center)
-      },
-      text = {
-        Text(
-            text = stringResource(R.string.settings_delete_warning_text),
-            textAlign = TextAlign.Center,
-        )
-      },
-      dismissButton = {
-        Button(
-            colors =
-                buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
-            onClick = { shouldShowDialog.value = false }) {
-              Text(
-                  text = stringResource(R.string.cancel),
-                  color = MaterialTheme.colorScheme.onPrimaryContainer)
-            }
-      },
-      onDismissRequest = { shouldShowDialog.value = false },
-      confirmButton = {
-        Button(
-            colors =
-                buttonColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    contentColor = MaterialTheme.colorScheme.error),
-            onClick = {
-              viewModel.deleteProfile()
-              shouldShowDialog.value = false
-            }) {
-              Text(text = stringResource(R.string.delete), color = MaterialTheme.colorScheme.error)
-            }
-      },
-  )
-}
-
-@Composable
-fun LogOutPopUp(
-    viewModel: SettingsViewModel,
-    shouldShowDialog: MutableState<Boolean>,
-    credentialManager: CredentialManager
-) {
-  AlertDialog(
-      containerColor = MaterialTheme.colorScheme.surfaceVariant,
-      titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-      textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-      title = { Text(text = stringResource(R.string.anon_log_out), textAlign = TextAlign.Center) },
-      text = {
-        Text(
-            text = stringResource(R.string.anon_log_out_text),
-            textAlign = TextAlign.Center,
-        )
-      },
-      dismissButton = {
-        Button(
-            colors =
-                buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
-            onClick = { shouldShowDialog.value = false }) {
-              Text(
-                  text = stringResource(R.string.cancel),
-                  color = MaterialTheme.colorScheme.onPrimaryContainer)
-            }
-      },
-      onDismissRequest = { shouldShowDialog.value = false },
-      confirmButton = {
-        Button(
-            colors =
-                buttonColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                    contentColor = MaterialTheme.colorScheme.error),
-            onClick = {
-              viewModel.signOut(credentialManager)
-              shouldShowDialog.value = false
-            }) {
-              Text(text = stringResource(R.string.log_out), color = MaterialTheme.colorScheme.error)
-            }
-      },
-  )
 }
 
 // Helper function to preview the timer screen
