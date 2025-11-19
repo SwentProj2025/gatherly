@@ -130,4 +130,8 @@
     <string name="friends_unfollow_message">You just lose a friend</string>
     <string name="friends_follow_message">You just got a new friend</string>
 
+    <!-- Add Group Screen -->
+    <string name="add_group_button_label">Add New Group</string>
+    <string name="group_name_bar_label">Group Name</string>
+    <string name="group_name_bar_placeholder">Name the Group</string>
 </resources>
