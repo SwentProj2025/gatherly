@@ -70,7 +70,7 @@ data class AddEventUiState(
     // the string the toast should display
     val toastString: String? = null,
     // when the event is edited or deleted, return to event overview
-    val backToOverview: Boolean = false,
+    val backToOverview: Boolean = false
 )
 
 // create a HTTP Client for Nominatim
@@ -395,6 +395,7 @@ class AddEventViewModel(
         createEvent(eventsRepository, profileRepository, event, currentProfile.uid, participants)
         uiState = uiState.copy(displayToast = true, toastString = "Saved")
       }
+
       uiState = uiState.copy(backToOverview = true)
     } else {
       uiState = uiState.copy(displayToast = true, toastString = "Failed to save :(")
