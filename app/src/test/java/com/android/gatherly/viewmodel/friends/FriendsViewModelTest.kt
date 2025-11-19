@@ -3,6 +3,7 @@ package com.android.gatherly.viewmodel.friends
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
+import com.android.gatherly.model.profile.ProfileStatus
 import com.android.gatherly.ui.friends.FriendsViewModel
 import com.android.gatherly.utilstest.MockitoUtils
 import kotlinx.coroutines.Dispatchers
@@ -66,7 +67,7 @@ class FriendsViewModelTest {
           username = "alice",
           name = "ProfileA",
           focusSessionIds = emptyList(),
-          eventIds = emptyList(),
+          participatingEventIds = emptyList(),
           groupIds = emptyList(),
           friendUids = listOf("B"),
           profilePicture = "profileA.png")
@@ -77,7 +78,7 @@ class FriendsViewModelTest {
           username = "bob",
           name = "ProfileB",
           focusSessionIds = emptyList(),
-          eventIds = emptyList(),
+          participatingEventIds = emptyList(),
           groupIds = emptyList(),
           friendUids = listOf("A"),
           profilePicture = "profileB.png")
@@ -88,7 +89,7 @@ class FriendsViewModelTest {
           username = "charlie",
           name = "ProfileC",
           focusSessionIds = emptyList(),
-          eventIds = emptyList(),
+          participatingEventIds = emptyList(),
           groupIds = emptyList(),
           friendUids = emptyList(),
           profilePicture = "profileC.png")
@@ -184,7 +185,23 @@ class FriendsViewModelTest {
 
           override suspend fun addFriend(friend: String, currentUserId: String) {}
 
+          override suspend fun updateStatus(uid: String, status: ProfileStatus) {}
+
+          override suspend fun createEvent(eventId: String, currentUserId: String) {}
+
+          override suspend fun deleteEvent(eventId: String, currentUserId: String) {}
+
+          override suspend fun participateEvent(eventId: String, currentUserId: String) {}
+
           override suspend fun deleteFriend(friend: String, currentUserId: String) {}
+
+          override suspend fun allParticipateEvent(eventId: String, participants: List<String>) {}
+
+          override suspend fun unregisterEvent(eventId: String, currentUserId: String) {}
+
+          override suspend fun allUnregisterEvent(eventId: String, participants: List<String>) {}
+
+          override suspend fun deleteUserProfile(uid: String) {}
         }
     val errorViewModel =
         FriendsViewModel(repository = throwingRepository, authProvider = { mockitoUtils.mockAuth })

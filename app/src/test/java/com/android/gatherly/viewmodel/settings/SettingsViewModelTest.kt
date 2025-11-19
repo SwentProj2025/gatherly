@@ -1,6 +1,5 @@
 package com.android.gatherly.viewmodel.settings
 
-import android.content.Context
 import android.net.Uri
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
@@ -34,7 +33,6 @@ class SettingsViewModelTest {
   private lateinit var repo: ProfileLocalRepository
   private lateinit var viewModel: SettingsViewModel
   private lateinit var mockitoUtils: MockitoUtils
-  private lateinit var context: Context
 
   @Before
   fun setup() {
@@ -47,7 +45,6 @@ class SettingsViewModelTest {
     mockitoUtils.chooseCurrentUser("currentUser")
 
     viewModel = SettingsViewModel(repository = repo, authProvider = { mockitoUtils.mockAuth })
-    context = Mockito.mock(Context::class.java)
   }
 
   @After

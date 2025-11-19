@@ -135,7 +135,6 @@ robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectr
 test-core-ktx = { group = "androidx.test", name = "core-ktx", version.ref = "androidxCoreKtx" }
 gms-play-services-maps = { group = "com.google.android.gms", name = "play-services-maps", version.ref = "playServicesMapsVersion" }
 play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
-
 firebase-storage = { group = "com.google.firebase", name = "firebase-storage" }
 
 [plugins]

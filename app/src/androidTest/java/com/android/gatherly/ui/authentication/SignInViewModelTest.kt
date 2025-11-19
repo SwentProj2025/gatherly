@@ -5,10 +5,12 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
+import com.android.gatherly.model.profile.ProfileStatus
 import com.android.gatherly.utils.FakeCredentialManager
 import com.android.gatherly.utils.FakeJwtGenerator
 import com.android.gatherly.utils.FirebaseEmulator
 import com.android.gatherly.utils.FirestoreGatherlyTest
+import kotlin.test.assertEquals
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -31,6 +33,7 @@ class SignInViewModelTest : FirestoreGatherlyTest() {
   override fun setUp() {
     super.setUp()
     FirebaseEmulator.auth.signOut()
+    signInViewModel = SignInViewModel(profileRepository)
   }
 
   @Test
@@ -79,6 +82,40 @@ class SignInViewModelTest : FirestoreGatherlyTest() {
     assert(userSignedIn.value)
     assert(FirebaseEmulator.auth.currentUser != null)
     assert(!profileRepository.initProfileIfMissing(FirebaseEmulator.auth.currentUser?.uid!!, ""))
-    assert(signInViewModel.destination.value == "init_profile")
+    assert(signInViewModel.destination.value == "home")
+  }
+
+  /** Test that after Google sign-in, the user's profile status is updated to ONLINE. */
+  @Test
+  fun googleSignIn_updatesStatusOnline() = runTest {
+    // Use fake Google sign-in for emulator
+    val fakeGoogleIdToken = FakeJwtGenerator.createFakeGoogleIdToken("12345", "test@example.com")
+    val fakeCredentialManager = FakeCredentialManager.create(fakeGoogleIdToken)
+    val context = ApplicationProvider.getApplicationContext<Context>()
+
+    signInViewModel.signInWithGoogle(context, fakeCredentialManager)
+
+    // Wait for coroutine to finish
+    withContext(Dispatchers.Default.limitedParallelism(1)) {
+      while (!signInViewModel.uiState.value) delay(50)
+    }
+
+    val uid = FirebaseEmulator.auth.currentUser!!.uid
+    val status = profileRepository.getProfileByUid(uid)?.status
+    assertEquals(ProfileStatus.ONLINE, status)
+  }
+
+  /** Test that after anonymous sign-in, the user's profile status is updated to ONLINE. */
+  @Test
+  fun anonymousSignIn_updatesStatusOnline() = runTest {
+    signInViewModel.signInAnonymously()
+
+    withContext(Dispatchers.Default.limitedParallelism(1)) {
+      while (!signInViewModel.uiState.value) delay(50)
+    }
+
+    val uid = FirebaseEmulator.auth.currentUser!!.uid
+    val status = profileRepository.getProfileByUid(uid)?.status
+    assertEquals(ProfileStatus.ONLINE, status)
   }
 }

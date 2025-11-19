@@ -1,5 +1,9 @@
 package com.android.gatherly.ui.map
 
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -30,6 +34,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
@@ -41,9 +46,12 @@ import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu
+import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapProperties
+import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.MarkerComposable
 import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
@@ -102,25 +110,65 @@ private object Dimensions {
 /**
  * A composable screen displaying ToDos and Events as interactive markers on a Google Map.
  *
- * @param viewModel The MapViewModel instance providing the list of ToDos, the current camera
- *   position, and marker interaction handlers.
+ * @param viewModel An optional MapViewModel to manage the UI state, used for testing.
  * @param credentialManager The CredentialManager for handling user sign-out.
  * @param onSignedOut Callback invoked when the user signs out.
  * @param navigationActions Navigation actions for switching between app sections.
+ * @param goToEvent Callback to navigate to the Event detail page.
+ * @param goToToDo Callback to navigate to the [ToDo] detail page.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MapScreen(
-    viewModel: MapViewModel = viewModel(),
+    viewModel: MapViewModel? = null,
     credentialManager: CredentialManager = CredentialManager.create(LocalContext.current),
     onSignedOut: () -> Unit = {},
     navigationActions: NavigationActions? = null,
     goToEvent: () -> Unit = {},
     goToToDo: () -> Unit = {}
 ) {
+  /** Location services setup * */
+  val context = LocalContext.current
+  val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
 
-  val uiState by viewModel.uiState.collectAsState()
+  /** ViewModel setup * */
+  val vm: MapViewModel =
+      viewModel
+          ?: viewModel(
+              factory = MapViewModel.provideFactory(fusedLocationClient = fusedLocationClient))
+
+  val uiState by vm.uiState.collectAsState()
+
   HandleSignedOutState(uiState.onSignedOut, onSignedOut)
+
+  // Initialize camera position on first composition
+  LaunchedEffect(Unit) { vm.initialiseCameraPosition(context) }
+
+  /** Handle permission request for location access * */
+  val permissionLauncher =
+      rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+        if (isGranted) {
+          vm.startLocationUpdates(context)
+        }
+      }
+
+  /** Check permission and start location updates * */
+  LaunchedEffect(Unit) {
+    val hasPermission =
+        ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) ==
+            PackageManager.PERMISSION_GRANTED
+
+    if (hasPermission) {
+      // Permission already granted - start updates
+      vm.startLocationUpdates(context)
+    } else {
+      // Ask user for permission (dialog box)
+      permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+    }
+  }
+
+  /** Stop location updates when the composable is disposed * */
+  DisposableEffect(Unit) { onDispose { vm.stopLocationUpdates() } }
 
   // Bottom sheet state for the selected event
   val selectedEvent =
@@ -145,7 +193,7 @@ fun MapScreen(
             selectedTab = Tab.Map,
             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
             modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
-            onSignedOut = { viewModel.signOut(credentialManager) })
+            onSignedOut = { vm.signOut(credentialManager) })
       },
       bottomBar = {
         BottomNavigationMenu(
@@ -158,7 +206,7 @@ fun MapScreen(
       floatingActionButton = {
         val isEvents = uiState.displayEventsPage
         ExtendedFloatingActionButton(
-            onClick = { viewModel.changeView() },
+            onClick = { vm.changeView() },
             icon = {},
             text = {
               Text(
@@ -174,21 +222,23 @@ fun MapScreen(
             modifier = Modifier.testTag(MapScreenTestTags.FILTER_TOGGLE))
       },
       content = { pd ->
-        // Camera position state, using the first ToDo location if available
+        // Camera position state
         val cameraPositionState = rememberCameraPositionState()
 
+        // Handle nullable cameraPos with ?.let {}
         LaunchedEffect(uiState.cameraPos) {
-          cameraPositionState.position = CameraPosition.fromLatLngZoom(uiState.cameraPos, 14f)
+          uiState.cameraPos?.let { pos ->
+            cameraPositionState.position = CameraPosition.fromLatLngZoom(pos, 16f)
+          }
         }
 
         GoogleMap(
             modifier =
                 Modifier.fillMaxSize().padding(pd).testTag(MapScreenTestTags.GOOGLE_MAP_SCREEN),
             cameraPositionState = cameraPositionState,
-            onMapClick = { _ ->
-              viewModel.clearSelection()
-              viewModel.clearSelection()
-            }) {
+            onMapClick = { _ -> vm.clearSelection() },
+            properties = MapProperties(isMyLocationEnabled = true),
+            uiSettings = MapUiSettings(myLocationButtonEnabled = true)) {
               uiState.itemsList.forEach { item ->
                 when (item) {
                   // -------------------------------- Todo Marker UI -------------------------------
@@ -205,7 +255,7 @@ fun MapScreen(
                           state = markerState,
                           zIndex = z,
                           onClick = {
-                            viewModel.onSelectedItem(item.uid)
+                            vm.onSelectedItem(item.uid)
                             true
                           }) {
                             ToDoIcon(item)
@@ -226,7 +276,7 @@ fun MapScreen(
                           state = markerState,
                           zIndex = z,
                           onClick = {
-                            viewModel.onSelectedItem(item.id)
+                            vm.onSelectedItem(item.id)
                             true
                           }) {
                             EventIcon(item)
@@ -238,27 +288,29 @@ fun MapScreen(
             }
 
         if (selectedEvent != null) {
-          ModalBottomSheet(
-              sheetState = sheetState, onDismissRequest = { viewModel.clearSelection() }) {
-                EventSheet(
-                    event = selectedEvent,
-                    onGoToEvent = {
-                      viewModel.clearSelection()
-                      goToEvent()
-                    },
-                    onClose = { viewModel.clearSelection() })
-              }
+          ModalBottomSheet(sheetState = sheetState, onDismissRequest = { vm.clearSelection() }) {
+            EventSheet(
+                event = selectedEvent,
+                onGoToEvent = {
+                  // Track consulted item before navigation
+                  vm.onItemConsulted(selectedEvent.id)
+                  vm.clearSelection()
+                  goToEvent()
+                },
+                onClose = { vm.clearSelection() })
+          }
         } else if (selectedToDo != null) {
-          ModalBottomSheet(
-              sheetState = sheetState, onDismissRequest = { viewModel.clearSelection() }) {
-                ToDoSheet(
-                    toDo = selectedToDo,
-                    onGoToToDo = {
-                      viewModel.clearSelection()
-                      goToToDo()
-                    },
-                    onClose = { viewModel.clearSelection() })
-              }
+          ModalBottomSheet(sheetState = sheetState, onDismissRequest = { vm.clearSelection() }) {
+            ToDoSheet(
+                toDo = selectedToDo,
+                onGoToToDo = {
+                  // Track consulted item before navigation
+                  vm.onItemConsulted(selectedToDo.uid)
+                  vm.clearSelection()
+                  goToToDo()
+                },
+                onClose = { vm.clearSelection() })
+          }
         }
       })
 }
@@ -364,12 +416,12 @@ fun EventSheet(event: Event, onGoToEvent: () -> Unit, onClose: () -> Unit) {
       }
 }
 
-// -------------------------------- ToDo icons --------------------------------
+/** -------------------------------- [ToDo] icons -------------------------------- * */
 
 /**
- * Collapsed ToDo marker icon
+ * Collapsed [ToDo] marker icon
  *
- * @param toDo The ToDo data to display in the marker.
+ * @param toDo The [ToDo] data to display in the marker.
  */
 @Composable
 fun ToDoIcon(toDo: ToDo) {
@@ -399,10 +451,10 @@ fun ToDoIcon(toDo: ToDo) {
 }
 
 /**
- * ToDo Sheet displayed when a toDo marker is tapped
+ * [ToDo] Sheet displayed when a `toDo` marker is tapped
  *
- * @param toDo The todo data to display in the marker.
- * @param onGoToToDo Go to Todo Page when button is clicked.
+ * @param toDo The [ToDo] data to display in the marker.
+ * @param onGoToToDo Go to [ToDo] Page when button is clicked.
  * @param onClose closes the sheet when tapped outside.
  */
 @Composable

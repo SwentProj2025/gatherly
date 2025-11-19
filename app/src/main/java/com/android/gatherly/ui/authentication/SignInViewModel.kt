@@ -13,6 +13,7 @@ import androidx.lifecycle.viewModelScope
 import com.android.gatherly.R
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
+import com.android.gatherly.model.profile.ProfileStatus
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.Companion.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
@@ -53,10 +54,11 @@ class SignInViewModel(
   /** Decide where to navigate after a successful sign in */
   private suspend fun handlePostSignInNav() {
     val uid = Firebase.auth.currentUser?.uid ?: return
+    val isAnon = Firebase.auth.currentUser?.isAnonymous ?: return
     val profile = profileRepository.getProfileByUid(uid)
 
     _destination.value =
-        if (profile?.username.isNullOrEmpty()) {
+        if (profile?.username.isNullOrEmpty() && !isAnon) {
           "init_profile"
         } else {
           "home"
@@ -78,6 +80,7 @@ class SignInViewModel(
           Firebase.auth.signInWithCredential(firebaseCredential).await()
           val uid = Firebase.auth.currentUser?.uid ?: return@launch
           profileRepository.initProfileIfMissing(uid, "")
+          profileRepository.updateStatus(uid, ProfileStatus.ONLINE)
           handlePostSignInNav()
           _uiState.value = true
         } catch (e: Exception) {
@@ -119,7 +122,7 @@ class SignInViewModel(
         Firebase.auth.signInAnonymously().await()
         val uid = Firebase.auth.currentUser?.uid ?: return@launch
         profileRepository.initProfileIfMissing(uid, "")
-
+        profileRepository.updateStatus(uid, ProfileStatus.ONLINE)
         handlePostSignInNav()
 
         _uiState.value = true

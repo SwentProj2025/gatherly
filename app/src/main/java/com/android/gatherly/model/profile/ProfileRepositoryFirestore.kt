@@ -9,7 +9,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.ktx.app
 import com.google.firebase.storage.FirebaseStorage
-import com.google.firebase.storage.storage
+import com.google.firebase.storage.ktx.storage
 import java.io.File
 import kotlinx.coroutines.tasks.await
 
@@ -256,6 +256,25 @@ class ProfileRepositoryFirestore(
     return true
   }
 
+  override suspend fun deleteUserProfile(uid: String) {
+    val profile = getProfileByUid(uid) ?: return
+
+    db.runBatch { batch ->
+          if (profile.username.isNotBlank()) {
+            batch.delete(usernamesCollection.document(profile.username))
+          }
+          batch.delete(profilesCollection.document(uid))
+        }
+        .await()
+
+    try {
+      val storageRef = Firebase.storage.reference.child("profile_pictures/$uid")
+      storageRef.delete().await()
+    } catch (e: Exception) {
+      Log.d("ProfileRepository", "No profile picture to delete: ${e.message}")
+    }
+  }
+
   /** Creates a profile. This is to be used only for testing purpose. */
   override suspend fun addProfile(profile: Profile) {
     // Empty because this function is never used, it is here for test purposes only.
@@ -272,26 +291,30 @@ class ProfileRepositoryFirestore(
     val name = doc.getString("name") ?: ""
     val username = doc.getString("username") ?: ""
     val focusSessionIds = doc.get("focusSessions") as? List<String> ?: emptyList()
-    val eventIds = doc.get("events") as? List<String> ?: emptyList()
+    val eventIds = doc.get("participatingEventIds") as? List<String> ?: emptyList()
+    val eventOwnerIds = doc.get("ownedEventIds") as? List<String> ?: emptyList()
     val groupIds = doc.get("groups") as? List<String> ?: emptyList()
     val friendUids = doc.get("friendUids") as? List<String> ?: emptyList()
     val school = doc.getString("school") ?: ""
     val schoolYear = doc.getString("schoolYear") ?: ""
     val birthday = doc.getTimestamp("birthday")
     val profilePicture = doc.getString("profilePicture") ?: return null
+    val status = ProfileStatus.fromString(doc.getString("status"))
 
     return Profile(
         uid = uid,
         name = name,
         username = username,
         focusSessionIds = focusSessionIds,
-        eventIds = eventIds,
+        participatingEventIds = eventIds,
+        ownedEventIds = eventOwnerIds,
         groupIds = groupIds,
         friendUids = friendUids,
         school = school,
         schoolYear = schoolYear,
         birthday = birthday,
-        profilePicture = profilePicture)
+        profilePicture = profilePicture,
+        status = status)
   }
 
   /**
@@ -306,13 +329,15 @@ class ProfileRepositoryFirestore(
         "name" to profile.name,
         "username" to profile.username,
         "focusSessionIds" to profile.focusSessionIds,
-        "eventIds" to profile.eventIds,
+        "participatingEventIds" to profile.participatingEventIds,
+        "ownedEventIds" to profile.ownedEventIds,
         "groupIds" to profile.groupIds,
         "friendUids" to profile.friendUids,
         "school" to profile.school,
         "schoolYear" to profile.schoolYear,
         "birthday" to profile.birthday,
-        "profilePicture" to profile.profilePicture)
+        "profilePicture" to profile.profilePicture,
+        "status" to profile.status.value)
   }
 
   override suspend fun getFriendsAndNonFriendsUsernames(currentUserId: String): Friends {
@@ -351,5 +376,37 @@ class ProfileRepositoryFirestore(
     val docRef = profilesCollection.document(currentUserId)
     val friendId = getProfileByUsername(friend)?.uid
     docRef.update("friendUids", FieldValue.arrayRemove(friendId)).await()
+  }
+
+  override suspend fun updateStatus(uid: String, status: ProfileStatus) {
+    profilesCollection.document(uid).update("status", status.value).await()
+  }
+
+  override suspend fun createEvent(eventId: String, currentUserId: String) {
+    val docRef = profilesCollection.document(currentUserId)
+    docRef.update("ownedEventIds", FieldValue.arrayUnion(eventId)).await()
+  }
+
+  override suspend fun deleteEvent(eventId: String, currentUserId: String) {
+    val docRef = profilesCollection.document(currentUserId)
+    docRef.update("ownedEventIds", FieldValue.arrayRemove(eventId)).await()
+  }
+
+  override suspend fun participateEvent(eventId: String, currentUserId: String) {
+    val docRef = profilesCollection.document(currentUserId)
+    docRef.update("participatingEventIds", FieldValue.arrayUnion(eventId)).await()
+  }
+
+  override suspend fun allParticipateEvent(eventId: String, participants: List<String>) {
+    participants.forEach { participant -> participateEvent(eventId, participant) }
+  }
+
+  override suspend fun unregisterEvent(eventId: String, currentUserId: String) {
+    val docRef = profilesCollection.document(currentUserId)
+    docRef.update("participatingEventIds", FieldValue.arrayRemove(eventId)).await()
+  }
+
+  override suspend fun allUnregisterEvent(eventId: String, participants: List<String>) {
+    participants.forEach { participant -> unregisterEvent(eventId, participant) }
   }
 }

@@ -10,7 +10,6 @@ import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import androidx.test.rule.GrantPermissionRule
 import com.android.gatherly.GatherlyApp
-import com.android.gatherly.ui.authentication.InitProfileScreenTestTags
 import com.android.gatherly.ui.authentication.SignInScreenTestTags
 import com.android.gatherly.ui.focusTimer.FocusTimerScreenTestTags
 import com.android.gatherly.ui.homePage.HomePageScreenTestTags
@@ -46,21 +45,6 @@ class Milestone1End2End : FirestoreGatherlyTest() {
   fun testAddTodoThenTimer() {
     // sign in anonymously
     composeTestRule.onNodeWithTag(SignInScreenTestTags.ANONYMOUS_BUTTON).performClick()
-
-    // Fill profile init screen
-    composeTestRule.waitUntil(TIMEOUT) {
-      composeTestRule.onNodeWithTag(InitProfileScreenTestTags.SAVE_BUTTON).isDisplayed()
-    }
-
-    // Fill username and name (mandatory fields)
-    composeTestRule.onNodeWithTag(InitProfileScreenTestTags.USERNAME).performTextInput("testuser")
-    composeTestRule
-        .onNodeWithTag(InitProfileScreenTestTags.NAME_FIELD)
-        .performTextInput("Test User")
-
-    // Save so navigate automatically to HomePage
-    composeTestRule.onNodeWithTag(InitProfileScreenTestTags.SAVE_BUTTON).performClick()
-    composeTestRule.waitForIdle()
 
     // wait for homescreen to load
     composeTestRule.waitUntil(TIMEOUT) {

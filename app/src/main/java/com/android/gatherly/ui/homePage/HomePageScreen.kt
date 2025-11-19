@@ -140,6 +140,7 @@ fun HomePageScreen(
               todos = uiState.displayableTodos,
               events = uiState.displayableEvents,
               onClickFriendsSection = onClickFriendsSection,
+              isAnon = uiState.isAnon,
               friends = uiState.friends)
 
           Spacer(modifier = Modifier.height(verticalSpacing))
@@ -190,6 +191,7 @@ fun EventsAndFriendsSection(
     todos: List<ToDo>,
     events: List<Event>,
     onClickFriendsSection: () -> Unit,
+    isAnon: Boolean,
     friends: List<Profile>
 ) {
 
@@ -200,13 +202,14 @@ fun EventsAndFriendsSection(
               .height(dimensionResource(id = R.dimen.homepage_events_section_height))) {
         Spacer(modifier = Modifier.width(spacingRegular))
 
-        MiniMap(todos = todos, events = events)
+        MiniMap(todos = todos, events = events, modifier = Modifier.weight(1f))
 
         Spacer(modifier = Modifier.width(spacingRegular))
 
-        FriendsSection(onClickFriendsSection = onClickFriendsSection, friends)
-
-        Spacer(modifier = Modifier.width(spacingRegular))
+        if (!isAnon) {
+          FriendsSection(onClickFriendsSection = onClickFriendsSection, friends = friends)
+          Spacer(modifier = Modifier.width(spacingRegular))
+        }
       }
 }
 
@@ -215,7 +218,7 @@ fun EventsAndFriendsSection(
  * campus if no locations are available.
  */
 @Composable
-fun MiniMap(todos: List<ToDo>, events: List<Event>) {
+fun MiniMap(todos: List<ToDo>, events: List<Event>, modifier: Modifier) {
   val defaultLoc = LatLng(46.5191, 6.5668) // EPFL campus loc
   val firstTodoLoc =
       todos.firstOrNull()?.location?.let { LatLng(it.latitude, it.longitude) } ?: defaultLoc
@@ -225,10 +228,7 @@ fun MiniMap(todos: List<ToDo>, events: List<Event>) {
   }
 
   Card(
-      modifier =
-          Modifier.width(dimensionResource(id = R.dimen.homepage_minimap_width))
-              .fillMaxHeight()
-              .testTag(HomePageScreenTestTags.MINI_MAP_CARD),
+      modifier = modifier.fillMaxSize().testTag(HomePageScreenTestTags.MINI_MAP_CARD),
       shape = RoundedCornerShape(dimensionResource(id = R.dimen.rounded_corner_shape_medium)),
   ) {
     GoogleMap(

@@ -5,6 +5,7 @@ import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import com.android.gatherly.model.profile.Profile
@@ -244,5 +245,72 @@ class FindFriendsScreenTest {
     composeTestRule
         .onNodeWithTag(FindFriendsScreenTestTags.getTestTagForFriendItem("charlie"))
         .assertIsNotDisplayed()
+  }
+
+  /**
+   * Test: Verifies when the screen is currently loading all the profiles item, a special animation
+   * is displayed.
+   */
+  @Test
+  fun testLoadingAnimation() {
+    runTest {
+      profileRepository = ProfileLocalRepository()
+
+      addProfiles()
+      profileRepository.addProfile(aliceProfile)
+
+      currentUserId = aliceProfile.uid
+
+      // Mock Firebase Auth
+      mockitoUtils = MockitoUtils()
+      mockitoUtils.chooseCurrentUser(currentUserId)
+
+      friendsViewModel = FriendsViewModel(profileRepository, { mockitoUtils.mockAuth })
+
+      composeTestRule.setContent { FindFriendsScreen(friendsViewModel) }
+
+      composeTestRule.waitForIdle()
+
+      if (friendsViewModel.uiState.value.isLoading) {
+        composeTestRule
+            .onNodeWithTag(FindFriendsScreenTestTags.LOADING_ANIMATION)
+            .assertIsDisplayed()
+      }
+    }
+  }
+
+  /**
+   * Test: Verifies that when the current user wants to follow a friend, a special animation is
+   * displayed.
+   */
+  @Test
+  fun testHeartAnimation() {
+    runTest {
+      setContentwithBobUID()
+      composeTestRule.waitForIdle()
+
+      composeTestRule.mainClock.autoAdvance = false
+      val animationDelay = 2000L
+
+      val friendToFollow = "francis"
+      val unfollowButtonTag =
+          FindFriendsScreenTestTags.getTestTagForFriendFollowButton(friendToFollow)
+      val followMessage = FindFriendsScreenTestTags.FOLLOWING_TEXT_ANIMATION
+      val heartAnimation = FindFriendsScreenTestTags.HEART_ANIMATION
+
+      composeTestRule.onNodeWithTag(unfollowButtonTag).performClick()
+      composeTestRule.mainClock.advanceTimeBy(100)
+      composeTestRule.onNodeWithTag(followMessage).assertIsDisplayed()
+      composeTestRule.onNodeWithTag(heartAnimation).assertIsDisplayed()
+
+      composeTestRule.mainClock.advanceTimeBy(animationDelay)
+      composeTestRule.onNodeWithText(followMessage, ignoreCase = true).assertIsNotDisplayed()
+      composeTestRule.onNodeWithText(heartAnimation, ignoreCase = true).assertIsNotDisplayed()
+
+      composeTestRule
+          .onNodeWithTag(FindFriendsScreenTestTags.getTestTagForFriendItem(friendToFollow))
+          .assertIsNotDisplayed()
+      composeTestRule.mainClock.autoAdvance = true
+    }
   }
 }

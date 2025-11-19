@@ -112,6 +112,16 @@ interface ProfileRepository {
    */
   suspend fun initProfileIfMissing(uid: String, defaultPhotoUrl: String): Boolean
 
+  /**
+   * Deletes a user's entire profile, including:
+   * - Their document in /profiles/{uid}
+   * - Their username in /usernames/{username}
+   * - Their profile picture in Firebase Storage
+   *
+   * After this call, the username becomes available again for reuse.
+   */
+  suspend fun deleteUserProfile(uid: String)
+
   /** Creates a profile. This is to be used only for testing purpose. */
   suspend fun addProfile(profile: Profile)
 
@@ -145,4 +155,60 @@ interface ProfileRepository {
    * @param currentUserId the ID of the current user
    */
   suspend fun addFriend(friend: String, currentUserId: String)
+
+  /**
+   * Updates the online/offline status of a user.
+   *
+   * @param uid The user ID whose status to update.
+   * @param status The new [ProfileStatus] to set.
+   */
+  suspend fun updateStatus(uid: String, status: ProfileStatus)
+
+  /**
+   * The user creates a new event
+   *
+   * @param eventId the ID of the event created
+   * @param currentUserId the ID of the current user
+   */
+  suspend fun createEvent(eventId: String, currentUserId: String)
+
+  /**
+   * The user deletes an event he created
+   *
+   * @param eventId the ID of the event he wants to delete
+   * @param currentUserId the ID of the current user who is the owner of this event
+   */
+  suspend fun deleteEvent(eventId: String, currentUserId: String)
+
+  /**
+   * The current user is added as a participant to an event
+   *
+   * @param eventId The ID of the event he wants to participate
+   * @param currentUserId the ID of the current user
+   */
+  suspend fun participateEvent(eventId: String, currentUserId: String)
+
+  /**
+   * When the event is created, we want chosen participants to be register for this event
+   *
+   * @param eventId the ID of the event concerned
+   * @param participants list of all the ID of profiles wanted to be registered for this event
+   */
+  suspend fun allParticipateEvent(eventId: String, participants: List<String>)
+
+  /**
+   * The current user does not want anymore to participate to an event
+   *
+   * @param eventId The ID of the event he wants to unregister
+   * @param currentUserId the ID of the current user
+   */
+  suspend fun unregisterEvent(eventId: String, currentUserId: String)
+
+  /**
+   * When the event is delete, we want every participant to be unregister from this event
+   *
+   * @param eventId the ID of the event concerned
+   * @param participants list of all the ID of profiles register for this event
+   */
+  suspend fun allUnregisterEvent(eventId: String, participants: List<String>)
 }
