@@ -56,6 +56,11 @@ class MapScreenTest {
   private val todoId = "t1"
   private val eventId = "e1"
 
+  private val participatingEventId = "e2"
+  private val creatingEventId = "e3"
+
+  private val TEST_USER_ID = "testUserId"
+
   private val todo =
       ToDo(
           uid = todoId,
@@ -79,13 +84,46 @@ class MapScreenTest {
           startTime = Timestamp(Date()),
           endTime = Timestamp(Date(Date().time + TimeUnit.HOURS.toMillis(2))),
           creatorId = "org-1",
-          participants = listOf("u1", "u2"),
+          participants = listOf("u1", "u2", "org-1"),
+          status = EventStatus.UPCOMING)
+
+  private val participatingEvent =
+      Event(
+          id = participatingEventId,
+          title = "Subsonic Party",
+          description = "Starts 18:30",
+          creatorName = "CLIC",
+          location = Location(46.5210, 6.5690, "EPFL BC"),
+          date = Timestamp(Date()),
+          startTime = Timestamp(Date()),
+          endTime = Timestamp(Date(Date().time + TimeUnit.HOURS.toMillis(2))),
+          creatorId = "org-1",
+          participants = listOf("u1", "u2", TEST_USER_ID),
+          status = EventStatus.UPCOMING)
+
+  private val creatingEvent =
+      Event(
+          id = creatingEventId,
+          title = "ICeLan",
+          description = "25h arcade games",
+          creatorName = "Game*",
+          location = Location(46.5210, 6.5690, "EPFL BC"),
+          date = Timestamp(Date()),
+          startTime = Timestamp(Date()),
+          endTime = Timestamp(Date(Date().time + TimeUnit.HOURS.toMillis(1))),
+          creatorId = TEST_USER_ID,
+          participants = listOf(TEST_USER_ID),
           status = EventStatus.UPCOMING)
 
   @Before
   fun setUp() = runBlocking {
     toDosRepository = ToDosLocalRepository().apply { addTodo(todo) }
-    eventsRepository = EventsLocalRepository().apply { addEvent(event) }
+    eventsRepository =
+        EventsLocalRepository().apply {
+          addEvent(event)
+          addEvent(participatingEvent)
+          addEvent(creatingEvent)
+        }
     viewModel = MapViewModel(todosRepository = toDosRepository, eventsRepository = eventsRepository)
 
     // Wait for ViewModel init to complete
@@ -340,7 +378,8 @@ class MapScreenTest {
 
   /**
    * Tests navigation from the MapScreen to the EventScreen when an event marker is clicked,
-   * including the display of the AlertDialog with event details.
+   * including the display of the AlertDialog with event details. This test specifically checks for
+   * an event the user is not participating in.
    */
   @Test
   fun testMapScreenToEventScreenWithAlertDialog() {
@@ -394,6 +433,122 @@ class MapScreenTest {
 
     compose
         .onNodeWithTag(EventsScreenTestTags.PARTICIPATE_BUTTON, useUnmergedTree = true)
+        .assertIsDisplayed()
+    compose
+        .onNodeWithTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON, useUnmergedTree = true)
+        .assertIsDisplayed()
+  }
+
+  /**
+   * Tests navigation from the MapScreen to the EventScreen when an event marker is clicked,
+   * including the display of the AlertDialog with event details. This test specifically checks for
+   * an event the user is participating in.
+   */
+  @Test
+  fun testMapScreenToParticipatingEvent() {
+    var navigatedEventId: String? = null
+    val isMapScreenActive = mutableStateOf(true)
+
+    val goToEvent: (String) -> Unit = { id ->
+      navigatedEventId = id
+      isMapScreenActive.value = false
+    }
+    mockitoUtils = MockitoUtils()
+    mockitoUtils.chooseCurrentUser(TEST_USER_ID)
+
+    compose.setContent {
+      if (isMapScreenActive.value) {
+        viewModel.changeView()
+        MapScreen(viewModel = viewModel, goToEvent = goToEvent)
+      } else {
+        val eventsVM =
+            EventsViewModel(repository = eventsRepository, authProvider = { mockitoUtils.mockAuth })
+        EventsScreen(
+            eventsViewModel = eventsVM,
+            eventId = navigatedEventId,
+            onSignedOut = {},
+            onAddEvent = {},
+            navigateToEditEvent = {})
+      }
+    }
+    compose.waitForIdle()
+
+    viewModel.onSelectedItem(participatingEventId)
+    compose.waitForIdle()
+
+    compose.onNodeWithTag(MapScreenTestTags.EVENT_BUTTON, useUnmergedTree = true).performClick()
+    compose.waitForIdle()
+
+    assertEquals(participatingEventId, navigatedEventId)
+    compose
+        .onNodeWithTag(EventsScreenTestTags.EVENT_POPUP, useUnmergedTree = true)
+        .assertIsDisplayed()
+
+    compose
+        .onNodeWithTag(EventsScreenTestTags.POPUP_DESCRIPTION, useUnmergedTree = true)
+        .assertIsDisplayed()
+        .assertTextEquals(participatingEvent.description)
+
+    compose
+        .onNodeWithTag(EventsScreenTestTags.UNREGISTER_BUTTON, useUnmergedTree = true)
+        .assertIsDisplayed()
+    compose
+        .onNodeWithTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON, useUnmergedTree = true)
+        .assertIsDisplayed()
+  }
+
+  /**
+   * Tests navigation from the MapScreen to the EventScreen when an event marker is clicked,
+   * including the display of the AlertDialog with event details. This test specifically checks for
+   * an event the user created.
+   */
+  @Test
+  fun testMapScreenToCreatingEvent() {
+    var navigatedEventId: String? = null
+    val isMapScreenActive = mutableStateOf(true)
+
+    val goToEvent: (String) -> Unit = { id ->
+      navigatedEventId = id
+      isMapScreenActive.value = false
+    }
+    mockitoUtils = MockitoUtils()
+    mockitoUtils.chooseCurrentUser(TEST_USER_ID)
+
+    compose.setContent {
+      if (isMapScreenActive.value) {
+        viewModel.changeView()
+        MapScreen(viewModel = viewModel, goToEvent = goToEvent)
+      } else {
+        val eventsVM =
+            EventsViewModel(repository = eventsRepository, authProvider = { mockitoUtils.mockAuth })
+        EventsScreen(
+            eventsViewModel = eventsVM,
+            eventId = navigatedEventId,
+            onSignedOut = {},
+            onAddEvent = {},
+            navigateToEditEvent = {})
+      }
+    }
+    compose.waitForIdle()
+
+    viewModel.onSelectedItem(creatingEventId)
+    compose.waitForIdle()
+
+    compose.onNodeWithTag(MapScreenTestTags.EVENT_BUTTON, useUnmergedTree = true).performClick()
+    compose.waitForIdle()
+
+    assertEquals(creatingEventId, navigatedEventId)
+    compose
+        .onNodeWithTag(EventsScreenTestTags.EVENT_POPUP, useUnmergedTree = true)
+        .assertIsDisplayed()
+
+    compose
+        .onNodeWithTag(EventsScreenTestTags.POPUP_DESCRIPTION, useUnmergedTree = true)
+        .assertIsDisplayed()
+        .assertTextEquals(creatingEvent.description)
+
+    compose
+        .onNodeWithTag(EventsScreenTestTags.EDIT_EVENT_BUTTON, useUnmergedTree = true)
         .assertIsDisplayed()
     compose
         .onNodeWithTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON, useUnmergedTree = true)
