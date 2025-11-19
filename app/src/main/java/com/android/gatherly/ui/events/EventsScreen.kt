@@ -472,7 +472,8 @@ fun UpcomingEventsItem(event: Event, onClick: () -> Unit) {
           // Status indicator circle
           BoxStatusColor(event.status)
 
-          dimensionResource(R.dimen.spacing_between_fields_regular)
+          Spacer(
+              modifier = Modifier.size(dimensionResource(R.dimen.spacing_between_fields_regular)))
 
           // Event details
 
@@ -522,7 +523,8 @@ fun MyOwnEventsItem(event: Event, onClick: () -> Unit) {
           // Status indicator circle
           BoxStatusColor(event.status)
 
-          dimensionResource(R.dimen.spacing_between_fields_regular)
+          Spacer(
+              modifier = Modifier.size(dimensionResource(R.dimen.spacing_between_fields_regular)))
 
           // Event details
 
