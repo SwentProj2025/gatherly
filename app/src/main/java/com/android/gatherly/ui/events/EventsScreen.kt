@@ -163,8 +163,10 @@ fun EventsScreen(
 
   val uiState by eventsViewModel.uiState.collectAsState()
 
+    // Filter state
   val selectedFilter = remember { mutableStateOf(EventFilter.ALL) }
 
+    // list of type of events based on the selected filter
   val browserEvents = getFilteredEvents(selectedFilter, uiState.globalEventList)
   val upcomingEvents = getFilteredEvents(selectedFilter, uiState.participatedEventList)
   val myOwnEvents = getFilteredEvents(selectedFilter, uiState.createdEventList)
@@ -209,7 +211,10 @@ fun EventsScreen(
                     .padding(horizontal = 16.dp)
                     .padding(padding)
                     .testTag(EventsScreenTestTags.ALL_LISTS)) {
+
+                // -- FILTER BAR --
               item { FilterBar(selectedFilter) }
+
               // --  BROWSE EVENTS LIST --
               item {
                 Text(
@@ -467,7 +472,7 @@ fun UpcomingEventsItem(event: Event, onClick: () -> Unit) {
           // Status indicator circle
           BoxStatusColor(event.status)
 
-          Spacer(modifier = Modifier.size(12.dp))
+            dimensionResource(R.dimen.spacing_between_fields_regular)
 
           // Event details
 
@@ -517,7 +522,7 @@ fun MyOwnEventsItem(event: Event, onClick: () -> Unit) {
           // Status indicator circle
           BoxStatusColor(event.status)
 
-          Spacer(modifier = Modifier.size(12.dp))
+            dimensionResource(R.dimen.spacing_between_fields_regular)
 
           // Event details
 
@@ -556,7 +561,8 @@ fun UpComingEventsPopUp(
       title = {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.events_popup_horizontalArrangement_size)),
+
             modifier = Modifier.fillMaxWidth()) {
               // Status indicator circle
               BoxStatusColor(event.status)
@@ -630,7 +636,7 @@ fun BrowserEventsPopUp(
       title = {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.events_popup_horizontalArrangement_size)),
             modifier = Modifier.fillMaxWidth()) {
               // Status indicator circle
               BoxStatusColor(event.status)
@@ -706,7 +712,7 @@ fun MyOwnEventsPopUp(
       title = {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.events_popup_horizontalArrangement_size)),
             modifier = Modifier.fillMaxWidth()) {
               // Status indicator circle
               BoxStatusColor(event.status)
@@ -792,7 +798,7 @@ private fun BoxStatusColor(status: EventStatus) {
 @Composable
 private fun FilterBar(selectedFilter: MutableState<EventFilter>) {
   Row(
-      modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
+      modifier = Modifier.fillMaxWidth().padding(vertical = dimensionResource(R.dimen.events_filter_bar_vertical_size)),
       horizontalArrangement = Arrangement.SpaceEvenly) {
         FilterButton("All", EventFilter.ALL, selectedFilter, Modifier)
         FilterButton(
@@ -839,8 +845,8 @@ fun FilterButton(
               contentColor =
                   if (isSelected) MaterialTheme.colorScheme.onPrimary
                   else MaterialTheme.colorScheme.background),
-      shape = RoundedCornerShape(20.dp),
-      modifier = modifier.height(35.dp)) {
+      shape = RoundedCornerShape(dimensionResource(R.dimen.rounded_corner_shape_large)),
+      modifier = modifier.height(dimensionResource(R.dimen.events_filter_button_height))) {
         Text(text = label)
       }
 }
