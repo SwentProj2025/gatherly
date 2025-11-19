@@ -13,7 +13,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material3.*
-import androidx.compose.material3.ButtonDefaults.buttonColors
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -138,11 +137,11 @@ fun SettingsScreen(
             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
             modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
             onSignedOut = {
-              if (uiState.isAnon) {
-                shouldShowLogOutWarning.value = true
-              } else {
-                settingsViewModel.signOut(credentialManager)
-              }
+              signOutSettingsScreen(
+                  uiState = uiState,
+                  shouldShowLogOutWarning = shouldShowLogOutWarning,
+                  settingsViewModel = settingsViewModel,
+                  credentialManager = credentialManager)
             })
       },
       snackbarHost = {
@@ -320,15 +319,7 @@ fun SettingsScreen(
                             containerColor = MaterialTheme.colorScheme.primary,
                             contentColor = MaterialTheme.colorScheme.onPrimary),
                     enabled = uiState.isValid && !uiState.isSaving) {
-                      Text(
-                          text =
-                              if (uiState.isSaving) {
-                                stringResource(R.string.saving)
-                              } else {
-                                stringResource(R.string.settings_save)
-                              },
-                          fontSize = 16.sp,
-                          fontWeight = FontWeight.Medium)
+                      SavingText(uiState = uiState)
                     }
 
                 // Delete account
@@ -377,6 +368,32 @@ fun SettingsScreen(
               isImportantWarning = true)
         }
       })
+}
+
+@Composable
+fun SavingText(uiState: SettingsUiState) {
+  Text(
+      text =
+          if (uiState.isSaving) {
+            stringResource(R.string.saving)
+          } else {
+            stringResource(R.string.settings_save)
+          },
+      fontSize = 16.sp,
+      fontWeight = FontWeight.Medium)
+}
+
+fun signOutSettingsScreen(
+    uiState: SettingsUiState,
+    shouldShowLogOutWarning: MutableState<Boolean>,
+    settingsViewModel: SettingsViewModel,
+    credentialManager: CredentialManager
+) {
+  if (uiState.isAnon) {
+    shouldShowLogOutWarning.value = true
+  } else {
+    settingsViewModel.signOut(credentialManager)
+  }
 }
 
 /**

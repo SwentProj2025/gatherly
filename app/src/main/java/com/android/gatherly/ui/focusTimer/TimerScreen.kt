@@ -49,7 +49,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
 import com.android.gatherly.ui.navigation.BottomNavigationMenu
@@ -61,7 +60,6 @@ import com.android.gatherly.ui.navigation.TopNavigationMenu
 import com.android.gatherly.ui.theme.GatherlyTheme
 
 object FocusTimerScreenTestTags {
-  const val TIMERTEXT = "TIMER"
   const val HOURS_TEXT = "HOURS_TEXT"
   const val MINUTES_TEXT = "MINUTES_TEXT"
   const val SECONDS_TEXT = "SECONDS_TEXT"
@@ -79,7 +77,6 @@ object FocusTimerScreenTestTags {
 @Composable
 fun TimerScreen(
     timerViewModel: TimerViewModel = viewModel(),
-    credentialManager: CredentialManager = CredentialManager.create(LocalContext.current),
     onSignedOut: () -> Unit = {},
     navigationActions: NavigationActions? = null,
 ) {

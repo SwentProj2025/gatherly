@@ -35,7 +35,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
 import com.android.gatherly.model.event.Event
@@ -111,7 +110,6 @@ private object Dimensions {
  * A composable screen displaying ToDos and Events as interactive markers on a Google Map.
  *
  * @param viewModel An optional MapViewModel to manage the UI state, used for testing.
- * @param credentialManager The CredentialManager for handling user sign-out.
  * @param onSignedOut Callback invoked when the user signs out.
  * @param navigationActions Navigation actions for switching between app sections.
  * @param goToEvent Callback to navigate to the Event detail page.
@@ -121,7 +119,6 @@ private object Dimensions {
 @Composable
 fun MapScreen(
     viewModel: MapViewModel? = null,
-    credentialManager: CredentialManager = CredentialManager.create(LocalContext.current),
     onSignedOut: () -> Unit = {},
     navigationActions: NavigationActions? = null,
     goToEvent: () -> Unit = {},
