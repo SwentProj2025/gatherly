@@ -67,12 +67,13 @@ class SignInViewModel(
   /** Decide where to navigate after a successful sign in */
   private suspend fun handlePostSignInNav() {
     val uid = Firebase.auth.currentUser?.uid ?: return
+    val isAnon = Firebase.auth.currentUser?.isAnonymous ?: return
     val profile = profileRepository.getProfileByUid(uid)
 
     uiState =
         uiState.copy(
             destinationScreen =
-                if (profile?.username.isNullOrEmpty()) {
+                if (profile?.username.isNullOrEmpty() && !isAnon) {
                   "init_profile"
                 } else {
                   "home"

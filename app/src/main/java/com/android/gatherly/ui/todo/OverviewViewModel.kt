@@ -4,10 +4,13 @@ import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.android.gatherly.model.profile.ProfileRepository
+import com.android.gatherly.model.profile.ProfileRepositoryProvider
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.model.todo.ToDosRepositoryProvider
+import com.android.gatherly.utils.editTodo_updateBadges
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -41,10 +44,13 @@ data class OverviewUIState(
  */
 class OverviewViewModel(
     private val todoRepository: ToDosRepository = ToDosRepositoryProvider.repository,
+    private val profileRepository: ProfileRepository = ProfileRepositoryProvider.repository
 ) : ViewModel() {
 
   private val _uiState = MutableStateFlow(OverviewUIState())
   val uiState: StateFlow<OverviewUIState> = _uiState.asStateFlow()
+
+  private var allTodosCache: List<ToDo> = emptyList()
 
   init {
     getAllTodos()
@@ -61,6 +67,7 @@ class OverviewViewModel(
       _uiState.value = _uiState.value.copy(isLoading = true, errorMsg = null)
       try {
         val todos = todoRepository.getAllTodos()
+        allTodosCache = todos
         _uiState.value = OverviewUIState(todos = todos, isLoading = false)
       } catch (e: Exception) {
         _uiState.value =
@@ -72,10 +79,26 @@ class OverviewViewModel(
   /** Invoked when the user clicks on the checkbox, to mark the ToDo as completed or ongoing. */
   fun onCheckboxChanged(uid: String, newStatus: ToDoStatus) {
     viewModelScope.launch {
-      val updatedTodo = todoRepository.getTodo(uid).copy(status = newStatus)
-      todoRepository.editTodo(uid, updatedTodo)
+      val ownerId = todoRepository.getTodo(uid).ownerId
+      editTodo_updateBadges(todoRepository, profileRepository, uid, newStatus, ownerId)
       refreshUIState()
     }
+  }
+
+  /** Invoked when users type in the search bar to filter todos according to the typed query. */
+  fun searchTodos(query: String) {
+    val normalized = query.trim().lowercase()
+    if (normalized.isEmpty()) {
+      // When query is empty in the search bar, we display the full list:
+      refreshUIState()
+      return
+    }
+    val filtered =
+        allTodosCache.filter {
+          it.name.lowercase().contains(normalized) ||
+              it.description.lowercase().contains(normalized)
+        }
+    _uiState.value = _uiState.value.copy(todos = filtered)
   }
 
   /** Initiates sign-out */

@@ -28,13 +28,13 @@ class ProfileScreenTest {
 
   private lateinit var mockitoUtils: MockitoUtils
 
-  private fun setContent() {
+  private fun setContent(isAnon: Boolean = false) {
     profileRepository = ProfileLocalRepository()
     fill_repository()
 
     // Mock Firebase Auth
     mockitoUtils = MockitoUtils()
-    mockitoUtils.chooseCurrentUser("")
+    mockitoUtils.chooseCurrentUser("", isAnon)
 
     profileViewModel =
         ProfileViewModel(repository = profileRepository, authProvider = { mockitoUtils.mockAuth })
@@ -89,5 +89,12 @@ class ProfileScreenTest {
     setContent()
     composeTestRule.onNodeWithTag(ProfileScreenTestTags.PROFILE_FOCUS_SESSIONS).assertExists()
     composeTestRule.onNodeWithTag(ProfileScreenTestTags.PROFILE_GROUPS).assertExists()
+  }
+
+  /** Check that the anonymous user sees the "upgrade with google" button */
+  @Test
+  fun anonUserSeesGoogleButton() {
+    setContent(true)
+    composeTestRule.onNodeWithTag(ProfileScreenTestTags.GOOGLE_BUTTON).assertIsDisplayed()
   }
 }

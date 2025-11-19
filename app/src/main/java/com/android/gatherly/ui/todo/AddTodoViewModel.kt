@@ -4,11 +4,17 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.map.Location
 import com.android.gatherly.model.map.NominatimLocationRepository
+import com.android.gatherly.model.profile.ProfileRepository
+import com.android.gatherly.model.profile.ProfileRepositoryProvider
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.model.todo.ToDosRepositoryProvider
+import com.android.gatherly.utils.addTodo_updateBadges
 import com.google.firebase.Timestamp
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.ktx.auth
+import com.google.firebase.ktx.Firebase
 import java.text.SimpleDateFormat
 import java.util.Locale
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -70,6 +76,8 @@ private var client: OkHttpClient =
  */
 class AddTodoViewModel(
     private val todoRepository: ToDosRepository = ToDosRepositoryProvider.repository,
+    private val profileRepository: ProfileRepository = ProfileRepositoryProvider.repository,
+    private val authProvider: () -> FirebaseAuth = { Firebase.auth },
     private val nominatimClient: NominatimLocationRepository = NominatimLocationRepository(client)
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(AddTodoUiState())
@@ -79,6 +87,7 @@ class AddTodoViewModel(
 
   // Chosen location
   private var chosenLocation: Location? = null
+  private lateinit var ownerId: String
 
   /** Clears the error message in the UI state. */
   fun clearErrorMsg() {
@@ -260,6 +269,10 @@ class AddTodoViewModel(
     viewModelScope.launch {
       _uiState.value = _uiState.value.copy(isSaving = true, saveError = null)
       try {
+        val ownerId =
+            authProvider().currentUser?.uid
+                ?: throw IllegalStateException("User not authenticated.")
+
         val uid = todoRepository.getNewUid()
         val sdfDate = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
         val date =
@@ -282,10 +295,9 @@ class AddTodoViewModel(
                 dueTime = dueTimeTimestamp,
                 location = chosenLocation,
                 status = ToDoStatus.ONGOING,
-                ownerId = "" // will be filled by Firestore repo
-                )
+                ownerId = ownerId)
 
-        todoRepository.addTodo(todo)
+        addTodo_updateBadges(todoRepository, profileRepository, todo, ownerId)
         _uiState.value = _uiState.value.copy(isSaving = false, saveSuccess = true)
       } catch (e: Exception) {
         _uiState.value = _uiState.value.copy(isSaving = false, saveError = e.message)

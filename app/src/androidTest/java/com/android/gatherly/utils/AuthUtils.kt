@@ -11,8 +11,10 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.Companion.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkObject
 import org.json.JSONObject
@@ -106,6 +108,7 @@ class FakeCredentialManager private constructor(private val context: Context) :
       coEvery {
         fakeCredentialManager.getCredential(any<Context>(), any<GetCredentialRequest>())
       } returns mockGetCredentialResponse
+      coEvery { fakeCredentialManager.clearCredentialState(any()) } just Runs
 
       return fakeCredentialManager
     }
@@ -137,7 +140,7 @@ class MockitoUtils {
   fun chooseCurrentUser(currentUser: String, isAnon: Boolean = false) {
     `when`(mockAuth.currentUser).thenReturn(mockUser)
     `when`(mockUser.uid).thenReturn(currentUser)
-    `when`(mockUser.isAnonymous).thenReturn(false)
+    `when`(mockUser.isAnonymous).thenReturn(isAnon)
   }
 
   /** For tests that want to test with an unauthenticated user */
