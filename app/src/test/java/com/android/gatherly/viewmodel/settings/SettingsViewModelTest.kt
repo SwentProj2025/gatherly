@@ -183,7 +183,6 @@ class SettingsViewModelTest {
     val updated = repo.getProfileByUid("u1")
     assertEquals("Bob", updated?.name)
     assertEquals("new_user", updated?.username)
-    assertNull(viewModel.uiState.value.errorMsg)
   }
 
   @Test
@@ -248,7 +247,6 @@ class SettingsViewModelTest {
     advanceUntilIdle()
 
     val state = viewModel.uiState.value
-    assertNull(state.errorMsg)
     assertTrue("Expected saveSuccess to be true", state.errorMsg == "Save successful")
   }
 
@@ -360,7 +358,6 @@ class SettingsViewModelTest {
       val updated = repo.getProfileByUid(uid)
       assertEquals("https://local.test.storage/$uid.jpg", updated?.profilePicture)
       assertTrue(viewModel.uiState.value.errorMsg == "Save successful")
-      assertNull(viewModel.uiState.value.errorMsg)
     }
   }
 

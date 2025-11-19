@@ -147,7 +147,7 @@ class SettingsViewModel(
    * @param id The id of the Profile to be updated.
    */
   fun updateProfile(id: String = authProvider().currentUser?.uid!!, isFirstTime: Boolean) {
-    _uiState.value = _uiState.value.copy(isSaving = true)
+    _uiState.value = _uiState.value.copy(isSaving = true, isUsernameAvailable = null)
     val state = _uiState.value
     if (!state.isValid) {
       setErrorMsg("At least one field is not valid.")
@@ -194,7 +194,6 @@ class SettingsViewModel(
         clearErrorMsg()
         _uiState.value = _uiState.value.copy(isSaving = false)
         setErrorMsg("Save successful")
-        loadProfile(id)
       } catch (e: Exception) {
         Log.e("SettingsViewModel", "Error saving profile", e)
         setErrorMsg("Failed to save profile: ${e.message}")
