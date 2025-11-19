@@ -106,6 +106,10 @@ object EventsScreenTestTags {
   const val EVENT_STATUS_INDICATOR_ONGOING = "EventStatusIndicatorYellow"
   const val EVENT_STATUS_INDICATOR_PAST = "EventStatusIndicatorGrey"
 
+  const val FILTER_UPCOMING_BUTTON = "FilterUpcomingButton"
+  const val FILTER_ONGOING_BUTTON = "FilterOngoingButton"
+  const val FILTER_PAST_BUTTON = "FilterPastButton"
+
   /**
    * Returns a unique test tag for the card or container representing a given [Event] item.
    *
@@ -113,6 +117,18 @@ object EventsScreenTestTags {
    * @return A string uniquely identifying the Event item in the UI.
    */
   fun getTestTagForEventItem(event: Event): String = "eventItem${event.id}"
+}
+
+/**
+ * Displays a colored box indicating the status of an event.
+ *
+ * @param status The [EventStatus] of the event.
+ */
+enum class EventFilter {
+  ALL,
+  UPCOMING,
+  ONGOING,
+  PAST
 }
 
 /**
@@ -146,9 +162,13 @@ fun EventsScreen(
   val coroutineScope = rememberCoroutineScope()
 
   val uiState by eventsViewModel.uiState.collectAsState()
-  val browserEvents = uiState.globalEventList
-  val upcomingEvents = uiState.participatedEventList
-  val myOwnEvents = uiState.createdEventList
+
+  val selectedFilter = remember { mutableStateOf(EventFilter.ALL) }
+
+  val browserEvents = getFilteredEvents(selectedFilter, uiState.globalEventList)
+  val upcomingEvents = getFilteredEvents(selectedFilter, uiState.participatedEventList)
+  val myOwnEvents = getFilteredEvents(selectedFilter, uiState.createdEventList)
+
   val currentUserIdFromVM = uiState.currentUserId
 
   val selectedBrowserEvent = remember { mutableStateOf<Event?>(null) }
@@ -189,7 +209,7 @@ fun EventsScreen(
                     .padding(horizontal = 16.dp)
                     .padding(padding)
                     .testTag(EventsScreenTestTags.ALL_LISTS)) {
-
+              item { FilterBar(selectedFilter) }
               // --  BROWSE EVENTS LIST --
               item {
                 Text(
@@ -766,6 +786,76 @@ private fun BoxStatusColor(status: EventStatus) {
                     EventStatus.ONGOING -> EventsScreenTestTags.EVENT_STATUS_INDICATOR_ONGOING
                     EventStatus.PAST -> EventsScreenTestTags.EVENT_STATUS_INDICATOR_PAST
                   }))
+}
+
+/** Displays a filter bar with buttons to filter events by their status. */
+@Composable
+private fun FilterBar(selectedFilter: MutableState<EventFilter>) {
+  Row(
+      modifier = Modifier.fillMaxWidth().padding(vertical = 10.dp),
+      horizontalArrangement = Arrangement.SpaceEvenly) {
+        FilterButton("All", EventFilter.ALL, selectedFilter, Modifier)
+        FilterButton(
+            "Upcoming",
+            EventFilter.UPCOMING,
+            selectedFilter,
+            Modifier.testTag(EventsScreenTestTags.FILTER_UPCOMING_BUTTON))
+        FilterButton(
+            "Ongoing",
+            EventFilter.ONGOING,
+            selectedFilter,
+            Modifier.testTag(EventsScreenTestTags.FILTER_ONGOING_BUTTON))
+        FilterButton(
+            "Past",
+            EventFilter.PAST,
+            selectedFilter,
+            Modifier.testTag(EventsScreenTestTags.FILTER_PAST_BUTTON))
+      }
+}
+
+/**
+ * A button used in the filter bar to select an event filter.
+ *
+ * @param label The text label for the button.
+ * @param filter The [EventFilter] associated with this button.
+ * @param selectedFilter The currently selected [EventFilter] state.
+ */
+@Composable
+fun FilterButton(
+    label: String,
+    filter: EventFilter,
+    selectedFilter: MutableState<EventFilter>,
+    modifier: Modifier
+) {
+  val isSelected = selectedFilter.value == filter
+
+  Button(
+      onClick = { selectedFilter.value = filter },
+      colors =
+          buttonColors(
+              containerColor =
+                  if (isSelected) MaterialTheme.colorScheme.primary
+                  else MaterialTheme.colorScheme.surfaceVariant,
+              contentColor =
+                  if (isSelected) MaterialTheme.colorScheme.onPrimary
+                  else MaterialTheme.colorScheme.background),
+      shape = RoundedCornerShape(20.dp),
+      modifier = modifier.height(35.dp)) {
+        Text(text = label)
+      }
+}
+
+/** Helper function : return the list of events filtered according to the selected filter status */
+private fun getFilteredEvents(
+    selectedFilter: MutableState<EventFilter>,
+    listEvents: List<Event>
+): List<Event> {
+  return when (selectedFilter.value) {
+    EventFilter.ALL -> listEvents
+    EventFilter.UPCOMING -> listEvents.filter { it.status == EventStatus.UPCOMING }
+    EventFilter.ONGOING -> listEvents.filter { it.status == EventStatus.ONGOING }
+    EventFilter.PAST -> listEvents.filter { it.status == EventStatus.PAST }
+  }
 }
 
 @Preview(showBackground = true)

@@ -640,6 +640,71 @@ class EventsOverviewScreenTest {
         pastEventCreated, hasTestTag(EventsScreenTestTags.EVENT_STATUS_INDICATOR_PAST))
   }
 
+  /** Test: Verifies that the filter bar correctly filters events based on their status */
+  @Test
+  fun testFilterBarWorksCorrectly() = runTest {
+    val currentUserId = "bobId"
+
+    val listUpcoming: List<Event> =
+        listOf(upcomingEvent, upcomingEventCreated, upcomingEventParticipate)
+    val listOngoing: List<Event> =
+        listOf(ongoingEvent, ongoingEventCreated, ongoingEventParticipating)
+    val listPast: List<Event> = listOf(pastEvent, pastEventCreated, pastEventParticipating)
+
+    val listEvents = listUpcoming + listOngoing + listPast
+
+    listEvents.forEach { event -> eventsRepository.addEvent(event) }
+
+    setContent(currentUserId)
+
+    composeTestRule.waitForIdle()
+
+    // Initially, all events should be displayed
+    listEvents.forEach { event ->
+      composeTestRule.scrollToEvent(event)
+      composeTestRule
+          .onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(event))
+          .assertIsDisplayed()
+    }
+    // Apply Upcoming filter
+    composeTestRule.scrollToEvent(upcomingEvent) // Ensure the filter bar is visible
+    composeTestRule
+        .onNodeWithTag(EventsScreenTestTags.FILTER_UPCOMING_BUTTON)
+        .assertIsDisplayed()
+        .performClick()
+    composeTestRule.waitForIdle()
+    listUpcoming.forEach { event ->
+      composeTestRule.scrollToEvent(event)
+      composeTestRule
+          .onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(event))
+          .assertIsDisplayed()
+    }
+    // Apply Ongoing filter
+    composeTestRule.scrollToEvent(upcomingEvent) // Ensure the filter bar is visible
+    composeTestRule
+        .onNodeWithTag(EventsScreenTestTags.FILTER_ONGOING_BUTTON)
+        .assertIsDisplayed()
+        .performClick()
+    composeTestRule.waitForIdle()
+    listOngoing.forEach { event ->
+      composeTestRule
+          .onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(event))
+          .assertIsDisplayed()
+    }
+    // Apply Past filter
+    composeTestRule.scrollToEvent(ongoingEvent) // Ensure the filter bar is visible
+    composeTestRule
+        .onNodeWithTag(EventsScreenTestTags.FILTER_PAST_BUTTON)
+        .assertIsDisplayed()
+        .performClick()
+    composeTestRule.waitForIdle()
+    listPast.forEach { event ->
+      composeTestRule
+          .onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(event))
+          .assertIsDisplayed()
+    }
+  }
+
   // ///////////////////// UTILS
 
   /** Helper function to use when we want to click on a specific event item */
