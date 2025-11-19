@@ -550,7 +550,11 @@ class EventsOverviewScreenTest {
     }
 
     composeTestRule.setContent {
-      EventsScreen(eventsViewModel = EventsViewModel(repository = SlowEventsRepo()))
+      EventsScreen(
+          eventsViewModel =
+              EventsViewModel(
+                  profileRepository = ProfileLocalRepository(),
+                  eventsRepository = SlowEventsRepo()))
     }
     composeTestRule.onNodeWithTag(EventsScreenTestTags.BROWSE_EVENTS_LOADING).assertIsDisplayed()
     composeTestRule.onNodeWithTag(EventsScreenTestTags.UPCOMING_EVENTS_LOADING).assertIsDisplayed()

@@ -249,7 +249,7 @@ class SettingsViewModelTest {
 
     val state = viewModel.uiState.value
     assertNull(state.errorMsg)
-    assertTrue("Expected saveSuccess to be true", state.saveSuccess)
+    assertTrue("Expected saveSuccess to be true", state.errorMsg == "Save successful")
   }
 
   @Test
@@ -270,19 +270,7 @@ class SettingsViewModelTest {
     val updated = repo.getProfileByUid("u1")
     assertEquals("Alice Updated", updated?.name)
     assertEquals("user_ok_new", updated?.username)
-    assertTrue(viewModel.uiState.value.saveSuccess)
-  }
-
-  @Test
-  fun clearSaveSuccess_ResetsFlag() = runTest {
-    viewModel.editName("Test")
-    viewModel.editUsername("valid_name")
-    advanceUntilIdle()
-    viewModel.updateProfile("id1", isFirstTime = true)
-    advanceUntilIdle()
-
-    viewModel.clearSaveSuccess()
-    assertFalse(viewModel.uiState.value.saveSuccess)
+    assertTrue(viewModel.uiState.value.errorMsg == "Save successful")
   }
 
   @Test
@@ -309,7 +297,7 @@ class SettingsViewModelTest {
     // THEN the ViewModel should report the username invalid/taken error
     val state = viewModel.uiState.value
     assertEquals("Username is invalid or already taken.", state.errorMsg)
-    assertFalse(state.saveSuccess)
+    assertTrue(state.errorMsg != "Save successful")
     repo.shouldFailRegisterUsername = false
   }
 
@@ -334,7 +322,7 @@ class SettingsViewModelTest {
 
     val updated = repo.getProfileByUid(uid)
     assertEquals("same_url", updated?.profilePicture)
-    assertTrue(viewModel.uiState.value.saveSuccess)
+    assertTrue(viewModel.uiState.value.errorMsg == "Save successful")
   }
 
   // Used ChatGpt for this test to implement Mockito and help use parse even though we are in unit
@@ -371,7 +359,7 @@ class SettingsViewModelTest {
       // THEN repository should now have updated URL
       val updated = repo.getProfileByUid(uid)
       assertEquals("https://local.test.storage/$uid.jpg", updated?.profilePicture)
-      assertTrue(viewModel.uiState.value.saveSuccess)
+      assertTrue(viewModel.uiState.value.errorMsg == "Save successful")
       assertNull(viewModel.uiState.value.errorMsg)
     }
   }
