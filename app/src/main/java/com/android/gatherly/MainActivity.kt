@@ -27,6 +27,7 @@ import com.android.gatherly.ui.events.EventsScreen
 import com.android.gatherly.ui.focusTimer.TimerScreen
 import com.android.gatherly.ui.friends.FindFriendsScreen
 import com.android.gatherly.ui.friends.FriendsScreen
+import com.android.gatherly.ui.groups.AddGroupScreen
 import com.android.gatherly.ui.homePage.HomePageScreen
 import com.android.gatherly.ui.map.MapScreen
 import com.android.gatherly.ui.navigation.NavigationActions
@@ -258,6 +259,18 @@ fun GatherlyApp(
     ) {
       composable(Screen.InitProfileScreen.route) {
         InitProfileScreen(navigationActions = navigationActions)
+      }
+    }
+
+    // ADDGROUP COMPOSABLE  ------------------------------
+    navigation(
+        startDestination = Screen.AddGroupScreen.route,
+        route = Screen.AddGroupScreen.name,
+    ) {
+      composable(Screen.AddGroupScreen.route) {
+        AddGroupScreen(
+            goBack = { navigationActions.goBack() },
+            onCreate = { navigationActions.navigateTo(Screen.HomePage) })
       }
     }
   }
