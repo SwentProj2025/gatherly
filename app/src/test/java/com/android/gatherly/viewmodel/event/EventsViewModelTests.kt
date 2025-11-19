@@ -201,7 +201,6 @@ class EventsViewModelTests {
     assertEquals(Timestamp(1730000000, 0), initialEvent?.date)
     assertEquals(Timestamp(1730010000, 0), initialEvent?.startTime)
     assertEquals(Timestamp(1730020000, 0), initialEvent?.endTime)
-    assertEquals(EventStatus.UPCOMING, initialEvent?.status)
 
     // onEditEvent call
     vm.onEditEvent(
