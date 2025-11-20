@@ -55,13 +55,7 @@ class SignInViewModelTest : FirestoreGatherlyTest() {
     assert(signInViewModel.uiState.isLoading)
 
     // Wait for the user to be signed in
-    withContext(Dispatchers.Default.limitedParallelism(1)) {
-      withTimeout(5000L) {
-        while (!signInViewModel.uiState.signedIn) {
-          delay(50)
-        }
-      }
-    }
+    waitForUserSignIn()
 
     // Check the loading, firebase user, destination screen and signedIn
     assert(!signInViewModel.uiState.isLoading)
@@ -119,13 +113,7 @@ class SignInViewModelTest : FirestoreGatherlyTest() {
 
     signInViewModel.signInAnonymously()
 
-    withContext(Dispatchers.Default.limitedParallelism(1)) {
-      withTimeout(5000L) {
-        while (!signInViewModel.uiState.signedIn) {
-          delay(50)
-        }
-      }
-    }
+    waitForUserSignIn()
 
     assert(signInViewModel.uiState.signedIn)
     assert(FirebaseEmulator.auth.currentUser != null)
@@ -144,9 +132,7 @@ class SignInViewModelTest : FirestoreGatherlyTest() {
     signInViewModel.signInWithGoogle(context, fakeCredentialManager)
 
     // Wait for coroutine to finish
-    withContext(Dispatchers.Default.limitedParallelism(1)) {
-      while (!signInViewModel.uiState.signedIn) delay(50)
-    }
+    waitForUserSignIn()
 
     val uid = FirebaseEmulator.auth.currentUser!!.uid
     val status = profileRepository.getProfileByUid(uid)?.status
@@ -158,12 +144,16 @@ class SignInViewModelTest : FirestoreGatherlyTest() {
   fun anonymousSignIn_updatesStatusOnline() = runTest {
     signInViewModel.signInAnonymously()
 
-    withContext(Dispatchers.Default.limitedParallelism(1)) {
-      while (!signInViewModel.uiState.signedIn) delay(50)
-    }
+    waitForUserSignIn()
 
     val uid = FirebaseEmulator.auth.currentUser!!.uid
     val status = profileRepository.getProfileByUid(uid)?.status
     assertEquals(ProfileStatus.ONLINE, status)
+  }
+
+  fun waitForUserSignIn() = runTest {
+    withContext(Dispatchers.Default.limitedParallelism(1)) {
+      while (!signInViewModel.uiState.signedIn) delay(50)
+    }
   }
 }
