@@ -1,5 +1,6 @@
 package com.android.gatherly.ui.todo
 
+import android.annotation.SuppressLint
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.map.Location
@@ -76,6 +77,7 @@ private var client: OkHttpClient =
  *
  * @param todoRepository The repository responsible for persisting ToDo items.
  */
+@SuppressLint("SimpleDateFormat")
 class AddTodoViewModel(
     private val todoRepository: ToDosRepository = ToDosRepositoryProvider.repository,
     private val profileRepository: ProfileRepository = ProfileRepositoryProvider.repository,
@@ -90,6 +92,7 @@ class AddTodoViewModel(
   // Chosen location
   private var chosenLocation: Location? = null
   private lateinit var ownerId: String
+  private val dateSDF = SimpleDateFormat("dd/MM/yyyy")
 
   /** Clears the error message in the UI state. */
   fun clearErrorMsg() {
@@ -185,9 +188,8 @@ class AddTodoViewModel(
     val regex = Regex("""\d{2}/\d{2}/\d{4}""")
     if (!regex.matches(date)) return false
     return try {
-      val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-      sdf.isLenient = false
-      sdf.parse(date)
+      dateSDF.isLenient = false
+      dateSDF.parse(date)
       true
     } catch (e: Exception) {
       false
@@ -269,9 +271,8 @@ class AddTodoViewModel(
       return
     }
     if (validated.dueTime.isBlank()) {
-      val sdfDate = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
       dateAndTime =
-          sdfDate.parse(validated.dueDate) ?: throw IllegalArgumentException("Invalid date")
+          dateSDF.parse(validated.dueDate) ?: throw IllegalArgumentException("Invalid date")
     } else {
       val sdfDateAndTime = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
       dateAndTime =
@@ -306,9 +307,8 @@ class AddTodoViewModel(
                 ?: throw IllegalStateException("User not authenticated.")
 
         val uid = todoRepository.getNewUid()
-        val sdfDate = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
         val date =
-            sdfDate.parse(validated.dueDate) ?: throw IllegalArgumentException("Invalid date")
+            dateSDF.parse(validated.dueDate) ?: throw IllegalArgumentException("Invalid date")
 
         val dueDateTimestamp = Timestamp(date)
         val dueTimeTimestamp =

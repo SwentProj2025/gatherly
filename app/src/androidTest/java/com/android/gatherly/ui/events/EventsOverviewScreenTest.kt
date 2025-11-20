@@ -12,6 +12,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
 import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsLocalRepository
@@ -21,12 +22,13 @@ import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.utils.AlertDialogTestTags
-import com.android.gatherly.utils.GatherlyTest.Companion.fromDate
 import com.android.gatherly.utils.MockitoUtils
 import com.android.gatherly.utils.UI_WAIT_TIMEOUT
 import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
-import java.util.Calendar
+import java.time.Instant
+import java.time.temporal.ChronoUnit
+import java.util.Date
 import java.util.NoSuchElementException
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
@@ -55,7 +57,6 @@ class EventsOverviewScreenTest {
     mockitoUtils = MockitoUtils()
   }
 
-  private val dateB = Timestamp.Companion.fromDate(2025, Calendar.OCTOBER, 25)
   private val start =
       SimpleDateFormat("HH:mm").parse("12:00") ?: throw NoSuchElementException("no date ")
   private val finish =
@@ -81,7 +82,7 @@ class EventsOverviewScreenTest {
         description = "Need to work in the CO with Gab, in order to finish the TDS homework",
         creatorName = "Sofija",
         location = Location(46.520278, 6.565556, "EPFL"),
-        date = dateB,
+        date = tomorrowTimestamp,
         startTime = Timestamp(start),
         endTime = Timestamp(finish),
         creatorId = currentUserId,
@@ -89,6 +90,136 @@ class EventsOverviewScreenTest {
         status = EventStatus.UPCOMING,
     )
   }
+
+  // Upcoming EVENT
+  private val tomorrowTimestamp = Timestamp(Date.from(Instant.now().plus(1, ChronoUnit.DAYS)))
+  private val upcomingEvent =
+      Event(
+          id = "upcomingEventId1",
+          title = "Tomorrow's Event 1",
+          description = "An event happening tomorrow",
+          creatorName = "Alice",
+          location = Location(46.520278, 6.565556, "EPFL"),
+          date = tomorrowTimestamp,
+          startTime = Timestamp(start),
+          endTime = Timestamp(finish),
+          creatorId = "aliceId",
+          participants = listOf(),
+          status = EventStatus.UPCOMING)
+
+  private val upcomingEventParticipate =
+      Event(
+          id = "upcomingEventIdParticipate",
+          title = "Tomorrow's Event 2",
+          description = "An event happening tomorrow",
+          creatorName = "Alice",
+          location = Location(46.520278, 6.565556, "EPFL"),
+          date = tomorrowTimestamp,
+          startTime = Timestamp(start),
+          endTime = Timestamp(finish),
+          creatorId = "aliceId",
+          participants = listOf("bobId"),
+          status = EventStatus.UPCOMING)
+
+  private val upcomingEventCreated =
+      Event(
+          id = "CreatedUpcomingEventId",
+          title = "Tomorrow's Event 3",
+          description = "An event happening tomorrow",
+          creatorName = "Bob",
+          location = Location(46.520278, 6.565556, "EPFL"),
+          date = tomorrowTimestamp,
+          startTime = Timestamp(start),
+          endTime = Timestamp(finish),
+          creatorId = "bobId",
+          participants = listOf(),
+          status = EventStatus.UPCOMING)
+
+  // ONGOING EVENT
+  private val oneHourAgo = Timestamp(Date(System.currentTimeMillis() - 3600_000))
+  private val oneHourLater = Timestamp(Date(System.currentTimeMillis() + 3600_000))
+  private val ongoingEvent =
+      Event(
+          id = "ongoing",
+          title = "Ongoing Event 1",
+          description = "An event currently happening",
+          creatorName = "Alice",
+          location = Location(46.520278, 6.565556, "EPFL"),
+          date = Timestamp.now(),
+          startTime = oneHourAgo,
+          endTime = oneHourLater,
+          creatorId = "aliceId",
+          participants = listOf(),
+          status = EventStatus.ONGOING)
+  private val ongoingEventParticipating =
+      Event(
+          id = "ongoing2",
+          title = "Ongoing Event 2",
+          description = "An event currently happening",
+          creatorName = "Alice",
+          location = Location(46.520278, 6.565556, "EPFL"),
+          date = Timestamp.now(),
+          startTime = oneHourAgo,
+          endTime = oneHourLater,
+          creatorId = "aliceId",
+          participants = listOf("bobId"),
+          status = EventStatus.ONGOING)
+  private val ongoingEventCreated =
+      Event(
+          id = "ongoing3",
+          title = "Ongoing Event 3",
+          description = "An event currently happening",
+          creatorName = "Bob",
+          location = Location(46.520278, 6.565556, "EPFL"),
+          date = Timestamp.now(),
+          startTime = oneHourAgo,
+          endTime = oneHourLater,
+          creatorId = "bobId",
+          participants = listOf(),
+          status = EventStatus.ONGOING)
+
+  // PAST EVENT
+  private val yesterdayTimestamp = Timestamp(Date.from(Instant.now().minus(1, ChronoUnit.DAYS)))
+  private val pastEvent =
+      Event(
+          id = "past",
+          title = "Past Event 1",
+          description = "An event is already past",
+          creatorName = "Alice",
+          location = Location(46.520278, 6.565556, "EPFL"),
+          date = yesterdayTimestamp,
+          startTime = Timestamp(start),
+          endTime = Timestamp(finish),
+          creatorId = "aliceId",
+          participants = listOf(),
+          status = EventStatus.PAST)
+
+  private val pastEventParticipating =
+      Event(
+          id = "past2",
+          title = "Past Event 2",
+          description = "An event is already past",
+          creatorName = "Alice",
+          location = Location(46.520278, 6.565556, "EPFL"),
+          date = yesterdayTimestamp,
+          startTime = Timestamp(start),
+          endTime = Timestamp(finish),
+          creatorId = "aliceId",
+          participants = listOf("bobId"),
+          status = EventStatus.PAST)
+  private val pastEventCreated =
+      Event(
+          id = "past3",
+          title = "Past Event 3",
+          description = "An event is already past",
+          creatorName = "Bob",
+          location = Location(46.520278, 6.565556, "EPFL"),
+          date = yesterdayTimestamp,
+          startTime = Timestamp(start),
+          endTime = Timestamp(finish),
+          creatorId = "bobId",
+          participants = listOf(),
+          status = EventStatus.PAST)
 
   /**
    * Test: Verifies that when there is no event registered, all relevant UI components are displayed
@@ -442,6 +573,133 @@ class EventsOverviewScreenTest {
         .performClick()
   }
 
+  /**
+   * Test: Verifies that when there are events with different statuses (upcoming, ongoing, past),
+   * all events are displayed with the correct status indicators.
+   */
+  @Test
+  fun testEventDisplayAllStatusCorrectly() = runTest {
+    val currentUserId = "bobId"
+
+    val listEvents: List<Event> =
+        listOf(
+            upcomingEvent,
+            upcomingEventCreated,
+            upcomingEventParticipate,
+            pastEvent,
+            pastEventCreated,
+            pastEventParticipating,
+            ongoingEvent,
+            ongoingEventCreated,
+            ongoingEventParticipating)
+
+    listEvents.forEach { event -> eventsRepository.addEvent(event) }
+
+    setContent(currentUserId)
+
+    composeTestRule.waitForIdle()
+
+    listEvents.forEach { event ->
+      composeTestRule.scrollToEvent(event)
+      composeTestRule
+          .onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(event))
+          .assertIsDisplayed()
+    }
+
+    composeTestRule.scrollToEvent(upcomingEvent)
+    composeTestRule.onEventItem(
+        upcomingEvent, hasTestTag(EventsScreenTestTags.EVENT_STATUS_INDICATOR_UPCOMING))
+    composeTestRule.scrollToEvent(upcomingEventParticipate)
+    composeTestRule.onEventItem(
+        upcomingEventParticipate, hasTestTag(EventsScreenTestTags.EVENT_STATUS_INDICATOR_UPCOMING))
+    composeTestRule.scrollToEvent(upcomingEventCreated)
+    composeTestRule.onEventItem(
+        upcomingEventCreated, hasTestTag(EventsScreenTestTags.EVENT_STATUS_INDICATOR_UPCOMING))
+    composeTestRule.scrollToEvent(ongoingEvent)
+    composeTestRule.onEventItem(
+        ongoingEvent, hasTestTag(EventsScreenTestTags.EVENT_STATUS_INDICATOR_ONGOING))
+    composeTestRule.scrollToEvent(ongoingEventParticipating)
+    composeTestRule.onEventItem(
+        ongoingEventParticipating, hasTestTag(EventsScreenTestTags.EVENT_STATUS_INDICATOR_ONGOING))
+    composeTestRule.scrollToEvent(ongoingEventCreated)
+    composeTestRule.onEventItem(
+        ongoingEventCreated, hasTestTag(EventsScreenTestTags.EVENT_STATUS_INDICATOR_ONGOING))
+    composeTestRule.scrollToEvent(pastEvent)
+    composeTestRule.onEventItem(
+        pastEvent, hasTestTag(EventsScreenTestTags.EVENT_STATUS_INDICATOR_PAST))
+    composeTestRule.scrollToEvent(pastEventParticipating)
+    composeTestRule.onEventItem(
+        pastEventParticipating, hasTestTag(EventsScreenTestTags.EVENT_STATUS_INDICATOR_PAST))
+    composeTestRule.scrollToEvent(pastEventCreated)
+    composeTestRule.onEventItem(
+        pastEventCreated, hasTestTag(EventsScreenTestTags.EVENT_STATUS_INDICATOR_PAST))
+  }
+
+  /** Test: Verifies that the filter bar correctly filters events based on their status */
+  @Test
+  fun testFilterBarWorksCorrectly() = runTest {
+    val currentUserId = "bobId"
+
+    val listUpcoming: List<Event> =
+        listOf(upcomingEvent, upcomingEventCreated, upcomingEventParticipate)
+    val listOngoing: List<Event> =
+        listOf(ongoingEvent, ongoingEventCreated, ongoingEventParticipating)
+    val listPast: List<Event> = listOf(pastEvent, pastEventCreated, pastEventParticipating)
+
+    val listEvents = listUpcoming + listOngoing + listPast
+
+    listEvents.forEach { event -> eventsRepository.addEvent(event) }
+
+    setContent(currentUserId)
+
+    composeTestRule.waitForIdle()
+
+    // Initially, all events should be displayed
+    listEvents.forEach { event ->
+      composeTestRule.scrollToEvent(event)
+      composeTestRule
+          .onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(event))
+          .assertIsDisplayed()
+    }
+    // Apply Upcoming filter
+    composeTestRule.scrollToEvent(upcomingEvent) // Ensure the filter bar is visible
+    composeTestRule
+        .onNodeWithTag(EventsScreenTestTags.FILTER_UPCOMING_BUTTON)
+        .assertIsDisplayed()
+        .performClick()
+    composeTestRule.waitForIdle()
+    listUpcoming.forEach { event ->
+      composeTestRule.scrollToEvent(event)
+      composeTestRule
+          .onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(event))
+          .assertIsDisplayed()
+    }
+    // Apply Ongoing filter
+    composeTestRule.scrollToEvent(upcomingEvent) // Ensure the filter bar is visible
+    composeTestRule
+        .onNodeWithTag(EventsScreenTestTags.FILTER_ONGOING_BUTTON)
+        .assertIsDisplayed()
+        .performClick()
+    composeTestRule.waitForIdle()
+    listOngoing.forEach { event ->
+      composeTestRule
+          .onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(event))
+          .assertIsDisplayed()
+    }
+    // Apply Past filter
+    composeTestRule.scrollToEvent(ongoingEvent) // Ensure the filter bar is visible
+    composeTestRule
+        .onNodeWithTag(EventsScreenTestTags.FILTER_PAST_BUTTON)
+        .assertIsDisplayed()
+        .performClick()
+    composeTestRule.waitForIdle()
+    listPast.forEach { event ->
+      composeTestRule
+          .onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(event))
+          .assertIsDisplayed()
+    }
+  }
+
   // ///////////////////// UTILS
 
   /** Helper function to use when we want to click on a specific event item */
@@ -508,5 +766,11 @@ class EventsOverviewScreenTest {
     composeTestRule.onNodeWithTag(EventsScreenTestTags.UPCOMING_TITLE).assertIsNotDisplayed()
     composeTestRule.onNodeWithTag(EventsScreenTestTags.YOUR_EVENTS_TITLE).assertIsNotDisplayed()
     composeTestRule.onNodeWithTag(EventsScreenTestTags.CREATE_EVENT_BUTTON).assertIsNotDisplayed()
+  }
+
+  /** Helper function to scroll to a specific event item in a list */
+  private fun ComposeTestRule.scrollToEvent(event: Event) {
+    onNodeWithTag(EventsScreenTestTags.ALL_LISTS)
+        .performScrollToNode(hasTestTag(EventsScreenTestTags.getTestTagForEventItem(event)))
   }
 }

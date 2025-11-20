@@ -2,7 +2,10 @@ package com.android.gatherly.ui.events
 
 import android.icu.text.SimpleDateFormat
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -10,7 +13,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults.buttonColors
@@ -21,6 +26,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,8 +34,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -40,6 +49,7 @@ import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
 import com.android.gatherly.model.event.Event
+import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.ui.navigation.BottomNavigationMenu
 import com.android.gatherly.ui.navigation.HandleSignedOutState
 import com.android.gatherly.ui.navigation.NavigationActions
@@ -47,6 +57,9 @@ import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu
 import com.android.gatherly.ui.theme.GatherlyTheme
+import com.android.gatherly.ui.theme.theme_status_ongoing
+import com.android.gatherly.ui.theme.theme_status_past
+import com.android.gatherly.ui.theme.theme_status_upcoming
 import com.android.gatherly.utils.GatherlyAlertDialog
 import java.util.Locale
 import kotlinx.coroutines.launch
@@ -73,6 +86,14 @@ object EventsScreenTestTags {
 
   const val EVENT_TITLE = "EventTitle"
 
+  const val EVENT_STATUS_INDICATOR_UPCOMING = "EventStatusIndicatorGreen"
+  const val EVENT_STATUS_INDICATOR_ONGOING = "EventStatusIndicatorYellow"
+  const val EVENT_STATUS_INDICATOR_PAST = "EventStatusIndicatorGrey"
+
+  const val FILTER_UPCOMING_BUTTON = "FilterUpcomingButton"
+  const val FILTER_ONGOING_BUTTON = "FilterOngoingButton"
+  const val FILTER_PAST_BUTTON = "FilterPastButton"
+
   /**
    * Returns a unique test tag for the card or container representing a given [Event] item.
    *
@@ -80,6 +101,18 @@ object EventsScreenTestTags {
    * @return A string uniquely identifying the Event item in the UI.
    */
   fun getTestTagForEventItem(event: Event): String = "eventItem${event.id}"
+}
+
+/**
+ * Displays a colored box indicating the status of an event.
+ *
+ * @param status The [EventStatus] of the event.
+ */
+enum class EventFilter {
+  ALL,
+  UPCOMING,
+  ONGOING,
+  PAST
 }
 
 /**
@@ -114,9 +147,16 @@ fun EventsScreen(
   val coroutineScope = rememberCoroutineScope()
 
   val uiState by eventsViewModel.uiState.collectAsState()
-  val browserEvents = uiState.globalEventList
-  val upcomingEvents = uiState.participatedEventList
-  val myOwnEvents = uiState.createdEventList
+
+  // Filter state
+  val selectedFilter = remember { mutableStateOf(EventFilter.ALL) }
+
+  // list of type of events based on the selected filter
+  val browserEvents = eventsViewModel.getFilteredEvents(selectedFilter, uiState.globalEventList)
+  val upcomingEvents =
+      eventsViewModel.getFilteredEvents(selectedFilter, uiState.participatedEventList)
+  val myOwnEvents = eventsViewModel.getFilteredEvents(selectedFilter, uiState.createdEventList)
+
   val currentUserIdFromVM = uiState.currentUserId
 
   val selectedBrowserEvent = remember { mutableStateOf<Event?>(null) }
@@ -193,6 +233,9 @@ fun EventsScreen(
                     .padding(horizontal = 16.dp)
                     .padding(padding)
                     .testTag(EventsScreenTestTags.ALL_LISTS)) {
+
+              // -- FILTER BAR --
+              item { FilterBar(selectedFilter) }
 
               // --  BROWSE EVENTS LIST --
               item {
@@ -414,6 +457,13 @@ fun BrowserEventsItem(event: Event, onClick: () -> Unit) {
             modifier = Modifier.fillMaxWidth().padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+          // Status indicator circle
+          BoxStatusColor(event.status)
+
+          Spacer(
+              modifier = Modifier.size(dimensionResource(R.dimen.spacing_between_fields_regular)))
+
+          // Event details
           Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = event.title,
@@ -457,6 +507,15 @@ fun UpcomingEventsItem(event: Event, onClick: () -> Unit) {
             modifier = Modifier.fillMaxWidth().padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+
+          // Status indicator circle
+          BoxStatusColor(event.status)
+
+          Spacer(
+              modifier = Modifier.size(dimensionResource(R.dimen.spacing_between_fields_regular)))
+
+          // Event details
+
           Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = event.title,
@@ -500,6 +559,14 @@ fun MyOwnEventsItem(event: Event, onClick: () -> Unit) {
             modifier = Modifier.fillMaxWidth().padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+          // Status indicator circle
+          BoxStatusColor(event.status)
+
+          Spacer(
+              modifier = Modifier.size(dimensionResource(R.dimen.spacing_between_fields_regular)))
+
+          // Event details
+
           Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = event.title,
@@ -516,6 +583,104 @@ fun MyOwnEventsItem(event: Event, onClick: () -> Unit) {
           }
         }
       }
+}
+
+/** Helper function : Return the color associated to the event status */
+@Composable
+private fun statusColor(status: EventStatus): Color {
+  return when (status) {
+    EventStatus.UPCOMING -> theme_status_upcoming
+    EventStatus.ONGOING -> theme_status_ongoing
+    EventStatus.PAST -> theme_status_past
+  }
+}
+
+/** Helper function : Display a status indicator circle */
+@Composable
+private fun BoxStatusColor(status: EventStatus) {
+  Box(
+      modifier =
+          Modifier.size(dimensionResource(R.dimen.events_indicator_status_size))
+              .clip(CircleShape)
+              .background(statusColor(status))
+              .testTag(
+                  when (status) {
+                    EventStatus.UPCOMING -> EventsScreenTestTags.EVENT_STATUS_INDICATOR_UPCOMING
+                    EventStatus.ONGOING -> EventsScreenTestTags.EVENT_STATUS_INDICATOR_ONGOING
+                    EventStatus.PAST -> EventsScreenTestTags.EVENT_STATUS_INDICATOR_PAST
+                  }))
+}
+
+/** Displays a filter bar with buttons to filter events by their status. */
+@Composable
+private fun FilterBar(selectedFilter: MutableState<EventFilter>) {
+  Row(
+      modifier =
+          Modifier.fillMaxWidth()
+              .padding(vertical = dimensionResource(R.dimen.events_filter_bar_vertical_size)),
+      horizontalArrangement = Arrangement.SpaceEvenly) {
+        FilterButton("All", EventFilter.ALL, selectedFilter, Modifier)
+        FilterButton(
+            "Upcoming",
+            EventFilter.UPCOMING,
+            selectedFilter,
+            Modifier.testTag(EventsScreenTestTags.FILTER_UPCOMING_BUTTON))
+        FilterButton(
+            "Ongoing",
+            EventFilter.ONGOING,
+            selectedFilter,
+            Modifier.testTag(EventsScreenTestTags.FILTER_ONGOING_BUTTON))
+        FilterButton(
+            "Past",
+            EventFilter.PAST,
+            selectedFilter,
+            Modifier.testTag(EventsScreenTestTags.FILTER_PAST_BUTTON))
+      }
+}
+
+/**
+ * A button used in the filter bar to select an event filter.
+ *
+ * @param label The text label for the button.
+ * @param filter The [EventFilter] associated with this button.
+ * @param selectedFilter The currently selected [EventFilter] state.
+ */
+@Composable
+fun FilterButton(
+    label: String,
+    filter: EventFilter,
+    selectedFilter: MutableState<EventFilter>,
+    modifier: Modifier
+) {
+  val isSelected = selectedFilter.value == filter
+
+  Button(
+      onClick = { selectedFilter.value = filter },
+      colors =
+          buttonColors(
+              containerColor =
+                  if (isSelected) MaterialTheme.colorScheme.primary
+                  else MaterialTheme.colorScheme.surfaceVariant,
+              contentColor =
+                  if (isSelected) MaterialTheme.colorScheme.onPrimary
+                  else MaterialTheme.colorScheme.background),
+      shape = RoundedCornerShape(dimensionResource(R.dimen.rounded_corner_shape_large)),
+      modifier = modifier.height(dimensionResource(R.dimen.events_filter_button_height))) {
+        Text(text = label)
+      }
+}
+
+/** Helper function : return the list of events filtered according to the selected filter status */
+private fun getFilteredEvents(
+    selectedFilter: MutableState<EventFilter>,
+    listEvents: List<Event>
+): List<Event> {
+  return when (selectedFilter.value) {
+    EventFilter.ALL -> listEvents
+    EventFilter.UPCOMING -> listEvents.filter { it.status == EventStatus.UPCOMING }
+    EventFilter.ONGOING -> listEvents.filter { it.status == EventStatus.ONGOING }
+    EventFilter.PAST -> listEvents.filter { it.status == EventStatus.PAST }
+  }
 }
 
 @Preview(showBackground = true)
