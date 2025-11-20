@@ -2,6 +2,7 @@ package com.android.gatherly.viewmodel.event
 
 import com.android.gatherly.model.event.EventsLocalRepository
 import com.android.gatherly.model.event.EventsRepository
+import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.ui.events.EventsViewModel
 import com.android.gatherly.utilstest.MockitoUtils
@@ -63,6 +64,12 @@ class EventsViewModelTests {
     for (event in EventsViewModelTestsData.allTestEvents) {
       repo.addEvent(event)
     }
+    profileRepo.addProfile(
+        Profile(
+            uid = "testUser123",
+            name = "Test User",
+            profilePicture = "" // or any dummy string, your data class default is ""
+            ))
     advanceUntilIdle()
   }
 
