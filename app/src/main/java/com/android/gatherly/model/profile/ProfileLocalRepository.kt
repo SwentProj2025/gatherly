@@ -236,4 +236,14 @@ class ProfileLocalRepository : ProfileRepository {
         count >= 1 -> Rank.STARTING
         else -> Rank.BLANK
       }
+
+  override suspend fun addBadge(profile: Profile, badgeId: String) {
+    val index = profiles.indexOfFirst { it.uid == profile.uid }
+    if (index == -1) return
+
+    val existing = profiles[index]
+    if (badgeId in existing.badgeIds) return
+
+    profiles[index] = existing.copy(badgeIds = existing.badgeIds + badgeId)
+  }
 }
