@@ -66,7 +66,6 @@ class EditTodoScreenTest : GatherlyTest() {
     composeTestRule.onNodeWithTag(EditToDoScreenTestTags.TODO_DELETE).assertExists()
     composeTestRule.onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_TITLE).assertExists()
     composeTestRule.onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_DESCRIPTION).assertExists()
-    composeTestRule.onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_ASSIGNEE).assertExists()
     composeTestRule.onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_LOCATION).assertExists()
     composeTestRule.onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_DATE).assertExists()
     composeTestRule.onNodeWithTag(EditToDoScreenTestTags.ERROR_MESSAGE).assertIsNotDisplayed()
@@ -115,7 +114,7 @@ class EditTodoScreenTest : GatherlyTest() {
 
   @Test
   fun canEnterAnInvalidDate() {
-    val invalidDate = "invalid date" // Invalid date format
+    val invalidDate = "13-13-1313" // Invalid date format
     composeTestRule.enterEditTodoDate(invalidDate)
     composeTestRule.checkErrorMessageIsDisplayedForEditTodo()
   }
