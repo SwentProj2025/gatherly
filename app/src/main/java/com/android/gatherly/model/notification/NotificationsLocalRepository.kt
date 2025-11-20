@@ -33,6 +33,9 @@ class NotificationsLocalRepository() : NotificationsRepository {
   }
 
   override suspend fun addNotification(notification: Notification) {
+    require(!notifications.containsKey(notification.id)) {
+      "Notification with ID ${notification.id} already exists"
+    }
     notifications[notification.id] = notification
   }
 

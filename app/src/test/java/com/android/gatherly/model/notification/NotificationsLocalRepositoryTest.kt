@@ -3,6 +3,7 @@ package com.android.gatherly.model.notification
 import com.android.gatherly.model.notification.NotificationsLocalRepositoryTestData.eventReminders
 import com.android.gatherly.model.notification.NotificationsLocalRepositoryTestData.friendRequests
 import com.android.gatherly.model.notification.NotificationsLocalRepositoryTestData.todoReminders
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
 import org.junit.Before
@@ -17,6 +18,15 @@ class NotificationsLocalRepositoryTest {
   @Before
   fun setUp() {
     repository = NotificationsLocalRepository()
+  }
+
+  /** Helper function to add sample notifications to the repository for testing. */
+  private fun addSampleNotifications() = runBlocking {
+    repository.addNotification(friendRequests[0]) // userB
+    repository.addNotification(friendRequests[1]) // userB
+    repository.addNotification(todoReminders[0]) // userA
+    repository.addNotification(todoReminders[2]) // userC
+    repository.addNotification(eventReminders[0]) // userA
   }
 
   // ============ Happy Path Tests ============
@@ -48,11 +58,7 @@ class NotificationsLocalRepositoryTest {
   @Test
   fun getUserNotifications_returnsNotificationsForSpecificUser() = runTest {
     // Add multiple notifications for different users
-    repository.addNotification(friendRequests[0]) // userB
-    repository.addNotification(friendRequests[1]) // userB
-    repository.addNotification(todoReminders[0]) // userA
-    repository.addNotification(todoReminders[2]) // userC
-    repository.addNotification(eventReminders[0]) // userA
+    addSampleNotifications()
 
     // Retrieve notifications for userB
     val userBNotifications = repository.getUserNotifications("userB")
@@ -71,7 +77,6 @@ class NotificationsLocalRepositoryTest {
 
   @Test
   fun deleteNotification_removesNotification() = runTest {
-    // TODO: Add notification, delete it, verify it's gone
     // Adding notification
     repository.addNotification(todoReminders[1])
     assertEquals(1, repository.getUserNotifications("userB").size)
@@ -88,11 +93,7 @@ class NotificationsLocalRepositoryTest {
   @Test(expected = NoSuchElementException::class)
   fun getNotification_withInvalidId_throwsException() = runTest {
     // Add multiple notifications for different users
-    repository.addNotification(friendRequests[0]) // userB
-    repository.addNotification(friendRequests[1]) // userB
-    repository.addNotification(todoReminders[0]) // userA
-    repository.addNotification(todoReminders[2]) // userC
-    repository.addNotification(eventReminders[0]) // userA
+    addSampleNotifications()
 
     val invalidId = "non_existent_id"
     repository.getNotification(invalidId)
@@ -100,13 +101,8 @@ class NotificationsLocalRepositoryTest {
 
   @Test(expected = NoSuchElementException::class)
   fun markAsRead_withInvalidId_throwsException() = runTest {
-    // TODO: Try to mark non-existent notification as read
     // Add multiple notifications for different users
-    repository.addNotification(friendRequests[0]) // userB
-    repository.addNotification(friendRequests[1]) // userB
-    repository.addNotification(todoReminders[0]) // userA
-    repository.addNotification(todoReminders[2]) // userC
-    repository.addNotification(eventReminders[0]) // userA
+    addSampleNotifications()
 
     val invalidId = "non_existent_id"
     repository.markAsRead(invalidId)
@@ -114,27 +110,24 @@ class NotificationsLocalRepositoryTest {
 
   @Test(expected = NoSuchElementException::class)
   fun deleteNotification_withInvalidId_throwsException() = runTest {
-    // TODO: Try to delete non-existent notification
     // Add multiple notifications for different users
-    repository.addNotification(friendRequests[0]) // userB
-    repository.addNotification(friendRequests[1]) // userB
-    repository.addNotification(todoReminders[0]) // userA
-    repository.addNotification(todoReminders[2]) // userC
-    repository.addNotification(eventReminders[0]) // userA
+    addSampleNotifications()
 
     val invalidId = "non_existent_id"
     repository.deleteNotification(invalidId)
   }
 
+  @Test(expected = IllegalArgumentException::class)
+  fun addNotification_withDuplicateId_throwsException() = runTest {
+    // Add notification with same ID twice to see if it throws
+    repository.addNotification(friendRequests[0])
+    repository.addNotification(friendRequests[0])
+  }
+
   @Test
   fun getUserNotifications_withNoNotifications_returnsEmptyList() = runTest {
-    // TODO: Get notifications for user with none
     // Add multiple notifications for different users
-    repository.addNotification(friendRequests[0]) // userB
-    repository.addNotification(friendRequests[1]) // userB
-    repository.addNotification(todoReminders[0]) // userA
-    repository.addNotification(todoReminders[2]) // userC
-    repository.addNotification(eventReminders[0]) // userA
+    addSampleNotifications()
 
     val noNotificationUser = "userE"
     val userENotifications = repository.getUserNotifications(noNotificationUser)
@@ -182,17 +175,13 @@ class NotificationsLocalRepositoryTest {
   @Test
   fun getUserNotifications_returnsNotificationsInDescendingTimeOrder() = runTest {
     // Add multiple notifications with different timestamps
-    repository.addNotification(friendRequests[0]) // time 1000
-    repository.addNotification(friendRequests[1]) // time 2000
-    repository.addNotification(todoReminders[0]) // time 4000
-    repository.addNotification(todoReminders[2]) // time 6000
-    repository.addNotification(eventReminders[0]) // time 8000
+    addSampleNotifications()
 
     // Retrieve notifications for userA
     val userANotifications = repository.getUserNotifications("userA")
     assertEquals(2, userANotifications.size)
 
     // Verify they are in descending order by emissionTime
-    assertTrue(userANotifications[0].emissionTime > userANotifications[1].emissionTime)
+    assertEquals(userANotifications.sortedByDescending { it.emissionTime }, userANotifications)
   }
 }
