@@ -95,6 +95,7 @@ fun EditEventsScreen(
 
   val ui = editEventsViewModel.uiState
   val context = LocalContext.current
+  val shouldShowDialog = remember { mutableStateOf(false) }
 
   val screenPadding = dimensionResource(id = R.dimen.padding_screen)
   val fieldSpacing = dimensionResource(id = R.dimen.spacing_between_fields)
@@ -425,10 +426,7 @@ fun EditEventsScreen(
               item {
                 // Delete
                 TextButton(
-                    onClick = {
-                      editEventsViewModel.deleteEvent()
-                      onSave()
-                    },
+                    onClick = { shouldShowDialog.value = true },
                     modifier = Modifier.fillMaxWidth().testTag(EditEventsScreenTestTags.BTN_DELETE),
                     colors =
                         ButtonDefaults.textButtonColors(
@@ -444,6 +442,19 @@ fun EditEventsScreen(
                     }
               }
             }
+        if (shouldShowDialog.value) {
+          GatherlyAlertDialog(
+              titleText = stringResource(R.string.events_delete_warning),
+              bodyText = stringResource(R.string.events_delete_warning_text),
+              dismissText = stringResource(R.string.cancel),
+              confirmText = stringResource(R.string.delete),
+              onDismiss = { shouldShowDialog.value = false },
+              onConfirm = {
+                editEventsViewModel.deleteEvent()
+                shouldShowDialog.value = false
+              },
+              isImportantWarning = true)
+        }
       }
 }
 

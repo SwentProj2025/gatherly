@@ -101,6 +101,7 @@ fun EditToDoScreen(
   val todoUIState by editTodoViewModel.uiState.collectAsState()
   val errorMsg = todoUIState.errorMsg
   val context = LocalContext.current
+  val shouldShowDialog = remember { mutableStateOf(false) }
 
   val screenPadding = dimensionResource(id = R.dimen.padding_screen)
   val fieldSpacing = dimensionResource(id = R.dimen.spacing_between_fields)
@@ -283,7 +284,7 @@ fun EditToDoScreen(
               // Delete Button
               item {
                 TextButton(
-                    onClick = { editTodoViewModel.deleteToDo(todoUid) },
+                    onClick = { shouldShowDialog.value = true },
                     modifier = Modifier.fillMaxWidth().testTag(EditToDoScreenTestTags.TODO_DELETE),
                     // TextButton has no background by default
                     colors =
@@ -304,6 +305,20 @@ fun EditToDoScreen(
                     }
               }
             }
+
+        if (shouldShowDialog.value) {
+          GatherlyAlertDialog(
+              titleText = stringResource(R.string.todos_delete_warning),
+              bodyText = stringResource(R.string.todos_delete_warning_text),
+              dismissText = stringResource(R.string.cancel),
+              confirmText = stringResource(R.string.delete),
+              onDismiss = { shouldShowDialog.value = false },
+              onConfirm = {
+                editTodoViewModel.deleteToDo(todoID = todoUid)
+                shouldShowDialog.value = false
+              },
+              isImportantWarning = true)
+        }
       })
 }
 
