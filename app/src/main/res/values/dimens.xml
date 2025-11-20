@@ -36,7 +36,7 @@
     <!-- Shapes -->
     <dimen name="rounded_corner_shape_small">4dp</dimen>
     <dimen name="rounded_corner_shape_medium">12dp</dimen>
-    <dimen name="rounded_corner_shape_large">24dp</dimen>
+    <dimen name="rounded_corner_shape_large">20dp</dimen>
 
     <!-- ToDos -->
     <dimen name="todos_overview_vertical_padding">8dp</dimen>
@@ -100,4 +100,10 @@
     <dimen name="add_group_button_vertical">12.dp</dimen>
     <dimen name="add_group_horizontal_divider_thickness">2.dp</dimen>
     <dimen name="add_group_friend_section_height">450.dp</dimen>
+    <!-- Events Screen -->
+    <dimen name="events_indicator_status_size">14.dp</dimen>
+    <dimen name="events_popup_horizontalArrangement_size">12.dp</dimen>
+    <dimen name="events_filter_bar_vertical_size">10.dp</dimen>
+    <dimen name="events_filter_button_height">35.dp</dimen>
+
 </resources>
