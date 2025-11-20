@@ -2,6 +2,9 @@ package com.android.gatherly.ui.authentication
 
 import android.content.Context
 import android.util.Log
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.credentials.Credential
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
@@ -18,38 +21,48 @@ import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.Companion.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
 import com.google.firebase.Firebase
-import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
 import com.google.firebase.storage.storage
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
 /**
  * Represents the UI state for authentication.
  *
+ * @property signedIn Whether the authentication was successful
+ * @property destinationScreen The screen to navigate to upon successful authentication
  * @property isLoading Whether an authentication operation is in progress.
- * @property user The currently signed-in [FirebaseUser], or null if not signed in.
- * @property errorMsg An error message to display, or null if there is no error.
- * @property signedOut True if a sign-out operation has completed.
  */
+data class SignInUIState(
+    val signedIn: Boolean = false,
+    val destinationScreen: String? = null,
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null
+)
+
 class SignInViewModel(
     private val profileRepository: ProfileRepository =
         ProfileRepositoryFirestore(Firebase.firestore, Firebase.storage)
 ) : ViewModel() {
-  // UI State containing the user sign in status
-  private val _uiState = MutableStateFlow<Boolean>(false)
 
-  // Read-only UI State presented to the UI
-  val uiState: StateFlow<Boolean>
-    get() = _uiState
+  // State with a private set
+  var uiState by mutableStateOf(SignInUIState())
+    private set
 
-  private val _destination = MutableStateFlow<String?>(null)
-  val destination: StateFlow<String?>
-    get() = _destination
+  /**
+   * Resets the state of the UI after successful authentication, so that the user can successfully
+   * navigate back from init profile screen if wanted
+   */
+  fun resetAuth() {
+    uiState = SignInUIState()
+  }
+
+  /** Once the error message is shown, reset it to null */
+  fun resetErrorMessage() {
+    uiState = uiState.copy(errorMessage = null)
+  }
 
   /** Decide where to navigate after a successful sign in */
   private suspend fun handlePostSignInNav() {
@@ -57,12 +70,14 @@ class SignInViewModel(
     val isAnon = Firebase.auth.currentUser?.isAnonymous ?: return
     val profile = profileRepository.getProfileByUid(uid)
 
-    _destination.value =
-        if (profile?.username.isNullOrEmpty() && !isAnon) {
-          "init_profile"
-        } else {
-          "home"
-        }
+    uiState =
+        uiState.copy(
+            destinationScreen =
+                if (profile?.username.isNullOrEmpty() && !isAnon) {
+                  "init_profile"
+                } else {
+                  "home"
+                })
   }
 
   /** Authenticate to Firebase */
@@ -82,11 +97,14 @@ class SignInViewModel(
           profileRepository.initProfileIfMissing(uid, "")
           profileRepository.updateStatus(uid, ProfileStatus.ONLINE)
           handlePostSignInNav()
-          _uiState.value = true
+          uiState = uiState.copy(signedIn = true, isLoading = false)
         } catch (e: Exception) {
+          uiState = uiState.copy(isLoading = false, errorMessage = "Google sign-in failed")
           Log.e("SignInViewModel", "Google sign-in failed", e)
         }
       } else {
+        uiState =
+            uiState.copy(isLoading = false, errorMessage = "Failed to recognize Google credentials")
         Log.e("Google credentials", "Failed to recognize Google credentials")
       }
     }
@@ -94,6 +112,7 @@ class SignInViewModel(
 
   /** Sign in with Google */
   fun signInWithGoogle(context: Context, credentialManager: CredentialManager) {
+    uiState = uiState.copy(isLoading = true)
     viewModelScope.launch {
       try {
         val signInWithGoogleOption =
@@ -108,8 +127,10 @@ class SignInViewModel(
 
         authenticateFirebaseWithGoogle(result.credential)
       } catch (e: NoCredentialException) {
+        uiState = uiState.copy(isLoading = false, errorMessage = "No Google credentials")
         Log.e("Google authentication", e.message.orEmpty())
       } catch (e: GetCredentialException) {
+        uiState = uiState.copy(isLoading = false, errorMessage = "Failed to get Google credentials")
         Log.e("Google authentication", e.message.orEmpty())
       }
     }
@@ -117,6 +138,7 @@ class SignInViewModel(
 
   /** Sign in anonymously */
   fun signInAnonymously() {
+    uiState = uiState.copy(isLoading = true)
     viewModelScope.launch {
       try {
         Firebase.auth.signInAnonymously().await()
@@ -125,8 +147,9 @@ class SignInViewModel(
         profileRepository.updateStatus(uid, ProfileStatus.ONLINE)
         handlePostSignInNav()
 
-        _uiState.value = true
+        uiState = uiState.copy(signedIn = true, isLoading = false)
       } catch (e: Exception) {
+        uiState = uiState.copy(isLoading = false, errorMessage = "Failed to log in")
         Log.e("SignInViewModel", "Anonymous sign-in failed", e)
       }
     }
