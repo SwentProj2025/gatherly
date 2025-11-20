@@ -1,7 +1,5 @@
 package com.android.gatherly.model.group
 
-import kotlin.String
-
 /**
  * Simplified in-memory local implementation of [GroupsRepository].
  *
@@ -23,12 +21,13 @@ class GroupsLocalRepository : GroupsRepository {
   }
 
   override suspend fun getUserGroups(): List<Group> {
-    TODO("Not yet implemented")
+    return groups // In a real implementation, filter by current user, but for local testing return
+    // all since all groups in this repository are created by the current user.
   }
 
   override suspend fun getGroup(groupId: String): Group {
     return groups.find { it.gid == groupId }
-        ?: throw NoSuchElementException("GroupsLocalRepository: Group not found")
+        ?: throw NoSuchElementException("GroupsLocalRepository.getGroup: Group not found")
   }
 
   override suspend fun addGroup(group: Group) {
@@ -40,7 +39,7 @@ class GroupsLocalRepository : GroupsRepository {
     if (index != -1) {
       groups[index] = newValue
     } else {
-      throw NoSuchElementException("GroupsLocalRepository: Group not found")
+      throw NoSuchElementException("GroupsLocalRepository.editGroup: Group not found")
     }
   }
 
@@ -49,23 +48,23 @@ class GroupsLocalRepository : GroupsRepository {
     if (index != -1) {
       groups.removeAt(index)
     } else {
-      throw NoSuchElementException("GroupsLocalRepository: Group not found")
+      throw NoSuchElementException("GroupsLocalRepository.deleteGroup: Group not found")
     }
   }
 
   override suspend fun addMember(groupId: String, userId: String) {
-    TODO("Not yet implemented")
+    TODO("GroupsLocalRepository.addMember Not yet implemented")
   }
 
   override suspend fun removeMember(groupId: String, userId: String) {
-    TODO("Not yet implemented")
+    TODO("GroupsLocalRepository.removeMember Not yet implemented")
   }
 
   override suspend fun addAdmin(groupId: String, userId: String) {
-    TODO("Not yet implemented")
+    TODO("GroupsLocalRepository.addAdmin Not yet implemented")
   }
 
   override suspend fun removeAdmin(groupId: String, userId: String) {
-    TODO("Not yet implemented")
+    TODO("GroupsLocalRepository.removeAdmin Not yet implemented")
   }
 }

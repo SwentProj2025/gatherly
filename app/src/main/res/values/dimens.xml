@@ -24,7 +24,6 @@
 
     <!-- Component Sizes -->
     <dimen name="input_height">100dp</dimen>
-    <dimen name="profile_pic_size_small">30dp</dimen>
     <dimen name="profile_pic_size_medium">40dp</dimen>
     <dimen name="profile_pic_size_regular">50dp</dimen>
     <dimen name="profile_pic_size">120dp</dimen>
@@ -99,7 +98,6 @@
     <!-- Add Group Screen -->
     <dimen name="add_group_button_height">80.dp</dimen>
     <dimen name="add_group_button_vertical">12.dp</dimen>
-    <dimen name="add_group_text_field_height">48.dp</dimen>
     <dimen name="add_group_horizontal_divider_thickness">2.dp</dimen>
     <dimen name="add_group_friend_section_height">450.dp</dimen>
 </resources>
