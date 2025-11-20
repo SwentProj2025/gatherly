@@ -1,12 +1,11 @@
 package com.android.gatherly.utilstest
 
-import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosRepository
-import com.android.gatherly.utils.addTodo_updateBadges
-import com.android.gatherly.utils.editTodo_updateBadges
+import com.android.gatherly.utils.addTodo
+import com.android.gatherly.utils.editTodo
 import com.google.firebase.Timestamp
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -45,7 +44,7 @@ class UpdateProfileTodosUtilsTest {
   /** Test adding a ToDo calls addTodo and increments "created todos" exactly once. */
   @Test
   fun testAddTodoUpdateBadges_callsIncrementCreatedTodo() = runTest {
-    addTodo_updateBadges(todoRepository, profileRepository, mockTodo, currentUserId)
+    addTodo(todoRepository, profileRepository, mockTodo, currentUserId)
 
     coVerify(exactly = 1) {
       todoRepository.addTodo(mockTodo)
@@ -66,13 +65,12 @@ class UpdateProfileTodosUtilsTest {
 
     coEvery { todoRepository.getTodo(todoId) } returns existing
 
-    editTodo_updateBadges(
-      todoRepository = todoRepository,
-      profileRepository = profileRepository,
-      todoID = todoId,
-      newStatus = newStatus,
-      currentUserId = currentUserId
-    )
+    editTodo(
+        todoRepository = todoRepository,
+        profileRepository = profileRepository,
+        todoID = todoId,
+        newStatus = newStatus,
+        currentUserId = currentUserId)
 
     coVerify {
       todoRepository.getTodo(todoId)
@@ -91,13 +89,12 @@ class UpdateProfileTodosUtilsTest {
 
     coEvery { todoRepository.getTodo(todoId) } returns existing
 
-    editTodo_updateBadges(
-      todoRepository = todoRepository,
-      profileRepository = profileRepository,
-      todoID = todoId,
-      newStatus = newStatus,
-      currentUserId = currentUserId
-    )
+    editTodo(
+        todoRepository = todoRepository,
+        profileRepository = profileRepository,
+        todoID = todoId,
+        newStatus = newStatus,
+        currentUserId = currentUserId)
 
     coVerify {
       todoRepository.getTodo(todoId)

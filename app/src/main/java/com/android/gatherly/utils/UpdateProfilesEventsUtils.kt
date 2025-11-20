@@ -10,9 +10,10 @@ import com.android.gatherly.model.profile.ProfileRepository
  */
 
 /**
- * Function util: register the user to this event:
- * * from eventsRepository pov : Add the userId to the event participants list
- * * from profileRepository pov : Add the event to the profile participantEvents list of the user
+ * Function util: register the user to this event and updates creator/participants counters +
+ * badges: from eventsRepository pov : Add the userId to the event participants list from
+ * profileRepository pov : Add the event to the profile participantEvents list of the user
+ * incrementParticipatedEvent(uid): increments "events participated" once for each participant
  *
  * @param eventsRepository : EventsRepository
  * @param profileRepository : ProfileRepository
@@ -27,6 +28,7 @@ suspend fun userParticipate(
 ) {
   eventsRepository.addParticipant(eventId, userId)
   profileRepository.participateEvent(eventId, userId)
+  profileRepository.incrementParticipatedEvent(userId)
 }
 
 /**
@@ -51,10 +53,11 @@ suspend fun userUnregister(
 }
 
 /**
- * Function util: create a new event:
- * * from eventsRepository pov : create this event
- * * from profileRepository pov : register all the participants chosen by the creator and create the
- *   event into the ownerEvents list of the creator
+ * Function util: create a new event and updates creator/participants counters + badges: from
+ * eventsRepository pov : create this event from profileRepository pov : register all the
+ * participants chosen by the creator and create the event into the ownerEvents list of the creator
+ * incrementCreatedEvent(creatorId): increments "events created" once
+ * incrementParticipatedEvent(uid): increments "events participated" once for each participant
  *
  * @param eventsRepository : EventsRepository
  * @param profileRepository : ProfileRepository
@@ -72,6 +75,10 @@ suspend fun createEvent(
   eventsRepository.addEvent(event)
   profileRepository.createEvent(event.id, creatorId)
   profileRepository.allParticipateEvent(event.id, participants)
+
+  profileRepository.incrementCreatedEvent(creatorId)
+
+  participants.forEach { uid -> profileRepository.incrementParticipatedEvent(uid) }
 }
 
 /**

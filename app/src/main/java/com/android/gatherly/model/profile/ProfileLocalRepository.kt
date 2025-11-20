@@ -240,7 +240,6 @@ class ProfileLocalRepository : ProfileRepository {
         else -> Rank.BLANK
       }
 
-
   override suspend fun addBadge(profile: Profile, badgeId: String) {
     val index = profiles.indexOfFirst { it.uid == profile.uid }
     if (index == -1) return
@@ -254,7 +253,8 @@ class ProfileLocalRepository : ProfileRepository {
   // ---- COUNTERS + BADGES (LOCAL) ----
 
   override suspend fun incrementCreatedTodo(uid: String): Int {
-    val profile = getProfileByUid(uid) ?: throw NoSuchElementException("Profile not found for uid=$uid")
+    val profile =
+        getProfileByUid(uid) ?: throw NoSuchElementException("Profile not found for uid=$uid")
     val newCount = profile.createdTodoCount + 1
     val updated = profile.copy(createdTodoCount = newCount)
     updateProfile(updated)
@@ -263,7 +263,8 @@ class ProfileLocalRepository : ProfileRepository {
   }
 
   override suspend fun incrementCompletedTodo(uid: String): Int {
-    val profile = getProfileByUid(uid) ?: throw NoSuchElementException("Profile not found for uid=$uid")
+    val profile =
+        getProfileByUid(uid) ?: throw NoSuchElementException("Profile not found for uid=$uid")
     val newCount = profile.completedTodoCount + 1
     val updated = profile.copy(completedTodoCount = newCount)
     updateProfile(updated)
@@ -272,7 +273,8 @@ class ProfileLocalRepository : ProfileRepository {
   }
 
   override suspend fun incrementCreatedEvent(uid: String): Int {
-    val profile = getProfileByUid(uid) ?: throw NoSuchElementException("Profile not found for uid=$uid")
+    val profile =
+        getProfileByUid(uid) ?: throw NoSuchElementException("Profile not found for uid=$uid")
     val newCount = profile.createdEventCount + 1
     val updated = profile.copy(createdEventCount = newCount)
     updateProfile(updated)
@@ -281,7 +283,8 @@ class ProfileLocalRepository : ProfileRepository {
   }
 
   override suspend fun incrementParticipatedEvent(uid: String): Int {
-    val profile = getProfileByUid(uid) ?: throw NoSuchElementException("Profile not found for uid=$uid")
+    val profile =
+        getProfileByUid(uid) ?: throw NoSuchElementException("Profile not found for uid=$uid")
     val newCount = profile.participatedEventCount + 1
     val updated = profile.copy(participatedEventCount = newCount)
     updateProfile(updated)
@@ -290,7 +293,8 @@ class ProfileLocalRepository : ProfileRepository {
   }
 
   override suspend fun incrementCompletedFocusSession(uid: String): Int {
-    val profile = getProfileByUid(uid) ?: throw NoSuchElementException("Profile not found for uid=$uid")
+    val profile =
+        getProfileByUid(uid) ?: throw NoSuchElementException("Profile not found for uid=$uid")
     val newCount = profile.completedFocusSessionCount + 1
     val updated = profile.copy(completedFocusSessionCount = newCount)
     updateProfile(updated)
@@ -299,7 +303,8 @@ class ProfileLocalRepository : ProfileRepository {
   }
 
   override suspend fun incrementAddedFriend(uid: String): Int {
-    val profile = getProfileByUid(uid) ?: throw NoSuchElementException("Profile not found for uid=$uid")
+    val profile =
+        getProfileByUid(uid) ?: throw NoSuchElementException("Profile not found for uid=$uid")
     val newCount = profile.addedFriendsCount + 1
     val updated = profile.copy(addedFriendsCount = newCount)
     updateProfile(updated)
@@ -321,13 +326,13 @@ class ProfileLocalRepository : ProfileRepository {
   }
 
   private fun countToRank(count: Int): BadgeRank =
-    when {
-      count >= 30 -> BadgeRank.LEGEND
-      count >= 20 -> BadgeRank.DIAMOND
-      count >= 10 -> BadgeRank.GOLD
-      count >= 5 -> BadgeRank.SILVER
-      count >= 3 -> BadgeRank.BRONZE
-      count >= 1 -> BadgeRank.STARTING
-      else -> BadgeRank.BLANK
-    }
+      when {
+        count >= 30 -> BadgeRank.LEGEND
+        count >= 20 -> BadgeRank.DIAMOND
+        count >= 10 -> BadgeRank.GOLD
+        count >= 5 -> BadgeRank.SILVER
+        count >= 3 -> BadgeRank.BRONZE
+        count >= 1 -> BadgeRank.STARTING
+        else -> BadgeRank.BLANK
+      }
 }

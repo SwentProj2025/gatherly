@@ -1,31 +1,30 @@
 package com.android.gatherly.utils
 
-import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosRepository
 
 /**
- * Function to add a ToDo and update the user's badges accordingly.
+ * Function to add a ToDo and update the user's counts and badges accordingly.
  *
  * @param todoRepository The repository to manage ToDos.
  * @param profileRepository The repository to manage Profiles.
  * @param todo The ToDo to be added.
  * @param currentUserId The ID of the current user.
  */
-suspend fun addTodo_updateBadges(
+suspend fun addTodo(
     todoRepository: ToDosRepository,
     profileRepository: ProfileRepository,
     todo: ToDo,
     currentUserId: String
 ) {
-    todoRepository.addTodo(todo)
-    profileRepository.incrementCreatedTodo(currentUserId)
+  todoRepository.addTodo(todo)
+  profileRepository.incrementCreatedTodo(currentUserId)
 }
 
 /**
- * Function to edit a ToDo's status and update the user's badges accordingly.
+ * Function to edit a ToDo's status and update the user's counts and badges accordingly.
  *
  * @param todoRepository The repository to manage ToDos.
  * @param profileRepository The repository to manage Profiles.
@@ -33,21 +32,21 @@ suspend fun addTodo_updateBadges(
  * @param newStatus The new status of the ToDo.
  * @param currentUserId The ID of the current user.
  */
-suspend fun editTodo_updateBadges(
+suspend fun editTodo(
     todoRepository: ToDosRepository,
     profileRepository: ProfileRepository,
     todoID: String,
     newStatus: ToDoStatus,
     currentUserId: String
 ) {
-    val existing = todoRepository.getTodo(todoID)
-    val wasCompleted = existing.status == ToDoStatus.ENDED
-    val updatedTodo = existing.copy(status = newStatus)
+  val existing = todoRepository.getTodo(todoID)
+  val wasCompleted = existing.status == ToDoStatus.ENDED
+  val updatedTodo = existing.copy(status = newStatus)
 
-    todoRepository.editTodo(todoID, updatedTodo)
+  todoRepository.editTodo(todoID, updatedTodo)
 
-    val isNowCompleted = newStatus == ToDoStatus.ENDED
-    if (!wasCompleted && isNowCompleted) {
-        profileRepository.incrementCompletedTodo(currentUserId)
-    }
+  val isNowCompleted = newStatus == ToDoStatus.ENDED
+  if (!wasCompleted && isNowCompleted) {
+    profileRepository.incrementCompletedTodo(currentUserId)
+  }
 }

@@ -266,7 +266,8 @@ class EditTodoViewModel(
       _uiState.value = _uiState.value.copy(isSaving = true, errorMsg = null)
       try {
         val ownerId = todoRepository.getTodo(todoID).ownerId
-          todoRepository.deleteTodo(todoID = todoID)
+
+        todoRepository.deleteTodo(todoID = todoID)
         _uiState.value = _uiState.value.copy(isSaving = false, saveSuccess = true)
       } catch (e: Exception) {
         _uiState.value =
