@@ -220,6 +220,7 @@ class HomePageViewModelTest {
     advanceUntilIdle()
 
     mockitoUtils.chooseCurrentUser(currentProfile.uid)
+    advanceUntilIdle()
 
     homePageViewModel =
         HomePageViewModel(
@@ -245,6 +246,7 @@ class HomePageViewModelTest {
     advanceUntilIdle()
 
     mockitoUtils.chooseCurrentUser(currentProfile.uid)
+    advanceUntilIdle()
 
     homePageViewModel =
         HomePageViewModel(
@@ -269,7 +271,7 @@ class HomePageViewModelTest {
     advanceUntilIdle()
 
     mockitoUtils.chooseCurrentUser(currentProfile.uid)
-
+    advanceUntilIdle()
     homePageViewModel =
         HomePageViewModel(
             eventsRepository = eventsRepository,
