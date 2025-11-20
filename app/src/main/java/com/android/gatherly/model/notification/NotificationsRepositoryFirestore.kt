@@ -16,6 +16,7 @@ class NotificationsRepositoryFirestore(private val db: FirebaseFirestore) :
    * Returns the user ID of the currently signed-in user, or throws an exception if no user is
    * signed in.
    */
+  @Throws(IllegalStateException::class)
   private fun currentUserId(): String {
     return Firebase.auth.currentUser?.uid ?: throw IllegalStateException("No signed in user")
   }
@@ -66,8 +67,8 @@ class NotificationsRepositoryFirestore(private val db: FirebaseFirestore) :
   }
 
   override suspend fun addNotification(notification: Notification) {
-    if (notification.recipientId.isEmpty()) {
-      throw IllegalArgumentException("Notification must have a valid recipientId")
+    require(!(notification.recipientId.isEmpty())) {
+      "Notification can't have an empty recipientId"
     }
     db.collection("users")
         .document(notification.recipientId)

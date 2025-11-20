@@ -124,7 +124,7 @@ class NotificationsRepositoryFirestoreTest : FirestoreNotificationsGatherlyTest(
   }
 
   @Test(expected = NoSuchElementException::class)
-  fun getNotification_forDifferentUser_throwsSecurityException() = runTest {
+  fun getNotification_forDifferentUser_throwsNoSuchElementException() = runTest {
     // Add a notification for user2
     signInWithToken(user2Token)
     val newId = repository.getNewId()
