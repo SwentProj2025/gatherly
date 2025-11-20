@@ -1032,18 +1032,16 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
       ownerId: String = userId
   ) {
     val todoData =
-      mapOf(
-        "uid" to todoId,
-        "name" to "Test ToDo $todoId",
-        "description" to "Description",
-        "assigneeName" to "Assignee",
-        "dueDate" to com.google.firebase.Timestamp.now(),
-        "ownerId" to ownerId,
-        "status" to status.name
-      )
+        mapOf(
+            "uid" to todoId,
+            "name" to "Test ToDo $todoId",
+            "description" to "Description",
+            "assigneeName" to "Assignee",
+            "dueDate" to com.google.firebase.Timestamp.now(),
+            "ownerId" to ownerId,
+            "status" to status.name)
 
     db.collection("users").document(userId).collection("todos").document(todoId).set(todoData)
-
   }
 
   @Test
@@ -1166,6 +1164,5 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     val profileB = repoB.getProfileByUid(userBUid)
     assertNotNull(profileB)
     assertEquals("bob", profileB!!.username)
-
   }
 }
