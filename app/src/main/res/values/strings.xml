@@ -27,6 +27,11 @@
     <string name="todos_save_button_text">Save</string>
     <string name="todos_back_button_desc">Back</string>
     <string name="todos_delete_button_text">Delete</string>
+    <string name="todos_sort_button_label">Sort todos</string>
+    <string name="todos_date_descending_sort_button_text">Date descending</string>
+    <string name="todos_date_ascending_sort_button_text">Date ascending</string>
+    <string name="todos_alphabetical_sort_button_text">Alphabetical</string>
+    <string name="todos_sort_menu_check_icon_label">Selected</string>
 
     <!-- Sign In Page. -->
     <string name="web_client_id">854490974901-rc0seqlo7nbm1net10ujpte2ckkrsgn2.apps.googleusercontent.com</string>
@@ -95,6 +100,12 @@
     <string name="events_location_field_placeholder">Enter an Address or Location</string>
     <string name="events_participant_field_label">Participant</string>
     <string name="events_participant_placeholder">Add or remove a participant</string>
+    <string name="events_delete_warning">Warning! You are deleting an event</string>
+    <string name="events_delete_warning_text">This action cannot be reversed. Are you sure?</string>
+
+    <string name="delete">Yes, Delete</string>
+    <string name="cancel">No, Cancel</string>
+    <string name="saving">Saving…</string>
 
     <!-- HomePage -->
     <string name="homepage_arrow_icon_description">Navigate</string>
@@ -116,11 +127,14 @@
     <string name="userEvents_emptylist_msg">You have not created any events</string>
     <string name="create_event_button_title">Create an event</string>
 
+    <!-- Sign In Screen -->
     <string name="sign_in_google_button_label">Continue with Google</string>
     <string name="upgrade_to_google_button_label">Upgrade account using Google</string>
     <string name="sign_in_anonymous_button_label">Continue without account</string>
     <string name="sign_in_welcome_section_text0">Welcome to Gatherly,</string>
     <string name="sign_in_welcome_section_text1">Your workflow and social events app!</string>
+    <string name="sign_in_logging_in">Logging in …</string>
+
     <!-- Map page -->
     <string name="show_events_button_title">Show events</string>
     <string name="show_todos_button_title">Show toDos</string>

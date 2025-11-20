@@ -500,6 +500,7 @@ class EditEventsViewModelTest {
     runTest {
       editEventsViewModel.deleteEvent()
       // wait
+      advanceUntilIdle()
       assert(editEventsViewModel.uiState.backToOverview) {
         "Successfully deleting should go back to overview events"
       }

@@ -6,8 +6,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -31,6 +30,8 @@ object SignInScreenTestTags {
   const val WELCOME_SUBTITLE = "welcomeSubtitle"
   const val GOOGLE_BUTTON = "googleButton"
   const val ANONYMOUS_BUTTON = "anonymousButton"
+  const val LOADING_TEXT = "loadingText"
+  const val SNACKBAR = "snackbar"
 }
 
 /**
@@ -38,7 +39,6 @@ object SignInScreenTestTags {
  *
  * @param authViewModel ViewModel managing authentication state and logic.
  * @param credentialManager Used for Google Credential authentication.
- * @param onSignedIn Callback invoked after a successful sign-in.
  */
 @Composable
 fun SignInScreen(
@@ -48,60 +48,88 @@ fun SignInScreen(
 ) {
 
   val context = LocalContext.current
-  val isSignedIn by authViewModel.uiState.collectAsState()
-  val destination by authViewModel.destination.collectAsState()
+  val uiState = authViewModel.uiState
+  val signedIn = uiState.signedIn
+  val errorMessage = uiState.errorMessage
+  val snackBarHostState = remember { SnackbarHostState() }
 
   // Navigate to home page screen on successful login
-  LaunchedEffect(destination) {
-    when (destination) {
-      "home" -> navigationActions?.navigateTo(Tab.HomePage.destination)
-      "init_profile" -> navigationActions?.navigateTo(Screen.InitProfileScreen)
+  LaunchedEffect(signedIn) {
+    if (signedIn) {
+      when (uiState.destinationScreen) {
+        "home" -> navigationActions?.navigateTo(Tab.HomePage.destination)
+        "init_profile" -> navigationActions?.navigateTo(Screen.InitProfileScreen)
+      }
+      authViewModel.resetAuth()
+    }
+  }
+
+  LaunchedEffect(errorMessage) {
+    if (errorMessage != null) {
+      snackBarHostState.showSnackbar(message = errorMessage, withDismissAction = true)
+      authViewModel.resetErrorMessage()
     }
   }
 
   Scaffold(
       containerColor = MaterialTheme.colorScheme.background,
       modifier = Modifier.fillMaxSize(),
+      snackbarHost = {
+        SnackbarHost(
+            hostState = snackBarHostState,
+            modifier = Modifier.testTag(SignInScreenTestTags.SNACKBAR))
+      },
       content = { innerPadding ->
-        Column(
-            modifier =
-                Modifier.fillMaxSize()
-                    .padding(innerPadding)
-                    .padding(horizontal = dimensionResource(id = R.dimen.padding_screen)),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween) {
-              Spacer(
-                  modifier = Modifier.height(dimensionResource(id = R.dimen.sign_in_top_spacing)))
+        if (uiState.isLoading) {
+          Box(
+              modifier = Modifier.padding(innerPadding).fillMaxSize(),
+              contentAlignment = Alignment.Center) {
+                Text(
+                    text = stringResource(R.string.sign_in_logging_in),
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.testTag(SignInScreenTestTags.LOADING_TEXT))
+              }
+        } else {
+          Column(
+              modifier =
+                  Modifier.fillMaxSize()
+                      .padding(innerPadding)
+                      .padding(horizontal = dimensionResource(id = R.dimen.padding_screen)),
+              horizontalAlignment = Alignment.CenterHorizontally,
+              verticalArrangement = Arrangement.SpaceBetween) {
+                Spacer(
+                    modifier = Modifier.height(dimensionResource(id = R.dimen.sign_in_top_spacing)))
 
-              Column(
-                  modifier = Modifier.weight(1f),
-                  horizontalAlignment = Alignment.CenterHorizontally) {
-                    WelcomeSection()
-                    Spacer(
-                        modifier =
-                            Modifier.height(
-                                dimensionResource(id = R.dimen.sign_in_top_buttons_spacing)))
+                Column(
+                    modifier = Modifier.weight(1f),
+                    horizontalAlignment = Alignment.CenterHorizontally) {
+                      WelcomeSection()
+                      Spacer(
+                          modifier =
+                              Modifier.height(
+                                  dimensionResource(id = R.dimen.sign_in_top_buttons_spacing)))
 
-                    // Sign In Buttons Section
-                    Column(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalArrangement =
-                            Arrangement.spacedBy(
-                                dimensionResource(id = R.dimen.spacing_between_fields_regular))) {
-                          SignInButton(
-                              text = stringResource(id = R.string.sign_in_google_button_label),
-                              onSignInClick = {
-                                authViewModel.signInWithGoogle(context, credentialManager)
-                              },
-                              iconResId = R.drawable.google_logo,
-                              modifier = Modifier.testTag(SignInScreenTestTags.GOOGLE_BUTTON))
-                          SignInButton(
-                              text = stringResource(id = R.string.sign_in_anonymous_button_label),
-                              onSignInClick = { authViewModel.signInAnonymously() },
-                              modifier = Modifier.testTag(SignInScreenTestTags.ANONYMOUS_BUTTON))
-                        }
-                  }
-            }
+                      // Sign In Buttons Section
+                      Column(
+                          modifier = Modifier.fillMaxWidth(),
+                          verticalArrangement =
+                              Arrangement.spacedBy(
+                                  dimensionResource(id = R.dimen.spacing_between_fields_regular))) {
+                            SignInButton(
+                                text = stringResource(id = R.string.sign_in_google_button_label),
+                                onSignInClick = {
+                                  authViewModel.signInWithGoogle(context, credentialManager)
+                                },
+                                iconResId = R.drawable.google_logo,
+                                modifier = Modifier.testTag(SignInScreenTestTags.GOOGLE_BUTTON))
+                            SignInButton(
+                                text = stringResource(id = R.string.sign_in_anonymous_button_label),
+                                onSignInClick = { authViewModel.signInAnonymously() },
+                                modifier = Modifier.testTag(SignInScreenTestTags.ANONYMOUS_BUTTON))
+                          }
+                    }
+              }
+        }
       })
 }
 
