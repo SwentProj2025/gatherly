@@ -46,7 +46,8 @@ data class AddTodoUiState(
     val saveError: String? = null,
     val saveSuccess: Boolean = false,
     val isLocLoading: Boolean = false,
-    val suggestions: List<Location> = emptyList()
+    val suggestions: List<Location> = emptyList(),
+    val pastTime: Boolean = false
 )
 
 // create a HTTP Client for Nominatim
@@ -97,6 +98,11 @@ class AddTodoViewModel(
   /** Clears the save success flag in the UI state. */
   fun clearSaveSuccess() {
     _uiState.value = _uiState.value.copy(saveSuccess = false)
+  }
+
+  /** Clear the past time error */
+  fun clearPastTime() {
+    _uiState.value = _uiState.value.copy(pastTime = false)
   }
 
   /**
@@ -233,15 +239,8 @@ class AddTodoViewModel(
     }
   }
 
-  /**
-   * Attempts to create and save a new [ToDo] entry to the repository.
-   *
-   * Performs field validation before saving, and updates the UI state to reflect loading, success,
-   * and error states.
-   *
-   * @throws IllegalArgumentException If the provided date or time format is invalid.
-   */
-  fun saveTodo() {
+  /** Checks that the todo time is valid before saving */
+  fun checkTodoTime() {
     val validated =
         _uiState.value.copy(
             titleError = if (_uiState.value.title.isBlank()) "Title cannot be empty" else null,
@@ -249,8 +248,6 @@ class AddTodoViewModel(
                 if (_uiState.value.description.isBlank()) "Description cannot be empty" else null,
             assigneeError =
                 if (_uiState.value.assignee.isBlank()) "Assignee cannot be empty" else null,
-            locationError =
-                if (_uiState.value.location.isBlank()) "Location cannot be empty" else null,
             dueDateError =
                 if (!isValidDate(_uiState.value.dueDate)) "Invalid format (dd/MM/yyyy)" else null,
             dueTimeError =
@@ -265,7 +262,31 @@ class AddTodoViewModel(
         _uiState.value.dueTimeError != null) {
       return
     }
+    val sdfDateAndTime = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+    val dateAndTime =
+        sdfDateAndTime.parse(validated.dueDate + " " + validated.dueTime)
+            ?: throw IllegalArgumentException("Invalid date or time")
+    val dueDateAndTime = Timestamp(dateAndTime)
 
+    val currentTimestamp = Timestamp.now()
+
+    if (dueDateAndTime < currentTimestamp) {
+      _uiState.value = _uiState.value.copy(pastTime = true)
+    } else {
+      saveTodo()
+    }
+  }
+
+  /**
+   * Attempts to create and save a new [ToDo] entry to the repository.
+   *
+   * Performs field validation before saving, and updates the UI state to reflect loading, success,
+   * and error states.
+   *
+   * @throws IllegalArgumentException If the provided date or time format is invalid.
+   */
+  fun saveTodo() {
+    val validated = uiState.value
     viewModelScope.launch {
       _uiState.value = _uiState.value.copy(isSaving = true, saveError = null)
       try {
