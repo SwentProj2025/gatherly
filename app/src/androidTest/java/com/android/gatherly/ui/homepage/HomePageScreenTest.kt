@@ -37,7 +37,7 @@ class HomePageScreenTest {
           uid = "0+",
           name = "Current",
           focusSessionIds = emptyList(),
-          eventIds = emptyList(),
+          participatingEventIds = emptyList(),
           groupIds = emptyList(),
           friendUids = emptyList())
 

@@ -70,6 +70,7 @@ data class SettingsUiState(
             username.isNotEmpty() &&
             (isUsernameAvailable != false)
 }
+
 /**
  * ViewModel for the Settings screen. This ViewModel manages the state of input fields for the
  * Settings screen.
@@ -91,6 +92,7 @@ class SettingsViewModel(
       credentialManager.clearCredentialState(ClearCredentialStateRequest())
     }
   }
+
   /** Clears the error message in the UI state. */
   fun clearErrorMsg() {
     _uiState.value = _uiState.value.copy(errorMsg = null)
@@ -109,6 +111,7 @@ class SettingsViewModel(
   init {
     loadProfile(authProvider().currentUser?.uid ?: "")
   }
+
   /**
    * Loads a Profile by its ID and updates the UI state.
    *

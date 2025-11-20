@@ -1,12 +1,15 @@
 package com.android.gatherly.viewmodel.todo
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.android.gatherly.model.profile.ProfileLocalRepository
+import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.ui.todo.OverviewViewModel
 import com.android.gatherly.ui.todo.TodoSortOrder
+import com.android.gatherly.utilstest.MockitoUtils
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -41,6 +44,8 @@ private const val DELAY = 50L
 class OverviewViewModelTest {
   private lateinit var overviewViewModel: OverviewViewModel
   private lateinit var toDosRepository: ToDosRepository
+  private lateinit var profileRepository: ProfileRepository
+  private lateinit var mockitoUtils: MockitoUtils
 
   private val testDispatcher = StandardTestDispatcher()
 
@@ -49,7 +54,13 @@ class OverviewViewModelTest {
     Dispatchers.setMain(testDispatcher)
 
     toDosRepository = ToDosLocalRepository()
-    overviewViewModel = OverviewViewModel(toDosRepository)
+    profileRepository = ProfileLocalRepository()
+
+    // Mock Firebase Auth
+    mockitoUtils = MockitoUtils()
+    mockitoUtils.chooseCurrentUser("0")
+
+    overviewViewModel = OverviewViewModel(toDosRepository, profileRepository)
   }
 
   @After

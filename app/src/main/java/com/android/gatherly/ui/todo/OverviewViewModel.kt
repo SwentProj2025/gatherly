@@ -4,10 +4,13 @@ import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.android.gatherly.model.profile.ProfileRepository
+import com.android.gatherly.model.profile.ProfileRepositoryProvider
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.model.todo.ToDosRepositoryProvider
+import com.android.gatherly.utils.editTodo_updateBadges
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -54,6 +57,7 @@ enum class TodoSortOrder {
  */
 class OverviewViewModel(
     private val todoRepository: ToDosRepository = ToDosRepositoryProvider.repository,
+    private val profileRepository: ProfileRepository = ProfileRepositoryProvider.repository
 ) : ViewModel() {
 
   private val _uiState = MutableStateFlow(OverviewUIState())
@@ -91,8 +95,8 @@ class OverviewViewModel(
   /** Invoked when the user clicks on the checkbox, to mark the [TODO] as completed or ongoing. */
   fun onCheckboxChanged(uid: String, newStatus: ToDoStatus) {
     viewModelScope.launch {
-      val updatedTodo = todoRepository.getTodo(uid).copy(status = newStatus)
-      todoRepository.editTodo(uid, updatedTodo)
+      val ownerId = todoRepository.getTodo(uid).ownerId
+      editTodo_updateBadges(todoRepository, profileRepository, uid, newStatus, ownerId)
       refreshUIState()
     }
   }

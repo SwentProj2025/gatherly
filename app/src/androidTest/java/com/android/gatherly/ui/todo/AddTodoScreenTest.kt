@@ -5,8 +5,11 @@ import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import com.android.gatherly.model.profile.ProfileLocalRepository
+import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.utils.GatherlyTest
+import com.android.gatherly.utils.MockitoUtils
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -15,11 +18,23 @@ class AddTodoScreenTest : GatherlyTest() {
   @get:Rule val composeTestRule = createComposeRule()
 
   private lateinit var addTodoViewModel: AddTodoViewModel
+  private lateinit var profileRepository: ProfileRepository
+  private lateinit var mockitoUtils: MockitoUtils
 
   @Before
   fun setUp() {
     repository = ToDosLocalRepository()
-    addTodoViewModel = AddTodoViewModel(todoRepository = repository)
+    profileRepository = ProfileLocalRepository()
+
+    // Mock Firebase Auth
+    mockitoUtils = MockitoUtils()
+    mockitoUtils.chooseCurrentUser("user")
+
+    addTodoViewModel =
+        AddTodoViewModel(
+            todoRepository = repository,
+            profileRepository = profileRepository,
+            authProvider = { mockitoUtils.mockAuth })
     composeTestRule.setContent { AddToDoScreen(addTodoViewModel = addTodoViewModel) }
   }
 
