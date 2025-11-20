@@ -44,9 +44,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -62,6 +62,7 @@ import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
+import com.android.gatherly.utils.profilePicturePainter
 import kotlinx.coroutines.delay
 
 object FindFriendsScreenTestTags {
@@ -193,7 +194,8 @@ fun FindFriendsScreen(
                   friendsViewModel.followFriend(
                       currentUserId = currentUserIdFromVM, friend = friend)
                   showFollowMessage = true
-                })
+                },
+                profiles = uiState.profiles)
           }
 
           // --- FOLLOW A FRIEND ANIMATION ---
@@ -212,7 +214,12 @@ fun FindFriendsScreen(
  * @param modifier Optional [Modifier] for layout customization.
  */
 @Composable
-private fun FriendItem(friend: String, follow: () -> Unit, modifier: Modifier = Modifier) {
+private fun FriendItem(
+    friend: String,
+    follow: () -> Unit,
+    modifier: Modifier = Modifier,
+    profilePicUrl: String? = null
+) {
   Card(
       border =
           BorderStroke(
@@ -236,13 +243,10 @@ private fun FriendItem(friend: String, follow: () -> Unit, modifier: Modifier = 
                     .padding(dimensionResource(R.dimen.find_friends_item_card_padding)),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-
-          // -- Placeholder Profile Picture --
           Image(
-              painter =
-                  painterResource(
-                      id = R.drawable.ic_launcher_foreground), // currently a placeholder image
+              painter = profilePicturePainter(profilePicUrl),
               contentDescription = "Profile picture of ${friend}",
+              contentScale = ContentScale.Crop,
               modifier =
                   Modifier.size(dimensionResource(R.dimen.find_friends_item_profile_picture_size))
                       .clip(CircleShape)
@@ -384,6 +388,7 @@ private fun FriendsListContent(
     searchQuery: String,
     onSearchQueryChange: (String) -> Unit,
     onFollowFriend: (String) -> Unit,
+    profiles: Map<String, Profile>
 ) {
   LazyColumn(
       contentPadding = PaddingValues(vertical = dimensionResource(R.dimen.padding_small)),
@@ -417,7 +422,8 @@ private fun FriendsListContent(
                 modifier =
                     Modifier.animateItemPlacement(
                         animationSpec =
-                            tween(durationMillis = ANIMATION_TIME, easing = LinearOutSlowInEasing)))
+                            tween(durationMillis = ANIMATION_TIME, easing = LinearOutSlowInEasing)),
+                profilePicUrl = profiles[friend]?.profilePicture)
           }
         }
       }

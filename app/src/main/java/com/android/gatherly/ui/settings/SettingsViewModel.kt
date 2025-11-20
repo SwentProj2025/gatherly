@@ -1,19 +1,29 @@
 package com.android.gatherly.ui.settings
 
+import android.content.Context
 import android.net.Uri
 import android.util.Log
 import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
+import androidx.credentials.CustomCredential
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.exceptions.GetCredentialException
+import androidx.credentials.exceptions.NoCredentialException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.android.gatherly.R
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryProvider
 import com.android.gatherly.model.profile.Username
 import com.android.gatherly.utils.DateParser
+import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.Companion.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.auth
 import java.text.SimpleDateFormat
 import java.util.Locale
@@ -21,6 +31,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 // Portions of the code in this file are adapted from the bootcamp solution provided by Swent staff
 
@@ -46,7 +57,10 @@ data class SettingsUiState(
     val invalidBirthdayMsg: String? = null,
     val isUsernameAvailable: Boolean? = null,
     val isLoadingProfile: Boolean = false,
-    val saveSuccess: Boolean = false
+    val saveSuccess: Boolean = false,
+    val navigateToInit: Boolean = false,
+    val isAnon: Boolean = true,
+    val isSaving: Boolean = false,
 ) {
   val isValid: Boolean
     get() =
@@ -57,6 +71,7 @@ data class SettingsUiState(
             username.isNotEmpty() &&
             (isUsernameAvailable != false)
 }
+
 /**
  * ViewModel for the Settings screen. This ViewModel manages the state of input fields for the
  * Settings screen.
@@ -78,6 +93,7 @@ class SettingsViewModel(
       credentialManager.clearCredentialState(ClearCredentialStateRequest())
     }
   }
+
   /** Clears the error message in the UI state. */
   fun clearErrorMsg() {
     _uiState.value = _uiState.value.copy(errorMsg = null)
@@ -96,6 +112,7 @@ class SettingsViewModel(
   init {
     loadProfile(authProvider().currentUser?.uid ?: "")
   }
+
   /**
    * Loads a Profile by its ID and updates the UI state.
    *
@@ -121,7 +138,8 @@ class SettingsViewModel(
                           dateFormat.format(profile.birthday.toDate())
                       else ""
                     },
-                isLoadingProfile = false)
+                isLoadingProfile = false,
+                isAnon = authProvider().currentUser?.isAnonymous ?: true)
       } catch (e: Exception) {
         Log.e("SettingsViewModel", "Error loading Profile by uid: $profileUID", e)
         setErrorMsg("Failed to load Profile: ${e.message}")
@@ -135,9 +153,11 @@ class SettingsViewModel(
    * @param id The id of the Profile to be updated.
    */
   fun updateProfile(id: String = authProvider().currentUser?.uid!!, isFirstTime: Boolean) {
+    _uiState.value = _uiState.value.copy(isSaving = true)
     val state = _uiState.value
     if (!state.isValid) {
       setErrorMsg("At least one field is not valid.")
+      _uiState.value = _uiState.value.copy(isSaving = false)
       return
     }
 
@@ -146,6 +166,7 @@ class SettingsViewModel(
         originalProfile
             ?: run {
               setErrorMsg("Original profile not loaded.")
+              _uiState.value = _uiState.value.copy(isSaving = false)
               return
             }
 
@@ -153,6 +174,7 @@ class SettingsViewModel(
       try {
         if (!checkUsernameSuccess(state, id, isFirstTime)) {
           setErrorMsg("Username is invalid or already taken.")
+          _uiState.value = _uiState.value.copy(isSaving = false)
           return@launch
         }
 
@@ -176,10 +198,11 @@ class SettingsViewModel(
 
         repository.updateProfile(updatedProfile)
         clearErrorMsg()
-        _uiState.value = _uiState.value.copy(saveSuccess = true)
+        _uiState.value = _uiState.value.copy(saveSuccess = true, isSaving = false)
       } catch (e: Exception) {
         Log.e("SettingsViewModel", "Error saving profile", e)
         setErrorMsg("Failed to save profile: ${e.message}")
+        _uiState.value = _uiState.value.copy(isSaving = false)
       }
     }
   }
@@ -233,6 +256,58 @@ class SettingsViewModel(
 
   fun editProfilePictureUrl(newPhotoUrl: String) {
     _uiState.value = _uiState.value.copy(profilePictureUrl = newPhotoUrl)
+  }
+
+  /**
+   * Upgrades the user's current account to a Google account. The user keeps all of their current
+   * data
+   */
+  fun upgradeWithGoogle(context: Context, credentialManager: CredentialManager) {
+    viewModelScope.launch {
+      try {
+        val signInWithGoogleOption =
+            GetSignInWithGoogleOption.Builder(
+                    serverClientId = context.getString(R.string.web_client_id))
+                .build()
+
+        val request =
+            GetCredentialRequest.Builder().addCredentialOption(signInWithGoogleOption).build()
+
+        val result = credentialManager.getCredential(request = request, context = context)
+
+        if (result.credential is CustomCredential &&
+            result.credential.type == TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+          try {
+            // Create idToken
+            val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(result.credential.data)
+            val idToken = googleIdTokenCredential.idToken
+
+            // Authenticate to Firebase
+            val firebaseCredential = GoogleAuthProvider.getCredential(idToken, null)
+            Firebase.auth.currentUser!!.linkWithCredential(firebaseCredential).await()
+            val uid = Firebase.auth.currentUser?.uid ?: return@launch
+
+            // Initialize profile in profileRepository
+            repository.initProfileIfMissing(uid, "")
+
+            // Navigate to init profile
+            _uiState.value = _uiState.value.copy(navigateToInit = true)
+          } catch (e: Exception) {
+            _uiState.value = _uiState.value.copy(errorMsg = "Google sign-in failed")
+            Log.e("SignInViewModel", "Google sign-in failed", e)
+          }
+        } else {
+          _uiState.value = _uiState.value.copy(errorMsg = "Failed to recognize Google credentials")
+          Log.e("Google credentials", "Failed to recognize Google credentials")
+        }
+      } catch (e: NoCredentialException) {
+        _uiState.value = _uiState.value.copy(errorMsg = "No Google credentials")
+        Log.e("Google authentication", e.message.orEmpty())
+      } catch (e: GetCredentialException) {
+        _uiState.value = _uiState.value.copy(errorMsg = "Failed to get Google credentials")
+        Log.e("Google authentication", e.message.orEmpty())
+      }
+    }
   }
 
   private fun checkUsernameAvailability(username: String) {

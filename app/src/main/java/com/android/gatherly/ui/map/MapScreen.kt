@@ -131,7 +131,7 @@ fun MapScreen(
     credentialManager: CredentialManager = CredentialManager.create(LocalContext.current),
     onSignedOut: () -> Unit = {},
     navigationActions: NavigationActions? = null,
-    goToEvent: () -> Unit = {},
+    goToEvent: (String) -> Unit = {},
     goToToDo: () -> Unit = {},
     runInitialisation: Boolean = true
 ) {
@@ -306,30 +306,29 @@ fun MapScreen(
                 }
               }
 
-          if (selectedEvent != null) {
-            ModalBottomSheet(sheetState = sheetState, onDismissRequest = { vm.clearSelection() }) {
-              EventSheet(
-                  event = selectedEvent,
-                  onGoToEvent = {
-                    // Track consulted item before navigation
-                    vm.onItemConsulted(selectedEvent.id)
-                    vm.clearSelection()
-                    goToEvent()
-                  },
-                  onClose = { vm.clearSelection() })
-            }
-          } else if (selectedToDo != null) {
-            ModalBottomSheet(sheetState = sheetState, onDismissRequest = { vm.clearSelection() }) {
-              ToDoSheet(
-                  toDo = selectedToDo,
-                  onGoToToDo = {
-                    // Track consulted item before navigation
-                    vm.onItemConsulted(selectedToDo.uid)
-                    vm.clearSelection()
-                    goToToDo()
-                  },
-                  onClose = { vm.clearSelection() })
-            }
+        if (selectedEvent != null) {
+          ModalBottomSheet(sheetState = sheetState, onDismissRequest = { vm.clearSelection() }) {
+            EventSheet(
+                event = selectedEvent,
+                onGoToEvent = {
+                  // Track consulted item before navigation
+                  vm.onItemConsulted(selectedEvent.id)
+                  vm.clearSelection()
+                  goToEvent(selectedEvent.id)
+                },
+                onClose = { vm.clearSelection() })
+          }
+        } else if (selectedToDo != null) {
+          ModalBottomSheet(sheetState = sheetState, onDismissRequest = { vm.clearSelection() }) {
+            ToDoSheet(
+                toDo = selectedToDo,
+                onGoToToDo = {
+                  // Track consulted item before navigation
+                  vm.onItemConsulted(selectedToDo.uid)
+                  vm.clearSelection()
+                  goToToDo()
+                },
+                onClose = { vm.clearSelection() })
           }
         } else {
           Box(

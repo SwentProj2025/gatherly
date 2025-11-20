@@ -88,7 +88,7 @@ object EventsScreenTestTags {
 
   const val POPUP_DESCRIPTION = "EventDescription"
 
-  const val POPUP_TITLE = "EventTitle"
+  const val POPUP_TITLE = "PopupTitle"
 
   /**
    * Returns a unique test tag for the card or container representing a given [Event] item.
@@ -124,7 +124,8 @@ fun EventsScreen(
     onAddEvent: () -> Unit = {},
     navigateToEditEvent: (Event) -> Unit = {},
     navigationActions: NavigationActions? = null,
-    eventsViewModel: EventsViewModel = viewModel(factory = EventsViewModel.provideFactory())
+    eventsViewModel: EventsViewModel = viewModel(factory = EventsViewModel.provideFactory()),
+    eventId: String? = null,
 ) {
 
   val coroutineScope = rememberCoroutineScope()
@@ -142,6 +143,42 @@ fun EventsScreen(
   val isPopupOnBrowser = remember { mutableStateOf(false) }
   val isPopupOnUpcoming = remember { mutableStateOf(false) }
   val isPopupOnYourE = remember { mutableStateOf(false) }
+
+  // Handle deep linking to a specific event if eventId is provided
+  val eventIdAlreadyProcessed = remember(eventId) { mutableStateOf(false) }
+  if (eventId != null && !eventIdAlreadyProcessed.value) {
+
+    // Check if the eventId exists in any of the event lists
+    val eventIdIsBrowser = browserEvents.find { it.id == eventId }
+    val eventIdIsUpcoming = upcomingEvents.find { it.id == eventId }
+    val eventIdIsYourEvent = myOwnEvents.find { it.id == eventId }
+
+    // Open the corresponding pop-up based on where the event was found
+    val eventFound =
+        when {
+          eventIdIsBrowser != null -> {
+            selectedBrowserEvent.value = eventIdIsBrowser
+            isPopupOnBrowser.value = true
+            true
+          }
+          eventIdIsUpcoming != null -> {
+            selectedUpcomingEvent.value = eventIdIsUpcoming
+            isPopupOnUpcoming.value = true
+            true
+          }
+          eventIdIsYourEvent != null -> {
+            selectedYourEvent.value = eventIdIsYourEvent
+            isPopupOnYourE.value = true
+            true
+          }
+          else -> false
+        }
+
+    // Mark the eventId as processed to avoid reopening the pop-up on recomposition
+    if (eventFound) {
+      eventIdAlreadyProcessed.value = true
+    }
+  }
 
   LaunchedEffect(Unit, currentUserIdFromVM) {
     if (currentUserIdFromVM.isNotBlank()) {
@@ -210,107 +247,112 @@ fun EventsScreen(
                 }
               }
 
-              // Spacer between Browse and Upcoming
-              item { Spacer(modifier = Modifier.height(24.dp)) }
+              if (!uiState.isAnon) {
+                // Spacer between Browse and Upcoming
+                item { Spacer(modifier = Modifier.height(24.dp)) }
 
-              // -- MY UPCOMING EVENTS LIST --
-              item {
-                Text(
-                    text = stringResource(R.string.upcomingEvents_list_title),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier =
-                        Modifier.padding(vertical = 10.dp)
-                            .testTag(EventsScreenTestTags.UPCOMING_TITLE),
-                    color = MaterialTheme.colorScheme.onBackground)
-              }
-
-              if (upcomingEvents.isNotEmpty()) {
-                items(upcomingEvents.size) { index ->
-                  UpcomingEventsItem(
-                      event = upcomingEvents[index],
-                      onClick = {
-                        selectedUpcomingEvent.value = upcomingEvents[index]
-                        isPopupOnUpcoming.value = true
-                      })
-                }
-              } else { // When there is no events in the upcoming list
+                // -- MY UPCOMING EVENTS LIST --
                 item {
                   Text(
-                      stringResource(R.string.upcomingEvents_emptylist_msg),
-                      modifier =
-                          Modifier.fillMaxWidth()
-                              .padding(8.dp)
-                              .testTag(EventsScreenTestTags.EMPTY_UPCOMING_LIST_MSG),
-                      textAlign = TextAlign.Center,
+                      text = stringResource(R.string.upcomingEvents_list_title),
                       style = MaterialTheme.typography.titleMedium,
                       fontWeight = FontWeight.Bold,
+                      modifier =
+                          Modifier.padding(vertical = 10.dp)
+                              .testTag(EventsScreenTestTags.UPCOMING_TITLE),
                       color = MaterialTheme.colorScheme.onBackground)
                 }
-              }
 
-              // Spacer between Upcoming and My Own Events
-              item { Spacer(modifier = Modifier.height(24.dp)) }
-
-              // MY OWN EVENTS
-              item {
-                Text(
-                    text = stringResource(R.string.userEvents_list_title),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier =
-                        Modifier.padding(vertical = 8.dp)
-                            .testTag(EventsScreenTestTags.YOUR_EVENTS_TITLE),
-                    color = MaterialTheme.colorScheme.onBackground)
-              }
-
-              if (myOwnEvents.isNotEmpty()) {
-                items(myOwnEvents.size) { index ->
-                  MyOwnEventsItem(
-                      event = myOwnEvents[index],
-                      onClick = {
-                        selectedYourEvent.value = myOwnEvents[index]
-                        isPopupOnYourE.value = true
-                      })
+                if (upcomingEvents.isNotEmpty()) {
+                  items(upcomingEvents.size) { index ->
+                    UpcomingEventsItem(
+                        event = upcomingEvents[index],
+                        onClick = {
+                          selectedUpcomingEvent.value = upcomingEvents[index]
+                          isPopupOnUpcoming.value = true
+                        })
+                  }
+                } else { // When there is no events in the upcoming list
+                  item {
+                    Text(
+                        stringResource(R.string.upcomingEvents_emptylist_msg),
+                        modifier =
+                            Modifier.fillMaxWidth()
+                                .padding(8.dp)
+                                .testTag(EventsScreenTestTags.EMPTY_UPCOMING_LIST_MSG),
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground)
+                  }
                 }
-              } else {
+
+                // Spacer between Upcoming and My Own Events
+                item { Spacer(modifier = Modifier.height(24.dp)) }
+
+                // MY OWN EVENTS
                 item {
                   Text(
-                      stringResource(R.string.userEvents_emptylist_msg),
-                      modifier =
-                          Modifier.fillMaxWidth()
-                              .padding(8.dp)
-                              .testTag(EventsScreenTestTags.EMPTY_OUREVENTS_LIST_MSG),
-                      textAlign = TextAlign.Center,
+                      text = stringResource(R.string.userEvents_list_title),
                       style = MaterialTheme.typography.titleMedium,
                       fontWeight = FontWeight.Bold,
+                      modifier =
+                          Modifier.padding(vertical = 8.dp)
+                              .testTag(EventsScreenTestTags.YOUR_EVENTS_TITLE),
                       color = MaterialTheme.colorScheme.onBackground)
                 }
-              }
 
-              // Spacer before the Create Event button
-              item { Spacer(modifier = Modifier.height(24.dp)) }
+                if (myOwnEvents.isNotEmpty()) {
+                  items(myOwnEvents.size) { index ->
+                    MyOwnEventsItem(
+                        event = myOwnEvents[index],
+                        onClick = {
+                          selectedYourEvent.value = myOwnEvents[index]
+                          isPopupOnYourE.value = true
+                        })
+                  }
+                } else {
+                  item {
+                    Text(
+                        stringResource(R.string.userEvents_emptylist_msg),
+                        modifier =
+                            Modifier.fillMaxWidth()
+                                .padding(8.dp)
+                                .testTag(EventsScreenTestTags.EMPTY_OUREVENTS_LIST_MSG),
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground)
+                  }
+                }
 
-              // CREATE A NEW EVENT BUTTON
+                // Spacer before the Create Event button
+                item { Spacer(modifier = Modifier.height(24.dp)) }
 
-              item {
-                Button(
-                    onClick = { onAddEvent() },
-                    modifier =
-                        Modifier.fillMaxWidth()
-                            .height(80.dp)
-                            .padding(vertical = 12.dp)
-                            .testTag(EventsScreenTestTags.CREATE_EVENT_BUTTON),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = buttonColors(containerColor = MaterialTheme.colorScheme.secondary)) {
-                      Text(
-                          text = stringResource(R.string.create_event_button_title),
-                          fontSize = 16.sp,
-                          fontWeight = FontWeight.Medium,
-                          color = MaterialTheme.colorScheme.onSecondary)
-                    }
+                // CREATE A NEW EVENT BUTTON
+
+                item {
+                  Button(
+                      onClick = { onAddEvent() },
+                      modifier =
+                          Modifier.fillMaxWidth()
+                              .height(80.dp)
+                              .padding(vertical = 12.dp)
+                              .testTag(EventsScreenTestTags.CREATE_EVENT_BUTTON),
+                      shape = RoundedCornerShape(12.dp),
+                      colors = buttonColors(containerColor = MaterialTheme.colorScheme.secondary)) {
+                        Text(
+                            text = stringResource(R.string.create_event_button_title),
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSecondary)
+                      }
+                }
               }
             }
+
+        // -- EVENT POP UPS --
+
         selectedBrowserEvent.value?.let { event ->
           BrowserEventsPopUp(
               event = event,
@@ -319,7 +361,8 @@ fun EventsScreen(
                 eventsViewModel.onParticipate(
                     eventId = event.id, currentUserId = currentUserIdFromVM)
                 coroutineScope.launch { eventsViewModel.refreshEvents(currentUserIdFromVM) }
-              })
+              },
+              isAnon = uiState.isAnon)
           selectedBrowserEvent.value = if (isPopupOnBrowser.value) event else null
         }
 
@@ -549,7 +592,8 @@ fun UpComingEventsPopUp(
 fun BrowserEventsPopUp(
     event: Event,
     shouldShowDialog: MutableState<Boolean>,
-    participate: () -> Unit
+    participate: () -> Unit,
+    isAnon: Boolean
 ) {
   AlertDialog(
       containerColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -592,9 +636,12 @@ fun BrowserEventsPopUp(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
             onClick = {
-              participate()
-              shouldShowDialog.value = false
+              if (!isAnon) {
+                participate()
+                shouldShowDialog.value = false
+              }
             },
+            enabled = !isAnon,
             modifier = Modifier.testTag(EventsScreenTestTags.PARTICIPATE_BUTTON)) {
               Text(
                   text = stringResource(R.string.participate_button_title),

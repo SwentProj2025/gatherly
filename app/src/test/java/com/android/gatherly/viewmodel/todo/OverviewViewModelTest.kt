@@ -1,11 +1,15 @@
 package com.android.gatherly.viewmodel.todo
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.android.gatherly.model.profile.ProfileLocalRepository
+import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.ui.todo.OverviewViewModel
+import com.android.gatherly.ui.todo.TodoSortOrder
+import com.android.gatherly.utilstest.MockitoUtils
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -40,6 +44,8 @@ private const val DELAY = 50L
 class OverviewViewModelTest {
   private lateinit var overviewViewModel: OverviewViewModel
   private lateinit var toDosRepository: ToDosRepository
+  private lateinit var profileRepository: ProfileRepository
+  private lateinit var mockitoUtils: MockitoUtils
 
   private val testDispatcher = StandardTestDispatcher()
 
@@ -48,7 +54,13 @@ class OverviewViewModelTest {
     Dispatchers.setMain(testDispatcher)
 
     toDosRepository = ToDosLocalRepository()
-    overviewViewModel = OverviewViewModel(toDosRepository)
+    profileRepository = ProfileLocalRepository()
+
+    // Mock Firebase Auth
+    mockitoUtils = MockitoUtils()
+    mockitoUtils.chooseCurrentUser("0")
+
+    overviewViewModel = OverviewViewModel(toDosRepository, profileRepository)
   }
 
   @After
@@ -186,6 +198,192 @@ class OverviewViewModelTest {
         val updatedTodo = overviewViewModel.uiState.value.todos.first { it.uid == todo.uid }
         assertEquals(
             "Expected todo status to be updated to ENDED", ToDoStatus.ENDED, updatedTodo.status)
+      }
+
+  @Test
+  fun searchTodos_filtersResultsCorrectly() =
+      runTest(testDispatcher) {
+        val todoA = makeTodo("Lunch with Claire", description = "meet at EPFL")
+        val todoB = makeTodo("Buy groceries", description = "milk and bread")
+        val todoC = makeTodo("Running", description = "morning run")
+
+        toDosRepository.addTodo(todoA)
+        toDosRepository.addTodo(todoB)
+        toDosRepository.addTodo(todoC)
+
+        advanceUntilIdle()
+
+        overviewViewModel.refreshUIState()
+        waitUntilLoaded(overviewViewModel)
+
+        // WHEN searching for "lunch"
+        overviewViewModel.searchTodos("lunch")
+        advanceUntilIdle()
+
+        val filtered = overviewViewModel.uiState.value.todos
+        assertEquals(1, filtered.size)
+        assertEquals(todoA.uid, filtered.first().uid)
+      }
+
+  @Test
+  fun searchTodos_restoreFullList_whenQueryCleared() =
+      runTest(testDispatcher) {
+        val todoA = makeTodo("Lunch with Claire")
+        val todoB = makeTodo("Buy groceries")
+
+        toDosRepository.addTodo(todoA)
+        toDosRepository.addTodo(todoB)
+
+        advanceUntilIdle()
+        overviewViewModel.refreshUIState()
+        waitUntilLoaded(overviewViewModel)
+
+        // Ensure we start with 2 todos
+        assertEquals(2, overviewViewModel.uiState.value.todos.size)
+
+        // WHEN searching something that yields no result
+        overviewViewModel.searchTodos("zzzz")
+        advanceUntilIdle()
+        assertEquals(0, overviewViewModel.uiState.value.todos.size)
+
+        // WHEN clearing the query
+        overviewViewModel.searchTodos("")
+        advanceUntilIdle()
+
+        // THEN full list should be restored
+        val restored = overviewViewModel.uiState.value.todos
+        assertEquals(2, restored.size)
+      }
+
+  @Test
+  fun searchTodos_filtersAgainstFullList_notFilteredResults() =
+      runTest(testDispatcher) {
+        val todoA = makeTodo("Lunch with Claire")
+        val todoB = makeTodo("Lundry")
+        val todoC = makeTodo("Groceries")
+
+        toDosRepository.addTodo(todoA)
+        toDosRepository.addTodo(todoB)
+        toDosRepository.addTodo(todoC)
+
+        advanceUntilIdle()
+        overviewViewModel.refreshUIState()
+        waitUntilLoaded(overviewViewModel)
+
+        // First search returns Lunch + Laundry
+        overviewViewModel.searchTodos("lun")
+        advanceUntilIdle()
+        assertEquals(2, overviewViewModel.uiState.value.todos.size)
+
+        // Now type something that returns no result
+        overviewViewModel.searchTodos("lunx")
+        advanceUntilIdle()
+        assertEquals(0, overviewViewModel.uiState.value.todos.size)
+
+        // Backspace: "lun"
+        overviewViewModel.searchTodos("lun")
+        advanceUntilIdle()
+
+        // Should again return Lunch + Laundry — not stay empty
+        val results = overviewViewModel.uiState.value.todos
+        assertEquals(2, results.size)
+      }
+
+  @Test
+  fun sortOrder_changes_sortListCorrectly() =
+      runTest(testDispatcher) {
+        val todoA =
+            makeTodo("A", description = "", ownerId = "u").copy(dueDate = Timestamp(1000, 0))
+        val todoB =
+            makeTodo("B", description = "", ownerId = "u").copy(dueDate = Timestamp(5000, 0))
+        val todoC =
+            makeTodo("C", description = "", ownerId = "u").copy(dueDate = Timestamp(2000, 0))
+
+        toDosRepository.addTodo(todoA)
+        toDosRepository.addTodo(todoB)
+        toDosRepository.addTodo(todoC)
+
+        advanceUntilIdle()
+        overviewViewModel.refreshUIState()
+        waitUntilLoaded(overviewViewModel)
+
+        // When sorting by DATE_ASC
+        overviewViewModel.setSortOrder(TodoSortOrder.DATE_ASC)
+        advanceUntilIdle()
+
+        val asc = overviewViewModel.uiState.value.todos
+        assertEquals(listOf(todoA.uid, todoC.uid, todoB.uid), asc.map { it.uid })
+
+        // When sorting by DATE_DESC
+        overviewViewModel.setSortOrder(TodoSortOrder.DATE_DESC)
+        advanceUntilIdle()
+
+        val desc = overviewViewModel.uiState.value.todos
+        assertEquals(listOf(todoB.uid, todoC.uid, todoA.uid), desc.map { it.uid })
+
+        // When sorting by ALPHABETICAL
+        overviewViewModel.setSortOrder(TodoSortOrder.ALPHABETICAL)
+        advanceUntilIdle()
+
+        val alpha = overviewViewModel.uiState.value.todos
+        assertEquals(listOf(todoA.uid, todoB.uid, todoC.uid), alpha.map { it.uid })
+      }
+
+  @Test
+  fun sorting_persists_after_refresh() =
+      runTest(testDispatcher) {
+        val todo1 = makeTodo("A")
+        val todo2 = makeTodo("B")
+
+        toDosRepository.addTodo(todo1)
+        toDosRepository.addTodo(todo2)
+
+        advanceUntilIdle()
+        overviewViewModel.refreshUIState()
+        waitUntilLoaded(overviewViewModel)
+
+        // Apply alphabetical
+        overviewViewModel.setSortOrder(TodoSortOrder.ALPHABETICAL)
+        advanceUntilIdle()
+
+        val firstSorted = overviewViewModel.uiState.value.todos
+        assertEquals(listOf(todo1.uid, todo2.uid), firstSorted.map { it.uid })
+
+        // Add new todo
+        val todo3 = makeTodo("C")
+        toDosRepository.addTodo(todo3)
+        advanceUntilIdle()
+
+        overviewViewModel.refreshUIState()
+        waitUntilLoaded(overviewViewModel)
+
+        val sortedAfterRefresh = overviewViewModel.uiState.value.todos
+        assertEquals(listOf(todo1.uid, todo2.uid, todo3.uid), sortedAfterRefresh.map { it.uid })
+      }
+
+  @Test
+  fun search_and_sort_interact_correctly() =
+      runTest(testDispatcher) {
+        val todoA = makeTodo("Alpha")
+        val todoC = makeTodo("Charlie")
+        val todoB = makeTodo("Bravo")
+
+        toDosRepository.addTodo(todoA)
+        toDosRepository.addTodo(todoC)
+        toDosRepository.addTodo(todoB)
+
+        advanceUntilIdle()
+        overviewViewModel.refreshUIState()
+        waitUntilLoaded(overviewViewModel)
+
+        overviewViewModel.setSortOrder(TodoSortOrder.ALPHABETICAL)
+        advanceUntilIdle()
+
+        overviewViewModel.searchTodos("a")
+        advanceUntilIdle()
+
+        val result = overviewViewModel.uiState.value.todos.map { it.name }
+        assertEquals(listOf("Alpha", "Bravo", "Charlie"), result)
       }
 
   private suspend fun waitUntilLoaded(viewModel: OverviewViewModel) {
