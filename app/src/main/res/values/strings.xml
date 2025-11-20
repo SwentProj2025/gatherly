@@ -100,6 +100,12 @@
     <string name="events_location_field_placeholder">Enter an Address or Location</string>
     <string name="events_participant_field_label">Participant</string>
     <string name="events_participant_placeholder">Add or remove a participant</string>
+    <string name="events_delete_warning">Warning! You are deleting an event</string>
+    <string name="events_delete_warning_text">This action cannot be reversed. Are you sure?</string>
+
+    <string name="delete">Yes, Delete</string>
+    <string name="cancel">No, Cancel</string>
+    <string name="saving">Saving…</string>
 
     <!-- HomePage -->
     <string name="homepage_arrow_icon_description">Navigate</string>
