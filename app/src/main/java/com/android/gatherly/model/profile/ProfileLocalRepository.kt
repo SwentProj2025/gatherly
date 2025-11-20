@@ -4,6 +4,7 @@ import android.net.Uri
 import com.android.gatherly.model.badge.ProfileBadges
 import com.android.gatherly.model.badge.Rank
 import com.android.gatherly.model.friends.Friends
+import com.android.gatherly.model.notification.Notification
 
 /**
  * Simplified in-memory local implementation of [ProfileRepository].
@@ -14,6 +15,10 @@ import com.android.gatherly.model.friends.Friends
 class ProfileLocalRepository : ProfileRepository {
 
   private val profiles: MutableList<Profile> = mutableListOf()
+
+  private data class FriendRequest(val senderId: String, val recipientId: String)
+
+  private val pendingFriendRequests = mutableListOf<FriendRequest>()
 
   var shouldFailRegisterUsername = false
 
@@ -133,11 +138,16 @@ class ProfileLocalRepository : ProfileRepository {
   }
 
   override suspend fun deleteFriend(friend: String, currentUserId: String) {
-    val currentProfile = getProfileByUid(currentUserId) ?: return
-    val friendId = getProfileByUsername(friend)?.uid
-    val updatedFriends = currentProfile.friendUids.filter { it != friendId }
-    val updatedProfile = currentProfile.copy(friendUids = updatedFriends)
-    updateProfile(updatedProfile)
+    val current = getProfileByUid(currentUserId) ?: return
+    val friendProfile = getProfileByUsername(friend) ?: return
+
+    // Remove friend from current user
+    val updatedCurrentFriends = current.friendUids.filter { it != friendProfile.uid }
+    updateProfile(current.copy(friendUids = updatedCurrentFriends))
+
+    // Remove current user from the friend’s profile (symmetry)
+    val updatedFriendFriends = friendProfile.friendUids.filter { it != currentUserId }
+    updateProfile(friendProfile.copy(friendUids = updatedFriendFriends))
   }
 
   override suspend fun addFriend(friend: String, currentUserId: String) {
@@ -202,6 +212,46 @@ class ProfileLocalRepository : ProfileRepository {
 
   override suspend fun allUnregisterEvent(eventId: String, participants: List<String>) {
     participants.forEach { participant -> unregisterEvent(eventId, participant) }
+  }
+
+  override suspend fun sendFriendRequest(senderId: String, recipientId: String) {
+    // Prevent duplicates
+    val alreadyPending =
+        pendingFriendRequests.any { it.senderId == senderId && it.recipientId == recipientId }
+    if (alreadyPending) return
+
+    // Prevent sending request to yourself
+    if (senderId == recipientId) return
+
+    pendingFriendRequests += FriendRequest(senderId, recipientId)
+  }
+
+  override suspend fun acceptFriendRequest(notification: Notification) {
+    val senderId = notification.senderId ?: return
+    val recipientId = notification.recipientId
+
+    // Remove pending request
+    pendingFriendRequests.removeAll { it.senderId == senderId && it.recipientId == recipientId }
+
+    // Add each other as friends
+    val senderProfile = getProfileByUid(senderId)
+    val recipientProfile = getProfileByUid(recipientId)
+
+    if (senderProfile != null && !senderProfile.friendUids.contains(recipientId)) {
+      updateProfile(senderProfile.copy(friendUids = senderProfile.friendUids + recipientId))
+    }
+
+    if (recipientProfile != null && !recipientProfile.friendUids.contains(senderId)) {
+      updateProfile(recipientProfile.copy(friendUids = recipientProfile.friendUids + senderId))
+    }
+  }
+
+  override suspend fun rejectFriendRequest(notification: Notification) {
+    val senderId = notification.senderId ?: return
+    val recipientId = notification.recipientId
+
+    // Remove pending request — no friendship changes
+    pendingFriendRequests.removeAll { it.senderId == senderId && it.recipientId == recipientId }
   }
 
   // ---- BADGE GESTION PART ----
