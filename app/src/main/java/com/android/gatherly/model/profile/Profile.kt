@@ -15,8 +15,6 @@ data class Profile(
         emptyList(), // Represents the list of events that the user create
     val groupIds: List<String> = emptyList(),
     val friendUids: List<String> = emptyList(),
-    val pendingFriendsIncoming: List<String> = emptyList(),
-    val pendingFriendsOutgoing: List<String> = emptyList(),
     val school: String = "",
     val schoolYear: String = "",
     val birthday: Timestamp? = null,

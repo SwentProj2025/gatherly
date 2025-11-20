@@ -4,7 +4,6 @@ import android.net.Uri
 import com.android.gatherly.model.badge.ProfileBadges
 import com.android.gatherly.model.badge.Rank
 import com.android.gatherly.model.friends.Friends
-import com.android.gatherly.model.notification.Notification
 
 /**
  * Simplified in-memory local implementation of [ProfileRepository].
@@ -212,46 +211,6 @@ class ProfileLocalRepository : ProfileRepository {
 
   override suspend fun allUnregisterEvent(eventId: String, participants: List<String>) {
     participants.forEach { participant -> unregisterEvent(eventId, participant) }
-  }
-
-  override suspend fun sendFriendRequest(senderId: String, recipientId: String) {
-    // Prevent duplicates
-    val alreadyPending =
-        pendingFriendRequests.any { it.senderId == senderId && it.recipientId == recipientId }
-    if (alreadyPending) return
-
-    // Prevent sending request to yourself
-    if (senderId == recipientId) return
-
-    pendingFriendRequests += FriendRequest(senderId, recipientId)
-  }
-
-  override suspend fun acceptFriendRequest(notification: Notification) {
-    val senderId = notification.senderId ?: return
-    val recipientId = notification.recipientId
-
-    // Remove pending request
-    pendingFriendRequests.removeAll { it.senderId == senderId && it.recipientId == recipientId }
-
-    // Add each other as friends
-    val senderProfile = getProfileByUid(senderId)
-    val recipientProfile = getProfileByUid(recipientId)
-
-    if (senderProfile != null && !senderProfile.friendUids.contains(recipientId)) {
-      updateProfile(senderProfile.copy(friendUids = senderProfile.friendUids + recipientId))
-    }
-
-    if (recipientProfile != null && !recipientProfile.friendUids.contains(senderId)) {
-      updateProfile(recipientProfile.copy(friendUids = recipientProfile.friendUids + senderId))
-    }
-  }
-
-  override suspend fun rejectFriendRequest(notification: Notification) {
-    val senderId = notification.senderId ?: return
-    val recipientId = notification.recipientId
-
-    // Remove pending request — no friendship changes
-    pendingFriendRequests.removeAll { it.senderId == senderId && it.recipientId == recipientId }
   }
 
   // ---- BADGE GESTION PART ----
