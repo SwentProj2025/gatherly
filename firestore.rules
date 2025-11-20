@@ -114,6 +114,11 @@ service cloud.firestore {
             && resource.data.creatorId == request.auth.uid;
         }
 
+        // --- BADGES ---
+                match /badges/{badgeId} {
+                  allow read: if request.auth != null;
+                }
+
         // --- NOTIFICATIONS ---
 
         match /users/{userId}/notifications/{notificationId} {
