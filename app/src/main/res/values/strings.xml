@@ -31,6 +31,11 @@
     <string name="todos_past_warning_text">Are you sure you want to create a todo with a past deadline?</string>
     <string name="todos_create">Yes, Create</string>
     <string name="todos_edit">Yes, Save</string>
+    <string name="todos_sort_button_label">Sort todos</string>
+    <string name="todos_date_descending_sort_button_text">Date descending</string>
+    <string name="todos_date_ascending_sort_button_text">Date ascending</string>
+    <string name="todos_alphabetical_sort_button_text">Alphabetical</string>
+    <string name="todos_sort_menu_check_icon_label">Selected</string>
 
     <!-- Sign In Page. -->
     <string name="web_client_id">854490974901-rc0seqlo7nbm1net10ujpte2ckkrsgn2.apps.googleusercontent.com</string>

@@ -8,6 +8,7 @@ import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.ui.todo.OverviewViewModel
+import com.android.gatherly.ui.todo.TodoSortOrder
 import com.android.gatherly.utilstest.MockitoUtils
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.Dispatchers
@@ -286,6 +287,103 @@ class OverviewViewModelTest {
         // Should again return Lunch + Laundry — not stay empty
         val results = overviewViewModel.uiState.value.todos
         assertEquals(2, results.size)
+      }
+
+  @Test
+  fun sortOrder_changes_sortListCorrectly() =
+      runTest(testDispatcher) {
+        val todoA =
+            makeTodo("A", description = "", ownerId = "u").copy(dueDate = Timestamp(1000, 0))
+        val todoB =
+            makeTodo("B", description = "", ownerId = "u").copy(dueDate = Timestamp(5000, 0))
+        val todoC =
+            makeTodo("C", description = "", ownerId = "u").copy(dueDate = Timestamp(2000, 0))
+
+        toDosRepository.addTodo(todoA)
+        toDosRepository.addTodo(todoB)
+        toDosRepository.addTodo(todoC)
+
+        advanceUntilIdle()
+        overviewViewModel.refreshUIState()
+        waitUntilLoaded(overviewViewModel)
+
+        // When sorting by DATE_ASC
+        overviewViewModel.setSortOrder(TodoSortOrder.DATE_ASC)
+        advanceUntilIdle()
+
+        val asc = overviewViewModel.uiState.value.todos
+        assertEquals(listOf(todoA.uid, todoC.uid, todoB.uid), asc.map { it.uid })
+
+        // When sorting by DATE_DESC
+        overviewViewModel.setSortOrder(TodoSortOrder.DATE_DESC)
+        advanceUntilIdle()
+
+        val desc = overviewViewModel.uiState.value.todos
+        assertEquals(listOf(todoB.uid, todoC.uid, todoA.uid), desc.map { it.uid })
+
+        // When sorting by ALPHABETICAL
+        overviewViewModel.setSortOrder(TodoSortOrder.ALPHABETICAL)
+        advanceUntilIdle()
+
+        val alpha = overviewViewModel.uiState.value.todos
+        assertEquals(listOf(todoA.uid, todoB.uid, todoC.uid), alpha.map { it.uid })
+      }
+
+  @Test
+  fun sorting_persists_after_refresh() =
+      runTest(testDispatcher) {
+        val todo1 = makeTodo("A")
+        val todo2 = makeTodo("B")
+
+        toDosRepository.addTodo(todo1)
+        toDosRepository.addTodo(todo2)
+
+        advanceUntilIdle()
+        overviewViewModel.refreshUIState()
+        waitUntilLoaded(overviewViewModel)
+
+        // Apply alphabetical
+        overviewViewModel.setSortOrder(TodoSortOrder.ALPHABETICAL)
+        advanceUntilIdle()
+
+        val firstSorted = overviewViewModel.uiState.value.todos
+        assertEquals(listOf(todo1.uid, todo2.uid), firstSorted.map { it.uid })
+
+        // Add new todo
+        val todo3 = makeTodo("C")
+        toDosRepository.addTodo(todo3)
+        advanceUntilIdle()
+
+        overviewViewModel.refreshUIState()
+        waitUntilLoaded(overviewViewModel)
+
+        val sortedAfterRefresh = overviewViewModel.uiState.value.todos
+        assertEquals(listOf(todo1.uid, todo2.uid, todo3.uid), sortedAfterRefresh.map { it.uid })
+      }
+
+  @Test
+  fun search_and_sort_interact_correctly() =
+      runTest(testDispatcher) {
+        val todoA = makeTodo("Alpha")
+        val todoC = makeTodo("Charlie")
+        val todoB = makeTodo("Bravo")
+
+        toDosRepository.addTodo(todoA)
+        toDosRepository.addTodo(todoC)
+        toDosRepository.addTodo(todoB)
+
+        advanceUntilIdle()
+        overviewViewModel.refreshUIState()
+        waitUntilLoaded(overviewViewModel)
+
+        overviewViewModel.setSortOrder(TodoSortOrder.ALPHABETICAL)
+        advanceUntilIdle()
+
+        overviewViewModel.searchTodos("a")
+        advanceUntilIdle()
+
+        val result = overviewViewModel.uiState.value.todos.map { it.name }
+        assertEquals(listOf("Alpha", "Bravo", "Charlie"), result)
       }
 
   private suspend fun waitUntilLoaded(viewModel: OverviewViewModel) {
