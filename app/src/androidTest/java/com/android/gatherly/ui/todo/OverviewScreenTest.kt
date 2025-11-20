@@ -14,6 +14,8 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
+import com.android.gatherly.model.profile.ProfileLocalRepository
+import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosLocalRepository
@@ -32,15 +34,18 @@ class OverviewScreenTest : GatherlyTest() {
   @get:Rule val composeTestRule = createComposeRule()
 
   private lateinit var overviewViewModel: OverviewViewModel
+  private lateinit var profileRepository: ProfileRepository
 
   @Before
   fun setUp() {
     repository = ToDosLocalRepository()
+    profileRepository = ProfileLocalRepository()
   }
 
   fun setContent(withInitialTodos: List<ToDo> = emptyList()) = runTest {
     withInitialTodos.forEach { repository.addTodo(it) }
-    overviewViewModel = OverviewViewModel(todoRepository = repository)
+    overviewViewModel =
+        OverviewViewModel(todoRepository = repository, profileRepository = profileRepository)
     composeTestRule.setContent { OverviewScreen(overviewViewModel = overviewViewModel) }
     advanceUntilIdle()
   }
