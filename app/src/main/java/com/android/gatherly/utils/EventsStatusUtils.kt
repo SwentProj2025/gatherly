@@ -19,8 +19,8 @@ fun updateEventStatus(event: Event): Event {
       Calendar.getInstance()
           .apply {
             time = date.toDate()
-            set(Calendar.HOUR_OF_DAY, startCal.get(Calendar.HOUR_OF_DAY))
-            set(Calendar.MINUTE, startCal.get(Calendar.MINUTE))
+            set(Calendar.HOUR_OF_DAY, startCal[Calendar.HOUR_OF_DAY])
+            set(Calendar.MINUTE, startCal[Calendar.MINUTE])
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
           }
@@ -30,8 +30,8 @@ fun updateEventStatus(event: Event): Event {
       Calendar.getInstance()
           .apply {
             time = date.toDate()
-            set(Calendar.HOUR_OF_DAY, endCal.get(Calendar.HOUR_OF_DAY))
-            set(Calendar.MINUTE, endCal.get(Calendar.MINUTE))
+            set(Calendar.HOUR_OF_DAY, endCal[Calendar.HOUR_OF_DAY])
+            set(Calendar.MINUTE, endCal[Calendar.MINUTE])
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
           }
