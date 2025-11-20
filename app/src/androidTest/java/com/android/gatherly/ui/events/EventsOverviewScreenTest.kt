@@ -21,14 +21,12 @@ import com.android.gatherly.model.map.Location
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.ui.navigation.NavigationTestTags
-import com.android.gatherly.utils.GatherlyTest.Companion.fromDate
 import com.android.gatherly.utils.MockitoUtils
 import com.android.gatherly.utils.UI_WAIT_TIMEOUT
 import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.temporal.ChronoUnit
-import java.util.Calendar
 import java.util.Date
 import java.util.NoSuchElementException
 import kotlinx.coroutines.runBlocking
@@ -58,7 +56,6 @@ class EventsOverviewScreenTest {
     mockitoUtils = MockitoUtils()
   }
 
-  private val dateB = Timestamp.Companion.fromDate(2025, Calendar.OCTOBER, 25)
   private val start =
       SimpleDateFormat("HH:mm").parse("12:00") ?: throw NoSuchElementException("no date ")
   private val finish =
@@ -84,7 +81,7 @@ class EventsOverviewScreenTest {
         description = "Need to work in the CO with Gab, in order to finish the TDS homework",
         creatorName = "Sofija",
         location = Location(46.520278, 6.565556, "EPFL"),
-        date = dateB,
+        date = tomorrowTimestamp,
         startTime = Timestamp(start),
         endTime = Timestamp(finish),
         creatorId = currentUserId,

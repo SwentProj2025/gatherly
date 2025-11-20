@@ -7,6 +7,11 @@ import com.android.gatherly.model.event.EventsRepository
 import com.android.gatherly.model.event.EventsRepositoryFirestore
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.GoogleAuthProvider
+import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.temporal.ChronoUnit
+import java.util.Date
+import java.util.NoSuchElementException
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -44,6 +49,12 @@ open class FirestoreEventsGatherlyTest {
   protected lateinit var user2Id: String
 
   /** Sample event used as a template in tests. Created by Alice. */
+  private val tomorrowTimestamp = Timestamp(Date.from(Instant.now().plus(1, ChronoUnit.DAYS)))
+  private val start =
+      SimpleDateFormat("HH:mm").parse("12:00") ?: throw NoSuchElementException("no date ")
+  private val finish =
+      SimpleDateFormat("HH:mm").parse("23:00") ?: throw NoSuchElementException("no date ")
+
   protected val event1 =
       Event(
           id = "1",
@@ -51,9 +62,9 @@ open class FirestoreEventsGatherlyTest {
           description = "Weekly sync",
           creatorName = "Alice",
           location = null,
-          date = Timestamp.now(),
-          startTime = Timestamp.now(),
-          endTime = Timestamp.now(),
+          date = tomorrowTimestamp,
+          startTime = Timestamp(start),
+          endTime = Timestamp(finish),
           creatorId = "", // Will be set dynamically in tests
           participants = emptyList(),
           status = EventStatus.UPCOMING)
