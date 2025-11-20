@@ -115,9 +115,27 @@ service cloud.firestore {
         }
 
         // --- BADGES ---
-                match /badges/{badgeId} {
-                  allow read: if request.auth != null;
-                }
+         match /badges/{badgeId} {
+           allow read: if request.auth != null;
+         }
+    
+        // --- NOTIFICATIONS ---
+
+        match /users/{userId}/notifications/{notificationId} {
+
+          // Read: Only the recipient can read their own notifications
+          allow read: if request.auth != null
+                      && request.auth.uid == userId;
+
+          // Create: Any authenticated user can create a notification for any user
+          // (Needed for friend requests, system notifications, etc.)
+          allow create: if request.auth != null
+                        && request.resource.data.recipientId == userId;
+
+          // Update/Delete: Only the recipient can modify their own notifications
+          allow update, delete: if request.auth != null
+                                && request.auth.uid == userId;
+        }
 
   }
 }
