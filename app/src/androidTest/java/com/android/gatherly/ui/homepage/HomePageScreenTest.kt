@@ -19,6 +19,7 @@ import com.android.gatherly.ui.homePage.HomePageScreenTestTags
 import com.android.gatherly.ui.homePage.HomePageViewModel
 import com.android.gatherly.ui.homePage.getFriendAvatarTestTag
 import com.android.gatherly.ui.homePage.getFriendStatusTestTag
+import com.android.gatherly.ui.homePage.getTaskItemTestTag
 import com.android.gatherly.utils.MockitoUtils
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.runBlocking
@@ -55,6 +56,18 @@ class HomePageScreenTest {
           groupIds = emptyList(),
           friendUids = emptyList(),
           status = ProfileStatus.FOCUSED)
+
+  val todo1 =
+      ToDo(
+          uid = "todo_1",
+          name = "Plan party",
+          description = "Buy decorations and invite friends",
+          assigneeName = "Eve",
+          dueDate = Timestamp.now(),
+          dueTime = null,
+          location = null,
+          status = ToDoStatus.ONGOING,
+          ownerId = "user1")
 
   private var currentProfile: Profile =
       Profile(
@@ -100,17 +113,7 @@ class HomePageScreenTest {
 
   /** Populates local repositories with fake data for testing. */
   private fun populateRepositories() = runBlocking {
-    todosLocalRepo.addTodo(
-        ToDo(
-            uid = "3",
-            name = "Plan party",
-            description = "Buy decorations and invite friends",
-            assigneeName = "Eve",
-            dueDate = Timestamp.now(),
-            dueTime = null,
-            location = null,
-            status = ToDoStatus.ONGOING,
-            ownerId = "user1"))
+    todosLocalRepo.addTodo(todo1)
     profileLocalRepo.addProfile(friend1)
     profileLocalRepo.addProfile(friend2)
     profileLocalRepo.addProfile(currentProfile)
@@ -142,9 +145,7 @@ class HomePageScreenTest {
   fun taskItemsAreDisplayed() {
     setContentWithGoogle()
     fakeViewModel.uiState.value.todos.forEach { todo ->
-      composeRule
-          .onNodeWithTag("${HomePageScreenTestTags.TASK_ITEM_PREFIX}${todo.uid}")
-          .assertIsDisplayed()
+      composeRule.onNodeWithTag(getTaskItemTestTag(todo.uid)).assertIsDisplayed()
     }
   }
 
@@ -153,9 +154,7 @@ class HomePageScreenTest {
   fun taskItemsTextMatchesUiState() {
     setContentWithGoogle()
     fakeViewModel.uiState.value.todos.forEach { todo ->
-      composeRule
-          .onNodeWithTag("${HomePageScreenTestTags.TASK_ITEM_PREFIX}${todo.uid}")
-          .assertIsDisplayed()
+      composeRule.onNodeWithTag(getTaskItemTestTag(todo.uid)).assertIsDisplayed()
     }
   }
 
@@ -164,10 +163,7 @@ class HomePageScreenTest {
   fun taskItem_isClickable() {
     setContentWithGoogle()
     fakeViewModel.uiState.value.todos.forEach { todo ->
-      composeRule
-          .onNodeWithTag("${HomePageScreenTestTags.TASK_ITEM_PREFIX}${todo.uid}")
-          .assertIsDisplayed()
-          .performClick()
+      composeRule.onNodeWithTag(getTaskItemTestTag(todo.uid)).assertIsDisplayed().performClick()
     }
   }
 
@@ -235,7 +231,7 @@ class HomePageScreenTest {
   /** Verifies that the empty task list text button is displayed when there are no todos */
   @Test
   fun emptyTaskList_displaysTextButton() {
-    runBlocking { todosLocalRepo.deleteTodo("3") }
+    runBlocking { todosLocalRepo.deleteTodo(todo1.uid) }
     setContentWithGoogle()
 
     composeRule
@@ -294,6 +290,45 @@ class HomePageScreenTest {
     // Assert last friend is displayed
     composeRule
         .onNodeWithTag(getFriendAvatarTestTag("scroll_friend5"), useUnmergedTree = true)
+        .assertIsDisplayed()
+  }
+
+  /** Verifies that the scrollable task list displays all todos correctly */
+  @Test
+  fun taskList_scrollable_displaysAllTodos() {
+    // Create multiple todos to ensure scrolling is required
+    val manyTodos =
+        (2..6).map { i ->
+          ToDo(
+              uid = "scroll_todo$i",
+              name = "Task $i",
+              description = "Description $i",
+              assigneeName = "Assignee $i",
+              dueDate = Timestamp.now(),
+              dueTime = null,
+              location = null,
+              status = ToDoStatus.ONGOING,
+              ownerId = currentProfile.uid)
+        }
+
+    runBlocking { manyTodos.forEach { todosLocalRepo.addTodo(it) } }
+
+    setContentWithGoogle()
+    composeRule.waitForIdle()
+
+    // Check first task is visible
+    composeRule
+        .onNodeWithTag(getTaskItemTestTag(todo1.uid), useUnmergedTree = true)
+        .assertIsDisplayed()
+
+    // Scroll LazyColumn to the last task
+    composeRule
+        .onNodeWithTag(HomePageScreenTestTags.TASKS_LAZY_COLUMN, useUnmergedTree = true)
+        .performScrollToNode(hasTestTag(getTaskItemTestTag("scroll_todo6")))
+
+    // Assert last task is displayed
+    composeRule
+        .onNodeWithTag(getTaskItemTestTag("scroll_todo6"), useUnmergedTree = true)
         .assertIsDisplayed()
   }
 }

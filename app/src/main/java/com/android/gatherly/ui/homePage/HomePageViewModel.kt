@@ -65,7 +65,7 @@ class HomePageViewModel(
                 displayableTodos = getDrawableTodos(todos),
                 displayableEvents = getDrawableEvents(events),
                 friends = friends,
-                todos = todos.take(3),
+                todos = todos,
                 isAnon = isAnon)
       } catch (e: Exception) {
         _uiState.value = _uiState.value.copy(errorMsg = "There was an error loading your home page")

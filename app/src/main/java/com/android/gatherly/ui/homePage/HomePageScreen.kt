@@ -93,7 +93,16 @@ object HomePageScreenTestTags {
   const val ADD_FRIENDS_ICON = "addFriendsIcon"
   const val ADD_FRIENDS_TEXT = "addFriendsText"
   const val FRIENDS_LAZY_COLUMN = "friendsLazyColumn"
+  const val TASKS_LAZY_COLUMN = "tasksLazyColumn"
 }
+
+/**
+ * Generates a unique test tag for a taskItem
+ *
+ * @param todoUid The unique identifier of the todo
+ * @return The generated test tag for the taskItem
+ */
+fun getTaskItemTestTag(todoUid: String) = "${HomePageScreenTestTags.TASK_ITEM_PREFIX}$todoUid"
 
 /**
  * Generates a unique test tag for a friend's status
@@ -363,27 +372,34 @@ fun FriendsSection(
  */
 @Composable
 fun TaskList(todos: List<ToDo>, onClickTodo: () -> Unit = {}) {
-  if (todos.isEmpty()) {
-    TextButton(
-        onClick = onClickTodo,
-        modifier =
-            Modifier.padding(horizontal = dimensionResource(id = R.dimen.padding_small))
-                .testTag(HomePageScreenTestTags.EMPTY_TASK_LIST_TEXT_BUTTON)) {
-          Text(
-              text = stringResource(id = R.string.homepage_empty_task_list_message),
-              color = MaterialTheme.colorScheme.onBackground)
-        }
-  } else {
+  Column(
+      modifier =
+          Modifier.height(dimensionResource(id = R.dimen.homepage_task_section_height))
+              .fillMaxWidth()) {
+        if (todos.isEmpty()) {
+          TextButton(
+              onClick = onClickTodo,
+              modifier =
+                  Modifier.padding(horizontal = dimensionResource(id = R.dimen.padding_small))
+                      .testTag(HomePageScreenTestTags.EMPTY_TASK_LIST_TEXT_BUTTON)) {
+                Text(
+                    text = stringResource(id = R.string.homepage_empty_task_list_message),
+                    color = MaterialTheme.colorScheme.onBackground)
+              }
+        } else {
 
-    Column {
-      todos.forEach { todo ->
-        TaskItem(
-            modifier = Modifier.testTag("${HomePageScreenTestTags.TASK_ITEM_PREFIX}${todo.uid}"),
-            text = todo.description,
-            onClick = onClickTodo)
+          LazyColumn(
+              modifier = Modifier.weight(1f).testTag(HomePageScreenTestTags.TASKS_LAZY_COLUMN)) {
+                items(todos.size) { index ->
+                  val todo = todos[index]
+                  TaskItem(
+                      modifier = Modifier.testTag(getTaskItemTestTag(todo.uid)),
+                      text = todo.description,
+                      onClick = onClickTodo)
+                }
+              }
+        }
       }
-    }
-  }
 }
 
 /** A single clickable task item with a description and arrow icon. */
