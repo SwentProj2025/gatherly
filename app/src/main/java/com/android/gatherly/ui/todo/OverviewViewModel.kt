@@ -140,8 +140,8 @@ class OverviewViewModel(
   private fun applySortOrder(list: List<ToDo>): List<ToDo> {
     return when (_uiState.value.sortOrder) {
       TodoSortOrder.ALPHABETICAL -> list.sortedBy { it.name.lowercase() }
-      TodoSortOrder.DATE_ASC -> list.sortedBy { it.dueDate.toDate() }
-      TodoSortOrder.DATE_DESC -> list.sortedByDescending { it.dueDate.toDate() }
+      TodoSortOrder.DATE_ASC -> list.sortedBy { it.dueDate?.toDate() }
+      TodoSortOrder.DATE_DESC -> list.sortedByDescending { it.dueDate?.toDate() }
     }
   }
 
