@@ -56,6 +56,7 @@ import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
+import com.android.gatherly.utils.profilePicturePainter
 
 /** Object containing test tags for the AddGroupScreen and its components. */
 object AddGroupScreenTestTags {
@@ -357,7 +358,7 @@ private fun FriendItem(friend: Profile, viewModel: AddGroupViewModel) {
         ) {
           // Friend Profile Picture
           Image(
-              painter = painterResource(id = R.drawable.default_profile_picture),
+              painter = profilePicturePainter(friend.profilePicture),
               contentDescription = picDescription,
               modifier =
                   Modifier.size(picSize)
