@@ -8,6 +8,7 @@ import androidx.compose.ui.test.onNodeWithTag
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.todo.ToDosLocalRepository
+import com.android.gatherly.utils.AlertDialogTestTags
 import com.android.gatherly.utils.GatherlyTest
 import com.android.gatherly.utils.MockitoUtils
 import org.junit.Before
@@ -195,5 +196,13 @@ class AddTodoScreenTest : GatherlyTest() {
     val invalidTime = "14:61" // Invalid time format
     composeTestRule.enterAddTodoTime(invalidTime)
     composeTestRule.checkErrorMessageIsDisplayedForAddTodo()
+  }
+
+  @Test
+  fun enterPastDate() {
+    composeTestRule.enterAddTodoDetails(todo1)
+    composeTestRule.enterAddTodoDate("12/12/2012")
+    composeTestRule.onNodeWithTag(AddToDoScreenTestTags.TODO_SAVE)
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.ALERT).assertIsDisplayed()
   }
 }
