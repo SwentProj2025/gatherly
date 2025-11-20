@@ -46,7 +46,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
@@ -256,7 +255,7 @@ fun AddGroupScreen(
                     LazyRow {
                       items(selectedFriends) { friend ->
                         Image(
-                            painter = painterResource(id = R.drawable.default_profile_picture),
+                            painter = profilePicturePainter(friend.profilePicture),
                             contentDescription = picDescription,
                             modifier =
                                 Modifier.size(picSize)
