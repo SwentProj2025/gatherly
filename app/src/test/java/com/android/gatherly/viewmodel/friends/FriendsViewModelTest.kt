@@ -208,6 +208,37 @@ class FriendsViewModelTest {
               createdTodosCount: Int?,
               completedTodosCount: Int?
           ) {}
+
+            override suspend fun addBadge(
+                profile: Profile,
+                badgeId: String
+            ) {
+                TODO("Not yet implemented")
+            }
+
+            override suspend fun incrementCreatedTodo(uid: String): Int {
+                TODO("Not yet implemented")
+            }
+
+            override suspend fun incrementCompletedTodo(uid: String): Int {
+                TODO("Not yet implemented")
+            }
+
+            override suspend fun incrementCreatedEvent(uid: String): Int {
+                TODO("Not yet implemented")
+            }
+
+            override suspend fun incrementParticipatedEvent(uid: String): Int {
+                TODO("Not yet implemented")
+            }
+
+            override suspend fun incrementCompletedFocusSession(uid: String): Int {
+                TODO("Not yet implemented")
+            }
+
+            override suspend fun incrementAddedFriend(uid: String): Int {
+                TODO("Not yet implemented")
+            }
         }
     val errorViewModel =
         FriendsViewModel(repository = throwingRepository, authProvider = { mockitoUtils.mockAuth })

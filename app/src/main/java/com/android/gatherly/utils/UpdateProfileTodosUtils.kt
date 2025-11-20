@@ -20,29 +20,8 @@ suspend fun addTodo_updateBadges(
     todo: ToDo,
     currentUserId: String
 ) {
-  todoRepository.addTodo(todo)
-  val currentProfile: Profile = profileRepository.getProfileByUid(currentUserId) ?: return
-
-  profileRepository.updateBadges(currentProfile)
-}
-
-/**
- * Function to delete a ToDo and update the user's badges accordingly.
- *
- * @param todoRepository The repository to manage ToDos.
- * @param profileRepository The repository to manage Profiles.
- * @param todoID The ID of the ToDo to be deleted.
- * @param currentUserId The ID of the current user.
- */
-suspend fun deleteTodo_updateBadges(
-    todoRepository: ToDosRepository,
-    profileRepository: ProfileRepository,
-    todoID: String,
-    currentUserId: String
-) {
-  todoRepository.deleteTodo(todoID = todoID)
-  val currentProfile = profileRepository.getProfileByUid(currentUserId) ?: return
-  profileRepository.updateBadges(currentProfile)
+    todoRepository.addTodo(todo)
+    profileRepository.incrementCreatedTodo(currentUserId)
 }
 
 /**
@@ -61,8 +40,14 @@ suspend fun editTodo_updateBadges(
     newStatus: ToDoStatus,
     currentUserId: String
 ) {
-  val updatedTodo = todoRepository.getTodo(todoID).copy(status = newStatus)
-  todoRepository.editTodo(todoID, updatedTodo)
-  val currentProfile = profileRepository.getProfileByUid(currentUserId) ?: return
-  profileRepository.updateBadges(currentProfile)
+    val existing = todoRepository.getTodo(todoID)
+    val wasCompleted = existing.status == ToDoStatus.ENDED
+    val updatedTodo = existing.copy(status = newStatus)
+
+    todoRepository.editTodo(todoID, updatedTodo)
+
+    val isNowCompleted = newStatus == ToDoStatus.ENDED
+    if (!wasCompleted && isNowCompleted) {
+        profileRepository.incrementCompletedTodo(currentUserId)
+    }
 }

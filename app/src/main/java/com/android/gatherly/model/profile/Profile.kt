@@ -21,5 +21,11 @@ data class Profile(
     val profilePicture: String = "",
     val status: ProfileStatus = ProfileStatus.OFFLINE,
     val badges: ProfileBadges = ProfileBadges.blank,
-    val badgeIds: List<String> = emptyList()
+    val badgeIds: List<String> = emptyList(),
+    val createdTodoCount: Int = 0,
+    val completedTodoCount: Int = 0,
+    val createdEventCount: Int = 0,
+    val participatedEventCount: Int = 0,
+    val completedFocusSessionCount: Int = 0,
+    val addedFriendsCount: Int = 0
 )

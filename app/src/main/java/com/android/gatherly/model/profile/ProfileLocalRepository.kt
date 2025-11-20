@@ -1,6 +1,8 @@
 package com.android.gatherly.model.profile
 
 import android.net.Uri
+import com.android.gatherly.model.badge.BadgeRank
+import com.android.gatherly.model.badge.BadgeType
 import com.android.gatherly.model.badge.ProfileBadges
 import com.android.gatherly.model.badge.Rank
 import com.android.gatherly.model.friends.Friends
@@ -142,10 +144,11 @@ class ProfileLocalRepository : ProfileRepository {
 
   override suspend fun addFriend(friend: String, currentUserId: String) {
     val currentProfile = getProfileByUid(currentUserId) ?: return
-    val friendId = getProfileByUsername(friend)?.uid
+    val friendId = getProfileByUsername(friend)?.uid ?: return
+
     if (!currentProfile.friendUids.contains(friendId)) {
       val updatedFriends = currentProfile.friendUids + friendId
-      val updatedProfile = currentProfile.copy(friendUids = updatedFriends as List<String>)
+      val updatedProfile = currentProfile.copy(friendUids = updatedFriends)
       updateProfile(updatedProfile)
     }
   }
@@ -237,6 +240,7 @@ class ProfileLocalRepository : ProfileRepository {
         else -> Rank.BLANK
       }
 
+
   override suspend fun addBadge(profile: Profile, badgeId: String) {
     val index = profiles.indexOfFirst { it.uid == profile.uid }
     if (index == -1) return
@@ -246,4 +250,84 @@ class ProfileLocalRepository : ProfileRepository {
 
     profiles[index] = existing.copy(badgeIds = existing.badgeIds + badgeId)
   }
+
+  // ---- COUNTERS + BADGES (LOCAL) ----
+
+  override suspend fun incrementCreatedTodo(uid: String): Int {
+    val profile = getProfileByUid(uid) ?: throw NoSuchElementException("Profile not found for uid=$uid")
+    val newCount = profile.createdTodoCount + 1
+    val updated = profile.copy(createdTodoCount = newCount)
+    updateProfile(updated)
+    awardBadge(uid, BadgeType.TODOS_CREATED, newCount)
+    return newCount
+  }
+
+  override suspend fun incrementCompletedTodo(uid: String): Int {
+    val profile = getProfileByUid(uid) ?: throw NoSuchElementException("Profile not found for uid=$uid")
+    val newCount = profile.completedTodoCount + 1
+    val updated = profile.copy(completedTodoCount = newCount)
+    updateProfile(updated)
+    awardBadge(uid, BadgeType.TODOS_COMPLETED, newCount)
+    return newCount
+  }
+
+  override suspend fun incrementCreatedEvent(uid: String): Int {
+    val profile = getProfileByUid(uid) ?: throw NoSuchElementException("Profile not found for uid=$uid")
+    val newCount = profile.createdEventCount + 1
+    val updated = profile.copy(createdEventCount = newCount)
+    updateProfile(updated)
+    awardBadge(uid, BadgeType.EVENTS_CREATED, newCount)
+    return newCount
+  }
+
+  override suspend fun incrementParticipatedEvent(uid: String): Int {
+    val profile = getProfileByUid(uid) ?: throw NoSuchElementException("Profile not found for uid=$uid")
+    val newCount = profile.participatedEventCount + 1
+    val updated = profile.copy(participatedEventCount = newCount)
+    updateProfile(updated)
+    awardBadge(uid, BadgeType.EVENTS_PARTICIPATED, newCount)
+    return newCount
+  }
+
+  override suspend fun incrementCompletedFocusSession(uid: String): Int {
+    val profile = getProfileByUid(uid) ?: throw NoSuchElementException("Profile not found for uid=$uid")
+    val newCount = profile.completedFocusSessionCount + 1
+    val updated = profile.copy(completedFocusSessionCount = newCount)
+    updateProfile(updated)
+    awardBadge(uid, BadgeType.FOCUS_SESSIONS_COMPLETED, newCount)
+    return newCount
+  }
+
+  override suspend fun incrementAddedFriend(uid: String): Int {
+    val profile = getProfileByUid(uid) ?: throw NoSuchElementException("Profile not found for uid=$uid")
+    val newCount = profile.addedFriendsCount + 1
+    val updated = profile.copy(addedFriendsCount = newCount)
+    updateProfile(updated)
+    awardBadge(uid, BadgeType.FRIENDS_ADDED, newCount)
+    return newCount
+  }
+
+  // ---------- helpers ----------
+
+  private suspend fun awardBadge(uid: String, type: BadgeType, count: Int) {
+    val rank = countToRank(count)
+    if (rank == BadgeRank.BLANK) return
+
+    // Fake badge id for tests/local usage: e.g. "TODOS_CREATED_GOLD"
+    val badgeId = "${type.name}_${rank.name}"
+
+    val profile = getProfileByUid(uid) ?: return
+    addBadge(profile, badgeId)
+  }
+
+  private fun countToRank(count: Int): BadgeRank =
+    when {
+      count >= 30 -> BadgeRank.LEGEND
+      count >= 20 -> BadgeRank.DIAMOND
+      count >= 10 -> BadgeRank.GOLD
+      count >= 5 -> BadgeRank.SILVER
+      count >= 3 -> BadgeRank.BRONZE
+      count >= 1 -> BadgeRank.STARTING
+      else -> BadgeRank.BLANK
+    }
 }
