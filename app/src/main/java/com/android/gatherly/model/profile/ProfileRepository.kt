@@ -228,4 +228,6 @@ interface ProfileRepository {
       createdTodosCount: Int? = null,
       completedTodosCount: Int? = null
   )
+
+  suspend fun addBadge(profile: Profile, badgeId: String)
 }

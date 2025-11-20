@@ -347,6 +347,7 @@ class ProfileRepositoryFirestore(
     val profilePicture = doc.getString("profilePicture") ?: return null
     val status = ProfileStatus.fromString(doc.getString("status"))
     val badges: ProfileBadges = doc.get("badges", ProfileBadges::class.java) ?: ProfileBadges.blank
+    val badgeIds = doc.get("badgeIds") as? List<String> ?: emptyList()
 
     return Profile(
         uid = uid,
@@ -362,7 +363,8 @@ class ProfileRepositoryFirestore(
         birthday = birthday,
         profilePicture = profilePicture,
         status = status,
-        badges = badges)
+        badges = badges,
+        badgeIds = badgeIds)
   }
 
   /**
@@ -386,7 +388,8 @@ class ProfileRepositoryFirestore(
         "birthday" to profile.birthday,
         "profilePicture" to profile.profilePicture,
         "status" to profile.status.value,
-        "badges" to profile.badges)
+        "badges" to profile.badges,
+        "badgeIds" to profile.badgeIds)
   }
 
   // -- FRIENDS GESTION PART --
@@ -499,4 +502,9 @@ class ProfileRepositoryFirestore(
         count >= 1 -> Rank.STARTING
         else -> Rank.BLANK
       }
+
+  override suspend fun addBadge(profile: Profile, badgeId: String) {
+    val docRef = profilesCollection.document(profile.uid)
+    docRef.update("badgeIds", FieldValue.arrayUnion(badgeId)).await()
+  }
 }
