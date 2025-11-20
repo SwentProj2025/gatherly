@@ -1,6 +1,5 @@
 package com.android.gatherly.viewmodel.event
 
-import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsLocalRepository
 import com.android.gatherly.model.event.EventsRepository
 import com.android.gatherly.model.profile.Profile
@@ -208,7 +207,6 @@ class EventsViewModelTests {
     assertEquals(Timestamp(1730000000, 0), initialEvent?.date)
     assertEquals(Timestamp(1730010000, 0), initialEvent?.startTime)
     assertEquals(Timestamp(1730020000, 0), initialEvent?.endTime)
-    assertEquals(EventStatus.UPCOMING, initialEvent?.status)
 
     // onEditEvent call
     vm.onEditEvent(

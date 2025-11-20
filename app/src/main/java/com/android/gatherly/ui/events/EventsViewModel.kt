@@ -1,5 +1,6 @@
 package com.android.gatherly.ui.events
 
+import androidx.compose.runtime.MutableState
 import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.ViewModel
@@ -186,6 +187,21 @@ class EventsViewModel(
       return GenericViewModelFactory {
         EventsViewModel(profileRepository = profileRepository, eventsRepository = eventsRepository)
       }
+    }
+  }
+
+  /**
+   * Helper function : return the list of events filtered according to the selected filter status
+   */
+  fun getFilteredEvents(
+      selectedFilter: MutableState<EventFilter>,
+      listEvents: List<Event>
+  ): List<Event> {
+    return when (selectedFilter.value) {
+      EventFilter.ALL -> listEvents
+      EventFilter.UPCOMING -> listEvents.filter { it.status == EventStatus.UPCOMING }
+      EventFilter.ONGOING -> listEvents.filter { it.status == EventStatus.ONGOING }
+      EventFilter.PAST -> listEvents.filter { it.status == EventStatus.PAST }
     }
   }
 }

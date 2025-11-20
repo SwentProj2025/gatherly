@@ -44,7 +44,7 @@ class MainActivity : ComponentActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContent { GatherlyTheme() { Surface(modifier = Modifier.fillMaxSize()) { GatherlyApp() } } }
+    setContent { GatherlyTheme { Surface(modifier = Modifier.fillMaxSize()) { GatherlyApp() } } }
   }
 
   private val userStatusManager = UserStatusManager()
@@ -65,7 +65,6 @@ class MainActivity : ComponentActivity() {
  * navigation controller and defines the navigation graph. You can add your app implementation
  * inside this function.
  *
- * @param navHostController The navigation controller used for navigating between screens.
  * @param context The context of the application, used for accessing resources and services.
  * @param credentialManager The CredentialManager instance for handling authentication credentials.
  */
@@ -82,7 +81,7 @@ fun GatherlyApp(
 
   NavHost(navController = navController, startDestination = startDestination) {
 
-    // SIGNIN COMPOSABLE  ------------------------------
+    // SIGN IN COMPOSABLE  ------------------------------
     navigation(
         startDestination = Screen.SignIn.route,
         route = Screen.SignIn.name,
@@ -155,7 +154,9 @@ fun GatherlyApp(
             navigationActions = navigationActions,
             credentialManager = credentialManager,
             onSignedOut = { navigationActions.navigateTo(Screen.SignIn) },
-            goToEvent = { navigationActions.navigateTo(Screen.EventsScreen) },
+            goToEvent = { event ->
+              navigationActions.navigateTo(Screen.EventsDetailsScreen(event))
+            },
             goToToDo = { navigationActions.navigateTo(Screen.OverviewToDo) })
       }
     }
@@ -188,6 +189,22 @@ fun GatherlyApp(
               navigationActions.navigateTo(Screen.EditEvent(event.id))
             })
       }
+
+      composable(Screen.EventsDetailsScreen.route) { navBackStackEntry ->
+        val uid = navBackStackEntry.arguments?.getString("uid")
+        uid?.let {
+          EventsScreen(
+              navigationActions = navigationActions,
+              credentialManager = credentialManager,
+              onSignedOut = { navigationActions.navigateTo(Screen.SignIn) },
+              onAddEvent = { navigationActions.navigateTo(Screen.AddEventScreen) },
+              navigateToEditEvent = { event ->
+                navigationActions.navigateTo(Screen.EditEvent(event.id))
+              },
+              eventId = it)
+        }
+      }
+
       composable(Screen.AddEventScreen.route) {
         AddEventScreen(
             goBack = { navigationActions.goBack() },

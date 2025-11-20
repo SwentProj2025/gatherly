@@ -31,6 +31,13 @@ sealed class Screen(
 
   object EventsScreen : Screen(route = "events_screen", name = "Your events")
 
+  data class EventsDetailsScreen(val eventUid: String) :
+      Screen(route = "event_details/${eventUid}", name = "Event Details") {
+    companion object {
+      const val route = "event_details/{uid}"
+    }
+  }
+
   object AddEventScreen : Screen(route = "add_event_screen", name = "Create an event")
 
   object EditEventScreen : Screen(route = "edit_event", name = "Edit event")

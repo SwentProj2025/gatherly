@@ -266,6 +266,48 @@ class ProfileRepositoryFirestore(
   override suspend fun deleteUserProfile(uid: String) {
     val profile = getProfileByUid(uid) ?: return
 
+    // Delete the user from all groups it is a part of:
+    // All groups the user belongs to:
+    val groupSnapshot = db.collection("groups").whereArrayContains("memberIds", uid).get().await()
+
+    // Loop through those groups:
+    for (doc in groupSnapshot.documents) {
+      val data = doc.data ?: continue
+      val members = (data["memberIds"] as? List<String>)?.toMutableList() ?: mutableListOf()
+      val admins = (data["adminIds"] as? List<String>)?.toMutableList() ?: mutableListOf()
+
+      val newMembers = members.filter { it != uid }
+      val newAdmins = admins.filter { it != uid }
+
+      db.collection("groups")
+          .document(doc.id)
+          .update(mapOf("memberIds" to newMembers, "adminIds" to newAdmins))
+          .await()
+    }
+
+    // Delete todos of the user:
+    val todosSnapshot = db.collection("users").document(uid).collection("todos").get().await()
+
+    for (doc in todosSnapshot.documents) {
+      doc.reference.delete().await()
+    }
+
+    // Delete events created by the user:
+    val eventsSnapshot = db.collection("events").whereEqualTo("creatorId", uid).get().await()
+
+    for (doc in eventsSnapshot.documents) {
+      doc.reference.delete().await()
+    }
+
+    // Delete focus sessions of the user:
+    val focusSessionsSnapshot =
+        db.collection("focusSessions").whereEqualTo("creatorId", uid).get().await()
+
+    for (doc in focusSessionsSnapshot.documents) {
+      doc.reference.delete().await()
+    }
+
+    // Delete username and profile:
     db.runBatch { batch ->
           if (profile.username.isNotBlank()) {
             batch.delete(usernamesCollection.document(profile.username))
@@ -274,6 +316,7 @@ class ProfileRepositoryFirestore(
         }
         .await()
 
+    // Delete profile picture:
     try {
       val storageRef = Firebase.storage.reference.child("profile_pictures/$uid")
       storageRef.delete().await()

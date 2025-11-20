@@ -124,7 +124,7 @@ fun MapScreen(
     credentialManager: CredentialManager = CredentialManager.create(LocalContext.current),
     onSignedOut: () -> Unit = {},
     navigationActions: NavigationActions? = null,
-    goToEvent: () -> Unit = {},
+    goToEvent: (String) -> Unit = {},
     goToToDo: () -> Unit = {}
 ) {
   /** Location services setup * */
@@ -295,7 +295,7 @@ fun MapScreen(
                   // Track consulted item before navigation
                   vm.onItemConsulted(selectedEvent.id)
                   vm.clearSelection()
-                  goToEvent()
+                  goToEvent(selectedEvent.id)
                 },
                 onClose = { vm.clearSelection() })
           }

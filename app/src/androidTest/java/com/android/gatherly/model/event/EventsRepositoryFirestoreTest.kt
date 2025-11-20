@@ -94,13 +94,13 @@ class EventsRepositoryFirestoreTest : FirestoreEventsGatherlyTest() {
         event1.copy(
             title = "Team Meeting (updated)",
             description = "Updated description",
-            status = EventStatus.ONGOING)
+            status = EventStatus.UPCOMING)
     repository.editEvent(event1.id, updated)
 
     val fetched = repository.getEvent(event1.id)
     assertEquals("Team Meeting (updated)", fetched.title)
     assertEquals("Updated description", fetched.description)
-    assertEquals(EventStatus.ONGOING, fetched.status)
+    assertEquals(EventStatus.UPCOMING, fetched.status)
   }
 
   /** Verifies that editEvent throws SecurityException when a non-creator tries to edit. */
