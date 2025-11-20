@@ -5,6 +5,7 @@ import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.todo.ToDosLocalRepository
@@ -202,7 +203,7 @@ class AddTodoScreenTest : GatherlyTest() {
   fun enterPastDate() {
     composeTestRule.enterAddTodoDetails(todo1)
     composeTestRule.enterAddTodoDate("12/12/2012")
-    composeTestRule.onNodeWithTag(AddToDoScreenTestTags.TODO_SAVE)
+    composeTestRule.onNodeWithTag(AddToDoScreenTestTags.TODO_SAVE).performClick()
     composeTestRule.onNodeWithTag(AlertDialogTestTags.ALERT).assertIsDisplayed()
   }
 }

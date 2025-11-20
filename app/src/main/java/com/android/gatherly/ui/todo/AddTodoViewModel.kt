@@ -16,6 +16,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -262,12 +263,22 @@ class AddTodoViewModel(
         _uiState.value.dueTimeError != null) {
       return
     }
-    val sdfDateAndTime = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
-    val dateAndTime =
-        sdfDateAndTime.parse(validated.dueDate + " " + validated.dueTime)
-            ?: throw IllegalArgumentException("Invalid date or time")
+    lateinit var dateAndTime: Date
+    if (validated.dueDate.isBlank()) {
+      saveTodo()
+      return
+    }
+    if (validated.dueTime.isBlank()) {
+      val sdfDate = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+      dateAndTime =
+          sdfDate.parse(validated.dueDate) ?: throw IllegalArgumentException("Invalid date")
+    } else {
+      val sdfDateAndTime = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+      dateAndTime =
+          sdfDateAndTime.parse(validated.dueDate + " " + validated.dueTime)
+              ?: throw IllegalArgumentException("Invalid date or time")
+    }
     val dueDateAndTime = Timestamp(dateAndTime)
-
     val currentTimestamp = Timestamp.now()
 
     if (dueDateAndTime < currentTimestamp) {

@@ -13,6 +13,7 @@ import com.android.gatherly.model.todo.ToDosRepositoryProvider
 import com.android.gatherly.utils.deleteTodo_updateBadges
 import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -169,11 +170,21 @@ class EditTodoViewModel(
       setErrorMsg("At least one field is not valid")
       return
     }
-
-    val sdfDateAndTime = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
-    val dateAndTime =
-        sdfDateAndTime.parse(validated.dueDate + " " + validated.dueTime)
-            ?: throw IllegalArgumentException("Invalid date or time")
+    lateinit var dateAndTime: Date
+    if (validated.dueDate.isBlank()) {
+      editTodo(editTodoId)
+      return
+    }
+    if (validated.dueTime.isBlank()) {
+      val sdfDate = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+      dateAndTime =
+          sdfDate.parse(validated.dueDate) ?: throw IllegalArgumentException("Invalid date")
+    } else {
+      val sdfDateAndTime = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+      dateAndTime =
+          sdfDateAndTime.parse(validated.dueDate + " " + validated.dueTime)
+              ?: throw IllegalArgumentException("Invalid date or time")
+    }
     val dueDateAndTime = Timestamp(dateAndTime)
 
     val currentTimestamp = Timestamp.now()
