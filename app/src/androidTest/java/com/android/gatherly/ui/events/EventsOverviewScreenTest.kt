@@ -107,7 +107,7 @@ class EventsOverviewScreenTest {
           endTime = Timestamp(finish),
           creatorId = "aliceId",
           participants = listOf(),
-          status = EventStatus.ONGOING)
+          status = EventStatus.UPCOMING)
 
   private val upcomingEventParticipate =
       Event(
@@ -121,7 +121,7 @@ class EventsOverviewScreenTest {
           endTime = Timestamp(finish),
           creatorId = "aliceId",
           participants = listOf("bobId"),
-          status = EventStatus.ONGOING)
+          status = EventStatus.UPCOMING)
 
   private val upcomingEventCreated =
       Event(
@@ -135,7 +135,7 @@ class EventsOverviewScreenTest {
           endTime = Timestamp(finish),
           creatorId = "bobId",
           participants = listOf(),
-          status = EventStatus.ONGOING)
+          status = EventStatus.UPCOMING)
 
   // ONGOING EVENT
   private val oneHourAgo = Timestamp(Date(System.currentTimeMillis() - 3600_000))
@@ -194,7 +194,7 @@ class EventsOverviewScreenTest {
           endTime = Timestamp(finish),
           creatorId = "aliceId",
           participants = listOf(),
-          status = EventStatus.ONGOING)
+          status = EventStatus.PAST)
 
   private val pastEventParticipating =
       Event(
@@ -208,7 +208,7 @@ class EventsOverviewScreenTest {
           endTime = Timestamp(finish),
           creatorId = "aliceId",
           participants = listOf("bobId"),
-          status = EventStatus.ONGOING)
+          status = EventStatus.PAST)
   private val pastEventCreated =
       Event(
           id = "past3",
@@ -221,7 +221,7 @@ class EventsOverviewScreenTest {
           endTime = Timestamp(finish),
           creatorId = "bobId",
           participants = listOf(),
-          status = EventStatus.ONGOING)
+          status = EventStatus.PAST)
 
   /**
    * Test: Verifies that when there is no event registered, all relevant UI components are displayed
