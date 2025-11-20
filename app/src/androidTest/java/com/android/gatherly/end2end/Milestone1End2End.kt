@@ -75,9 +75,6 @@ class Milestone1End2End : FirestoreGatherlyTest() {
         .onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_DESCRIPTION)
         .performTextInput("Description")
     composeTestRule
-        .onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_ASSIGNEE)
-        .performTextInput("Assignee")
-    composeTestRule
         .onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_DATE)
         .performTextInput("20/12/2025")
     composeTestRule.onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_TIME).performTextInput("10:00")

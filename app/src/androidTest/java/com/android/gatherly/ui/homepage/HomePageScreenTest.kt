@@ -81,7 +81,6 @@ class HomePageScreenTest {
             uid = "3",
             name = "Plan party",
             description = "Buy decorations and invite friends",
-            assigneeName = "Eve",
             dueDate = Timestamp.now(),
             dueTime = null,
             location = null,

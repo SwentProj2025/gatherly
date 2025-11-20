@@ -117,7 +117,10 @@ abstract class GatherlyTest() {
   fun ComposeTestRule.enterAddTodoLocation(location: String) =
       onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_LOCATION).performTextInput(location)
 
-  fun ComposeTestRule.enterAddTodoDetails(todo: ToDo, date: String = todo.dueDate.toDateString()) {
+  fun ComposeTestRule.enterAddTodoDetails(
+      todo: ToDo,
+      date: String = todo.dueDate?.toDateString() ?: ""
+  ) {
     enterAddTodoTitle(todo.name)
     enterAddTodoDescription(todo.description)
     enterAddTodoDate(date)
@@ -181,7 +184,7 @@ abstract class GatherlyTest() {
   fun ToDo.Equals(other: ToDo): Boolean =
       name == other.name &&
           description == other.description &&
-          dueDate.toDateString() == other.dueDate.toDateString() &&
+          (dueDate?.toDateString() ?: "") == (other.dueDate?.toDateString() ?: "") &&
           status == other.status
 
   fun ToDosRepository.getTodoByName(name: String): ToDo = runBlocking {
