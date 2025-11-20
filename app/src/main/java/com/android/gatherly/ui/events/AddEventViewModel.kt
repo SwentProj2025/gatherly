@@ -70,7 +70,9 @@ data class AddEventUiState(
     // the string the toast should display
     val toastString: String? = null,
     // when the event is edited or deleted, return to event overview
-    val backToOverview: Boolean = false
+    val backToOverview: Boolean = false,
+    // when the event is being saved
+    val isSaving: Boolean = false
 )
 
 // create a HTTP Client for Nominatim
@@ -370,11 +372,17 @@ class AddEventViewModel(
         !uiState.startTimeError &&
         !uiState.endTimeError) {
 
+      uiState = uiState.copy(isSaving = true)
+
       // Parse date
       val date =
           dateFormat.parse(uiState.date)
               ?: run {
-                uiState = uiState.copy(displayToast = true, toastString = "Cannot parse event date")
+                uiState =
+                    uiState.copy(
+                        displayToast = true,
+                        toastString = "Cannot parse event date",
+                        isSaving = false)
                 return
               }
       val timestampDate = Timestamp(date)
@@ -384,7 +392,10 @@ class AddEventViewModel(
           timeFormat.parse(uiState.startTime)
               ?: run {
                 uiState =
-                    uiState.copy(displayToast = true, toastString = "Cannot parse event start time")
+                    uiState.copy(
+                        displayToast = true,
+                        toastString = "Cannot parse event start time",
+                        isSaving = false)
                 return
               }
       val timestampStartTime = Timestamp(startTime)
@@ -394,7 +405,10 @@ class AddEventViewModel(
           timeFormat.parse(uiState.endTime)
               ?: run {
                 uiState =
-                    uiState.copy(displayToast = true, toastString = "Cannot parse event end time")
+                    uiState.copy(
+                        displayToast = true,
+                        toastString = "Cannot parse event end time",
+                        isSaving = false)
                 return
               }
       val timestampEndTime = Timestamp(endTime)
@@ -420,17 +434,16 @@ class AddEventViewModel(
               participants = participants,
               status = EventStatus.UPCOMING)
 
-      uiState = uiState.copy(displayToast = true, toastString = "Saving...")
-
       // Save in event repository
       viewModelScope.launch {
         createEvent(eventsRepository, profileRepository, event, currentProfile.uid, participants)
-        uiState = uiState.copy(displayToast = true, toastString = "Saved")
+        uiState =
+            uiState.copy(
+                displayToast = true, toastString = "Saved", isSaving = false, backToOverview = true)
       }
-
-      uiState = uiState.copy(backToOverview = true)
     } else {
-      uiState = uiState.copy(displayToast = true, toastString = "Failed to save :(")
+      uiState =
+          uiState.copy(displayToast = true, toastString = "Failed to save :(", isSaving = false)
     }
   }
 

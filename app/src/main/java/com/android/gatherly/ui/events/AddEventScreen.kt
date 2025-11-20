@@ -410,8 +410,16 @@ fun AddEventScreen(
                             !ui.creatorNameError &&
                             !ui.dateError &&
                             !ui.startTimeError &&
-                            !ui.endTimeError) {
-                      Text("Save", color = MaterialTheme.colorScheme.onSecondary)
+                            !ui.endTimeError &&
+                            !ui.isSaving) {
+                      Text(
+                          text =
+                              if (ui.isSaving) {
+                                stringResource(R.string.saving)
+                              } else {
+                                stringResource(R.string.settings_save)
+                              },
+                          color = MaterialTheme.colorScheme.onSecondary)
                     }
               }
             }

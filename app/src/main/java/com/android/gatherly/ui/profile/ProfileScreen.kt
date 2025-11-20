@@ -49,6 +49,7 @@ import com.android.gatherly.ui.navigation.Screen
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Profile
 import com.android.gatherly.ui.theme.GatherlyTheme
+import com.android.gatherly.utils.profilePicturePainter
 
 /** Contains test tags used for UI testing on the Profile screen. */
 object ProfileScreenTestTags {
@@ -190,7 +191,7 @@ fun ProfileScreen(
               horizontalAlignment = Alignment.CenterHorizontally) {
                 // Profile Picture
                 Image(
-                    painter = painterResource(id = R.drawable.default_profile_picture),
+                    painter = profilePicturePainter(profile?.profilePicture),
                     contentDescription = stringResource(R.string.profile_picture_description),
                     modifier =
                         Modifier.size(profilePictureSize)
