@@ -7,18 +7,26 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -73,6 +81,9 @@ object OverviewScreenTestTags {
 
   /** Test tag for the search bar used to search for todos */
   const val SEARCH_BAR = "searchBar"
+
+  /** Test tag for the sort menu button */
+  const val SORT_MENU_BUTTON = "sortMenuButton"
 
   /**
    * Returns a unique test tag for the checkbox associated with a given [ToDo] item.
@@ -159,26 +170,39 @@ fun OverviewScreen(
               var searchQuery by remember { mutableStateOf("") }
 
               Column(modifier = Modifier.padding(pd)) {
-                OutlinedTextField(
-                    value = searchQuery,
-                    onValueChange = { newText ->
-                      searchQuery = newText
-                      overviewViewModel.searchTodos(newText)
-                    },
+                Row(
                     modifier =
                         Modifier.fillMaxWidth()
+                            .height(dimensionResource(R.dimen.todo_overview_top_row_height))
                             .padding(
-                                bottom = dimensionResource(R.dimen.todos_overview_vertical_padding))
-                            .testTag(OverviewScreenTestTags.SEARCH_BAR),
-                    label = { Text(text = stringResource(R.string.todos_search_bar_label)) },
-                    singleLine = true,
-                    colors =
-                        OutlinedTextFieldDefaults.colors(
-                            focusedContainerColor = MaterialTheme.colorScheme.background,
-                            unfocusedContainerColor = MaterialTheme.colorScheme.background,
-                            unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-                            focusedTextColor = MaterialTheme.colorScheme.onBackground,
-                        ))
+                                bottom =
+                                    dimensionResource(R.dimen.todos_overview_vertical_padding))) {
+                      OutlinedTextField(
+                          value = searchQuery,
+                          onValueChange = { newText ->
+                            searchQuery = newText
+                            overviewViewModel.searchTodos(newText)
+                          },
+                          modifier =
+                              Modifier.weight(1f)
+                                  .padding(
+                                      horizontal =
+                                          dimensionResource(
+                                              R.dimen.todos_overview_horizontal_padding))
+                                  .testTag(OverviewScreenTestTags.SEARCH_BAR),
+                          label = { Text(stringResource(R.string.todos_search_bar_label)) },
+                          singleLine = true,
+                          colors =
+                              OutlinedTextFieldDefaults.colors(
+                                  focusedContainerColor = MaterialTheme.colorScheme.background,
+                                  unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                                  unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+                                  focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                              ))
+                      SortMenu(
+                          currentOrder = uiState.sortOrder,
+                          onSortSelected = { overviewViewModel.setSortOrder(it) })
+                    }
 
                 if (todos.isNotEmpty()) {
                   LazyColumn(
@@ -262,6 +286,95 @@ fun OverviewScreen(
               }
             }
       })
+}
+
+/**
+ * Displays a button that opens a dropdown menu allowing the user to choose a sorting order for the
+ * ToDo list.
+ *
+ * When the icon button is tapped, a dropdown menu expands with three sorting options:
+ * - Date descending
+ * - Date ascending
+ * - Alphabetical
+ *
+ * @param onSortSelected Callback invoked when the user selects a new [TodoSortOrder].
+ */
+@Composable
+fun SortMenu(currentOrder: TodoSortOrder, onSortSelected: (TodoSortOrder) -> Unit) {
+  var expanded by remember { mutableStateOf(false) }
+
+  Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxHeight()) {
+    IconButton(
+        modifier = Modifier.fillMaxHeight().testTag(OverviewScreenTestTags.SORT_MENU_BUTTON),
+        onClick = { expanded = true },
+    ) {
+      Icon(
+          imageVector = Icons.AutoMirrored.Filled.Sort,
+          modifier =
+              Modifier.size(dimensionResource(R.dimen.todo_overview_sort_icon_size)).fillMaxSize(),
+          contentDescription = stringResource(R.string.todos_sort_button_label),
+          tint = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+    DropdownMenu(
+        expanded = expanded,
+        onDismissRequest = { expanded = false },
+        containerColor = MaterialTheme.colorScheme.surfaceVariant) {
+          DropdownMenuItem(
+              text = {
+                Text(
+                    text = stringResource(R.string.todos_date_descending_sort_button_text),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+              },
+              onClick = {
+                onSortSelected(TodoSortOrder.DATE_DESC)
+                expanded = false
+              },
+              trailingIcon = {
+                if (currentOrder == TodoSortOrder.DATE_DESC) {
+                  Icon(
+                      Icons.Default.Check,
+                      contentDescription =
+                          stringResource(R.string.todos_sort_menu_check_icon_label))
+                }
+              })
+          DropdownMenuItem(
+              text = {
+                Text(
+                    text = stringResource(R.string.todos_date_ascending_sort_button_text),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+              },
+              onClick = {
+                onSortSelected(TodoSortOrder.DATE_ASC)
+                expanded = false
+              },
+              trailingIcon = {
+                if (currentOrder == TodoSortOrder.DATE_ASC) {
+                  Icon(
+                      Icons.Default.Check,
+                      contentDescription =
+                          stringResource(R.string.todos_sort_menu_check_icon_label))
+                }
+              })
+          DropdownMenuItem(
+              text = {
+                Text(
+                    text = stringResource(R.string.todos_alphabetical_sort_button_text),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+              },
+              onClick = {
+                onSortSelected(TodoSortOrder.ALPHABETICAL)
+                expanded = false
+              },
+              trailingIcon = {
+                if (currentOrder == TodoSortOrder.ALPHABETICAL) {
+                  Icon(
+                      Icons.Default.Check,
+                      contentDescription =
+                          stringResource(R.string.todos_sort_menu_check_icon_label))
+                }
+              })
+        }
+  }
 }
 
 // A portion of the code in the ToDoItem composable was generated by an LLM.

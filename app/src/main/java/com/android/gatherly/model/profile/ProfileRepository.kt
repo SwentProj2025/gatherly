@@ -163,4 +163,69 @@ interface ProfileRepository {
    * @param status The new [ProfileStatus] to set.
    */
   suspend fun updateStatus(uid: String, status: ProfileStatus)
+
+  /**
+   * The user creates a new event
+   *
+   * @param eventId the ID of the event created
+   * @param currentUserId the ID of the current user
+   */
+  suspend fun createEvent(eventId: String, currentUserId: String)
+
+  /**
+   * The user deletes an event he created
+   *
+   * @param eventId the ID of the event he wants to delete
+   * @param currentUserId the ID of the current user who is the owner of this event
+   */
+  suspend fun deleteEvent(eventId: String, currentUserId: String)
+
+  /**
+   * The current user is added as a participant to an event
+   *
+   * @param eventId The ID of the event he wants to participate
+   * @param currentUserId the ID of the current user
+   */
+  suspend fun participateEvent(eventId: String, currentUserId: String)
+
+  /**
+   * When the event is created, we want chosen participants to be register for this event
+   *
+   * @param eventId the ID of the event concerned
+   * @param participants list of all the ID of profiles wanted to be registered for this event
+   */
+  suspend fun allParticipateEvent(eventId: String, participants: List<String>)
+
+  /**
+   * The current user does not want anymore to participate to an event
+   *
+   * @param eventId The ID of the event he wants to unregister
+   * @param currentUserId the ID of the current user
+   */
+  suspend fun unregisterEvent(eventId: String, currentUserId: String)
+
+  /**
+   * When the event is delete, we want every participant to be unregister from this event
+   *
+   * @param eventId the ID of the event concerned
+   * @param participants list of all the ID of profiles register for this event
+   */
+  suspend fun allUnregisterEvent(eventId: String, participants: List<String>)
+
+  // -- BADGES GESTION PART --
+
+  /**
+   * Triggers the badges that the user won
+   *
+   * @param userProfile corresponds to the profile of the user we want to know his badges
+   * @param createdTodosCount number of todos created by the user, null for the
+   *   ProfileRepositoryFirestore but can be set for testing purposes with ProfileLocalRepository
+   * @param completedTodosCount number of todos completed by the user, null for the
+   *   ProfileRepositoryFirestore but can be set for testing purposes with ProfileLocalRepository
+   */
+  suspend fun updateBadges(
+      userProfile: Profile,
+      createdTodosCount: Int? = null,
+      completedTodosCount: Int? = null
+  )
 }

@@ -14,6 +14,7 @@ import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.ui.homePage.HomePageScreen
 import com.android.gatherly.ui.homePage.HomePageScreenTestTags
 import com.android.gatherly.ui.homePage.HomePageViewModel
+import com.android.gatherly.ui.homePage.getFriendAvatarTestTag
 import com.android.gatherly.utils.MockitoUtils
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.runBlocking
@@ -32,14 +33,31 @@ import org.junit.Test
  */
 class HomePageScreenTest {
 
+  val friend1 =
+      Profile(
+          uid = "homePageTests_friend1",
+          name = "Alice",
+          focusSessionIds = emptyList(),
+          participatingEventIds = emptyList(),
+          groupIds = emptyList(),
+          friendUids = emptyList())
+  val friend2 =
+      Profile(
+          uid = "homePageTests_friend2",
+          name = "Bob",
+          focusSessionIds = emptyList(),
+          participatingEventIds = emptyList(),
+          groupIds = emptyList(),
+          friendUids = emptyList())
+
   private var currentProfile: Profile =
       Profile(
           uid = "0+",
           name = "Current",
           focusSessionIds = emptyList(),
-          eventIds = emptyList(),
+          participatingEventIds = emptyList(),
           groupIds = emptyList(),
-          friendUids = emptyList())
+          friendUids = listOf(friend1.uid, friend2.uid))
 
   @get:Rule val composeRule = createComposeRule()
 
@@ -87,7 +105,8 @@ class HomePageScreenTest {
             location = null,
             status = ToDoStatus.ONGOING,
             ownerId = "user1"))
-
+    profileLocalRepo.addProfile(friend1)
+    profileLocalRepo.addProfile(friend2)
     profileLocalRepo.addProfile(currentProfile)
   }
 
@@ -180,5 +199,16 @@ class HomePageScreenTest {
 
     // Check that the friends section is not displayed
     composeRule.onNodeWithTag(HomePageScreenTestTags.FRIENDS_SECTION).assertIsNotDisplayed()
+  }
+
+  /** Verifies that friends avatars are displayed */
+  @Test
+  fun friendAvatars_areDisplayed_forMultipleFriends() {
+    setContentWithGoogle()
+    currentProfile.friendUids.forEach { uid ->
+      composeRule
+          .onNodeWithTag(useUnmergedTree = true, testTag = getFriendAvatarTestTag(uid))
+          .assertIsDisplayed()
+    }
   }
 }

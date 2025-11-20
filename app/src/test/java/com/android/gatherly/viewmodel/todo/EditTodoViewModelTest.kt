@@ -1,6 +1,8 @@
 package com.android.gatherly.viewmodel.todo
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.android.gatherly.model.profile.ProfileLocalRepository
+import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosLocalRepository
@@ -36,6 +38,7 @@ class EditTodoViewModelTest {
 
   private lateinit var editTodoViewModel: EditTodoViewModel
   private lateinit var toDosRepository: ToDosRepository
+  private lateinit var profileRepository: ProfileRepository
   private lateinit var baseTodo: ToDo
   private lateinit var mockitoUtils: MockitoUtils
 
@@ -48,6 +51,7 @@ class EditTodoViewModelTest {
     Dispatchers.setMain(testDispatcher)
 
     toDosRepository = ToDosLocalRepository()
+    profileRepository = ProfileLocalRepository()
     fillRepository()
 
     // Mock Firebase Auth
@@ -55,8 +59,7 @@ class EditTodoViewModelTest {
     mockitoUtils.chooseCurrentUser("owner")
 
     editTodoViewModel =
-        EditTodoViewModel(
-            todoRepository = toDosRepository, authProvider = { mockitoUtils.mockAuth })
+        EditTodoViewModel(todoRepository = toDosRepository, profileRepository = profileRepository)
   }
 
   @After
@@ -212,7 +215,7 @@ class EditTodoViewModelTest {
           override suspend fun toggleStatus(todoID: String) = Unit
         }
 
-    val viewModel = EditTodoViewModel(failingRepo, authProvider = { mockitoUtils.mockAuth })
+    val viewModel = EditTodoViewModel(failingRepo, profileRepository = profileRepository)
     viewModel.deleteToDo("anything")
 
     advanceUntilIdle()

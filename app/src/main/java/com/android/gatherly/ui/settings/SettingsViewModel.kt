@@ -59,7 +59,8 @@ data class SettingsUiState(
     val isLoadingProfile: Boolean = false,
     val saveSuccess: Boolean = false,
     val navigateToInit: Boolean = false,
-    val isAnon: Boolean = true
+    val isAnon: Boolean = true,
+    val isSaving: Boolean = false,
 ) {
   val isValid: Boolean
     get() =
@@ -70,6 +71,7 @@ data class SettingsUiState(
             username.isNotEmpty() &&
             (isUsernameAvailable != false)
 }
+
 /**
  * ViewModel for the Settings screen. This ViewModel manages the state of input fields for the
  * Settings screen.
@@ -91,6 +93,7 @@ class SettingsViewModel(
       credentialManager.clearCredentialState(ClearCredentialStateRequest())
     }
   }
+
   /** Clears the error message in the UI state. */
   fun clearErrorMsg() {
     _uiState.value = _uiState.value.copy(errorMsg = null)
@@ -109,6 +112,7 @@ class SettingsViewModel(
   init {
     loadProfile(authProvider().currentUser?.uid ?: "")
   }
+
   /**
    * Loads a Profile by its ID and updates the UI state.
    *
@@ -149,9 +153,11 @@ class SettingsViewModel(
    * @param id The id of the Profile to be updated.
    */
   fun updateProfile(id: String = authProvider().currentUser?.uid!!, isFirstTime: Boolean) {
+    _uiState.value = _uiState.value.copy(isSaving = true)
     val state = _uiState.value
     if (!state.isValid) {
       setErrorMsg("At least one field is not valid.")
+      _uiState.value = _uiState.value.copy(isSaving = false)
       return
     }
 
@@ -160,6 +166,7 @@ class SettingsViewModel(
         originalProfile
             ?: run {
               setErrorMsg("Original profile not loaded.")
+              _uiState.value = _uiState.value.copy(isSaving = false)
               return
             }
 
@@ -167,6 +174,7 @@ class SettingsViewModel(
       try {
         if (!checkUsernameSuccess(state, id, isFirstTime)) {
           setErrorMsg("Username is invalid or already taken.")
+          _uiState.value = _uiState.value.copy(isSaving = false)
           return@launch
         }
 
@@ -190,10 +198,11 @@ class SettingsViewModel(
 
         repository.updateProfile(updatedProfile)
         clearErrorMsg()
-        _uiState.value = _uiState.value.copy(saveSuccess = true)
+        _uiState.value = _uiState.value.copy(saveSuccess = true, isSaving = false)
       } catch (e: Exception) {
         Log.e("SettingsViewModel", "Error saving profile", e)
         setErrorMsg("Failed to save profile: ${e.message}")
+        _uiState.value = _uiState.value.copy(isSaving = false)
       }
     }
   }

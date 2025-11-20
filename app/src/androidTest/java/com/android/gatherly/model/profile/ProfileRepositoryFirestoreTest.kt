@@ -4,12 +4,16 @@ import android.content.ContentValues
 import android.net.Uri
 import android.provider.MediaStore
 import androidx.test.platform.app.InstrumentationRegistry
+import com.android.gatherly.model.badge.Rank
+import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.utils.FirebaseEmulator
 import com.android.gatherly.utils.FirestoreGatherlyProfileTest
+import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.storage
 import java.io.OutputStream
 import kotlin.io.use
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
@@ -634,5 +638,531 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
         .await()
     val profile2 = repository.getProfileByUid(uid)
     assertEquals(ProfileStatus.OFFLINE, profile2!!.status)
+  }
+
+  @OptIn(ExperimentalCoroutinesApi::class)
+  @Test
+  fun testCreateEvent() = runTest {
+    val auth = FirebaseEmulator.auth
+    val firestore = FirebaseEmulator.firestore
+    val storage = FirebaseEmulator.storage
+    val repo = ProfileRepositoryFirestore(firestore, storage)
+
+    // User B
+    auth.signInAnonymously().await()
+    val userBUid = auth.currentUser!!.uid
+    repo.initProfileIfMissing(userBUid, "bob.png")
+
+    // Create a fictional event ID
+    val eventId = "BobEventID"
+
+    // UserB create a new event
+    repo.createEvent(eventId, userBUid)
+
+    // Verify that the event is in the User B profile's events list
+    val profileB = repo.getProfileByUid(userBUid)
+    assertNotNull(profileB)
+    assertTrue(profileB!!.ownedEventIds.contains(eventId))
+  }
+
+  @OptIn(ExperimentalCoroutinesApi::class)
+  @Test
+  fun testDeleteEvent() = runTest {
+    val auth = FirebaseEmulator.auth
+    val firestore = FirebaseEmulator.firestore
+    val storage = FirebaseEmulator.storage
+    val repo = ProfileRepositoryFirestore(firestore, storage)
+
+    // User B
+    auth.signInAnonymously().await()
+    val userBUid = auth.currentUser!!.uid
+    repo.initProfileIfMissing(userBUid, "bob.png")
+
+    // Create a fictional event ID
+    val eventId = "BobEventID"
+
+    // UserB create a new event
+    repo.createEvent(eventId, userBUid)
+
+    // Verify that the event is in the User B profile's events list
+    val profileB = repo.getProfileByUid(userBUid)
+    assertNotNull(profileB)
+    assertTrue(profileB!!.ownedEventIds.contains(eventId))
+
+    // UserB delete this event
+    repo.deleteEvent(eventId, userBUid)
+
+    // Verify that the event is not in the User B profile's events list
+    val profile = repo.getProfileByUid(userBUid)
+    assertNotNull(profile)
+    assertFalse(profile!!.ownedEventIds.contains(eventId))
+  }
+
+  @Test
+  fun testParticipateEvent() = runTest {
+    val auth = FirebaseEmulator.auth
+    val firestore = FirebaseEmulator.firestore
+    val storage = FirebaseEmulator.storage
+    val repo = ProfileRepositoryFirestore(firestore, storage)
+
+    // User A
+    auth.signInAnonymously().await()
+    val userAUid = auth.currentUser!!.uid
+    repo.initProfileIfMissing(userAUid, "alice.png")
+
+    // Create a fictional event ID
+    val eventId = "AliceEventID"
+
+    // UserB create a new event
+    repo.createEvent(eventId, userAUid)
+
+    // Verify that the event is in the User B profile's events list
+    val profileA = repo.getProfileByUid(userAUid)
+    assertNotNull(profileA)
+    assertTrue(profileA!!.ownedEventIds.contains(eventId))
+
+    auth.signOut()
+
+    // User B
+    auth.signInAnonymously().await()
+    val userBUid = auth.currentUser!!.uid
+    repo.initProfileIfMissing(userBUid, "bob.png")
+
+    repo.participateEvent(eventId, userBUid)
+
+    // Verify that the event is in the User B profile's events list
+    val profileB = repo.getProfileByUid(userBUid)
+    assertNotNull(profileB)
+    assertTrue(profileB!!.participatingEventIds.contains(eventId))
+  }
+
+  @Test
+  fun testUnregisterEvent() = runTest {
+    val auth = FirebaseEmulator.auth
+    val firestore = FirebaseEmulator.firestore
+    val storage = FirebaseEmulator.storage
+    val repo = ProfileRepositoryFirestore(firestore, storage)
+
+    // User A
+    auth.signInAnonymously().await()
+    val userAUid = auth.currentUser!!.uid
+    repo.initProfileIfMissing(userAUid, "alice.png")
+
+    // Create a fictional event ID
+    val eventId = "AliceEventID"
+
+    // UserB create a new event
+    repo.createEvent(eventId, userAUid)
+
+    // Verify that the event is in the User B profile's events list
+    val profileA = repo.getProfileByUid(userAUid)
+    assertNotNull(profileA)
+    assertTrue(profileA!!.ownedEventIds.contains(eventId))
+
+    auth.signOut()
+
+    // User B
+    auth.signInAnonymously().await()
+    val userBUid = auth.currentUser!!.uid
+    repo.initProfileIfMissing(userBUid, "bob.png")
+
+    repo.participateEvent(eventId, userBUid)
+
+    // Verify that the event is in the User B profile's events list
+    val profileB = repo.getProfileByUid(userBUid)
+    assertNotNull(profileB)
+    assertTrue(profileB!!.participatingEventIds.contains(eventId))
+
+    repo.unregisterEvent(eventId, userBUid)
+
+    // Verify that the event is not in te User B profile's events list
+    val profile = repo.getProfileByUid(userBUid)
+    assertNotNull(profile)
+    assertFalse(profile!!.participatingEventIds.contains(eventId))
+  }
+
+  @Test
+  fun testAllParticipateEvent() = runTest {
+    val auth = FirebaseEmulator.auth
+    val firestore = FirebaseEmulator.firestore
+    val storage = FirebaseEmulator.storage
+    val repo = ProfileRepositoryFirestore(firestore, storage)
+
+    // User B
+    auth.signInAnonymously().await()
+    val userBUid = auth.currentUser!!.uid
+    repo.initProfileIfMissing(userBUid, "bob.png")
+    auth.signOut()
+
+    // User C
+    auth.signInAnonymously().await()
+    val userCUid = auth.currentUser!!.uid
+    repo.initProfileIfMissing(userCUid, "charlie.png")
+    auth.signOut()
+
+    // User A
+    auth.signInAnonymously().await()
+    val userAUid = auth.currentUser!!.uid
+    repo.initProfileIfMissing(userAUid, "alice.png")
+
+    // Create a fictional event ID
+    val eventId = "AliceEventID"
+
+    // UserB create a new event
+    repo.createEvent(eventId, userAUid)
+
+    // Verify that the event is in the User B profile's events list
+    val profileA = repo.getProfileByUid(userAUid)
+    assertNotNull(profileA)
+    assertTrue(profileA!!.ownedEventIds.contains(eventId))
+
+    val participants = listOf(userAUid, userBUid, userCUid)
+
+    repo.allParticipateEvent(eventId, participants)
+
+    val updatedProfileA = repo.getProfileByUid(userAUid)
+    val updatedProfileB = repo.getProfileByUid(userBUid)
+    val updatedProfileC = repo.getProfileByUid(userCUid)
+
+    assertNotNull(updatedProfileA)
+    assertNotNull(updatedProfileB)
+    assertNotNull(updatedProfileC)
+    assertTrue(updatedProfileA!!.participatingEventIds.contains(eventId))
+    assertTrue(updatedProfileB!!.participatingEventIds.contains(eventId))
+    assertTrue(updatedProfileC!!.participatingEventIds.contains(eventId))
+  }
+
+  @Test
+  fun testAllUnregisterEvent() = runTest {
+    val auth = FirebaseEmulator.auth
+    val firestore = FirebaseEmulator.firestore
+    val storage = FirebaseEmulator.storage
+    val repo = ProfileRepositoryFirestore(firestore, storage)
+
+    // User B
+    auth.signInAnonymously().await()
+    val userBUid = auth.currentUser!!.uid
+    repo.initProfileIfMissing(userBUid, "bob.png")
+    val profileB = repo.getProfileByUid(userBUid)
+    auth.signOut()
+
+    // User C
+    auth.signInAnonymously().await()
+    val userCUid = auth.currentUser!!.uid
+    repo.initProfileIfMissing(userCUid, "charlie.png")
+    val profileC = repo.getProfileByUid(userCUid)
+    auth.signOut()
+
+    // User A
+    auth.signInAnonymously().await()
+    val userAUid = auth.currentUser!!.uid
+    repo.initProfileIfMissing(userAUid, "alice.png")
+
+    // Create a fictional event ID
+    val eventId = "AliceEventID"
+
+    // UserB create a new event
+    repo.createEvent(eventId, userAUid)
+
+    // Verify that the event is in the User B profile's events list
+    val profileA = repo.getProfileByUid(userAUid)
+    assertNotNull(profileA)
+    assertTrue(profileA!!.ownedEventIds.contains(eventId))
+
+    val participants = listOf(userAUid, userBUid, userCUid)
+
+    repo.allParticipateEvent(eventId, participants)
+
+    val updatedProfileA = repo.getProfileByUid(userAUid)
+    val updatedProfileB = repo.getProfileByUid(userBUid)
+    val updatedProfileC = repo.getProfileByUid(userCUid)
+
+    assertNotNull(updatedProfileA)
+    assertNotNull(updatedProfileB)
+    assertNotNull(updatedProfileC)
+    assertTrue(updatedProfileA!!.participatingEventIds.contains(eventId))
+    assertTrue(updatedProfileB!!.participatingEventIds.contains(eventId))
+    assertTrue(updatedProfileC!!.participatingEventIds.contains(eventId))
+
+    repo.allUnregisterEvent(eventId, participants)
+
+    val updated2ProfileA = repo.getProfileByUid(userAUid)
+    val updated2ProfileB = repo.getProfileByUid(userBUid)
+    val updated2ProfileC = repo.getProfileByUid(userCUid)
+
+    assertNotNull(updated2ProfileA)
+    assertNotNull(updated2ProfileB)
+    assertNotNull(updated2ProfileC)
+    assertFalse(updated2ProfileA!!.participatingEventIds.contains(eventId))
+    assertFalse(updated2ProfileB!!.participatingEventIds.contains(eventId))
+    assertFalse(updated2ProfileC!!.participatingEventIds.contains(eventId))
+  }
+
+  @Test
+  fun testSetupBadgesCorrectly() = runTest {
+    val auth = FirebaseEmulator.auth
+    val firestore = FirebaseEmulator.firestore
+    val storage = FirebaseEmulator.storage
+    val repo = ProfileRepositoryFirestore(firestore, storage)
+
+    // User B
+    auth.signInAnonymously().await()
+    val userBUid = auth.currentUser!!.uid
+    repo.initProfileIfMissing(userBUid, "bob.png")
+
+    val profileB: Profile? = repo.getProfileByUid(userBUid)
+    assertNotNull(profileB)
+    assertEquals(profileB!!.badges.createEvent, Rank.BLANK)
+    assertEquals(profileB.badges.participateEvent, Rank.BLANK)
+    assertEquals(profileB.badges.focusSessionPoint, Rank.BLANK)
+    assertEquals(profileB.badges.addFriends, Rank.BLANK)
+    assertEquals(profileB.badges.completedTodos, Rank.BLANK)
+    assertEquals(profileB.badges.createdTodos, Rank.BLANK)
+    auth.signOut()
+  }
+
+  @Test
+  fun testUpdateBadgeCorrectlyAddFriends() = runTest {
+    val uid = FirebaseEmulator.auth.currentUser!!.uid
+    repository.initProfileIfMissing(uid, "bob.png")
+
+    val massiveFriendCount = 20
+    val fakeFriendUids = List(massiveFriendCount) { "fakeUid$it" }
+
+    val initialProfile = repository.getProfileByUid(uid)!!
+    val profileWithFakeFriends =
+        initialProfile.copy(
+            friendUids = fakeFriendUids,
+        )
+    repository.updateProfile(profileWithFakeFriends)
+
+    val profileToUpdate = repository.getProfileByUid(uid)!!
+
+    repository.updateBadges(profileToUpdate)
+    val updatedProfile = repository.getProfileByUid(uid)!!
+
+    assertEquals(20, updatedProfile.friendUids.size)
+    assertEquals(Rank.LEGEND, updatedProfile.badges.addFriends)
+  }
+
+  @Test
+  fun testUpdateBadgeCorrectlyFocusSessionPoints() = runTest {
+    val uid = FirebaseEmulator.auth.currentUser!!.uid
+    repository.initProfileIfMissing(uid, "bob.png")
+
+    val initialProfile = repository.getProfileByUid(uid)!!
+    val profileWithFakeFocusSession =
+        initialProfile.copy(
+            focusSessionIds = listOf("fakeFocusSessionIds"),
+        )
+
+    repository.updateProfile(profileWithFakeFocusSession)
+
+    val profileToUpdate = repository.getProfileByUid(uid)!!
+
+    repository.updateBadges(profileToUpdate)
+    val updatedProfile = repository.getProfileByUid(uid)!!
+
+    assertEquals(1, updatedProfile.focusSessionIds.size)
+    assertEquals(Rank.STARTING, updatedProfile.badges.focusSessionPoint)
+  }
+
+  @Test
+  fun testUpdateBadgeCorrectlyCreatedEventParticipatingEvent() = runTest {
+    val uid = FirebaseEmulator.auth.currentUser!!.uid
+    repository.initProfileIfMissing(uid, "bob.png")
+
+    val createdEventCount = 3
+    val fakeEventUids = List(createdEventCount) { "fakeUid$it" }
+
+    val participatingEventCount = 11
+    val fakeParticipatingEventsUids = List(participatingEventCount) { "participatingFakeUid$it" }
+
+    val initialProfile = repository.getProfileByUid(uid)!!
+    val profileWithFakeEvents =
+        initialProfile.copy(
+            ownedEventIds = fakeEventUids, participatingEventIds = fakeParticipatingEventsUids)
+    repository.updateProfile(profileWithFakeEvents)
+
+    val profileToUpdate = repository.getProfileByUid(uid)!!
+
+    repository.updateBadges(profileToUpdate)
+    val updatedProfile = repository.getProfileByUid(uid)!!
+
+    assertEquals(3, updatedProfile.ownedEventIds.size)
+    assertEquals(11, updatedProfile.participatingEventIds.size)
+    assertEquals(Rank.BRONZE, updatedProfile.badges.createEvent)
+    assertEquals(Rank.DIAMOND, updatedProfile.badges.participateEvent)
+  }
+
+  @Test
+  fun testUpdateBadgeCorrectlyCreatedTodosCompletedTodos() = runTest {
+    val uid = FirebaseEmulator.auth.currentUser!!.uid
+    repository.initProfileIfMissing(uid, "tester.png")
+
+    val db = FirebaseEmulator.firestore
+
+    val todosSnap = db.collection("users").document(uid).collection("todos").get().await()
+    for (doc in todosSnap.documents) {
+      db.collection("users").document(uid).collection("todos").document(doc.id).delete().await()
+    }
+
+    writeTodo(db, uid, "todo_completed_1", ToDoStatus.ENDED)
+    writeTodo(db, uid, "todo_completed_2", ToDoStatus.ENDED)
+    writeTodo(db, uid, "todo_completed_3", ToDoStatus.ENDED)
+
+    writeTodo(db, uid, "todo_ongoing_4", ToDoStatus.ONGOING)
+    writeTodo(db, uid, "todo_ongoing_5", ToDoStatus.ONGOING)
+
+    val profileToUpdate = repository.getProfileByUid(uid)!!
+    repository.updateBadges(profileToUpdate, null, null)
+
+    val updatedProfile = repository.getProfileByUid(uid)!!
+
+    assertEquals(Rank.GOLD, updatedProfile.badges.createdTodos)
+    assertEquals(Rank.BRONZE, updatedProfile.badges.completedTodos)
+  }
+
+  /** Helper function to write a ToDo document in Firestore for testing. */
+  private fun writeTodo(
+      db: FirebaseFirestore,
+      userId: String,
+      todoId: String,
+      status: ToDoStatus,
+      ownerId: String = userId
+  ) {
+    val todoData =
+        mapOf(
+            "uid" to todoId,
+            "name" to "Test ToDo $todoId",
+            "description" to "Description",
+            "assigneeName" to "Assignee",
+            "dueDate" to com.google.firebase.Timestamp.now(),
+            "ownerId" to ownerId,
+            "status" to status.name)
+
+    db.collection("users").document(userId).collection("todos").document(todoId).set(todoData)
+  }
+
+  @Test
+  fun deleteUserProfile_removesUserFromAllGroups() = runTest {
+    val firestore = FirebaseEmulator.firestore
+    val storage = FirebaseEmulator.storage
+    val auth = FirebaseEmulator.auth
+
+    // USER B (normal member)
+    auth.signOut()
+    auth.signInAnonymously().await()
+    val userBUid = auth.currentUser!!.uid
+    val repoB = ProfileRepositoryFirestore(firestore, storage)
+    repoB.initProfileIfMissing(userBUid, "picB.png")
+    auth.signOut()
+
+    // USER A (to be deleted)
+    auth.signInAnonymously().await()
+    val userAUid = auth.currentUser!!.uid
+    val repoA = ProfileRepositoryFirestore(firestore, storage)
+    repoA.initProfileIfMissing(userAUid, "picA.png")
+
+    val group1 = firestore.collection("groups").document()
+    group1
+        .set(
+            mapOf(
+                "name" to "Group 1",
+                "creatorId" to userAUid,
+                "adminIds" to listOf(userAUid),
+                "memberIds" to listOf(userAUid, userBUid)))
+        .await()
+
+    val group2 = firestore.collection("groups").document()
+    group2
+        .set(
+            mapOf(
+                "name" to "Group 2",
+                "creatorId" to userAUid,
+                "adminIds" to listOf(userAUid),
+                "memberIds" to listOf(userAUid)))
+        .await()
+
+    // Now delete user A fully
+    repoA.deleteUserProfile(userAUid)
+
+    // Reload groups
+    val g1 = group1.get().await().data!!
+    val g1Members = g1["memberIds"] as List<*>
+    val g1Admins = g1["adminIds"] as List<*>
+
+    val g2 = group2.get().await().data!!
+    val g2Members = g2["memberIds"] as List<*>
+    val g2Admins = g2["adminIds"] as List<*>
+
+    // Assertions
+    assertFalse(g1Members.contains(userAUid))
+    assertTrue(g1Admins.isEmpty()) // A was the only admin
+
+    assertFalse(g2Members.contains(userAUid))
+    assertTrue(g2Admins.isEmpty()) // A removed from adminIds
+  }
+
+  @Test
+  fun deleteUserProfile_deletesAllUserOwnedDocuments() = runTest {
+    val firestore = FirebaseEmulator.firestore
+    val storage = FirebaseEmulator.storage
+    val auth = FirebaseEmulator.auth
+    val repo = ProfileRepositoryFirestore(firestore, storage)
+
+    auth.signInAnonymously().await()
+    val uid = auth.currentUser!!.uid
+    repo.initProfileIfMissing(uid, "pic.png")
+
+    // Add a todo
+    val todoRef = firestore.collection("users").document(uid).collection("todos").document()
+    todoRef.set(mapOf("text" to "test todo")).await()
+
+    // Add an event
+    val eventRef = firestore.collection("events").document()
+    eventRef.set(mapOf("creatorId" to uid, "name" to "Test Event")).await()
+
+    // Add a focus session
+    val focusRef = firestore.collection("focusSessions").document()
+    focusRef.set(mapOf("creatorId" to uid, "duration" to 25)).await()
+
+    // Now delete user
+    repo.deleteUserProfile(uid)
+
+    // All should be gone
+    assertFalse(todoRef.get().await().exists())
+    assertFalse(eventRef.get().await().exists())
+    assertFalse(focusRef.get().await().exists())
+  }
+
+  @Test
+  fun deleteUserProfile_doesNotAffectOtherUsersData() = runTest {
+    val firestore = FirebaseEmulator.firestore
+    val storage = FirebaseEmulator.storage
+    val auth = FirebaseEmulator.auth
+
+    // USER B (must create their own profile)
+    auth.signOut()
+    auth.signInAnonymously().await()
+    val userBUid = auth.currentUser!!.uid
+    val repoB = ProfileRepositoryFirestore(firestore, storage)
+    repoB.initProfileIfMissing(userBUid, "b.png")
+    repoB.registerUsername(userBUid, "bob")
+
+    auth.signOut()
+    // USER A (to be deleted)
+    auth.signInAnonymously().await()
+    val userAUid = auth.currentUser!!.uid
+    val repoA = ProfileRepositoryFirestore(firestore, storage)
+    repoA.initProfileIfMissing(userAUid, "a.png")
+    repoA.registerUsername(userAUid, "alice")
+
+    repoA.deleteUserProfile(userAUid)
+
+    // USER B's data must remain
+    val profileB = repoB.getProfileByUid(userBUid)
+    assertNotNull(profileB)
+    assertEquals("bob", profileB!!.username)
   }
 }

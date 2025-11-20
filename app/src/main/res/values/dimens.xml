@@ -28,6 +28,8 @@
     <dimen name="profile_pic_border">2dp</dimen>
     <dimen name="settings_text_field_height">48dp</dimen>
     <dimen name="settings_save_button_height">48dp</dimen>
+    <dimen name="todo_overview_top_row_height">75dp</dimen>
+    <dimen name="todo_overview_sort_icon_size">30dp</dimen>
 
     <!-- Shapes -->
     <dimen name="rounded_corner_shape_medium">12dp</dimen>

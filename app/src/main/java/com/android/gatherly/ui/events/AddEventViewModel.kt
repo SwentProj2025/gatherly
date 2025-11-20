@@ -17,6 +17,7 @@ import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.android.gatherly.utils.GenericViewModelFactory
+import com.android.gatherly.utils.createEvent
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
@@ -69,7 +70,9 @@ data class AddEventUiState(
     // the string the toast should display
     val toastString: String? = null,
     // when the event is edited or deleted, return to event overview
-    val backToOverview: Boolean = false
+    val backToOverview: Boolean = false,
+    // when the event is being saved
+    val isSaving: Boolean = false
 )
 
 // create a HTTP Client for Nominatim
@@ -337,11 +340,17 @@ class AddEventViewModel(
         !uiState.startTimeError &&
         !uiState.endTimeError) {
 
+      uiState = uiState.copy(isSaving = true)
+
       // Parse date
       val date =
           dateFormat.parse(uiState.date)
               ?: run {
-                uiState = uiState.copy(displayToast = true, toastString = "Cannot parse event date")
+                uiState =
+                    uiState.copy(
+                        displayToast = true,
+                        toastString = "Cannot parse event date",
+                        isSaving = false)
                 return
               }
       val timestampDate = Timestamp(date)
@@ -351,7 +360,10 @@ class AddEventViewModel(
           timeFormat.parse(uiState.startTime)
               ?: run {
                 uiState =
-                    uiState.copy(displayToast = true, toastString = "Cannot parse event start time")
+                    uiState.copy(
+                        displayToast = true,
+                        toastString = "Cannot parse event start time",
+                        isSaving = false)
                 return
               }
       val timestampStartTime = Timestamp(startTime)
@@ -361,15 +373,24 @@ class AddEventViewModel(
           timeFormat.parse(uiState.endTime)
               ?: run {
                 uiState =
-                    uiState.copy(displayToast = true, toastString = "Cannot parse event end time")
+                    uiState.copy(
+                        displayToast = true,
+                        toastString = "Cannot parse event end time",
+                        isSaving = false)
                 return
               }
       val timestampEndTime = Timestamp(endTime)
 
+      // Create ID of the new event
+      val eventId = eventsRepository.getNewId()
+
+      // List of the ID of every participants
+      val participants = uiState.participants.map { it.uid }
+
       // Create new event
       val event =
           Event(
-              id = eventsRepository.getNewId(),
+              id = eventId,
               title = uiState.name,
               description = uiState.description,
               creatorName = uiState.creatorName,
@@ -378,20 +399,19 @@ class AddEventViewModel(
               startTime = timestampStartTime,
               endTime = timestampEndTime,
               creatorId = currentProfile.uid,
-              participants = uiState.participants.map { it.uid },
+              participants = participants,
               status = EventStatus.UPCOMING)
-
-      uiState = uiState.copy(displayToast = true, toastString = "Saving...")
 
       // Save in event repository
       viewModelScope.launch {
-        eventsRepository.addEvent(event)
-        uiState = uiState.copy(displayToast = true, toastString = "Saved")
+        createEvent(eventsRepository, profileRepository, event, currentProfile.uid, participants)
+        uiState =
+            uiState.copy(
+                displayToast = true, toastString = "Saved", isSaving = false, backToOverview = true)
       }
-
-      uiState = uiState.copy(backToOverview = true)
     } else {
-      uiState = uiState.copy(displayToast = true, toastString = "Failed to save :(")
+      uiState =
+          uiState.copy(displayToast = true, toastString = "Failed to save :(", isSaving = false)
     }
   }
 

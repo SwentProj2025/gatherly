@@ -17,6 +17,7 @@ import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.android.gatherly.utils.GenericViewModelFactory
+import com.android.gatherly.utils.cancelEvent
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.firestore
 import com.google.firebase.firestore.ktx.firestore
@@ -68,7 +69,9 @@ data class EditEventsUIState(
     // the string the toast should display
     val toastString: String? = null,
     // when the event is edited or deleted, return to event overview
-    val backToOverview: Boolean = false
+    val backToOverview: Boolean = false,
+    // when the event is being
+    val isLoading: Boolean = false
 )
 
 // create a HTTP Client for Nominatim
@@ -104,6 +107,10 @@ class EditEventsViewModel(
   private lateinit var eventId: String
   private lateinit var creatorId: String
 
+  // The list of participants ID is needed in case
+  // if the event is canceled we have to unregister everybody
+  private lateinit var participants: List<String>
+
   // Selected Location
   private var chosenLocation: Location? = null
 
@@ -130,6 +137,7 @@ class EditEventsViewModel(
               participants = event.participants.map { profileRepository.getProfileByUid(it)!! })
       eventId = event.id
       creatorId = event.creatorId
+      participants = event.participants
     }
   }
 
@@ -253,6 +261,7 @@ class EditEventsViewModel(
         } else if (participant == creatorId) {
           uiState.copy(displayToast = true, toastString = "Cannot delete the owner")
         } else {
+          viewModelScope.launch { profileRepository.unregisterEvent(eventId, participant) }
           uiState.copy(
               participants = uiState.participants.filter { it.uid != participant },
               suggestedProfiles = emptyList())
@@ -271,6 +280,7 @@ class EditEventsViewModel(
               displayToast = true, toastString = "Cannot add a participant that is already added")
       return
     }
+    viewModelScope.launch { profileRepository.participateEvent(eventId, participant.uid) }
     uiState =
         uiState.copy(
             participants = uiState.participants + participant, suggestedProfiles = emptyList())
@@ -330,12 +340,17 @@ class EditEventsViewModel(
         !uiState.dateError &&
         !uiState.startTimeError &&
         !uiState.endTimeError) {
+      uiState = uiState.copy(isLoading = true)
 
       // Parse date
       val date =
           dateFormat.parse(uiState.date)
               ?: run {
-                uiState = uiState.copy(displayToast = true, toastString = "Cannot parse event date")
+                uiState =
+                    uiState.copy(
+                        displayToast = true,
+                        toastString = "Cannot parse event date",
+                        isLoading = false)
                 return
               }
       val timestampDate = Timestamp(date)
@@ -345,7 +360,10 @@ class EditEventsViewModel(
           timeFormat.parse(uiState.startTime)
               ?: run {
                 uiState =
-                    uiState.copy(displayToast = true, toastString = "Cannot parse event start time")
+                    uiState.copy(
+                        displayToast = true,
+                        toastString = "Cannot parse event start time",
+                        isLoading = false)
                 return
               }
       val timestampStartTime = Timestamp(startTime)
@@ -355,7 +373,10 @@ class EditEventsViewModel(
           timeFormat.parse(uiState.endTime)
               ?: run {
                 uiState =
-                    uiState.copy(displayToast = true, toastString = "Cannot parse event end time")
+                    uiState.copy(
+                        displayToast = true,
+                        toastString = "Cannot parse event end time",
+                        isLoading = false)
                 return
               }
       val timestampEndTime = Timestamp(endTime)
@@ -375,25 +396,29 @@ class EditEventsViewModel(
               participants = uiState.participants.map { it.uid },
               status = EventStatus.UPCOMING)
 
-      uiState = uiState.copy(displayToast = true, toastString = "Saving...")
-
       // Save in event repository
       viewModelScope.launch {
         eventsRepository.editEvent(eventId, event)
-        uiState = uiState.copy(displayToast = true, toastString = "Saved")
+        uiState =
+            uiState.copy(
+                displayToast = true,
+                toastString = "Saved",
+                isLoading = false,
+                backToOverview = true)
       }
-
-      uiState = uiState.copy(backToOverview = true)
     } else {
-      uiState = uiState.copy(displayToast = true, toastString = "Failed to save :(")
+      uiState =
+          uiState.copy(displayToast = true, toastString = "Failed to save :(", isLoading = false)
     }
   }
 
   /** Deletes the event from the events repository */
   fun deleteEvent() {
     // Call event repository
-    viewModelScope.launch { eventsRepository.deleteEvent(eventId) }
-    uiState = uiState.copy(backToOverview = true)
+    viewModelScope.launch {
+      cancelEvent(eventsRepository, profileRepository, eventId, creatorId, participants)
+      uiState = uiState.copy(backToOverview = true)
+    }
   }
 
   /**
