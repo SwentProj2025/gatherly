@@ -55,6 +55,7 @@ object SettingsScreenTestTags {
   const val PHOTO_PICKER_CANCEL_BUTTON = "settings_photo_picker_cancel_button"
   const val PROFILE_PICTURE_URL_NOT_EMPTY = "settings_profile_picture_url_not_empty"
   const val GOOGLE_BUTTON = "google_button"
+  const val LOADING = "loading"
 }
 
 /**
@@ -140,7 +141,14 @@ fun SettingsScreen(
       },
       containerColor = MaterialTheme.colorScheme.background,
       content = { paddingValues ->
-        if (uiState.isAnon) {
+        if (uiState.isLoadingProfile) {
+          Box(
+              modifier = Modifier.fillMaxSize().padding(paddingValues),
+              contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(
+                    modifier = Modifier.testTag(SettingsScreenTestTags.LOADING))
+              }
+        } else if (uiState.isAnon) {
 
           // If the user is anonymous, they do not have a profile
 
@@ -300,7 +308,7 @@ fun SettingsScreen(
                         ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary,
                             contentColor = MaterialTheme.colorScheme.onPrimary),
-                    enabled = uiState.isValid) {
+                    enabled = uiState.isValid && !uiState.isSaving) {
                       Text(
                           text = stringResource(R.string.settings_save),
                           fontSize = 16.sp,
