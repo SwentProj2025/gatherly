@@ -83,7 +83,7 @@ private var friendlessProfile: Profile =
         groupIds = emptyList(),
         friendUids = emptyList())
 
-private val friendsList = listOf(friend1Profile, friend2Profile, friend3Profile)
+private val friendsList = listOf(friend1Profile, friend2Profile, friend3Profile, friend4Profile)
 
 /*----------------------------------------ToDos-----------------------------------------------*/
 

@@ -2,9 +2,11 @@ package com.android.gatherly.ui.homepage
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
 import com.android.gatherly.model.event.EventsLocalRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
@@ -253,6 +255,45 @@ class HomePageScreenTest {
         .assertIsDisplayed()
     composeRule
         .onNodeWithTag(HomePageScreenTestTags.ADD_FRIENDS_TEXT, useUnmergedTree = true)
+        .assertIsDisplayed()
+  }
+
+  /** Verifies that the scrollable friendList displays friends correctly */
+  @Test
+  fun friendsList_scrollable_displaysAllFriends() {
+    // Create a current profile with 5 friends
+    val manyFriends =
+        (1..5).map { i ->
+          Profile(
+              uid = "scroll_friend$i",
+              name = "Friend $i",
+              focusSessionIds = emptyList(),
+              participatingEventIds = emptyList(),
+              groupIds = emptyList(),
+              friendUids = emptyList(),
+              status = ProfileStatus.ONLINE)
+        }
+
+    runBlocking {
+      profileLocalRepo.updateProfile(currentProfile.copy(friendUids = manyFriends.map { it.uid }))
+      manyFriends.forEach { profileLocalRepo.addProfile(it) }
+    }
+
+    setContentWithGoogle()
+    composeRule.waitForIdle()
+    // Check first friend is visible
+    composeRule
+        .onNodeWithTag(getFriendAvatarTestTag("scroll_friend1"), useUnmergedTree = true)
+        .assertIsDisplayed()
+
+    // Scroll LazyColumn to the last friend
+    composeRule
+        .onNodeWithTag(HomePageScreenTestTags.FRIENDS_LAZY_COLUMN, useUnmergedTree = true)
+        .performScrollToNode(hasTestTag(getFriendAvatarTestTag("scroll_friend5")))
+
+    // Assert last friend is displayed
+    composeRule
+        .onNodeWithTag(getFriendAvatarTestTag("scroll_friend5"), useUnmergedTree = true)
         .assertIsDisplayed()
   }
 }

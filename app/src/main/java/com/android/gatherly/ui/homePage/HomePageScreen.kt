@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -91,6 +92,7 @@ object HomePageScreenTestTags {
   const val EMPTY_TASK_LIST_TEXT_BUTTON = "emptyTaskListTextButton"
   const val ADD_FRIENDS_ICON = "addFriendsIcon"
   const val ADD_FRIENDS_TEXT = "addFriendsText"
+  const val FRIENDS_LAZY_COLUMN = "friendsLazyColumn"
 }
 
 /**
@@ -498,20 +500,25 @@ private fun EmptyFriendsView() {
  */
 @Composable
 private fun PopulatedFriendsView(friends: List<Profile>) {
-  Column(
-      verticalArrangement =
-          Arrangement.spacedBy(dimensionResource(id = R.dimen.spacing_between_fields)),
-      horizontalAlignment = Alignment.CenterHorizontally) {
-        friends.forEach { friend ->
-          FriendAvatar(
-              profilePicUrl = friend.profilePicture,
-              modifier = Modifier.testTag(getFriendAvatarTestTag(friend.uid)),
-              status = friend.status,
-              statusTag = getFriendStatusTestTag(friend.uid))
-        }
+  Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    LazyColumn(
+        modifier = Modifier.weight(1f).testTag(HomePageScreenTestTags.FRIENDS_LAZY_COLUMN),
+        verticalArrangement =
+            Arrangement.spacedBy(dimensionResource(id = R.dimen.spacing_between_fields)),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+      items(friends.size) { index ->
+        val friend = friends[index]
+        FriendAvatar(
+            profilePicUrl = friend.profilePicture,
+            modifier = Modifier.testTag(getFriendAvatarTestTag(friend.uid)),
+            status = friend.status,
+            statusTag = getFriendStatusTestTag(friend.uid))
       }
-  Text(
-      text = stringResource(R.string.homepage_friends_section_label),
-      color = MaterialTheme.colorScheme.onBackground,
-      style = MaterialTheme.typography.bodySmall)
+    }
+    Text(
+        text = stringResource(R.string.homepage_friends_section_label),
+        color = MaterialTheme.colorScheme.onBackground,
+        style = MaterialTheme.typography.bodySmall)
+  }
 }
