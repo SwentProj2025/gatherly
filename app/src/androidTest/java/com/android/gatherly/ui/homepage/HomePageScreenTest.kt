@@ -227,4 +227,30 @@ class HomePageScreenTest {
         .onNodeWithTag(getFriendStatusTestTag(friend2.uid), useUnmergedTree = true)
         .assertIsDisplayed()
   }
+
+  /** Verifies that the empty task list text button is displayed when there are no todos */
+  @Test
+  fun emptyTaskList_displaysTextButton() {
+    runBlocking { todosLocalRepo.deleteTodo("3") }
+    setContentWithGoogle()
+
+    composeRule
+        .onNodeWithTag(
+            testTag = HomePageScreenTestTags.EMPTY_TASK_LIST_TEXT_BUTTON, useUnmergedTree = true)
+        .assertIsDisplayed()
+  }
+
+  /** Verifies that the empty friends message (icon + text) is displayed when user has no friends */
+  @Test
+  fun emptyFriends_displaysAddFriendsMessage() {
+    runBlocking { profileLocalRepo.updateProfile(currentProfile.copy(friendUids = emptyList())) }
+    setContentWithGoogle()
+
+    composeRule
+        .onNodeWithTag(testTag = HomePageScreenTestTags.ADD_FRIENDS_ICON, useUnmergedTree = true)
+        .assertIsDisplayed()
+    composeRule
+        .onNodeWithTag(HomePageScreenTestTags.ADD_FRIENDS_TEXT, useUnmergedTree = true)
+        .assertIsDisplayed()
+  }
 }

@@ -55,6 +55,7 @@
     <dimen name="homepage_section_spacing">20.dp</dimen>
     <dimen name="homepage_events_section_height">200.dp</dimen>
     <dimen name="homepage_minimap_width">280.dp</dimen>
+    <dimen name="homepage_add_friends_icon_size">30.dp</dimen>
 
     <!-- SignIn Screen -->
     <dimen name="sign_in_top_spacing">80.dp</dimen>

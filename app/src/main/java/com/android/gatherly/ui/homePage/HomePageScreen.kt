@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -28,7 +29,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -40,9 +43,13 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
 import androidx.credentials.CredentialManager
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
 import com.android.gatherly.model.event.Event
@@ -81,6 +88,9 @@ object HomePageScreenTestTags {
   const val MINI_MAP_CARD = "miniMapCard"
   const val FRIEND_AVATAR_PREFIX = "friendAvatar_"
   const val FRIEND_STATUS_PREFIX = "friendStatus_"
+  const val EMPTY_TASK_LIST_TEXT_BUTTON = "emptyTaskListTextButton"
+  const val ADD_FRIENDS_ICON = "addFriendsIcon"
+  const val ADD_FRIENDS_TEXT = "addFriendsText"
 }
 
 /**
@@ -113,6 +123,12 @@ fun HomePageScreen(
     onClickTodo: () -> Unit = {},
     onClickFriendsSection: () -> Unit = {},
 ) {
+
+  val lifecycle = LocalLifecycleOwner.current.lifecycle
+
+  LaunchedEffect(lifecycle) {
+    lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) { homePageViewModel.updateUI() }
+  }
   val uiState by homePageViewModel.uiState.collectAsState()
 
   HandleSignedOutState(uiState.signedOut, onSignedOut)
@@ -212,12 +228,15 @@ fun EventsAndFriendsSection(
               .height(dimensionResource(id = R.dimen.homepage_events_section_height))) {
         Spacer(modifier = Modifier.width(spacingRegular))
 
-        MiniMap(todos = todos, events = events, modifier = Modifier.weight(1f))
+        MiniMap(todos = todos, events = events, modifier = Modifier.weight(0.8f))
 
         Spacer(modifier = Modifier.width(spacingRegular))
 
         if (!isAnon) {
-          FriendsSection(onClickFriendsSection = onClickFriendsSection, friends = friends)
+          FriendsSection(
+              onClickFriendsSection = onClickFriendsSection,
+              friends = friends,
+              modifier = Modifier.weight(0.2f))
           Spacer(modifier = Modifier.width(spacingRegular))
         }
       }
@@ -298,14 +317,20 @@ fun FriendAvatar(
 
 /** Displays a bordered section with friend avatars and a label. The entire section is clickable. */
 @Composable
-fun FriendsSection(onClickFriendsSection: () -> Unit, friends: List<Profile>) {
+fun FriendsSection(
+    modifier: Modifier = Modifier,
+    onClickFriendsSection: () -> Unit,
+    friends: List<Profile>
+) {
 
   val roundedCornerPercentage = 50
+  val arrangement = if (friends.isEmpty()) Arrangement.Bottom else Arrangement.SpaceBetween
   Column(
       horizontalAlignment = Alignment.CenterHorizontally,
-      verticalArrangement = Arrangement.SpaceBetween,
+      verticalArrangement = arrangement,
       modifier =
-          Modifier.testTag(HomePageScreenTestTags.FRIENDS_SECTION)
+          modifier
+              .testTag(HomePageScreenTestTags.FRIENDS_SECTION)
               .border(
                   width = dimensionResource(id = R.dimen.homepage_friends_section_border_width),
                   color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f),
@@ -321,22 +346,11 @@ fun FriendsSection(onClickFriendsSection: () -> Unit, friends: List<Profile>) {
                           id = R.dimen.homepage_friends_section_vertical_border_padding),
                   horizontal = dimensionResource(id = R.dimen.padding_small))
               .fillMaxHeight()) {
-        Column(
-            verticalArrangement =
-                Arrangement.spacedBy(dimensionResource(id = R.dimen.spacing_between_fields))) {
-              friends.forEach { friend ->
-                FriendAvatar(
-                    profilePicUrl = friend.profilePicture,
-                    modifier = Modifier.testTag(getFriendAvatarTestTag(friend.uid)),
-                    status = friend.status,
-                    statusTag = getFriendStatusTestTag(friend.uid))
-              }
-            }
-
-        Text(
-            text = stringResource(R.string.homepage_friends_section_label),
-            color = MaterialTheme.colorScheme.onBackground,
-            style = MaterialTheme.typography.bodySmall)
+        if (friends.isEmpty()) {
+          EmptyFriendsView()
+        } else {
+          PopulatedFriendsView(friends)
+        }
       }
 }
 
@@ -346,12 +360,25 @@ fun FriendsSection(onClickFriendsSection: () -> Unit, friends: List<Profile>) {
  */
 @Composable
 fun TaskList(todos: List<ToDo>, onClickTodo: () -> Unit = {}) {
-  Column {
-    todos.forEach { todo ->
-      TaskItem(
-          modifier = Modifier.testTag("${HomePageScreenTestTags.TASK_ITEM_PREFIX}${todo.uid}"),
-          text = todo.description,
-          onClick = onClickTodo)
+  if (todos.isEmpty()) {
+    TextButton(
+        onClick = onClickTodo,
+        modifier =
+            Modifier.padding(horizontal = dimensionResource(id = R.dimen.padding_small))
+                .testTag(HomePageScreenTestTags.EMPTY_TASK_LIST_TEXT_BUTTON)) {
+          Text(
+              text = stringResource(id = R.string.homepage_empty_task_list_message),
+              color = MaterialTheme.colorScheme.onBackground)
+        }
+  } else {
+
+    Column {
+      todos.forEach { todo ->
+        TaskItem(
+            modifier = Modifier.testTag("${HomePageScreenTestTags.TASK_ITEM_PREFIX}${todo.uid}"),
+            text = todo.description,
+            onClick = onClickTodo)
+      }
     }
   }
 }
@@ -438,4 +465,52 @@ fun StatusIndicator(status: ProfileStatus, modifier: Modifier = Modifier, size: 
       }
 
   Box(modifier = modifier.size(size).clip(CircleShape).background(color))
+}
+
+/**
+ * Displays the empty state of the friends section.
+ *
+ * Shows a "add friend" icon and a message prompting the user to add friends.
+ */
+@Composable
+private fun EmptyFriendsView() {
+  Icon(
+      imageVector = Icons.Default.PersonAdd,
+      contentDescription = stringResource(id = R.string.homepage_add_friend_icon_description),
+      tint = MaterialTheme.colorScheme.onBackground,
+      modifier =
+          Modifier.size(dimensionResource(id = R.dimen.homepage_add_friends_icon_size))
+              .testTag(HomePageScreenTestTags.ADD_FRIENDS_ICON))
+  Text(
+      text = stringResource(id = R.string.homepage_no_friends_message),
+      style = MaterialTheme.typography.bodySmall,
+      textAlign = TextAlign.Center,
+      modifier = Modifier.testTag(HomePageScreenTestTags.ADD_FRIENDS_TEXT))
+}
+
+/**
+ * Displays the populated state of the friends section.
+ *
+ * Shows a vertical column of friend avatars and a label at the bottom.
+ *
+ * @param friends List of [Profile] representing the user's friends.
+ */
+@Composable
+private fun PopulatedFriendsView(friends: List<Profile>) {
+  Column(
+      verticalArrangement =
+          Arrangement.spacedBy(dimensionResource(id = R.dimen.spacing_between_fields)),
+      horizontalAlignment = Alignment.CenterHorizontally) {
+        friends.forEach { friend ->
+          FriendAvatar(
+              profilePicUrl = friend.profilePicture,
+              modifier = Modifier.testTag(getFriendAvatarTestTag(friend.uid)),
+              status = friend.status,
+              statusTag = getFriendStatusTestTag(friend.uid))
+        }
+      }
+  Text(
+      text = stringResource(R.string.homepage_friends_section_label),
+      color = MaterialTheme.colorScheme.onBackground,
+      style = MaterialTheme.typography.bodySmall)
 }
