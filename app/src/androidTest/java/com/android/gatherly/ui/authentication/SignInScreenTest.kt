@@ -2,7 +2,9 @@ package com.android.gatherly.ui.authentication
 
 import android.content.Context
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onChild
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.test.core.app.ApplicationProvider
@@ -77,11 +79,16 @@ class SignInScreenTest : FirestoreGatherlyTest() {
         .assertIsDisplayed()
         .performClick()
 
+    // Check that the screen is loading
+    composeTestRule.onNodeWithTag(SignInScreenTestTags.LOADING_TEXT).assertIsDisplayed()
+
     // Wait until uiState becomes true or timeout is reached
-    composeTestRule.waitUntil(timeoutMillis = WAIT_TIMEOUT) { signInViewModel.uiState.value }
+    composeTestRule.waitUntil(timeoutMillis = WAIT_TIMEOUT) { signInViewModel.uiState.signedIn }
+
+    // Check that the screen is no longer loading
+    composeTestRule.onNodeWithTag(SignInScreenTestTags.LOADING_TEXT).assertIsNotDisplayed()
 
     // Assert that the state is updated and user is signed in
-    assert(signInViewModel.uiState.value) { "ViewModel did not report signed in" }
     val currentUser = FirebaseEmulator.auth.currentUser
     assert(currentUser != null) { "FirebaseEmulator has no signed-in user" }
     assert(currentUser!!.email == "signinscreentest@signinscreen.com") {
@@ -99,10 +106,35 @@ class SignInScreenTest : FirestoreGatherlyTest() {
         .assertIsDisplayed()
         .performClick()
 
-    // Wait until uiState becomes true or timeout is reached
-    composeTestRule.waitUntil(timeoutMillis = WAIT_TIMEOUT) { signInViewModel.uiState.value }
+    // Check that the screen is loading
+    composeTestRule.onNodeWithTag(SignInScreenTestTags.LOADING_TEXT).assertIsDisplayed()
 
-    assert(signInViewModel.uiState.value)
+    // Wait until uiState becomes true or timeout is reached
+    composeTestRule.waitUntil(timeoutMillis = WAIT_TIMEOUT) { signInViewModel.uiState.signedIn }
+
+    // Check that the screen is no longer loading
+    composeTestRule.onNodeWithTag(SignInScreenTestTags.LOADING_TEXT).assertIsNotDisplayed()
+
     assert(FirebaseEmulator.auth.currentUser != null)
+  }
+
+  @Test
+  fun failedSignInDisplaysSnackBar() {
+    signInViewModel = SignInViewModel()
+    composeTestRule.setContent { SignInScreen(authViewModel = signInViewModel) }
+
+    // Click the Google sign-in button
+    composeTestRule
+        .onNodeWithTag(SignInScreenTestTags.GOOGLE_BUTTON)
+        .assertIsDisplayed()
+        .performClick()
+
+    // Wait until uiState becomes true or timeout is reached
+    composeTestRule.waitUntil(timeoutMillis = WAIT_TIMEOUT) {
+      signInViewModel.uiState.errorMessage != null
+    }
+
+    // Check that there is a snackbar
+    composeTestRule.onNodeWithTag(SignInScreenTestTags.SNACKBAR).onChild().assertIsDisplayed()
   }
 }

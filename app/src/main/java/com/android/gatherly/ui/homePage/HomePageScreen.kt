@@ -290,8 +290,9 @@ fun MiniMap(todos: List<ToDo>, events: List<Event>, modifier: Modifier) {
 }
 
 /**
- * Circular avatar for a friend profile. Currently uses a default drawable until profile pictures
- * are supported.
+ * Circular avatar for a friend profile.
+ *
+ * @param profilePicUrl url to the picture data
  */
 @Composable
 fun FriendAvatar(

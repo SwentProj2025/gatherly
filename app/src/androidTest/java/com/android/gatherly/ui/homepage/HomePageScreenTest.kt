@@ -210,7 +210,9 @@ class HomePageScreenTest {
   fun friendAvatars_areDisplayed_forMultipleFriends() {
     setContentWithGoogle()
     currentProfile.friendUids.forEach { uid ->
-      composeRule.onNodeWithTag(getFriendAvatarTestTag(uid))
+      composeRule
+          .onNodeWithTag(useUnmergedTree = true, testTag = getFriendAvatarTestTag(uid))
+          .assertIsDisplayed()
     }
   }
 
