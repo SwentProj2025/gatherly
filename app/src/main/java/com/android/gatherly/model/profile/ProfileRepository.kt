@@ -230,4 +230,16 @@ interface ProfileRepository {
   )
 
   suspend fun addBadge(profile: Profile, badgeId: String)
+
+  suspend fun incrementCreatedTodo(uid: String): Int
+
+  suspend fun incrementCompletedTodo(uid: String): Int
+
+  suspend fun incrementCreatedEvent(uid: String): Int
+
+  suspend fun incrementParticipatedEvent(uid: String): Int
+
+  suspend fun incrementCompletedFocusSession(uid: String): Int
+
+  suspend fun incrementAddedFriend(uid: String): Int
 }
