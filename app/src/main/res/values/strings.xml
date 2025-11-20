@@ -107,12 +107,10 @@
     <string name="events_delete_warning">Warning! You are deleting an event</string>
     <string name="events_delete_warning_text">This action cannot be reversed. Are you sure?</string>
 
+    <!-- General -->
     <string name="delete">Yes, Delete</string>
     <string name="cancel">No, Cancel</string>
     <string name="saving">Saving…</string>
-
-    <!-- General -->
-    <string name="cancel">No, Cancel</string>
 
     <!-- HomePage -->
     <string name="homepage_arrow_icon_description">Navigate</string>
