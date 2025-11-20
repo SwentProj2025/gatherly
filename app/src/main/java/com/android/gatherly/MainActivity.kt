@@ -44,7 +44,7 @@ class MainActivity : ComponentActivity() {
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
-    setContent { GatherlyTheme() { Surface(modifier = Modifier.fillMaxSize()) { GatherlyApp() } } }
+    setContent { GatherlyTheme { Surface(modifier = Modifier.fillMaxSize()) { GatherlyApp() } } }
   }
 
   private val userStatusManager = UserStatusManager()
@@ -65,7 +65,6 @@ class MainActivity : ComponentActivity() {
  * navigation controller and defines the navigation graph. You can add your app implementation
  * inside this function.
  *
- * @param navHostController The navigation controller used for navigating between screens.
  * @param context The context of the application, used for accessing resources and services.
  * @param credentialManager The CredentialManager instance for handling authentication credentials.
  */
@@ -82,7 +81,7 @@ fun GatherlyApp(
 
   NavHost(navController = navController, startDestination = startDestination) {
 
-    // SIGNIN COMPOSABLE  ------------------------------
+    // SIGN IN COMPOSABLE  ------------------------------
     navigation(
         startDestination = Screen.SignIn.route,
         route = Screen.SignIn.name,
