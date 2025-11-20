@@ -5,6 +5,7 @@ import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.todo.ToDosLocalRepository
@@ -36,6 +37,10 @@ class AddTodoScreenTest : GatherlyTest() {
             profileRepository = profileRepository,
             authProvider = { mockitoUtils.mockAuth })
     composeTestRule.setContent { AddToDoScreen(addTodoViewModel = addTodoViewModel) }
+    composeTestRule
+        .onNodeWithTag(AddToDoScreenTestTags.MORE_OPTIONS)
+        .assertIsDisplayed()
+        .performClick()
   }
 
   @Test

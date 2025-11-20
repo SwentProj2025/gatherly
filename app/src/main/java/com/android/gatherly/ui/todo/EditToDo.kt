@@ -81,6 +81,9 @@ object EditToDoScreenTestTags {
 
   /** Tag for displaying error messages under text fields. */
   const val LOCATION_MENU = "locationMenu"
+
+  /** Tag for displaying error messages under text fields. */
+  const val MORE_OPTIONS = "moreOptions"
 }
 
 private const val DELAY = 1000L
@@ -207,7 +210,8 @@ fun EditToDoScreen(
                           modifier =
                               Modifier.rotate(if (expandAdvanced.value) 90f else 0f)
                                   .clickable(
-                                      onClick = { expandAdvanced.value = !expandAdvanced.value }))
+                                      onClick = { expandAdvanced.value = !expandAdvanced.value })
+                                  .testTag(EditToDoScreenTestTags.MORE_OPTIONS))
 
                       Text(
                           text = stringResource(R.string.todos_advanced_settings),
