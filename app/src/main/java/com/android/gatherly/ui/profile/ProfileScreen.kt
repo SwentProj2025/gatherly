@@ -1,5 +1,6 @@
 package com.android.gatherly.ui.profile
 
+import GroupsOverview
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -61,6 +62,10 @@ object ProfileScreenTestTags {
   const val PROFILE_FOCUS_POINTS_COUNT = "profileFocusPointsCount"
   const val PROFILE_FOCUS_SESSIONS = "profileFocusSessions"
   const val PROFILE_GROUPS = "profileGroups"
+  const val GROUPS_OVERVIEW_CONTAINER = "groupsOverviewContainer"
+  const val GROUP_ROW = "groupRow"
+  const val GROUP_ROW_NAME = "groupRowName"
+  const val GROUP_ROW_MEMBER_COUNT = "groupRowMembers"
   const val GOOGLE_BUTTON = "googleButton"
 }
 
@@ -81,10 +86,15 @@ fun ProfileScreen(
 ) {
   val uiState by profileViewModel.uiState.collectAsState()
   val profile = uiState.profile
+  val groupsToMembers = uiState.groupsToMembers
+  val groups = groupsToMembers.keys.toList()
   val context = LocalContext.current
 
   // Fetch profile when the screen is recomposed
-  LaunchedEffect(Unit) { profileViewModel.loadUserProfile() }
+  LaunchedEffect(Unit) {
+    profileViewModel.loadUserProfile()
+    profileViewModel.loadUserGroups()
+  }
 
   // If the anonymous user decides to upgrade their account to a signed in one, navigate to the init
   // profile screen
@@ -297,10 +307,15 @@ fun ProfileScreen(
                     modifier =
                         Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PROFILE_GROUPS))
                 Spacer(modifier = Modifier.height(fieldSpacingSmall))
-                Text(
-                    text = stringResource(R.string.profile_empty_groups_message),
-                    style = MaterialTheme.typography.bodyMedium,
-                    textAlign = TextAlign.Center)
+                if (groups.isEmpty()) {
+                  Text(
+                      text = stringResource(R.string.profile_empty_groups_message),
+                      style = MaterialTheme.typography.bodyMedium,
+                      textAlign = TextAlign.Center)
+                } else {
+                  GroupsOverview(
+                      groupsToMembers = groupsToMembers, modifier = Modifier.fillMaxWidth())
+                }
               }
         }
       })
