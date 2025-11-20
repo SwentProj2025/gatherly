@@ -29,9 +29,9 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.rememberAsyncImagePainter
 import com.android.gatherly.R
 import com.android.gatherly.ui.navigation.*
+import com.android.gatherly.utils.profilePicturePainter
 import java.io.File
 
 // Technical constants
@@ -382,15 +382,8 @@ fun SettingsField(
  */
 @Composable
 fun ProfilePictureImage(pictureUrl: String) {
-  val painter =
-      if (pictureUrl.isNotEmpty()) {
-        rememberAsyncImagePainter(pictureUrl)
-      } else {
-        painterResource(R.drawable.ic_launcher_foreground)
-      }
-
   Image(
-      painter = painter,
+      painter = profilePicturePainter(pictureUrl),
       contentDescription = stringResource(R.string.settings_profile_picture_description),
       modifier =
           Modifier.size(dimensionResource(id = R.dimen.profile_pic_size))
