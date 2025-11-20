@@ -2,6 +2,7 @@ package com.android.gatherly.model.profile
 
 import android.net.Uri
 import com.android.gatherly.model.friends.Friends
+import com.android.gatherly.model.notification.Notification
 
 /**
  * Interface for repositories managing user profiles.
@@ -211,6 +212,35 @@ interface ProfileRepository {
    * @param participants list of all the ID of profiles register for this event
    */
   suspend fun allUnregisterEvent(eventId: String, participants: List<String>)
+
+  /**
+   * Send a friend request to another user.
+   *
+   * @param senderId the uid of the user sending the friend request
+   * @param recipientId the uid of the user receiving the friend request
+   */
+  suspend fun sendFriendRequest(senderId: String, recipientId: String)
+
+  /**
+   * Accept a friend request.
+   *
+   * @param notification the friend request
+   */
+  suspend fun acceptFriendRequest(notification: Notification)
+
+  /**
+   * Reject a friend request.
+   *
+   * @param notification the friend request
+   */
+  suspend fun rejectFriendRequest(notification: Notification)
+
+  /**
+   * Cancel a friend request. (This is an alias for rejectFriendRequest)
+   *
+   * @param notification the friend request
+   */
+  suspend fun cancelFriendRequest(notification: Notification) = rejectFriendRequest(notification)
 
   // -- BADGES GESTION PART --
 
