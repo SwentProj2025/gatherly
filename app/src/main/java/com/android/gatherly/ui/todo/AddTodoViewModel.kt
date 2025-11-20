@@ -50,7 +50,15 @@ data class AddTodoUiState(
     val isLocLoading: Boolean = false,
     val suggestions: List<Location> = emptyList(),
     val pastTime: Boolean = false
-)
+) {
+  val isValid: Boolean
+    get() =
+        !(titleError != null ||
+            descriptionError != null ||
+            assigneeError != null ||
+            dueDateError != null ||
+            dueTimeError != null)
+}
 
 // create a HTTP Client for Nominatim
 private var client: OkHttpClient =
@@ -258,11 +266,7 @@ class AddTodoViewModel(
     _uiState.value = validated
 
     // Abort if validation failed
-    if (_uiState.value.titleError != null ||
-        _uiState.value.descriptionError != null ||
-        _uiState.value.assigneeError != null ||
-        _uiState.value.dueDateError != null ||
-        _uiState.value.dueTimeError != null) {
+    if (!uiState.value.isValid) {
       return
     }
     lateinit var dateAndTime: Date

@@ -239,13 +239,7 @@ fun AddToDoScreen(
                     colors =
                         ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.secondary),
-                    enabled =
-                        todoUIState.dueDateError == null &&
-                            todoUIState.assigneeError == null &&
-                            todoUIState.descriptionError == null &&
-                            todoUIState.titleError == null &&
-                            todoUIState.dueTimeError == null &&
-                            !todoUIState.isSaving) {
+                    enabled = todoUIState.isValid && !todoUIState.isSaving) {
                       Text(
                           text =
                               if (todoUIState.isSaving) {
