@@ -167,9 +167,10 @@ fun EventsScreen(
   val selectedFilter = remember { mutableStateOf(EventFilter.ALL) }
 
   // list of type of events based on the selected filter
-  val browserEvents = getFilteredEvents(selectedFilter, uiState.globalEventList)
-  val upcomingEvents = getFilteredEvents(selectedFilter, uiState.participatedEventList)
-  val myOwnEvents = getFilteredEvents(selectedFilter, uiState.createdEventList)
+  val browserEvents = eventsViewModel.getFilteredEvents(selectedFilter, uiState.globalEventList)
+  val upcomingEvents =
+      eventsViewModel.getFilteredEvents(selectedFilter, uiState.participatedEventList)
+  val myOwnEvents = eventsViewModel.getFilteredEvents(selectedFilter, uiState.createdEventList)
 
   val currentUserIdFromVM = uiState.currentUserId
 
