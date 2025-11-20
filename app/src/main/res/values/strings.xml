@@ -9,7 +9,7 @@
     <string name="todos_ongoing_section_label">Ongoing</string>
     <string name="todos_completed_section_label">Completed</string>
     <string name="no_todos_text">You have no ToDos yet.</string>
-    <string name="todos_title_field_label">Title</string>
+    <string name="todos_title_field_label">Title*</string>
     <string name="todos_title_field_placeholder">Task Title</string>
     <string name="todos_description_field_label">Description</string>
     <string name="todos_description_placeholder">Describe the task</string>
@@ -27,6 +27,7 @@
     <string name="todos_save_button_text">Save</string>
     <string name="todos_back_button_desc">Back</string>
     <string name="todos_delete_button_text">Delete</string>
+    <string name="todos_advanced_settings">More Options</string>
 
     <!-- Sign In Page. -->
     <string name="web_client_id">854490974901-rc0seqlo7nbm1net10ujpte2ckkrsgn2.apps.googleusercontent.com</string>

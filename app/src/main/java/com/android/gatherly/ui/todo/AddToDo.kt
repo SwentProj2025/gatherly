@@ -1,26 +1,36 @@
 package com.android.gatherly.ui.todo
 
 import android.widget.Toast
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
@@ -83,18 +93,26 @@ fun AddToDoScreen(
   val errorMsg = todoUIState.saveError
 
   val context = LocalContext.current
+  val expandAdvanced = remember { mutableStateOf(false) }
 
   val screenPadding = dimensionResource(id = R.dimen.padding_screen)
   val fieldSpacing = dimensionResource(id = R.dimen.spacing_between_fields)
   val inputHeight = dimensionResource(id = R.dimen.input_height)
 
   val textFieldColors =
-      TextFieldDefaults.colors(
-          focusedContainerColor = MaterialTheme.colorScheme.background,
-          unfocusedContainerColor = MaterialTheme.colorScheme.background,
-          unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-          focusedTextColor = MaterialTheme.colorScheme.onBackground,
-          errorTextColor = MaterialTheme.colorScheme.onBackground)
+      OutlinedTextFieldDefaults.colors(
+          focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+          unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+          unfocusedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+          focusedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+          errorTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+          focusedPlaceholderColor = MaterialTheme.colorScheme.surface,
+          unfocusedPlaceholderColor = MaterialTheme.colorScheme.surface,
+          errorPlaceholderColor = MaterialTheme.colorScheme.surface,
+          unfocusedBorderColor = Color.Transparent,
+          focusedBorderColor = Color.Transparent,
+          disabledBorderColor = Color.Transparent,
+          errorBorderColor = Color.Transparent)
 
   LaunchedEffect(errorMsg) {
     if (errorMsg != null) {
@@ -155,12 +173,6 @@ fun AddToDoScreen(
                     onValueChange = { addTodoViewModel.onDescriptionChanged(it) },
                     label = { Text(stringResource(R.string.todos_description_field_label)) },
                     placeholder = { Text(stringResource(R.string.todos_description_placeholder)) },
-                    isError = todoUIState.descriptionError != null,
-                    supportingText = {
-                      todoUIState.descriptionError?.let {
-                        Text(it, modifier = Modifier.testTag(AddToDoScreenTestTags.ERROR_MESSAGE))
-                      }
-                    },
                     colors = textFieldColors,
                     modifier =
                         Modifier.fillMaxWidth()
@@ -170,41 +182,61 @@ fun AddToDoScreen(
                     maxLines = integerResource(R.integer.todo_description_max_lines))
               }
 
-              // Location Input with dropdown
               item {
-                LocationSuggestions(
-                    location = todoUIState.location,
-                    suggestions = todoUIState.suggestions,
-                    onLocationChanged = { addTodoViewModel.onLocationChanged(it) },
-                    onSelectLocation = { loc -> addTodoViewModel.selectLocation(loc) },
+                Row(
                     modifier = Modifier.fillMaxWidth(),
-                    testTagInput = AddToDoScreenTestTags.INPUT_TODO_LOCATION,
-                    testTagDropdown = AddToDoScreenTestTags.LOCATION_MENU,
-                )
+                    verticalAlignment = Alignment.CenterVertically) {
+                      Icon(
+                          imageVector = Icons.Default.ChevronRight,
+                          contentDescription = null,
+                          modifier =
+                              Modifier.rotate(if (expandAdvanced.value) 90f else 0f)
+                                  .clickable(
+                                      onClick = { expandAdvanced.value = !expandAdvanced.value }))
+
+                      Text(
+                          text = stringResource(R.string.todos_advanced_settings),
+                          modifier = Modifier.weight(1f))
+                    }
               }
 
-              // Due Date Input
-              item {
-                DateInputField(
-                    initialDate = todoUIState.dueDate,
-                    onDateChanged = { addTodoViewModel.onDateChanged(it) },
-                    dueDateError = todoUIState.dueDateError,
-                    textFieldColors = textFieldColors,
-                    testTagInput = AddToDoScreenTestTags.INPUT_TODO_DATE,
-                    testTagErrorMessage = AddToDoScreenTestTags.ERROR_MESSAGE,
-                )
-              }
+              if (expandAdvanced.value) {
+                // Location Input with dropdown
+                item {
+                  LocationSuggestions(
+                      location = todoUIState.location,
+                      suggestions = todoUIState.suggestions,
+                      onLocationChanged = { addTodoViewModel.onLocationChanged(it) },
+                      onSelectLocation = { loc -> addTodoViewModel.selectLocation(loc) },
+                      modifier = Modifier.fillMaxWidth(),
+                      testTagInput = AddToDoScreenTestTags.INPUT_TODO_LOCATION,
+                      testTagDropdown = AddToDoScreenTestTags.LOCATION_MENU,
+                      textFieldColors = textFieldColors)
+                }
 
-              // Due Time Input
-              item {
-                TimeInputField(
-                    initialTime = todoUIState.dueTime,
-                    onTimeChanged = { addTodoViewModel.onTimeChanged(it) },
-                    dueTimeError = todoUIState.dueTimeError,
-                    textFieldColors = textFieldColors,
-                    testTagInput = AddToDoScreenTestTags.INPUT_TODO_TIME,
-                    testTagErrorMessage = AddToDoScreenTestTags.ERROR_MESSAGE,
-                )
+                // Due Date Input
+                item {
+                  DateInputField(
+                      initialDate = todoUIState.dueDate,
+                      onDateChanged = { addTodoViewModel.onDateChanged(it) },
+                      dueDateError = todoUIState.dueDateError,
+                      textFieldColors = textFieldColors,
+                      testTagInput = AddToDoScreenTestTags.INPUT_TODO_DATE,
+                      testTagErrorMessage = AddToDoScreenTestTags.ERROR_MESSAGE,
+                  )
+                }
+
+                // Due Time Input
+                item {
+                  TimeInputField(
+                      initialTime = todoUIState.dueTime,
+                      onTimeChanged = { addTodoViewModel.onTimeChanged(it) },
+                      dueTimeError = todoUIState.dueTimeError,
+                      textFieldColors = textFieldColors,
+                      testTagInput = AddToDoScreenTestTags.INPUT_TODO_TIME,
+                      testTagErrorMessage = AddToDoScreenTestTags.ERROR_MESSAGE,
+                  )
+                }
               }
 
               item { Spacer(modifier = Modifier.height(fieldSpacing)) }
@@ -217,12 +249,7 @@ fun AddToDoScreen(
                     colors =
                         ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.secondary),
-                    enabled =
-                        todoUIState.dueDateError == null &&
-                            todoUIState.descriptionError == null &&
-                            todoUIState.titleError == null &&
-                            todoUIState.dueTimeError == null &&
-                            !todoUIState.isSaving) {
+                    enabled = todoUIState.isValid) {
                       Text(
                           stringResource(R.string.todos_save_button_text),
                           color = MaterialTheme.colorScheme.onSecondary)

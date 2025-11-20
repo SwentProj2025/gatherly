@@ -316,8 +316,10 @@ fun ToDoItem(
                     fontWeight = FontWeight.Medium)
                 Text(
                     text =
-                        SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-                            .format(todo.dueDate.toDate()),
+                        todo.dueDate?.let {
+                          SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                              .format(todo.dueDate.toDate())
+                        } ?: "",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

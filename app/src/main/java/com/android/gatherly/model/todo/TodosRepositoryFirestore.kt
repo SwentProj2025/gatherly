@@ -166,8 +166,7 @@ class ToDosRepositoryFirestore(private val db: FirebaseFirestore) : ToDosReposit
     val uid = doc.getString("uid") ?: return null
     val name = doc.getString("name") ?: return null
     val description = doc.getString("description") ?: return null
-    val assigneeName = doc.getString("assigneeName") ?: return null
-    val dueDate = doc.getTimestamp("dueDate") ?: return null
+    val dueDate = doc.getTimestamp("dueDate")
     val dueTime = doc.getTimestamp("dueTime")
     val locationMap = doc.get("location") as? Map<*, *>
     val location =

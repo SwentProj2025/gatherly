@@ -124,14 +124,6 @@ class AddTodoScreenTest : GatherlyTest() {
   }
 
   @Test
-  fun savingWithInvalidDescriptionShouldDoNothing() = checkNoTodoWereAdded {
-    composeTestRule.enterAddTodoDetails(todo = todo1.copy(description = " "))
-    composeTestRule.clickOnSaveForAddTodo()
-    composeTestRule.waitForIdle()
-    composeTestRule.onNodeWithTag(AddToDoScreenTestTags.TODO_SAVE).assertExists()
-  }
-
-  @Test
   fun savingWithInvalidDateShouldDoNothing() = checkNoTodoWereAdded {
     composeTestRule.enterAddTodoDetails(
         todo = todo1, date = "13/13/2023" // Invalid date format
@@ -145,20 +137,6 @@ class AddTodoScreenTest : GatherlyTest() {
   fun enteringEmptyTitleShowsErrorMessage() {
     val invalidTitle = " "
     composeTestRule.enterAddTodoTitle(invalidTitle)
-    composeTestRule.checkErrorMessageIsDisplayedForAddTodo()
-  }
-
-  @Test
-  fun enteringEmptyDescriptionShowsErrorMessage() {
-    val invalidDescription = " "
-    composeTestRule.enterAddTodoDescription(invalidDescription)
-    composeTestRule.checkErrorMessageIsDisplayedForAddTodo()
-  }
-
-  @Test
-  fun enteringEmptyAssigneeNameShowsErrorMessage() {
-    val invalidAssigneeName = " "
-    composeTestRule.enterAddTodoAssignee(invalidAssigneeName)
     composeTestRule.checkErrorMessageIsDisplayedForAddTodo()
   }
 

@@ -36,16 +36,17 @@ data class AddTodoUiState(
     val dueDate: String = "",
     val dueTime: String = "",
     val titleError: String? = null,
-    val descriptionError: String? = null,
     val dueDateError: String? = null,
     val dueTimeError: String? = null,
-    val locationError: String? = null,
     val isSaving: Boolean = false,
     val saveError: String? = null,
     val saveSuccess: Boolean = false,
     val isLocLoading: Boolean = false,
     val suggestions: List<Location> = emptyList()
-)
+) {
+  val isValid: Boolean
+    get() = titleError == null && dueDateError == null && dueTimeError == null && !isSaving
+}
 
 // create a HTTP Client for Nominatim
 private var client: OkHttpClient =
@@ -114,10 +115,7 @@ class AddTodoViewModel(
    * @param newValue The new description entered by the user. If blank, a validation error is set.
    */
   fun onDescriptionChanged(newValue: String) {
-    _uiState.value =
-        _uiState.value.copy(
-            description = newValue,
-            descriptionError = if (newValue.isBlank()) "Description cannot be empty" else null)
+    _uiState.value = _uiState.value.copy(description = newValue)
   }
 
   /**
@@ -160,6 +158,7 @@ class AddTodoViewModel(
    * @return `true` if the format and date are valid, `false` otherwise.
    */
   private fun isValidDate(date: String): Boolean {
+    if (date.isBlank()) return true // optional
     val regex = Regex("""\d{2}/\d{2}/\d{4}""")
     if (!regex.matches(date)) return false
     return try {
@@ -230,10 +229,6 @@ class AddTodoViewModel(
     val validated =
         _uiState.value.copy(
             titleError = if (_uiState.value.title.isBlank()) "Title cannot be empty" else null,
-            descriptionError =
-                if (_uiState.value.description.isBlank()) "Description cannot be empty" else null,
-            locationError =
-                if (_uiState.value.location.isBlank()) "Location cannot be empty" else null,
             dueDateError =
                 if (!isValidDate(_uiState.value.dueDate)) "Invalid format (dd/MM/yyyy)" else null,
             dueTimeError =
@@ -241,10 +236,7 @@ class AddTodoViewModel(
     _uiState.value = validated
 
     // Abort if validation failed
-    if (_uiState.value.titleError != null ||
-        _uiState.value.descriptionError != null ||
-        _uiState.value.dueDateError != null ||
-        _uiState.value.dueTimeError != null) {
+    if (!uiState.value.isValid) {
       return
     }
 
@@ -256,11 +248,13 @@ class AddTodoViewModel(
                 ?: throw IllegalStateException("User not authenticated.")
 
         val uid = todoRepository.getNewUid()
-        val sdfDate = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-        val date =
-            sdfDate.parse(validated.dueDate) ?: throw IllegalArgumentException("Invalid date")
 
-        val dueDateTimestamp = Timestamp(date)
+        val dueDateTimestamp =
+            if (validated.dueDate.isNotBlank()) {
+              val sdfTime = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+              Timestamp(sdfTime.parse(validated.dueDate)!!)
+            } else null
+
         val dueTimeTimestamp =
             if (validated.dueTime.isNotBlank()) {
               val sdfTime = SimpleDateFormat("HH:mm", Locale.getDefault())
@@ -271,7 +265,7 @@ class AddTodoViewModel(
             ToDo(
                 uid = uid,
                 name = validated.title,
-                description = validated.description,
+                description = validated.description.ifBlank { validated.title },
                 dueDate = dueDateTimestamp,
                 dueTime = dueTimeTimestamp,
                 location = chosenLocation,

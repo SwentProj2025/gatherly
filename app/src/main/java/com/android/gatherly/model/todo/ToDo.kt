@@ -10,7 +10,7 @@ data class ToDo(
     val uid: String,
     val name: String,
     val description: String,
-    val dueDate: Timestamp,
+    val dueDate: Timestamp?,
     val dueTime: Timestamp?,
     override val location: Location?,
     val status: ToDoStatus,
