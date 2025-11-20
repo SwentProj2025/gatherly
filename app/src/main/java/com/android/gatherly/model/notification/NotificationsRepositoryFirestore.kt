@@ -67,7 +67,7 @@ class NotificationsRepositoryFirestore(private val db: FirebaseFirestore) :
   }
 
   override suspend fun addNotification(notification: Notification) {
-    require(!(notification.recipientId.isEmpty())) {
+    require(notification.recipientId.isNotEmpty()) {
       "Notification can't have an empty recipientId"
     }
     db.collection("users")
