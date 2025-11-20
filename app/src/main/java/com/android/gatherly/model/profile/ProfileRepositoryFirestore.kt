@@ -5,6 +5,7 @@ import android.util.Log
 import com.android.gatherly.model.badge.ProfileBadges
 import com.android.gatherly.model.badge.Rank
 import com.android.gatherly.model.friends.Friends
+import com.android.gatherly.model.notification.Notification
 import com.android.gatherly.model.todo.ToDoStatus
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
@@ -14,6 +15,7 @@ import com.google.firebase.ktx.app
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.ktx.storage
 import java.io.File
+import java.lang.IllegalArgumentException
 import kotlinx.coroutines.tasks.await
 
 /**
@@ -341,6 +343,8 @@ class ProfileRepositoryFirestore(
     val eventOwnerIds = doc.get("ownedEventIds") as? List<String> ?: emptyList()
     val groupIds = doc.get("groups") as? List<String> ?: emptyList()
     val friendUids = doc.get("friendUids") as? List<String> ?: emptyList()
+    val pendingFriendsIncoming = doc.get("pendingFriendsIncoming") as? List<String> ?: emptyList()
+    val pendingFriendsOutgoing = doc.get("pendingFriendsOutgoing") as? List<String> ?: emptyList()
     val school = doc.getString("school") ?: ""
     val schoolYear = doc.getString("schoolYear") ?: ""
     val birthday = doc.getTimestamp("birthday")
@@ -381,6 +385,8 @@ class ProfileRepositoryFirestore(
         "ownedEventIds" to profile.ownedEventIds,
         "groupIds" to profile.groupIds,
         "friendUids" to profile.friendUids,
+        "pendingFriendsIncoming" to profile.pendingFriendsIncoming,
+        "pendingFriendsOutgoing" to profile.pendingFriendsOutgoing,
         "school" to profile.school,
         "schoolYear" to profile.schoolYear,
         "birthday" to profile.birthday,
@@ -423,9 +429,16 @@ class ProfileRepositoryFirestore(
   }
 
   override suspend fun deleteFriend(friend: String, currentUserId: String) {
-    val docRef = profilesCollection.document(currentUserId)
-    val friendId = getProfileByUsername(friend)?.uid
-    docRef.update("friendUids", FieldValue.arrayRemove(friendId)).await()
+    val friendId =
+        getProfileByUsername(friend)?.uid ?: throw NoSuchElementException("User $friend not found")
+
+    db.runBatch { batch ->
+          val currentUserDoc = profilesCollection.document(currentUserId)
+          val friendDoc = profilesCollection.document(friendId)
+          batch.update(currentUserDoc, "friendUids", FieldValue.arrayRemove(friendId))
+          batch.update(friendDoc, "friendUids", FieldValue.arrayRemove(currentUserId))
+        }
+        .await()
   }
 
   // -- STATUS GESTION PART --
@@ -459,6 +472,56 @@ class ProfileRepositoryFirestore(
 
   override suspend fun allUnregisterEvent(eventId: String, participants: List<String>) {
     participants.forEach { participant -> unregisterEvent(eventId, participant) }
+  }
+
+  override suspend fun sendFriendRequest(senderId: String, recipientId: String) {
+    db.runBatch { batch ->
+          val recipientDoc = profilesCollection.document(recipientId)
+          val senderDoc = profilesCollection.document(senderId)
+
+          batch.update(recipientDoc, "pendingFriendsIncoming", FieldValue.arrayUnion(senderId))
+          batch.update(senderDoc, "pendingFriendsOutgoing", FieldValue.arrayUnion(recipientId))
+        }
+        .await()
+  }
+
+  override suspend fun acceptFriendRequest(notification: Notification) {
+    val senderId =
+        notification.senderId
+            ?: throw IllegalArgumentException("Friend notification missing senderId")
+    val recipientId = notification.recipientId
+
+    db.runBatch { batch ->
+          val recipientDoc = profilesCollection.document(recipientId)
+          val senderDoc = profilesCollection.document(senderId)
+
+          batch.update(
+              recipientDoc, "pendingFriendsIncoming", FieldValue.arrayUnion(notification.senderId))
+          batch.update(
+              senderDoc, "pendingFriendsOutgoing", FieldValue.arrayUnion(notification.recipientId))
+
+          batch.update(recipientDoc, "friendUids", FieldValue.arrayUnion(notification.senderId))
+          batch.update(senderDoc, "friendUids", FieldValue.arrayUnion(notification.recipientId))
+        }
+        .await()
+  }
+
+  override suspend fun rejectFriendRequest(notification: Notification) {
+    val senderId =
+        notification.senderId
+            ?: throw IllegalArgumentException("Friend notification missing senderId")
+    val recipientId = notification.recipientId
+
+    db.runBatch { batch ->
+          val recipientDoc = profilesCollection.document(recipientId)
+          val senderDoc = profilesCollection.document(senderId)
+
+          batch.update(
+              recipientDoc, "pendingFriendsIncoming", FieldValue.arrayRemove(notification.senderId))
+          batch.update(
+              senderDoc, "pendingFriendsOutgoing", FieldValue.arrayRemove(notification.recipientId))
+        }
+        .await()
   }
 
   // -- BADGES GESTION PART --
