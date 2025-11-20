@@ -312,7 +312,7 @@ fun SortMenu(currentOrder: TodoSortOrder, onSortSelected: (TodoSortOrder) -> Uni
           imageVector = Icons.AutoMirrored.Filled.Sort,
           modifier =
               Modifier.size(dimensionResource(R.dimen.todo_overview_sort_icon_size)).fillMaxSize(),
-          contentDescription = "Sort todos",
+          contentDescription = stringResource(R.string.todos_sort_button_label),
           tint = MaterialTheme.colorScheme.onSurfaceVariant)
     }
     DropdownMenu(
@@ -321,7 +321,9 @@ fun SortMenu(currentOrder: TodoSortOrder, onSortSelected: (TodoSortOrder) -> Uni
         containerColor = MaterialTheme.colorScheme.surfaceVariant) {
           DropdownMenuItem(
               text = {
-                Text(text = "Date descending", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    text = stringResource(R.string.todos_date_descending_sort_button_text),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
               },
               onClick = {
                 onSortSelected(TodoSortOrder.DATE_DESC)
@@ -329,12 +331,17 @@ fun SortMenu(currentOrder: TodoSortOrder, onSortSelected: (TodoSortOrder) -> Uni
               },
               trailingIcon = {
                 if (currentOrder == TodoSortOrder.DATE_DESC) {
-                  Icon(Icons.Default.Check, contentDescription = "Selected")
+                  Icon(
+                      Icons.Default.Check,
+                      contentDescription =
+                          stringResource(R.string.todos_sort_menu_check_icon_label))
                 }
               })
           DropdownMenuItem(
               text = {
-                Text(text = "Date ascending", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    text = stringResource(R.string.todos_date_ascending_sort_button_text),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
               },
               onClick = {
                 onSortSelected(TodoSortOrder.DATE_ASC)
@@ -342,12 +349,17 @@ fun SortMenu(currentOrder: TodoSortOrder, onSortSelected: (TodoSortOrder) -> Uni
               },
               trailingIcon = {
                 if (currentOrder == TodoSortOrder.DATE_ASC) {
-                  Icon(Icons.Default.Check, contentDescription = "Selected")
+                  Icon(
+                      Icons.Default.Check,
+                      contentDescription =
+                          stringResource(R.string.todos_sort_menu_check_icon_label))
                 }
               })
           DropdownMenuItem(
               text = {
-                Text(text = "Alphabetical", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(
+                    text = stringResource(R.string.todos_alphabetical_sort_button_text),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
               },
               onClick = {
                 onSortSelected(TodoSortOrder.ALPHABETICAL)
@@ -355,7 +367,10 @@ fun SortMenu(currentOrder: TodoSortOrder, onSortSelected: (TodoSortOrder) -> Uni
               },
               trailingIcon = {
                 if (currentOrder == TodoSortOrder.ALPHABETICAL) {
-                  Icon(Icons.Default.Check, contentDescription = "Selected")
+                  Icon(
+                      Icons.Default.Check,
+                      contentDescription =
+                          stringResource(R.string.todos_sort_menu_check_icon_label))
                 }
               })
         }
