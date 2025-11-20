@@ -10,7 +10,7 @@ import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.model.todo.ToDosRepositoryProvider
-import com.android.gatherly.utils.editTodo_updateBadges
+import com.android.gatherly.utils.editTodo
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -80,7 +80,7 @@ class OverviewViewModel(
   fun onCheckboxChanged(uid: String, newStatus: ToDoStatus) {
     viewModelScope.launch {
       val ownerId = todoRepository.getTodo(uid).ownerId
-      editTodo_updateBadges(todoRepository, profileRepository, uid, newStatus, ownerId)
+      editTodo(todoRepository, profileRepository, uid, newStatus, ownerId)
       refreshUIState()
     }
   }

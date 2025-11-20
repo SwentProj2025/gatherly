@@ -10,7 +10,7 @@ import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.model.todo.ToDosRepositoryProvider
-import com.android.gatherly.utils.addTodo_updateBadges
+import com.android.gatherly.utils.addTodo
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
@@ -297,7 +297,7 @@ class AddTodoViewModel(
                 status = ToDoStatus.ONGOING,
                 ownerId = ownerId)
 
-        addTodo_updateBadges(todoRepository, profileRepository, todo, ownerId)
+        addTodo(todoRepository, profileRepository, todo, ownerId)
         _uiState.value = _uiState.value.copy(isSaving = false, saveSuccess = true)
       } catch (e: Exception) {
         _uiState.value = _uiState.value.copy(isSaving = false, saveError = e.message)
