@@ -568,24 +568,28 @@ class ProfileRepositoryFirestore(
 
   /** Atomically increments the given numeric field and returns the new value. */
   private suspend fun incrementField(uid: String, field: String): Int {
-    val docRef = profilesCollection.document(uid)
+    try {
+      val docRef = profilesCollection.document(uid)
 
-    return db.runTransaction { tx ->
-          val snap = tx.get(docRef)
+      return db.runTransaction { tx ->
+            val snap = tx.get(docRef)
 
-          // If profile doesn't exist, we can't do much
-          if (!snap.exists()) {
-            throw IllegalStateException("Profile not found for uid=$uid when incrementing $field")
+            // If profile doesn't exist, we can't do much
+            if (!snap.exists()) {
+              throw IllegalStateException("Profile not found for uid=$uid when incrementing $field")
+            }
+
+            val current = (snap.getLong(field) ?: 0L).toInt()
+            val updated = current + 1
+
+            tx.set(docRef, mapOf(field to updated), SetOptions.merge())
+
+            updated
           }
-
-          val current = (snap.getLong(field) ?: 0L).toInt()
-          val updated = current + 1
-
-          tx.set(docRef, mapOf(field to updated), SetOptions.merge())
-
-          updated
-        }
-        .await()
+          .await()
+    } catch (e: Exception) {
+      return -1
+    }
   }
 
   /**
