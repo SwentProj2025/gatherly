@@ -24,6 +24,9 @@
 
     <!-- Component Sizes -->
     <dimen name="input_height">100dp</dimen>
+    <dimen name="profile_pic_size_small">30dp</dimen>
+    <dimen name="profile_pic_size_medium">40dp</dimen>
+    <dimen name="profile_pic_size_regular">50dp</dimen>
     <dimen name="profile_pic_size">120dp</dimen>
     <dimen name="profile_pic_border">2dp</dimen>
     <dimen name="settings_text_field_height">48dp</dimen>
@@ -32,6 +35,7 @@
     <dimen name="todo_overview_sort_icon_size">30dp</dimen>
 
     <!-- Shapes -->
+    <dimen name="rounded_corner_shape_small">4dp</dimen>
     <dimen name="rounded_corner_shape_medium">12dp</dimen>
     <dimen name="rounded_corner_shape_large">20dp</dimen>
 
@@ -91,6 +95,16 @@
     <dimen name="find_friends_item_card_padding_vertical">4.dp</dimen>
     <dimen name="find_friends_item_card_padding">12.dp</dimen>
     <dimen name="find_friends_item_profile_picture_size">56.dp</dimen>
+
+    <!-- Groups -->
+    <dimen name="add_group_button_height">80.dp</dimen>
+    <dimen name="add_group_button_vertical">12.dp</dimen>
+    <dimen name="add_group_horizontal_divider_thickness">2.dp</dimen>
+    <dimen name="add_group_friend_section_height">450.dp</dimen>
+    <dimen name="group_overview_horizontal_divider_thickness">1.dp</dimen>
+    <dimen name="group_overview_avatar_spacing">4.dp</dimen>
+    <dimen name="group_overview_row_horizontal_padding">16.dp</dimen>
+    <dimen name="group_overview_avatar_border_width">1.dp</dimen>
 
     <!-- Events Screen -->
     <dimen name="events_indicator_status_size">14.dp</dimen>
