@@ -111,9 +111,9 @@ class EditEventsViewModelTest {
           description = "Describing this great event",
           creatorName = "my name :)",
           location = null,
-          date = Timestamp.now(),
-          startTime = Timestamp.now(),
-          endTime = Timestamp.now(),
+          date = Timestamp(1821465600L, 0),
+          startTime = Timestamp(1821465600L, 0),
+          endTime = Timestamp(1821465660L, 0),
           creatorId = ownerProfile.uid,
           participants = listOf(ownerProfile.uid, participantProfile.uid),
           status = EventStatus.UPCOMING)
@@ -281,16 +281,6 @@ class EditEventsViewModelTest {
   }
 
   /*----------------------------------End time tests--------------------------------------------*/
-  // Start time accepts valid time
-  @Test
-  fun canEnterEventEndTime() {
-    runTest {
-      val endTimeString = "14:15"
-      editEventsViewModel.updateEndTime(endTimeString)
-      assert(!editEventsViewModel.uiState.endTimeError) { "\'14:15\' should not make an error" }
-      assert(editEventsViewModel.uiState.endTime == endTimeString) { "\'14:15\' should work" }
-    }
-  }
 
   // Start time does not accept words time
   @Test

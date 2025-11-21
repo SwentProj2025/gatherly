@@ -13,6 +13,7 @@ import com.android.gatherly.model.todo.ToDosRepositoryProvider
 import com.android.gatherly.utils.deleteTodo_updateBadges
 import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -43,8 +44,17 @@ data class EditTodoUIState(
     val isSaving: Boolean = false,
     val saveSuccess: Boolean = false,
     val deleteSuccess: Boolean = false,
-    val suggestions: List<Location> = emptyList()
-)
+    val suggestions: List<Location> = emptyList(),
+    val pastTime: Boolean = false
+) {
+  val isValid: Boolean
+    get() =
+        !(titleError != null ||
+            descriptionError != null ||
+            assigneeError != null ||
+            dueDateError != null ||
+            dueTimeError != null)
+}
 
 // create a HTTP Client for Nominatim
 private var client: OkHttpClient =
@@ -83,6 +93,9 @@ class EditTodoViewModel(
   // Selected Location
   private var chosenLocation: Location? = null
 
+  // Todo ID
+  private lateinit var editTodoId: String
+
   /** Clears the error message in the UI state. */
   fun clearErrorMsg() {
     _uiState.value = _uiState.value.copy(errorMsg = null)
@@ -103,6 +116,11 @@ class EditTodoViewModel(
     _uiState.value = _uiState.value.copy(errorMsg = errorMsg)
   }
 
+  /** Clear the past time error */
+  fun clearPastTime() {
+    _uiState.value = _uiState.value.copy(pastTime = false)
+  }
+
   /**
    * Loads a ToDo by its ID and updates the UI state.
    *
@@ -111,6 +129,7 @@ class EditTodoViewModel(
   fun loadTodo(todoID: String) {
     viewModelScope.launch {
       try {
+        editTodoId = todoID
         val todo = todoRepository.getTodo(todoID)
         chosenLocation = todo.location
         _uiState.value =
@@ -136,13 +155,8 @@ class EditTodoViewModel(
     }
   }
 
-  /**
-   * Edits a ToDo document.
-   *
-   * @param id id of The ToDo document to be edited.
-   */
-  fun editTodo(id: String): Boolean {
-    _uiState.value =
+  fun checkPastTime() {
+    val validated =
         _uiState.value.copy(
             titleError = if (_uiState.value.title.isBlank()) "Title cannot be empty" else null,
             descriptionError =
@@ -153,17 +167,46 @@ class EditTodoViewModel(
                 if (!isValidDate(_uiState.value.dueDate)) "Invalid format (dd/MM/yyyy)" else null,
             dueTimeError =
                 if (!isValidTime(_uiState.value.dueTime)) "Invalid time (HH:mm)" else null)
-    val state = _uiState.value
+    _uiState.value = validated
 
     // Abort if validation failed
-    if (state.titleError != null ||
-        state.descriptionError != null ||
-        state.assigneeError != null ||
-        state.dueDateError != null ||
-        state.dueTimeError != null) {
+    if (!uiState.value.isValid) {
       setErrorMsg("At least one field is not valid")
-      return false
+      return
     }
+    lateinit var dateAndTime: Date
+    if (validated.dueDate.isBlank()) {
+      editTodo(editTodoId)
+      return
+    }
+    if (validated.dueTime.isBlank()) {
+      val sdfDate = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+      dateAndTime =
+          sdfDate.parse(validated.dueDate) ?: throw IllegalArgumentException("Invalid date")
+    } else {
+      val sdfDateAndTime = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+      dateAndTime =
+          sdfDateAndTime.parse(validated.dueDate + " " + validated.dueTime)
+              ?: throw IllegalArgumentException("Invalid date or time")
+    }
+    val dueDateAndTime = Timestamp(dateAndTime)
+
+    val currentTimestamp = Timestamp.now()
+
+    if (dueDateAndTime < currentTimestamp) {
+      _uiState.value = _uiState.value.copy(pastTime = true)
+    } else {
+      editTodo(editTodoId)
+    }
+  }
+
+  /**
+   * Edits a ToDo document.
+   *
+   * @param id id of The ToDo document to be edited.
+   */
+  fun editTodo(id: String): Boolean {
+    val state = uiState.value
     val sdfDate = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
     val date = sdfDate.parse(state.dueDate) ?: throw IllegalArgumentException("Invalid date")
 

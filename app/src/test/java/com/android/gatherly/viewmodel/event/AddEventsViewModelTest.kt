@@ -118,9 +118,9 @@ class AddEventsViewModelTest {
           description = "Describing this great event",
           creatorName = "my name :)",
           location = null,
-          date = Timestamp.now(),
-          startTime = Timestamp.now(),
-          endTime = Timestamp.now(),
+          date = Timestamp(1821465600L, 0),
+          startTime = Timestamp(1821465600L, 0),
+          endTime = Timestamp(1821465660L, 0),
           creatorId = ownerProfile.uid,
           participants = listOf(ownerProfile.uid, participantProfile.uid),
           status = EventStatus.UPCOMING)

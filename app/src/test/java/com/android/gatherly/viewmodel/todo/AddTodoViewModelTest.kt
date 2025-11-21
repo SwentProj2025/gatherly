@@ -137,7 +137,7 @@ class AddTodoViewModelTest {
     addToDoViewModel.onAssigneeChanged("User")
     addToDoViewModel.onDateChanged("10/10/2025")
 
-    addToDoViewModel.saveTodo()
+    addToDoViewModel.checkTodoTime()
     delay(DELAY)
 
     val state = addToDoViewModel.uiState.value
