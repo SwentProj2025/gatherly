@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import com.android.gatherly.R
 import com.android.gatherly.model.group.Group
@@ -41,6 +42,7 @@ fun GroupsOverview(groupsToMembers: Map<Group, List<Profile>>, modifier: Modifie
   val horizontalPadding = dimensionResource(id = R.dimen.group_overview_row_horizontal_padding)
   val borderWidth = dimensionResource(id = R.dimen.group_overview_avatar_border_width)
   val roundedCorner = dimensionResource(id = R.dimen.rounded_corner_shape_large)
+  val pictureContentDescription = stringResource(R.string.profile_picture_description)
 
   // Width needed for 3 avatars + spacing between them
   val maxAvatarWidth =
@@ -70,7 +72,7 @@ fun GroupsOverview(groupsToMembers: Map<Group, List<Profile>>, modifier: Modifie
                       membersProfile.take(MAX_MEMBERS_DISPLAYED).forEach { member ->
                         Image(
                             painter = profilePicturePainter(member.profilePicture),
-                            contentDescription = null,
+                            contentDescription = pictureContentDescription,
                             modifier =
                                 Modifier.size(profilePictureSize)
                                     .clip(CircleShape)
@@ -99,6 +101,10 @@ fun GroupsOverview(groupsToMembers: Map<Group, List<Profile>>, modifier: Modifie
                       color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
 
+                // This is just a temporary placeholder icon until group details screen is
+                // implemented, then it will be replaced by a button or clickable row
+                // TODO : Make the whole row clickable to navigate to group details when group
+                // details screen is ready
                 Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null)
               }
 
