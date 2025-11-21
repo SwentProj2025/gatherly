@@ -4,17 +4,21 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FabPosition
@@ -83,6 +87,9 @@ object MapScreenTestTags {
   const val EVENT_DATE = "eventDate"
   const val TODO_DESCRIPTION = "todoDescription"
   const val EVENT_DESCRIPTION = "eventDescription"
+  const val LOADING_SCREEN = "loadingScreen"
+  const val LOADING_SPINNER = "loadingSpinner"
+  const val LOADING_TEXT = "loadingText"
 
   // ToDo markers
   fun todoMarker(id: String) = "todoMarker_$id"
@@ -125,7 +132,8 @@ fun MapScreen(
     onSignedOut: () -> Unit = {},
     navigationActions: NavigationActions? = null,
     goToEvent: (String) -> Unit = {},
-    goToToDo: () -> Unit = {}
+    goToToDo: () -> Unit = {},
+    runInitialisation: Boolean = true
 ) {
   /** Location services setup * */
   val context = LocalContext.current
@@ -141,8 +149,10 @@ fun MapScreen(
 
   HandleSignedOutState(uiState.onSignedOut, onSignedOut)
 
-  // Initialize camera position on first composition
-  LaunchedEffect(Unit) { vm.initialiseCameraPosition(context) }
+  // Initialize camera position on first composition if runInitialisation is true
+  if (runInitialisation) {
+    LaunchedEffect(Unit) { vm.initialiseCameraPosition(context) }
+  }
 
   /** Handle permission request for location access * */
   val permissionLauncher =
@@ -168,7 +178,12 @@ fun MapScreen(
   }
 
   /** Stop location updates when the composable is disposed * */
-  DisposableEffect(Unit) { onDispose { vm.stopLocationUpdates() } }
+  DisposableEffect(Unit) {
+    onDispose {
+      vm.onNavigationToDifferentScreen()
+      vm.stopLocationUpdates()
+    }
+  }
 
   // Bottom sheet state for the selected event
   val selectedEvent =
@@ -204,113 +219,138 @@ fun MapScreen(
       // Toggle button to switch between ToDos and Events
       floatingActionButtonPosition = FabPosition.Start,
       floatingActionButton = {
-        val isEvents = uiState.displayEventsPage
-        ExtendedFloatingActionButton(
-            onClick = { vm.changeView() },
-            icon = {},
-            text = {
-              Text(
-                  if (uiState.displayEventsPage) stringResource(R.string.show_todos_button_title)
-                  else stringResource(R.string.show_events_button_title))
-            },
-            containerColor =
-                if (isEvents) MaterialTheme.colorScheme.secondary
-                else MaterialTheme.colorScheme.tertiary,
-            contentColor =
-                if (isEvents) MaterialTheme.colorScheme.onSecondary
-                else MaterialTheme.colorScheme.onTertiary,
-            modifier = Modifier.testTag(MapScreenTestTags.FILTER_TOGGLE))
+        if (uiState.cameraPos != null) {
+          val isEvents = uiState.displayEventsPage
+          ExtendedFloatingActionButton(
+              onClick = { vm.changeView() },
+              icon = {},
+              text = {
+                Text(
+                    if (uiState.displayEventsPage) stringResource(R.string.show_todos_button_title)
+                    else stringResource(R.string.show_events_button_title))
+              },
+              containerColor =
+                  if (isEvents) MaterialTheme.colorScheme.secondary
+                  else MaterialTheme.colorScheme.tertiary,
+              contentColor =
+                  if (isEvents) MaterialTheme.colorScheme.onSecondary
+                  else MaterialTheme.colorScheme.onTertiary,
+              modifier = Modifier.testTag(MapScreenTestTags.FILTER_TOGGLE))
+        }
       },
       content = { pd ->
-        // Camera position state
-        val cameraPositionState = rememberCameraPositionState()
+        if (uiState.cameraPos != null) {
+          // Camera position state
+          val cameraPositionState = rememberCameraPositionState()
 
-        // Handle nullable cameraPos with ?.let {}
-        LaunchedEffect(uiState.cameraPos) {
-          uiState.cameraPos?.let { pos ->
-            cameraPositionState.position = CameraPosition.fromLatLngZoom(pos, 16f)
+          // Handle nullable cameraPos with ?.let {}
+          LaunchedEffect(uiState.cameraPos) {
+            uiState.cameraPos?.let { pos ->
+              cameraPositionState.position = CameraPosition.fromLatLngZoom(pos, 16f)
+            }
           }
-        }
 
-        GoogleMap(
-            modifier =
-                Modifier.fillMaxSize().padding(pd).testTag(MapScreenTestTags.GOOGLE_MAP_SCREEN),
-            cameraPositionState = cameraPositionState,
-            onMapClick = { _ -> vm.clearSelection() },
-            properties = MapProperties(isMyLocationEnabled = true),
-            uiSettings = MapUiSettings(myLocationButtonEnabled = true)) {
-              uiState.itemsList.forEach { item ->
-                when (item) {
-                  // -------------------------------- Todo Marker UI -------------------------------
-                  is ToDo -> {
-                    val loc = item.location ?: return@forEach
-                    val isExpanded = uiState.selectedItemId == item.uid
-                    val z = if (isExpanded) 2f else 1f
+          GoogleMap(
+              modifier =
+                  Modifier.fillMaxSize().padding(pd).testTag(MapScreenTestTags.GOOGLE_MAP_SCREEN),
+              cameraPositionState = cameraPositionState,
+              onMapClick = { _ -> vm.clearSelection() },
+              properties = MapProperties(isMyLocationEnabled = true),
+              uiSettings = MapUiSettings(myLocationButtonEnabled = true)) {
+                uiState.itemsList.forEach { item ->
+                  when (item) {
+                    // -------------------------------- Todo Marker UI
+                    // -------------------------------
+                    is ToDo -> {
+                      val loc = item.location ?: return@forEach
+                      val isExpanded = uiState.selectedItemId == item.uid
+                      val z = if (isExpanded) 2f else 1f
 
-                    key("todo_${item.uid}_$isExpanded") {
-                      val markerState =
-                          rememberMarkerState(position = LatLng(loc.latitude, loc.longitude))
+                      key("todo_${item.uid}_$isExpanded") {
+                        val markerState =
+                            rememberMarkerState(position = LatLng(loc.latitude, loc.longitude))
 
-                      MarkerComposable(
-                          state = markerState,
-                          zIndex = z,
-                          onClick = {
-                            vm.onSelectedItem(item.uid)
-                            true
-                          }) {
-                            ToDoIcon(item)
-                          }
+                        MarkerComposable(
+                            state = markerState,
+                            zIndex = z,
+                            onClick = {
+                              vm.onSelectedItem(item.uid)
+                              true
+                            }) {
+                              ToDoIcon(item)
+                            }
+                      }
                     }
-                  }
-                  // -------------------------------- Event Marker UI ---------------------------
-                  is Event -> {
-                    val loc = item.location ?: return@forEach
-                    val isExpanded = uiState.selectedItemId == item.id
-                    val z = if (isExpanded) 2f else 1f
+                    // -------------------------------- Event Marker UI ---------------------------
+                    is Event -> {
+                      val loc = item.location ?: return@forEach
+                      val isExpanded = uiState.selectedItemId == item.id
+                      val z = if (isExpanded) 2f else 1f
 
-                    key("event_${item.id}_$isExpanded") {
-                      val markerState =
-                          rememberMarkerState(position = LatLng(loc.latitude, loc.longitude))
+                      key("event_${item.id}_$isExpanded") {
+                        val markerState =
+                            rememberMarkerState(position = LatLng(loc.latitude, loc.longitude))
 
-                      MarkerComposable(
-                          state = markerState,
-                          zIndex = z,
-                          onClick = {
-                            vm.onSelectedItem(item.id)
-                            true
-                          }) {
-                            EventIcon(item)
-                          }
+                        MarkerComposable(
+                            state = markerState,
+                            zIndex = z,
+                            onClick = {
+                              vm.onSelectedItem(item.id)
+                              true
+                            }) {
+                              EventIcon(item)
+                            }
+                      }
                     }
                   }
                 }
               }
-            }
 
-        if (selectedEvent != null) {
-          ModalBottomSheet(sheetState = sheetState, onDismissRequest = { vm.clearSelection() }) {
-            EventSheet(
-                event = selectedEvent,
-                onGoToEvent = {
-                  // Track consulted item before navigation
-                  vm.onItemConsulted(selectedEvent.id)
-                  vm.clearSelection()
-                  goToEvent(selectedEvent.id)
-                },
-                onClose = { vm.clearSelection() })
+          if (selectedEvent != null) {
+            ModalBottomSheet(sheetState = sheetState, onDismissRequest = { vm.clearSelection() }) {
+              EventSheet(
+                  event = selectedEvent,
+                  onGoToEvent = {
+                    // Track consulted item before navigation
+                    vm.onItemConsulted(selectedEvent.id)
+                    vm.clearSelection()
+                    goToEvent(selectedEvent.id)
+                  },
+                  onClose = { vm.clearSelection() })
+            }
+          } else if (selectedToDo != null) {
+            ModalBottomSheet(sheetState = sheetState, onDismissRequest = { vm.clearSelection() }) {
+              ToDoSheet(
+                  toDo = selectedToDo,
+                  onGoToToDo = {
+                    // Track consulted item before navigation
+                    vm.onItemConsulted(selectedToDo.uid)
+                    vm.clearSelection()
+                    goToToDo()
+                  },
+                  onClose = { vm.clearSelection() })
+            }
           }
-        } else if (selectedToDo != null) {
-          ModalBottomSheet(sheetState = sheetState, onDismissRequest = { vm.clearSelection() }) {
-            ToDoSheet(
-                toDo = selectedToDo,
-                onGoToToDo = {
-                  // Track consulted item before navigation
-                  vm.onItemConsulted(selectedToDo.uid)
-                  vm.clearSelection()
-                  goToToDo()
-                },
-                onClose = { vm.clearSelection() })
-          }
+        } else {
+          Box(
+              modifier =
+                  Modifier.fillMaxSize()
+                      .padding(pd)
+                      .background(MaterialTheme.colorScheme.background)
+                      .testTag(MapScreenTestTags.LOADING_SCREEN),
+              contentAlignment = Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                  CircularProgressIndicator(
+                      color = MaterialTheme.colorScheme.primary,
+                      modifier = Modifier.testTag(MapScreenTestTags.LOADING_SPINNER))
+                  Spacer(modifier = Modifier.height(16.dp))
+                  Text(
+                      text = stringResource(R.string.loading_map),
+                      color = MaterialTheme.colorScheme.onBackground,
+                      style = MaterialTheme.typography.bodyLarge,
+                      modifier = Modifier.testTag(MapScreenTestTags.LOADING_TEXT))
+                }
+              }
         }
       })
 }
