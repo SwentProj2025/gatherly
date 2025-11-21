@@ -27,7 +27,6 @@ class ProfileScreenTest {
           friendUids = emptyList(),
           groupIds = listOf("g1", "g2"))
 
-  // Arrange
   private val group1 =
       Group(
           gid = "g1",
