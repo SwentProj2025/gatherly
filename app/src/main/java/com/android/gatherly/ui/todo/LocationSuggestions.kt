@@ -11,7 +11,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TextFieldColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -51,6 +51,7 @@ fun LocationSuggestions(
     modifier: Modifier = Modifier,
     testTagInput: String,
     testTagDropdown: String,
+    textFieldColors: TextFieldColors
 ) {
   val suggestionLimit = integerResource(R.integer.todo_location_number_of_suggestions)
   val suggestionTextLimit = integerResource(R.integer.todo_location_suggestion_length)
@@ -58,15 +59,6 @@ fun LocationSuggestions(
   val etc = stringResource(R.string.todos_location_text_etc)
   val label = stringResource(R.string.todos_location_field_label)
   val placeholder = stringResource(R.string.todos_location_field_placeholder)
-
-  val textFieldColors =
-      TextFieldDefaults.colors(
-          focusedContainerColor = MaterialTheme.colorScheme.background,
-          unfocusedContainerColor = MaterialTheme.colorScheme.background,
-          unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-          focusedTextColor = MaterialTheme.colorScheme.onBackground,
-          errorTextColor = MaterialTheme.colorScheme.onBackground,
-      )
 
   var showLocationDropdown by remember { mutableStateOf(false) }
 

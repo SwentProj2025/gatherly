@@ -2,6 +2,7 @@ package com.android.gatherly.end2end
 
 import android.Manifest
 import androidx.activity.ComponentActivity
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -69,14 +70,15 @@ class Milestone1End2End : FirestoreGatherlyTest() {
       composeTestRule.onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_TITLE).isDisplayed()
     }
 
+    composeTestRule
+        .onNodeWithTag(AddToDoScreenTestTags.MORE_OPTIONS)
+        .assertIsDisplayed()
+        .performClick()
     // input information and save
     composeTestRule.onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_TITLE).performTextInput("Title")
     composeTestRule
         .onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_DESCRIPTION)
         .performTextInput("Description")
-    composeTestRule
-        .onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_ASSIGNEE)
-        .performTextInput("Assignee")
     composeTestRule
         .onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_DATE)
         .performTextInput("20/12/2025")

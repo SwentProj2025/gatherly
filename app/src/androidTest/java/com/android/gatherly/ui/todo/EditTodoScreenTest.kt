@@ -1,9 +1,11 @@
 package com.android.gatherly.ui.todo
 
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.todo.ToDosLocalRepository
@@ -39,6 +41,10 @@ class EditTodoScreenTest : GatherlyTest() {
     composeTestRule.setContent {
       EditToDoScreen(todoUid = todo1.uid, editTodoViewModel = editTodoViewModel)
     }
+    composeTestRule
+        .onNodeWithTag(EditToDoScreenTestTags.MORE_OPTIONS)
+        .assertIsDisplayed()
+        .performClick()
   }
 
   private fun fill_repository() = runTest {
@@ -60,7 +66,6 @@ class EditTodoScreenTest : GatherlyTest() {
     composeTestRule.onNodeWithTag(EditToDoScreenTestTags.TODO_DELETE).assertExists()
     composeTestRule.onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_TITLE).assertExists()
     composeTestRule.onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_DESCRIPTION).assertExists()
-    composeTestRule.onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_ASSIGNEE).assertExists()
     composeTestRule.onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_LOCATION).assertExists()
     composeTestRule.onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_DATE).assertExists()
     composeTestRule.onNodeWithTag(EditToDoScreenTestTags.ERROR_MESSAGE).assertIsNotDisplayed()
@@ -89,18 +94,6 @@ class EditTodoScreenTest : GatherlyTest() {
   }
 
   @Test
-  fun canEnterAssigneeName() {
-    val text = "testAssignee"
-    composeTestRule.enterEditTodoAssignee(text)
-    composeTestRule
-        .onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_ASSIGNEE)
-        .assertTextContains(text)
-    composeTestRule
-        .onNodeWithTag(EditToDoScreenTestTags.ERROR_MESSAGE, useUnmergedTree = true)
-        .assertIsNotDisplayed()
-  }
-
-  @Test
   fun canEnterLocation() {
     val text = "testLocation"
     composeTestRule.enterEditTodoLocation(text)
@@ -121,7 +114,7 @@ class EditTodoScreenTest : GatherlyTest() {
 
   @Test
   fun canEnterAnInvalidDate() {
-    val invalidDate = "invalid date" // Invalid date format
+    val invalidDate = "13-13-1313" // Invalid date format
     composeTestRule.enterEditTodoDate(invalidDate)
     composeTestRule.checkErrorMessageIsDisplayedForEditTodo()
   }
