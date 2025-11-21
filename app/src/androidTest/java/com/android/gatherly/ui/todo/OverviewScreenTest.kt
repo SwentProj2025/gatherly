@@ -15,6 +15,7 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
+import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.todo.ToDo
@@ -49,6 +50,7 @@ class OverviewScreenTest : GatherlyTest() {
     overviewViewModel =
         OverviewViewModel(todoRepository = repository, profileRepository = profileRepository)
     composeTestRule.setContent { OverviewScreen(overviewViewModel = overviewViewModel) }
+    profileRepository.addProfile(Profile(uid = "user", name = "Test User", profilePicture = ""))
     advanceUntilIdle()
   }
 
