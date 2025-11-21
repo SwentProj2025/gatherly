@@ -29,9 +29,9 @@ import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
-import coil.compose.rememberAsyncImagePainter
 import com.android.gatherly.R
 import com.android.gatherly.ui.navigation.*
+import com.android.gatherly.utils.profilePicturePainter
 import java.io.File
 
 // Technical constants
@@ -55,6 +55,7 @@ object SettingsScreenTestTags {
   const val PHOTO_PICKER_CANCEL_BUTTON = "settings_photo_picker_cancel_button"
   const val PROFILE_PICTURE_URL_NOT_EMPTY = "settings_profile_picture_url_not_empty"
   const val GOOGLE_BUTTON = "google_button"
+  const val LOADING = "loading"
 }
 
 /**
@@ -140,7 +141,14 @@ fun SettingsScreen(
       },
       containerColor = MaterialTheme.colorScheme.background,
       content = { paddingValues ->
-        if (uiState.isAnon) {
+        if (uiState.isLoadingProfile) {
+          Box(
+              modifier = Modifier.fillMaxSize().padding(paddingValues),
+              contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(
+                    modifier = Modifier.testTag(SettingsScreenTestTags.LOADING))
+              }
+        } else if (uiState.isAnon) {
 
           // If the user is anonymous, they do not have a profile
 
@@ -300,7 +308,7 @@ fun SettingsScreen(
                         ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.primary,
                             contentColor = MaterialTheme.colorScheme.onPrimary),
-                    enabled = uiState.isValid) {
+                    enabled = uiState.isValid && !uiState.isSaving) {
                       Text(
                           text = stringResource(R.string.settings_save),
                           fontSize = 16.sp,
@@ -382,15 +390,8 @@ fun SettingsField(
  */
 @Composable
 fun ProfilePictureImage(pictureUrl: String) {
-  val painter =
-      if (pictureUrl.isNotEmpty()) {
-        rememberAsyncImagePainter(pictureUrl)
-      } else {
-        painterResource(R.drawable.ic_launcher_foreground)
-      }
-
   Image(
-      painter = painter,
+      painter = profilePicturePainter(pictureUrl),
       contentDescription = stringResource(R.string.settings_profile_picture_description),
       modifier =
           Modifier.size(dimensionResource(id = R.dimen.profile_pic_size))

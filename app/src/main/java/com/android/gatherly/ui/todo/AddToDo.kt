@@ -246,7 +246,12 @@ fun AddToDoScreen(
                             todoUIState.dueTimeError == null &&
                             !todoUIState.isSaving) {
                       Text(
-                          stringResource(R.string.todos_save_button_text),
+                          text =
+                              if (todoUIState.isSaving) {
+                                stringResource(R.string.saving)
+                              } else {
+                                stringResource(R.string.todos_save_button_text)
+                              },
                           color = MaterialTheme.colorScheme.onSecondary)
                     }
               }

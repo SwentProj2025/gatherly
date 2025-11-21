@@ -3,6 +3,7 @@ package com.android.gatherly.ui.friends
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.android.gatherly.utils.GenericViewModelFactory
@@ -22,7 +23,8 @@ data class FriendsUIState(
     val friends: List<String> = emptyList(),
     val listNoFriends: List<String> = emptyList(),
     val currentUserId: String = "",
-    val isLoading: Boolean = true
+    val isLoading: Boolean = true,
+    val profiles: Map<String, Profile> = emptyMap()
 )
 
 class FriendsViewModel(
@@ -52,10 +54,17 @@ class FriendsViewModel(
     try {
       val friendsData = repository.getFriendsAndNonFriendsUsernames(currentUserId)
 
+      val allUsernames = friendsData.friendUsernames + friendsData.nonFriendUsernames
+      val profiles =
+          allUsernames
+              .mapNotNull { username -> repository.getProfileByUsername(username) }
+              .associateBy { it.username }
+
       _uiState.value =
           _uiState.value.copy(
               friends = friendsData.friendUsernames,
               listNoFriends = friendsData.nonFriendUsernames,
+              profiles = profiles,
               errorMsg = null,
               currentUserId = currentUserId,
               isLoading = false)
