@@ -256,18 +256,23 @@ fun AddToDoScreen(
                         ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.secondary),
                     enabled = todoUIState.isValid) {
-                      Text(
-                          text =
-                              if (todoUIState.isSaving) {
-                                stringResource(R.string.saving)
-                              } else {
-                                stringResource(R.string.todos_save_button_text)
-                              },
-                          color = MaterialTheme.colorScheme.onSecondary)
+                      SavingText(todoUIState = todoUIState)
                     }
               }
             }
       })
+}
+
+@Composable
+fun SavingText(todoUIState: AddTodoUiState) {
+  Text(
+      text =
+          if (todoUIState.isSaving) {
+            stringResource(R.string.saving)
+          } else {
+            stringResource(R.string.todos_save_button_text)
+          },
+      color = MaterialTheme.colorScheme.onSecondary)
 }
 
 // Helper function to preview the timer screen
