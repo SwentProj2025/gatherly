@@ -265,7 +265,18 @@ fun EventsScreen(
                     color = MaterialTheme.colorScheme.onBackground)
               }
 
-              if (browserEvents.isNotEmpty()) {
+              if (uiState.isLoading) {
+                // Events are loading so display that text
+                item {
+                  Text(
+                      stringResource(R.string.events_loading),
+                      modifier = Modifier.fillMaxWidth().padding(8.dp),
+                      textAlign = TextAlign.Center,
+                      style = MaterialTheme.typography.titleMedium,
+                      fontWeight = FontWeight.Bold,
+                      color = MaterialTheme.colorScheme.onBackground)
+                }
+              } else if (browserEvents.isNotEmpty()) {
                 items(browserEvents.size) { index ->
                   BrowserEventsItem(
                       event = browserEvents[index],
