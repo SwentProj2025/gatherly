@@ -61,6 +61,7 @@ import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
 import java.text.SimpleDateFormat
 import java.util.Locale
+import kotlinx.coroutines.launch
 
 // Portions of the code in this file are copy-pasted from the Bootcamp solution provided by the
 // SwEnt staff.
@@ -147,33 +148,69 @@ fun MapScreen(
 
   val uiState by vm.uiState.collectAsState()
 
-  HandleSignedOutState(uiState.onSignedOut, onSignedOut)
+  /** Coroutine scope for launching permission requests * */
+  val scope = rememberCoroutineScope()
 
-  // Initialize camera position on first composition if runInitialisation is true
-  if (runInitialisation) {
-    LaunchedEffect(Unit) { vm.initialiseCameraPosition(context) }
-  }
+  /** Variable to track location permission status */
+  var isLocationPermissionGranted by remember { mutableStateOf(false) }
+
+  HandleSignedOutState(uiState.onSignedOut, onSignedOut)
 
   /** Handle permission request for location access * */
   val permissionLauncher =
-      rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+      rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+          permissions ->
+        val isGranted =
+            permissions.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false) ||
+                permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false)
+
+        isLocationPermissionGranted = isGranted
+
         if (isGranted) {
           vm.startLocationUpdates(context)
+        }
+
+        // Run initialization regardless of the result
+        // If granted, it tries to fetch user location
+        // If denied, it catches the error and falls back to EPFL (Default)
+        if (runInitialisation) {
+          scope.launch { vm.initialiseCameraPosition(context) }
         }
       }
 
   /** Check permission and start location updates * */
   LaunchedEffect(Unit) {
-    val hasPermission =
+    // Check if we already have permissions (Fine OR Coarse)
+    val hasFine =
         ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) ==
             PackageManager.PERMISSION_GRANTED
+    val hasCoarse =
+        ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) ==
+            PackageManager.PERMISSION_GRANTED
+    val hasPermission = hasFine || hasCoarse
 
     if (hasPermission) {
-      // Permission already granted - start updates
+      // Already existing permissions
+      // Set the blue dot state
+      isLocationPermissionGranted = true
+
+      // Start the location data stream
       vm.startLocationUpdates(context)
+
+      // Initialize Camera
+      if (runInitialisation) {
+        vm.initialiseCameraPosition(context)
+      }
     } else {
-      // Ask user for permission (dialog box)
-      permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+      // No initial permission granted
+
+      // Disable blue dot to prevent crash
+      isLocationPermissionGranted = false
+
+      // Launch the dialog
+      permissionLauncher.launch(
+          arrayOf(
+              Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
     }
   }
 
@@ -255,8 +292,8 @@ fun MapScreen(
                   Modifier.fillMaxSize().padding(pd).testTag(MapScreenTestTags.GOOGLE_MAP_SCREEN),
               cameraPositionState = cameraPositionState,
               onMapClick = { _ -> vm.clearSelection() },
-              properties = MapProperties(isMyLocationEnabled = true),
-              uiSettings = MapUiSettings(myLocationButtonEnabled = true)) {
+              properties = MapProperties(isMyLocationEnabled = isLocationPermissionGranted),
+              uiSettings = MapUiSettings(myLocationButtonEnabled = isLocationPermissionGranted)) {
                 uiState.itemsList.forEach { item ->
                   when (item) {
                     // -------------------------------- Todo Marker UI

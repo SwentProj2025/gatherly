@@ -249,13 +249,18 @@ class MapViewModel(
     }
 
     // Try current user location with timeout
-    val currentLocation =
-        withTimeoutOrNull(LOCATION_FETCH_TIMEOUT) {
-          fusedLocationClient?.locationFlow(context)?.first()
-        }
+    try {
+      val currentLocation =
+          withTimeoutOrNull(LOCATION_FETCH_TIMEOUT) {
+            fusedLocationClient?.locationFlow(context)?.first()
+          }
 
-    if (currentLocation != null) {
-      return LatLng(currentLocation.latitude, currentLocation.longitude)
+      if (currentLocation != null) {
+        return LatLng(currentLocation.latitude, currentLocation.longitude)
+      }
+    } catch (e: Exception) {
+      // Permission denied or other error
+      // Ignore this to fall back to EPFL default
     }
 
     // Fallback to EPFL
