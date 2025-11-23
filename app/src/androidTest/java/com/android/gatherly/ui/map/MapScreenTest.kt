@@ -29,7 +29,6 @@ import com.android.gatherly.utils.AlertDialogTestTags
 import com.android.gatherly.utils.MockitoUtils
 import com.google.firebase.Timestamp
 import java.util.Date
-import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
@@ -77,6 +76,8 @@ class MapScreenTest {
           status = ToDoStatus.ONGOING,
           ownerId = "owner-1")
 
+  private val oneHourLater = Timestamp(Date(System.currentTimeMillis() + 3600_000))
+  private val twoHoursLater = Timestamp(Date(System.currentTimeMillis() + 7200_000))
   private val event =
       Event(
           id = eventId,
@@ -85,8 +86,8 @@ class MapScreenTest {
           creatorName = "CLIC",
           location = Location(46.5210, 6.5690, "EPFL BC"),
           date = Timestamp(Date()),
-          startTime = Timestamp(Date()),
-          endTime = Timestamp(Date(Date().time + TimeUnit.HOURS.toMillis(2))),
+          startTime = oneHourLater,
+          endTime = twoHoursLater,
           creatorId = "org-1",
           participants = listOf("u1", "u2", "org-1"),
           status = EventStatus.UPCOMING)
@@ -99,8 +100,8 @@ class MapScreenTest {
           creatorName = "CLIC",
           location = Location(46.5210, 6.5690, "EPFL BC"),
           date = Timestamp(Date()),
-          startTime = Timestamp(Date()),
-          endTime = Timestamp(Date(Date().time + TimeUnit.HOURS.toMillis(2))),
+          startTime = oneHourLater,
+          endTime = twoHoursLater,
           creatorId = "org-1",
           participants = listOf("u1", "u2", TEST_USER_ID),
           status = EventStatus.UPCOMING)
@@ -113,8 +114,8 @@ class MapScreenTest {
           creatorName = "Game*",
           location = Location(46.5210, 6.5690, "EPFL BC"),
           date = Timestamp(Date()),
-          startTime = Timestamp(Date()),
-          endTime = Timestamp(Date(Date().time + TimeUnit.HOURS.toMillis(1))),
+          startTime = oneHourLater,
+          endTime = twoHoursLater,
           creatorId = TEST_USER_ID,
           participants = listOf(TEST_USER_ID),
           status = EventStatus.UPCOMING)
