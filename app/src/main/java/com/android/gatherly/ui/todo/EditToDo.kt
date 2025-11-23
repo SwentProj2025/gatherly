@@ -120,6 +120,7 @@ fun EditToDoScreen(
       OutlinedTextFieldDefaults.colors(
           focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
           unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+          errorContainerColor = MaterialTheme.colorScheme.surfaceVariant,
           unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
           focusedTextColor = MaterialTheme.colorScheme.onBackground,
           errorTextColor = MaterialTheme.colorScheme.onBackground,
