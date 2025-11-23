@@ -59,7 +59,8 @@ data class SettingsUiState(
     val isLoadingProfile: Boolean = false,
     val saveSuccess: Boolean = false,
     val navigateToInit: Boolean = false,
-    val isAnon: Boolean = true
+    val isAnon: Boolean = true,
+    val isSaving: Boolean = false,
 ) {
   val isValid: Boolean
     get() =
@@ -152,9 +153,11 @@ class SettingsViewModel(
    * @param id The id of the Profile to be updated.
    */
   fun updateProfile(id: String = authProvider().currentUser?.uid!!, isFirstTime: Boolean) {
+    _uiState.value = _uiState.value.copy(isSaving = true)
     val state = _uiState.value
     if (!state.isValid) {
       setErrorMsg("At least one field is not valid.")
+      _uiState.value = _uiState.value.copy(isSaving = false)
       return
     }
 
@@ -163,6 +166,7 @@ class SettingsViewModel(
         originalProfile
             ?: run {
               setErrorMsg("Original profile not loaded.")
+              _uiState.value = _uiState.value.copy(isSaving = false)
               return
             }
 
@@ -170,6 +174,7 @@ class SettingsViewModel(
       try {
         if (!checkUsernameSuccess(state, id, isFirstTime)) {
           setErrorMsg("Username is invalid or already taken.")
+          _uiState.value = _uiState.value.copy(isSaving = false)
           return@launch
         }
 
@@ -193,10 +198,11 @@ class SettingsViewModel(
 
         repository.updateProfile(updatedProfile)
         clearErrorMsg()
-        _uiState.value = _uiState.value.copy(saveSuccess = true)
+        _uiState.value = _uiState.value.copy(saveSuccess = true, isSaving = false)
       } catch (e: Exception) {
         Log.e("SettingsViewModel", "Error saving profile", e)
         setErrorMsg("Failed to save profile: ${e.message}")
+        _uiState.value = _uiState.value.copy(isSaving = false)
       }
     }
   }

@@ -70,6 +70,7 @@ object EditEventsScreenTestTags {
   const val PROFILE_SUGGESTION_ITEM = "EVENT_PROFILE_SUGGESTION_ITEM"
   const val PROFILE_SUGGESTION_ADD = "EVENT_PROFILE_SUGGESTION_ADD"
   const val PROFILE_SUGGESTION_REMOVE = "EVENT_PROFILE_SUGGESTION_REMOVE"
+  const val LIST = "LIST"
 }
 
 /**
@@ -153,7 +154,11 @@ fun EditEventsScreen(
             goBack = goBack)
       }) { paddingVal ->
         LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(paddingVal).padding(screenPadding),
+            modifier =
+                Modifier.fillMaxSize()
+                    .padding(paddingVal)
+                    .padding(screenPadding)
+                    .testTag(EditEventsScreenTestTags.LIST),
             verticalArrangement = Arrangement.spacedBy(fieldSpacing)) {
               item {
                 // Name
@@ -417,8 +422,16 @@ fun EditEventsScreen(
                             !ui.creatorNameError &&
                             !ui.dateError &&
                             !ui.startTimeError &&
-                            !ui.endTimeError) {
-                      Text("Save", color = MaterialTheme.colorScheme.onSecondary)
+                            !ui.endTimeError &&
+                            !ui.isLoading) {
+                      Text(
+                          text =
+                              if (ui.isLoading) {
+                                stringResource(R.string.saving)
+                              } else {
+                                stringResource(R.string.settings_save)
+                              },
+                          color = MaterialTheme.colorScheme.onSecondary)
                     }
               }
 

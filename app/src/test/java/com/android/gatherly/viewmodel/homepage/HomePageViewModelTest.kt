@@ -16,6 +16,9 @@ import com.android.gatherly.ui.homePage.HomePageViewModel
 import com.android.gatherly.utilstest.MockitoUtils
 import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.temporal.ChronoUnit
+import java.util.Date
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -133,7 +136,8 @@ private var todo4: ToDo =
 
 /*----------------------------------------Events----------------------------------------------*/
 
-private val mexicoGP = Timestamp(SimpleDateFormat("dd/MM/yyyy").parse("26/10/2023")!!)
+private val tomorrowTimestamp = Timestamp(Date.from(Instant.now().plus(1, ChronoUnit.DAYS)))
+
 private val startTime = Timestamp(SimpleDateFormat("HH:mm").parse("10:00")!!)
 private val endTime = Timestamp(SimpleDateFormat("HH:mm").parse("23:00")!!)
 
@@ -144,7 +148,7 @@ private val event1 =
         description = "Come celebrate christmas with us in a few months :)",
         creatorName = "Gatherly team",
         location = Location(latitude = 46.5190, longitude = 6.5668, name = "BC Building"),
-        date = mexicoGP,
+        date = tomorrowTimestamp,
         startTime = startTime,
         endTime = endTime,
         creatorId = "gersende",
@@ -159,7 +163,7 @@ private val event2 =
         description = "Come celebrate christmas with us in a few months :)",
         creatorName = "Gatherly team",
         location = null,
-        date = mexicoGP,
+        date = tomorrowTimestamp,
         startTime = startTime,
         endTime = endTime,
         creatorId = "gersende",
@@ -216,6 +220,7 @@ class HomePageViewModelTest {
     advanceUntilIdle()
 
     mockitoUtils.chooseCurrentUser(currentProfile.uid)
+    advanceUntilIdle()
 
     homePageViewModel =
         HomePageViewModel(
@@ -241,6 +246,7 @@ class HomePageViewModelTest {
     advanceUntilIdle()
 
     mockitoUtils.chooseCurrentUser(currentProfile.uid)
+    advanceUntilIdle()
 
     homePageViewModel =
         HomePageViewModel(
@@ -265,6 +271,7 @@ class HomePageViewModelTest {
     advanceUntilIdle()
 
     mockitoUtils.chooseCurrentUser(currentProfile.uid)
+    advanceUntilIdle()
 
     homePageViewModel =
         HomePageViewModel(

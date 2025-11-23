@@ -1,5 +1,7 @@
 package com.android.gatherly.model.event
 
+import com.android.gatherly.utils.updateEventStatus
+
 /**
  * Local in-memory implementation of [EventsRepository].
  *
@@ -19,23 +21,27 @@ class EventsLocalRepository : EventsRepository {
   }
 
   override suspend fun getAllEvents(): List<Event> {
-    return events.toList()
+    val findEvents = events.toList()
+    return findEvents.map { updateEventStatus(it) }
   }
 
   override suspend fun getEvent(eventId: String): Event {
-    return events.find { it.id == eventId }!!
+    val findEvent = events.find { it.id == eventId }!!
+    return updateEventStatus(findEvent)
   }
 
   override suspend fun addEvent(event: Event) {
-    events += event
+    val updatedEvent = updateEventStatus(event)
+    events += updatedEvent
   }
 
   override suspend fun editEvent(eventId: String, newValue: Event) {
     val index = events.indexOf(getEvent(eventId))
+    val updatedEvent = updateEventStatus(newValue)
     if (index == -1) {
       throw IllegalArgumentException()
     } else {
-      events[index] = newValue
+      events[index] = updatedEvent
     }
   }
 

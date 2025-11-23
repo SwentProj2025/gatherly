@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -36,14 +37,13 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.sp
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
 import com.android.gatherly.model.event.Event
+import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.ui.navigation.BottomNavigationMenu
 import com.android.gatherly.ui.navigation.HandleSignedOutState
@@ -51,7 +51,7 @@ import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_HomePage
-import com.android.gatherly.ui.theme.GatherlyTheme
+import com.android.gatherly.utils.profilePicturePainter
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
@@ -75,6 +75,7 @@ object HomePageScreenTestTags {
   const val TASK_ITEM_PREFIX = "taskItem_"
   const val FRIENDS_SECTION = "friendsSection"
   const val MINI_MAP_CARD = "miniMapCard"
+  const val FRIEND_AVATAR_PREFIX = "friendAvatar_"
 }
 
 /**
@@ -135,7 +136,8 @@ fun HomePageScreen(
               todos = uiState.displayableTodos,
               events = uiState.displayableEvents,
               onClickFriendsSection = onClickFriendsSection,
-              isAnon = uiState.isAnon)
+              isAnon = uiState.isAnon,
+              friends = uiState.friends)
 
           Spacer(modifier = Modifier.height(verticalSpacing))
 
@@ -185,7 +187,8 @@ fun EventsAndFriendsSection(
     todos: List<ToDo>,
     events: List<Event>,
     onClickFriendsSection: () -> Unit,
-    isAnon: Boolean
+    isAnon: Boolean,
+    friends: List<Profile>
 ) {
 
   val spacingRegular = dimensionResource(id = R.dimen.spacing_between_fields_regular)
@@ -200,8 +203,7 @@ fun EventsAndFriendsSection(
         Spacer(modifier = Modifier.width(spacingRegular))
 
         if (!isAnon) {
-          FriendsSection(onClickFriendsSection = onClickFriendsSection)
-
+          FriendsSection(onClickFriendsSection = onClickFriendsSection, friends = friends)
           Spacer(modifier = Modifier.width(spacingRegular))
         }
       }
@@ -255,18 +257,19 @@ fun MiniMap(todos: List<ToDo>, events: List<Event>, modifier: Modifier) {
 }
 
 /**
- * Circular avatar for a friend profile. Currently uses a default drawable until profile pictures
- * are supported.
+ * Circular avatar for a friend profile.
+ *
+ * @param profilePicUrl url to the picture data
  */
 @Composable
 fun FriendAvatar(
     modifier: Modifier = Modifier,
+    profilePicUrl: String? = null,
 ) {
   val size = dimensionResource(id = R.dimen.homepage_friend_profile_pic_size)
   Box(modifier = modifier.size(size)) {
-    Image( // Currently a placeholder image, will be implemented when profile picture storage is
-        // merged to main
-        painter = painterResource(id = R.drawable.default_profile_picture),
+    Image(
+        painter = profilePicturePainter(profilePicUrl),
         contentDescription = stringResource(id = R.string.homepage_profile_image_description),
         modifier = Modifier.fillMaxSize().clip(CircleShape),
         contentScale = ContentScale.Crop)
@@ -275,12 +278,12 @@ fun FriendAvatar(
 
 /** Displays a bordered section with friend avatars and a label. The entire section is clickable. */
 @Composable
-fun FriendsSection(onClickFriendsSection: () -> Unit) {
+fun FriendsSection(onClickFriendsSection: () -> Unit, friends: List<Profile>) {
 
-  val friendCount = 3
   val roundedCornerPercentage = 50
   Column(
       horizontalAlignment = Alignment.CenterHorizontally,
+      verticalArrangement = Arrangement.SpaceBetween,
       modifier =
           Modifier.testTag(HomePageScreenTestTags.FRIENDS_SECTION)
               .border(
@@ -296,11 +299,16 @@ fun FriendsSection(onClickFriendsSection: () -> Unit) {
                   vertical =
                       dimensionResource(
                           id = R.dimen.homepage_friends_section_vertical_border_padding),
-                  horizontal = dimensionResource(id = R.dimen.padding_small))) {
+                  horizontal = dimensionResource(id = R.dimen.padding_small))
+              .fillMaxHeight()) {
         Column(
             verticalArrangement =
                 Arrangement.spacedBy(dimensionResource(id = R.dimen.spacing_between_fields))) {
-              repeat(friendCount) { FriendAvatar() }
+              friends.forEach { friend ->
+                FriendAvatar(
+                    profilePicUrl = friend.profilePicture,
+                    modifier = Modifier.testTag(getFriendAvatarTestTag(friend.uid)))
+              }
             }
 
         Text(
@@ -381,8 +389,11 @@ fun FocusSection(modifier: Modifier = Modifier, timerString: String = "", onClic
       }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun HomePageScreenPreview() {
-  GatherlyTheme(darkTheme = true) { HomePageScreen() }
-}
+/**
+ * Generates a unique test tag for a friend's avatar.
+ *
+ * @param friendUid The unique identifier of the friend.
+ * @return The generated test tag for the friend's avatar.
+ */
+fun getFriendAvatarTestTag(friendUid: String) =
+    "${HomePageScreenTestTags.FRIEND_AVATAR_PREFIX}$friendUid"

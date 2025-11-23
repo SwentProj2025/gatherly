@@ -58,6 +58,8 @@ sealed class Screen(
   object SettingsScreen : Screen(route = "settings_screen", name = "Settings")
 
   object InitProfileScreen : Screen(route = "init_profile_screen", name = "Complete your profile")
+
+  object AddGroupScreen : Screen(route = "add_group_screen", name = "Add a New Group")
 }
 
 open class NavigationActions(
