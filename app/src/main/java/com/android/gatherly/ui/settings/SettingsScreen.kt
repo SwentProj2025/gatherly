@@ -81,6 +81,7 @@ fun SettingsScreen(
 
   val uiState by settingsViewModel.uiState.collectAsState()
   val context = LocalContext.current
+  val shouldShowLogOutWarning = remember { mutableStateOf(false) }
 
   var showPhotoPickerDialog by remember { mutableStateOf(false) }
 
@@ -137,7 +138,13 @@ fun SettingsScreen(
             selectedTab = Tab.Settings,
             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
             modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
-            onSignedOut = { settingsViewModel.signOut(credentialManager) })
+            onSignedOut = {
+              if (uiState.isAnon) {
+                shouldShowLogOutWarning.value = true
+              } else {
+                settingsViewModel.signOut(credentialManager)
+              }
+            })
       },
       containerColor = MaterialTheme.colorScheme.background,
       content = { paddingValues ->
@@ -315,6 +322,20 @@ fun SettingsScreen(
                           fontWeight = FontWeight.Medium)
                     }
               }
+        }
+
+        if (shouldShowLogOutWarning.value) {
+          GatherlyAlertDialog(
+              titleText = stringResource(R.string.anon_log_out),
+              bodyText = stringResource(R.string.anon_log_out_text),
+              dismissText = stringResource(R.string.cancel),
+              confirmText = stringResource(R.string.log_out),
+              onDismiss = { shouldShowLogOutWarning.value = false },
+              onConfirm = {
+                settingsViewModel.signOut(credentialManager)
+                shouldShowLogOutWarning.value = false
+              },
+              isImportantWarning = true)
         }
       })
 }

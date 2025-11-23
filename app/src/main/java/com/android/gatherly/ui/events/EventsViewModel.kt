@@ -1,8 +1,6 @@
 package com.android.gatherly.ui.events
 
 import androidx.compose.runtime.MutableState
-import androidx.credentials.ClearCredentialStateRequest
-import androidx.credentials.CredentialManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -157,19 +155,6 @@ class EventsViewModel(
       refreshEvents(currentUserId)
     }
     _editEventRequest.value = null
-  }
-
-  /**
-   * Handles user sign-out by clearing credentials and updating the UI state.
-   *
-   * @param credentialManager the CredentialManager to clear credentials
-   */
-  fun signOut(credentialManager: CredentialManager): Unit {
-    viewModelScope.launch {
-      _uiState.value = _uiState.value.copy(signedOut = true)
-      Firebase.auth.signOut()
-      credentialManager.clearCredentialState(ClearCredentialStateRequest())
-    }
   }
 
   /**

@@ -1,7 +1,5 @@
 package com.android.gatherly.ui.todo
 
-import androidx.credentials.ClearCredentialStateRequest
-import androidx.credentials.CredentialManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.profile.ProfileRepository
@@ -11,8 +9,6 @@ import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.model.todo.ToDosRepositoryProvider
 import com.android.gatherly.utils.editTodo_updateBadges
-import com.google.firebase.Firebase
-import com.google.firebase.auth.auth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -142,15 +138,6 @@ class OverviewViewModel(
       TodoSortOrder.ALPHABETICAL -> list.sortedBy { it.name.lowercase() }
       TodoSortOrder.DATE_ASC -> list.sortedBy { it.dueDate.toDate() }
       TodoSortOrder.DATE_DESC -> list.sortedByDescending { it.dueDate.toDate() }
-    }
-  }
-
-  /** Initiates sign-out */
-  fun onSignedOut(credentialManager: CredentialManager): Unit {
-    viewModelScope.launch {
-      _uiState.value = _uiState.value.copy(signedOut = true)
-      Firebase.auth.signOut()
-      credentialManager.clearCredentialState(ClearCredentialStateRequest())
     }
   }
 }

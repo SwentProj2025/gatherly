@@ -42,14 +42,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusManager
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.integerResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
 import com.android.gatherly.model.todo.ToDo
@@ -118,8 +116,7 @@ fun OverviewScreen(
     onSelectTodo: (ToDo) -> Unit = {},
     goHomePage: () -> Unit = {},
     onSignedOut: () -> Unit = {},
-    navigationActions: NavigationActions? = null,
-    credentialManager: CredentialManager = CredentialManager.create(LocalContext.current)
+    navigationActions: NavigationActions? = null
 ) {
 
   val uiState by overviewViewModel.uiState.collectAsState()
@@ -139,8 +136,7 @@ fun OverviewScreen(
         TopNavigationMenu(
             selectedTab = Tab.Overview,
             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
-            modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
-            onSignedOut = { overviewViewModel.onSignedOut(credentialManager) })
+            modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU))
       },
       bottomBar = {
         BottomNavigationMenu(

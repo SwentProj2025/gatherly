@@ -4,8 +4,6 @@ package com.android.gatherly.ui.map
 
 import android.content.Context
 import android.location.Location as AndroidLocation
-import androidx.credentials.ClearCredentialStateRequest
-import androidx.credentials.CredentialManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -24,7 +22,6 @@ import com.android.gatherly.utils.locationFlow
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.Firebase
-import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -262,18 +259,6 @@ class MapViewModel(
     return EPFL_LATLNG
   }
 
-  /**
-   * Signs out the current user and clears credential state.
-   *
-   * @param credentialManager The credential manager to clear stored credentials.
-   */
-  fun signOut(credentialManager: CredentialManager) {
-    viewModelScope.launch {
-      _uiState.value = _uiState.value.copy(onSignedOut = true)
-      Firebase.auth.signOut()
-      credentialManager.clearCredentialState(ClearCredentialStateRequest())
-    }
-  }
   /** Factory method to provide a MapViewModel with default dependencies. */
   companion object {
     fun provideFactory(

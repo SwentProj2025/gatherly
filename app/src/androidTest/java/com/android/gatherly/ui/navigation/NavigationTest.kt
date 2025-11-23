@@ -175,18 +175,6 @@ class NavigationTest : FirestoreGatherlyTest() {
   // LOGOUT PART :
 
   /**
-   * Test: Verifies that the user can sign out from the home page screen using the logout button in
-   * the drop-down menu of the top app bar.
-   */
-  @Test
-  fun canLogOutFromHomePage() {
-    setUpWithGoogle()
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
-    composeTestRule.onNodeWithTag(NavigationTestTags.LOGOUT_TAB).performClick()
-    composeTestRule.checkSignInScreenIsDisplayed()
-  }
-
-  /**
    * Test: Verifies that the user can sign out from the profile screen using the logout button in
    * the drop-down menu of the top app bar.
    */
@@ -196,58 +184,6 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
     composeTestRule.checkProfileScreenIsDisplayed()
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
-    composeTestRule.onNodeWithTag(NavigationTestTags.LOGOUT_TAB).performClick()
-    composeTestRule.checkSignInScreenIsDisplayed()
-  }
-
-  /**
-   * Test: Verifies that the user can sign out from the focus timer screen using the logout button
-   * in the drop-down menu of the top app bar.
-   */
-  @Test
-  fun canLogOutFromTimer() {
-    setUpWithGoogle()
-    composeTestRule.navigateFromHomeToTimer()
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
-    composeTestRule.onNodeWithTag(NavigationTestTags.LOGOUT_TAB).performClick()
-    composeTestRule.checkSignInScreenIsDisplayed()
-  }
-
-  /**
-   * Test: Verifies that the user can sign out from the events overview screen using the logout
-   * button in the drop-down menu of the top app bar.
-   */
-  @Test
-  fun canLogOutFromEvents() {
-    setUpWithGoogle()
-    composeTestRule.navigateFromHomeToEvents()
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
-    composeTestRule.onNodeWithTag(NavigationTestTags.LOGOUT_TAB).performClick()
-    composeTestRule.checkSignInScreenIsDisplayed()
-  }
-
-  /**
-   * Test: Verifies that the user can sign out from the map screen using the logout button in the
-   * drop-down menu of the top app bar.
-   */
-  @Test
-  fun canLogOutFromMap() {
-    setUpWithGoogle()
-    composeTestRule.navigateFromHomeToMap()
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
-    composeTestRule.onNodeWithTag(NavigationTestTags.LOGOUT_TAB).performClick()
-    composeTestRule.checkSignInScreenIsDisplayed()
-  }
-
-  /**
-   * Test: Verifies that the user can sign out from the Todo overview screen using the logout button
-   * in the drop-down menu of the top app bar.
-   */
-  @Test
-  fun canLogOutFromOverview() {
-    setUpWithGoogle()
-    composeTestRule.navigateFromHomeToOverview()
     composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.LOGOUT_TAB).performClick()
     composeTestRule.checkSignInScreenIsDisplayed()
@@ -263,7 +199,6 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).assertIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.SETTINGS_TAB).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(NavigationTestTags.LOGOUT_TAB).assertIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).assertIsDisplayed()
   }
 
@@ -461,7 +396,6 @@ class NavigationTest : FirestoreGatherlyTest() {
 
     composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.SETTINGS_TAB).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(NavigationTestTags.LOGOUT_TAB).assertIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).assertIsDisplayed()
   }
 
@@ -573,7 +507,6 @@ class NavigationTest : FirestoreGatherlyTest() {
 
     composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.SETTINGS_TAB).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(NavigationTestTags.LOGOUT_TAB).assertIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).assertIsDisplayed()
   }
 
@@ -685,7 +618,6 @@ class NavigationTest : FirestoreGatherlyTest() {
 
     composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.SETTINGS_TAB).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(NavigationTestTags.LOGOUT_TAB).assertIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).assertIsDisplayed()
   }
 
@@ -797,7 +729,6 @@ class NavigationTest : FirestoreGatherlyTest() {
 
     composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.SETTINGS_TAB).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(NavigationTestTags.LOGOUT_TAB).assertIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).assertIsDisplayed()
   }
 
