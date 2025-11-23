@@ -2,6 +2,7 @@ package com.android.gatherly.ui.map
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -61,6 +62,7 @@ import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
 import java.text.SimpleDateFormat
 import java.util.Locale
+import kotlinx.coroutines.flow.first
 
 // Portions of the code in this file are copy-pasted from the Bootcamp solution provided by the
 // SwEnt staff.
@@ -133,7 +135,8 @@ fun MapScreen(
     navigationActions: NavigationActions? = null,
     goToEvent: (String) -> Unit = {},
     goToToDo: () -> Unit = {},
-    runInitialisation: Boolean = true
+    runInitialisation: Boolean = true,
+    eventId: String? = null
 ) {
   /** Location services setup * */
   val context = LocalContext.current
@@ -143,15 +146,33 @@ fun MapScreen(
   val vm: MapViewModel =
       viewModel
           ?: viewModel(
-              factory = MapViewModel.provideFactory(fusedLocationClient = fusedLocationClient))
+              factory =
+                  MapViewModel.provideFactory(
+                      fusedLocationClient = fusedLocationClient, eventId = eventId))
 
   val uiState by vm.uiState.collectAsState()
+
+  Log.d(
+      "MapScreen",
+      "MapScreen composing, runInitialisation=$runInitialisation, cameraPos=${vm.uiState.value.cameraPos}, itemsList.size=${uiState.itemsList.size}")
 
   HandleSignedOutState(uiState.onSignedOut, onSignedOut)
 
   // Initialize camera position on first composition if runInitialisation is true
   if (runInitialisation) {
-    LaunchedEffect(Unit) { vm.initialiseCameraPosition(context) }
+    LaunchedEffect(uiState.cameraPos == null) {
+      Log.d("MapScreen", "LaunchedEffect started, eventId=$eventId, cameraPos=${uiState.cameraPos}")
+      snapshotFlow { uiState.itemsList.isNotEmpty() }.first { it } // Wait until items are loaded
+      Log.d(
+          "MapScreen",
+          "After data wait: itemsList.size=${uiState.itemsList.size}, cameraPos=${uiState.cameraPos}")
+      if (uiState.cameraPos == null) {
+        Log.d("MapScreen", "Calling initialiseCameraPosition")
+        vm.initialiseCameraPosition(context)
+      } else {
+        Log.d("MapScreen", "Skipping initialiseCameraPosition")
+      }
+    }
   }
 
   /** Handle permission request for location access * */

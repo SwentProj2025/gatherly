@@ -13,10 +13,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.lifecycleScope
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.android.gatherly.model.profile.ProfileStatus
 import com.android.gatherly.model.profile.UserStatusManager
 import com.android.gatherly.ui.authentication.InitProfileScreen
@@ -150,16 +152,26 @@ fun GatherlyApp(
         startDestination = Screen.Map.route,
         route = Screen.Map.name,
     ) {
-      composable(Screen.Map.route) {
-        MapScreen(
-            navigationActions = navigationActions,
-            credentialManager = credentialManager,
-            onSignedOut = { navigationActions.navigateTo(Screen.SignIn) },
-            goToEvent = { event ->
-              navigationActions.navigateTo(Screen.EventsDetailsScreen(event))
-            },
-            goToToDo = { navigationActions.navigateTo(Screen.OverviewToDo) })
-      }
+      composable(
+          route = "map?eventId={eventId}",
+          arguments =
+              listOf(
+                  navArgument("eventId") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                  })) { backStackEntry ->
+            val eventId = backStackEntry.arguments?.getString("eventId")
+            MapScreen(
+                navigationActions = navigationActions,
+                credentialManager = credentialManager,
+                onSignedOut = { navigationActions.navigateTo(Screen.SignIn) },
+                goToEvent = { event ->
+                  navigationActions.navigateTo(Screen.EventsDetailsScreen(event))
+                },
+                goToToDo = { navigationActions.navigateTo(Screen.OverviewToDo) },
+                eventId = eventId)
+          }
     }
 
     // TIMER COMPOSABLE  ------------------------------

@@ -4,6 +4,7 @@ package com.android.gatherly.ui.map
 
 import android.content.Context
 import android.location.Location as AndroidLocation
+import android.util.Log
 import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.ViewModel
@@ -105,15 +106,21 @@ private fun getDrawableEvents(events: List<Event>): List<Event> {
 class MapViewModel(
     private val todosRepository: ToDosRepository = ToDosRepositoryFirestore(Firebase.firestore),
     private val eventsRepository: EventsRepository = EventsRepositoryFirestore(Firebase.firestore),
-    private val fusedLocationClient: FusedLocationProviderClient? = null
+    private val fusedLocationClient: FusedLocationProviderClient? = null,
+    val eventId: String? = null
 ) : ViewModel() {
+
+  /** * Flag to ensure eventId is "consulted" only once. */
+  private var eventIdConsumed = false
 
   /** StateFlow that emits the current UI state for the Map screen. */
   private val _uiState: MutableStateFlow<UIState> = MutableStateFlow(UIState())
   val uiState: StateFlow<UIState> = _uiState.asStateFlow()
 
-  private lateinit var todoList: List<ToDo>
-  private lateinit var eventsList: List<Event>
+  // private lateinit var todoList: List<ToDo>
+  private var todoList: List<ToDo> = emptyList()
+  // private lateinit var eventsList: List<Event>
+  private var eventsList: List<Event> = emptyList()
 
   /** Job for tracking user location updates. */
   private var locationJob: Job? = null
@@ -154,8 +161,11 @@ class MapViewModel(
    */
   @Suppress("SuspendFunctionOnCoroutineScope")
   suspend fun initialiseCameraPosition(context: Context) {
+    Log.d("MapViewModel", "initialiseCameraPosition started")
     val pos = fetchLocationToCenterOn(context)
+    Log.d("MapViewModel", "Got position: $pos")
     _uiState.update { it.copy(cameraPos = pos) }
+    Log.d("MapViewModel", "Updated cameraPos in state")
   }
 
   /**
@@ -163,14 +173,25 @@ class MapViewModel(
    * them to display only drawable items.
    */
   init {
+    Log.d("MapViewModel", "ViewModel instance=${System.identityHashCode(this)}")
+    Log.d("MapViewModel", "Init started, eventId=$eventId, eventIdConsumed=$eventIdConsumed")
+
     viewModelScope.launch {
-      val todos = todosRepository.getAllTodos()
-      todoList = getDrawableTodos(todos)
+      try {
+        Log.d("MapViewModel", "Loading data...")
+        val todos = todosRepository.getAllTodos()
+        todoList = getDrawableTodos(todos)
 
-      val events = eventsRepository.getAllEvents()
-      eventsList = getDrawableEvents(events)
+        val events = eventsRepository.getAllEvents()
+        eventsList = getDrawableEvents(events)
+        Log.d("MapViewModel", "Data loaded: ${todos.size} todos, ${events.size} events")
 
-      _uiState.update { it.copy(itemsList = todoList, displayEventsPage = false) }
+        _uiState.update { it.copy(itemsList = todoList, displayEventsPage = false) }
+
+        // Handle eventId after data is loaded
+      } catch (e: Exception) {
+        Log.e("MapViewModel", "Error loading map data (init)", e)
+      }
     }
   }
 
@@ -195,14 +216,16 @@ class MapViewModel(
    * @param itemId The ID of the item being consulted.
    */
   fun onItemConsulted(itemId: String) {
+    Log.d("MapViewModel", "Item consulted: $itemId")
+    Log.d("MapViewModel", "Item type: ${if (_uiState.value.displayEventsPage) "Event" else "ToDo"}")
     if (_uiState.value.displayEventsPage) {
       _uiState.value =
-          _uiState.value.copy(
-              lastConsultedEventId = itemId, lastConsultedTodoId = null, cameraPos = null)
+          _uiState.value.copy(lastConsultedEventId = itemId, lastConsultedTodoId = null)
+      Log.d("MapViewModel", "Updated lastConsultedEventId to $itemId")
     } else {
       _uiState.value =
-          _uiState.value.copy(
-              lastConsultedTodoId = itemId, lastConsultedEventId = null, cameraPos = null)
+          _uiState.value.copy(lastConsultedTodoId = itemId, lastConsultedEventId = null)
+      Log.d("MapViewModel", "Updated lastConsultedTodoId to $itemId")
     }
   }
 
@@ -232,18 +255,37 @@ class MapViewModel(
    */
   @Suppress("SuspendFunctionOnCoroutineScope")
   suspend fun fetchLocationToCenterOn(context: Context): LatLng {
+    Log.d("MapViewModel", "fetchLocationToCenterOn started")
     // Check for last consulted `ToDo`
+
     if (_uiState.value.lastConsultedTodoId != null) {
+      Log.d("MapViewModel", "Entering lastConsultedTodoId check")
       val todo = todoList.find { it.uid == _uiState.value.lastConsultedTodoId }
       if (todo?.location != null) {
+        Log.d("MapViewModel", "Found last consulted ToDo with location")
         return toLatLng(todo.location)
       }
     }
 
     // Check for last consulted event
     if (_uiState.value.lastConsultedEventId != null) {
+      Log.d("MapViewModel", "Entering lastConsultedEventId check")
       val event = eventsList.find { it.id == _uiState.value.lastConsultedEventId }
       if (event?.location != null) {
+        Log.d("MapViewModel", "Found last consulted Event with location")
+        return toLatLng(event.location)
+      }
+    }
+
+    // Check for eventId
+    if (eventId != null && !eventIdConsumed) {
+      Log.d("MapViewModel", "Entering eventId check")
+      val event = eventsList.find { it.id == eventId }
+      if (event?.location != null) {
+        Log.d("MapViewModel", "Found Event by eventId with location")
+        eventIdConsumed = true
+        _uiState.update { it.copy(displayEventsPage = true, itemsList = eventsList) }
+        Log.d("MapViewModel", "About to return location for eventId")
         return toLatLng(event.location)
       }
     }
@@ -279,10 +321,11 @@ class MapViewModel(
     fun provideFactory(
         todosRepository: ToDosRepository = ToDosRepositoryFirestore(Firebase.firestore),
         eventsRepository: EventsRepository = EventsRepositoryFirestore(Firebase.firestore),
-        fusedLocationClient: FusedLocationProviderClient? = null
+        fusedLocationClient: FusedLocationProviderClient? = null,
+        eventId: String? = null
     ): ViewModelProvider.Factory {
       return GenericViewModelFactory {
-        MapViewModel(todosRepository, eventsRepository, fusedLocationClient)
+        MapViewModel(todosRepository, eventsRepository, fusedLocationClient, eventId)
       }
     }
   }

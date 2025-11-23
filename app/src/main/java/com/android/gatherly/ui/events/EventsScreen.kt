@@ -404,6 +404,7 @@ fun EventsScreen(
                     eventId = event.id, currentUserId = currentUserIdFromVM)
                 coroutineScope.launch { eventsViewModel.refreshEvents(currentUserIdFromVM) }
               },
+              navigationActions = navigationActions,
               isAnon = uiState.isAnon)
           selectedBrowserEvent.value = if (isPopupOnBrowser.value) event else null
         }
@@ -412,6 +413,7 @@ fun EventsScreen(
           UpComingEventsPopUp(
               event = event,
               shouldShowDialog = isPopupOnUpcoming,
+              navigationActions = navigationActions,
               unparticipate = {
                 eventsViewModel.onUnregister(
                     eventId = event.id, currentUserId = currentUserIdFromVM)
@@ -425,6 +427,7 @@ fun EventsScreen(
           MyOwnEventsPopUp(
               event = event,
               shouldShowDialog = isPopupOnYourE,
+              navigationActions = navigationActions,
               cancelYourEvent = {
                 navigateToEditEvent(event)
                 coroutineScope.launch { eventsViewModel.refreshEvents(currentUserIdFromVM) }
@@ -595,7 +598,8 @@ fun MyOwnEventsItem(event: Event, onClick: () -> Unit) {
 fun UpComingEventsPopUp(
     event: Event,
     shouldShowDialog: MutableState<Boolean>,
-    unparticipate: () -> Unit
+    unparticipate: () -> Unit,
+    navigationActions: NavigationActions?
 ) {
   AlertDialog(
       containerColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -608,9 +612,7 @@ fun UpComingEventsPopUp(
                 Arrangement.spacedBy(
                     dimensionResource(R.dimen.events_popup_horizontalArrangement_size)),
             modifier = Modifier.fillMaxWidth()) {
-              // Status indicator circle
               BoxStatusColor(event.status)
-              // Event tilte
               Text(
                   text = event.title,
                   modifier = Modifier.testTag(EventsScreenTestTags.POPUP_TITLE),
@@ -620,45 +622,76 @@ fun UpComingEventsPopUp(
             }
       },
       text = {
-        Text(
-            text = event.description,
-            modifier = Modifier.testTag(EventsScreenTestTags.POPUP_DESCRIPTION),
-            textAlign = TextAlign.Center,
-        )
+        Column {
+          Text(
+              text = event.description,
+              modifier = Modifier.testTag(EventsScreenTestTags.POPUP_DESCRIPTION),
+              textAlign = TextAlign.Center,
+          )
+
+          Spacer(modifier = Modifier.height(16.dp))
+
+          // Buttons in improved layout
+          Column(
+              modifier = Modifier.fillMaxWidth(),
+              verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(
+                    colors =
+                        buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
+                    onClick = {
+                      navigationActions?.navigateToMapWithEvent(event.id)
+                      shouldShowDialog.value = false
+                    },
+                    enabled = event.location != null,
+                    modifier = Modifier.fillMaxWidth()) {
+                      Text(
+                          text = stringResource(R.string.see_on_map_button_title),
+                          color = MaterialTheme.colorScheme.onPrimaryContainer)
+                    }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                      Button(
+                          colors =
+                              buttonColors(
+                                  containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                  contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
+                          onClick = { shouldShowDialog.value = false },
+                          modifier =
+                              Modifier.weight(1f)
+                                  .testTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON)) {
+                            Text(
+                                text = stringResource(R.string.goback_button_title),
+                                color = MaterialTheme.colorScheme.onPrimaryContainer)
+                          }
+
+                      Button(
+                          colors =
+                              buttonColors(
+                                  containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                  contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
+                          onClick = {
+                            unparticipate()
+                            shouldShowDialog.value = false
+                          },
+                          modifier =
+                              Modifier.weight(1f).testTag(EventsScreenTestTags.UNREGISTER_BUTTON)) {
+                            Text(
+                                text = stringResource(R.string.unregister_button_title),
+                                color = MaterialTheme.colorScheme.onPrimaryContainer)
+                          }
+                    }
+              }
+        }
       },
       icon = { Icons.Outlined.Celebration },
       modifier = Modifier.testTag(EventsScreenTestTags.EVENT_POPUP),
-      dismissButton = {
-        Button(
-            colors =
-                buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
-            onClick = { shouldShowDialog.value = false },
-            modifier = Modifier.testTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON)) {
-              Text(
-                  text = stringResource(R.string.goback_button_title),
-                  color = MaterialTheme.colorScheme.onPrimaryContainer)
-            }
-      },
       onDismissRequest = { shouldShowDialog.value = false },
-      confirmButton = {
-        Button(
-            colors =
-                buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
-            onClick = {
-              unparticipate()
-              shouldShowDialog.value = false
-            },
-            modifier = Modifier.testTag(EventsScreenTestTags.UNREGISTER_BUTTON)) {
-              Text(
-                  text = stringResource(R.string.unregister_button_title),
-                  color = MaterialTheme.colorScheme.onPrimaryContainer)
-            }
-      },
-  )
+      confirmButton = {},
+      dismissButton = {})
 }
 
 /**
@@ -671,7 +704,8 @@ fun BrowserEventsPopUp(
     event: Event,
     shouldShowDialog: MutableState<Boolean>,
     participate: () -> Unit,
-    isAnon: Boolean
+    isAnon: Boolean,
+    navigationActions: NavigationActions?
 ) {
   AlertDialog(
       containerColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -684,9 +718,7 @@ fun BrowserEventsPopUp(
                 Arrangement.spacedBy(
                     dimensionResource(R.dimen.events_popup_horizontalArrangement_size)),
             modifier = Modifier.fillMaxWidth()) {
-              // Status indicator circle
               BoxStatusColor(event.status)
-              // Event title
               Text(
                   text = event.title,
                   modifier = Modifier.testTag(EventsScreenTestTags.POPUP_TITLE),
@@ -696,48 +728,80 @@ fun BrowserEventsPopUp(
             }
       },
       text = {
-        Text(
-            text = event.description,
-            modifier = Modifier.testTag(EventsScreenTestTags.POPUP_DESCRIPTION),
-            textAlign = TextAlign.Center,
-        )
+        Column {
+          Text(
+              text = event.description,
+              modifier = Modifier.testTag(EventsScreenTestTags.POPUP_DESCRIPTION),
+              textAlign = TextAlign.Center,
+          )
+
+          Spacer(modifier = Modifier.height(16.dp))
+
+          // Buttons in improved layout
+          Column(
+              modifier = Modifier.fillMaxWidth(),
+              verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(
+                    colors =
+                        buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
+                    onClick = {
+                      navigationActions?.navigateToMapWithEvent(event.id)
+                      shouldShowDialog.value = false
+                    },
+                    enabled = event.location != null,
+                    modifier = Modifier.fillMaxWidth()) {
+                      Text(
+                          text = stringResource(R.string.see_on_map_button_title),
+                          color = MaterialTheme.colorScheme.onPrimaryContainer)
+                    }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                      Button(
+                          colors =
+                              buttonColors(
+                                  containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                  contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
+                          onClick = { shouldShowDialog.value = false },
+                          modifier =
+                              Modifier.weight(1f)
+                                  .testTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON)) {
+                            Text(
+                                text = stringResource(R.string.goback_button_title),
+                                color = MaterialTheme.colorScheme.onPrimaryContainer)
+                          }
+
+                      Button(
+                          colors =
+                              buttonColors(
+                                  containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                  contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
+                          onClick = {
+                            if (!isAnon) {
+                              participate()
+                              shouldShowDialog.value = false
+                            }
+                          },
+                          enabled = !isAnon,
+                          modifier =
+                              Modifier.weight(1f)
+                                  .testTag(EventsScreenTestTags.PARTICIPATE_BUTTON)) {
+                            Text(
+                                text = stringResource(R.string.participate_button_title),
+                                color = MaterialTheme.colorScheme.onPrimaryContainer)
+                          }
+                    }
+              }
+        }
       },
       icon = { Icons.Outlined.Celebration },
       modifier = Modifier.testTag(EventsScreenTestTags.EVENT_POPUP),
-      dismissButton = {
-        Button(
-            colors =
-                buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
-            onClick = { shouldShowDialog.value = false },
-            modifier = Modifier.testTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON)) {
-              Text(
-                  text = stringResource(R.string.goback_button_title),
-                  color = MaterialTheme.colorScheme.onPrimaryContainer)
-            }
-      },
       onDismissRequest = { shouldShowDialog.value = false },
-      confirmButton = {
-        Button(
-            colors =
-                buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
-            onClick = {
-              if (!isAnon) {
-                participate()
-                shouldShowDialog.value = false
-              }
-            },
-            enabled = !isAnon,
-            modifier = Modifier.testTag(EventsScreenTestTags.PARTICIPATE_BUTTON)) {
-              Text(
-                  text = stringResource(R.string.participate_button_title),
-                  color = MaterialTheme.colorScheme.onPrimaryContainer)
-            }
-      },
-  )
+      confirmButton = {},
+      dismissButton = {})
 }
 
 /**
@@ -749,7 +813,8 @@ fun BrowserEventsPopUp(
 fun MyOwnEventsPopUp(
     event: Event,
     shouldShowDialog: MutableState<Boolean>,
-    cancelYourEvent: () -> Unit
+    cancelYourEvent: () -> Unit,
+    navigationActions: NavigationActions?
 ) {
   AlertDialog(
       containerColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -762,10 +827,7 @@ fun MyOwnEventsPopUp(
                 Arrangement.spacedBy(
                     dimensionResource(R.dimen.events_popup_horizontalArrangement_size)),
             modifier = Modifier.fillMaxWidth()) {
-              // Status indicator circle
               BoxStatusColor(event.status)
-
-              // Event title
               Text(
                   text = event.title,
                   modifier = Modifier.testTag(EventsScreenTestTags.POPUP_TITLE),
@@ -775,45 +837,76 @@ fun MyOwnEventsPopUp(
             }
       },
       text = {
-        Text(
-            text = event.description,
-            modifier = Modifier.testTag(EventsScreenTestTags.POPUP_DESCRIPTION),
-            textAlign = TextAlign.Center,
-        )
+        Column {
+          Text(
+              text = event.description,
+              modifier = Modifier.testTag(EventsScreenTestTags.POPUP_DESCRIPTION),
+              textAlign = TextAlign.Center,
+          )
+
+          Spacer(modifier = Modifier.height(16.dp))
+
+          // Buttons in improved layout
+          Column(
+              modifier = Modifier.fillMaxWidth(),
+              verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(
+                    colors =
+                        buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
+                    onClick = {
+                      navigationActions?.navigateToMapWithEvent(event.id)
+                      shouldShowDialog.value = false
+                    },
+                    enabled = event.location != null,
+                    modifier = Modifier.fillMaxWidth()) {
+                      Text(
+                          text = stringResource(R.string.see_on_map_button_title),
+                          color = MaterialTheme.colorScheme.onPrimaryContainer)
+                    }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                      Button(
+                          colors =
+                              buttonColors(
+                                  containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                  contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
+                          onClick = { shouldShowDialog.value = false },
+                          modifier =
+                              Modifier.weight(1f)
+                                  .testTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON)) {
+                            Text(
+                                text = stringResource(R.string.goback_button_title),
+                                color = MaterialTheme.colorScheme.onPrimaryContainer)
+                          }
+
+                      Button(
+                          colors =
+                              buttonColors(
+                                  containerColor = MaterialTheme.colorScheme.primaryContainer,
+                                  contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
+                          onClick = {
+                            cancelYourEvent()
+                            shouldShowDialog.value = false
+                          },
+                          modifier =
+                              Modifier.weight(1f).testTag(EventsScreenTestTags.EDIT_EVENT_BUTTON)) {
+                            Text(
+                                text = stringResource(R.string.edit_button_title),
+                                color = MaterialTheme.colorScheme.onPrimaryContainer)
+                          }
+                    }
+              }
+        }
       },
       icon = { Icons.Outlined.Celebration },
       modifier = Modifier.testTag(EventsScreenTestTags.EVENT_POPUP),
-      dismissButton = {
-        Button(
-            colors =
-                buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
-            onClick = { shouldShowDialog.value = false },
-            modifier = Modifier.testTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON)) {
-              Text(
-                  text = stringResource(R.string.goback_button_title),
-                  color = MaterialTheme.colorScheme.onPrimaryContainer)
-            }
-      },
       onDismissRequest = { shouldShowDialog.value = false },
-      confirmButton = {
-        Button(
-            colors =
-                buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
-            onClick = {
-              cancelYourEvent()
-              shouldShowDialog.value = false
-            },
-            modifier = Modifier.testTag(EventsScreenTestTags.EDIT_EVENT_BUTTON)) {
-              Text(
-                  text = stringResource(R.string.edit_button_title),
-                  color = MaterialTheme.colorScheme.onPrimaryContainer)
-            }
-      },
-  )
+      confirmButton = {},
+      dismissButton = {})
 }
 
 /** Helper function : Return the color associated to the event status */

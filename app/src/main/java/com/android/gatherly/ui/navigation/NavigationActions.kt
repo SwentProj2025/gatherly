@@ -100,4 +100,12 @@ open class NavigationActions(
   open fun currentRoute(): String {
     return navController.currentDestination?.route ?: ""
   }
+
+  /** Navigate to the Map screen with a specific event ID. */
+  open fun navigateToMapWithEvent(eventId: String) {
+    navController.navigate("map?eventId=$eventId") {
+      launchSingleTop = true
+      restoreState = true
+    }
+  }
 }
