@@ -29,6 +29,10 @@
     <string name="todos_delete_button_text">Delete</string>
     <string name="todos_delete_warning">Warning! You are deleting a todo</string>
     <string name="todos_delete_warning_text">This action cannot be reversed. Are you sure?</string>
+    <string name="todos_past_warning">Warning! You are creating a todo in the past</string>
+    <string name="todos_past_warning_text">Are you sure you want to create a todo with a past deadline?</string>
+    <string name="todos_create">Yes, Create</string>
+    <string name="todos_edit">Yes, Save</string>
     <string name="todos_sort_button_label">Sort todos</string>
     <string name="todos_date_descending_sort_button_text">Date descending</string>
     <string name="todos_date_ascending_sort_button_text">Date ascending</string>
@@ -105,6 +109,7 @@
     <string name="events_delete_warning">Warning! You are deleting an event</string>
     <string name="events_delete_warning_text">This action cannot be reversed. Are you sure?</string>
 
+    <!-- General -->
     <string name="delete">Yes, Delete</string>
     <string name="cancel">No, Cancel</string>
     <string name="saving">Saving…</string>
@@ -142,6 +147,7 @@
     <string name="show_todos_button_title">Show toDos</string>
     <string name="go_to_event_page_button">Go to Event</string>
     <string name="go_to_todo_page_button">Go to ToDo</string>
+    <string name="loading_map">Loading…</string>
 
     <!-- Friends Screen -->
     <string name="friends_empty_list_msg">You have no friends added yet.</string>
@@ -154,4 +160,8 @@
     <string name="friends_unfollow_message">You just lose a friend</string>
     <string name="friends_follow_message">You just got a new friend</string>
 
+    <!-- Add Group Screen -->
+    <string name="add_group_button_label">Add New Group</string>
+    <string name="group_name_bar_label">Group Name</string>
+    <string name="group_name_bar_placeholder">Name the Group</string>
 </resources>

@@ -2,7 +2,10 @@ package com.android.gatherly.ui.events
 
 import android.icu.text.SimpleDateFormat
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -10,11 +13,10 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Celebration
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults.buttonColors
 import androidx.compose.material3.Card
@@ -32,8 +34,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -44,6 +49,7 @@ import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
 import com.android.gatherly.model.event.Event
+import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.ui.navigation.BottomNavigationMenu
 import com.android.gatherly.ui.navigation.HandleSignedOutState
 import com.android.gatherly.ui.navigation.NavigationActions
@@ -51,24 +57,18 @@ import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu
 import com.android.gatherly.ui.theme.GatherlyTheme
+import com.android.gatherly.ui.theme.theme_status_ongoing
+import com.android.gatherly.ui.theme.theme_status_past
+import com.android.gatherly.ui.theme.theme_status_upcoming
+import com.android.gatherly.utils.GatherlyAlertDialog
 import java.util.Locale
 import kotlinx.coroutines.launch
 
 object EventsScreenTestTags {
 
-  const val EVENT_POPUP = "EventPopUp"
-
   const val ALL_LISTS = "EventsLists"
 
   const val CREATE_EVENT_BUTTON = "CreateANewEvent"
-
-  const val EDIT_EVENT_BUTTON = "EditEvent"
-
-  const val GOBACK_EVENT_BUTTON = "GoBackOverview"
-
-  const val PARTICIPATE_BUTTON = "Participate"
-
-  const val UNREGISTER_BUTTON = "Unregister"
 
   const val EMPTY_BROWSER_LIST_MSG = "EmptyBrowserEvents"
 
@@ -86,9 +86,13 @@ object EventsScreenTestTags {
 
   const val EVENT_TITLE = "EventTitle"
 
-  const val POPUP_DESCRIPTION = "EventDescription"
+  const val EVENT_STATUS_INDICATOR_UPCOMING = "EventStatusIndicatorGreen"
+  const val EVENT_STATUS_INDICATOR_ONGOING = "EventStatusIndicatorYellow"
+  const val EVENT_STATUS_INDICATOR_PAST = "EventStatusIndicatorGrey"
 
-  const val POPUP_TITLE = "PopupTitle"
+  const val FILTER_UPCOMING_BUTTON = "FilterUpcomingButton"
+  const val FILTER_ONGOING_BUTTON = "FilterOngoingButton"
+  const val FILTER_PAST_BUTTON = "FilterPastButton"
 
   /**
    * Returns a unique test tag for the card or container representing a given [Event] item.
@@ -97,6 +101,18 @@ object EventsScreenTestTags {
    * @return A string uniquely identifying the Event item in the UI.
    */
   fun getTestTagForEventItem(event: Event): String = "eventItem${event.id}"
+}
+
+/**
+ * Displays a colored box indicating the status of an event.
+ *
+ * @param status The [EventStatus] of the event.
+ */
+enum class EventFilter {
+  ALL,
+  UPCOMING,
+  ONGOING,
+  PAST
 }
 
 /**
@@ -131,9 +147,16 @@ fun EventsScreen(
   val coroutineScope = rememberCoroutineScope()
 
   val uiState by eventsViewModel.uiState.collectAsState()
-  val browserEvents = uiState.globalEventList
-  val upcomingEvents = uiState.participatedEventList
-  val myOwnEvents = uiState.createdEventList
+
+  // Filter state
+  val selectedFilter = remember { mutableStateOf(EventFilter.ALL) }
+
+  // list of type of events based on the selected filter
+  val browserEvents = eventsViewModel.getFilteredEvents(selectedFilter, uiState.globalEventList)
+  val upcomingEvents =
+      eventsViewModel.getFilteredEvents(selectedFilter, uiState.participatedEventList)
+  val myOwnEvents = eventsViewModel.getFilteredEvents(selectedFilter, uiState.createdEventList)
+
   val currentUserIdFromVM = uiState.currentUserId
 
   val selectedBrowserEvent = remember { mutableStateOf<Event?>(null) }
@@ -210,6 +233,9 @@ fun EventsScreen(
                     .padding(horizontal = 16.dp)
                     .padding(padding)
                     .testTag(EventsScreenTestTags.ALL_LISTS)) {
+
+              // -- FILTER BAR --
+              item { FilterBar(selectedFilter) }
 
               // --  BROWSE EVENTS LIST --
               item {
@@ -354,38 +380,52 @@ fun EventsScreen(
         // -- EVENT POP UPS --
 
         selectedBrowserEvent.value?.let { event ->
-          BrowserEventsPopUp(
-              event = event,
-              shouldShowDialog = isPopupOnBrowser,
-              participate = {
-                eventsViewModel.onParticipate(
-                    eventId = event.id, currentUserId = currentUserIdFromVM)
-                coroutineScope.launch { eventsViewModel.refreshEvents(currentUserIdFromVM) }
+          GatherlyAlertDialog(
+              titleText = event.title,
+              bodyText = event.description,
+              dismissText = stringResource(R.string.goback_button_title),
+              confirmText = stringResource(R.string.participate_button_title),
+              onDismiss = { isPopupOnBrowser.value = false },
+              onConfirm = {
+                if (!uiState.isAnon) {
+                  eventsViewModel.onParticipate(
+                      eventId = event.id, currentUserId = currentUserIdFromVM)
+                  coroutineScope.launch { eventsViewModel.refreshEvents(currentUserIdFromVM) }
+                  isPopupOnBrowser.value = false
+                }
               },
-              isAnon = uiState.isAnon)
+              confirmEnabled = !uiState.isAnon)
           selectedBrowserEvent.value = if (isPopupOnBrowser.value) event else null
         }
 
         selectedUpcomingEvent.value?.let { event ->
-          UpComingEventsPopUp(
-              event = event,
-              shouldShowDialog = isPopupOnUpcoming,
-              unparticipate = {
+          GatherlyAlertDialog(
+              titleText = event.title,
+              bodyText = event.description,
+              dismissText = stringResource(R.string.goback_button_title),
+              confirmText = stringResource(R.string.unregister_button_title),
+              onDismiss = { isPopupOnUpcoming.value = false },
+              onConfirm = {
                 eventsViewModel.onUnregister(
                     eventId = event.id, currentUserId = currentUserIdFromVM)
 
                 coroutineScope.launch { eventsViewModel.refreshEvents(currentUserIdFromVM) }
+                isPopupOnUpcoming.value = false
               })
           selectedUpcomingEvent.value = if (isPopupOnUpcoming.value) event else null
         }
 
         selectedYourEvent.value?.let { event ->
-          MyOwnEventsPopUp(
-              event = event,
-              shouldShowDialog = isPopupOnYourE,
-              cancelYourEvent = {
+          GatherlyAlertDialog(
+              titleText = event.title,
+              bodyText = event.description,
+              dismissText = stringResource(R.string.goback_button_title),
+              confirmText = stringResource(R.string.edit_button_title),
+              onDismiss = { isPopupOnYourE.value = false },
+              onConfirm = {
                 navigateToEditEvent(event)
                 coroutineScope.launch { eventsViewModel.refreshEvents(currentUserIdFromVM) }
+                isPopupOnYourE.value = false
               })
           selectedYourEvent.value = if (isPopupOnYourE.value) event else null
         }
@@ -417,6 +457,13 @@ fun BrowserEventsItem(event: Event, onClick: () -> Unit) {
             modifier = Modifier.fillMaxWidth().padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+          // Status indicator circle
+          BoxStatusColor(event.status)
+
+          Spacer(
+              modifier = Modifier.size(dimensionResource(R.dimen.spacing_between_fields_regular)))
+
+          // Event details
           Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = event.title,
@@ -460,6 +507,15 @@ fun UpcomingEventsItem(event: Event, onClick: () -> Unit) {
             modifier = Modifier.fillMaxWidth().padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+
+          // Status indicator circle
+          BoxStatusColor(event.status)
+
+          Spacer(
+              modifier = Modifier.size(dimensionResource(R.dimen.spacing_between_fields_regular)))
+
+          // Event details
+
           Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = event.title,
@@ -503,6 +559,14 @@ fun MyOwnEventsItem(event: Event, onClick: () -> Unit) {
             modifier = Modifier.fillMaxWidth().padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+          // Status indicator circle
+          BoxStatusColor(event.status)
+
+          Spacer(
+              modifier = Modifier.size(dimensionResource(R.dimen.spacing_between_fields_regular)))
+
+          // Event details
+
           Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = event.title,
@@ -520,199 +584,103 @@ fun MyOwnEventsItem(event: Event, onClick: () -> Unit) {
         }
       }
 }
-/**
- * Displays PopUp when clicking on an event : UNPARTICIPATE OPTION click
- *
- * @param events The [Event] item to display.
- */
+
+/** Helper function : Return the color associated to the event status */
 @Composable
-fun UpComingEventsPopUp(
-    event: Event,
-    shouldShowDialog: MutableState<Boolean>,
-    unparticipate: () -> Unit
-) {
-  AlertDialog(
-      containerColor = MaterialTheme.colorScheme.surfaceVariant,
-      titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-      textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-      title = {
-        Text(
-            text = event.title,
-            modifier = Modifier.testTag(EventsScreenTestTags.POPUP_TITLE),
-            textAlign = TextAlign.Center)
-      },
-      text = {
-        Text(
-            text = event.description,
-            modifier = Modifier.testTag(EventsScreenTestTags.POPUP_DESCRIPTION),
-            textAlign = TextAlign.Center,
-        )
-      },
-      icon = { Icons.Outlined.Celebration },
-      modifier = Modifier.testTag(EventsScreenTestTags.EVENT_POPUP),
-      dismissButton = {
-        Button(
-            colors =
-                buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
-            onClick = { shouldShowDialog.value = false },
-            modifier = Modifier.testTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON)) {
-              Text(
-                  text = stringResource(R.string.goback_button_title),
-                  color = MaterialTheme.colorScheme.onPrimaryContainer)
-            }
-      },
-      onDismissRequest = { shouldShowDialog.value = false },
-      confirmButton = {
-        Button(
-            colors =
-                buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
-            onClick = {
-              unparticipate()
-              shouldShowDialog.value = false
-            },
-            modifier = Modifier.testTag(EventsScreenTestTags.UNREGISTER_BUTTON)) {
-              Text(
-                  text = stringResource(R.string.unregister_button_title),
-                  color = MaterialTheme.colorScheme.onPrimaryContainer)
-            }
-      },
-  )
+private fun statusColor(status: EventStatus): Color {
+  return when (status) {
+    EventStatus.UPCOMING -> theme_status_upcoming
+    EventStatus.ONGOING -> theme_status_ongoing
+    EventStatus.PAST -> theme_status_past
+  }
+}
+
+/** Helper function : Display a status indicator circle */
+@Composable
+private fun BoxStatusColor(status: EventStatus) {
+  Box(
+      modifier =
+          Modifier.size(dimensionResource(R.dimen.events_indicator_status_size))
+              .clip(CircleShape)
+              .background(statusColor(status))
+              .testTag(
+                  when (status) {
+                    EventStatus.UPCOMING -> EventsScreenTestTags.EVENT_STATUS_INDICATOR_UPCOMING
+                    EventStatus.ONGOING -> EventsScreenTestTags.EVENT_STATUS_INDICATOR_ONGOING
+                    EventStatus.PAST -> EventsScreenTestTags.EVENT_STATUS_INDICATOR_PAST
+                  }))
+}
+
+/** Displays a filter bar with buttons to filter events by their status. */
+@Composable
+private fun FilterBar(selectedFilter: MutableState<EventFilter>) {
+  Row(
+      modifier =
+          Modifier.fillMaxWidth()
+              .padding(vertical = dimensionResource(R.dimen.events_filter_bar_vertical_size)),
+      horizontalArrangement = Arrangement.SpaceEvenly) {
+        FilterButton("All", EventFilter.ALL, selectedFilter, Modifier)
+        FilterButton(
+            "Upcoming",
+            EventFilter.UPCOMING,
+            selectedFilter,
+            Modifier.testTag(EventsScreenTestTags.FILTER_UPCOMING_BUTTON))
+        FilterButton(
+            "Ongoing",
+            EventFilter.ONGOING,
+            selectedFilter,
+            Modifier.testTag(EventsScreenTestTags.FILTER_ONGOING_BUTTON))
+        FilterButton(
+            "Past",
+            EventFilter.PAST,
+            selectedFilter,
+            Modifier.testTag(EventsScreenTestTags.FILTER_PAST_BUTTON))
+      }
 }
 
 /**
- * Displays PopUp when clicking on an event : PARTICIPATE OPTION
+ * A button used in the filter bar to select an event filter.
  *
- * @param events The [Event] item to display.
+ * @param label The text label for the button.
+ * @param filter The [EventFilter] associated with this button.
+ * @param selectedFilter The currently selected [EventFilter] state.
  */
 @Composable
-fun BrowserEventsPopUp(
-    event: Event,
-    shouldShowDialog: MutableState<Boolean>,
-    participate: () -> Unit,
-    isAnon: Boolean
+fun FilterButton(
+    label: String,
+    filter: EventFilter,
+    selectedFilter: MutableState<EventFilter>,
+    modifier: Modifier
 ) {
-  AlertDialog(
-      containerColor = MaterialTheme.colorScheme.surfaceVariant,
-      titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-      textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-      title = {
-        Text(
-            text = event.title,
-            modifier = Modifier.testTag(EventsScreenTestTags.POPUP_TITLE),
-            textAlign = TextAlign.Center,
-        )
-      },
-      text = {
-        Text(
-            text = event.description,
-            modifier = Modifier.testTag(EventsScreenTestTags.POPUP_DESCRIPTION),
-            textAlign = TextAlign.Center,
-        )
-      },
-      icon = { Icons.Outlined.Celebration },
-      modifier = Modifier.testTag(EventsScreenTestTags.EVENT_POPUP),
-      dismissButton = {
-        Button(
-            colors =
-                buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
-            onClick = { shouldShowDialog.value = false },
-            modifier = Modifier.testTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON)) {
-              Text(
-                  text = stringResource(R.string.goback_button_title),
-                  color = MaterialTheme.colorScheme.onPrimaryContainer)
-            }
-      },
-      onDismissRequest = { shouldShowDialog.value = false },
-      confirmButton = {
-        Button(
-            colors =
-                buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
-            onClick = {
-              if (!isAnon) {
-                participate()
-                shouldShowDialog.value = false
-              }
-            },
-            enabled = !isAnon,
-            modifier = Modifier.testTag(EventsScreenTestTags.PARTICIPATE_BUTTON)) {
-              Text(
-                  text = stringResource(R.string.participate_button_title),
-                  color = MaterialTheme.colorScheme.onPrimaryContainer)
-            }
-      },
-  )
+  val isSelected = selectedFilter.value == filter
+
+  Button(
+      onClick = { selectedFilter.value = filter },
+      colors =
+          buttonColors(
+              containerColor =
+                  if (isSelected) MaterialTheme.colorScheme.primary
+                  else MaterialTheme.colorScheme.surfaceVariant,
+              contentColor =
+                  if (isSelected) MaterialTheme.colorScheme.onPrimary
+                  else MaterialTheme.colorScheme.background),
+      shape = RoundedCornerShape(dimensionResource(R.dimen.rounded_corner_shape_large)),
+      modifier = modifier.height(dimensionResource(R.dimen.events_filter_button_height))) {
+        Text(text = label)
+      }
 }
 
-/**
- * Displays PopUp when clicking on an event : CANCELED OPTION click
- *
- * @param events The [Event] item to display.
- */
-@Composable
-fun MyOwnEventsPopUp(
-    event: Event,
-    shouldShowDialog: MutableState<Boolean>,
-    cancelYourEvent: () -> Unit
-) {
-  AlertDialog(
-      containerColor = MaterialTheme.colorScheme.surfaceVariant,
-      titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-      textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-      title = {
-        Text(
-            text = event.title,
-            modifier = Modifier.testTag(EventsScreenTestTags.POPUP_TITLE),
-            textAlign = TextAlign.Center,
-        )
-      },
-      text = {
-        Text(
-            text = event.description,
-            modifier = Modifier.testTag(EventsScreenTestTags.POPUP_DESCRIPTION),
-            textAlign = TextAlign.Center,
-        )
-      },
-      icon = { Icons.Outlined.Celebration },
-      modifier = Modifier.testTag(EventsScreenTestTags.EVENT_POPUP),
-      dismissButton = {
-        Button(
-            colors =
-                buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
-            onClick = { shouldShowDialog.value = false },
-            modifier = Modifier.testTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON)) {
-              Text(
-                  text = stringResource(R.string.goback_button_title),
-                  color = MaterialTheme.colorScheme.onPrimaryContainer)
-            }
-      },
-      onDismissRequest = { shouldShowDialog.value = false },
-      confirmButton = {
-        Button(
-            colors =
-                buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
-            onClick = {
-              cancelYourEvent()
-              shouldShowDialog.value = false
-            },
-            modifier = Modifier.testTag(EventsScreenTestTags.EDIT_EVENT_BUTTON)) {
-              Text(
-                  text = stringResource(R.string.edit_button_title),
-                  color = MaterialTheme.colorScheme.onPrimaryContainer)
-            }
-      },
-  )
+/** Helper function : return the list of events filtered according to the selected filter status */
+private fun getFilteredEvents(
+    selectedFilter: MutableState<EventFilter>,
+    listEvents: List<Event>
+): List<Event> {
+  return when (selectedFilter.value) {
+    EventFilter.ALL -> listEvents
+    EventFilter.UPCOMING -> listEvents.filter { it.status == EventStatus.UPCOMING }
+    EventFilter.ONGOING -> listEvents.filter { it.status == EventStatus.ONGOING }
+    EventFilter.PAST -> listEvents.filter { it.status == EventStatus.PAST }
+  }
 }
 
 @Preview(showBackground = true)

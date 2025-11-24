@@ -66,3 +66,7 @@ val md_theme_dark_outlineVariant = Color(0xFF41484D)
 val md_theme_dark_scrim = Color(0xFF000000)
 
 val seed = Color(0xFF008BBB)
+
+val theme_status_upcoming = Color(0xFF4CAF50)
+val theme_status_ongoing = Color(0xFFFFC107)
+val theme_status_past = Color(0xFF9E9E9E)

@@ -17,6 +17,7 @@ import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.ui.todo.AddToDoScreenTestTags
 import com.google.firebase.Timestamp
+import java.util.Date
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -96,6 +97,8 @@ class EditEventsScreenTest {
           friendUids = emptyList())
 
   /*----------------------------------------Event-----------------------------------------------*/
+  private val oneHourLater = Timestamp(Date(System.currentTimeMillis() + 3600_000))
+  private val twoHoursLater = Timestamp(Date(System.currentTimeMillis() + 7200_000))
   val event: Event =
       Event(
           id = "0",
@@ -104,8 +107,8 @@ class EditEventsScreenTest {
           creatorName = "my name :)",
           location = null,
           date = Timestamp.now(),
-          startTime = Timestamp.now(),
-          endTime = Timestamp.now(),
+          startTime = oneHourLater,
+          endTime = twoHoursLater,
           creatorId = ownerProfile.uid,
           participants = listOf(ownerProfile.uid, participantProfile.uid),
           status = EventStatus.UPCOMING)

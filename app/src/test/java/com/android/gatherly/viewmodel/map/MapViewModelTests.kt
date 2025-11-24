@@ -525,4 +525,23 @@ class MapViewModelTests {
         // Just verify it doesn't crash
         assertTrue(true)
       }
+
+  @OptIn(ExperimentalCoroutinesApi::class)
+  @Test
+  fun onNavigationToDifferentScreen_updatesCameraPosToNull() =
+      runTest(testDispatcher) {
+        val todosRepo = ToDosLocalRepository()
+        val eventsRepo = EventsLocalRepository()
+        val mockContext = mockk<Context>(relaxed = true)
+        val vm = MapViewModel(todosRepository = todosRepo, eventsRepository = eventsRepo)
+        advanceUntilIdle()
+
+        vm.initialiseCameraPosition(mockContext)
+        advanceUntilIdle()
+        assertNotNull(vm.uiState.value.cameraPos)
+
+        vm.onNavigationToDifferentScreen()
+
+        assertNull(vm.uiState.value.cameraPos)
+      }
 }
