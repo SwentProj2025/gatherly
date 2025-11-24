@@ -16,7 +16,7 @@ import com.google.firebase.Timestamp
 data class Points(
     val userId: String = "",
     val obtained: Double = 0.0,
-    val reason: PointsType,
+    val reason: PointsSource,
     val dateObtained: Timestamp = Timestamp.now()
 )
 
@@ -26,13 +26,13 @@ data class Points(
  * the string that will be displayed to the user. This can be augmented later if we decide to add
  * more ways to obtain points.
  */
-sealed class PointsType {
+sealed class PointsSource {
   /**
    * The user used the focus timer
    *
    * @param minutes The number of minutes for which the user focused.
    */
-  data class Timer(val minutes: Int) : PointsType()
+  data class Timer(val minutes: Int) : PointsSource()
 
   /**
    * The user obtained a badge
@@ -40,7 +40,7 @@ sealed class PointsType {
    * @param badgeName The name of the badge the user obtained (this implementation can change
    *   depending on the implementation of the badges)
    */
-  data class Badge(val badgeName: String) : PointsType()
+  data class Badge(val badgeName: String) : PointsSource()
 
   /**
    * The user was in the top three in their friends leaderboard
@@ -48,14 +48,14 @@ sealed class PointsType {
    * @param rank The rank they obtained in their leaderboard (this implementation can change
    *   depending on the implementation of the leaderboard)
    */
-  data class Leaderboard(val rank: String) : PointsType()
+  data class Leaderboard(val rank: String) : PointsSource()
 }
 
-/** Transforms the [PointsType] to a string displayable to the user */
-fun pointsTypeToString(type: PointsType): String {
+/** Transforms the [PointsSource] to a string displayable to the user */
+fun pointsSourceToString(type: PointsSource): String {
   return when (type) {
-    is PointsType.Timer -> "Focused for ${type.minutes} minutes"
-    is PointsType.Badge -> "Obtained the ${type.badgeName} badge"
-    is PointsType.Leaderboard -> "Reached ${type.rank} on your friends leaderboard"
+    is PointsSource.Timer -> "Focused for ${type.minutes} minutes"
+    is PointsSource.Badge -> "Obtained the ${type.badgeName} badge"
+    is PointsSource.Leaderboard -> "Reached ${type.rank} on your friends leaderboard"
   }
 }
