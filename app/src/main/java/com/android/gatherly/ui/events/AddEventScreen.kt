@@ -337,40 +337,26 @@ fun AddEventScreen(
 
               item {
                 // Start time
-                OutlinedTextField(
-                    value = ui.startTime,
-                    onValueChange = { addEventViewModel.updateStartTime(it) },
-                    label = { Text(stringResource(R.string.events_start_time_field_label)) },
-                    placeholder = { Text("HH:mm") },
-                    isError = ui.startTimeError,
-                    supportingText = {
-                      if (ui.startTimeError) {
-                        Text(
-                            "Use format HH:mm",
-                            modifier = Modifier.testTag(AddEventScreenTestTags.ERROR_MESSAGE))
-                      }
-                    },
-                    colors = textFieldColors,
-                    modifier = Modifier.fillMaxWidth().testTag(AddEventScreenTestTags.INPUT_START))
+                StartTimeInputField(
+                    initialTime = ui.startTime,
+                    onTimeChanged = { addEventViewModel.updateStartTime(it) },
+                    dueTimeError = ui.startTimeError,
+                    textFieldColors = textFieldColors,
+                    testTagInput = AddEventScreenTestTags.INPUT_START,
+                    testTagErrorMessage = AddEventScreenTestTags.ERROR_MESSAGE,
+                )
               }
 
               item {
                 // End time
-                OutlinedTextField(
-                    value = ui.endTime,
-                    onValueChange = { addEventViewModel.updateEndTime(it) },
-                    label = { Text(stringResource(R.string.events_end_time_field_label)) },
-                    placeholder = { Text("HH:mm") },
-                    isError = ui.endTimeError,
-                    supportingText = {
-                      if (ui.endTimeError) {
-                        Text(
-                            "Invalid format, past date or ending time before starting time",
-                            modifier = Modifier.testTag(AddEventScreenTestTags.ERROR_MESSAGE))
-                      }
-                    },
-                    colors = textFieldColors,
-                    modifier = Modifier.fillMaxWidth().testTag(AddEventScreenTestTags.INPUT_END))
+                EndTimeInputField(
+                    initialTime = ui.endTime,
+                    onTimeChanged = { addEventViewModel.updateEndTime(it) },
+                    dueTimeError = ui.endTimeError,
+                    textFieldColors = textFieldColors,
+                    testTagInput = AddEventScreenTestTags.INPUT_END,
+                    testTagErrorMessage = AddEventScreenTestTags.ERROR_MESSAGE,
+                )
               }
 
               item { Spacer(modifier = Modifier.height(buttonSpacing)) }
