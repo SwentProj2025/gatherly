@@ -51,7 +51,6 @@ object AddEventScreenTestTags {
   const val LAZY_LIST = "LAZY_LIST"
   const val INPUT_NAME = "EVENT_NAME"
   const val INPUT_DESCRIPTION = "EVENT_DESCRIPTION"
-  const val INPUT_CREATOR = "EVENT_CREATOR"
   const val INPUT_LOCATION = "EVENT_LOCATION"
   const val LOCATION_SUGGESTION = "EVENT_LOCATION"
   const val INPUT_DATE = "EVENT_DATE"
@@ -189,26 +188,6 @@ fun AddEventScreen(
                     modifier =
                         Modifier.fillMaxWidth().testTag(AddEventScreenTestTags.INPUT_DESCRIPTION),
                     minLines = 3)
-              }
-
-              item {
-                // Creator name
-                OutlinedTextField(
-                    value = ui.creatorName,
-                    onValueChange = { addEventViewModel.updateCreatorName(it) },
-                    label = { Text(stringResource(R.string.events_creator_field_label)) },
-                    placeholder = { Text(stringResource(R.string.events_creator_placeholder)) },
-                    isError = ui.creatorNameError,
-                    supportingText = {
-                      if (ui.creatorNameError) {
-                        Text(
-                            "Creator name is required",
-                            modifier = Modifier.testTag(AddEventScreenTestTags.ERROR_MESSAGE))
-                      }
-                    },
-                    colors = textFieldColors,
-                    modifier =
-                        Modifier.fillMaxWidth().testTag(AddEventScreenTestTags.INPUT_CREATOR))
               }
 
               item {
@@ -394,9 +373,9 @@ fun AddEventScreen(
                     modifier = Modifier.fillMaxWidth().testTag(AddEventScreenTestTags.INPUT_END))
               }
 
-              item {
-                Spacer(modifier = Modifier.height(buttonSpacing))
+              item { Spacer(modifier = Modifier.height(buttonSpacing)) }
 
+              item {
                 // Save
                 Button(
                     onClick = { addEventViewModel.saveEvent() },
@@ -407,7 +386,6 @@ fun AddEventScreen(
                     enabled =
                         !ui.nameError &&
                             !ui.descriptionError &&
-                            !ui.creatorNameError &&
                             !ui.dateError &&
                             !ui.startTimeError &&
                             !ui.endTimeError &&

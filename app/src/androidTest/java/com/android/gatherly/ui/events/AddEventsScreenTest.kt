@@ -125,7 +125,6 @@ class AddEventsScreenTest {
   fun displayAllComponents() {
     composeTestRule.onNodeWithTag(AddEventScreenTestTags.INPUT_NAME).assertIsDisplayed()
     composeTestRule.onNodeWithTag(AddEventScreenTestTags.INPUT_DESCRIPTION).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(AddEventScreenTestTags.INPUT_CREATOR).assertIsDisplayed()
     composeTestRule.onNodeWithTag(AddEventScreenTestTags.INPUT_PARTICIPANT).assertIsDisplayed()
     composeTestRule.onNodeWithTag(AddEventScreenTestTags.INPUT_LOCATION).assertIsDisplayed()
     composeTestRule.onNodeWithTag(AddEventScreenTestTags.INPUT_DATE).assertIsDisplayed()

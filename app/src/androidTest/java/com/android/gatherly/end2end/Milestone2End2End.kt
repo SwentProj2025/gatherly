@@ -113,10 +113,6 @@ class Milestone2End2End : FirestoreGatherlyTest() {
         .assertIsDisplayed()
         .performTextInput("Description for my great event")
     composeTestRule
-        .onNodeWithTag(AddEventScreenTestTags.INPUT_CREATOR)
-        .assertIsDisplayed()
-        .performTextInput("User1")
-    composeTestRule
         .onNodeWithTag(AddEventScreenTestTags.INPUT_DATE)
         .assertIsDisplayed()
         .performTextInput("12/12/2025")

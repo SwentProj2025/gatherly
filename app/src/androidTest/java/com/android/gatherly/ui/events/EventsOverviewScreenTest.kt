@@ -343,6 +343,7 @@ class EventsOverviewScreenTest {
     composeTestRule.clickEventItem(eventByAlice)
     // Check that the popup is displayed
     composeTestRule.onNodeWithTag(EventsScreenTestTags.EVENT_POPUP).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(EventsScreenTestTags.POPUP_CREATOR_NAME).assertIsDisplayed()
     composeTestRule.onNodeWithTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON).assertIsDisplayed()
 
     // Click on Participate button
@@ -449,6 +450,7 @@ class EventsOverviewScreenTest {
     composeTestRule.clickEventItem(eventByAlice)
     composeTestRule.onNodeWithTag(EventsScreenTestTags.EVENT_POPUP).assertIsDisplayed()
     composeTestRule.onNodeWithTag(EventsScreenTestTags.POPUP_TITLE).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(EventsScreenTestTags.POPUP_CREATOR_NAME).assertIsDisplayed()
     composeTestRule.onNodeWithTag(EventsScreenTestTags.POPUP_DESCRIPTION).assertIsDisplayed()
     composeTestRule.onNodeWithTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON).assertIsDisplayed()
     composeTestRule
@@ -511,6 +513,7 @@ class EventsOverviewScreenTest {
     composeTestRule.onNodeWithTag(EventsScreenTestTags.EVENT_POPUP).assertIsDisplayed()
     composeTestRule.onNodeWithTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON).assertIsDisplayed()
     composeTestRule.onNodeWithTag(EventsScreenTestTags.POPUP_TITLE).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(EventsScreenTestTags.POPUP_CREATOR_NAME).assertIsNotDisplayed()
     composeTestRule.onNodeWithTag(EventsScreenTestTags.POPUP_DESCRIPTION).assertIsDisplayed()
     // Click on the Edit button
     composeTestRule
@@ -547,6 +550,7 @@ class EventsOverviewScreenTest {
     composeTestRule.clickEventItem(eventByBob)
     composeTestRule.onNodeWithTag(EventsScreenTestTags.EVENT_POPUP).assertIsDisplayed()
     composeTestRule.onNodeWithTag(EventsScreenTestTags.POPUP_TITLE).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(EventsScreenTestTags.POPUP_CREATOR_NAME).assertIsNotDisplayed()
     composeTestRule.onNodeWithTag(EventsScreenTestTags.POPUP_DESCRIPTION).assertIsDisplayed()
     // Click on the Cancel button and verify that the popup is closed
     composeTestRule

@@ -201,26 +201,6 @@ fun EditEventsScreen(
               }
 
               item {
-                // Creator name
-                OutlinedTextField(
-                    value = ui.creatorName,
-                    onValueChange = { editEventsViewModel.updateCreatorName(it) },
-                    label = { Text(stringResource(R.string.events_creator_field_label)) },
-                    placeholder = { Text(stringResource(R.string.events_creator_placeholder)) },
-                    isError = ui.creatorNameError,
-                    supportingText = {
-                      if (ui.creatorNameError) {
-                        Text(
-                            "Creator name is required",
-                            modifier = Modifier.testTag(EditEventsScreenTestTags.ERROR_MESSAGE))
-                      }
-                    },
-                    colors = textFieldColors,
-                    modifier =
-                        Modifier.fillMaxWidth().testTag(EditEventsScreenTestTags.INPUT_CREATOR))
-              }
-
-              item {
                 // Participants search with dropdown and + / - actions
                 Box(modifier = Modifier.fillMaxWidth()) {
                   OutlinedTextField(
@@ -419,7 +399,6 @@ fun EditEventsScreen(
                     enabled =
                         !ui.nameError &&
                             !ui.descriptionError &&
-                            !ui.creatorNameError &&
                             !ui.dateError &&
                             !ui.startTimeError &&
                             !ui.endTimeError &&

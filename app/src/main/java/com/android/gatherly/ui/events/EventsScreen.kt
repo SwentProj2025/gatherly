@@ -102,6 +102,8 @@ object EventsScreenTestTags {
 
   const val POPUP_TITLE = "PopupTitle"
 
+  const val POPUP_CREATOR_NAME = "PopupCreatorName"
+
   const val EVENT_STATUS_INDICATOR_UPCOMING = "EventStatusIndicatorGreen"
   const val EVENT_STATUS_INDICATOR_ONGOING = "EventStatusIndicatorYellow"
   const val EVENT_STATUS_INDICATOR_PAST = "EventStatusIndicatorGrey"
@@ -602,22 +604,33 @@ fun UpComingEventsPopUp(
       titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
       textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
       title = {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement =
-                Arrangement.spacedBy(
-                    dimensionResource(R.dimen.events_popup_horizontalArrangement_size)),
-            modifier = Modifier.fillMaxWidth()) {
-              // Status indicator circle
-              BoxStatusColor(event.status)
-              // Event tilte
-              Text(
-                  text = event.title,
-                  modifier = Modifier.testTag(EventsScreenTestTags.POPUP_TITLE),
-                  textAlign = TextAlign.Start,
-                  style = MaterialTheme.typography.titleLarge,
-                  color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
+        Column {
+          Row(
+              verticalAlignment = Alignment.CenterVertically,
+              horizontalArrangement =
+                  Arrangement.spacedBy(
+                      dimensionResource(R.dimen.events_popup_horizontalArrangement_size)),
+              modifier = Modifier.fillMaxWidth()) {
+                // Status indicator circle
+                BoxStatusColor(event.status)
+                // Event tilte
+                Text(
+                    text = event.title,
+                    modifier = Modifier.testTag(EventsScreenTestTags.POPUP_TITLE),
+                    textAlign = TextAlign.Start,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+              }
+
+          // Event creator name
+          Text(
+              text = "by ${event.creatorName}",
+              modifier =
+                  Modifier.testTag(EventsScreenTestTags.POPUP_CREATOR_NAME).align(Alignment.End),
+              style = MaterialTheme.typography.bodyMedium,
+              color = MaterialTheme.colorScheme.onSurfaceVariant,
+          )
+        }
       },
       text = {
         Text(
@@ -678,22 +691,32 @@ fun BrowserEventsPopUp(
       titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
       textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
       title = {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement =
-                Arrangement.spacedBy(
-                    dimensionResource(R.dimen.events_popup_horizontalArrangement_size)),
-            modifier = Modifier.fillMaxWidth()) {
-              // Status indicator circle
-              BoxStatusColor(event.status)
-              // Event title
-              Text(
-                  text = event.title,
-                  modifier = Modifier.testTag(EventsScreenTestTags.POPUP_TITLE),
-                  textAlign = TextAlign.Start,
-                  style = MaterialTheme.typography.titleLarge,
-                  color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
+        Column {
+          Row(
+              verticalAlignment = Alignment.CenterVertically,
+              horizontalArrangement =
+                  Arrangement.spacedBy(
+                      dimensionResource(R.dimen.events_popup_horizontalArrangement_size)),
+              modifier = Modifier.fillMaxWidth()) {
+                // Status indicator circle
+                BoxStatusColor(event.status)
+                // Event title
+                Text(
+                    text = event.title,
+                    modifier = Modifier.testTag(EventsScreenTestTags.POPUP_TITLE),
+                    textAlign = TextAlign.Start,
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+              }
+          // Event creator name
+          Text(
+              text = "by ${event.creatorName}",
+              modifier =
+                  Modifier.testTag(EventsScreenTestTags.POPUP_CREATOR_NAME).align(Alignment.End),
+              style = MaterialTheme.typography.bodyMedium,
+              color = MaterialTheme.colorScheme.onSurfaceVariant,
+          )
+        }
       },
       text = {
         Text(

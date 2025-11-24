@@ -35,8 +35,6 @@ data class AddEventUiState(
     val name: String = "",
     // the event description
     val description: String = "",
-    // the event creators name
-    val creatorName: String = "",
     // the event location
     val location: String = "",
     // the event date
@@ -57,8 +55,6 @@ data class AddEventUiState(
     val nameError: Boolean = false,
     // if there is an error in the description
     val descriptionError: Boolean = false,
-    // if there is an error in the creators name
-    val creatorNameError: Boolean = false,
     // if there is an error in the date
     val dateError: Boolean = false,
     // if there is an error in the start time
@@ -159,17 +155,6 @@ class AddEventViewModel(
     uiState =
         uiState.copy(
             description = updatedDescription, descriptionError = updatedDescription.isBlank())
-  }
-
-  /**
-   * Updates the event creator name
-   *
-   * @param updatedCreatorName the string with which to update
-   */
-  fun updateCreatorName(updatedCreatorName: String) {
-    uiState =
-        uiState.copy(
-            creatorName = updatedCreatorName, creatorNameError = updatedCreatorName.isBlank())
   }
 
   /**
@@ -322,7 +307,6 @@ class AddEventViewModel(
   private fun checkAllEntries() {
     updateName(uiState.name)
     updateDescription(uiState.description)
-    updateCreatorName(uiState.creatorName)
     updateDate(uiState.date)
     updateStartTime(uiState.startTime)
     updateEndTime(uiState.endTime)
@@ -335,7 +319,6 @@ class AddEventViewModel(
     checkAllEntries()
     if (!uiState.nameError &&
         !uiState.descriptionError &&
-        !uiState.creatorNameError &&
         !uiState.dateError &&
         !uiState.startTimeError &&
         !uiState.endTimeError) {
@@ -393,7 +376,7 @@ class AddEventViewModel(
               id = eventId,
               title = uiState.name,
               description = uiState.description,
-              creatorName = uiState.creatorName,
+              creatorName = currentProfile.name,
               location = chosenLocation,
               date = timestampDate,
               startTime = timestampStartTime,

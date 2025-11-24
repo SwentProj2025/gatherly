@@ -115,7 +115,6 @@ class EditEventsScreenTest {
   fun displayAllComponents() {
     composeTestRule.onNodeWithTag(EditEventsScreenTestTags.INPUT_NAME).assertIsDisplayed()
     composeTestRule.onNodeWithTag(EditEventsScreenTestTags.INPUT_DESCRIPTION).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(EditEventsScreenTestTags.INPUT_CREATOR).assertIsDisplayed()
     composeTestRule.onNodeWithTag(EditEventsScreenTestTags.INPUT_PARTICIPANT).assertIsDisplayed()
     composeTestRule.onNodeWithTag(EditEventsScreenTestTags.INPUT_LOCATION).assertIsDisplayed()
     composeTestRule.onNodeWithTag(EditEventsScreenTestTags.INPUT_DATE).assertIsDisplayed()

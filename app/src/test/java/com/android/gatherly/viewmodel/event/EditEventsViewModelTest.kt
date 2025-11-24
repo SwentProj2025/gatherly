@@ -109,7 +109,7 @@ class EditEventsViewModelTest {
           id = "0",
           title = "Event title",
           description = "Describing this great event",
-          creatorName = "my name :)",
+          creatorName = ownerProfile.name,
           location = null,
           date = Timestamp.now(),
           startTime = Timestamp.now(),
@@ -163,32 +163,6 @@ class EditEventsViewModelTest {
       val blankString = " "
       editEventsViewModel.updateDescription(blankString)
       assert(editEventsViewModel.uiState.descriptionError) { "Blank description should be wrong" }
-    }
-  }
-
-  /*------------------------------Creator name tests--------------------------------------------*/
-  // Creator name accepts valid string
-  @Test
-  fun canEnterEventCreatorName() {
-    runTest {
-      val creatorNameString = "creator"
-      editEventsViewModel.updateCreatorName(creatorNameString)
-      assert(!editEventsViewModel.uiState.creatorNameError) {
-        "Entering a creator name should not make an error"
-      }
-      assert(editEventsViewModel.uiState.creatorName == creatorNameString) {
-        "Entering a creator name should work"
-      }
-    }
-  }
-
-  // Creator name does not accept blank string
-  @Test
-  fun cannotEnterEmptyEventCreatorName() {
-    runTest {
-      val blankString = " "
-      editEventsViewModel.updateCreatorName(blankString)
-      assert(editEventsViewModel.uiState.creatorNameError) { "Blank creator name should be wrong" }
     }
   }
 
@@ -481,12 +455,10 @@ class EditEventsViewModelTest {
   fun canSaveEvent2() {
     runTest {
       editEventsViewModel.setEventValues(event.id)
-      val modifiedEvent = event.copy(creatorName = "creator nameeeee")
-      editEventsViewModel.updateCreatorName(modifiedEvent.creatorName)
       editEventsViewModel.saveEvent()
       advanceUntilIdle()
 
-      assert(eventsRepository.getEvent(event.id).creatorName == modifiedEvent.creatorName) {
+      assert(eventsRepository.getEvent(event.id).creatorName == ownerProfile.name) {
         "The event is not modified"
       }
     }
