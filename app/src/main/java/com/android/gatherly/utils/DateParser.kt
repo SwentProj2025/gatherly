@@ -38,7 +38,6 @@ object DateParser {
     return runCatching { dateFormat.parse(str) }.getOrNull()
   }
 
-
   /**
    * Formats a [Timestamp] to a string in "HH:mm" format.
    *
@@ -50,12 +49,12 @@ object DateParser {
     return sdf.format(timestamp.toDate())
   }
 
-    /**
-     * Formats a [Timestamp] to a string in "dd/MM/yyyy" format.
-     *
-     * @param timestamp The [Timestamp] to format.
-     * @return A string representing the date in "dd/MM/yyyy" format.
-     */
+  /**
+   * Formats a [Timestamp] to a string in "dd/MM/yyyy" format.
+   *
+   * @param timestamp The [Timestamp] to format.
+   * @return A string representing the date in "dd/MM/yyyy" format.
+   */
   fun dateToString(timestamp: Timestamp): String {
     val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
     return sdf.format(timestamp.toDate())

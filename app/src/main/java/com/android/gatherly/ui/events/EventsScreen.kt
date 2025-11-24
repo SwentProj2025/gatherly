@@ -399,7 +399,7 @@ fun EventsScreen(
               creatorText = event.creatorName,
               dateText = dateToString(event.date),
               startTimeText = timeToString(event.startTime),
-                endTimeText = timeToString(event.endTime),
+              endTimeText = timeToString(event.endTime),
               confirmEnabled = !uiState.isAnon)
           selectedBrowserEvent.value = if (isPopupOnBrowser.value) event else null
         }
