@@ -25,10 +25,10 @@ import com.android.gatherly.ui.events.EventsScreen
 import com.android.gatherly.ui.events.EventsScreenTestTags
 import com.android.gatherly.ui.events.EventsViewModel
 import com.android.gatherly.ui.todo.OverviewScreenTestTags
+import com.android.gatherly.utils.AlertDialogTestTags
 import com.android.gatherly.utils.MockitoUtils
 import com.google.firebase.Timestamp
 import java.util.Date
-import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
@@ -78,6 +78,8 @@ class MapScreenTest {
           status = ToDoStatus.ONGOING,
           ownerId = "owner-1")
 
+  private val oneHourLater = Timestamp(Date(System.currentTimeMillis() + 3600_000))
+  private val twoHoursLater = Timestamp(Date(System.currentTimeMillis() + 7200_000))
   private val event =
       Event(
           id = eventId,
@@ -86,8 +88,8 @@ class MapScreenTest {
           creatorName = "CLIC",
           location = Location(46.5210, 6.5690, "EPFL BC"),
           date = Timestamp(Date()),
-          startTime = Timestamp(Date()),
-          endTime = Timestamp(Date(Date().time + TimeUnit.HOURS.toMillis(2))),
+          startTime = oneHourLater,
+          endTime = twoHoursLater,
           creatorId = "org-1",
           participants = listOf("u1", "u2", "org-1"),
           status = EventStatus.UPCOMING)
@@ -100,8 +102,8 @@ class MapScreenTest {
           creatorName = "CLIC",
           location = Location(46.5210, 6.5690, "EPFL BC"),
           date = Timestamp(Date()),
-          startTime = Timestamp(Date()),
-          endTime = Timestamp(Date(Date().time + TimeUnit.HOURS.toMillis(2))),
+          startTime = oneHourLater,
+          endTime = twoHoursLater,
           creatorId = "org-1",
           participants = listOf("u1", "u2", TEST_USER_ID),
           status = EventStatus.UPCOMING)
@@ -114,8 +116,8 @@ class MapScreenTest {
           creatorName = "Game*",
           location = Location(46.5210, 6.5690, "EPFL BC"),
           date = Timestamp(Date()),
-          startTime = Timestamp(Date()),
-          endTime = Timestamp(Date(Date().time + TimeUnit.HOURS.toMillis(1))),
+          startTime = oneHourLater,
+          endTime = twoHoursLater,
           creatorId = TEST_USER_ID,
           participants = listOf(TEST_USER_ID),
           status = EventStatus.UPCOMING)
@@ -483,25 +485,23 @@ class MapScreenTest {
     compose.waitForIdle()
 
     assertEquals(eventId, navigatedEventId)
-    compose
-        .onNodeWithTag(EventsScreenTestTags.EVENT_POPUP, useUnmergedTree = true)
-        .assertIsDisplayed()
+    compose.onNodeWithTag(AlertDialogTestTags.ALERT, useUnmergedTree = true).assertIsDisplayed()
 
     compose
-        .onNodeWithTag(EventsScreenTestTags.POPUP_TITLE, useUnmergedTree = true)
+        .onNodeWithTag(AlertDialogTestTags.TITLE, useUnmergedTree = true)
         .assertIsDisplayed()
         .assertTextEquals(event.title)
 
     compose
-        .onNodeWithTag(EventsScreenTestTags.POPUP_DESCRIPTION, useUnmergedTree = true)
+        .onNodeWithTag(AlertDialogTestTags.BODY, useUnmergedTree = true)
         .assertIsDisplayed()
         .assertTextEquals(event.description)
 
     compose
-        .onNodeWithTag(EventsScreenTestTags.PARTICIPATE_BUTTON, useUnmergedTree = true)
+        .onNodeWithTag(AlertDialogTestTags.CONFIRM_BTN, useUnmergedTree = true)
         .assertIsDisplayed()
     compose
-        .onNodeWithTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON, useUnmergedTree = true)
+        .onNodeWithTag(AlertDialogTestTags.DISMISS_BTN, useUnmergedTree = true)
         .assertIsDisplayed()
   }
 
@@ -549,20 +549,18 @@ class MapScreenTest {
     compose.waitForIdle()
 
     assertEquals(participatingEventId, navigatedEventId)
-    compose
-        .onNodeWithTag(EventsScreenTestTags.EVENT_POPUP, useUnmergedTree = true)
-        .assertIsDisplayed()
+    compose.onNodeWithTag(AlertDialogTestTags.ALERT, useUnmergedTree = true).assertIsDisplayed()
 
     compose
-        .onNodeWithTag(EventsScreenTestTags.POPUP_DESCRIPTION, useUnmergedTree = true)
+        .onNodeWithTag(AlertDialogTestTags.BODY, useUnmergedTree = true)
         .assertIsDisplayed()
         .assertTextEquals(participatingEvent.description)
 
     compose
-        .onNodeWithTag(EventsScreenTestTags.UNREGISTER_BUTTON, useUnmergedTree = true)
+        .onNodeWithTag(AlertDialogTestTags.CONFIRM_BTN, useUnmergedTree = true)
         .assertIsDisplayed()
     compose
-        .onNodeWithTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON, useUnmergedTree = true)
+        .onNodeWithTag(AlertDialogTestTags.DISMISS_BTN, useUnmergedTree = true)
         .assertIsDisplayed()
   }
 
@@ -610,20 +608,18 @@ class MapScreenTest {
     compose.waitForIdle()
 
     assertEquals(creatingEventId, navigatedEventId)
-    compose
-        .onNodeWithTag(EventsScreenTestTags.EVENT_POPUP, useUnmergedTree = true)
-        .assertIsDisplayed()
+    compose.onNodeWithTag(AlertDialogTestTags.ALERT, useUnmergedTree = true).assertIsDisplayed()
 
     compose
-        .onNodeWithTag(EventsScreenTestTags.POPUP_DESCRIPTION, useUnmergedTree = true)
+        .onNodeWithTag(AlertDialogTestTags.BODY, useUnmergedTree = true)
         .assertIsDisplayed()
         .assertTextEquals(creatingEvent.description)
 
     compose
-        .onNodeWithTag(EventsScreenTestTags.EDIT_EVENT_BUTTON, useUnmergedTree = true)
+        .onNodeWithTag(AlertDialogTestTags.CONFIRM_BTN, useUnmergedTree = true)
         .assertIsDisplayed()
     compose
-        .onNodeWithTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON, useUnmergedTree = true)
+        .onNodeWithTag(AlertDialogTestTags.DISMISS_BTN, useUnmergedTree = true)
         .assertIsDisplayed()
   }
 }

@@ -327,7 +327,7 @@ fun AddEventScreen(
                     supportingText = {
                       if (ui.dateError) {
                         Text(
-                            "Use format dd/MM/yyyy",
+                            "Invalid format or past date",
                             modifier = Modifier.testTag(AddEventScreenTestTags.ERROR_MESSAGE))
                       }
                     },
@@ -365,7 +365,7 @@ fun AddEventScreen(
                     supportingText = {
                       if (ui.endTimeError) {
                         Text(
-                            "Use format HH:mm",
+                            "Invalid format, past date or ending time before starting time",
                             modifier = Modifier.testTag(AddEventScreenTestTags.ERROR_MESSAGE))
                       }
                     },
