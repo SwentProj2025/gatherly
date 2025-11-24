@@ -15,7 +15,7 @@ import com.google.firebase.Timestamp
  */
 data class Points(
     val userId: String = "",
-    val obtained: Long = 0L,
+    val obtained: Double = 0.0,
     val reason: PointsType,
     val dateObtained: Timestamp = Timestamp.now()
 )
