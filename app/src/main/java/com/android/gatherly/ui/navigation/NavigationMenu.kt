@@ -76,6 +76,8 @@ sealed class Tab(val name: String, val icon: ImageVector, val destination: Scree
   object AddTodo : Tab("Add To-Do", Icons.Outlined.Add, Screen.AddToDo)
 
   object EditTodo : Tab("Edit To-Do", Icons.Outlined.Edit, Screen.Task)
+
+  object AddGroup : Tab("Add Group", Icons.Outlined.GroupAdd, Screen.AddGroupScreen)
 }
 
 private val bottomtabs =
@@ -349,6 +351,8 @@ fun TopDropdownMenu(onTabSelected: (Tab) -> Unit, onSignedOut: () -> Unit = {}) 
               onClick = { onTabSelected(Tab.Profile) },
               modifier = Modifier.testTag(NavigationTestTags.PROFILE_TAB))
 
+          AddGroupDropdownItem(onTabSelected = onTabSelected)
+
           // Settings section
           DropdownMenuItem(
               text = {
@@ -412,6 +416,8 @@ fun TopDropdownMenuForSettings(onTabSelected: (Tab) -> Unit, onSignedOut: () -> 
               onClick = { onTabSelected(Tab.Profile) },
               modifier = Modifier.testTag(NavigationTestTags.PROFILE_TAB))
 
+          AddGroupDropdownItem(onTabSelected = onTabSelected)
+
           // Logout section
           DropdownMenuItem(
               text = { Text(Tab.SignOut.name, color = MaterialTheme.colorScheme.onSurfaceVariant) },
@@ -449,6 +455,8 @@ fun TopDropdownMenuForProfile(onTabSelected: (Tab) -> Unit, onSignedOut: () -> U
         expanded = expanded,
         onDismissRequest = { expanded = false },
         containerColor = MaterialTheme.colorScheme.surfaceVariant) {
+          AddGroupDropdownItem(onTabSelected = onTabSelected)
+
           // Settings section
           DropdownMenuItem(
               text = {
@@ -502,4 +510,24 @@ fun topAppColor(): TopAppBarColors {
       titleContentColor = MaterialTheme.colorScheme.primary,
       actionIconContentColor = MaterialTheme.colorScheme.primary,
   )
+}
+
+/**
+ * An Add Group section in the dropdown menu.
+ *
+ * @param onTabSelected A callback function that is invoked when a tab is selected. It takes a [Tab]
+ *   as a parameter.
+ */
+@Composable
+fun AddGroupDropdownItem(onTabSelected: (Tab) -> Unit) {
+  DropdownMenuItem(
+      text = { Text(Tab.AddGroup.name, color = MaterialTheme.colorScheme.onSurfaceVariant) },
+      leadingIcon = {
+        Icon(
+            imageVector = Tab.AddGroup.icon,
+            contentDescription = Tab.AddGroup.name,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant)
+      },
+      onClick = { onTabSelected(Tab.AddGroup) },
+      modifier = Modifier.testTag(NavigationTestTags.ADDGROUP_TAB))
 }
