@@ -27,6 +27,10 @@
     <string name="todos_save_button_text">Save</string>
     <string name="todos_back_button_desc">Back</string>
     <string name="todos_delete_button_text">Delete</string>
+    <string name="todos_past_warning">Warning! You are creating a todo in the past</string>
+    <string name="todos_past_warning_text">Are you sure you want to create a todo with a past deadline?</string>
+    <string name="todos_create">Yes, Create</string>
+    <string name="todos_edit">Yes, Save</string>
     <string name="todos_sort_button_label">Sort todos</string>
     <string name="todos_date_descending_sort_button_text">Date descending</string>
     <string name="todos_date_ascending_sort_button_text">Date ascending</string>
@@ -103,6 +107,7 @@
     <string name="events_delete_warning">Warning! You are deleting an event</string>
     <string name="events_delete_warning_text">This action cannot be reversed. Are you sure?</string>
 
+    <!-- General -->
     <string name="delete">Yes, Delete</string>
     <string name="cancel">No, Cancel</string>
     <string name="saving">Saving…</string>
