@@ -196,7 +196,7 @@ fun AddToDoScreen(
                           imageVector = Icons.Default.ChevronRight,
                           contentDescription = null,
                           modifier =
-                              Modifier.rotate(if (expandAdvanced.value) 90f else 0f)
+                              Modifier.rotate(90f * expandAdvanced.value.compareTo(false))
                                   .clickable(
                                       onClick = { expandAdvanced.value = !expandAdvanced.value })
                                   .testTag(AddToDoScreenTestTags.MORE_OPTIONS))

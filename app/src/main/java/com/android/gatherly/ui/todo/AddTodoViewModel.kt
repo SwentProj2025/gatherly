@@ -284,8 +284,6 @@ class AddTodoViewModel(
                 ?: throw IllegalStateException("User not authenticated.")
 
         val uid = todoRepository.getNewUid()
-        val date =
-            dateSDF.parse(validated.dueDate) ?: throw IllegalArgumentException("Invalid date")
 
         val dueDateTimestamp =
             if (validated.dueDate.isNotBlank()) {
