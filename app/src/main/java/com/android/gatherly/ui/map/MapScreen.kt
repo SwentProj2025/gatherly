@@ -1,6 +1,7 @@
 package com.android.gatherly.ui.map
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -134,7 +135,13 @@ fun MapScreen(
     navigationActions: NavigationActions? = null,
     goToEvent: (String) -> Unit = {},
     goToToDo: () -> Unit = {},
-    runInitialisation: Boolean = true
+    runInitialisation: Boolean = true,
+    isLocationPermissionGrantedProvider: (Context) -> Boolean = { ctx ->
+      (ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION) ==
+          PackageManager.PERMISSION_GRANTED) ||
+          (ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_COARSE_LOCATION) ==
+              PackageManager.PERMISSION_GRANTED)
+    }
 ) {
   /** Location services setup * */
   val context = LocalContext.current
@@ -181,13 +188,8 @@ fun MapScreen(
   /** Check permission and start location updates * */
   LaunchedEffect(Unit) {
     // Check if we already have permissions (Fine OR Coarse)
-    val hasFine =
-        ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) ==
-            PackageManager.PERMISSION_GRANTED
-    val hasCoarse =
-        ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) ==
-            PackageManager.PERMISSION_GRANTED
-    val hasPermission = hasFine || hasCoarse
+
+    val hasPermission = isLocationPermissionGrantedProvider(context)
 
     if (hasPermission) {
       // Already existing permissions
