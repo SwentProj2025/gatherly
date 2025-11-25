@@ -109,6 +109,7 @@
     <string name="delete">Yes, Delete</string>
     <string name="cancel">No, Cancel</string>
     <string name="saving">Saving…</string>
+    <string name="save">Save</string>
 
     <!-- HomePage -->
     <string name="homepage_arrow_icon_description">Navigate</string>

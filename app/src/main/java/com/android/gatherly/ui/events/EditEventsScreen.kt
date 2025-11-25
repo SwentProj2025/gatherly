@@ -336,7 +336,7 @@ fun EditEventsScreen(
                     textFieldColors = textFieldColors,
                     testTagInput = EditEventsScreenTestTags.INPUT_DATE,
                     testTagErrorMessage = EditEventsScreenTestTags.ERROR_MESSAGE,
-                )
+                    onClick = {})
               }
 
               item {
