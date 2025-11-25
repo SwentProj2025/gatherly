@@ -66,7 +66,7 @@ class EditTodoScreenTest : GatherlyTest() {
     composeTestRule.onNodeWithTag(EditToDoScreenTestTags.TODO_DELETE).assertExists()
     composeTestRule.onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_TITLE).assertExists()
     composeTestRule.onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_DESCRIPTION).assertExists()
-    composeTestRule.onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_LOCATION).assertExists()
+    composeTestRule.onNodeWithTag(LocationSuggestionsTestTags.INPUT).assertExists()
     composeTestRule.onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_DATE).assertExists()
     composeTestRule.onNodeWithTag(EditToDoScreenTestTags.ERROR_MESSAGE).assertIsNotDisplayed()
   }
@@ -97,9 +97,7 @@ class EditTodoScreenTest : GatherlyTest() {
   fun canEnterLocation() {
     val text = "testLocation"
     composeTestRule.enterEditTodoLocation(text)
-    composeTestRule
-        .onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_LOCATION)
-        .assertTextContains(text)
+    composeTestRule.onNodeWithTag(LocationSuggestionsTestTags.INPUT).assertTextContains(text)
     composeTestRule
         .onNodeWithTag(EditToDoScreenTestTags.ERROR_MESSAGE, useUnmergedTree = true)
         .assertIsNotDisplayed()

@@ -56,9 +56,6 @@ object AddToDoScreenTestTags {
   /** Tag for the To-Do description input field. */
   const val INPUT_TODO_DESCRIPTION = "inputTodoDescription"
 
-  /** Tag for the To-Do location input field. */
-  const val INPUT_TODO_LOCATION = "inputTodoLocation"
-
   /** Tag for the To-Do due date input field. */
   const val INPUT_TODO_DATE = "inputTodoDate"
 
@@ -71,12 +68,32 @@ object AddToDoScreenTestTags {
   /** Tag for displaying error messages under text fields. */
   const val ERROR_MESSAGE = "errorMessage"
 
-  /** Tag for displaying error messages under text fields. */
-  const val LOCATION_MENU = "locationMenu"
-
   /** Tag for the extra options button */
   const val MORE_OPTIONS = "moreOptions"
 }
+
+/**
+ * Text field colors defined outside the composable scope to be shared between add and edit todo
+ * screens
+ */
+val toDoTextFieldColors
+  @Composable
+  get() =
+      OutlinedTextFieldDefaults.colors(
+          focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+          unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+          errorContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+          unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+          focusedTextColor = MaterialTheme.colorScheme.onBackground,
+          errorTextColor = MaterialTheme.colorScheme.onBackground,
+          focusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+          unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+          focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+          unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+          unfocusedBorderColor = Color.Transparent,
+          focusedBorderColor = Color.Transparent,
+          disabledBorderColor = Color.Transparent,
+          errorBorderColor = Color.Transparent)
 
 /**
  * Displays the screen for creating and saving a new [ToDo].
@@ -101,23 +118,6 @@ fun AddToDoScreen(
   val screenPadding = dimensionResource(id = R.dimen.padding_screen)
   val fieldSpacing = dimensionResource(id = R.dimen.spacing_between_fields)
   val inputHeight = dimensionResource(id = R.dimen.input_height)
-
-  val textFieldColors =
-      OutlinedTextFieldDefaults.colors(
-          focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-          unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-          errorContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-          unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-          focusedTextColor = MaterialTheme.colorScheme.onBackground,
-          errorTextColor = MaterialTheme.colorScheme.onBackground,
-          focusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
-          unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
-          focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
-          unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
-          unfocusedBorderColor = Color.Transparent,
-          focusedBorderColor = Color.Transparent,
-          disabledBorderColor = Color.Transparent,
-          errorBorderColor = Color.Transparent)
 
   LaunchedEffect(errorMsg) {
     if (errorMsg != null) {
@@ -166,7 +166,7 @@ fun AddToDoScreen(
                         Text(it, modifier = Modifier.testTag(AddToDoScreenTestTags.ERROR_MESSAGE))
                       }
                     },
-                    colors = textFieldColors,
+                    colors = toDoTextFieldColors,
                     modifier =
                         Modifier.fillMaxWidth().testTag(AddToDoScreenTestTags.INPUT_TODO_TITLE))
               }
@@ -178,7 +178,7 @@ fun AddToDoScreen(
                     onValueChange = { addTodoViewModel.onDescriptionChanged(it) },
                     label = { Text(stringResource(R.string.todos_description_field_label)) },
                     placeholder = { Text(stringResource(R.string.todos_description_placeholder)) },
-                    colors = textFieldColors,
+                    colors = toDoTextFieldColors,
                     modifier =
                         Modifier.fillMaxWidth()
                             .height(inputHeight)
@@ -215,9 +215,7 @@ fun AddToDoScreen(
                       onLocationChanged = { addTodoViewModel.onLocationChanged(it) },
                       onSelectLocation = { loc -> addTodoViewModel.selectLocation(loc) },
                       modifier = Modifier.fillMaxWidth(),
-                      testTagInput = AddToDoScreenTestTags.INPUT_TODO_LOCATION,
-                      testTagDropdown = AddToDoScreenTestTags.LOCATION_MENU,
-                      textFieldColors = textFieldColors)
+                      textFieldColors = toDoTextFieldColors)
                 }
 
                 // Due Date Input
@@ -226,7 +224,7 @@ fun AddToDoScreen(
                       initialDate = todoUIState.dueDate,
                       onDateChanged = { addTodoViewModel.onDateChanged(it) },
                       dueDateError = todoUIState.dueDateError,
-                      textFieldColors = textFieldColors,
+                      textFieldColors = toDoTextFieldColors,
                       testTagInput = AddToDoScreenTestTags.INPUT_TODO_DATE,
                       testTagErrorMessage = AddToDoScreenTestTags.ERROR_MESSAGE,
                   )
@@ -238,7 +236,7 @@ fun AddToDoScreen(
                       initialTime = todoUIState.dueTime,
                       onTimeChanged = { addTodoViewModel.onTimeChanged(it) },
                       dueTimeError = todoUIState.dueTimeError,
-                      textFieldColors = textFieldColors,
+                      textFieldColors = toDoTextFieldColors,
                       testTagInput = AddToDoScreenTestTags.INPUT_TODO_TIME,
                       testTagErrorMessage = AddToDoScreenTestTags.ERROR_MESSAGE,
                   )

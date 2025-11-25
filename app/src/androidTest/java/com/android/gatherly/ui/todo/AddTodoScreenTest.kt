@@ -50,7 +50,7 @@ class AddTodoScreenTest : GatherlyTest() {
         .assertTextContains("Save", substring = true, ignoreCase = true)
     composeTestRule.onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_TITLE).assertIsDisplayed()
     composeTestRule.onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_DESCRIPTION).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_LOCATION).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(LocationSuggestionsTestTags.INPUT).assertIsDisplayed()
     composeTestRule.onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_DATE).assertIsDisplayed()
     composeTestRule.onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_TIME).assertIsDisplayed()
     composeTestRule
@@ -84,9 +84,7 @@ class AddTodoScreenTest : GatherlyTest() {
   fun canEnterLocation() {
     val text = "location"
     composeTestRule.enterAddTodoLocation(text)
-    composeTestRule
-        .onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_LOCATION)
-        .assertTextContains(text)
+    composeTestRule.onNodeWithTag(LocationSuggestionsTestTags.INPUT).assertTextContains(text)
     composeTestRule
         .onNodeWithTag(AddToDoScreenTestTags.ERROR_MESSAGE, useUnmergedTree = true)
         .assertIsNotDisplayed()

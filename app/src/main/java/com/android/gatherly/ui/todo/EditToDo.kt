@@ -19,7 +19,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -32,7 +31,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
@@ -58,12 +56,6 @@ object EditToDoScreenTestTags {
   /** Tag for the To-Do description input field. */
   const val INPUT_TODO_DESCRIPTION = "inputTodoDescription"
 
-  /** Tag for the To-Do assignee input field. */
-  const val INPUT_TODO_ASSIGNEE = "inputTodoAssignee"
-
-  /** Tag for the To-Do location input field. */
-  const val INPUT_TODO_LOCATION = "inputTodoLocation"
-
   /** Tag for the To-Do due date input field. */
   const val INPUT_TODO_DATE = "inputTodoDate"
 
@@ -78,9 +70,6 @@ object EditToDoScreenTestTags {
 
   /** Tag for displaying error messages under text fields. */
   const val ERROR_MESSAGE = "errorMessage"
-
-  /** Tag for displaying error messages under text fields. */
-  const val LOCATION_MENU = "locationMenu"
 
   /** Tag for displaying error messages under text fields. */
   const val MORE_OPTIONS = "moreOptions"
@@ -115,23 +104,6 @@ fun EditToDoScreen(
   val screenPadding = dimensionResource(id = R.dimen.padding_screen)
   val fieldSpacing = dimensionResource(id = R.dimen.spacing_between_fields)
   val buttonSpacing = dimensionResource(id = R.dimen.spacing_between_buttons)
-
-  val textFieldColors =
-      OutlinedTextFieldDefaults.colors(
-          focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-          unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-          errorContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-          unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-          focusedTextColor = MaterialTheme.colorScheme.onBackground,
-          errorTextColor = MaterialTheme.colorScheme.onBackground,
-          focusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
-          unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
-          focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
-          unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
-          unfocusedBorderColor = Color.Transparent,
-          focusedBorderColor = Color.Transparent,
-          disabledBorderColor = Color.Transparent,
-          errorBorderColor = Color.Transparent)
 
   // Search location when input changes
   LaunchedEffect(todoUIState.location) {
@@ -181,7 +153,7 @@ fun EditToDoScreen(
                         Text(it, modifier = Modifier.testTag(EditToDoScreenTestTags.ERROR_MESSAGE))
                       }
                     },
-                    colors = textFieldColors,
+                    colors = toDoTextFieldColors,
                     modifier =
                         Modifier.fillMaxWidth().testTag(EditToDoScreenTestTags.INPUT_TODO_TITLE))
               }
@@ -193,7 +165,7 @@ fun EditToDoScreen(
                     onValueChange = { editTodoViewModel.onDescriptionChanged(it) },
                     label = { Text(stringResource(R.string.todos_description_field_label)) },
                     placeholder = { Text(stringResource(R.string.todos_description_placeholder)) },
-                    colors = textFieldColors,
+                    colors = toDoTextFieldColors,
                     modifier =
                         Modifier.fillMaxWidth()
                             .testTag(EditToDoScreenTestTags.INPUT_TODO_DESCRIPTION),
@@ -229,9 +201,7 @@ fun EditToDoScreen(
                       onLocationChanged = { editTodoViewModel.onLocationChanged(it) },
                       onSelectLocation = { loc -> editTodoViewModel.selectLocation(loc) },
                       modifier = Modifier.fillMaxWidth(),
-                      testTagInput = EditToDoScreenTestTags.INPUT_TODO_LOCATION,
-                      testTagDropdown = EditToDoScreenTestTags.LOCATION_MENU,
-                      textFieldColors = textFieldColors)
+                      textFieldColors = toDoTextFieldColors)
                 }
 
                 // Due Date Input
@@ -240,7 +210,7 @@ fun EditToDoScreen(
                       initialDate = todoUIState.dueDate,
                       onDateChanged = { editTodoViewModel.onDateChanged(it) },
                       dueDateError = todoUIState.dueDateError,
-                      textFieldColors = textFieldColors,
+                      textFieldColors = toDoTextFieldColors,
                       testTagInput = EditToDoScreenTestTags.INPUT_TODO_DATE,
                       testTagErrorMessage = EditToDoScreenTestTags.ERROR_MESSAGE,
                   )
@@ -252,7 +222,7 @@ fun EditToDoScreen(
                       initialTime = todoUIState.dueTime,
                       onTimeChanged = { editTodoViewModel.onTimeChanged(it) },
                       dueTimeError = todoUIState.dueTimeError,
-                      textFieldColors = textFieldColors,
+                      textFieldColors = toDoTextFieldColors,
                       testTagInput = EditToDoScreenTestTags.INPUT_TODO_TIME,
                       testTagErrorMessage = EditToDoScreenTestTags.ERROR_MESSAGE,
                   )

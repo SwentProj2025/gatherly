@@ -21,6 +21,7 @@ import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.ui.todo.AddToDoScreenTestTags
 import com.android.gatherly.ui.todo.EditToDoScreenTestTags
+import com.android.gatherly.ui.todo.LocationSuggestionsTestTags
 import com.android.gatherly.ui.todo.OverviewScreenTestTags
 import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
@@ -94,8 +95,8 @@ abstract class GatherlyTest() {
   }
 
   fun ComposeTestRule.enterEditTodoLocation(location: String) {
-    onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_LOCATION).performTextClearance()
-    onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_LOCATION).performTextInput(location)
+    onNodeWithTag(LocationSuggestionsTestTags.INPUT).performTextClearance()
+    onNodeWithTag(LocationSuggestionsTestTags.INPUT).performTextInput(location)
   }
 
   fun ComposeTestRule.checkErrorMessageIsDisplayedForEditTodo() =
@@ -115,7 +116,7 @@ abstract class GatherlyTest() {
       onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_TIME).performTextInput(time)
 
   fun ComposeTestRule.enterAddTodoLocation(location: String) =
-      onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_LOCATION).performTextInput(location)
+      onNodeWithTag(LocationSuggestionsTestTags.INPUT).performTextInput(location)
 
   fun ComposeTestRule.enterAddTodoDetails(
       todo: ToDo,
