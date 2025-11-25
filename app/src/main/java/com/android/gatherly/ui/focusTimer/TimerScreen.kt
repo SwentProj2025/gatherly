@@ -80,8 +80,6 @@ fun TimerScreen(
     navigationActions: NavigationActions? = null,
 ) {
 
-  val uiState by timerViewModel.uiState.collectAsState()
-
   // Scaffold to have top bar and bottom bar
   Scaffold(
       topBar = {
