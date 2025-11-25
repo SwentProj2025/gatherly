@@ -6,6 +6,8 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import com.android.gatherly.model.event.EventsLocalRepository
+import com.android.gatherly.model.notification.NotificationsLocalRepository
+import com.android.gatherly.model.notification.NotificationsRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.todo.ToDo
@@ -65,6 +67,7 @@ class HomePageScreenTest {
   private lateinit var todosLocalRepo: ToDosLocalRepository
   private lateinit var eventsLocalRepo: EventsLocalRepository
   private lateinit var profileLocalRepo: ProfileLocalRepository
+  private lateinit var notificationsRepository: NotificationsRepository
   private lateinit var mockitoUtils: MockitoUtils
 
   @Before
@@ -73,6 +76,7 @@ class HomePageScreenTest {
       todosLocalRepo = ToDosLocalRepository()
       eventsLocalRepo = EventsLocalRepository()
       profileLocalRepo = ProfileLocalRepository()
+      notificationsRepository = NotificationsLocalRepository()
 
       populateRepositories()
     }
@@ -88,6 +92,7 @@ class HomePageScreenTest {
             toDosRepository = todosLocalRepo,
             eventsRepository = eventsLocalRepo,
             profileRepository = profileLocalRepo,
+            notificationsRepository = notificationsRepository,
             authProvider = { mockitoUtils.mockAuth })
     composeRule.setContent { HomePageScreen(homePageViewModel = fakeViewModel) }
   }
@@ -194,6 +199,7 @@ class HomePageScreenTest {
             toDosRepository = todosLocalRepo,
             eventsRepository = eventsLocalRepo,
             profileRepository = profileLocalRepo,
+            notificationsRepository = notificationsRepository,
             authProvider = { mockitoUtils.mockAuth })
     composeRule.setContent { HomePageScreen(homePageViewModel = fakeViewModel) }
 

@@ -1,5 +1,7 @@
 package com.android.gatherly.viewmodel.profile
 
+import com.android.gatherly.model.notification.NotificationsLocalRepository
+import com.android.gatherly.model.notification.NotificationsRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
@@ -16,6 +18,7 @@ import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
+import org.mockito.kotlin.not
 
 /**
  * Integration tests for [com.android.gatherly.ui.profile.ProfileViewModel] using the Firebase
@@ -32,6 +35,7 @@ class ProfileViewModelIntegrationTest {
 
   private lateinit var profileViewModel: ProfileViewModel
   private lateinit var profileRepository: ProfileRepository
+  private lateinit var notificationsRepository: NotificationsRepository
   private lateinit var mockitoUtils: MockitoUtils
 
   // initialize this so that tests control all coroutines and can wait on them
@@ -47,6 +51,7 @@ class ProfileViewModelIntegrationTest {
 
     // initialize repos and profileViewModel
     profileRepository = ProfileLocalRepository()
+    notificationsRepository = NotificationsLocalRepository()
   }
 
   @After
@@ -65,7 +70,10 @@ class ProfileViewModelIntegrationTest {
     mockitoUtils.chooseCurrentUser(uid)
 
     profileViewModel =
-        ProfileViewModel(repository = profileRepository, authProvider = { mockitoUtils.mockAuth })
+        ProfileViewModel(
+            profileRepository = profileRepository,
+            notificationsRepository = notificationsRepository,
+            authProvider = { mockitoUtils.mockAuth })
     profileViewModel.loadUserProfile()
 
     // Wait until loading completes and profile is available
@@ -85,7 +93,10 @@ class ProfileViewModelIntegrationTest {
     mockitoUtils.chooseCurrentUser(uid)
 
     profileViewModel =
-        ProfileViewModel(repository = profileRepository, authProvider = { mockitoUtils.mockAuth })
+        ProfileViewModel(
+            profileRepository = profileRepository,
+            notificationsRepository = notificationsRepository,
+            authProvider = { mockitoUtils.mockAuth })
     profileViewModel.loadUserProfile()
 
     // Wait until loading completes and an error appears
@@ -101,7 +112,10 @@ class ProfileViewModelIntegrationTest {
     mockitoUtils.unauthenticatedCurrentUser()
 
     profileViewModel =
-        ProfileViewModel(repository = profileRepository, authProvider = { mockitoUtils.mockAuth })
+        ProfileViewModel(
+            profileRepository = profileRepository,
+            notificationsRepository = notificationsRepository,
+            authProvider = { mockitoUtils.mockAuth })
     profileViewModel.loadUserProfile()
 
     // Wait until loading completes and an error appears

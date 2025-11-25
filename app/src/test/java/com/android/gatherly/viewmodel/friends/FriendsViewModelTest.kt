@@ -1,5 +1,7 @@
 package com.android.gatherly.viewmodel.friends
 
+import com.android.gatherly.model.notification.NotificationsLocalRepository
+import com.android.gatherly.model.notification.NotificationsRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
@@ -33,6 +35,7 @@ private const val DELAY = 200L
 class FriendsViewModelTest {
 
   private lateinit var profileRepository: ProfileLocalRepository
+  private lateinit var notificationsRepository: NotificationsRepository
   private lateinit var viewModel: FriendsViewModel
   private lateinit var mockitoUtils: MockitoUtils
 
@@ -45,6 +48,7 @@ class FriendsViewModelTest {
     Dispatchers.setMain(testDispatcher)
     // initialize repos and viewModel
     profileRepository = ProfileLocalRepository()
+    notificationsRepository = NotificationsLocalRepository()
 
     fill_repositories()
 
@@ -53,7 +57,10 @@ class FriendsViewModelTest {
     mockitoUtils.chooseCurrentUser("A")
 
     viewModel =
-        FriendsViewModel(repository = profileRepository, authProvider = { mockitoUtils.mockAuth })
+        FriendsViewModel(
+            profileRepository = profileRepository,
+            notificationsRepository = notificationsRepository,
+            authProvider = { mockitoUtils.mockAuth })
   }
 
   @After
@@ -210,7 +217,10 @@ class FriendsViewModelTest {
           ) {}
         }
     val errorViewModel =
-        FriendsViewModel(repository = throwingRepository, authProvider = { mockitoUtils.mockAuth })
+        FriendsViewModel(
+            profileRepository = throwingRepository,
+            notificationsRepository = notificationsRepository,
+            authProvider = { mockitoUtils.mockAuth })
     errorViewModel.refreshFriends("A")
 
     advanceUntilIdle()
