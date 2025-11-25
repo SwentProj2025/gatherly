@@ -8,6 +8,7 @@ import androidx.activity.result.contract.ActivityResultContract
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.core.app.ActivityOptionsCompat
+import androidx.test.platform.app.InstrumentationRegistry
 import com.android.gatherly.model.event.EventsLocalRepository
 import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -16,6 +17,7 @@ import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.spyk
 import io.mockk.verify
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
@@ -34,6 +36,19 @@ import org.junit.Test
 class MapScreenCoverageTest {
 
   @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
+
+  // Ensure permissions are revoked so we hit the "Slow Path"
+  @Before
+  fun setup() {
+    val instrumentation = InstrumentationRegistry.getInstrumentation()
+    val packageName = instrumentation.targetContext.packageName
+
+    // Execute shell commands to revoke permissions on the device
+    instrumentation.uiAutomation.executeShellCommand(
+        "pm revoke $packageName ${Manifest.permission.ACCESS_FINE_LOCATION}")
+    instrumentation.uiAutomation.executeShellCommand(
+        "pm revoke $packageName ${Manifest.permission.ACCESS_COARSE_LOCATION}")
+  }
 
   /**
    * Verifies that when the permission launcher callback receives a "Granted" result, the ViewModel
