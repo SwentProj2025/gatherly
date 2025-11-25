@@ -136,6 +136,9 @@ class MapScreenCoverageTest {
     // STEP 5: Verification
     // =========================================================================================
 
+    // Wait for idle
+    compose.waitForIdle()
+
     // Assertion 1: Did the app actually try to ask for permissions? (Covers the 'else' block)
     assert(wasLaunchCalled)
 
