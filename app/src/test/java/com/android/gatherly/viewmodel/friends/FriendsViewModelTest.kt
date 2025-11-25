@@ -208,6 +208,8 @@ class FriendsViewModelTest {
               createdTodosCount: Int?,
               completedTodosCount: Int?
           ) {}
+
+          override suspend fun updateFocusPoints(uid: String, points: Double) {}
         }
     val errorViewModel =
         FriendsViewModel(repository = throwingRepository, authProvider = { mockitoUtils.mockAuth })

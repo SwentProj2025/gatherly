@@ -228,4 +228,12 @@ interface ProfileRepository {
       createdTodosCount: Int? = null,
       completedTodosCount: Int? = null
   )
+
+  /**
+   * Adds the given number of points to the user's total number of points
+   *
+   * @param uid The profile to update
+   * @param points The number of points to add
+   */
+  suspend fun updateFocusPoints(uid: String, points: Double)
 }

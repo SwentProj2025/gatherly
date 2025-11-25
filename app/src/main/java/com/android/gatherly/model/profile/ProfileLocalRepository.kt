@@ -227,6 +227,12 @@ class ProfileLocalRepository : ProfileRepository {
     updateProfile(updatedProfile)
   }
 
+  override suspend fun updateFocusPoints(uid: String, points: Double) {
+    var profile = getProfileByUid(uid) ?: throw IllegalArgumentException("Profile doesn't exist")
+    profile = profile.copy(focusPoints = profile.focusPoints + points)
+    updateProfile(profile)
+  }
+
   private fun rank(count: Int): Rank =
       when {
         count >= 20 -> Rank.LEGEND
