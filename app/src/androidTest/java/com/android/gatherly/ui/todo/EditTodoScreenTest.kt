@@ -149,4 +149,14 @@ class EditTodoScreenTest : GatherlyTest() {
     composeTestRule.onNodeWithTag(EditToDoScreenTestTags.TODO_SAVE).performClick()
     composeTestRule.onNodeWithTag(AlertDialogTestTags.ALERT).assertIsDisplayed()
   }
+
+  /** Check that pressing the delete button shows the alert dialog */
+  @Test
+  fun deleteTodoShowsAlertDialog() {
+    composeTestRule
+        .onNodeWithTag(EditToDoScreenTestTags.TODO_DELETE)
+        .assertIsDisplayed()
+        .performClick()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.ALERT).assertIsDisplayed()
+  }
 }
