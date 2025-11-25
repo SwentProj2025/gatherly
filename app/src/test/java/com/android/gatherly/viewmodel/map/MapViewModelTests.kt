@@ -446,6 +446,10 @@ class MapViewModelTests {
         assertEquals(EPFL_LATLNG, result)
       }
 
+  /**
+   * Verifies that fetching location to center on with location permission and no consulted item
+   * returns current location.
+   */
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun fetchLocationToCenterOn_withLocationPermissionAndNoConsultedItem_returnsCurrentLocation() =
