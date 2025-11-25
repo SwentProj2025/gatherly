@@ -7,9 +7,12 @@ import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.group.Group
 import com.android.gatherly.model.group.GroupsRepository
 import com.android.gatherly.model.group.GroupsRepositoryFirestore
+import com.android.gatherly.model.notification.NotificationsRepository
+import com.android.gatherly.model.notification.NotificationsRepositoryProvider
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
+import com.android.gatherly.utils.getProfileWithSyncedFriendNotifications
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
@@ -55,6 +58,8 @@ class AddGroupViewModel(
     private val groupsRepository: GroupsRepository = GroupsRepositoryFirestore(Firebase.firestore),
     private val profileRepository: ProfileRepository =
         ProfileRepositoryFirestore(Firebase.firestore, Firebase.storage),
+    private val notificationsRepository: NotificationsRepository =
+        NotificationsRepositoryProvider.repository,
     private val authProvider: () -> FirebaseAuth = { Firebase.auth }
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(AddGroupUiState())
@@ -140,7 +145,8 @@ class AddGroupViewModel(
         val currentUserId =
             authProvider().currentUser?.uid ?: throw IllegalStateException("No signed in user")
         val currentProfile =
-            profileRepository.getProfileByUid(currentUserId)
+            getProfileWithSyncedFriendNotifications(
+                profileRepository, notificationsRepository, currentUserId)
                 ?: throw NoSuchElementException("Current user profile not found")
 
         val friendProfiles =

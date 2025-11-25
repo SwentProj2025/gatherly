@@ -3,10 +3,14 @@ package com.android.gatherly.ui.friends
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.android.gatherly.model.notification.NotificationsRepository
+import com.android.gatherly.model.notification.NotificationsRepositoryProvider
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
+import com.android.gatherly.model.profile.ProfileRepositoryProvider
 import com.android.gatherly.utils.GenericViewModelFactory
+import com.android.gatherly.utils.getProfileWithSyncedFriendNotifications
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.auth.ktx.auth
@@ -28,7 +32,9 @@ data class FriendsUIState(
 )
 
 class FriendsViewModel(
-    private val repository: ProfileRepository,
+    private val profileRepository: ProfileRepository = ProfileRepositoryProvider.repository,
+    private val notificationsRepository: NotificationsRepository =
+        NotificationsRepositoryProvider.repository,
     private val authProvider: () -> FirebaseAuth = { Firebase.auth }
 ) : ViewModel() {
 
@@ -52,12 +58,14 @@ class FriendsViewModel(
   suspend fun refreshFriends(currentUserId: String) {
     _uiState.value = _uiState.value.copy(isLoading = true)
     try {
-      val friendsData = repository.getFriendsAndNonFriendsUsernames(currentUserId)
+      getProfileWithSyncedFriendNotifications(
+          profileRepository, notificationsRepository, currentUserId)
+      val friendsData = profileRepository.getFriendsAndNonFriendsUsernames(currentUserId)
 
       val allUsernames = friendsData.friendUsernames + friendsData.nonFriendUsernames
       val profiles =
           allUsernames
-              .mapNotNull { username -> repository.getProfileByUsername(username) }
+              .mapNotNull { username -> profileRepository.getProfileByUsername(username) }
               .associateBy { it.username }
 
       _uiState.value =
@@ -85,7 +93,7 @@ class FriendsViewModel(
     _uiState.value = _uiState.value.copy(friends = updatedFriends)
     viewModelScope.launch {
       try {
-        repository.deleteFriend(friend, currentUserId)
+        profileRepository.deleteFriend(friend, currentUserId)
         refreshFriends(currentUserId)
       } catch (e: Exception) {
         _uiState.value =
@@ -111,7 +119,7 @@ class FriendsViewModel(
     _uiState.value = _uiState.value.copy(friends = updatedFriends)
     viewModelScope.launch {
       try {
-        repository.addFriend(friend, currentUserId)
+        profileRepository.addFriend(friend, currentUserId)
         refreshFriends(currentUserId)
       } catch (e: Exception) {
         _uiState.value =
