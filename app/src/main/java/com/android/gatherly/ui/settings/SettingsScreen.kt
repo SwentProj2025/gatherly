@@ -140,11 +140,8 @@ fun SettingsScreen(
             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
             modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
             onSignedOut = {
-              if (uiState.isAnon) {
-                shouldShowLogOutWarning.value = true
-              } else {
-                settingsViewModel.signOut(credentialManager)
-              }
+              signOutAlertIfAnon(
+                  uiState, shouldShowLogOutWarning, settingsViewModel, credentialManager)
             })
       },
       containerColor = MaterialTheme.colorScheme.background,
@@ -339,6 +336,19 @@ fun SettingsScreen(
               isImportantWarning = true)
         }
       })
+}
+
+fun signOutAlertIfAnon(
+    uiState: SettingsUiState,
+    shouldShowLogOutWarning: MutableState<Boolean>,
+    settingsViewModel: SettingsViewModel,
+    credentialManager: CredentialManager
+) {
+  if (uiState.isAnon) {
+    shouldShowLogOutWarning.value = true
+  } else {
+    settingsViewModel.signOut(credentialManager)
+  }
 }
 
 /**

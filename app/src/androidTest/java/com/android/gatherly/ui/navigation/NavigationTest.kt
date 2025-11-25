@@ -17,6 +17,7 @@ import com.android.gatherly.ui.authentication.InitProfileScreenTestTags
 import com.android.gatherly.ui.authentication.SignInScreenTestTags
 import com.android.gatherly.ui.homePage.HomePageScreenTestTags
 import com.android.gatherly.ui.profile.ProfileScreenTestTags
+import com.android.gatherly.utils.AlertDialogTestTags
 import com.android.gatherly.utils.FakeCredentialManager
 import com.android.gatherly.utils.FakeJwtGenerator
 import com.android.gatherly.utils.FirebaseEmulator
@@ -186,6 +187,44 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.checkProfileScreenIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.LOGOUT_TAB).performClick()
+    composeTestRule.checkSignInScreenIsDisplayed()
+  }
+
+  /**
+   * Test: Verifies that the user can sign out from the profile screen, but given that they are
+   * anonymous, they get a warning before signing out
+   */
+  @Test
+  fun canLogOutFromProfileAnon() {
+    composeTestRule.setContent { GatherlyApp() }
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
+    composeTestRule.checkProfileScreenIsDisplayed()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.LOGOUT_TAB).performClick()
+    composeTestRule
+        .onNodeWithTag(AlertDialogTestTags.CONFIRM_BTN)
+        .assertIsDisplayed()
+        .performClick()
+    composeTestRule.checkSignInScreenIsDisplayed()
+  }
+
+  /**
+   * Test: Verifies that the user can sign out from the profile screen, but given that they are
+   * anonymous, they get a warning before signing out
+   */
+  @Test
+  fun canLogOutFromSettingsAnon() {
+    composeTestRule.setContent { GatherlyApp() }
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.SETTINGS_TAB).performClick()
+    composeTestRule.checkSettingsScreenIsDisplayed()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.LOGOUT_TAB).performClick()
+    composeTestRule
+        .onNodeWithTag(AlertDialogTestTags.CONFIRM_BTN)
+        .assertIsDisplayed()
+        .performClick()
     composeTestRule.checkSignInScreenIsDisplayed()
   }
 

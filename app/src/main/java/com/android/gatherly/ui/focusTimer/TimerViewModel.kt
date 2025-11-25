@@ -47,8 +47,7 @@ data class TimerState(
     val isStarted: Boolean = false,
     val errorMsg: String? = null,
     val linkedTodo: ToDo? = null,
-    val allTodos: List<ToDo> = emptyList(),
-    val signedOut: Boolean = false
+    val allTodos: List<ToDo> = emptyList()
 )
 
 /**

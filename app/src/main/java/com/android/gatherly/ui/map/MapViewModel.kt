@@ -49,7 +49,6 @@ const val LOCATION_FETCH_TIMEOUT = 5000L
  * @property lastConsultedEventId ID of the most recently consulted `Event`.
  * @property cameraPos Current camera position on the map.
  * @property errorMsg Error message to display, or null if no error.
- * @property onSignedOut Flag indicating whether the user has signed out.
  * @property displayEventsPage Flag indicating whether events are being displayed (vs todos).
  * @property currentUserLocation The user's current location, if available.
  */
@@ -60,7 +59,6 @@ data class UIState(
     val lastConsultedEventId: String? = null,
     val cameraPos: LatLng? = null,
     val errorMsg: String? = null,
-    val onSignedOut: Boolean = false,
     val displayEventsPage: Boolean = false,
     val currentUserLocation: LatLng? = null
 )

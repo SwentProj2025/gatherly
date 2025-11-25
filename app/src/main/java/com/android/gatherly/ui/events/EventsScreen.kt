@@ -49,7 +49,6 @@ import com.android.gatherly.R
 import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.ui.navigation.BottomNavigationMenu
-import com.android.gatherly.ui.navigation.HandleSignedOutState
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
@@ -132,7 +131,6 @@ enum class EventFilter {
  */
 @Composable
 fun EventsScreen(
-    onSignedOut: () -> Unit = {},
     onAddEvent: () -> Unit = {},
     navigateToEditEvent: (Event) -> Unit = {},
     navigationActions: NavigationActions? = null,
@@ -204,8 +202,6 @@ fun EventsScreen(
       eventsViewModel.refreshEvents(currentUserIdFromVM)
     }
   }
-
-  HandleSignedOutState(uiState.signedOut, onSignedOut)
 
   Scaffold(
       topBar = {

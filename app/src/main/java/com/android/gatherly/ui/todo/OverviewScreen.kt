@@ -53,7 +53,6 @@ import com.android.gatherly.R
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.ui.navigation.BottomNavigationMenu
-import com.android.gatherly.ui.navigation.HandleSignedOutState
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
@@ -115,7 +114,6 @@ fun OverviewScreen(
     onAddTodo: () -> Unit = {},
     onSelectTodo: (ToDo) -> Unit = {},
     goHomePage: () -> Unit = {},
-    onSignedOut: () -> Unit = {},
     navigationActions: NavigationActions? = null
 ) {
 
@@ -128,8 +126,6 @@ fun OverviewScreen(
 
   val ongoingTodos = todos.filter { it.status == ToDoStatus.ONGOING }
   val completedTodos = todos.filter { it.status == ToDoStatus.ENDED }
-
-  HandleSignedOutState(uiState.signedOut, onSignedOut)
 
   Scaffold(
       topBar = {

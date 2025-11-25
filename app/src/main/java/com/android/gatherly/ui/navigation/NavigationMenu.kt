@@ -218,16 +218,13 @@ fun TopNavigationMenuSettings(
  * @param onTabSelected A callback function that is invoked when a tab is selected. It takes a [Tab]
  *   as a parameter.
  * @param modifier A [Modifier] for this component. Default is [Modifier].
- * @param onSignedOut A callback function that is invoked when the user chooses to sign out. Default
- *   is an empty function.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopNavigationMenu_HomePage(
     selectedTab: Tab,
     onTabSelected: (Tab) -> Unit,
-    modifier: Modifier = Modifier,
-    onSignedOut: () -> Unit = {}
+    modifier: Modifier = Modifier
 ) {
   CenterAlignedTopAppBar(
       title = {
