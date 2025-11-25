@@ -74,15 +74,28 @@ class PointsRepositoryFirestore(private val db: FirebaseFirestore) : PointsRepos
    * @return A map of field names to values that can be stored in Firestore
    */
   private fun pointsToMap(points: Points): Map<String, Any?> {
-    return mapOf(
-        "userId" to points.userId,
-        "obtained" to points.obtained,
-        "reason" to points.reason,
-        "dateObtained" to points.dateObtained,
-        when (points.reason) {
-          is PointsSource.Timer -> "minutes" to points.reason.minutes
-          is PointsSource.Badge -> "badgeName" to points.reason.badgeName
-          is PointsSource.Leaderboard -> "rank" to points.reason.rank
-        })
+
+    val map =
+        mutableMapOf<String, Any?>(
+            "userId" to points.userId,
+            "obtained" to points.obtained,
+            "dateObtained" to points.dateObtained)
+
+    when (val src = points.reason) {
+      is PointsSource.Timer -> {
+        map["reason"] = "Timer"
+        map["minutes"] = src.minutes
+      }
+      is PointsSource.Badge -> {
+        map["reason"] = "Badge"
+        map["badgeName"] = src.badgeName
+      }
+      is PointsSource.Leaderboard -> {
+        map["reason"] = "Leaderboard"
+        map["rank"] = src.rank
+      }
+    }
+
+    return map
   }
 }

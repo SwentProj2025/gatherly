@@ -79,7 +79,14 @@ open class FirestorePointsGatherlyTest {
 
   /** Deletes all [Points] in the emulator Firestore */
   protected suspend fun clearPoints() {
-    val points = FirebaseEmulator.firestore.collection("points").get().await()
+    val currentUid = FirebaseEmulator.auth.currentUser?.uid ?: return
+
+    val points =
+        FirebaseEmulator.firestore
+            .collection("points")
+            .whereEqualTo("userId", currentUid)
+            .get()
+            .await()
 
     val batch = FirebaseEmulator.firestore.batch()
     points.documents.forEach { batch.delete(it.reference) }
@@ -90,7 +97,13 @@ open class FirestorePointsGatherlyTest {
 
   /** Returns the current count of [Points] in the emulator Firestore */
   protected suspend fun getPointsCount(): Int {
-    val snap = FirebaseEmulator.firestore.collection("points").get().await()
+    val currentUid = FirebaseEmulator.auth.currentUser?.uid ?: return -1
+    val snap =
+        FirebaseEmulator.firestore
+            .collection("points")
+            .whereEqualTo("userId", currentUid)
+            .get()
+            .await()
     return snap.size()
   }
 }
