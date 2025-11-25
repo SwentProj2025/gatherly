@@ -141,7 +141,7 @@ class EditTodoViewModelTest {
     editTodoViewModel.onTimeChanged("14:00")
     editTodoViewModel.onLocationChanged("Place")
 
-    editTodoViewModel.editTodo(baseTodo.uid)
+    editTodoViewModel.checkPastTime()
     advanceUntilIdle()
 
     val state = editTodoViewModel.uiState.value

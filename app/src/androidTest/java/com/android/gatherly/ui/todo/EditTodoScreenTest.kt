@@ -9,6 +9,7 @@ import androidx.compose.ui.test.performClick
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.todo.ToDosLocalRepository
+import com.android.gatherly.utils.AlertDialogTestTags
 import com.android.gatherly.utils.GatherlyTest
 import com.android.gatherly.utils.MockitoUtils
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -129,5 +130,12 @@ class EditTodoScreenTest : GatherlyTest() {
     val invalidTime = "25:80" // Invalid time format
     composeTestRule.enterEditTodoTime(invalidTime)
     composeTestRule.checkErrorMessageIsDisplayedForEditTodo()
+  }
+
+  @Test
+  fun enterPastDate() {
+    composeTestRule.enterEditTodoDate("12/12/2012")
+    composeTestRule.onNodeWithTag(EditToDoScreenTestTags.TODO_SAVE).performClick()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.ALERT).assertIsDisplayed()
   }
 }
