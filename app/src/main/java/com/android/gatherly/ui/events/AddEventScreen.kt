@@ -45,8 +45,7 @@ import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
 import com.android.gatherly.ui.theme.GatherlyTheme
-import com.android.gatherly.utils.DatePickerInputField
-import com.android.gatherly.utils.GatherlyDatePicker
+import com.android.gatherly.ui.todo.DateInputField
 import kotlinx.coroutines.delay
 
 object AddEventScreenTestTags {
@@ -106,9 +105,6 @@ fun AddEventScreen(
 
   // Profile state for the dropdown visibility
   var showProfilesDropdown by remember { mutableStateOf(false) }
-
-  // Date state for the alert dialog visibilty
-  var showDatePicker by remember { mutableStateOf(false) }
 
   // Toasts
   LaunchedEffect(ui.displayToast, ui.toastString) {
@@ -323,15 +319,14 @@ fun AddEventScreen(
 
               item {
                 // Date
-                DatePickerInputField(
-                    value = ui.date,
-                    label = stringResource(R.string.events_date_field_label),
-                    isError = ui.dateError,
-                    errorMessage = "Invalid format or past date",
-                    onClick = { showDatePicker = true },
-                    colors = textFieldColors,
+                DateInputField(
+                    initialDate = ui.date,
+                    onDateChanged = { addEventViewModel.updateDate(it) },
+                    dueDateError = ui.dateError,
+                    textFieldColors = textFieldColors,
                     testTagInput = AddEventScreenTestTags.INPUT_DATE,
-                    testTagError = AddEventScreenTestTags.ERROR_MESSAGE)
+                    testTagErrorMessage = AddEventScreenTestTags.ERROR_MESSAGE,
+                )
               }
 
               item {
@@ -386,12 +381,6 @@ fun AddEventScreen(
                     }
               }
             }
-
-        GatherlyDatePicker(
-            show = showDatePicker,
-            initialDate = ui.date,
-            onDateSelected = { selectedDate -> addEventViewModel.updateDate(selectedDate) },
-            onDismiss = { showDatePicker = false })
       }
 }
 
