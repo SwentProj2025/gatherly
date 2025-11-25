@@ -29,7 +29,6 @@ import com.android.gatherly.R
  * @param dueDateError An optional error message to display below the input field.
  * @param textFieldColors The colors to be used for the text field.
  * @param testTagInput The test tag used for the date input field.
- * @param testTagErrorMessage The test tag used for the error message text.
  */
 @Composable
 fun DateInputField(
@@ -37,8 +36,7 @@ fun DateInputField(
     onDateChanged: (String) -> Unit = {},
     dueDateError: Boolean,
     textFieldColors: TextFieldColors,
-    testTagInput: String,
-    testTagErrorMessage: String,
+    testTagInput: String
 ) {
   var dateFieldValue by remember { mutableStateOf(TextFieldValue("")) }
   dateFieldValue = dateFieldValue.copy(text = initialDate)
