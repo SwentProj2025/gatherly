@@ -95,8 +95,6 @@
     <string name="events_title_field_placeholder">Task Title</string>
     <string name="events_description_field_label">Description (*)</string>
     <string name="events_description_placeholder">Describe the task</string>
-    <string name="events_creator_field_label">Creator</string>
-    <string name="events_creator_placeholder">Assign a creator</string>
     <string name="events_start_time_field_label">Start Time (*)</string>
     <string name="events_end_time_field_label">End Time (*)</string>
     <string name="events_date_field_label">Due Date (*)</string>
