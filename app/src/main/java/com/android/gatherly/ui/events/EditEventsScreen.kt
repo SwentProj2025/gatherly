@@ -327,63 +327,40 @@ fun EditEventsScreen(
                       }
                 }
               }
-
               item {
                 // Date
-                OutlinedTextField(
-                    value = ui.date,
-                    onValueChange = { editEventsViewModel.updateDate(it) },
-                    label = { Text(stringResource(R.string.events_date_field_label)) },
-                    placeholder = { Text("dd/MM/yyyy") },
-                    isError = ui.dateError,
-                    supportingText = {
-                      if (ui.dateError) {
-                        Text(
-                            "Invalid format or past date",
-                            modifier = Modifier.testTag(EditEventsScreenTestTags.ERROR_MESSAGE))
-                      }
-                    },
-                    colors = textFieldColors,
-                    modifier = Modifier.fillMaxWidth().testTag(EditEventsScreenTestTags.INPUT_DATE))
+                DateInputField(
+                    initialDate = ui.date,
+                    onDateChanged = { editEventsViewModel.updateDate(it) },
+                    dueDateError = ui.dateError,
+                    textFieldColors = textFieldColors,
+                    testTagInput = EditEventsScreenTestTags.INPUT_DATE,
+                    testTagErrorMessage = EditEventsScreenTestTags.ERROR_MESSAGE,
+                )
               }
 
               item {
                 // Start time
-                OutlinedTextField(
-                    value = ui.startTime,
-                    onValueChange = { editEventsViewModel.updateStartTime(it) },
-                    label = { Text(stringResource(R.string.events_start_time_field_label)) },
-                    placeholder = { Text("HH:mm") },
-                    isError = ui.startTimeError,
-                    supportingText = {
-                      if (ui.startTimeError) {
-                        Text(
-                            "Use format HH:mm",
-                            modifier = Modifier.testTag(EditEventsScreenTestTags.ERROR_MESSAGE))
-                      }
-                    },
-                    colors = textFieldColors,
-                    modifier =
-                        Modifier.fillMaxWidth().testTag(EditEventsScreenTestTags.INPUT_START))
+                StartTimeInputField(
+                    initialTime = ui.startTime,
+                    onTimeChanged = { editEventsViewModel.updateStartTime(it) },
+                    dueTimeError = ui.startTimeError,
+                    textFieldColors = textFieldColors,
+                    testTagInput = EditEventsScreenTestTags.INPUT_START,
+                    testTagErrorMessage = EditEventsScreenTestTags.ERROR_MESSAGE,
+                )
               }
 
               item {
                 // End time
-                OutlinedTextField(
-                    value = ui.endTime,
-                    onValueChange = { editEventsViewModel.updateEndTime(it) },
-                    label = { Text(stringResource(R.string.events_end_time_field_label)) },
-                    placeholder = { Text("HH:mm") },
-                    isError = ui.endTimeError,
-                    supportingText = {
-                      if (ui.endTimeError) {
-                        Text(
-                            "Invalid format, past date or ending time before starting time",
-                            modifier = Modifier.testTag(EditEventsScreenTestTags.ERROR_MESSAGE))
-                      }
-                    },
-                    colors = textFieldColors,
-                    modifier = Modifier.fillMaxWidth().testTag(EditEventsScreenTestTags.INPUT_END))
+                EndTimeInputField(
+                    initialTime = ui.endTime,
+                    onTimeChanged = { editEventsViewModel.updateEndTime(it) },
+                    dueTimeError = ui.endTimeError,
+                    textFieldColors = textFieldColors,
+                    testTagInput = EditEventsScreenTestTags.INPUT_END,
+                    testTagErrorMessage = EditEventsScreenTestTags.ERROR_MESSAGE,
+                )
               }
 
               item {

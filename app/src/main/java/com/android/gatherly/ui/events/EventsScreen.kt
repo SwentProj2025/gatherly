@@ -412,9 +412,9 @@ fun EventsScreen(
               confirmText = stringResource(R.string.unregister_button_title),
               onDismiss = { isPopupOnUpcoming.value = false },
               creatorText = event.creatorName,
-              dateText = event.date.toString(),
-              startTimeText = event.startTime.toString(),
-              endTimeText = event.endTime.toString(),
+              dateText = dateToString(event.date),
+              startTimeText = timeToString(event.startTime),
+              endTimeText = timeToString(event.endTime),
               onConfirm = {
                 eventsViewModel.onUnregister(
                     eventId = event.id, currentUserId = currentUserIdFromVM)
@@ -433,9 +433,9 @@ fun EventsScreen(
               confirmText = stringResource(R.string.edit_button_title),
               onDismiss = { isPopupOnYourE.value = false },
               creatorText = null,
-              dateText = event.date.toString(),
-              startTimeText = event.startTime.toString(),
-              endTimeText = event.endTime.toString(),
+              dateText = dateToString(event.date),
+              startTimeText = timeToString(event.startTime),
+              endTimeText = timeToString(event.endTime),
               onConfirm = {
                 navigateToEditEvent(event)
                 coroutineScope.launch { eventsViewModel.refreshEvents(currentUserIdFromVM) }

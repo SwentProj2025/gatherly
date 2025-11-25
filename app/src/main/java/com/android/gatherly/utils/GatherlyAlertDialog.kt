@@ -37,8 +37,8 @@ fun GatherlyAlertDialog(
           Text(
               text = titleText,
               textAlign = TextAlign.Center,
-              style = MaterialTheme.typography.bodyLarge,
-              modifier = Modifier.testTag(AlertDialogTestTags.TITLE))
+              style = MaterialTheme.typography.titleLarge,
+              modifier = Modifier.fillMaxWidth().testTag(AlertDialogTestTags.TITLE))
 
           if (dateText == null || startTimeText == null || endTimeText == null) return@Column
 
@@ -61,6 +61,7 @@ fun GatherlyAlertDialog(
         Text(
             text = bodyText,
             textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.bodyLarge,
             modifier = Modifier.testTag(AlertDialogTestTags.BODY))
       },
       dismissButton = {
