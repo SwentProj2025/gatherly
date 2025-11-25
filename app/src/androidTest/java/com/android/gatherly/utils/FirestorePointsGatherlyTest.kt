@@ -4,7 +4,7 @@ import android.util.Log
 import com.android.gatherly.model.points.Points
 import com.android.gatherly.model.points.PointsRepository
 import com.android.gatherly.model.points.PointsRepositoryFirestore
-import com.android.gatherly.model.points.PointsType
+import com.android.gatherly.model.points.PointsSource
 import com.google.firebase.Timestamp
 import java.util.Calendar
 import kotlinx.coroutines.runBlocking
@@ -50,14 +50,14 @@ open class FirestorePointsGatherlyTest {
       Points(
           userId = "test-user",
           obtained = 23.9,
-          reason = PointsType.Timer(22),
+          reason = PointsSource.Timer(22),
           dateObtained = Timestamp(nov21.time))
 
   protected val points2 =
       Points(
           userId = "test-user",
           obtained = 30.0,
-          reason = PointsType.Badge("bronze friends"),
+          reason = PointsSource.Badge("bronze friends"),
           dateObtained = Timestamp(nov23.time))
 
   @Before

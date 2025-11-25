@@ -53,15 +53,15 @@ class PointsRepositoryFirestore(private val db: FirebaseFirestore) : PointsRepos
     when (pointsType) {
       "Timer" -> {
         val minutes = doc.getLong("minutes")?.toInt() ?: return null
-        return Points(userId, obtained, PointsType.Timer(minutes), dateObtained)
+        return Points(userId, obtained, PointsSource.Timer(minutes), dateObtained)
       }
       "Badge" -> {
         val badgeName = doc.getString("badgeName") ?: return null
-        return Points(userId, obtained, PointsType.Badge(badgeName), dateObtained)
+        return Points(userId, obtained, PointsSource.Badge(badgeName), dateObtained)
       }
       "Leaderboard" -> {
         val rank = doc.getString("rank") ?: return null
-        return Points(userId, obtained, PointsType.Leaderboard(rank), dateObtained)
+        return Points(userId, obtained, PointsSource.Leaderboard(rank), dateObtained)
       }
       else -> return null
     }
@@ -80,9 +80,9 @@ class PointsRepositoryFirestore(private val db: FirebaseFirestore) : PointsRepos
         "reason" to points.reason,
         "dateObtained" to points.dateObtained,
         when (points.reason) {
-          is PointsType.Timer -> "minutes" to points.reason.minutes
-          is PointsType.Badge -> "badgeName" to points.reason.badgeName
-          is PointsType.Leaderboard -> "rank" to points.reason.rank
+          is PointsSource.Timer -> "minutes" to points.reason.minutes
+          is PointsSource.Badge -> "badgeName" to points.reason.badgeName
+          is PointsSource.Leaderboard -> "rank" to points.reason.rank
         })
   }
 }
