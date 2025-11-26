@@ -538,17 +538,14 @@ fun ToDoIcon(toDo: ToDo) {
  */
 @Composable
 fun ToDoSheet(toDo: ToDo, onGoToToDo: () -> Unit, onClose: () -> Unit) {
+
   val formattedDate =
       remember(toDo.dueDate) {
         val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
         sdf.format(toDo.dueDate.toDate())
       }
 
-  Card(
-      colors =
-          CardDefaults.cardColors(
-              containerColor = MaterialTheme.colorScheme.secondary,
-              contentColor = MaterialTheme.colorScheme.onSecondary),
+  Column(
       modifier =
           Modifier.fillMaxWidth()
               .padding(Dimensions.rowColPadding)
@@ -556,7 +553,7 @@ fun ToDoSheet(toDo: ToDo, onGoToToDo: () -> Unit, onClose: () -> Unit) {
         Text(
             text = toDo.name.uppercase(),
             style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onSecondary,
+            color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.testTag(MapScreenTestTags.TODO_TITLE_SHEET))
 
         Spacer(modifier = Modifier.size(Dimensions.spacerPadding))
@@ -566,14 +563,14 @@ fun ToDoSheet(toDo: ToDo, onGoToToDo: () -> Unit, onClose: () -> Unit) {
                 Modifier.padding(Dimensions.textPadding).testTag(MapScreenTestTags.TODO_DUE_DATE),
             text = formattedDate,
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSecondary)
+            color = MaterialTheme.colorScheme.onBackground)
         Text(
             modifier =
                 Modifier.padding(Dimensions.textPadding)
                     .testTag(MapScreenTestTags.TODO_DESCRIPTION),
             text = toDo.description,
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSecondary)
+            color = MaterialTheme.colorScheme.onBackground)
 
         Spacer(modifier = Modifier.size(Dimensions.spacerPadding))
 
