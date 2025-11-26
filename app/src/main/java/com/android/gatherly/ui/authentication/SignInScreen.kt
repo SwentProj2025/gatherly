@@ -2,7 +2,9 @@ package com.android.gatherly.ui.authentication
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -71,6 +73,8 @@ fun SignInScreen(
     }
   }
 
+  val scrollState = rememberScrollState()
+
   Scaffold(
       containerColor = MaterialTheme.colorScheme.background,
       modifier = Modifier.fillMaxSize(),
@@ -92,42 +96,41 @@ fun SignInScreen(
         } else {
           Column(
               modifier =
-                  Modifier.fillMaxSize()
-                      .padding(innerPadding)
-                      .padding(horizontal = dimensionResource(id = R.dimen.padding_screen)),
-              horizontalAlignment = Alignment.CenterHorizontally,
-              verticalArrangement = Arrangement.SpaceBetween) {
+                  Modifier.padding(innerPadding)
+                      .padding(horizontal = dimensionResource(id = R.dimen.padding_screen))
+                      .verticalScroll(scrollState),
+              horizontalAlignment = Alignment.CenterHorizontally) {
                 Spacer(
                     modifier = Modifier.height(dimensionResource(id = R.dimen.sign_in_top_spacing)))
 
-                Column(
-                    modifier = Modifier.weight(1f),
-                    horizontalAlignment = Alignment.CenterHorizontally) {
-                      WelcomeSection()
-                      Spacer(
-                          modifier =
-                              Modifier.height(
-                                  dimensionResource(id = R.dimen.sign_in_top_buttons_spacing)))
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                  WelcomeSection()
+                  Spacer(
+                      modifier =
+                          Modifier.height(
+                              dimensionResource(id = R.dimen.sign_in_top_buttons_spacing)))
 
-                      // Sign In Buttons Section
-                      Column(
-                          modifier = Modifier.fillMaxWidth(),
-                          verticalArrangement =
-                              Arrangement.spacedBy(
-                                  dimensionResource(id = R.dimen.spacing_between_fields_regular))) {
-                            SignInButton(
-                                text = stringResource(id = R.string.sign_in_google_button_label),
-                                onSignInClick = {
-                                  authViewModel.signInWithGoogle(context, credentialManager)
-                                },
-                                iconResId = R.drawable.google_logo,
-                                modifier = Modifier.testTag(SignInScreenTestTags.GOOGLE_BUTTON))
-                            SignInButton(
-                                text = stringResource(id = R.string.sign_in_anonymous_button_label),
-                                onSignInClick = { authViewModel.signInAnonymously() },
-                                modifier = Modifier.testTag(SignInScreenTestTags.ANONYMOUS_BUTTON))
-                          }
-                    }
+                  // Sign In Buttons Section
+                  Column(
+                      modifier = Modifier.fillMaxWidth(),
+                      verticalArrangement =
+                          Arrangement.spacedBy(
+                              dimensionResource(id = R.dimen.spacing_between_fields_regular))) {
+                        SignInButton(
+                            text = stringResource(id = R.string.sign_in_google_button_label),
+                            onSignInClick = {
+                              authViewModel.signInWithGoogle(context, credentialManager)
+                            },
+                            iconResId = R.drawable.google_logo,
+                            modifier = Modifier.testTag(SignInScreenTestTags.GOOGLE_BUTTON))
+                        SignInButton(
+                            text = stringResource(id = R.string.sign_in_anonymous_button_label),
+                            onSignInClick = { authViewModel.signInAnonymously() },
+                            modifier = Modifier.testTag(SignInScreenTestTags.ANONYMOUS_BUTTON))
+                      }
+                }
+                Spacer(
+                    modifier = Modifier.height(dimensionResource(id = R.dimen.sign_in_top_spacing)))
               }
         }
       })
