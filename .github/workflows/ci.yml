@@ -194,7 +194,7 @@ jobs:
           arch: x86_64
           profile: pixel_6
           force-avd-creation: true
-          emulator-options: -no-snapshot-save -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          emulator-options: -no-snapshot -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
           disable-animations: true
           script: ./gradlew connectedCheck --parallel --build-cache
 
