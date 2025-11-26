@@ -9,6 +9,8 @@ import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.focusSession.FocusSession
 import com.android.gatherly.model.focusSession.FocusSessionsRepository
 import com.android.gatherly.model.focusSession.FocusSessionsRepositoryProvider
+import com.android.gatherly.model.profile.ProfileRepository
+import com.android.gatherly.model.profile.ProfileRepositoryProvider
 import com.android.gatherly.model.profile.ProfileStatus
 import com.android.gatherly.model.profile.UserStatusManager
 import com.android.gatherly.model.todo.ToDo

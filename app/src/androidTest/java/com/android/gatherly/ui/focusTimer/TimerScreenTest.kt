@@ -54,6 +54,7 @@ class TimerScreenTest {
 
   private lateinit var mockitoUtils: MockitoUtils
   private lateinit var profileRepository: ProfileRepository
+  private lateinit var pointsRepository: PointsRepository
   private lateinit var userStatusManager: UserStatusManager
   private val fakeUid = "test-user"
 
@@ -63,6 +64,7 @@ class TimerScreenTest {
     focusSessionsRepository = FocusSessionsLocalRepository()
     // Add a todo in the repository to test linking
     profileRepository = ProfileLocalRepository()
+    pointsRepository = PointsLocalRepository()
     fill_repository()
 
     mockitoUtils = MockitoUtils()
@@ -72,8 +74,11 @@ class TimerScreenTest {
     timerViewModel =
         TimerViewModel(
             todoRepository = toDosRepository,
+            pointsRepository = pointsRepository,
+            profileRepository = profileRepository,
             userStatusManager = userStatusManager,
-            focusSessionsRepository = focusSessionsRepository)
+            focusSessionsRepository = focusSessionsRepository,
+            authProvider = { mockitoUtils.mockAuth })
 
     composeTestRule.setContent { TimerScreen(timerViewModel) }
   }
