@@ -54,6 +54,7 @@ import com.android.gatherly.ui.navigation.BottomNavigationMenu
 import com.android.gatherly.ui.navigation.HandleSignedOutState
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.NavigationTestTags
+import com.android.gatherly.ui.navigation.Screen
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu
 import com.android.gatherly.ui.theme.GatherlyTheme
@@ -61,6 +62,7 @@ import com.android.gatherly.ui.theme.theme_status_ongoing
 import com.android.gatherly.ui.theme.theme_status_past
 import com.android.gatherly.ui.theme.theme_status_upcoming
 import com.android.gatherly.utils.GatherlyAlertDialog
+import com.android.gatherly.utils.MapCoordinator
 import java.util.Locale
 import kotlinx.coroutines.launch
 
@@ -142,6 +144,7 @@ fun EventsScreen(
     navigationActions: NavigationActions? = null,
     eventsViewModel: EventsViewModel = viewModel(factory = EventsViewModel.provideFactory()),
     eventId: String? = null,
+    coordinator: MapCoordinator
 ) {
 
   val coroutineScope = rememberCoroutineScope()
@@ -394,7 +397,14 @@ fun EventsScreen(
                   isPopupOnBrowser.value = false
                 }
               },
-              confirmEnabled = !uiState.isAnon)
+              confirmEnabled = !uiState.isAnon,
+              neutralText = stringResource(R.string.see_on_map_button_title),
+              neutralEnabled = event.location != null,
+              onNeutral = {
+                coordinator.requestCenterOnEvent(event.id)
+                navigationActions?.navigateTo(Screen.Map)
+                isPopupOnBrowser.value = false
+              })
           selectedBrowserEvent.value = if (isPopupOnBrowser.value) event else null
         }
 
@@ -408,8 +418,14 @@ fun EventsScreen(
               onConfirm = {
                 eventsViewModel.onUnregister(
                     eventId = event.id, currentUserId = currentUserIdFromVM)
-
                 coroutineScope.launch { eventsViewModel.refreshEvents(currentUserIdFromVM) }
+                isPopupOnUpcoming.value = false
+              },
+              neutralText = stringResource(R.string.see_on_map_button_title),
+              neutralEnabled = event.location != null,
+              onNeutral = {
+                coordinator.requestCenterOnEvent(event.id)
+                navigationActions?.navigateTo(Screen.Map)
                 isPopupOnUpcoming.value = false
               })
           selectedUpcomingEvent.value = if (isPopupOnUpcoming.value) event else null
@@ -425,6 +441,13 @@ fun EventsScreen(
               onConfirm = {
                 navigateToEditEvent(event)
                 coroutineScope.launch { eventsViewModel.refreshEvents(currentUserIdFromVM) }
+                isPopupOnYourE.value = false
+              },
+              neutralText = stringResource(R.string.see_on_map_button_title),
+              neutralEnabled = event.location != null,
+              onNeutral = {
+                coordinator.requestCenterOnEvent(event.id)
+                navigationActions?.navigateTo(Screen.Map)
                 isPopupOnYourE.value = false
               })
           selectedYourEvent.value = if (isPopupOnYourE.value) event else null
@@ -686,5 +709,5 @@ private fun getFilteredEvents(
 @Preview(showBackground = true)
 @Composable
 fun EventsScreenPreview() {
-  GatherlyTheme(darkTheme = true) { EventsScreen() }
+  GatherlyTheme(darkTheme = true) { EventsScreen(coordinator = MapCoordinator()) }
 }
