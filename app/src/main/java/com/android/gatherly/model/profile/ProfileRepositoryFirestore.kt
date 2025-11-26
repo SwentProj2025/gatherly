@@ -439,6 +439,7 @@ class ProfileRepositoryFirestore(
     val docRef = profilesCollection.document(currentUserId)
     val friendId = getProfileByUsername(friend)?.uid
     docRef.update("friendUids", FieldValue.arrayUnion(friendId)).await()
+    incrementAddedFriend(currentUserId)
   }
 
   override suspend fun deleteFriend(friend: String, currentUserId: String) {
