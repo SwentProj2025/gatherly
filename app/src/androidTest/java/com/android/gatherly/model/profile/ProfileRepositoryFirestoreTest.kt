@@ -4,12 +4,22 @@ import android.content.ContentValues
 import android.net.Uri
 import android.provider.MediaStore
 import androidx.test.platform.app.InstrumentationRegistry
+import com.android.gatherly.model.event.Event
+import com.android.gatherly.model.event.EventStatus
+import com.android.gatherly.model.event.EventsRepositoryFirestore
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.utils.FirebaseEmulator
 import com.android.gatherly.utils.FirestoreGatherlyProfileTest
+import com.android.gatherly.utils.createEvent
+import com.google.firebase.Timestamp
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.storage
 import java.io.OutputStream
+import java.text.SimpleDateFormat
+import java.time.Instant
+import java.time.temporal.ChronoUnit
+import java.util.Date
+import java.util.NoSuchElementException
 import kotlin.io.use
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -837,6 +847,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     val firestore = FirebaseEmulator.firestore
     val storage = FirebaseEmulator.storage
     val repo = ProfileRepositoryFirestore(firestore, storage)
+    val eventRepo = EventsRepositoryFirestore(firestore)
 
     // User B
     auth.signInAnonymously().await()
@@ -859,9 +870,30 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
 
     // Create a fictional event ID
     val eventId = "AliceEventID"
+    val event =
+        Event(
+            id = eventId,
+            title = "Team Meeting",
+            description = "Weekly sync",
+            creatorName = "Alice",
+            location = null,
+            date = Timestamp(Date.from(Instant.now().plus(1, ChronoUnit.DAYS))),
+            startTime =
+                Timestamp(
+                    SimpleDateFormat("HH:mm").parse("12:00")
+                        ?: throw NoSuchElementException("no date ")),
+            endTime =
+                Timestamp(
+                    SimpleDateFormat("HH:mm").parse("23:00")
+                        ?: throw NoSuchElementException("no date ")),
+            creatorId = userAUid,
+            participants = listOf(userAUid, userBUid, userCUid),
+            status = EventStatus.UPCOMING)
+
+    eventRepo.addEvent(event)
 
     // UserB create a new event
-    repo.createEvent(eventId, userAUid)
+    createEvent(eventRepo, repo, event, userAUid, emptyList())
 
     // Verify that the event is in the User B profile's events list
     val profileA = repo.getProfileByUid(userAUid)

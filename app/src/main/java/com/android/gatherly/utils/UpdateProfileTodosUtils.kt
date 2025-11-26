@@ -1,5 +1,6 @@
 package com.android.gatherly.utils
 
+import com.android.gatherly.model.badge.BadgeType
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
@@ -20,7 +21,7 @@ suspend fun addTodo(
     currentUserId: String
 ) {
   todoRepository.addTodo(todo)
-  profileRepository.incrementCreatedTodo(currentUserId)
+  profileRepository.incrementBadge(currentUserId, BadgeType.TODOS_CREATED)
 }
 
 /**
@@ -47,6 +48,6 @@ suspend fun editTodo(
 
   val isNowCompleted = newStatus == ToDoStatus.ENDED
   if (!wasCompleted && isNowCompleted) {
-    profileRepository.incrementCompletedTodo(currentUserId)
+    profileRepository.incrementBadge(currentUserId, BadgeType.TODOS_COMPLETED)
   }
 }

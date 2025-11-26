@@ -9,7 +9,6 @@ import com.android.gatherly.model.friends.Friends
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.SetOptions
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.ktx.app
 import com.google.firebase.storage.FirebaseStorage
@@ -348,12 +347,7 @@ class ProfileRepositoryFirestore(
     val profilePicture = doc.getString("profilePicture") ?: return null
     val status = ProfileStatus.fromString(doc.getString("status"))
     val badgeIds = doc.get("badgeIds") as? List<String> ?: emptyList()
-    val createdTodoCount = (doc.getLong("createdTodoCount") ?: 0L).toInt()
-    val completedTodoCount = (doc.getLong("completedTodoCount") ?: 0L).toInt()
-    val createdEventCount = (doc.getLong("createdEventCount") ?: 0L).toInt()
-    val participatedEventCount = (doc.getLong("participatedEventCount") ?: 0L).toInt()
-    val completedFocusSessionCount = (doc.getLong("completedFocusSessionCount") ?: 0L).toInt()
-    val addedFriendsCount = (doc.getLong("addedFriendsCount") ?: 0L).toInt()
+    val badgeCount = doc.get("badgeCount") as? Map<String, Long> ?: emptyMap()
 
     return Profile(
         uid = uid,
@@ -370,12 +364,7 @@ class ProfileRepositoryFirestore(
         profilePicture = profilePicture,
         status = status,
         badgeIds = badgeIds,
-        createdTodoCount = createdTodoCount,
-        completedTodoCount = completedTodoCount,
-        createdEventCount = createdEventCount,
-        participatedEventCount = participatedEventCount,
-        completedFocusSessionCount = completedFocusSessionCount,
-        addedFriendsCount = addedFriendsCount)
+        badgeCount = badgeCount)
   }
 
   /**
@@ -400,12 +389,7 @@ class ProfileRepositoryFirestore(
         "profilePicture" to profile.profilePicture,
         "status" to profile.status.value,
         "badgeIds" to profile.badgeIds,
-        "createdTodoCount" to profile.createdTodoCount,
-        "completedTodoCount" to profile.completedTodoCount,
-        "createdEventCount" to profile.createdEventCount,
-        "participatedEventCount" to profile.participatedEventCount,
-        "completedFocusSessionCount" to profile.completedFocusSessionCount,
-        "addedFriendsCount" to profile.addedFriendsCount)
+        "badgeCount" to profile.badgeCount)
   }
 
   // -- FRIENDS GESTION PART --
@@ -439,7 +423,7 @@ class ProfileRepositoryFirestore(
     val docRef = profilesCollection.document(currentUserId)
     val friendId = getProfileByUsername(friend)?.uid
     docRef.update("friendUids", FieldValue.arrayUnion(friendId)).await()
-    incrementAddedFriend(currentUserId)
+    incrementBadge(currentUserId, BadgeType.FRIENDS_ADDED)
   }
 
   override suspend fun deleteFriend(friend: String, currentUserId: String) {
@@ -466,7 +450,6 @@ class ProfileRepositoryFirestore(
   override suspend fun participateEvent(eventId: String, currentUserId: String) {
     val docRef = profilesCollection.document(currentUserId)
     docRef.update("participatingEventIds", FieldValue.arrayUnion(eventId)).await()
-    incrementParticipatedEvent(currentUserId)
   }
 
   override suspend fun allParticipateEvent(eventId: String, participants: List<String>) {
@@ -484,86 +467,36 @@ class ProfileRepositoryFirestore(
 
   // -- BADGES GESTION PART --
 
-  override suspend fun addBadge(profile: Profile, badgeId: String) {
-    val docRef = profilesCollection.document(profile.uid)
+  override suspend fun addBadge(uid: String, badgeId: String) {
+    val docRef = profilesCollection.document(uid)
     docRef.update("badgeIds", FieldValue.arrayUnion(badgeId)).await()
   }
 
-  override suspend fun incrementCreatedTodo(uid: String): Int {
-    val count = incrementField(uid, "createdTodoCount")
-    awardBadgeFor(uid, BadgeType.TODOS_CREATED, count)
-    return count
-  }
-
-  override suspend fun incrementCompletedTodo(uid: String): Int {
-    val count = incrementField(uid, "completedTodoCount")
-    awardBadgeFor(uid, BadgeType.TODOS_COMPLETED, count)
-    return count
-  }
-
-  override suspend fun incrementCreatedEvent(uid: String): Int {
-    val count = incrementField(uid, "createdEventCount")
-    awardBadgeFor(uid, BadgeType.EVENTS_CREATED, count)
-    return count
-  }
-
-  override suspend fun incrementParticipatedEvent(uid: String): Int {
-    val count = incrementField(uid, "participatedEventCount")
-    awardBadgeFor(uid, BadgeType.EVENTS_PARTICIPATED, count)
-    return count
-  }
-
-  override suspend fun incrementCompletedFocusSession(uid: String): Int {
-    val count = incrementField(uid, "completedFocusSessionCount")
-    awardBadgeFor(uid, BadgeType.FOCUS_SESSIONS_COMPLETED, count)
-    return count
-  }
-
-  override suspend fun incrementAddedFriend(uid: String): Int {
-    val count = incrementField(uid, "addedFriendsCount")
-    awardBadgeFor(uid, BadgeType.FRIENDS_ADDED, count)
-    return count
-  }
-
-  /** Atomically increments the given numeric field and returns the new value. */
-  private suspend fun incrementField(uid: String, field: String): Int {
+  override suspend fun incrementBadge(uid: String, type: BadgeType) {
     val docRef = profilesCollection.document(uid)
+    val fieldName = "badgeCount.${type.name}"
 
-    return db.runTransaction { tx ->
-          val snap = tx.get(docRef)
+    docRef.update(fieldName, FieldValue.increment(1)).await()
 
-          // If profile doesn't exist, we can't do much
-          if (!snap.exists()) {
-            throw IllegalStateException("Profile not found for uid=$uid when incrementing $field")
-          }
-
-          val current = (snap.getLong(field) ?: 0L).toInt()
-          val updated = current + 1
-
-          tx.set(docRef, mapOf(field to updated), SetOptions.merge())
-
-          updated
-        }
-        .await()
+    awardBadgeFor(uid, type, docRef.get().await().getLong(fieldName) ?: 0L)
   }
 
   /**
    * Converts a count to a rank, then finds the matching badge in Badges enum and adds it to
    * profile.
    */
-  private suspend fun awardBadgeFor(uid: String, type: BadgeType, count: Int) {
+  private suspend fun awardBadgeFor(uid: String, type: BadgeType, count: Long) {
     val rank = countToRank(count)
     if (rank == BadgeRank.BLANK) return
 
     // Find the matching Badge enum entry for this type + rank
     val badge = Badge.entries.firstOrNull { it.type == type && it.rank == rank } ?: return
 
-    val profile = getProfileByUid(uid) ?: return
-    addBadge(profile, badge.id)
+    addBadge(uid, badge.id)
   }
 
   /** Shared thresholds from count to BadgeRank. */
-  private fun countToRank(count: Int): BadgeRank =
+  private fun countToRank(count: Long): BadgeRank =
       when {
         count >= 30 -> BadgeRank.LEGEND
         count >= 20 -> BadgeRank.DIAMOND
