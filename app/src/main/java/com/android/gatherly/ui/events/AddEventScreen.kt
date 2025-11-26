@@ -318,14 +318,21 @@ fun AddEventScreen(
 
               item {
                 // Date
-                DateInputField(
-                    initialDate = ui.date,
-                    onDateChanged = { addEventViewModel.updateDate(it) },
-                    dueDateError = ui.dateError,
-                    textFieldColors = textFieldColors,
-                    testTagInput = AddEventScreenTestTags.INPUT_DATE,
-                    testTagErrorMessage = AddEventScreenTestTags.ERROR_MESSAGE,
-                )
+                OutlinedTextField(
+                    value = ui.date,
+                    onValueChange = { addEventViewModel.updateDate(it) },
+                    label = { Text(stringResource(R.string.events_date_field_label)) },
+                    placeholder = { Text("dd/MM/yyyy") },
+                    isError = ui.dateError,
+                    supportingText = {
+                      if (ui.dateError) {
+                        Text(
+                            "Invalid format or past date",
+                            modifier = Modifier.testTag(AddEventScreenTestTags.ERROR_MESSAGE))
+                      }
+                    },
+                    colors = textFieldColors,
+                    modifier = Modifier.fillMaxWidth().testTag(AddEventScreenTestTags.INPUT_DATE))
               }
 
               item {
