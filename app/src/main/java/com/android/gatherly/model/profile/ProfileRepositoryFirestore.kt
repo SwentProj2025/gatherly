@@ -2,6 +2,7 @@ package com.android.gatherly.model.profile
 
 import android.net.Uri
 import android.util.Log
+import com.android.gatherly.model.badge.Badge
 import com.android.gatherly.model.badge.BadgeRank
 import com.android.gatherly.model.badge.BadgeType
 import com.android.gatherly.model.friends.Friends
@@ -30,7 +31,6 @@ class ProfileRepositoryFirestore(
 
   private val profilesCollection = db.collection("profiles")
   private val usernamesCollection = db.collection("usernames")
-  private val badgesCollection = db.collection("badges")
 
   /**
    * Retrieves the [Profile] document associated with uid.
@@ -466,6 +466,7 @@ class ProfileRepositoryFirestore(
   override suspend fun participateEvent(eventId: String, currentUserId: String) {
     val docRef = profilesCollection.document(currentUserId)
     docRef.update("participatingEventIds", FieldValue.arrayUnion(eventId)).await()
+    incrementParticipatedEvent(currentUserId)
   }
 
   override suspend fun allParticipateEvent(eventId: String, participants: List<String>) {
@@ -547,26 +548,18 @@ class ProfileRepositoryFirestore(
   }
 
   /**
-   * Converts a count to a rank, then finds the matching badge in Firestore and adds it to profile.
+   * Converts a count to a rank, then finds the matching badge in Badges enum and adds it to
+   * profile.
    */
   private suspend fun awardBadgeFor(uid: String, type: BadgeType, count: Int) {
     val rank = countToRank(count)
     if (rank == BadgeRank.BLANK) return
 
-    // Find the global badge doc for this type + rank
-    val snap =
-        badgesCollection
-            .whereEqualTo("type", type.name)
-            .whereEqualTo("rank", rank.name)
-            .limit(1)
-            .get()
-            .await()
-
-    val badgeDoc = snap.documents.firstOrNull() ?: return
-    val badgeId = badgeDoc.id
+    // Find the matching Badge enum entry for this type + rank
+    val badge = Badge.entries.firstOrNull { it.type == type && it.rank == rank } ?: return
 
     val profile = getProfileByUid(uid) ?: return
-    addBadge(profile, badgeId)
+    addBadge(profile, badge.id)
   }
 
   /** Shared thresholds from count to BadgeRank. */

@@ -1,6 +1,7 @@
 package com.android.gatherly.model.profile
 
 import android.net.Uri
+import com.android.gatherly.model.badge.Badge
 import com.android.gatherly.model.badge.BadgeRank
 import com.android.gatherly.model.badge.BadgeType
 import com.android.gatherly.model.friends.Friends
@@ -187,6 +188,7 @@ class ProfileLocalRepository : ProfileRepository {
       val updatedProfile = currentProfile.copy(participatingEventIds = updateEventIds)
       updateProfile(updatedProfile)
     }
+    incrementParticipatedEvent(currentUserId)
   }
 
   override suspend fun allParticipateEvent(eventId: String, participants: List<String>) {
@@ -286,11 +288,9 @@ class ProfileLocalRepository : ProfileRepository {
     val rank = countToRank(count)
     if (rank == BadgeRank.BLANK) return
 
-    // Fake badge id for tests/local usage: e.g. "TODOS_CREATED_GOLD"
-    val badgeId = "${type.name}_${rank.name}"
-
+    val badge = Badge.entries.firstOrNull { it.type == type && it.rank == rank } ?: return
     val profile = getProfileByUid(uid) ?: return
-    addBadge(profile, badgeId)
+    addBadge(profile, badge.id)
   }
 
   private fun countToRank(count: Int): BadgeRank =

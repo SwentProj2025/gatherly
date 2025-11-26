@@ -203,12 +203,6 @@ class FriendsViewModelTest {
 
           override suspend fun deleteUserProfile(uid: String) {}
 
-          override suspend fun updateBadges(
-              userProfile: Profile,
-              createdTodosCount: Int?,
-              completedTodosCount: Int?
-          ) {}
-
           override suspend fun addBadge(profile: Profile, badgeId: String) {
             TODO("Not yet implemented")
           }
