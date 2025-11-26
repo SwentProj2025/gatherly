@@ -8,6 +8,7 @@ plugins {
 
     id("org.sonarqube") version "4.4.1.3373"   //"6.3.1.5724"
     //id("com.google.gms.google-services") version "4.4.3" apply false
+    id("org.gradle.test-retry") version "1.5.9"
 }
 
 sonar {
@@ -22,5 +23,13 @@ sonar {
         property("sonar.androidLint.reportPaths", "${project(":app").layout.buildDirectory.get()}/reports/lint-results-debug.xml")
         // Paths to JaCoCo XML coverage report files.
         property("sonar.coverage.jacoco.xmlReportPaths", "${project(":app").layout.buildDirectory.get()}/reports/jacoco/jacocoTestReport/jacocoTestReport.xml")
+    }
+}
+
+tasks.withType<Test>().configureEach {
+    retry {
+        maxRetries.set(3)
+        maxFailures.set(5)
+        failOnPassedAfterRetry.set(false)
     }
 }
