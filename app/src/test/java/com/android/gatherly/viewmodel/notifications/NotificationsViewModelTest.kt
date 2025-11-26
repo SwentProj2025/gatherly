@@ -177,68 +177,6 @@ class NotificationViewModelTest {
   }
 
   // ------------------------------------------------------------------------
-  // sendFriendRequest
-  // ------------------------------------------------------------------------
-
-  @Test
-  fun sendFriendRequest_success_addsNotificationForRecipient() = runTest {
-    val recipientId = "recipientUser"
-
-    // WHEN
-    viewModel.sendFriendRequest(recipientId)
-    advanceUntilIdle()
-
-    // THEN notification should be in repo for that recipient
-    val userNotifications = notificationsRepo.getUserNotifications(recipientId)
-    assertEquals(1, userNotifications.size)
-    val notif = userNotifications.first()
-    assertEquals(NotificationType.FRIEND_REQUEST, notif.type)
-    assertEquals(CURRENT_USER_ID, notif.senderId)
-    assertEquals(recipientId, notif.recipientId)
-    assertFalse(notif.wasRead)
-    assertNull(viewModel.uiState.value.errorMessage)
-  }
-
-  @Test
-  fun sendFriendRequest_failure_setsErrorMessage() = runTest {
-    // GIVEN repo that throws on addNotification
-    val delegate = notificationsRepo
-    val failingRepo =
-        object : NotificationsLocalRepository() {
-          override fun getNewId(): String = delegate.getNewId()
-
-          override suspend fun getUserNotifications(userId: String): List<Notification> =
-              delegate.getUserNotifications(userId)
-
-          override suspend fun getNotification(notificationId: String): Notification =
-              delegate.getNotification(notificationId)
-
-          override suspend fun deleteNotification(notificationId: String) =
-              delegate.deleteNotification(notificationId)
-
-          override suspend fun addNotification(notification: Notification) {
-            throw RuntimeException("Unable to add notification")
-          }
-
-          override suspend fun markAsRead(notificationId: String) =
-              delegate.markAsRead(notificationId)
-        }
-
-    val vm =
-        NotificationViewModel(
-            notificationsRepository = failingRepo,
-            profileRepository = profileRepo,
-            authProvider = { mockAuth })
-
-    // WHEN
-    vm.sendFriendRequest("recipient")
-    advanceUntilIdle()
-
-    // THEN
-    assertEquals("Failed to send friend request", vm.uiState.value.errorMessage)
-  }
-
-  // ------------------------------------------------------------------------
   // acceptFriendRequest
   // ------------------------------------------------------------------------
 

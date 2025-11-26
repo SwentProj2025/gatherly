@@ -71,31 +71,6 @@ class NotificationViewModel(
     }
   }
 
-  /**
-   * Sends a friend request from the current user to [recipientId]. This only creates a
-   * FRIEND_REQUEST notification in the recipient's subcollection.
-   */
-  fun sendFriendRequest(recipientId: String) {
-    viewModelScope.launch {
-      try {
-        val senderId = currentUserId
-        val newId = notificationsRepository.getNewId()
-        val notification =
-            Notification(
-                id = newId,
-                type = NotificationType.FRIEND_REQUEST,
-                emissionTime = Timestamp.now(),
-                senderId = senderId,
-                relatedEntityId = null,
-                recipientId = recipientId,
-                wasRead = false)
-        notificationsRepository.addNotification(notification)
-      } catch (e: Exception) {
-        _uiState.value = _uiState.value.copy(errorMessage = "Failed to send friend request")
-      }
-    }
-  }
-
   /** Accepts a friend request represented by [notificationId]. */
   fun acceptFriendRequest(notificationId: String) {
     viewModelScope.launch {
