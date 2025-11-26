@@ -7,6 +7,8 @@ import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsRepository
 import com.android.gatherly.model.event.EventsRepositoryFirestore
+import com.android.gatherly.model.notification.NotificationsRepository
+import com.android.gatherly.model.notification.NotificationsRepositoryProvider
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryProvider
@@ -14,6 +16,7 @@ import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.model.todo.ToDosRepositoryProvider
+import com.android.gatherly.utils.getProfileWithSyncedFriendNotifications
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
@@ -37,6 +40,8 @@ class HomePageViewModel(
     private val eventsRepository: EventsRepository = EventsRepositoryFirestore(Firebase.firestore),
     private val toDosRepository: ToDosRepository = ToDosRepositoryProvider.repository,
     private val profileRepository: ProfileRepository = ProfileRepositoryProvider.repository,
+    private val notificationsRepository: NotificationsRepository =
+        NotificationsRepositoryProvider.repository,
     private val authProvider: () -> FirebaseAuth = { Firebase.auth }
 ) : ViewModel() {
 
@@ -53,8 +58,10 @@ class HomePageViewModel(
       try {
         val todos = toDosRepository.getAllTodos()
         val events = eventsRepository.getAllEvents()
-        val profile = profileRepository.getProfileByUid(authProvider().currentUser?.uid!!)!!
-        val friends = profile.friendUids.map { profileRepository.getProfileByUid(it)!! }
+        val profile =
+            getProfileWithSyncedFriendNotifications(
+                profileRepository, notificationsRepository, authProvider().currentUser?.uid!!)!!
+        val friends = profile.friendUids.take(3).map { profileRepository.getProfileByUid(it)!! }
         val isAnon = authProvider().currentUser?.isAnonymous ?: true
 
         _uiState.value =

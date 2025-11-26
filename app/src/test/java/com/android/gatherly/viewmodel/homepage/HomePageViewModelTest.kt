@@ -5,6 +5,8 @@ import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsLocalRepository
 import com.android.gatherly.model.event.EventsRepository
 import com.android.gatherly.model.map.Location
+import com.android.gatherly.model.notification.NotificationsLocalRepository
+import com.android.gatherly.model.notification.NotificationsRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
@@ -180,6 +182,7 @@ class HomePageViewModelTest {
   private lateinit var eventsRepository: EventsRepository
   private lateinit var toDosRepository: ToDosRepository
   private lateinit var profileRepository: ProfileRepository
+  private lateinit var notificationsRepository: NotificationsRepository
   private lateinit var displayableTodos: List<ToDo>
   private lateinit var upcomingTodos: List<ToDo>
   private lateinit var mockitoUtils: MockitoUtils
@@ -198,6 +201,7 @@ class HomePageViewModelTest {
     profileRepository = ProfileLocalRepository()
     eventsRepository = EventsLocalRepository()
     toDosRepository = ToDosLocalRepository()
+    notificationsRepository = NotificationsLocalRepository()
 
     // fill the profile and events repositories with profiles and event
     fill_repositories()
@@ -227,6 +231,7 @@ class HomePageViewModelTest {
             eventsRepository = eventsRepository,
             toDosRepository = toDosRepository,
             profileRepository = profileRepository,
+            notificationsRepository = notificationsRepository,
             authProvider = { mockitoUtils.mockAuth })
 
     advanceUntilIdle()
@@ -253,6 +258,7 @@ class HomePageViewModelTest {
             eventsRepository = eventsRepository,
             toDosRepository = toDosRepository,
             profileRepository = profileRepository,
+            notificationsRepository = notificationsRepository,
             authProvider = { mockitoUtils.mockAuth })
 
     advanceUntilIdle()
@@ -278,6 +284,7 @@ class HomePageViewModelTest {
             eventsRepository = eventsRepository,
             toDosRepository = toDosRepository,
             profileRepository = profileRepository,
+            notificationsRepository = notificationsRepository,
             authProvider = { mockitoUtils.mockAuth })
 
     advanceUntilIdle()
