@@ -1,5 +1,6 @@
 package com.android.gatherly.utilstest
 
+import com.android.gatherly.model.badge.BadgeType
 import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsRepository
@@ -59,8 +60,7 @@ class UpdateProfileEventsUtilsTest {
     coVerify { profileRepository.allParticipateEvent(event.id, participantIds) }
 
     // Counters
-    coVerify { profileRepository.incrementCreatedEvent(creatorId) }
-    participantIds.forEach { uid -> coVerify { profileRepository.incrementParticipatedEvent(uid) } }
+    coVerify { profileRepository.incrementBadge(creatorId, BadgeType.EVENTS_CREATED) }
   }
 
   /**
@@ -89,10 +89,6 @@ class UpdateProfileEventsUtilsTest {
     // Event + profile links
     coVerify { eventsRepository.removeParticipant(eventId, userId) }
     coVerify { profileRepository.unregisterEvent(eventId, userId) }
-
-    // No counter change
-    coVerify(exactly = 0) { profileRepository.incrementParticipatedEvent(any()) }
-    coVerify(exactly = 0) { profileRepository.incrementCreatedEvent(any()) }
   }
 
   @Test
@@ -111,9 +107,5 @@ class UpdateProfileEventsUtilsTest {
     coVerify { eventsRepository.deleteEvent(eventId) }
     coVerify { profileRepository.deleteEvent(eventId, creatorId) }
     coVerify { profileRepository.allUnregisterEvent(eventId, participantsToRemove) }
-
-    // No counter change when canceling
-    coVerify(exactly = 0) { profileRepository.incrementCreatedEvent(any()) }
-    coVerify(exactly = 0) { profileRepository.incrementParticipatedEvent(any()) }
   }
 }

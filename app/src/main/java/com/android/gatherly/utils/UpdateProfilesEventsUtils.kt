@@ -1,5 +1,6 @@
 package com.android.gatherly.utils
 
+import com.android.gatherly.model.badge.BadgeType
 import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.event.EventsRepository
 import com.android.gatherly.model.profile.ProfileRepository
@@ -75,9 +76,7 @@ suspend fun createEvent(
   profileRepository.createEvent(event.id, creatorId)
   profileRepository.allParticipateEvent(event.id, participants)
 
-  profileRepository.incrementCreatedEvent(creatorId)
-
-  participants.forEach { uid -> profileRepository.incrementParticipatedEvent(uid) }
+  profileRepository.incrementBadge(creatorId, BadgeType.EVENTS_CREATED)
 }
 
 /**

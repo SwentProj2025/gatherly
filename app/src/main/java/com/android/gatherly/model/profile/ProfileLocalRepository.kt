@@ -150,7 +150,7 @@ class ProfileLocalRepository : ProfileRepository {
       val updatedProfile = currentProfile.copy(friendUids = updatedFriends)
       updateProfile(updatedProfile)
     }
-    incrementAddedFriend(currentUserId)
+    incrementBadge(currentUserId, BadgeType.FRIENDS_ADDED)
   }
 
   // ---- STATUS GESTION PART ----
@@ -188,7 +188,7 @@ class ProfileLocalRepository : ProfileRepository {
       val updatedProfile = currentProfile.copy(participatingEventIds = updateEventIds)
       updateProfile(updatedProfile)
     }
-    incrementParticipatedEvent(currentUserId)
+    incrementBadge(currentUserId, BadgeType.EVENTS_PARTICIPATED)
   }
 
   override suspend fun allParticipateEvent(eventId: String, participants: List<String>) {
@@ -210,90 +210,45 @@ class ProfileLocalRepository : ProfileRepository {
 
   // ---- BADGE GESTION PART ----
 
-  override suspend fun addBadge(profile: Profile, badgeId: String) {
-    val index = profiles.indexOfFirst { it.uid == profile.uid }
-    if (index == -1) return
+  override suspend fun addBadge(uid: String, badgeId: String) {
+    val profile =
+        getProfileByUid(uid) ?: throw NoSuchElementException("Profile not found for uid=$uid")
 
-    val existing = profiles[index]
-    if (badgeId in existing.badgeIds) return
+    val currentBadgesSet = profile.badgeIds.toMutableSet()
+    currentBadgesSet.add(badgeId)
 
-    profiles[index] = existing.copy(badgeIds = existing.badgeIds + badgeId)
+    updateProfile(profile.copy(badgeIds = currentBadgesSet.toList()))
   }
 
   // ---- COUNTERS + BADGES (LOCAL) ----
-
-  override suspend fun incrementCreatedTodo(uid: String): Int {
+  override suspend fun incrementBadge(uid: String, type: BadgeType) {
     val profile =
         getProfileByUid(uid) ?: throw NoSuchElementException("Profile not found for uid=$uid")
-    val newCount = profile.createdTodoCount + 1
-    val updated = profile.copy(createdTodoCount = newCount)
-    updateProfile(updated)
-    awardBadge(uid, BadgeType.TODOS_CREATED, newCount)
-    return newCount
-  }
 
-  override suspend fun incrementCompletedTodo(uid: String): Int {
-    val profile =
-        getProfileByUid(uid) ?: throw NoSuchElementException("Profile not found for uid=$uid")
-    val newCount = profile.completedTodoCount + 1
-    val updated = profile.copy(completedTodoCount = newCount)
-    updateProfile(updated)
-    awardBadge(uid, BadgeType.TODOS_COMPLETED, newCount)
-    return newCount
-  }
+    val badgeCount = profile.badgeCount
+    val key = type.name
+    val currentValue: Long
 
-  override suspend fun incrementCreatedEvent(uid: String): Int {
-    val profile =
-        getProfileByUid(uid) ?: throw NoSuchElementException("Profile not found for uid=$uid")
-    val newCount = profile.createdEventCount + 1
-    val updated = profile.copy(createdEventCount = newCount)
-    updateProfile(updated)
-    awardBadge(uid, BadgeType.EVENTS_CREATED, newCount)
-    return newCount
-  }
-
-  override suspend fun incrementParticipatedEvent(uid: String): Int {
-    val profile =
-        getProfileByUid(uid) ?: throw NoSuchElementException("Profile not found for uid=$uid")
-    val newCount = profile.participatedEventCount + 1
-    val updated = profile.copy(participatedEventCount = newCount)
-    updateProfile(updated)
-    awardBadge(uid, BadgeType.EVENTS_PARTICIPATED, newCount)
-    return newCount
-  }
-
-  override suspend fun incrementCompletedFocusSession(uid: String): Int {
-    val profile =
-        getProfileByUid(uid) ?: throw NoSuchElementException("Profile not found for uid=$uid")
-    val newCount = profile.completedFocusSessionCount + 1
-    val updated = profile.copy(completedFocusSessionCount = newCount)
-    updateProfile(updated)
-    awardBadge(uid, BadgeType.FOCUS_SESSIONS_COMPLETED, newCount)
-    return newCount
-  }
-
-  override suspend fun incrementAddedFriend(uid: String): Int {
-    val profile =
-        getProfileByUid(uid) ?: throw NoSuchElementException("Profile not found for uid=$uid")
-    val newCount = profile.addedFriendsCount + 1
-    val updated = profile.copy(addedFriendsCount = newCount)
-    updateProfile(updated)
-    awardBadge(uid, BadgeType.FRIENDS_ADDED, newCount)
-    return newCount
+    val updated =
+        badgeCount.toMutableMap().apply {
+          currentValue = this[key] ?: 0L
+          this[key] = currentValue + 1
+        }
+    updateProfile(profile.copy(badgeCount = updated))
+    awardBadge(uid, type, currentValue + 1)
   }
 
   // ---------- helpers ----------
 
-  private suspend fun awardBadge(uid: String, type: BadgeType, count: Int) {
+  private suspend fun awardBadge(uid: String, type: BadgeType, count: Long) {
     val rank = countToRank(count)
     if (rank == BadgeRank.BLANK) return
 
     val badge = Badge.entries.firstOrNull { it.type == type && it.rank == rank } ?: return
-    val profile = getProfileByUid(uid) ?: return
-    addBadge(profile, badge.id)
+    addBadge(uid, badge.id)
   }
 
-  private fun countToRank(count: Int): BadgeRank =
+  private fun countToRank(count: Long): BadgeRank =
       when {
         count >= 30 -> BadgeRank.LEGEND
         count >= 20 -> BadgeRank.DIAMOND

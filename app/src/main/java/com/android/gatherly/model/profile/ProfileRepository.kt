@@ -1,6 +1,7 @@
 package com.android.gatherly.model.profile
 
 import android.net.Uri
+import com.android.gatherly.model.badge.BadgeType
 import com.android.gatherly.model.friends.Friends
 
 /**
@@ -217,52 +218,16 @@ interface ProfileRepository {
   /**
    * The user obtains a badge in his profile via the badgeId
    *
-   * @param profile the user's profile
+   * @param uid the user's profile id
    * @param badgeId the badge that the user just gained
    */
-  suspend fun addBadge(profile: Profile, badgeId: String)
+  suspend fun addBadge(uid: String, badgeId: String)
 
   /**
-   * When a user creates a todo it increments the created todo counter in his profile
+   * The user's count is updated accordingly to the action that has been done is his profile
    *
-   * @param uid the id of the user creating a todo
+   * @param uid the user's profile id
+   * @param type the type of action that needs it's count incremented
    */
-  suspend fun incrementCreatedTodo(uid: String): Int
-
-  /**
-   * When a user completes a todo it increments the completed todo counter in his profile
-   *
-   * @param uid the id of the user completing a todo
-   */
-  suspend fun incrementCompletedTodo(uid: String): Int
-
-  /**
-   * When a user creates an event it increments the created event counter in his profile
-   *
-   * @param uid the id of the user creating an event
-   */
-  suspend fun incrementCreatedEvent(uid: String): Int
-
-  /**
-   * When a user participated in an event it increments the participated event counter in his
-   * profile
-   *
-   * @param uid the id of the user participating in an event
-   */
-  suspend fun incrementParticipatedEvent(uid: String): Int
-
-  /**
-   * When a user completes a focus session it increments the completed focus session counter in his
-   * profile
-   *
-   * @param uid the id of the user completing a focus session
-   */
-  suspend fun incrementCompletedFocusSession(uid: String): Int
-
-  /**
-   * When a user adds a friend it increments the added friend counter in his profile
-   *
-   * @param uid the id of the user adding a friend
-   */
-  suspend fun incrementAddedFriend(uid: String): Int
+  suspend fun incrementBadge(uid: String, type: BadgeType)
 }
