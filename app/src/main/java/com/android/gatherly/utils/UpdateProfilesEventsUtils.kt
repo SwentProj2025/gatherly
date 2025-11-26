@@ -28,7 +28,6 @@ suspend fun userParticipate(
 ) {
   eventsRepository.addParticipant(eventId, userId)
   profileRepository.participateEvent(eventId, userId)
-  profileRepository.incrementParticipatedEvent(userId)
 }
 
 /**

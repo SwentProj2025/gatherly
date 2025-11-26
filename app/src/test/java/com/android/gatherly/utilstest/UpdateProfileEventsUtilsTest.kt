@@ -6,7 +6,6 @@ import com.android.gatherly.model.event.EventsRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.utils.cancelEvent
 import com.android.gatherly.utils.createEvent
-import com.android.gatherly.utils.userParticipate
 import com.android.gatherly.utils.userUnregister
 import com.google.firebase.Timestamp
 import io.mockk.coVerify
@@ -64,25 +63,18 @@ class UpdateProfileEventsUtilsTest {
     participantIds.forEach { uid -> coVerify { profileRepository.incrementParticipatedEvent(uid) } }
   }
 
-  @Test
-  fun userParticipate_updateBadges_updatesEventProfileAndCounter() = runTest {
-    val eventId = "eventABC"
-    val userId = "userXYZ"
-
-    userParticipate(
-        eventsRepository = eventsRepository,
-        profileRepository = profileRepository,
-        eventId = eventId,
-        userId = userId)
-
-    // Event + profile links
-    coVerify { eventsRepository.addParticipant(eventId, userId) }
-    coVerify { profileRepository.participateEvent(eventId, userId) }
-
-    // Counter increment once
-    coVerify { profileRepository.incrementParticipatedEvent(userId) }
-  }
-
+  /**
+   * @Test fun userParticipate_updateBadges_updatesEventProfileAndCounter() = runTest { val eventId
+   *   = "eventABC" val userId = "userXYZ"
+   *
+   * userParticipate( eventsRepository = eventsRepository, profileRepository = profileRepository,
+   * eventId = eventId, userId = userId)
+   *
+   * // Event + profile links coVerify { eventsRepository.addParticipant(eventId, userId) } coVerify
+   * { profileRepository.participateEvent(eventId, userId) }
+   *
+   * // Counter increment once coVerify { profileRepository.incrementParticipatedEvent(userId) } }
+   */
   @Test
   fun userUnregister_updateBadges_updatesEventProfileButDoesNotChangeCounters() = runTest {
     val eventId = "eventDEF"

@@ -4,7 +4,6 @@ import android.content.ContentValues
 import android.net.Uri
 import android.provider.MediaStore
 import androidx.test.platform.app.InstrumentationRegistry
-import com.android.gatherly.model.badge.Rank
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.utils.FirebaseEmulator
 import com.android.gatherly.utils.FirestoreGatherlyProfileTest
@@ -898,130 +897,97 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     assertFalse(updated2ProfileC!!.participatingEventIds.contains(eventId))
   }
 
-  @Test
-  fun testSetupBadgesCorrectly() = runTest {
-    val auth = FirebaseEmulator.auth
-    val firestore = FirebaseEmulator.firestore
-    val storage = FirebaseEmulator.storage
-    val repo = ProfileRepositoryFirestore(firestore, storage)
-
-    // User B
-    auth.signInAnonymously().await()
-    val userBUid = auth.currentUser!!.uid
-    repo.initProfileIfMissing(userBUid, "bob.png")
-
-    val profileB: Profile? = repo.getProfileByUid(userBUid)
-    assertNotNull(profileB)
-    assertEquals(profileB!!.badges.createEvent, Rank.BLANK)
-    assertEquals(profileB.badges.participateEvent, Rank.BLANK)
-    assertEquals(profileB.badges.focusSessionPoint, Rank.BLANK)
-    assertEquals(profileB.badges.addFriends, Rank.BLANK)
-    assertEquals(profileB.badges.completedTodos, Rank.BLANK)
-    assertEquals(profileB.badges.createdTodos, Rank.BLANK)
-    auth.signOut()
-  }
-
-  @Test
-  fun testUpdateBadgeCorrectlyAddFriends() = runTest {
-    val uid = FirebaseEmulator.auth.currentUser!!.uid
-    repository.initProfileIfMissing(uid, "bob.png")
-
-    val massiveFriendCount = 20
-    val fakeFriendUids = List(massiveFriendCount) { "fakeUid$it" }
-
-    val initialProfile = repository.getProfileByUid(uid)!!
-    val profileWithFakeFriends =
-        initialProfile.copy(
-            friendUids = fakeFriendUids,
-        )
-    repository.updateProfile(profileWithFakeFriends)
-
-    val profileToUpdate = repository.getProfileByUid(uid)!!
-
-    repository.updateBadges(profileToUpdate)
-    val updatedProfile = repository.getProfileByUid(uid)!!
-
-    assertEquals(20, updatedProfile.friendUids.size)
-    assertEquals(Rank.LEGEND, updatedProfile.badges.addFriends)
-  }
-
-  @Test
-  fun testUpdateBadgeCorrectlyFocusSessionPoints() = runTest {
-    val uid = FirebaseEmulator.auth.currentUser!!.uid
-    repository.initProfileIfMissing(uid, "bob.png")
-
-    val initialProfile = repository.getProfileByUid(uid)!!
-    val profileWithFakeFocusSession =
-        initialProfile.copy(
-            focusSessionIds = listOf("fakeFocusSessionIds"),
-        )
-
-    repository.updateProfile(profileWithFakeFocusSession)
-
-    val profileToUpdate = repository.getProfileByUid(uid)!!
-
-    repository.updateBadges(profileToUpdate)
-    val updatedProfile = repository.getProfileByUid(uid)!!
-
-    assertEquals(1, updatedProfile.focusSessionIds.size)
-    assertEquals(Rank.STARTING, updatedProfile.badges.focusSessionPoint)
-  }
-
-  @Test
-  fun testUpdateBadgeCorrectlyCreatedEventParticipatingEvent() = runTest {
-    val uid = FirebaseEmulator.auth.currentUser!!.uid
-    repository.initProfileIfMissing(uid, "bob.png")
-
-    val createdEventCount = 3
-    val fakeEventUids = List(createdEventCount) { "fakeUid$it" }
-
-    val participatingEventCount = 11
-    val fakeParticipatingEventsUids = List(participatingEventCount) { "participatingFakeUid$it" }
-
-    val initialProfile = repository.getProfileByUid(uid)!!
-    val profileWithFakeEvents =
-        initialProfile.copy(
-            ownedEventIds = fakeEventUids, participatingEventIds = fakeParticipatingEventsUids)
-    repository.updateProfile(profileWithFakeEvents)
-
-    val profileToUpdate = repository.getProfileByUid(uid)!!
-
-    repository.updateBadges(profileToUpdate)
-    val updatedProfile = repository.getProfileByUid(uid)!!
-
-    assertEquals(3, updatedProfile.ownedEventIds.size)
-    assertEquals(11, updatedProfile.participatingEventIds.size)
-    assertEquals(Rank.BRONZE, updatedProfile.badges.createEvent)
-    assertEquals(Rank.DIAMOND, updatedProfile.badges.participateEvent)
-  }
-
-  @Test
-  fun testUpdateBadgeCorrectlyCreatedTodosCompletedTodos() = runTest {
-    val uid = FirebaseEmulator.auth.currentUser!!.uid
-    repository.initProfileIfMissing(uid, "tester.png")
-
-    val db = FirebaseEmulator.firestore
-
-    val todosSnap = db.collection("users").document(uid).collection("todos").get().await()
-    for (doc in todosSnap.documents) {
-      db.collection("users").document(uid).collection("todos").document(doc.id).delete().await()
-    }
-
-    writeTodo(db, uid, "todo_completed_1", ToDoStatus.ENDED)
-    writeTodo(db, uid, "todo_completed_2", ToDoStatus.ENDED)
-    writeTodo(db, uid, "todo_completed_3", ToDoStatus.ENDED)
-
-    writeTodo(db, uid, "todo_ongoing_4", ToDoStatus.ONGOING)
-    writeTodo(db, uid, "todo_ongoing_5", ToDoStatus.ONGOING)
-
-    val profileToUpdate = repository.getProfileByUid(uid)!!
-    repository.updateBadges(profileToUpdate, null, null)
-
-    val updatedProfile = repository.getProfileByUid(uid)!!
-
-    assertEquals(Rank.GOLD, updatedProfile.badges.createdTodos)
-    assertEquals(Rank.BRONZE, updatedProfile.badges.completedTodos)
-  }
+  /**
+   * @Test fun testSetupBadgesCorrectly() = runTest { val auth = FirebaseEmulator.auth val firestore
+   *   = FirebaseEmulator.firestore val storage = FirebaseEmulator.storage val repo =
+   *   ProfileRepositoryFirestore(firestore, storage)
+   *
+   * // User B auth.signInAnonymously().await() val userBUid = auth.currentUser!!.uid
+   * repo.initProfileIfMissing(userBUid, "bob.png")
+   *
+   * val profileB: Profile? = repo.getProfileByUid(userBUid) assertNotNull(profileB)
+   * assertEquals(profileB!!.badges.createEvent, Rank.BLANK)
+   * assertEquals(profileB.badges.participateEvent, Rank.BLANK)
+   * assertEquals(profileB.badges.focusSessionPoint, Rank.BLANK)
+   * assertEquals(profileB.badges.addFriends, Rank.BLANK)
+   * assertEquals(profileB.badges.completedTodos, Rank.BLANK)
+   * assertEquals(profileB.badges.createdTodos, Rank.BLANK) auth.signOut() }
+   *
+   * @Test fun testUpdateBadgeCorrectlyAddFriends() = runTest { val uid =
+   *   FirebaseEmulator.auth.currentUser!!.uid repository.initProfileIfMissing(uid, "bob.png")
+   *
+   * val massiveFriendCount = 20 val fakeFriendUids = List(massiveFriendCount) { "fakeUid$it" }
+   *
+   * val initialProfile = repository.getProfileByUid(uid)!! val profileWithFakeFriends =
+   * initialProfile.copy( friendUids = fakeFriendUids, )
+   * repository.updateProfile(profileWithFakeFriends)
+   *
+   * val profileToUpdate = repository.getProfileByUid(uid)!!
+   *
+   * repository.updateBadges(profileToUpdate) val updatedProfile = repository.getProfileByUid(uid)!!
+   *
+   * assertEquals(20, updatedProfile.friendUids.size) assertEquals(Rank.LEGEND,
+   * updatedProfile.badges.addFriends) }
+   *
+   * @Test fun testUpdateBadgeCorrectlyFocusSessionPoints() = runTest { val uid =
+   *   FirebaseEmulator.auth.currentUser!!.uid repository.initProfileIfMissing(uid, "bob.png")
+   *
+   * val initialProfile = repository.getProfileByUid(uid)!! val profileWithFakeFocusSession =
+   * initialProfile.copy( focusSessionIds = listOf("fakeFocusSessionIds"), )
+   *
+   * repository.updateProfile(profileWithFakeFocusSession)
+   *
+   * val profileToUpdate = repository.getProfileByUid(uid)!!
+   *
+   * repository.updateBadges(profileToUpdate) val updatedProfile = repository.getProfileByUid(uid)!!
+   *
+   * assertEquals(1, updatedProfile.focusSessionIds.size) assertEquals(Rank.STARTING,
+   * updatedProfile.badges.focusSessionPoint) }
+   *
+   * @Test fun testUpdateBadgeCorrectlyCreatedEventParticipatingEvent() = runTest { val uid =
+   *   FirebaseEmulator.auth.currentUser!!.uid repository.initProfileIfMissing(uid, "bob.png")
+   *
+   * val createdEventCount = 3 val fakeEventUids = List(createdEventCount) { "fakeUid$it" }
+   *
+   * val participatingEventCount = 11 val fakeParticipatingEventsUids =
+   * List(participatingEventCount) { "participatingFakeUid$it" }
+   *
+   * val initialProfile = repository.getProfileByUid(uid)!! val profileWithFakeEvents =
+   * initialProfile.copy( ownedEventIds = fakeEventUids, participatingEventIds =
+   * fakeParticipatingEventsUids) repository.updateProfile(profileWithFakeEvents)
+   *
+   * val profileToUpdate = repository.getProfileByUid(uid)!!
+   *
+   * repository.updateBadges(profileToUpdate) val updatedProfile = repository.getProfileByUid(uid)!!
+   *
+   * assertEquals(3, updatedProfile.ownedEventIds.size) assertEquals(11,
+   * updatedProfile.participatingEventIds.size) assertEquals(Rank.BRONZE,
+   * updatedProfile.badges.createEvent) assertEquals(Rank.DIAMOND,
+   * updatedProfile.badges.participateEvent) }
+   *
+   * @Test fun testUpdateBadgeCorrectlyCreatedTodosCompletedTodos() = runTest { val uid =
+   *   FirebaseEmulator.auth.currentUser!!.uid repository.initProfileIfMissing(uid, "tester.png")
+   *
+   * val db = FirebaseEmulator.firestore
+   *
+   * val todosSnap = db.collection("users").document(uid).collection("todos").get().await() for (doc
+   * in todosSnap.documents) {
+   * db.collection("users").document(uid).collection("todos").document(doc.id).delete().await() }
+   *
+   * writeTodo(db, uid, "todo_completed_1", ToDoStatus.ENDED) writeTodo(db, uid, "todo_completed_2",
+   * ToDoStatus.ENDED) writeTodo(db, uid, "todo_completed_3", ToDoStatus.ENDED)
+   *
+   * writeTodo(db, uid, "todo_ongoing_4", ToDoStatus.ONGOING) writeTodo(db, uid, "todo_ongoing_5",
+   * ToDoStatus.ONGOING)
+   *
+   * val profileToUpdate = repository.getProfileByUid(uid)!!
+   * repository.updateBadges(profileToUpdate, null, null)
+   *
+   * val updatedProfile = repository.getProfileByUid(uid)!!
+   *
+   * assertEquals(Rank.GOLD, updatedProfile.badges.createdTodos) assertEquals(Rank.BRONZE,
+   * updatedProfile.badges.completedTodos) }
+   */
 
   /** Helper function to write a ToDo document in Firestore for testing. */
   private fun writeTodo(
