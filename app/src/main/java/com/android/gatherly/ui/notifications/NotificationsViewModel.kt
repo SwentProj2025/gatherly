@@ -44,120 +44,120 @@ class NotificationViewModel(
     private val authProvider: () -> FirebaseAuth = { Firebase.auth }
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(NotificationUiState())
-    val uiState: StateFlow<NotificationUiState> = _uiState
+  private val _uiState = MutableStateFlow(NotificationUiState())
+  val uiState: StateFlow<NotificationUiState> = _uiState
 
-    private val currentUserId: String
-        get() = authProvider().currentUser?.uid ?: throw IllegalStateException("No signed-in user")
+  private val currentUserId: String
+    get() = authProvider().currentUser?.uid ?: throw IllegalStateException("No signed-in user")
 
-    /** Loads all notifications for the currently signed-in user. */
-    fun loadNotifications() {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
-            try {
-                val notifications = notificationsRepository.getUserNotifications(currentUserId)
-                val hasUnreadFriendRequests =
-                    notifications.any { it.type == NotificationType.FRIEND_REQUEST && !it.wasRead }
-                _uiState.value =
-                    _uiState.value.copy(
-                        notifications = notifications,
-                        isLoading = false,
-                        hasUnreadFriendRequests = hasUnreadFriendRequests)
-            } catch (e: Exception) {
-                _uiState.value =
-                    _uiState.value.copy(
-                        isLoading = false, errorMessage = "Failed to load user's notifications")
-            }
+  /** Loads all notifications for the currently signed-in user. */
+  fun loadNotifications() {
+    viewModelScope.launch {
+      _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+      try {
+        val notifications = notificationsRepository.getUserNotifications(currentUserId)
+        val hasUnreadFriendRequests =
+            notifications.any { it.type == NotificationType.FRIEND_REQUEST && !it.wasRead }
+        _uiState.value =
+            _uiState.value.copy(
+                notifications = notifications,
+                isLoading = false,
+                hasUnreadFriendRequests = hasUnreadFriendRequests)
+      } catch (e: Exception) {
+        _uiState.value =
+            _uiState.value.copy(
+                isLoading = false, errorMessage = "Failed to load user's notifications")
+      }
+    }
+  }
+
+  /** Accepts a friend request represented by [notificationId]. */
+  fun acceptFriendRequest(notificationId: String) {
+    viewModelScope.launch {
+      try {
+        val notification = notificationsRepository.getNotification(notificationId)
+        if (notification.type != NotificationType.FRIEND_REQUEST) {
+          Log.w(
+              "NotificationViewModel",
+              "acceptFriendRequest called on non-Friend_REQUEST notification")
+          return@launch
         }
-    }
+        val senderId =
+            notification.senderId
+                ?: throw IllegalArgumentException("Friend request notification missing senderId")
+        val recipientId = notification.recipientId
 
-    /** Accepts a friend request represented by [notificationId]. */
-    fun acceptFriendRequest(notificationId: String) {
-        viewModelScope.launch {
-            try {
-                val notification = notificationsRepository.getNotification(notificationId)
-                if (notification.type != NotificationType.FRIEND_REQUEST) {
-                    Log.w(
-                        "NotificationViewModel",
-                        "acceptFriendRequest called on non-Friend_REQUEST notification")
-                    return@launch
-                }
-                val senderId =
-                    notification.senderId
-                        ?: throw IllegalArgumentException("Friend request notification missing senderId")
-                val recipientId = notification.recipientId
-
-                if (recipientId != currentUserId) {
-                    throw SecurityException("Current user is not the recipient of this friend request")
-                }
-
-                val senderProfile =
-                    profileRepository.getProfileByUid(senderId)
-                        ?: throw IllegalStateException("Sender profile not found")
-                val senderUsername = senderProfile.username
-
-                profileRepository.addFriend(friend = senderUsername, currentUserId = recipientId)
-
-                val acceptedId = notificationsRepository.getNewId()
-                val acceptedNotification =
-                    Notification(
-                        id = acceptedId,
-                        type = NotificationType.FRIEND_ACCEPTED,
-                        emissionTime = Timestamp.now(),
-                        senderId = currentUserId,
-                        relatedEntityId = null,
-                        recipientId = senderId,
-                        wasRead = false)
-                notificationsRepository.addNotification(acceptedNotification)
-                notificationsRepository.deleteNotification(notification.id)
-                loadNotifications()
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(errorMessage = "Failed to accept friend request")
-            }
+        if (recipientId != currentUserId) {
+          throw SecurityException("Current user is not the recipient of this friend request")
         }
+
+        val senderProfile =
+            profileRepository.getProfileByUid(senderId)
+                ?: throw IllegalStateException("Sender profile not found")
+        val senderUsername = senderProfile.username
+
+        profileRepository.addFriend(friend = senderUsername, currentUserId = recipientId)
+
+        val acceptedId = notificationsRepository.getNewId()
+        val acceptedNotification =
+            Notification(
+                id = acceptedId,
+                type = NotificationType.FRIEND_ACCEPTED,
+                emissionTime = Timestamp.now(),
+                senderId = currentUserId,
+                relatedEntityId = null,
+                recipientId = senderId,
+                wasRead = false)
+        notificationsRepository.addNotification(acceptedNotification)
+        notificationsRepository.deleteNotification(notification.id)
+        loadNotifications()
+      } catch (e: Exception) {
+        _uiState.value = _uiState.value.copy(errorMessage = "Failed to accept friend request")
+      }
     }
+  }
 
-    /** Rejects a friend request represented by [notificationId]. */
-    fun rejectFriendRequest(notificationId: String) {
-        viewModelScope.launch {
-            try {
-                val notification = notificationsRepository.getNotification(notificationId)
-                if (notification.type != NotificationType.FRIEND_REQUEST) {
-                    Log.w(
-                        "NotificationViewModel",
-                        "rejectFriendRequest called on non-Friend_REQUEST notification")
-                    return@launch
-                }
-                val senderId =
-                    notification.senderId
-                        ?: throw IllegalArgumentException("Friend request notification missing senderId")
-                val recipientId = notification.recipientId
-
-                if (recipientId != currentUserId) {
-                    throw SecurityException("Current user is not the recipient of this friend request")
-                }
-
-                val rejectedId = notificationsRepository.getNewId()
-                val rejectedNotification =
-                    Notification(
-                        id = rejectedId,
-                        type = NotificationType.FRIEND_REJECTED,
-                        emissionTime = Timestamp.now(),
-                        senderId = currentUserId,
-                        relatedEntityId = null,
-                        recipientId = senderId,
-                        wasRead = false)
-                notificationsRepository.addNotification(rejectedNotification)
-                notificationsRepository.deleteNotification(notification.id)
-                loadNotifications()
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(errorMessage = "Failed to reject friend request")
-            }
+  /** Rejects a friend request represented by [notificationId]. */
+  fun rejectFriendRequest(notificationId: String) {
+    viewModelScope.launch {
+      try {
+        val notification = notificationsRepository.getNotification(notificationId)
+        if (notification.type != NotificationType.FRIEND_REQUEST) {
+          Log.w(
+              "NotificationViewModel",
+              "rejectFriendRequest called on non-Friend_REQUEST notification")
+          return@launch
         }
-    }
+        val senderId =
+            notification.senderId
+                ?: throw IllegalArgumentException("Friend request notification missing senderId")
+        val recipientId = notification.recipientId
 
-    /** Clears any error message currently in the UI state. */
-    fun clearError() {
-        _uiState.value = _uiState.value.copy(errorMessage = null)
+        if (recipientId != currentUserId) {
+          throw SecurityException("Current user is not the recipient of this friend request")
+        }
+
+        val rejectedId = notificationsRepository.getNewId()
+        val rejectedNotification =
+            Notification(
+                id = rejectedId,
+                type = NotificationType.FRIEND_REJECTED,
+                emissionTime = Timestamp.now(),
+                senderId = currentUserId,
+                relatedEntityId = null,
+                recipientId = senderId,
+                wasRead = false)
+        notificationsRepository.addNotification(rejectedNotification)
+        notificationsRepository.deleteNotification(notification.id)
+        loadNotifications()
+      } catch (e: Exception) {
+        _uiState.value = _uiState.value.copy(errorMessage = "Failed to reject friend request")
+      }
     }
+  }
+
+  /** Clears any error message currently in the UI state. */
+  fun clearError() {
+    _uiState.value = _uiState.value.copy(errorMessage = null)
+  }
 }
