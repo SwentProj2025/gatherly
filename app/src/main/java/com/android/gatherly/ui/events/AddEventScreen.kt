@@ -1,8 +1,6 @@
 package com.android.gatherly.ui.events
 
-import android.app.DatePickerDialog
 import android.widget.Toast
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -17,8 +15,6 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -28,9 +24,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -51,9 +45,8 @@ import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
 import com.android.gatherly.ui.theme.GatherlyTheme
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import com.android.gatherly.utils.DatePickerInputField
+import com.android.gatherly.utils.GatherlyDatePicker
 import kotlinx.coroutines.delay
 
 object AddEventScreenTestTags {
@@ -330,26 +323,15 @@ fun AddEventScreen(
 
               item {
                 // Date
-                Box(modifier = Modifier.fillMaxWidth()) {
-                  OutlinedTextField(
-                      value = ui.date,
-                      onValueChange = {},
-                      readOnly = true,
-                      label = { Text(stringResource(R.string.events_date_field_label)) },
-                      placeholder = { Text("dd/MM/yyyy") },
-                      isError = ui.dateError,
-                      supportingText = {
-                        if (ui.dateError) {
-                          Text(
-                              "Invalid format or past date",
-                              modifier = Modifier.testTag(AddEventScreenTestTags.ERROR_MESSAGE))
-                        }
-                      },
-                      colors = textFieldColors,
-                      modifier = Modifier.fillMaxWidth().testTag(AddEventScreenTestTags.INPUT_DATE),
-                  )
-                  Box(modifier = Modifier.matchParentSize().clickable { showDatePicker = true })
-                }
+                DatePickerInputField(
+                    value = ui.date,
+                    label = stringResource(R.string.events_date_field_label),
+                    isError = ui.dateError,
+                    errorMessage = "Invalid format or past date",
+                    onClick = { showDatePicker = true },
+                    colors = textFieldColors,
+                    testTagInput = AddEventScreenTestTags.INPUT_DATE,
+                    testTagError = AddEventScreenTestTags.ERROR_MESSAGE)
               }
 
               item {
@@ -405,73 +387,11 @@ fun AddEventScreen(
               }
             }
 
-        if (showDatePicker) {
-
-          val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-
-          val initialDateMillis =
-              remember(ui.date) {
-                try {
-                  if (ui.date.isNotBlank()) {
-                    formatter.parse(ui.date)?.time
-                  } else null
-                } catch (e: Exception) {
-                  null
-                }
-              }
-
-          val datePickerState =
-              rememberDatePickerState(initialSelectedDateMillis = initialDateMillis)
-
-          DatePickerDialog(
-              onDismissRequest = { showDatePicker = false },
-              confirmButton = {
-                TextButton(
-                    onClick = {
-                      showDatePicker = false
-                      datePickerState.selectedDateMillis?.let {
-                        addEventViewModel.updateDate(formatter.format(Date(it)))
-                      }
-                    }) {
-                      Text(stringResource(R.string.save))
-                    }
-              },
-              dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) {
-                  Text(stringResource(R.string.cancel))
-                }
-              }) {
-                DatePicker(state = datePickerState)
-              }
-        }
-      }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun DatePickerModal(
-    onDateSelected: (Long) -> Unit,
-    onDismiss: () -> Unit,
-    initialDate: Long? = null
-) {
-  val datePickerState = rememberDatePickerState(initialSelectedDateMillis = initialDate)
-
-  DatePickerDialog(
-      onDismissRequest = onDismiss,
-      confirmButton = {
-        TextButton(
-            onClick = {
-              datePickerState.selectedDateMillis?.let { selectedDate ->
-                onDateSelected(selectedDate)
-              }
-            }) {
-              Text(stringResource(R.string.save))
-            }
-      },
-      dismissButton = {
-        TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) }
-      }) {
-        DatePicker(state = datePickerState)
+        GatherlyDatePicker(
+            show = showDatePicker,
+            initialDate = ui.date,
+            onDateSelected = { selectedDate -> addEventViewModel.updateDate(selectedDate) },
+            onDismiss = { showDatePicker = false })
       }
 }
 

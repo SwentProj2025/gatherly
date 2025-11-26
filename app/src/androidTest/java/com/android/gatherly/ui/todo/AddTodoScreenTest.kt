@@ -12,9 +12,13 @@ import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.utils.AlertDialogTestTags
 import com.android.gatherly.utils.GatherlyTest
 import com.android.gatherly.utils.MockitoUtils
+import com.android.gatherly.utils.selectDateFromPicker
+import com.google.firebase.Timestamp
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import java.time.LocalDate
+import java.util.Calendar
 
 class AddTodoScreenTest : GatherlyTest() {
   @get:Rule val composeTestRule = createComposeRule()
@@ -22,6 +26,30 @@ class AddTodoScreenTest : GatherlyTest() {
   private lateinit var addTodoViewModel: AddTodoViewModel
   private lateinit var profileRepository: ProfileRepository
   private lateinit var mockitoUtils: MockitoUtils
+
+  private val currentMonth = LocalDate.now().month.value
+  private val currentDay = LocalDate.now().dayOfMonth
+  private val currentYear = LocalDate.now().year
+  private val pastYear = currentYear.minus(1)
+  private val futureYear = currentYear.plus(1)
+
+  private val futureDate = "$currentDay/$currentMonth/$futureYear"
+
+  val calendar = Calendar.getInstance().apply {
+    set(Calendar.YEAR, futureYear)
+    set(Calendar.MONTH, currentMonth - 1)
+    set(Calendar.DAY_OF_MONTH, currentDay)
+  }
+  val futureDueDate: Timestamp = Timestamp(calendar.time)
+
+  val calendar2 = Calendar.getInstance().apply {
+    set(Calendar.YEAR, pastYear)
+    set(Calendar.MONTH, currentMonth - 1)
+    set(Calendar.DAY_OF_MONTH, currentDay)
+  }
+  val pastDueDate: Timestamp = Timestamp(calendar2.time)
+
+  private val pastDate = "$currentDay/$currentMonth/$pastYear"
 
   @Before
   fun setUp() {
@@ -104,17 +132,11 @@ class AddTodoScreenTest : GatherlyTest() {
 
   @Test
   fun canEnterAValidDate() {
-    val text = "31/02/2023"
-    composeTestRule.enterAddTodoDate(text)
-    composeTestRule.onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_DATE).assertTextContains(text)
+    composeTestRule.selectDateFromPicker(currentDay, currentMonth, futureYear)
+    composeTestRule.onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_DATE)
+      .assertTextContains(futureDate, ignoreCase = true)
   }
 
-  @Test
-  fun canEnterAnInvalidDate() {
-    val text = "13/13/2023"
-    composeTestRule.enterAddTodoDate(text)
-    composeTestRule.onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_DATE).assertTextContains(text)
-  }
 
   @Test
   fun canEnterAValidTime() {
@@ -132,7 +154,7 @@ class AddTodoScreenTest : GatherlyTest() {
 
   @Test
   fun savingWithInvalidTitleShouldDoNothing() = checkNoTodoWereAdded {
-    composeTestRule.enterAddTodoDetails(todo = todo1.copy(name = " "))
+    composeTestRule.enterAddTodoDetails(todo = todo1.copy(name = " ", dueDate = futureDueDate))
     composeTestRule.clickOnSaveForAddTodo()
     composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag(AddToDoScreenTestTags.TODO_SAVE).assertExists()
@@ -140,7 +162,7 @@ class AddTodoScreenTest : GatherlyTest() {
 
   @Test
   fun savingWithInvalidDescriptionShouldDoNothing() = checkNoTodoWereAdded {
-    composeTestRule.enterAddTodoDetails(todo = todo1.copy(description = " "))
+    composeTestRule.enterAddTodoDetails(todo = todo1.copy(description = " ", dueDate = futureDueDate))
     composeTestRule.clickOnSaveForAddTodo()
     composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag(AddToDoScreenTestTags.TODO_SAVE).assertExists()
@@ -148,17 +170,7 @@ class AddTodoScreenTest : GatherlyTest() {
 
   @Test
   fun savingWithInvalidAssigneeShouldDoNothing() = checkNoTodoWereAdded {
-    composeTestRule.enterAddTodoDetails(todo = todo1.copy(assigneeName = " "))
-    composeTestRule.clickOnSaveForAddTodo()
-    composeTestRule.waitForIdle()
-    composeTestRule.onNodeWithTag(AddToDoScreenTestTags.TODO_SAVE).assertExists()
-  }
-
-  @Test
-  fun savingWithInvalidDateShouldDoNothing() = checkNoTodoWereAdded {
-    composeTestRule.enterAddTodoDetails(
-        todo = todo1, date = "13/13/2023" // Invalid date format
-        )
+    composeTestRule.enterAddTodoDetails(todo = todo1.copy(assigneeName = " ", dueDate = futureDueDate))
     composeTestRule.clickOnSaveForAddTodo()
     composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag(AddToDoScreenTestTags.TODO_SAVE).assertExists()
@@ -186,13 +198,6 @@ class AddTodoScreenTest : GatherlyTest() {
   }
 
   @Test
-  fun enteringInvalidDateShowsErrorMessage() {
-    val invalidDate = "13/13/2023" // Invalid date format
-    composeTestRule.enterAddTodoDate(invalidDate)
-    composeTestRule.checkErrorMessageIsDisplayedForAddTodo()
-  }
-
-  @Test
   fun enteringInvalidTimeShowsErrorMessage() {
     val invalidTime = "14:61" // Invalid time format
     composeTestRule.enterAddTodoTime(invalidTime)
@@ -201,8 +206,7 @@ class AddTodoScreenTest : GatherlyTest() {
 
   @Test
   fun enterPastDate() {
-    composeTestRule.enterAddTodoDetails(todo1)
-    composeTestRule.enterAddTodoDate("12/12/2012")
+    composeTestRule.enterAddTodoDetails(todo = todo1.copy(dueDate = pastDueDate))
     composeTestRule.onNodeWithTag(AddToDoScreenTestTags.TODO_SAVE).performClick()
     composeTestRule.onNodeWithTag(AlertDialogTestTags.ALERT).assertIsDisplayed()
   }

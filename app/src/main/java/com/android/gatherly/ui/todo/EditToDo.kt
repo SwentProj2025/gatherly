@@ -25,6 +25,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -39,7 +42,9 @@ import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
 import com.android.gatherly.ui.theme.GatherlyTheme
+import com.android.gatherly.utils.DatePickerInputField
 import com.android.gatherly.utils.GatherlyAlertDialog
+import com.android.gatherly.utils.GatherlyDatePicker
 import kotlinx.coroutines.delay
 
 // Portions of the code in this file are copy-pasted from the Bootcamp solution provided by the
@@ -115,6 +120,9 @@ fun EditToDoScreen(
           focusedTextColor = MaterialTheme.colorScheme.onBackground,
           errorTextColor = MaterialTheme.colorScheme.onBackground,
       )
+
+  // Date state for the alert dialog visibilty
+  var showDatePicker by remember { mutableStateOf(false) }
 
   // Search location when input changes
   LaunchedEffect(todoUIState.location) {
@@ -223,14 +231,15 @@ fun EditToDoScreen(
 
               // Due Date Input
               item {
-                DateInputField(
-                    initialDate = todoUIState.dueDate,
-                    onDateChanged = { editTodoViewModel.onDateChanged(it) },
-                    dueDateError = todoUIState.dueDateError,
-                    textFieldColors = textFieldColors,
+                DatePickerInputField(
+                    value = todoUIState.dueDate,
+                    label = stringResource(R.string.todos_date_field_label),
+                    isError = (todoUIState.dueDateError != null),
+                    errorMessage = "Invalid format or past date",
+                    onClick = { showDatePicker = true },
+                    colors = textFieldColors,
                     testTagInput = EditToDoScreenTestTags.INPUT_TODO_DATE,
-                    testTagErrorMessage = EditToDoScreenTestTags.ERROR_MESSAGE,
-                )
+                    testTagError = EditToDoScreenTestTags.ERROR_MESSAGE)
               }
 
               // Due Time Input
@@ -320,6 +329,11 @@ fun EditToDoScreen(
                 editTodoViewModel.clearPastTime()
               })
         }
+        GatherlyDatePicker(
+            show = showDatePicker,
+            initialDate = todoUIState.dueDate,
+            onDateSelected = { selectedDate -> editTodoViewModel.onDateChanged(selectedDate) },
+            onDismiss = { showDatePicker = false })
       })
 }
 
