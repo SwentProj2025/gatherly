@@ -7,6 +7,8 @@ import com.google.firebase.Timestamp
 /** Represents the type of a [Notification]. */
 enum class NotificationType {
   FRIEND_REQUEST,
+  FRIEND_ACCEPTED,
+  FRIEND_REJECTED,
   TODO_REMINDER,
   EVENT_REMINDER
 }
