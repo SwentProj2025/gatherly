@@ -568,7 +568,6 @@ class ProfileRepositoryFirestore(
 
   /** Atomically increments the given numeric field and returns the new value. */
   private suspend fun incrementField(uid: String, field: String): Int {
-    try {
       val docRef = profilesCollection.document(uid)
 
       return db.runTransaction { tx ->
@@ -587,9 +586,6 @@ class ProfileRepositoryFirestore(
             updated
           }
           .await()
-    } catch (e: Exception) {
-      return -1
-    }
   }
 
   /**
