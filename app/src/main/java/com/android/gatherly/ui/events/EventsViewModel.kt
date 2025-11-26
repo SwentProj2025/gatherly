@@ -40,7 +40,8 @@ data class UIState(
         emptyList(), // Events neither created by nor participated in by current user
     val errorMsg: String? = null,
     val currentUserId: String = "",
-    val isAnon: Boolean = true
+    val isAnon: Boolean = true,
+    val isLoading: Boolean = false
 )
 /**
  * Function that retrieves "drawable" events, i.e. those which are not past, and have a valid
@@ -90,6 +91,7 @@ class EventsViewModel(
    * @param currentUserId the ID of the current user
    */
   suspend fun refreshEvents(currentUserId: String) {
+    _uiState.value = _uiState.value.copy(isLoading = true)
     val events = eventsRepository.getAllEvents()
     _uiState.value =
         _uiState.value.copy(
@@ -105,6 +107,7 @@ class EventsViewModel(
                 },
             currentUserId = currentUserId,
             isAnon = authProvider().currentUser?.isAnonymous ?: true)
+    _uiState.value = _uiState.value.copy(isLoading = false)
   }
 
   /**
