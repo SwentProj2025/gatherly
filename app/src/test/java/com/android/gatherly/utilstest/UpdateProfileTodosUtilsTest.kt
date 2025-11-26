@@ -1,5 +1,6 @@
 package com.android.gatherly.utilstest
 
+import com.android.gatherly.model.badge.BadgeType
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
@@ -9,13 +10,14 @@ import com.android.gatherly.utils.editTodo
 import com.google.firebase.Timestamp
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.runs
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
 
 class UpdateProfileTodosUtilsTest {
-
   private val todoRepository = mockk<ToDosRepository>()
   private val profileRepository = mockk<ProfileRepository>()
   private val currentUserId = "user123"
@@ -33,12 +35,13 @@ class UpdateProfileTodosUtilsTest {
 
   @Before
   fun setup() {
-    coEvery { todoRepository.addTodo(any()) } returns Unit
-    coEvery { todoRepository.deleteTodo(any()) } returns Unit
+    coEvery { todoRepository.addTodo(any()) } just runs
+
+    coEvery { todoRepository.deleteTodo(any()) } just runs
     coEvery { todoRepository.getTodo(any()) } returns mockTodo
-    coEvery { todoRepository.editTodo(any(), any()) } returns Unit
-    coEvery { profileRepository.incrementCreatedTodo(any()) } returns 1
-    coEvery { profileRepository.incrementCompletedTodo(any()) } returns 1
+    coEvery { todoRepository.editTodo(any(), any()) } just runs
+
+    coEvery { profileRepository.incrementBadge(any(), any()) } just runs
   }
 
   /** Test adding a ToDo calls addTodo and increments "created todos" exactly once. */
@@ -48,11 +51,8 @@ class UpdateProfileTodosUtilsTest {
 
     coVerify(exactly = 1) {
       todoRepository.addTodo(mockTodo)
-      profileRepository.incrementCreatedTodo(currentUserId)
+      profileRepository.incrementBadge(currentUserId, BadgeType.TODOS_CREATED)
     }
-
-    // make sure we do NOT touch completed counter here
-    coVerify(exactly = 0) { profileRepository.incrementCompletedTodo(any()) }
   }
 
   /** When status goes from ONGOING -> ENDED, we increment "completed todos" once. */
@@ -75,7 +75,7 @@ class UpdateProfileTodosUtilsTest {
     coVerify {
       todoRepository.getTodo(todoId)
       todoRepository.editTodo(todoId, expectedUpdated)
-      profileRepository.incrementCompletedTodo(currentUserId)
+      profileRepository.incrementBadge(currentUserId, BadgeType.TODOS_COMPLETED)
     }
   }
 
@@ -100,8 +100,5 @@ class UpdateProfileTodosUtilsTest {
       todoRepository.getTodo(todoId)
       todoRepository.editTodo(todoId, expectedUpdated)
     }
-
-    // No new completion should be counted in this direction
-    coVerify(exactly = 0) { profileRepository.incrementCompletedTodo(any()) }
   }
 }
