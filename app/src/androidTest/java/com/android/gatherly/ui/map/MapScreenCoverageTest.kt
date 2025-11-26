@@ -36,7 +36,7 @@ class MapScreenCoverageTest {
     val todoRepo = ToDosLocalRepository()
     val eventsRepo = EventsLocalRepository()
     val locationClient: FusedLocationProviderClient? = null
-      val mapCoordinator = MapCoordinator()
+    val mapCoordinator = MapCoordinator()
 
     val realViewModel = MapViewModel(todoRepo, eventsRepo, locationClient, mapCoordinator)
     val spyViewModel = spyk(realViewModel)
@@ -87,7 +87,8 @@ class MapScreenCoverageTest {
       CompositionLocalProvider(
           androidx.activity.compose.LocalActivityResultRegistryOwner provides registryOwner) {
             MapScreen(
-                viewModel = spyViewModel, isLocationPermissionGrantedProvider = { _ -> false },
+                viewModel = spyViewModel,
+                isLocationPermissionGrantedProvider = { _ -> false },
                 coordinator = mapCoordinator)
           }
     }

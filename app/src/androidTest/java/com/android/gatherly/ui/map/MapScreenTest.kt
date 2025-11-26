@@ -136,10 +136,11 @@ class MapScreenTest {
           addEvent(creatingEvent)
         }
     mapCoordinator = MapCoordinator()
-    viewModel = MapViewModel(
-        todosRepository = toDosRepository,
-        eventsRepository = eventsRepository,
-        coordinator = mapCoordinator)
+    viewModel =
+        MapViewModel(
+            todosRepository = toDosRepository,
+            eventsRepository = eventsRepository,
+            coordinator = mapCoordinator)
 
     // Wait for ViewModel init to complete
     while (viewModel.uiState.value.itemsList.isEmpty()) {
@@ -156,10 +157,7 @@ class MapScreenTest {
   // Helper for your existing UI existence tests
   private fun renderDefaultMapUi() {
     compose.setContent {
-      MapScreen(
-          viewModel = viewModel,
-          coordinator = mapCoordinator
-          )
+      MapScreen(viewModel = viewModel, coordinator = mapCoordinator)
       ToDoIcon(todo)
       ToDoSheet(todo, onGoToToDo = {}, onClose = {})
       EventIcon(event)
@@ -176,10 +174,7 @@ class MapScreenTest {
   }
 
   private fun renderMapScreenOnly() {
-    compose.setContent { MapScreen(
-        viewModel = viewModel,
-        coordinator = mapCoordinator
-    ) }
+    compose.setContent { MapScreen(viewModel = viewModel, coordinator = mapCoordinator) }
 
     // Wait for camera position to initialize
     compose.waitForIdle()
@@ -191,10 +186,9 @@ class MapScreenTest {
   }
 
   private fun renderMapScreenWithoutInitialisation() {
-    compose.setContent { MapScreen(
-        viewModel = viewModel,
-        coordinator = mapCoordinator,
-        runInitialisation = false) }
+    compose.setContent {
+      MapScreen(viewModel = viewModel, coordinator = mapCoordinator, runInitialisation = false)
+    }
   }
 
   // Check that the Google Map is displayed
@@ -477,9 +471,7 @@ class MapScreenTest {
     compose.setContent {
       if (isMapScreenActive.value) {
         viewModel.changeView()
-        MapScreen(viewModel = viewModel,
-            coordinator = mapCoordinator,
-            goToEvent = goToEvent)
+        MapScreen(viewModel = viewModel, coordinator = mapCoordinator, goToEvent = goToEvent)
       } else {
         val eventsVM =
             EventsViewModel(
@@ -544,9 +536,7 @@ class MapScreenTest {
     compose.setContent {
       if (isMapScreenActive.value) {
         viewModel.changeView()
-        MapScreen(viewModel = viewModel,
-            goToEvent = goToEvent,
-            coordinator = mapCoordinator)
+        MapScreen(viewModel = viewModel, goToEvent = goToEvent, coordinator = mapCoordinator)
       } else {
         val eventsVM =
             EventsViewModel(
@@ -606,9 +596,7 @@ class MapScreenTest {
     compose.setContent {
       if (isMapScreenActive.value) {
         viewModel.changeView()
-        MapScreen(viewModel = viewModel,
-            goToEvent = goToEvent,
-            coordinator = mapCoordinator)
+        MapScreen(viewModel = viewModel, goToEvent = goToEvent, coordinator = mapCoordinator)
       } else {
         val eventsVM =
             EventsViewModel(

@@ -48,7 +48,7 @@ class EventsOverviewScreenTest {
   private lateinit var profileRepository: ProfileRepository
   private lateinit var eventsViewModel: EventsViewModel
   private lateinit var mockitoUtils: MockitoUtils
-    private lateinit var mapCoordinator: MapCoordinator
+  private lateinit var mapCoordinator: MapCoordinator
 
   @Before
   fun setUp() {
@@ -56,7 +56,7 @@ class EventsOverviewScreenTest {
     profileRepository = ProfileLocalRepository()
     currentUserId = ""
 
-      mapCoordinator = MapCoordinator()
+    mapCoordinator = MapCoordinator()
 
     // Mock Firebase Auth
     mockitoUtils = MockitoUtils()
@@ -76,12 +76,9 @@ class EventsOverviewScreenTest {
             eventsRepository = eventsRepository,
             profileRepository = profileRepository,
             authProvider = { mockitoUtils.mockAuth })
-      composeTestRule.setContent {
-          EventsScreen(
-              eventsViewModel = eventsViewModel,
-              coordinator = mapCoordinator
-          )
-      }
+    composeTestRule.setContent {
+      EventsScreen(eventsViewModel = eventsViewModel, coordinator = mapCoordinator)
+    }
   }
 
   /** Helper function to create an event for the current user */
@@ -770,9 +767,9 @@ class EventsOverviewScreenTest {
             eventsRepository = eventsRepository,
             profileRepository = profileRepository,
             authProvider = { mockitoUtils.mockAuth })
-    composeTestRule.setContent { EventsScreen(
-        eventsViewModel = eventsViewModel,
-        coordinator = mapCoordinator) }
+    composeTestRule.setContent {
+      EventsScreen(eventsViewModel = eventsViewModel, coordinator = mapCoordinator)
+    }
 
     composeTestRule.onNodeWithTag(EventsScreenTestTags.BROWSE_TITLE).assertIsDisplayed()
     composeTestRule.onNodeWithTag(EventsScreenTestTags.UPCOMING_TITLE).assertIsNotDisplayed()
@@ -780,106 +777,100 @@ class EventsOverviewScreenTest {
     composeTestRule.onNodeWithTag(EventsScreenTestTags.CREATE_EVENT_BUTTON).assertIsNotDisplayed()
   }
 
-    /**
-     * Test: scenario: Log in as Bob, view an event with a location.
-     * Click on the event to open details. Click "See on Map".
-     * Verifies that the MapCoordinator receives the request to center on that event.
-     */
-    @Test
-    fun testSeeOnMapButtonTriggersCoordinator() = runTest {
-        val bobId = "bobId"
+  /**
+   * Test: scenario: Log in as Bob, view an event with a location. Click on the event to open
+   * details. Click "See on Map". Verifies that the MapCoordinator receives the request to center on
+   * that event.
+   */
+  @Test
+  fun testSeeOnMapButtonTriggersCoordinator() = runTest {
+    val bobId = "bobId"
 
-        // Create an event with a valid location
-        val eventWithLocation = createYourEvent(bobId).copy(
-            id = "loc_event",
-            location = Location(46.5, 6.5, "Test Place")
-        )
-        eventsRepository.addEvent(eventWithLocation)
+    // Create an event with a valid location
+    val eventWithLocation =
+        createYourEvent(bobId).copy(id = "loc_event", location = Location(46.5, 6.5, "Test Place"))
+    eventsRepository.addEvent(eventWithLocation)
 
-        setContent(bobId)
+    setContent(bobId)
 
-        composeTestRule.waitForIdle()
+    composeTestRule.waitForIdle()
 
-        // Open the event dialog
-        composeTestRule.clickEventItem(eventWithLocation)
+    // Open the event dialog
+    composeTestRule.clickEventItem(eventWithLocation)
 
-        // Verify the "See on map" button (Neutral button) is displayed
-        composeTestRule
-            .onNodeWithTag(AlertDialogTestTags.NEUTRAL_BTN) //
-            .assertIsDisplayed()
-            .performClick()
+    // Verify the "See on map" button (Neutral button) is displayed
+    composeTestRule
+        .onNodeWithTag(AlertDialogTestTags.NEUTRAL_BTN) //
+        .assertIsDisplayed()
+        .performClick()
 
-        // Verify the coordinator received the ID
-        // We check the internal state of our local coordinator instance
-        assert(mapCoordinator.getUnconsumedEventId() == eventWithLocation.id)
-    }
+    // Verify the coordinator received the ID
+    // We check the internal state of our local coordinator instance
+    assert(mapCoordinator.getUnconsumedEventId() == eventWithLocation.id)
+  }
 
-    /**
-     * Test: Verifies that the "See on Map" button is disabled
-     * when the event does not have a valid location.
-     */
-    @Test
-    fun testSeeOnMapButtonDisabledWhenNoLocation() = runTest {
-        val bobId = "bobId"
+  /**
+   * Test: Verifies that the "See on Map" button is disabled when the event does not have a valid
+   * location.
+   */
+  @Test
+  fun testSeeOnMapButtonDisabledWhenNoLocation() = runTest {
+    val bobId = "bobId"
 
-        // Create an event with NO location
-        val eventNoLocation = createYourEvent(bobId).copy(
-            id = "no_loc_event",
-            location = null
-        )
-        eventsRepository.addEvent(eventNoLocation)
+    // Create an event with NO location
+    val eventNoLocation = createYourEvent(bobId).copy(id = "no_loc_event", location = null)
+    eventsRepository.addEvent(eventNoLocation)
 
-        setContent(bobId)
+    setContent(bobId)
 
-        composeTestRule.waitForIdle()
+    composeTestRule.waitForIdle()
 
-        // Open the event dialog
-        composeTestRule.clickEventItem(eventNoLocation)
+    // Open the event dialog
+    composeTestRule.clickEventItem(eventNoLocation)
 
-        // Find the button and assert it is displayed but disabled
-        composeTestRule
-            .onNodeWithTag(AlertDialogTestTags.NEUTRAL_BTN)
-            .assertIsDisplayed()
-            .assertIsNotEnabled()
-    }
+    // Find the button and assert it is displayed but disabled
+    composeTestRule
+        .onNodeWithTag(AlertDialogTestTags.NEUTRAL_BTN)
+        .assertIsDisplayed()
+        .assertIsNotEnabled()
+  }
 
-    /**
-     * Test: Verifies that clicking "See on Map" performs two actions:
-     * 1. Sends the event ID to the MapCoordinator.
-     * 2. Dismisses (closes) the Alert Dialog.
-     */
-    @Test
-    fun testSeeOnMapDismissesDialog() = runTest {
-        val bobId = "bobId"
-        val eventWithLocation = createYourEvent(bobId).copy(
-            id = "loc_event_dismiss",
-            location = Location(46.5, 6.5, "Test Place")
-        )
-        eventsRepository.addEvent(eventWithLocation)
+  /**
+   * Test: Verifies that clicking "See on Map" performs two actions:
+   * 1. Sends the event ID to the MapCoordinator.
+   * 2. Dismisses (closes) the Alert Dialog.
+   */
+  @Test
+  fun testSeeOnMapDismissesDialog() = runTest {
+    val bobId = "bobId"
+    val eventWithLocation =
+        createYourEvent(bobId)
+            .copy(id = "loc_event_dismiss", location = Location(46.5, 6.5, "Test Place"))
+    eventsRepository.addEvent(eventWithLocation)
 
-        setContent(bobId)
-        composeTestRule.waitForIdle()
+    setContent(bobId)
+    composeTestRule.waitForIdle()
 
-        // Open the event dialog
-        composeTestRule.clickEventItem(eventWithLocation)
+    // Open the event dialog
+    composeTestRule.clickEventItem(eventWithLocation)
 
-        // Verify dialog is open
-        composeTestRule.onNodeWithTag(AlertDialogTestTags.ALERT).assertIsDisplayed()
+    // Verify dialog is open
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.ALERT).assertIsDisplayed()
 
-        // Click "See on map"
-        composeTestRule
-            .onNodeWithTag(AlertDialogTestTags.NEUTRAL_BTN) //
-            .performClick()
+    // Click "See on map"
+    composeTestRule
+        .onNodeWithTag(AlertDialogTestTags.NEUTRAL_BTN) //
+        .performClick()
 
-        // Assert that coordinator received the ID
-        assert(mapCoordinator.getUnconsumedEventId() == eventWithLocation.id)
+    // Assert that coordinator received the ID
+    assert(mapCoordinator.getUnconsumedEventId() == eventWithLocation.id)
 
-        // Assert that dialog is closed
-        composeTestRule.waitForIdle()
-        composeTestRule
-            .onNodeWithTag(AlertDialogTestTags.ALERT) //
-            .assertIsNotDisplayed()
-    }
+    // Assert that dialog is closed
+    composeTestRule.waitForIdle()
+    composeTestRule
+        .onNodeWithTag(AlertDialogTestTags.ALERT) //
+        .assertIsNotDisplayed()
+  }
   /** Helper function to scroll to a specific event item in a list */
   private fun ComposeTestRule.scrollToEvent(event: Event) {
     onNodeWithTag(EventsScreenTestTags.ALL_LISTS)
