@@ -1,6 +1,5 @@
 package com.android.gatherly.model.profile
 
-import com.android.gatherly.model.badge.ProfileBadges
 import com.google.firebase.Timestamp
 
 /** Represents a single [Profile] item within the app. */
@@ -20,7 +19,6 @@ data class Profile(
     val birthday: Timestamp? = null,
     val profilePicture: String = "",
     val status: ProfileStatus = ProfileStatus.OFFLINE,
-    val badges: ProfileBadges = ProfileBadges.blank,
     val badgeIds: List<String> = emptyList(),
     val createdTodoCount: Int = 0,
     val completedTodoCount: Int = 0,

@@ -3,8 +3,6 @@ package com.android.gatherly.model.profile
 import android.net.Uri
 import com.android.gatherly.model.badge.BadgeRank
 import com.android.gatherly.model.badge.BadgeType
-import com.android.gatherly.model.badge.ProfileBadges
-import com.android.gatherly.model.badge.Rank
 import com.android.gatherly.model.friends.Friends
 
 /**
@@ -208,37 +206,6 @@ class ProfileLocalRepository : ProfileRepository {
   }
 
   // ---- BADGE GESTION PART ----
-
-  override suspend fun updateBadges(
-      userProfile: Profile,
-      createdTodosCount: Int?,
-      completedTodosCount: Int?
-  ) {
-
-    if (createdTodosCount == null || completedTodosCount == null) {
-      return
-    }
-    val updatedBadges =
-        ProfileBadges(
-            addFriends = rank(userProfile.friendUids.size),
-            createdTodos = rank(createdTodosCount),
-            completedTodos = rank(completedTodosCount),
-            createEvent = rank(userProfile.ownedEventIds.size),
-            participateEvent = rank(userProfile.participatingEventIds.size),
-            focusSessionPoint = rank(userProfile.focusSessionIds.size))
-    val updatedProfile = userProfile.copy(badges = updatedBadges)
-    updateProfile(updatedProfile)
-  }
-
-  private fun rank(count: Int): Rank =
-      when {
-        count >= 20 -> Rank.LEGEND
-        count >= 10 -> Rank.DIAMOND
-        count >= 5 -> Rank.GOLD
-        count >= 3 -> Rank.BRONZE
-        count >= 1 -> Rank.STARTING
-        else -> Rank.BLANK
-      }
 
   override suspend fun addBadge(profile: Profile, badgeId: String) {
     val index = profiles.indexOfFirst { it.uid == profile.uid }
