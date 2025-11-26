@@ -26,6 +26,7 @@ import com.android.gatherly.ui.events.EventsScreenTestTags
 import com.android.gatherly.ui.events.EventsViewModel
 import com.android.gatherly.ui.todo.OverviewScreenTestTags
 import com.android.gatherly.utils.AlertDialogTestTags
+import com.android.gatherly.utils.MapCoordinator
 import com.android.gatherly.utils.MockitoUtils
 import com.google.firebase.Timestamp
 import java.util.Date
@@ -56,6 +57,8 @@ class MapScreenTest {
   private lateinit var eventsRepository: EventsRepository
   private lateinit var profileRepository: ProfileRepository
   private lateinit var mockitoUtils: MockitoUtils
+
+  private lateinit var mapCoordinator: MapCoordinator
   private lateinit var viewModel: MapViewModel
 
   private val todoId = "t1"
@@ -132,7 +135,11 @@ class MapScreenTest {
           addEvent(participatingEvent)
           addEvent(creatingEvent)
         }
-    viewModel = MapViewModel(todosRepository = toDosRepository, eventsRepository = eventsRepository)
+    mapCoordinator = MapCoordinator()
+    viewModel = MapViewModel(
+        todosRepository = toDosRepository,
+        eventsRepository = eventsRepository,
+        coordinator = mapCoordinator)
 
     // Wait for ViewModel init to complete
     while (viewModel.uiState.value.itemsList.isEmpty()) {
@@ -149,7 +156,10 @@ class MapScreenTest {
   // Helper for your existing UI existence tests
   private fun renderDefaultMapUi() {
     compose.setContent {
-      MapScreen(viewModel = viewModel)
+      MapScreen(
+          viewModel = viewModel,
+          coordinator = mapCoordinator
+          )
       ToDoIcon(todo)
       ToDoSheet(todo, onGoToToDo = {}, onClose = {})
       EventIcon(event)
@@ -166,7 +176,10 @@ class MapScreenTest {
   }
 
   private fun renderMapScreenOnly() {
-    compose.setContent { MapScreen(viewModel = viewModel) }
+    compose.setContent { MapScreen(
+        viewModel = viewModel,
+        coordinator = mapCoordinator
+    ) }
 
     // Wait for camera position to initialize
     compose.waitForIdle()
@@ -178,7 +191,10 @@ class MapScreenTest {
   }
 
   private fun renderMapScreenWithoutInitialisation() {
-    compose.setContent { MapScreen(viewModel = viewModel, runInitialisation = false) }
+    compose.setContent { MapScreen(
+        viewModel = viewModel,
+        coordinator = mapCoordinator,
+        runInitialisation = false) }
   }
 
   // Check that the Google Map is displayed
@@ -461,7 +477,9 @@ class MapScreenTest {
     compose.setContent {
       if (isMapScreenActive.value) {
         viewModel.changeView()
-        MapScreen(viewModel = viewModel, goToEvent = goToEvent)
+        MapScreen(viewModel = viewModel,
+            coordinator = mapCoordinator,
+            goToEvent = goToEvent)
       } else {
         val eventsVM =
             EventsViewModel(
@@ -473,7 +491,8 @@ class MapScreenTest {
             eventId = navigatedEventId,
             onSignedOut = {},
             onAddEvent = {},
-            navigateToEditEvent = {})
+            navigateToEditEvent = {},
+            coordinator = mapCoordinator)
       }
     }
     compose.waitForIdle()
@@ -525,7 +544,9 @@ class MapScreenTest {
     compose.setContent {
       if (isMapScreenActive.value) {
         viewModel.changeView()
-        MapScreen(viewModel = viewModel, goToEvent = goToEvent)
+        MapScreen(viewModel = viewModel,
+            goToEvent = goToEvent,
+            coordinator = mapCoordinator)
       } else {
         val eventsVM =
             EventsViewModel(
@@ -537,7 +558,8 @@ class MapScreenTest {
             eventId = navigatedEventId,
             onSignedOut = {},
             onAddEvent = {},
-            navigateToEditEvent = {})
+            navigateToEditEvent = {},
+            coordinator = mapCoordinator)
       }
     }
     compose.waitForIdle()
@@ -584,7 +606,9 @@ class MapScreenTest {
     compose.setContent {
       if (isMapScreenActive.value) {
         viewModel.changeView()
-        MapScreen(viewModel = viewModel, goToEvent = goToEvent)
+        MapScreen(viewModel = viewModel,
+            goToEvent = goToEvent,
+            coordinator = mapCoordinator)
       } else {
         val eventsVM =
             EventsViewModel(
@@ -596,7 +620,8 @@ class MapScreenTest {
             eventId = navigatedEventId,
             onSignedOut = {},
             onAddEvent = {},
-            navigateToEditEvent = {})
+            navigateToEditEvent = {},
+            coordinator = mapCoordinator)
       }
     }
     compose.waitForIdle()

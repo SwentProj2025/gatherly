@@ -6,22 +6,26 @@ import android.location.Location
 import android.os.Looper
 import androidx.core.content.ContextCompat
 import com.android.gatherly.model.event.Event
+import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsLocalRepository
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.ui.map.EPFL_LATLNG
 import com.android.gatherly.ui.map.MapViewModel
+import com.android.gatherly.utils.MapCoordinator
 import com.android.gatherly.utils.createLocationRequest
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.tasks.Task
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
+import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
@@ -45,633 +49,747 @@ import org.junit.Test
  */
 class MapViewModelTests {
 
-  @OptIn(ExperimentalCoroutinesApi::class) private val testDispatcher = UnconfinedTestDispatcher()
+    @OptIn(ExperimentalCoroutinesApi::class) private val testDispatcher = UnconfinedTestDispatcher()
 
-  /**
-   * Sets up the test environment by replacing the main dispatcher with a test dispatcher. This
-   * allows control over coroutine execution during tests.
-   */
-  @OptIn(ExperimentalCoroutinesApi::class)
-  @Before
-  fun setup() {
-    // Mocking for static android classes
-    mockkStatic(ContextCompat::class)
-    mockkStatic(Looper::class)
+    /**
+     * Sets up the test environment by replacing the main dispatcher with a test dispatcher. This
+     * allows control over coroutine execution during tests.
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Before
+    fun setup() {
+        // Mocking for static android classes
+        mockkStatic(ContextCompat::class)
+        mockkStatic(Looper::class)
 
-    // Prevent "Stub!" error when Looper is called
-    every { Looper.getMainLooper() } returns mockk(relaxed = true)
-    // Mocking for extension function (prevent stub error for createLocationRequest)
-    mockkStatic("com.android.gatherly.utils.LocationUtilsKt")
-    Dispatchers.setMain(testDispatcher)
-  }
+        // Prevent "Stub!" error when Looper is called
+        every { Looper.getMainLooper() } returns mockk(relaxed = true)
+        // Mocking for extension function (prevent stub error for createLocationRequest)
+        mockkStatic("com.android.gatherly.utils.LocationUtilsKt")
+        Dispatchers.setMain(testDispatcher)
+    }
 
-  /** Cleans up the test environment by resetting the main dispatcher to its original state. */
-  @OptIn(ExperimentalCoroutinesApi::class)
-  @After
-  fun tearDown() {
-    Dispatchers.resetMain()
-    // Clean up static mocks
-    unmockkAll()
-  }
+    /** Cleans up the test environment by resetting the main dispatcher to its original state. */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
+        // Clean up static mocks
+        unmockkAll()
+    }
 
-  /** Test data objects used across multiple test cases. */
-  val testObjects = MapViewModelTestsTodos.testedTodos
+    /** Test data objects used across multiple test cases. */
+    val testObjects = MapViewModelTestsTodos.testedTodos
 
-  // -------------------------------------Todos------------------------------------------------------
-  /**
-   * Helper function to determine if a todo should be displayed on the map.
-   *
-   * A todo is drawable if it is not complete and has a valid location.
-   *
-   * @param todo The todo to check.
-   * @return true if the todo is incomplete and has a location, false otherwise.
-   */
-  fun isDrawable(todo: ToDo): Boolean {
-    return todo.status != ToDoStatus.ENDED && todo.location != null
-  }
+    // -------------------------------------Todos------------------------------------------------------
+    /**
+     * Helper function to determine if a todo should be displayed on the map.
+     *
+     * A todo is drawable if it is not complete and has a valid location.
+     *
+     * @param todo The todo to check.
+     * @return true if the todo is incomplete and has a location, false otherwise.
+     */
+    fun isDrawable(todo: ToDo): Boolean {
+        return todo.status != ToDoStatus.ENDED && todo.location != null
+    }
 
-  /**
-   * Verifies that [isDrawable] correctly identifies incomplete todos with locations as drawable.
-   *
-   * Tests two different incomplete todos that have valid locations to ensure the function
-   * consistently returns true for this category.
-   */
-  @Test
-  fun isDrawableWorksOn_IncompleteTodoWithLocation() =
-      runTest(testDispatcher) {
-        val expectedResult1 = true
-        val actualResult1 = isDrawable(MapViewModelTestsTodos.incompleteTodoWithLocation1)
-        assertEquals(expectedResult1, actualResult1)
+    /**
+     * Verifies that [isDrawable] correctly identifies incomplete todos with locations as drawable.
+     *
+     * Tests two different incomplete todos that have valid locations to ensure the function
+     * consistently returns true for this category.
+     */
+    @Test
+    fun isDrawableWorksOn_IncompleteTodoWithLocation() =
+        runTest(testDispatcher) {
+            val expectedResult1 = true
+            val actualResult1 = isDrawable(MapViewModelTestsTodos.incompleteTodoWithLocation1)
+            assertEquals(expectedResult1, actualResult1)
 
-        val expectedResult2 = true
-        val actualResult2 = isDrawable(MapViewModelTestsTodos.incompleteTodoWithLocation2)
-        assertEquals(expectedResult2, actualResult2)
-      }
-
-  /**
-   * Verifies that [isDrawable] correctly identifies complete todos as not drawable.
-   *
-   * Even though the todo has a valid location, it should not be drawable because it is marked as
-   * complete.
-   */
-  @Test
-  fun isDrawableWorksOn_CompleteTodoWithLocation() =
-      runTest(testDispatcher) {
-        val expectedResult = false
-        val actualResult = isDrawable(MapViewModelTestsTodos.completeTodoWithLocation)
-        assertEquals(expectedResult, actualResult)
-      }
-
-  /**
-   * Verifies that [isDrawable] correctly identifies todos without locations as not drawable.
-   *
-   * Even though the todo is incomplete, it should not be drawable because it lacks a valid location
-   * to display on the map.
-   */
-  @Test
-  fun isDrawableWorksOn_IncompleteTodoWithoutLocation() =
-      runTest(testDispatcher) {
-        val expectedResult = false
-        val actualResult = isDrawable(MapViewModelTestsTodos.incompleteTodoWithoutLocation)
-        assertEquals(expectedResult, actualResult)
-      }
-
-  /**
-   * Verifies that [isDrawable] correctly identifies complete todos without locations as not
-   * drawable.
-   *
-   * This tests the lazy evaluation behavior where the function should return false as soon as it
-   * determines the todo is complete, without checking the location.
-   */
-  @Test
-  fun isDrawableWorksOn_CompleteTodoWithoutLocation() =
-      runTest(testDispatcher) {
-        val expectedResult = false
-        val actualResult = isDrawable(MapViewModelTestsTodos.completeTodoWithoutLocation)
-        assertEquals(expectedResult, actualResult)
-      }
-
-  /**
-   * Verifies that [MapViewModel] correctly filters and displays only drawable todos.
-   *
-   * Populates the repository with a mix of complete/incomplete todos with/without locations, then
-   * verifies that the ViewModel's UI state contains only the incomplete todos that have valid
-   * locations.
-   */
-  @OptIn(ExperimentalCoroutinesApi::class)
-  @Test
-  fun getDrawableTodosRetrievesCorrectList() =
-      runTest(testDispatcher) {
-        val todosRepo = ToDosLocalRepository()
-        val eventsRepo = EventsLocalRepository()
-        for (todo in testObjects) {
-          todosRepo.addTodo(todo)
+            val expectedResult2 = true
+            val actualResult2 = isDrawable(MapViewModelTestsTodos.incompleteTodoWithLocation2)
+            assertEquals(expectedResult2, actualResult2)
         }
 
-        val vm = MapViewModel(todosRepository = todosRepo, eventsRepository = eventsRepo)
-        advanceUntilIdle()
-
-        val expectedList: List<ToDo> =
-            listOf(
-                MapViewModelTestsTodos.incompleteTodoWithLocation1,
-                MapViewModelTestsTodos.incompleteTodoWithLocation2)
-
-        val actualList: List<ToDo> = vm.uiState.value.itemsList.map { it as ToDo }
-        assertEquals(expectedList, actualList)
-      }
-
-  /**
-   * Verifies that tapping a todo marker updates the expanded todo ID in the UI state.
-   *
-   * This ensures that the ViewModel correctly tracks which marker the user has expanded for
-   * displaying additional information.
-   */
-  @Test
-  fun onTodoMarkerTapped_UpdatesExpandedTodoId() =
-      runTest(testDispatcher) {
-        val todosRepo = ToDosLocalRepository()
-        val eventsRepo = EventsLocalRepository()
-        val vm = MapViewModel(todosRepository = todosRepo, eventsRepository = eventsRepo)
-
-        assertNull(vm.uiState.value.selectedItemId)
-
-        vm.onSelectedItem("todo1")
-
-        assertEquals("todo1", vm.uiState.value.selectedItemId)
-      }
-
-  /**
-   * Verifies that dismissing an expanded marker clears the expanded todo ID in the UI state.
-   *
-   * This ensures that the ViewModel correctly collapses the marker information when the user
-   * dismisses or closes the expanded view.
-   */
-  @Test
-  fun onTodoMarkerDismissed_ClearsExpandedTodoId() =
-      runTest(testDispatcher) {
-        val todosRepo = ToDosLocalRepository()
-        val eventsRepo = EventsLocalRepository()
-        val vm = MapViewModel(todosRepository = todosRepo, eventsRepository = eventsRepo)
-
-        vm.onSelectedItem("todo1")
-        assertEquals("todo1", vm.uiState.value.selectedItemId)
-
-        vm.clearSelection()
-
-        assertNull(vm.uiState.value.selectedItemId)
-      }
-
-  // ------------------------------------Events------------------------------------------------------
-  /** Verifies that tapping an event marker updates the expanded event ID in the UI state. */
-  @Test
-  fun onEventMarkerTappedDismissed_UpdateExpandedId() =
-      runTest(testDispatcher) {
-        val todosRepo = ToDosLocalRepository()
-        val eventsRepo = EventsLocalRepository()
-        val vm = MapViewModel(todosRepository = todosRepo, eventsRepository = eventsRepo)
-
-        assertNull(vm.uiState.value.selectedItemId)
-
-        vm.onSelectedItem("upcoming_location")
-        assertEquals("upcoming_location", vm.uiState.value.selectedItemId)
-
-        vm.clearSelection()
-        assertEquals(null, vm.uiState.value.selectedItemId)
-      }
-
-  /** Verifies that [MapViewModel] correctly filters and displays only drawable events. */
-  @OptIn(ExperimentalCoroutinesApi::class)
-  @Test
-  fun getDrawableEventsRetrievesCorrectList() =
-      runTest(testDispatcher) {
-        val todosRepo = ToDosLocalRepository()
-        val eventsRepo = EventsLocalRepository()
-        for (event in MapViewModelTestsEvents.testEvents) {
-          eventsRepo.addEvent(event)
+    /**
+     * Verifies that [isDrawable] correctly identifies complete todos as not drawable.
+     *
+     * Even though the todo has a valid location, it should not be drawable because it is marked as
+     * complete.
+     */
+    @Test
+    fun isDrawableWorksOn_CompleteTodoWithLocation() =
+        runTest(testDispatcher) {
+            val expectedResult = false
+            val actualResult = isDrawable(MapViewModelTestsTodos.completeTodoWithLocation)
+            assertEquals(expectedResult, actualResult)
         }
 
-        val vm = MapViewModel(todosRepository = todosRepo, eventsRepository = eventsRepo)
-        advanceUntilIdle()
-
-        vm.changeView()
-
-        val expectedList: List<Event> =
-            listOf(
-                MapViewModelTestsEvents.upcomingEventWithLocation1,
-                MapViewModelTestsEvents.upcomingEventWithLocation2)
-
-        val actualList: List<Event> = vm.uiState.value.itemsList.map { it as Event }
-        assertEquals(expectedList, actualList)
-      }
-
-  // ----------------------------------View
-  // change---------------------------------------------------
-
-  /** Verifies that [MapViewModel] correctly switches from an todo view to a event view and back. */
-  @OptIn(ExperimentalCoroutinesApi::class)
-  @Test
-  fun canChangeViewBetweenTodosAndEvents() =
-      runTest(testDispatcher) {
-        val todoRepo = ToDosLocalRepository()
-        for (todo in MapViewModelTestsTodos.testedTodos) {
-          todoRepo.addTodo(todo)
+    /**
+     * Verifies that [isDrawable] correctly identifies todos without locations as not drawable.
+     *
+     * Even though the todo is incomplete, it should not be drawable because it lacks a valid location
+     * to display on the map.
+     */
+    @Test
+    fun isDrawableWorksOn_IncompleteTodoWithoutLocation() =
+        runTest(testDispatcher) {
+            val expectedResult = false
+            val actualResult = isDrawable(MapViewModelTestsTodos.incompleteTodoWithoutLocation)
+            assertEquals(expectedResult, actualResult)
         }
 
-        val eventRepo = EventsLocalRepository()
-        for (event in MapViewModelTestsEvents.testEvents) {
-          eventRepo.addEvent(event)
+    /**
+     * Verifies that [isDrawable] correctly identifies complete todos without locations as not
+     * drawable.
+     *
+     * This tests the lazy evaluation behavior where the function should return false as soon as it
+     * determines the todo is complete, without checking the location.
+     */
+    @Test
+    fun isDrawableWorksOn_CompleteTodoWithoutLocation() =
+        runTest(testDispatcher) {
+            val expectedResult = false
+            val actualResult = isDrawable(MapViewModelTestsTodos.completeTodoWithoutLocation)
+            assertEquals(expectedResult, actualResult)
         }
 
-        val vm = MapViewModel(todosRepository = todoRepo, eventsRepository = eventRepo)
-        advanceUntilIdle()
-
-        val expectedTodosList: List<ToDo> =
-            listOf(
-                MapViewModelTestsTodos.incompleteTodoWithLocation1,
-                MapViewModelTestsTodos.incompleteTodoWithLocation2)
-
-        val expectedEventsList: List<Event> =
-            listOf(
-                MapViewModelTestsEvents.upcomingEventWithLocation1,
-                MapViewModelTestsEvents.upcomingEventWithLocation2)
-
-        val actualTodosList: List<ToDo> = vm.uiState.value.itemsList.map { it as ToDo }
-        assertEquals(expectedTodosList, actualTodosList)
-
-        vm.changeView()
-
-        val actualEventsList: List<Event> = vm.uiState.value.itemsList.map { it as Event }
-        assertEquals(expectedEventsList, actualEventsList)
-
-        vm.changeView()
-
-        val actualTodosListAgain: List<ToDo> = vm.uiState.value.itemsList.map { it as ToDo }
-        assertEquals(expectedTodosList, actualTodosListAgain)
-      }
-  /**
-   * Verifies that consulting a todo item updates the last consulted todo ID and clears the camera
-   * position in the UI state.
-   */
-  @OptIn(ExperimentalCoroutinesApi::class)
-  @Test
-  fun onItemConsulted_withTodo_setsLastConsultedTodoIdAndNullsCameraPos() =
-      runTest(testDispatcher) {
-        val todosRepo = ToDosLocalRepository()
-        val eventsRepo = EventsLocalRepository()
-        val vm = MapViewModel(todosRepository = todosRepo, eventsRepository = eventsRepo)
-        advanceUntilIdle()
-
-        // Set initial camera position
-        vm.initialiseCameraPosition(mockk(relaxed = true))
-        advanceUntilIdle()
-        assertNotNull(vm.uiState.value.cameraPos)
-
-        vm.onItemConsulted("todo123")
-
-        assertEquals("todo123", vm.uiState.value.lastConsultedTodoId)
-        assertNull(vm.uiState.value.lastConsultedEventId)
-        assertNull(vm.uiState.value.cameraPos)
-      }
-
-  /**
-   * Verifies that consulting an event item updates the last consulted event ID and clears the
-   * camera position in the UI state.
-   */
-  @OptIn(ExperimentalCoroutinesApi::class)
-  @Test
-  fun onItemConsulted_withEvent_setsLastConsultedEventIdAndNullsCameraPos() =
-      runTest(testDispatcher) {
-        val todosRepo = ToDosLocalRepository()
-        val eventsRepo = EventsLocalRepository()
-        val vm = MapViewModel(todosRepository = todosRepo, eventsRepository = eventsRepo)
-        advanceUntilIdle()
-
-        vm.changeView() // Switch to events view
-
-        vm.onItemConsulted("event456")
-
-        assertEquals("event456", vm.uiState.value.lastConsultedEventId)
-        assertNull(vm.uiState.value.lastConsultedTodoId)
-        assertNull(vm.uiState.value.cameraPos)
-      }
-
-  // ----------------------------------Camera Position--------------------------------------------
-  /** Verifies that initializing the camera position updates the camera position in the UI state. */
-  @OptIn(ExperimentalCoroutinesApi::class)
-  @Test
-  fun initializeCameraPosition_updatesCameraPosInUIState() =
-      runTest(testDispatcher) {
-        val todosRepo = ToDosLocalRepository()
-        val eventsRepo = EventsLocalRepository()
-        val mockContext = mockk<Context>(relaxed = true)
-        val vm = MapViewModel(todosRepository = todosRepo, eventsRepository = eventsRepo)
-        advanceUntilIdle()
-
-        assertNull(vm.uiState.value.cameraPos)
-
-        vm.initialiseCameraPosition(mockContext)
-        advanceUntilIdle()
-
-        assertNotNull(vm.uiState.value.cameraPos)
-        assertEquals(EPFL_LATLNG, vm.uiState.value.cameraPos)
-      }
-
-  /** Verifies that fetching location to center on returns the last consulted todo's location. */
-  @OptIn(ExperimentalCoroutinesApi::class)
-  @Test
-  fun fetchLocationToCenterOn_withLastConsultedTodo_returnsTodoLocation() =
-      runTest(testDispatcher) {
-        val todosRepo = ToDosLocalRepository()
-        val eventsRepo = EventsLocalRepository()
-        todosRepo.addTodo(MapViewModelTestsTodos.incompleteTodoWithLocation1)
-
-        val mockContext = mockk<Context>(relaxed = true)
-        val vm = MapViewModel(todosRepository = todosRepo, eventsRepository = eventsRepo)
-        advanceUntilIdle()
-
-        vm.onItemConsulted(MapViewModelTestsTodos.incompleteTodoWithLocation1.uid)
-
-        val result = vm.fetchLocationToCenterOn(mockContext)
-
-        val expectedLatLng =
-            LatLng(
-                MapViewModelTestsTodos.testLocation1.latitude,
-                MapViewModelTestsTodos.testLocation1.longitude)
-        assertEquals(expectedLatLng, result)
-      }
-
-  /** Verifies that fetching location to center on returns the last consulted event's location. */
-  @OptIn(ExperimentalCoroutinesApi::class)
-  @Test
-  fun fetchLocationToCenterOn_withLastConsultedEvent_returnsEventLocation() =
-      runTest(testDispatcher) {
-        val todosRepo = ToDosLocalRepository()
-        val eventsRepo = EventsLocalRepository()
-        eventsRepo.addEvent(MapViewModelTestsEvents.upcomingEventWithLocation1)
-
-        val mockContext = mockk<Context>(relaxed = true)
-        val vm = MapViewModel(todosRepository = todosRepo, eventsRepository = eventsRepo)
-        advanceUntilIdle()
-
-        vm.changeView() // Switch to events
-        vm.onItemConsulted(MapViewModelTestsEvents.upcomingEventWithLocation1.id)
-
-        val result = vm.fetchLocationToCenterOn(mockContext)
-
-        val expectedLatLng =
-            LatLng(
-                MapViewModelTestsEvents.testLocation1.latitude,
-                MapViewModelTestsEvents.testLocation1.longitude)
-        assertEquals(expectedLatLng, result)
-      }
-
-  /** Verifies that fetching location to center on with no consulted item returns EPFL location. */
-  @OptIn(ExperimentalCoroutinesApi::class)
-  @Test
-  fun fetchLocationToCenterOn_withNoConsultedItem_returnsEPFL() =
-      runTest(testDispatcher) {
-        val todosRepo = ToDosLocalRepository()
-        val eventsRepo = EventsLocalRepository()
-        val mockContext = mockk<Context>(relaxed = true)
-
-        val vm =
-            MapViewModel(
-                todosRepository = todosRepo,
-                eventsRepository = eventsRepo,
-                fusedLocationClient = null)
-        advanceUntilIdle()
-
-        val result = vm.fetchLocationToCenterOn(mockContext)
-
-        assertEquals(EPFL_LATLNG, result)
-      }
-
-  /**
-   * Verifies that fetching location to center on with location permission and no consulted item
-   * returns current location.
-   */
-  @OptIn(ExperimentalCoroutinesApi::class)
-  @Test
-  fun fetchLocationToCenterOn_withLocationPermissionAndNoConsultedItem_returnsCurrentLocation() =
-      runTest(testDispatcher) {
-        val todosRepo = ToDosLocalRepository()
-        val eventsRepo = EventsLocalRepository()
-        val mockContext = mockk<Context>()
-        val mockClient = mockk<FusedLocationProviderClient>(relaxed = true)
-        val mockTask = mockk<Task<Void>>(relaxed = true)
-        val mockLocation = mockk<Location>()
-
-        // Mock the top-level function to avoid "Method not mocked" crash
-        every { createLocationRequest() } returns mockk(relaxed = true)
-
-        // Mock permissions
-        every {
-          ContextCompat.checkSelfPermission(
-              mockContext, android.Manifest.permission.ACCESS_FINE_LOCATION)
-        } returns PackageManager.PERMISSION_GRANTED
-        every {
-          ContextCompat.checkSelfPermission(
-              mockContext, android.Manifest.permission.ACCESS_COARSE_LOCATION)
-        } returns PackageManager.PERMISSION_GRANTED
-
-        every { mockLocation.latitude } returns 50.1231
-        every { mockLocation.longitude } returns 2.3253
-
-        var capturedCallback: LocationCallback? = null
-
-        every {
-          mockClient.requestLocationUpdates(any(), any<LocationCallback>(), any<Looper>())
-        } answers
-            {
-              capturedCallback = secondArg()
-              mockTask
+    /**
+     * Verifies that [MapViewModel] correctly filters and displays only drawable todos.
+     *
+     * Populates the repository with a mix of complete/incomplete todos with/without locations, then
+     * verifies that the ViewModel's UI state contains only the incomplete todos that have valid
+     * locations.
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun getDrawableTodosRetrievesCorrectList() =
+        runTest(testDispatcher) {
+            val todosRepo = ToDosLocalRepository()
+            val eventsRepo = EventsLocalRepository()
+            for (todo in testObjects) {
+                todosRepo.addTodo(todo)
             }
 
-        every { mockClient.removeLocationUpdates(any<LocationCallback>()) } returns mockTask
+            val vm =
+                MapViewModel(
+                    todosRepository = todosRepo,
+                    eventsRepository = eventsRepo,
+                    coordinator = mockk(relaxed = true))
+            advanceUntilIdle()
 
-        val locationResult = mockk<LocationResult>(relaxed = true)
-        every { locationResult.locations } returns listOf(mockLocation)
+            val expectedList: List<ToDo> =
+                listOf(
+                    MapViewModelTestsTodos.incompleteTodoWithLocation1,
+                    MapViewModelTestsTodos.incompleteTodoWithLocation2)
 
-        val vm =
-            MapViewModel(
-                todosRepository = todosRepo,
-                eventsRepository = eventsRepo,
-                fusedLocationClient = mockClient)
+            val actualList: List<ToDo> = vm.uiState.value.itemsList.map { it as ToDo }
+            assertEquals(expectedList, actualList)
+        }
 
-        // Start the call
-        var result: LatLng? = null
-        val job = launch { result = vm.fetchLocationToCenterOn(mockContext) }
+    /**
+     * Verifies that tapping a todo marker updates the expanded todo ID in the UI state.
+     *
+     * This ensures that the ViewModel correctly tracks which marker the user has expanded for
+     * displaying additional information.
+     */
+    @Test
+    fun onTodoMarkerTapped_UpdatesExpandedTodoId() =
+        runTest(testDispatcher) {
+            val todosRepo = ToDosLocalRepository()
+            val eventsRepo = EventsLocalRepository()
+            val vm =
+                MapViewModel(
+                    todosRepository = todosRepo,
+                    eventsRepository = eventsRepo,
+                    coordinator = mockk(relaxed = true))
 
-        // Unlike other tests, advanceUntilIdle() here would force the 5s timeout to trigger
-        // This makes the function return the EPFL fallback, thus failing the test
+            assertNull(vm.uiState.value.selectedItemId)
 
-        // Trigger the callback
-        assertNotNull("Callback should have been captured", capturedCallback)
-        capturedCallback?.onLocationResult(locationResult)
+            vm.onSelectedItem("todo1")
 
-        // Now it is safe to advance, allowing the flow to emit and the function to return
-        advanceUntilIdle()
+            assertEquals("todo1", vm.uiState.value.selectedItemId)
+        }
 
-        val expectedLatLng = LatLng(50.1231, 2.3253)
-        assertNotNull(result)
-        assertEquals(expectedLatLng, result)
-        job.cancel()
-      }
-  /**
-   * Verifies that starting and stopping location updates manages the location job without crashing.
-   */
-  @OptIn(ExperimentalCoroutinesApi::class)
-  @Test
-  fun startAndStopLocationUpdates_managesLocationJob() =
-      runTest(testDispatcher) {
-        val todosRepo = ToDosLocalRepository()
-        val eventsRepo = EventsLocalRepository()
-        val mockClient = mockk<FusedLocationProviderClient>(relaxed = true)
-        val mockContext = mockk<Context>(relaxed = true)
+    /**
+     * Verifies that dismissing an expanded marker clears the expanded todo ID in the UI state.
+     *
+     * This ensures that the ViewModel correctly collapses the marker information when the user
+     * dismisses or closes the expanded view.
+     */
+    @Test
+    fun onTodoMarkerDismissed_ClearsExpandedTodoId() =
+        runTest(testDispatcher) {
+            val todosRepo = ToDosLocalRepository()
+            val eventsRepo = EventsLocalRepository()
+            val vm =
+                MapViewModel(
+                    todosRepository = todosRepo,
+                    eventsRepository = eventsRepo,
+                    coordinator = mockk(relaxed = true))
 
-        // Mock both permissions to ensure the flow passes the check
-        every {
-          ContextCompat.checkSelfPermission(
-              mockContext, android.Manifest.permission.ACCESS_FINE_LOCATION)
-        } returns PackageManager.PERMISSION_GRANTED
+            vm.onSelectedItem("todo1")
+            assertEquals("todo1", vm.uiState.value.selectedItemId)
 
-        every {
-          ContextCompat.checkSelfPermission(
-              mockContext, android.Manifest.permission.ACCESS_COARSE_LOCATION)
-        } returns PackageManager.PERMISSION_GRANTED
+            vm.clearSelection()
 
-        val vm =
-            MapViewModel(
-                todosRepository = todosRepo,
-                eventsRepository = eventsRepo,
-                fusedLocationClient = mockClient)
-        advanceUntilIdle()
+            assertNull(vm.uiState.value.selectedItemId)
+        }
 
-        vm.startLocationUpdates(mockContext)
-        advanceUntilIdle()
+    // ------------------------------------Events------------------------------------------------------
+    /** Verifies that tapping an event marker updates the expanded event ID in the UI state. */
+    @Test
+    fun onEventMarkerTappedDismissed_UpdateExpandedId() =
+        runTest(testDispatcher) {
+            val todosRepo = ToDosLocalRepository()
+            val eventsRepo = EventsLocalRepository()
+            val vm =
+                MapViewModel(
+                    todosRepository = todosRepo,
+                    eventsRepository = eventsRepo,
+                    coordinator = mockk(relaxed = true))
 
-        vm.stopLocationUpdates()
-        advanceUntilIdle()
+            assertNull(vm.uiState.value.selectedItemId)
 
-        // Just verify it doesn't crash
-        assertTrue(true)
-      }
+            vm.onSelectedItem("upcoming_location")
+            assertEquals("upcoming_location", vm.uiState.value.selectedItemId)
 
-  @OptIn(ExperimentalCoroutinesApi::class)
-  @Test
-  fun onNavigationToDifferentScreen_updatesCameraPosToNull() =
-      runTest(testDispatcher) {
-        val todosRepo = ToDosLocalRepository()
-        val eventsRepo = EventsLocalRepository()
-        val mockContext = mockk<Context>(relaxed = true)
-        val vm = MapViewModel(todosRepository = todosRepo, eventsRepository = eventsRepo)
-        advanceUntilIdle()
+            vm.clearSelection()
+            assertEquals(null, vm.uiState.value.selectedItemId)
+        }
 
-        vm.initialiseCameraPosition(mockContext)
-        advanceUntilIdle()
-        assertNotNull(vm.uiState.value.cameraPos)
-
-        vm.onNavigationToDifferentScreen()
-
-        assertNull(vm.uiState.value.cameraPos)
-      }
-
-  /**
-   * Verifies that if permissions are denied (SecurityException), the ViewModel catches it and
-   * returns the fallback (EPFL) instead of crashing.
-   */
-  @OptIn(ExperimentalCoroutinesApi::class)
-  @Test
-  fun fetchLocationToCenterOn_whenPermissionDenied_ReturnsEPFL() =
-      runTest(testDispatcher) {
-        val todosRepo = ToDosLocalRepository()
-        val eventsRepo = EventsLocalRepository()
-        val mockContext = mockk<Context>()
-        // We don't need to mock the client deeply because LocationUtils checks permission first
-        val mockClient = mockk<FusedLocationProviderClient>(relaxed = true)
-
-        // Mock permissions as DENIED
-        every {
-          ContextCompat.checkSelfPermission(
-              mockContext, android.Manifest.permission.ACCESS_FINE_LOCATION)
-        } returns PackageManager.PERMISSION_DENIED
-
-        every {
-          ContextCompat.checkSelfPermission(
-              mockContext, android.Manifest.permission.ACCESS_COARSE_LOCATION)
-        } returns PackageManager.PERMISSION_DENIED
-
-        val vm =
-            MapViewModel(
-                todosRepository = todosRepo,
-                eventsRepository = eventsRepo,
-                fusedLocationClient = mockClient)
-
-        advanceUntilIdle()
-
-        val result = vm.fetchLocationToCenterOn(mockContext)
-
-        assertEquals(EPFL_LATLNG, result)
-      }
-
-  /**
-   * Verifies Android 12+ compatibility fix. Ensures that if the user selects "Approximate" (Coarse)
-   * only, the map still centers on them (doesn't fallback to EPFL).
-   */
-  @OptIn(ExperimentalCoroutinesApi::class)
-  @Test
-  fun fetchLocationToCenterOn_withOnlyCoarsePermission_returnsCurrentLocation() =
-      runTest(testDispatcher) {
-        val todosRepo = ToDosLocalRepository()
-        val eventsRepo = EventsLocalRepository()
-        val mockContext = mockk<Context>()
-        val mockClient = mockk<FusedLocationProviderClient>(relaxed = true)
-        val mockTask = mockk<Task<Void>>(relaxed = true)
-        val mockLocation = mockk<Location>()
-
-        // Mock top-level function
-        every { createLocationRequest() } returns mockk(relaxed = true)
-
-        // Fine is DENIED, but Coarse is GRANTED
-        every {
-          ContextCompat.checkSelfPermission(
-              mockContext, android.Manifest.permission.ACCESS_FINE_LOCATION)
-        } returns PackageManager.PERMISSION_DENIED // <--- User said "No Precise"
-
-        every {
-          ContextCompat.checkSelfPermission(
-              mockContext, android.Manifest.permission.ACCESS_COARSE_LOCATION)
-        } returns PackageManager.PERMISSION_GRANTED // <--- User said "Approximate OK"
-
-        every { mockLocation.latitude } returns 50.1231
-        every { mockLocation.longitude } returns 2.3253
-
-        var capturedCallback: LocationCallback? = null
-
-        every {
-          mockClient.requestLocationUpdates(any(), any<LocationCallback>(), any<Looper>())
-        } answers
-            {
-              capturedCallback = secondArg()
-              mockTask
+    /** Verifies that [MapViewModel] correctly filters and displays only drawable events. */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun getDrawableEventsRetrievesCorrectList() =
+        runTest(testDispatcher) {
+            val todosRepo = ToDosLocalRepository()
+            val eventsRepo = EventsLocalRepository()
+            for (event in MapViewModelTestsEvents.testEvents) {
+                eventsRepo.addEvent(event)
             }
-        every { mockClient.removeLocationUpdates(any<LocationCallback>()) } returns mockTask
 
-        val locationResult = mockk<LocationResult>(relaxed = true)
-        every { locationResult.locations } returns listOf(mockLocation)
+            val vm =
+                MapViewModel(
+                    todosRepository = todosRepo,
+                    eventsRepository = eventsRepo,
+                    coordinator = mockk(relaxed = true))
+            advanceUntilIdle()
 
-        val vm = MapViewModel(todosRepo, eventsRepo, mockClient)
+            vm.changeView()
 
-        var result: LatLng? = null
-        val job = launch { result = vm.fetchLocationToCenterOn(mockContext) }
+            val expectedList: List<Event> =
+                listOf(
+                    MapViewModelTestsEvents.upcomingEventWithLocation1,
+                    MapViewModelTestsEvents.upcomingEventWithLocation2)
 
-        assertNotNull("Callback should capture even with only Coarse permission", capturedCallback)
-        capturedCallback?.onLocationResult(locationResult)
+            val actualList: List<Event> = vm.uiState.value.itemsList.map { it as Event }
+            assertEquals(expectedList, actualList)
+        }
 
-        advanceUntilIdle()
+    // ----------------------------------View
+    // change---------------------------------------------------
 
-        assertEquals(LatLng(50.1231, 2.3253), result)
+    /** Verifies that [MapViewModel] correctly switches from an todo view to a event view and back. */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun canChangeViewBetweenTodosAndEvents() =
+        runTest(testDispatcher) {
+            val todoRepo = ToDosLocalRepository()
+            for (todo in MapViewModelTestsTodos.testedTodos) {
+                todoRepo.addTodo(todo)
+            }
 
-        job.cancel()
-      }
+            val eventRepo = EventsLocalRepository()
+            for (event in MapViewModelTestsEvents.testEvents) {
+                eventRepo.addEvent(event)
+            }
+
+            val vm =
+                MapViewModel(
+                    todosRepository = todoRepo,
+                    eventsRepository = eventRepo,
+                    coordinator = mockk(relaxed = true))
+            advanceUntilIdle()
+
+            val expectedTodosList: List<ToDo> =
+                listOf(
+                    MapViewModelTestsTodos.incompleteTodoWithLocation1,
+                    MapViewModelTestsTodos.incompleteTodoWithLocation2)
+
+            val expectedEventsList: List<Event> =
+                listOf(
+                    MapViewModelTestsEvents.upcomingEventWithLocation1,
+                    MapViewModelTestsEvents.upcomingEventWithLocation2)
+
+            val actualTodosList: List<ToDo> = vm.uiState.value.itemsList.map { it as ToDo }
+            assertEquals(expectedTodosList, actualTodosList)
+
+            vm.changeView()
+
+            val actualEventsList: List<Event> = vm.uiState.value.itemsList.map { it as Event }
+            assertEquals(expectedEventsList, actualEventsList)
+
+            vm.changeView()
+
+            val actualTodosListAgain: List<ToDo> = vm.uiState.value.itemsList.map { it as ToDo }
+            assertEquals(expectedTodosList, actualTodosListAgain)
+        }
+    /**
+     * Verifies that consulting a todo item updates the last consulted todo ID and clears the camera
+     * position in the UI state.
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun onItemConsulted_withTodo_setsLastConsultedTodoIdAndNullsCameraPos() =
+        runTest(testDispatcher) {
+            val todosRepo = ToDosLocalRepository()
+            val eventsRepo = EventsLocalRepository()
+            val vm =
+                MapViewModel(
+                    todosRepository = todosRepo,
+                    eventsRepository = eventsRepo,
+                    coordinator = mockk(relaxed = true))
+            advanceUntilIdle()
+
+            // Set initial camera position
+            vm.initialiseCameraPosition(mockk(relaxed = true))
+            advanceUntilIdle()
+            assertNotNull(vm.uiState.value.cameraPos)
+
+            vm.onItemConsulted("todo123")
+
+            assertEquals("todo123", vm.uiState.value.lastConsultedTodoId)
+            assertNull(vm.uiState.value.lastConsultedEventId)
+            assertNull(vm.uiState.value.cameraPos)
+        }
+
+    /**
+     * Verifies that consulting an event item updates the last consulted event ID and clears the
+     * camera position in the UI state.
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun onItemConsulted_withEvent_setsLastConsultedEventIdAndNullsCameraPos() =
+        runTest(testDispatcher) {
+            val todosRepo = ToDosLocalRepository()
+            val eventsRepo = EventsLocalRepository()
+            val vm =
+                MapViewModel(
+                    todosRepository = todosRepo,
+                    eventsRepository = eventsRepo,
+                    coordinator = mockk(relaxed = true))
+            advanceUntilIdle()
+
+            vm.changeView() // Switch to events view
+
+            vm.onItemConsulted("event456")
+
+            assertEquals("event456", vm.uiState.value.lastConsultedEventId)
+            assertNull(vm.uiState.value.lastConsultedTodoId)
+            assertNull(vm.uiState.value.cameraPos)
+        }
+
+    // ----------------------------------Camera Position--------------------------------------------
+    /** Verifies that initializing the camera position updates the camera position in the UI state. */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun initializeCameraPosition_updatesCameraPosInUIState() =
+        runTest(testDispatcher) {
+            val todosRepo = ToDosLocalRepository()
+            val eventsRepo = EventsLocalRepository()
+            val mockContext = mockk<Context>(relaxed = true)
+            val vm =
+                MapViewModel(
+                    todosRepository = todosRepo,
+                    eventsRepository = eventsRepo,
+                    coordinator = mockk(relaxed = true))
+            advanceUntilIdle()
+
+            assertNull(vm.uiState.value.cameraPos)
+
+            vm.initialiseCameraPosition(mockContext)
+            advanceUntilIdle()
+
+            assertNotNull(vm.uiState.value.cameraPos)
+            assertEquals(EPFL_LATLNG, vm.uiState.value.cameraPos)
+        }
+
+    /** Verifies that fetching location to center on returns the last consulted todo's location. */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun fetchLocationToCenterOn_withLastConsultedTodo_returnsTodoLocation() =
+        runTest(testDispatcher) {
+            val todosRepo = ToDosLocalRepository()
+            val eventsRepo = EventsLocalRepository()
+            todosRepo.addTodo(MapViewModelTestsTodos.incompleteTodoWithLocation1)
+
+            val mockContext = mockk<Context>(relaxed = true)
+            val vm =
+                MapViewModel(
+                    todosRepository = todosRepo,
+                    eventsRepository = eventsRepo,
+                    coordinator = mockk(relaxed = true))
+            advanceUntilIdle()
+
+            vm.onItemConsulted(MapViewModelTestsTodos.incompleteTodoWithLocation1.uid)
+
+            val result = vm.fetchLocationToCenterOn(mockContext)
+
+            val expectedLatLng =
+                LatLng(
+                    MapViewModelTestsTodos.testLocation1.latitude,
+                    MapViewModelTestsTodos.testLocation1.longitude)
+            assertEquals(expectedLatLng, result)
+        }
+
+    /** Verifies that fetching location to center on returns the last consulted event's location. */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun fetchLocationToCenterOn_withLastConsultedEvent_returnsEventLocation() =
+        runTest(testDispatcher) {
+            val todosRepo = ToDosLocalRepository()
+            val eventsRepo = EventsLocalRepository()
+            eventsRepo.addEvent(MapViewModelTestsEvents.upcomingEventWithLocation1)
+
+            val mockContext = mockk<Context>(relaxed = true)
+            val vm =
+                MapViewModel(
+                    todosRepository = todosRepo,
+                    eventsRepository = eventsRepo,
+                    coordinator = mockk(relaxed = true))
+            advanceUntilIdle()
+
+            vm.changeView() // Switch to events
+            vm.onItemConsulted(MapViewModelTestsEvents.upcomingEventWithLocation1.id)
+
+            val result = vm.fetchLocationToCenterOn(mockContext)
+
+            val expectedLatLng =
+                LatLng(
+                    MapViewModelTestsEvents.testLocation1.latitude,
+                    MapViewModelTestsEvents.testLocation1.longitude)
+            assertEquals(expectedLatLng, result)
+        }
+
+    /** Verifies that fetching location to center on with no consulted item returns EPFL location. */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun fetchLocationToCenterOn_withNoConsultedItem_returnsEPFL() =
+        runTest(testDispatcher) {
+            val todosRepo = ToDosLocalRepository()
+            val eventsRepo = EventsLocalRepository()
+            val mockContext = mockk<Context>(relaxed = true)
+
+            val vm =
+                MapViewModel(
+                    todosRepository = todosRepo,
+                    eventsRepository = eventsRepo,
+                    fusedLocationClient = null,
+                    coordinator = mockk(relaxed = true))
+            advanceUntilIdle()
+
+            val result = vm.fetchLocationToCenterOn(mockContext)
+
+            assertEquals(EPFL_LATLNG, result)
+        }
+
+    /**
+     * Verifies that fetching location to center on with location permission and no consulted item
+     * returns current location.
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun fetchLocationToCenterOn_withLocationPermissionAndNoConsultedItem_returnsCurrentLocation() =
+        runTest(testDispatcher) {
+            val todosRepo = ToDosLocalRepository()
+            val eventsRepo = EventsLocalRepository()
+            val mockContext = mockk<Context>()
+            val mockClient = mockk<FusedLocationProviderClient>(relaxed = true)
+            val mockTask = mockk<Task<Void>>(relaxed = true)
+            val mockLocation = mockk<Location>()
+
+            // Mock the top-level function to avoid "Method not mocked" crash
+            every { createLocationRequest() } returns mockk(relaxed = true)
+
+            // Mock permissions
+            every {
+                ContextCompat.checkSelfPermission(
+                    mockContext, android.Manifest.permission.ACCESS_FINE_LOCATION)
+            } returns PackageManager.PERMISSION_GRANTED
+            every {
+                ContextCompat.checkSelfPermission(
+                    mockContext, android.Manifest.permission.ACCESS_COARSE_LOCATION)
+            } returns PackageManager.PERMISSION_GRANTED
+
+            every { mockLocation.latitude } returns 50.1231
+            every { mockLocation.longitude } returns 2.3253
+
+            var capturedCallback: LocationCallback? = null
+
+            every {
+                mockClient.requestLocationUpdates(any(), any<LocationCallback>(), any<Looper>())
+            } answers
+                    {
+                        capturedCallback = secondArg()
+                        mockTask
+                    }
+
+            every { mockClient.removeLocationUpdates(any<LocationCallback>()) } returns mockTask
+
+            val locationResult = mockk<LocationResult>(relaxed = true)
+            every { locationResult.locations } returns listOf(mockLocation)
+
+            val vm =
+                MapViewModel(
+                    todosRepository = todosRepo,
+                    eventsRepository = eventsRepo,
+                    fusedLocationClient = mockClient,
+                    coordinator = mockk(relaxed = true))
+
+            // Start the call
+            var result: LatLng? = null
+            val job = launch { result = vm.fetchLocationToCenterOn(mockContext) }
+
+            // Unlike other tests, advanceUntilIdle() here would force the 5s timeout to trigger
+            // This makes the function return the EPFL fallback, thus failing the test
+
+            // Trigger the callback
+            assertNotNull("Callback should have been captured", capturedCallback)
+            capturedCallback?.onLocationResult(locationResult)
+
+            // Now it is safe to advance, allowing the flow to emit and the function to return
+            advanceUntilIdle()
+
+            val expectedLatLng = LatLng(50.1231, 2.3253)
+            assertNotNull(result)
+            assertEquals(expectedLatLng, result)
+            job.cancel()
+        }
+    /**
+     * Verifies that starting and stopping location updates manages the location job without crashing.
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun startAndStopLocationUpdates_managesLocationJob() =
+        runTest(testDispatcher) {
+            val todosRepo = ToDosLocalRepository()
+            val eventsRepo = EventsLocalRepository()
+            val mockClient = mockk<FusedLocationProviderClient>(relaxed = true)
+            val mockContext = mockk<Context>(relaxed = true)
+
+            // Mock both permissions to ensure the flow passes the check
+            every {
+                ContextCompat.checkSelfPermission(
+                    mockContext, android.Manifest.permission.ACCESS_FINE_LOCATION)
+            } returns PackageManager.PERMISSION_GRANTED
+
+            every {
+                ContextCompat.checkSelfPermission(
+                    mockContext, android.Manifest.permission.ACCESS_COARSE_LOCATION)
+            } returns PackageManager.PERMISSION_GRANTED
+
+            val vm =
+                MapViewModel(
+                    todosRepository = todosRepo,
+                    eventsRepository = eventsRepo,
+                    fusedLocationClient = mockClient,
+                    coordinator = mockk(relaxed = true))
+            advanceUntilIdle()
+
+            vm.startLocationUpdates(mockContext)
+            advanceUntilIdle()
+
+            vm.stopLocationUpdates()
+            advanceUntilIdle()
+
+            // Just verify it doesn't crash
+            assertTrue(true)
+        }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun onNavigationToDifferentScreen_updatesCameraPosToNull() =
+        runTest(testDispatcher) {
+            val todosRepo = ToDosLocalRepository()
+            val eventsRepo = EventsLocalRepository()
+            val mockContext = mockk<Context>(relaxed = true)
+            val vm =
+                MapViewModel(
+                    todosRepository = todosRepo,
+                    eventsRepository = eventsRepo,
+                    coordinator = mockk(relaxed = true))
+            advanceUntilIdle()
+
+            vm.initialiseCameraPosition(mockContext)
+            advanceUntilIdle()
+            assertNotNull(vm.uiState.value.cameraPos)
+
+            vm.onNavigationToDifferentScreen()
+
+            assertNull(vm.uiState.value.cameraPos)
+        }
+
+    /**
+     * Verifies that if permissions are denied (SecurityException), the ViewModel catches it and
+     * returns the fallback (EPFL) instead of crashing.
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun fetchLocationToCenterOn_whenPermissionDenied_ReturnsEPFL() =
+        runTest(testDispatcher) {
+            val todosRepo = ToDosLocalRepository()
+            val eventsRepo = EventsLocalRepository()
+            val mockContext = mockk<Context>()
+            // We don't need to mock the client deeply because LocationUtils checks permission first
+            val mockClient = mockk<FusedLocationProviderClient>(relaxed = true)
+
+            // Mock permissions as DENIED
+            every {
+                ContextCompat.checkSelfPermission(
+                    mockContext, android.Manifest.permission.ACCESS_FINE_LOCATION)
+            } returns PackageManager.PERMISSION_DENIED
+
+            every {
+                ContextCompat.checkSelfPermission(
+                    mockContext, android.Manifest.permission.ACCESS_COARSE_LOCATION)
+            } returns PackageManager.PERMISSION_DENIED
+
+            val vm =
+                MapViewModel(
+                    todosRepository = todosRepo,
+                    eventsRepository = eventsRepo,
+                    fusedLocationClient = mockClient,
+                    coordinator = mockk(relaxed = true))
+
+            advanceUntilIdle()
+
+            val result = vm.fetchLocationToCenterOn(mockContext)
+
+            assertEquals(EPFL_LATLNG, result)
+        }
+
+    /**
+     * Verifies Android 12+ compatibility fix. Ensures that if the user selects "Approximate" (Coarse)
+     * only, the map still centers on them (doesn't fallback to EPFL).
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun fetchLocationToCenterOn_withOnlyCoarsePermission_returnsCurrentLocation() =
+        runTest(testDispatcher) {
+            val todosRepo = ToDosLocalRepository()
+            val eventsRepo = EventsLocalRepository()
+            val mockContext = mockk<Context>()
+            val mockClient = mockk<FusedLocationProviderClient>(relaxed = true)
+            val mockTask = mockk<Task<Void>>(relaxed = true)
+            val mockLocation = mockk<Location>()
+
+            // Mock top-level function
+            every { createLocationRequest() } returns mockk(relaxed = true)
+
+            // Fine is DENIED, but Coarse is GRANTED
+            every {
+                ContextCompat.checkSelfPermission(
+                    mockContext, android.Manifest.permission.ACCESS_FINE_LOCATION)
+            } returns PackageManager.PERMISSION_DENIED
+
+            every {
+                ContextCompat.checkSelfPermission(
+                    mockContext, android.Manifest.permission.ACCESS_COARSE_LOCATION)
+            } returns PackageManager.PERMISSION_GRANTED
+
+            every { mockLocation.latitude } returns 50.1231
+            every { mockLocation.longitude } returns 2.3253
+
+            var capturedCallback: LocationCallback? = null
+
+            every {
+                mockClient.requestLocationUpdates(any(), any<LocationCallback>(), any<Looper>())
+            } answers
+                    {
+                        capturedCallback = secondArg()
+                        mockTask
+                    }
+            every { mockClient.removeLocationUpdates(any<LocationCallback>()) } returns mockTask
+
+            val locationResult = mockk<LocationResult>(relaxed = true)
+            every { locationResult.locations } returns listOf(mockLocation)
+
+            val vm = MapViewModel(todosRepo, eventsRepo, mockClient, mockk(relaxed = true))
+
+            var result: LatLng? = null
+            val job = launch { result = vm.fetchLocationToCenterOn(mockContext) }
+
+            assertNotNull("Callback should capture even with only Coarse permission", capturedCallback)
+            capturedCallback?.onLocationResult(locationResult)
+
+            advanceUntilIdle()
+
+            assertEquals(LatLng(50.1231, 2.3253), result)
+
+            job.cancel()
+        }
+
+    /**
+     * Verifies that [MapViewModel.initialiseCameraPosition] checks the coordinator, consumes the
+     * event ID, and centers the camera on that event.
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun initialiseCameraPosition_withCoordinatorRequest_centersOnEvent() =
+        runTest(testDispatcher) {
+            val targetEventId = "target_event"
+            val targetLocation = com.android.gatherly.model.map.Location(46.5, 6.6, "Test Loc")
+
+            val targetEvent =
+                Event(
+                    id = targetEventId,
+                    title = "Target Event",
+                    description = "Desc",
+                    creatorName = "Creator",
+                    location = targetLocation,
+                    date = com.google.firebase.Timestamp.now(),
+                    startTime = com.google.firebase.Timestamp.now(),
+                    endTime = com.google.firebase.Timestamp.now(),
+                    creatorId = "creatorId",
+                    participants = emptyList(),
+                    status = EventStatus.UPCOMING)
+
+            // We mock the Repositories to strictly control data return and avoid local repo issues
+            val eventsRepo = mockk<com.android.gatherly.model.event.EventsRepository>()
+            val todosRepo = mockk<com.android.gatherly.model.todo.ToDosRepository>(relaxed = true)
+            val mockContext = mockk<Context>(relaxed = true)
+            val mockCoordinator = mockk<MapCoordinator>(relaxed = true)
+
+            coEvery { eventsRepo.getAllEvents() } returns listOf(targetEvent)
+            every { mockCoordinator.getUnconsumedEventId() } returns targetEventId
+
+            // Initialise ViewModel
+            val vm =
+                MapViewModel(
+                    todosRepository = todosRepo,
+                    eventsRepository = eventsRepo,
+                    fusedLocationClient = null,
+                    coordinator = mockCoordinator)
+
+            // Advance to allow the init block (loadingDataJob) to complete and populate eventsList
+            advanceUntilIdle()
+
+            // Initialise Camera
+            vm.initialiseCameraPosition(mockContext)
+            advanceUntilIdle()
+
+            val state = vm.uiState.value
+
+            // Verify the coordinator was marked as consumed
+            verify { mockCoordinator.markConsumed() }
+
+            // Verify logic switched to Events view
+            assertTrue("Should switch to events page", state.displayEventsPage)
+
+            // Verify camera position matches event location
+            val expectedLatLng = LatLng(targetLocation.latitude, targetLocation.longitude)
+            assertEquals(expectedLatLng, state.cameraPos)
+        }
 }
