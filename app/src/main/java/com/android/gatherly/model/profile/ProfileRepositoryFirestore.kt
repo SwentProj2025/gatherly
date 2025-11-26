@@ -4,10 +4,7 @@ import android.net.Uri
 import android.util.Log
 import com.android.gatherly.model.badge.BadgeRank
 import com.android.gatherly.model.badge.BadgeType
-import com.android.gatherly.model.badge.ProfileBadges
-import com.android.gatherly.model.badge.Rank
 import com.android.gatherly.model.friends.Friends
-import com.android.gatherly.model.todo.ToDoStatus
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
@@ -350,7 +347,6 @@ class ProfileRepositoryFirestore(
     val birthday = doc.getTimestamp("birthday")
     val profilePicture = doc.getString("profilePicture") ?: return null
     val status = ProfileStatus.fromString(doc.getString("status"))
-    val badges: ProfileBadges = doc.get("badges", ProfileBadges::class.java) ?: ProfileBadges.blank
     val badgeIds = doc.get("badgeIds") as? List<String> ?: emptyList()
     val createdTodoCount = (doc.getLong("createdTodoCount") ?: 0L).toInt()
     val completedTodoCount = (doc.getLong("completedTodoCount") ?: 0L).toInt()
@@ -373,7 +369,6 @@ class ProfileRepositoryFirestore(
         birthday = birthday,
         profilePicture = profilePicture,
         status = status,
-        badges = badges,
         badgeIds = badgeIds,
         createdTodoCount = createdTodoCount,
         completedTodoCount = completedTodoCount,
@@ -404,7 +399,6 @@ class ProfileRepositoryFirestore(
         "birthday" to profile.birthday,
         "profilePicture" to profile.profilePicture,
         "status" to profile.status.value,
-        "badges" to profile.badges,
         "badgeIds" to profile.badgeIds,
         "createdTodoCount" to profile.createdTodoCount,
         "completedTodoCount" to profile.completedTodoCount,
@@ -488,43 +482,6 @@ class ProfileRepositoryFirestore(
 
   // -- BADGES GESTION PART --
 
-  /**
-   * @param createdTodosCount will not be used in this implementation
-   * @param completedTodosCount will not be used in this implementation
-   */
-  override suspend fun updateBadges(
-      userProfile: Profile,
-      createdTodosCount: Int?,
-      completedTodosCount: Int?
-  ) {
-    val docRef = profilesCollection.document(userProfile.uid)
-    val todoDocRef = db.collection("users").document(userProfile.uid).collection("todos")
-    val createdTodosCount = todoDocRef.get().await().size()
-
-    val completedTodosCount =
-        todoDocRef.whereEqualTo("status", ToDoStatus.ENDED.name).get().await().size()
-
-    val updateBadges =
-        ProfileBadges(
-            addFriends = rank(userProfile.friendUids.size),
-            createdTodos = rank(createdTodosCount),
-            completedTodos = rank(completedTodosCount),
-            participateEvent = rank(userProfile.participatingEventIds.size),
-            createEvent = rank(userProfile.ownedEventIds.size),
-            focusSessionPoint = rank(userProfile.focusSessionIds.size))
-    docRef.update("badges", updateBadges).await()
-  }
-
-  private fun rank(count: Int): Rank =
-      when {
-        count >= 20 -> Rank.LEGEND
-        count >= 10 -> Rank.DIAMOND
-        count >= 5 -> Rank.GOLD
-        count >= 3 -> Rank.BRONZE
-        count >= 1 -> Rank.STARTING
-        else -> Rank.BLANK
-      }
-
   override suspend fun addBadge(profile: Profile, badgeId: String) {
     val docRef = profilesCollection.document(profile.uid)
     docRef.update("badgeIds", FieldValue.arrayUnion(badgeId)).await()
@@ -568,24 +525,24 @@ class ProfileRepositoryFirestore(
 
   /** Atomically increments the given numeric field and returns the new value. */
   private suspend fun incrementField(uid: String, field: String): Int {
-      val docRef = profilesCollection.document(uid)
+    val docRef = profilesCollection.document(uid)
 
-      return db.runTransaction { tx ->
-            val snap = tx.get(docRef)
+    return db.runTransaction { tx ->
+          val snap = tx.get(docRef)
 
-            // If profile doesn't exist, we can't do much
-            if (!snap.exists()) {
-              throw IllegalStateException("Profile not found for uid=$uid when incrementing $field")
-            }
-
-            val current = (snap.getLong(field) ?: 0L).toInt()
-            val updated = current + 1
-
-            tx.set(docRef, mapOf(field to updated), SetOptions.merge())
-
-            updated
+          // If profile doesn't exist, we can't do much
+          if (!snap.exists()) {
+            throw IllegalStateException("Profile not found for uid=$uid when incrementing $field")
           }
-          .await()
+
+          val current = (snap.getLong(field) ?: 0L).toInt()
+          val updated = current + 1
+
+          tx.set(docRef, mapOf(field to updated), SetOptions.merge())
+
+          updated
+        }
+        .await()
   }
 
   /**
