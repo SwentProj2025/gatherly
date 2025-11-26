@@ -149,6 +149,7 @@ class ProfileLocalRepository : ProfileRepository {
       val updatedProfile = currentProfile.copy(friendUids = updatedFriends)
       updateProfile(updatedProfile)
     }
+    incrementAddedFriend(currentUserId)
   }
 
   // ---- STATUS GESTION PART ----

@@ -214,17 +214,55 @@ interface ProfileRepository {
 
   // -- BADGES GESTION PART --
 
+  /**
+   * The user obtains a badge in his profile via the badgeId
+   *
+   * @param profile the user's profile
+   * @param badgeId the badge that the user just gained
+   */
   suspend fun addBadge(profile: Profile, badgeId: String)
 
+  /**
+   * When a user creates a todo it increments the created todo counter in his profile
+   *
+   * @param uid the id of the user creating a todo
+   */
   suspend fun incrementCreatedTodo(uid: String): Int
 
+  /**
+   * When a user completes a todo it increments the completed todo counter in his profile
+   *
+   * @param uid the id of the user completing a todo
+   */
   suspend fun incrementCompletedTodo(uid: String): Int
 
+  /**
+   * When a user creates an event it increments the created event counter in his profile
+   *
+   * @param uid the id of the user creating an event
+   */
   suspend fun incrementCreatedEvent(uid: String): Int
 
+  /**
+   * When a user participated in an event it increments the participated event counter in his
+   * profile
+   *
+   * @param uid the id of the user participating in an event
+   */
   suspend fun incrementParticipatedEvent(uid: String): Int
 
+  /**
+   * When a user completes a focus session it increments the completed focus session counter in his
+   * profile
+   *
+   * @param uid the id of the user completing a focus session
+   */
   suspend fun incrementCompletedFocusSession(uid: String): Int
 
+  /**
+   * When a user adds a friend it increments the added friend counter in his profile
+   *
+   * @param uid the id of the user adding a friend
+   */
   suspend fun incrementAddedFriend(uid: String): Int
 }

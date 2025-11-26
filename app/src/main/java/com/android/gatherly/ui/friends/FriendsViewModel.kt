@@ -7,7 +7,6 @@ import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.android.gatherly.utils.GenericViewModelFactory
-import com.android.gatherly.utils.addFriend
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.auth.ktx.auth
@@ -112,7 +111,7 @@ class FriendsViewModel(
     _uiState.value = _uiState.value.copy(friends = updatedFriends)
     viewModelScope.launch {
       try {
-        addFriend(repository, friend, currentUserId)
+        repository.addFriend(friend, currentUserId)
         refreshFriends(currentUserId)
       } catch (e: Exception) {
         _uiState.value =
