@@ -1,20 +1,25 @@
 package com.android.gatherly.ui.map
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.FabPosition
@@ -57,6 +62,7 @@ import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
 import java.text.SimpleDateFormat
 import java.util.Locale
+import kotlinx.coroutines.launch
 
 // Portions of the code in this file are copy-pasted from the Bootcamp solution provided by the
 // SwEnt staff.
@@ -83,6 +89,9 @@ object MapScreenTestTags {
   const val EVENT_DATE = "eventDate"
   const val TODO_DESCRIPTION = "todoDescription"
   const val EVENT_DESCRIPTION = "eventDescription"
+  const val LOADING_SCREEN = "loadingScreen"
+  const val LOADING_SPINNER = "loadingSpinner"
+  const val LOADING_TEXT = "loadingText"
 
   // ToDo markers
   fun todoMarker(id: String) = "todoMarker_$id"
@@ -125,7 +134,14 @@ fun MapScreen(
     onSignedOut: () -> Unit = {},
     navigationActions: NavigationActions? = null,
     goToEvent: (String) -> Unit = {},
-    goToToDo: () -> Unit = {}
+    goToToDo: () -> Unit = {},
+    runInitialisation: Boolean = true,
+    isLocationPermissionGrantedProvider: (Context) -> Boolean = { ctx ->
+      (ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION) ==
+          PackageManager.PERMISSION_GRANTED) ||
+          (ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_COARSE_LOCATION) ==
+              PackageManager.PERMISSION_GRANTED)
+    }
 ) {
   /** Location services setup * */
   val context = LocalContext.current
@@ -139,36 +155,74 @@ fun MapScreen(
 
   val uiState by vm.uiState.collectAsState()
 
-  HandleSignedOutState(uiState.onSignedOut, onSignedOut)
+  /** Coroutine scope for launching permission requests * */
+  val scope = rememberCoroutineScope()
 
-  // Initialize camera position on first composition
-  LaunchedEffect(Unit) { vm.initialiseCameraPosition(context) }
+  /** Variable to track location permission status */
+  var isLocationPermissionGranted by remember { mutableStateOf(false) }
+
+  HandleSignedOutState(uiState.onSignedOut, onSignedOut)
 
   /** Handle permission request for location access * */
   val permissionLauncher =
-      rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+      rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+          permissions ->
+        val isGranted =
+            permissions.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false) ||
+                permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false)
+
+        isLocationPermissionGranted = isGranted
+
         if (isGranted) {
           vm.startLocationUpdates(context)
+        }
+
+        // Run initialization regardless of the result
+        // If granted, it tries to fetch user location
+        // If denied, it catches the error and falls back to EPFL (Default)
+        if (runInitialisation) {
+          scope.launch { vm.initialiseCameraPosition(context) }
         }
       }
 
   /** Check permission and start location updates * */
   LaunchedEffect(Unit) {
-    val hasPermission =
-        ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) ==
-            PackageManager.PERMISSION_GRANTED
+    // Check if we already have permissions (Fine OR Coarse)
+
+    val hasPermission = isLocationPermissionGrantedProvider(context)
 
     if (hasPermission) {
-      // Permission already granted - start updates
+      // Already existing permissions
+      // Set the blue dot state
+      isLocationPermissionGranted = true
+
+      // Start the location data stream
       vm.startLocationUpdates(context)
+
+      // Initialize Camera
+      if (runInitialisation) {
+        vm.initialiseCameraPosition(context)
+      }
     } else {
-      // Ask user for permission (dialog box)
-      permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+      // No initial permission granted
+
+      // Disable blue dot to prevent crash
+      isLocationPermissionGranted = false
+
+      // Launch the dialog
+      permissionLauncher.launch(
+          arrayOf(
+              Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
     }
   }
 
   /** Stop location updates when the composable is disposed * */
-  DisposableEffect(Unit) { onDispose { vm.stopLocationUpdates() } }
+  DisposableEffect(Unit) {
+    onDispose {
+      vm.onNavigationToDifferentScreen()
+      vm.stopLocationUpdates()
+    }
+  }
 
   // Bottom sheet state for the selected event
   val selectedEvent =
@@ -204,113 +258,138 @@ fun MapScreen(
       // Toggle button to switch between ToDos and Events
       floatingActionButtonPosition = FabPosition.Start,
       floatingActionButton = {
-        val isEvents = uiState.displayEventsPage
-        ExtendedFloatingActionButton(
-            onClick = { vm.changeView() },
-            icon = {},
-            text = {
-              Text(
-                  if (uiState.displayEventsPage) stringResource(R.string.show_todos_button_title)
-                  else stringResource(R.string.show_events_button_title))
-            },
-            containerColor =
-                if (isEvents) MaterialTheme.colorScheme.secondary
-                else MaterialTheme.colorScheme.tertiary,
-            contentColor =
-                if (isEvents) MaterialTheme.colorScheme.onSecondary
-                else MaterialTheme.colorScheme.onTertiary,
-            modifier = Modifier.testTag(MapScreenTestTags.FILTER_TOGGLE))
+        if (uiState.cameraPos != null) {
+          val isEvents = uiState.displayEventsPage
+          ExtendedFloatingActionButton(
+              onClick = { vm.changeView() },
+              icon = {},
+              text = {
+                Text(
+                    if (uiState.displayEventsPage) stringResource(R.string.show_todos_button_title)
+                    else stringResource(R.string.show_events_button_title))
+              },
+              containerColor =
+                  if (isEvents) MaterialTheme.colorScheme.secondary
+                  else MaterialTheme.colorScheme.tertiary,
+              contentColor =
+                  if (isEvents) MaterialTheme.colorScheme.onSecondary
+                  else MaterialTheme.colorScheme.onTertiary,
+              modifier = Modifier.testTag(MapScreenTestTags.FILTER_TOGGLE))
+        }
       },
       content = { pd ->
-        // Camera position state
-        val cameraPositionState = rememberCameraPositionState()
+        if (uiState.cameraPos != null) {
+          // Camera position state
+          val cameraPositionState = rememberCameraPositionState()
 
-        // Handle nullable cameraPos with ?.let {}
-        LaunchedEffect(uiState.cameraPos) {
-          uiState.cameraPos?.let { pos ->
-            cameraPositionState.position = CameraPosition.fromLatLngZoom(pos, 16f)
+          // Handle nullable cameraPos with ?.let {}
+          LaunchedEffect(uiState.cameraPos) {
+            uiState.cameraPos?.let { pos ->
+              cameraPositionState.position = CameraPosition.fromLatLngZoom(pos, 16f)
+            }
           }
-        }
 
-        GoogleMap(
-            modifier =
-                Modifier.fillMaxSize().padding(pd).testTag(MapScreenTestTags.GOOGLE_MAP_SCREEN),
-            cameraPositionState = cameraPositionState,
-            onMapClick = { _ -> vm.clearSelection() },
-            properties = MapProperties(isMyLocationEnabled = true),
-            uiSettings = MapUiSettings(myLocationButtonEnabled = true)) {
-              uiState.itemsList.forEach { item ->
-                when (item) {
-                  // -------------------------------- Todo Marker UI -------------------------------
-                  is ToDo -> {
-                    val loc = item.location ?: return@forEach
-                    val isExpanded = uiState.selectedItemId == item.uid
-                    val z = if (isExpanded) 2f else 1f
+          GoogleMap(
+              modifier =
+                  Modifier.fillMaxSize().padding(pd).testTag(MapScreenTestTags.GOOGLE_MAP_SCREEN),
+              cameraPositionState = cameraPositionState,
+              onMapClick = { _ -> vm.clearSelection() },
+              properties = MapProperties(isMyLocationEnabled = isLocationPermissionGranted),
+              uiSettings = MapUiSettings(myLocationButtonEnabled = isLocationPermissionGranted)) {
+                uiState.itemsList.forEach { item ->
+                  when (item) {
+                    // -------------------------------- Todo Marker UI
+                    // -------------------------------
+                    is ToDo -> {
+                      val loc = item.location ?: return@forEach
+                      val isExpanded = uiState.selectedItemId == item.uid
+                      val z = if (isExpanded) 2f else 1f
 
-                    key("todo_${item.uid}_$isExpanded") {
-                      val markerState =
-                          rememberMarkerState(position = LatLng(loc.latitude, loc.longitude))
+                      key("todo_${item.uid}_$isExpanded") {
+                        val markerState =
+                            rememberMarkerState(position = LatLng(loc.latitude, loc.longitude))
 
-                      MarkerComposable(
-                          state = markerState,
-                          zIndex = z,
-                          onClick = {
-                            vm.onSelectedItem(item.uid)
-                            true
-                          }) {
-                            ToDoIcon(item)
-                          }
+                        MarkerComposable(
+                            state = markerState,
+                            zIndex = z,
+                            onClick = {
+                              vm.onSelectedItem(item.uid)
+                              true
+                            }) {
+                              ToDoIcon(item)
+                            }
+                      }
                     }
-                  }
-                  // -------------------------------- Event Marker UI ---------------------------
-                  is Event -> {
-                    val loc = item.location ?: return@forEach
-                    val isExpanded = uiState.selectedItemId == item.id
-                    val z = if (isExpanded) 2f else 1f
+                    // -------------------------------- Event Marker UI ---------------------------
+                    is Event -> {
+                      val loc = item.location ?: return@forEach
+                      val isExpanded = uiState.selectedItemId == item.id
+                      val z = if (isExpanded) 2f else 1f
 
-                    key("event_${item.id}_$isExpanded") {
-                      val markerState =
-                          rememberMarkerState(position = LatLng(loc.latitude, loc.longitude))
+                      key("event_${item.id}_$isExpanded") {
+                        val markerState =
+                            rememberMarkerState(position = LatLng(loc.latitude, loc.longitude))
 
-                      MarkerComposable(
-                          state = markerState,
-                          zIndex = z,
-                          onClick = {
-                            vm.onSelectedItem(item.id)
-                            true
-                          }) {
-                            EventIcon(item)
-                          }
+                        MarkerComposable(
+                            state = markerState,
+                            zIndex = z,
+                            onClick = {
+                              vm.onSelectedItem(item.id)
+                              true
+                            }) {
+                              EventIcon(item)
+                            }
+                      }
                     }
                   }
                 }
               }
-            }
 
-        if (selectedEvent != null) {
-          ModalBottomSheet(sheetState = sheetState, onDismissRequest = { vm.clearSelection() }) {
-            EventSheet(
-                event = selectedEvent,
-                onGoToEvent = {
-                  // Track consulted item before navigation
-                  vm.onItemConsulted(selectedEvent.id)
-                  vm.clearSelection()
-                  goToEvent(selectedEvent.id)
-                },
-                onClose = { vm.clearSelection() })
+          if (selectedEvent != null) {
+            ModalBottomSheet(sheetState = sheetState, onDismissRequest = { vm.clearSelection() }) {
+              EventSheet(
+                  event = selectedEvent,
+                  onGoToEvent = {
+                    // Track consulted item before navigation
+                    vm.onItemConsulted(selectedEvent.id)
+                    vm.clearSelection()
+                    goToEvent(selectedEvent.id)
+                  },
+                  onClose = { vm.clearSelection() })
+            }
+          } else if (selectedToDo != null) {
+            ModalBottomSheet(sheetState = sheetState, onDismissRequest = { vm.clearSelection() }) {
+              ToDoSheet(
+                  toDo = selectedToDo,
+                  onGoToToDo = {
+                    // Track consulted item before navigation
+                    vm.onItemConsulted(selectedToDo.uid)
+                    vm.clearSelection()
+                    goToToDo()
+                  },
+                  onClose = { vm.clearSelection() })
+            }
           }
-        } else if (selectedToDo != null) {
-          ModalBottomSheet(sheetState = sheetState, onDismissRequest = { vm.clearSelection() }) {
-            ToDoSheet(
-                toDo = selectedToDo,
-                onGoToToDo = {
-                  // Track consulted item before navigation
-                  vm.onItemConsulted(selectedToDo.uid)
-                  vm.clearSelection()
-                  goToToDo()
-                },
-                onClose = { vm.clearSelection() })
-          }
+        } else {
+          Box(
+              modifier =
+                  Modifier.fillMaxSize()
+                      .padding(pd)
+                      .background(MaterialTheme.colorScheme.background)
+                      .testTag(MapScreenTestTags.LOADING_SCREEN),
+              contentAlignment = Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                  CircularProgressIndicator(
+                      color = MaterialTheme.colorScheme.primary,
+                      modifier = Modifier.testTag(MapScreenTestTags.LOADING_SPINNER))
+                  Spacer(modifier = Modifier.height(16.dp))
+                  Text(
+                      text = stringResource(R.string.loading_map),
+                      color = MaterialTheme.colorScheme.onBackground,
+                      style = MaterialTheme.typography.bodyLarge,
+                      modifier = Modifier.testTag(MapScreenTestTags.LOADING_TEXT))
+                }
+              }
         }
       })
 }
@@ -459,17 +538,14 @@ fun ToDoIcon(toDo: ToDo) {
  */
 @Composable
 fun ToDoSheet(toDo: ToDo, onGoToToDo: () -> Unit, onClose: () -> Unit) {
+
   val formattedDate =
       remember(toDo.dueDate) {
         val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
         sdf.format(toDo.dueDate.toDate())
       }
 
-  Card(
-      colors =
-          CardDefaults.cardColors(
-              containerColor = MaterialTheme.colorScheme.secondary,
-              contentColor = MaterialTheme.colorScheme.onSecondary),
+  Column(
       modifier =
           Modifier.fillMaxWidth()
               .padding(Dimensions.rowColPadding)
@@ -477,7 +553,7 @@ fun ToDoSheet(toDo: ToDo, onGoToToDo: () -> Unit, onClose: () -> Unit) {
         Text(
             text = toDo.name.uppercase(),
             style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onSecondary,
+            color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.testTag(MapScreenTestTags.TODO_TITLE_SHEET))
 
         Spacer(modifier = Modifier.size(Dimensions.spacerPadding))
@@ -487,14 +563,14 @@ fun ToDoSheet(toDo: ToDo, onGoToToDo: () -> Unit, onClose: () -> Unit) {
                 Modifier.padding(Dimensions.textPadding).testTag(MapScreenTestTags.TODO_DUE_DATE),
             text = formattedDate,
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSecondary)
+            color = MaterialTheme.colorScheme.onBackground)
         Text(
             modifier =
                 Modifier.padding(Dimensions.textPadding)
                     .testTag(MapScreenTestTags.TODO_DESCRIPTION),
             text = toDo.description,
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSecondary)
+            color = MaterialTheme.colorScheme.onBackground)
 
         Spacer(modifier = Modifier.size(Dimensions.spacerPadding))
 

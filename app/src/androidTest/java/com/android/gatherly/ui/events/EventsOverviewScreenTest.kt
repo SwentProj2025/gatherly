@@ -22,6 +22,7 @@ import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.ui.navigation.NavigationTestTags
+import com.android.gatherly.utils.AlertDialogTestTags
 import com.android.gatherly.utils.MockitoUtils
 import com.android.gatherly.utils.UI_WAIT_TIMEOUT
 import com.google.firebase.Timestamp
@@ -231,7 +232,7 @@ class EventsOverviewScreenTest {
     composeTestRule
         .onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
         .assertTextContains("Events", substring = true, ignoreCase = true)
-    composeTestRule.onNodeWithTag(EventsScreenTestTags.EVENT_POPUP).assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.ALERT).assertIsNotDisplayed()
     composeTestRule.onNodeWithTag(EventsScreenTestTags.BROWSE_TITLE).assertIsDisplayed()
     composeTestRule.onNodeWithTag(EventsScreenTestTags.EMPTY_BROWSER_LIST_MSG).assertIsDisplayed()
     composeTestRule.onNodeWithTag(EventsScreenTestTags.UPCOMING_TITLE).assertIsDisplayed()
@@ -345,21 +346,18 @@ class EventsOverviewScreenTest {
     // Click on the event item
     composeTestRule.clickEventItem(eventByAlice)
     // Check that the popup is displayed
-    composeTestRule.onNodeWithTag(EventsScreenTestTags.EVENT_POPUP).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.ALERT).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.DISMISS_BTN).assertIsDisplayed()
 
     // Click on Participate button
     composeTestRule
-        .onNodeWithTag(EventsScreenTestTags.PARTICIPATE_BUTTON)
+        .onNodeWithTag(AlertDialogTestTags.CONFIRM_BTN)
         .assertIsDisplayed()
         .performClick()
 
     // Wait until the popup is closed
     composeTestRule.waitUntil(UI_WAIT_TIMEOUT) {
-      composeTestRule
-          .onAllNodesWithTag(EventsScreenTestTags.EVENT_POPUP)
-          .fetchSemanticsNodes()
-          .isEmpty()
+      composeTestRule.onAllNodesWithTag(AlertDialogTestTags.ALERT).fetchSemanticsNodes().isEmpty()
     }
     composeTestRule.waitForIdle()
 
@@ -425,9 +423,9 @@ class EventsOverviewScreenTest {
 
     // Click on the event item and participate button
     composeTestRule.clickEventItem(eventByAlice)
-    composeTestRule.onNodeWithTag(EventsScreenTestTags.EVENT_POPUP).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.ALERT).assertIsDisplayed()
     composeTestRule
-        .onNodeWithTag(EventsScreenTestTags.PARTICIPATE_BUTTON)
+        .onNodeWithTag(AlertDialogTestTags.CONFIRM_BTN)
         .assertIsDisplayed()
         .performClick()
 
@@ -452,12 +450,12 @@ class EventsOverviewScreenTest {
 
     // Click on the event item and unregister button
     composeTestRule.clickEventItem(eventByAlice)
-    composeTestRule.onNodeWithTag(EventsScreenTestTags.EVENT_POPUP).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(EventsScreenTestTags.POPUP_TITLE).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(EventsScreenTestTags.POPUP_DESCRIPTION).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.ALERT).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.TITLE).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.BODY).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.DISMISS_BTN).assertIsDisplayed()
     composeTestRule
-        .onNodeWithTag(EventsScreenTestTags.UNREGISTER_BUTTON)
+        .onNodeWithTag(AlertDialogTestTags.CONFIRM_BTN)
         .assertIsDisplayed()
         .performClick()
 
@@ -513,13 +511,13 @@ class EventsOverviewScreenTest {
         .assertIsDisplayed()
     // Click on Bob's event item and verify the popup
     composeTestRule.clickEventItem(eventByBob)
-    composeTestRule.onNodeWithTag(EventsScreenTestTags.EVENT_POPUP).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(EventsScreenTestTags.POPUP_TITLE).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(EventsScreenTestTags.POPUP_DESCRIPTION).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.ALERT).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.DISMISS_BTN).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.TITLE).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.BODY).assertIsDisplayed()
     // Click on the Edit button
     composeTestRule
-        .onNodeWithTag(EventsScreenTestTags.EDIT_EVENT_BUTTON)
+        .onNodeWithTag(AlertDialogTestTags.CONFIRM_BTN)
         .assertIsDisplayed()
         .performClick()
   }
@@ -550,15 +548,15 @@ class EventsOverviewScreenTest {
         .onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(eventByBob))
         .assertIsDisplayed()
     composeTestRule.clickEventItem(eventByBob)
-    composeTestRule.onNodeWithTag(EventsScreenTestTags.EVENT_POPUP).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(EventsScreenTestTags.POPUP_TITLE).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(EventsScreenTestTags.POPUP_DESCRIPTION).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.ALERT).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.TITLE).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.BODY).assertIsDisplayed()
     // Click on the Cancel button and verify that the popup is closed
     composeTestRule
-        .onNodeWithTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON)
+        .onNodeWithTag(AlertDialogTestTags.DISMISS_BTN)
         .assertIsDisplayed()
         .performClick()
-    composeTestRule.onNodeWithTag(EventsScreenTestTags.EVENT_POPUP).assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.ALERT).assertIsNotDisplayed()
   }
 
   /**
