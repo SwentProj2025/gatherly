@@ -1,5 +1,6 @@
 package com.android.gatherly.viewmodel.badge
 
+import com.android.gatherly.R
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.ui.badge.BadgeViewModel
@@ -82,40 +83,32 @@ class BadgeViewModelTest {
     val uiState = vm.uiState
 
     assertEquals(
-        Triple(
-            "Silver ToDo Created Badge",
-            "You created 5 ToDos!",
-            "app/src/main/res/drawable/badges/todos/Silver Todo Created.png"),
+        Triple("Silver ToDo Created Badge", "You created 5 ToDos!", R.drawable.google_logo),
         uiState.value.badgeTodoCreated)
     assertEquals(
-        Triple(
-            "Diamond ToDo Completed Badge",
-            "You completed 20 ToDos!",
-            "app/src/main/res/drawable/badges/todos/Diamond Todo Completed.png"),
+        Triple("Diamond ToDo Completed Badge", "You completed 20 ToDos!", R.drawable.google_logo),
         uiState.value.badgeTodoCompleted)
     assertEquals(
         Triple(
-            "Bronze Event Created Badge",
-            "You created 3 Events!",
-            "app/src/main/res/drawable/badges/events/Bronze Event Created.png"),
+            "Bronze Event Created Badge", "You created 3 Events!", R.drawable.bronze_event_created),
         uiState.value.badgeEventCreated)
     assertEquals(
         Triple(
             "Blank Event Participated Badge",
             "Participate to your first Todo to get a Badge!",
-            "app/src/main/res/drawable/badges/events/Blank Events.png"),
+            R.drawable.blank_event_participated),
         uiState.value.badgeEventParticipated)
     assertEquals(
         Triple(
             "Blank Friend Badge",
             "Add your first Friend to get a Badge!",
-            "app/src/main/res/drawable/badges/friends/Blank Friends.png"),
+            R.drawable.blank_friends),
         uiState.value.badgeFriendAdded)
     assertEquals(
         Triple(
             "Blank Focus Session Badge",
             "Complete your first Focus Session to get a Badge!",
-            "app/src/main/res/drawable/badges/focusSessions/Blank FocusSession.png"),
+            R.drawable.blank_focus_session),
         uiState.value.badgeFocusSessionCompleted)
   }
 }

@@ -2,6 +2,7 @@ package com.android.gatherly.ui.badge
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.android.gatherly.R
 import com.android.gatherly.model.badge.Badge
 import com.android.gatherly.model.badge.BadgeType
 import com.android.gatherly.model.profile.Profile
@@ -31,36 +32,36 @@ import kotlinx.coroutines.launch
  *   type Focus Session Completed
  */
 data class UIState(
-    val badgeTodoCreated: Triple<String, String, String> =
+    val badgeTodoCreated: Triple<String, String, Int> =
         Triple(
             "Blank Todo Created Badge",
             "Create your first Todo to get a Badge!",
-            "app/src/main/res/drawable/badges/todos/Blank Todo Created.png"),
-    val badgeTodoCompleted: Triple<String, String, String> =
+            R.drawable.blank_todo_created),
+    val badgeTodoCompleted: Triple<String, String, Int> =
         Triple(
             "Blank Todo Completed Badge",
             "Complete your first Todo to get a Badge!",
-            "app/src/main/res/drawable/badges/todos/Blank Todo Completed.png"),
-    val badgeEventCreated: Triple<String, String, String> =
+            R.drawable.blank_todo_completed),
+    val badgeEventCreated: Triple<String, String, Int> =
         Triple(
             "Blank Event Created Badge",
             "Create your first Event to get a Badge!",
-            "app/src/main/res/drawable/badges/events/Blank Event Created.png"),
-    val badgeEventParticipated: Triple<String, String, String> =
+            R.drawable.blank_event_created),
+    val badgeEventParticipated: Triple<String, String, Int> =
         Triple(
             "Blank Event Participated Badge",
             "Participate to your first Todo to get a Badge!",
-            "app/src/main/res/drawable/badges/events/Blank Events.png"),
-    val badgeFriendAdded: Triple<String, String, String> =
+            R.drawable.blank_event_participated),
+    val badgeFriendAdded: Triple<String, String, Int> =
         Triple(
             "Blank Friend Badge",
             "Add your first Friend to get a Badge!",
-            "app/src/main/res/drawable/badges/friends/Blank Friends.png"),
-    val badgeFocusSessionCompleted: Triple<String, String, String> =
+            R.drawable.blank_friends),
+    val badgeFocusSessionCompleted: Triple<String, String, Int> =
         Triple(
             "Blank Focus Session Badge",
             "Complete your first Focus Session to get a Badge!",
-            "app/src/main/res/drawable/badges/focusSessions/Blank FocusSession.png"),
+            R.drawable.blank_friends),
 )
 
 /**
@@ -115,8 +116,8 @@ class BadgeViewModel(
     fun highestBadgeOfType(type: BadgeType): Badge? =
         userBadges.filter { it.type == type }.maxByOrNull { it.rank.ordinal }
 
-    fun Badge.toTriple(): Triple<String, String, String> =
-        Triple(this.title, this.description, this.icon)
+    fun Badge.toTriple(): Triple<String, String, Int> =
+        Triple(this.title, this.description, this.iconRes)
 
     val default = UIState()
 
