@@ -29,12 +29,40 @@ suspend fun getProfileWithSyncedFriendNotifications(
           val senderProfile = profileRepository.getProfileByUid(senderId)
           if (senderProfile != null) {
             profileRepository.addFriend(senderProfile.username, userId)
+            profileRepository.removePendingSentFriendUid(userId, senderId)
           }
         }
         notificationsRepository.deleteNotification(notification.id)
       }
       NotificationType.FRIEND_REJECTED -> {
+        val senderId = notification.senderId
+        if (senderId != null) {
+          profileRepository.removePendingSentFriendUid(userId, senderId)
+        }
         notificationsRepository.deleteNotification(notificationId = notification.id)
+      }
+      NotificationType.REMOVE_FRIEND -> {
+        val senderId = notification.senderId
+        if (senderId != null) {
+          val senderProfile = profileRepository.getProfileByUid(senderId)
+          if (senderProfile != null) {
+            profileRepository.deleteFriend(senderProfile.username, userId)
+          }
+        }
+        notificationsRepository.deleteNotification(notification.id)
+      }
+      NotificationType.FRIEND_REQUEST_CANCELLED -> {
+        val senderId = notification.senderId
+        if (senderId != null) {
+          val originalNotifications =
+              notifications.filter {
+                it.type == NotificationType.FRIEND_REQUEST && it.senderId == senderId
+              }
+          for (notification in originalNotifications) {
+            notificationsRepository.deleteNotification(notification.id)
+          }
+        }
+        notificationsRepository.deleteNotification(notification.id)
       }
       else -> {}
     }
