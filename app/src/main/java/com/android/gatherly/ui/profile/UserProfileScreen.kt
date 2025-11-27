@@ -80,7 +80,6 @@ fun UserProfileScreen(
   val spacingSmall = dimensionResource(id = R.dimen.spacing_between_fields)
   val spacingLarge = dimensionResource(id = R.dimen.spacing_between_fields_large)
   val profilePictureSize = dimensionResource(id = R.dimen.profile_pic_size)
-  val profilePictureBorder = dimensionResource(id = R.dimen.profile_pic_border)
 
   Scaffold(
       snackbarHost = {
