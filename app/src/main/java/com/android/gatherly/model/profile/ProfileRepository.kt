@@ -157,6 +157,10 @@ interface ProfileRepository {
    */
   suspend fun addFriend(friend: String, currentUserId: String)
 
+  suspend fun addPendingSentFriendUid(currentUserId: String, targetUid: String)
+
+  suspend fun removePendingSentFriendUid(currentUserId: String, targetUid: String)
+
   /**
    * Updates the online/offline status of a user.
    *
