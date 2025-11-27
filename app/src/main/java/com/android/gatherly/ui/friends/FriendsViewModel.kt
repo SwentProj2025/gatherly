@@ -3,6 +3,8 @@ package com.android.gatherly.ui.friends
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.android.gatherly.model.notification.Notification
+import com.android.gatherly.model.notification.NotificationType
 import com.android.gatherly.model.notification.NotificationsRepository
 import com.android.gatherly.model.notification.NotificationsRepositoryProvider
 import com.android.gatherly.model.profile.Profile
@@ -10,6 +12,7 @@ import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.android.gatherly.utils.GenericViewModelFactory
 import com.android.gatherly.utils.getProfileWithSyncedFriendNotifications
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.auth.ktx.auth
@@ -25,6 +28,7 @@ data class FriendsUIState(
     val errorMsg: String? = null,
     val friends: List<String> = emptyList(),
     val listNoFriends: List<String> = emptyList(),
+    val pendingSentUsernames: List<String> = emptyList(),
     val currentUserId: String = "",
     val isLoading: Boolean = true,
     val profiles: Map<String, Profile> = emptyMap()
@@ -68,10 +72,17 @@ class FriendsViewModel(
               .mapNotNull { username -> repository.getProfileByUsername(username) }
               .associateBy { it.username }
 
+      val currentUserProfile = repository.getProfileByUid(currentUserId)!!
+      val pendingSentUsernames =
+          currentUserProfile.pendingSentFriendsUids.mapNotNull { uid ->
+            repository.getProfileByUid(uid)?.username
+          }
+
       _uiState.value =
           _uiState.value.copy(
               friends = friendsData.friendUsernames,
               listNoFriends = friendsData.nonFriendUsernames,
+              pendingSentUsernames = pendingSentUsernames,
               profiles = profiles,
               errorMsg = null,
               currentUserId = currentUserId,
@@ -128,6 +139,100 @@ class FriendsViewModel(
     }
   }
 
+  fun sendFriendRequest(friendUserId: String, currentUserId: String) {
+    viewModelScope.launch {
+      try {
+        if (friendUserId == currentUserId) {
+          _uiState.value = _uiState.value.copy(errorMsg = "Cannot friend yourself")
+          return@launch
+        }
+        val friendProfile = repository.getProfileByUid(friendUserId)
+        if (friendProfile == null) {
+          _uiState.value = _uiState.value.copy(errorMsg = "Friend profile not found")
+          return@launch
+        }
+
+        if (_uiState.value.friends.contains(friendProfile.username)) return@launch
+        if (_uiState.value.pendingSentUsernames.contains(friendProfile.username)) return@launch
+
+        repository.addPendingSentFriendUid(currentUserId, friendUserId)
+
+        val newId = notificationsRepository.getNewId()
+        notificationsRepository.addNotification(
+            Notification(
+                id = newId,
+                type = NotificationType.FRIEND_REQUEST,
+                emissionTime = Timestamp.now(),
+                senderId = currentUserId,
+                relatedEntityId = null,
+                recipientId = friendUserId,
+                wasRead = false))
+        refreshFriends(currentUserId)
+      } catch (e: Exception) {
+        _uiState.value = _uiState.value.copy(errorMsg = "Failed to send friend request")
+      }
+    }
+  }
+
+  fun removeFriend(friendUserId: String, currentUserId: String) {
+    viewModelScope.launch {
+      try {
+        val friendProfile = repository.getProfileByUid(friendUserId)
+        if (friendProfile == null) {
+          _uiState.value = _uiState.value.copy(errorMsg = "Friend profile not found")
+          return@launch
+        }
+        if (!_uiState.value.friends.contains(friendProfile.username)) {
+          _uiState.value = _uiState.value.copy(errorMsg = "Cannot remove non-friend")
+          return@launch
+        }
+
+        repository.deleteFriend(friendProfile.username, currentUserId)
+
+        val newId = notificationsRepository.getNewId()
+        notificationsRepository.addNotification(
+            Notification(
+                id = newId,
+                type = NotificationType.REMOVE_FRIEND,
+                emissionTime = Timestamp.now(),
+                senderId = currentUserId,
+                recipientId = friendUserId,
+                relatedEntityId = null,
+                wasRead = false))
+
+        refreshFriends(currentUserId)
+      } catch (e: Exception) {
+        _uiState.value = _uiState.value.copy(errorMsg = "Failed to remove friend")
+      }
+    }
+  }
+
+  fun cancelPendingFriendRequest(recipientId: String, currentUserId: String) {
+    viewModelScope.launch {
+      try {
+        val friendProfile = repository.getProfileByUid(recipientId)
+        if (friendProfile == null) {
+          _uiState.value = _uiState.value.copy(errorMsg = "Profile not found")
+          return@launch
+        }
+        repository.removePendingSentFriendUid(currentUserId, recipientId)
+        val newId = notificationsRepository.getNewId()
+        notificationsRepository.addNotification(
+            Notification(
+                id = newId,
+                type = NotificationType.FRIEND_REQUEST_CANCELLED,
+                emissionTime = Timestamp.now(),
+                senderId = currentUserId,
+                recipientId = recipientId,
+                relatedEntityId = null,
+                wasRead = false))
+        refreshFriends(currentUserId)
+      } catch (e: Exception) {
+        _uiState.value = _uiState.value.copy(errorMsg = "Failed to cancel friend request")
+      }
+    }
+  }
+
   /**
    * Companion Object used to encapsulate a static method to retrieve a ViewModelProvider.Factory
    * and its default dependencies.
@@ -136,9 +241,13 @@ class FriendsViewModel(
     fun provideFactory(
         profileRepository: ProfileRepository =
             ProfileRepositoryFirestore(Firebase.firestore, Firebase.storage),
+        notificationsRepository: NotificationsRepository =
+            NotificationsRepositoryProvider.repository,
         currentUserId: String = Firebase.auth.currentUser?.uid ?: ""
     ): ViewModelProvider.Factory {
-      return GenericViewModelFactory { FriendsViewModel(profileRepository) }
+      return GenericViewModelFactory {
+        FriendsViewModel(profileRepository, notificationsRepository)
+      }
     }
   }
 }
