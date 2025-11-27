@@ -31,9 +31,7 @@ class PointsRepositoryFirestore(private val db: FirebaseFirestore) : PointsRepos
   }
 
   override suspend fun addPoints(points: Points) {
-    if (points.userId != currentUserId()) {
-      throw IllegalArgumentException("Trying to add points for another user!")
-    }
+    require(points.userId == currentUserId()) { "Trying to add points for another user!" }
 
     collection.document(getNewUid()).set(pointsToMap(points)).await()
   }
@@ -50,18 +48,18 @@ class PointsRepositoryFirestore(private val db: FirebaseFirestore) : PointsRepos
     val pointsType = doc.getString("reason") ?: return null
     val dateObtained = doc.getTimestamp("dateObtained") ?: return null
 
-    when (pointsType) {
+    return when (pointsType) {
       "Timer" -> {
         val minutes = doc.getLong("minutes")?.toInt() ?: return null
-        return Points(userId, obtained, PointsSource.Timer(minutes), dateObtained)
+        Points(userId, obtained, PointsSource.Timer(minutes), dateObtained)
       }
       "Badge" -> {
         val badgeName = doc.getString("badgeName") ?: return null
-        return Points(userId, obtained, PointsSource.Badge(badgeName), dateObtained)
+        Points(userId, obtained, PointsSource.Badge(badgeName), dateObtained)
       }
       "Leaderboard" -> {
         val rank = doc.getString("rank") ?: return null
-        return Points(userId, obtained, PointsSource.Leaderboard(rank), dateObtained)
+        Points(userId, obtained, PointsSource.Leaderboard(rank), dateObtained)
       }
       else -> return null
     }
