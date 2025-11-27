@@ -9,6 +9,7 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.credentials.CredentialManager
@@ -24,6 +25,7 @@ import com.android.gatherly.ui.authentication.SignInScreen
 import com.android.gatherly.ui.events.AddEventScreen
 import com.android.gatherly.ui.events.EditEventsScreen
 import com.android.gatherly.ui.events.EventsScreen
+import com.android.gatherly.ui.events.EventsScreenActions
 import com.android.gatherly.ui.focusTimer.TimerScreen
 import com.android.gatherly.ui.friends.FindFriendsScreen
 import com.android.gatherly.ui.friends.FriendsScreen
@@ -38,6 +40,7 @@ import com.android.gatherly.ui.theme.GatherlyTheme
 import com.android.gatherly.ui.todo.AddToDoScreen
 import com.android.gatherly.ui.todo.EditToDoScreen
 import com.android.gatherly.ui.todo.OverviewScreen
+import com.android.gatherly.utils.MapCoordinator
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 
@@ -76,6 +79,7 @@ fun GatherlyApp(
 ) {
   val navController = rememberNavController()
   val navigationActions = NavigationActions(navController)
+  val mapCoordinator = remember { MapCoordinator() }
   val startDestination =
       if (FirebaseAuth.getInstance().currentUser == null) Screen.SignIn.name
       else Screen.HomePage.name
@@ -154,7 +158,8 @@ fun GatherlyApp(
             goToEvent = { event ->
               navigationActions.navigateTo(Screen.EventsDetailsScreen(event))
             },
-            goToToDo = { navigationActions.navigateTo(Screen.OverviewToDo) })
+            goToToDo = { navigationActions.navigateTo(Screen.OverviewToDo) },
+            coordinator = mapCoordinator)
       }
     }
 
@@ -176,10 +181,14 @@ fun GatherlyApp(
       composable(Screen.EventsScreen.route) {
         EventsScreen(
             navigationActions = navigationActions,
-            onAddEvent = { navigationActions.navigateTo(Screen.AddEventScreen) },
-            navigateToEditEvent = { event ->
-              navigationActions.navigateTo(Screen.EditEvent(event.id))
-            })
+            actions =
+                EventsScreenActions(
+                    onSignedOut = { navigationActions.navigateTo(Screen.SignIn) },
+                    onAddEvent = { navigationActions.navigateTo(Screen.AddEventScreen) },
+                    navigateToEditEvent = { event ->
+                      navigationActions.navigateTo(Screen.EditEvent(event.id))
+                    }),
+            coordinator = mapCoordinator)
       }
 
       composable(Screen.EventsDetailsScreen.route) { navBackStackEntry ->
@@ -187,11 +196,15 @@ fun GatherlyApp(
         uid?.let {
           EventsScreen(
               navigationActions = navigationActions,
-              onAddEvent = { navigationActions.navigateTo(Screen.AddEventScreen) },
-              navigateToEditEvent = { event ->
-                navigationActions.navigateTo(Screen.EditEvent(event.id))
-              },
-              eventId = it)
+              actions =
+                  EventsScreenActions(
+                      onSignedOut = { navigationActions.navigateTo(Screen.SignIn) },
+                      onAddEvent = { navigationActions.navigateTo(Screen.AddEventScreen) },
+                      navigateToEditEvent = { event ->
+                        navigationActions.navigateTo(Screen.EditEvent(event.id))
+                      }),
+              eventId = it,
+              coordinator = mapCoordinator)
         }
       }
 
