@@ -10,9 +10,9 @@ import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.model.todo.ToDosRepositoryProvider
-import com.android.gatherly.utils.deleteTodo_updateBadges
 import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,22 +29,23 @@ import okhttp3.OkHttpClient
 data class EditTodoUIState(
     val title: String = "",
     val description: String = "",
-    val assignee: String = "",
     val dueDate: String = "",
     val dueTime: String = "",
     val location: String = "",
     val status: ToDoStatus = ToDoStatus.ONGOING,
     val errorMsg: String? = null,
     val titleError: String? = null,
-    val descriptionError: String? = null,
-    val assigneeError: String? = null,
     val dueDateError: String? = null,
     val dueTimeError: String? = null,
     val isSaving: Boolean = false,
     val saveSuccess: Boolean = false,
     val deleteSuccess: Boolean = false,
-    val suggestions: List<Location> = emptyList()
-)
+    val suggestions: List<Location> = emptyList(),
+    val pastTime: Boolean = false
+) {
+  val isValid: Boolean
+    get() = titleError == null && dueDateError == null && dueTimeError == null && !isSaving
+}
 
 // create a HTTP Client for Nominatim
 private var client: OkHttpClient =
@@ -83,6 +84,9 @@ class EditTodoViewModel(
   // Selected Location
   private var chosenLocation: Location? = null
 
+  // Todo ID
+  private lateinit var editTodoId: String
+
   /** Clears the error message in the UI state. */
   fun clearErrorMsg() {
     _uiState.value = _uiState.value.copy(errorMsg = null)
@@ -103,6 +107,11 @@ class EditTodoViewModel(
     _uiState.value = _uiState.value.copy(errorMsg = errorMsg)
   }
 
+  /** Clear the past time error */
+  fun clearPastTime() {
+    _uiState.value = _uiState.value.copy(pastTime = false)
+  }
+
   /**
    * Loads a ToDo by its ID and updates the UI state.
    *
@@ -111,18 +120,18 @@ class EditTodoViewModel(
   fun loadTodo(todoID: String) {
     viewModelScope.launch {
       try {
+        editTodoId = todoID
         val todo = todoRepository.getTodo(todoID)
         chosenLocation = todo.location
         _uiState.value =
             EditTodoUIState(
                 title = todo.name,
                 description = todo.description,
-                assignee = todo.assigneeName,
                 dueDate =
-                    todo.dueDate.let {
+                    todo.dueDate?.let {
                       val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
                       return@let dateFormat.format(todo.dueDate.toDate())
-                    },
+                    } ?: "",
                 dueTime =
                     todo.dueTime?.let {
                       val dateFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
@@ -136,36 +145,59 @@ class EditTodoViewModel(
     }
   }
 
+  fun checkPastTime() {
+    val validated =
+        _uiState.value.copy(
+            titleError = if (_uiState.value.title.isBlank()) "Title cannot be empty" else null,
+            dueDateError =
+                if (!isValidDate(_uiState.value.dueDate)) "Invalid format (dd/MM/yyyy)" else null,
+            dueTimeError =
+                if (!isValidTime(_uiState.value.dueTime)) "Invalid time (HH:mm)" else null)
+    _uiState.value = validated
+
+    // Abort if validation failed
+    if (!uiState.value.isValid) {
+      setErrorMsg("At least one field is not valid")
+      return
+    }
+    lateinit var dateAndTime: Date
+    if (validated.dueDate.isBlank()) {
+      editTodo(editTodoId)
+      return
+    }
+    if (validated.dueTime.isBlank()) {
+      val sdfDate = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+      dateAndTime =
+          sdfDate.parse(validated.dueDate) ?: throw IllegalArgumentException("Invalid date")
+    } else {
+      val sdfDateAndTime = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+      dateAndTime =
+          sdfDateAndTime.parse(validated.dueDate + " " + validated.dueTime)
+              ?: throw IllegalArgumentException("Invalid date or time")
+    }
+    val dueDateAndTime = Timestamp(dateAndTime)
+
+    val currentTimestamp = Timestamp.now()
+
+    if (dueDateAndTime < currentTimestamp) {
+      _uiState.value = _uiState.value.copy(pastTime = true)
+    } else {
+      editTodo(editTodoId)
+    }
+  }
+
   /**
    * Edits a ToDo document.
    *
    * @param id id of The ToDo document to be edited.
    */
   fun editTodo(id: String): Boolean {
-    _uiState.value =
-        _uiState.value.copy(
-            titleError = if (_uiState.value.title.isBlank()) "Title cannot be empty" else null,
-            descriptionError =
-                if (_uiState.value.description.isBlank()) "Description cannot be empty" else null,
-            assigneeError =
-                if (_uiState.value.assignee.isBlank()) "Assignee cannot be empty" else null,
-            dueDateError =
-                if (!isValidDate(_uiState.value.dueDate)) "Invalid format (dd/MM/yyyy)" else null,
-            dueTimeError =
-                if (!isValidTime(_uiState.value.dueTime)) "Invalid time (HH:mm)" else null)
-    val state = _uiState.value
-
-    // Abort if validation failed
-    if (state.titleError != null ||
-        state.descriptionError != null ||
-        state.assigneeError != null ||
-        state.dueDateError != null ||
-        state.dueTimeError != null) {
-      setErrorMsg("At least one field is not valid")
-      return false
-    }
-    val sdfDate = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-    val date = sdfDate.parse(state.dueDate) ?: throw IllegalArgumentException("Invalid date")
+    val state = uiState.value
+    val date =
+        if (state.dueDate.isNotBlank()) {
+          val sdfTime = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+          Timestamp(sdfTime.parse(state.dueDate)!!)
+        } else null
 
     val time =
         if (state.dueTime.isNotBlank()) {
@@ -181,9 +213,8 @@ class EditTodoViewModel(
           todo =
               ToDo(
                   name = state.title,
-                  description = state.description,
-                  assigneeName = state.assignee,
-                  dueDate = Timestamp(date),
+                  description = state.description.ifBlank { state.title },
+                  dueDate = date,
                   dueTime = time,
                   location = chosenLocation,
                   status = state.status,
@@ -224,7 +255,8 @@ class EditTodoViewModel(
       _uiState.value = _uiState.value.copy(isSaving = true, errorMsg = null)
       try {
         val ownerId = todoRepository.getTodo(todoID).ownerId
-        deleteTodo_updateBadges(todoRepository, profileRepository, todoID, ownerId)
+
+        todoRepository.deleteTodo(todoID = todoID)
         _uiState.value = _uiState.value.copy(isSaving = false, saveSuccess = true)
       } catch (e: Exception) {
         _uiState.value =
@@ -250,19 +282,7 @@ class EditTodoViewModel(
    *   set.
    */
   fun onDescriptionChanged(newDescription: String) {
-    val errMsg = if (newDescription.isBlank()) "Description cannot be empty" else null
-    _uiState.value = _uiState.value.copy(descriptionError = errMsg, description = newDescription)
-  }
-
-  /**
-   * Updates the assignee field and validates that it is not blank.
-   *
-   * @param newAssignee The new assignee name entered by the user. If blank, a validation error is
-   *   set.
-   */
-  fun onAssigneeChanged(newAssignee: String) {
-    val errMsg = if (newAssignee.isBlank()) "Assignee cannot be empty" else null
-    _uiState.value = _uiState.value.copy(assigneeError = errMsg, assignee = newAssignee)
+    _uiState.value = _uiState.value.copy(description = newDescription)
   }
 
   /**
@@ -301,6 +321,7 @@ class EditTodoViewModel(
    * @return `true` if the format and date are valid, `false` otherwise.
    */
   private fun isValidDate(date: String): Boolean {
+    if (date.isBlank()) return true
     val regex = Regex("""\d{2}/\d{2}/\d{4}""")
     if (!regex.matches(date)) return false
     try {

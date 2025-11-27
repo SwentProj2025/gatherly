@@ -40,14 +40,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
-import androidx.credentials.CredentialManager
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
@@ -58,7 +56,6 @@ import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileStatus
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.ui.navigation.BottomNavigationMenu
-import com.android.gatherly.ui.navigation.HandleSignedOutState
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
@@ -127,8 +124,6 @@ fun getFriendStatusTestTag(friendUid: String) =
 @Composable
 fun HomePageScreen(
     homePageViewModel: HomePageViewModel = viewModel(),
-    credentialManager: CredentialManager = CredentialManager.create(LocalContext.current),
-    onSignedOut: () -> Unit = {},
     navigationActions: NavigationActions? = null,
     onClickFocusButton: () -> Unit = {},
     onClickTodo: () -> Unit = {},
@@ -142,8 +137,6 @@ fun HomePageScreen(
   }
   val uiState by homePageViewModel.uiState.collectAsState()
 
-  HandleSignedOutState(uiState.signedOut, onSignedOut)
-
   val screenPadding = dimensionResource(id = R.dimen.padding_screen)
   val verticalSpacing = dimensionResource(id = R.dimen.spacing_between_fields_medium)
   val sectionSpacing = dimensionResource(id = R.dimen.homepage_section_spacing)
@@ -152,8 +145,7 @@ fun HomePageScreen(
       topBar = {
         TopNavigationMenu_HomePage(
             selectedTab = Tab.HomePage,
-            onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
-            onSignedOut = { homePageViewModel.signOut(credentialManager) })
+            onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) })
       },
       bottomBar = {
         BottomNavigationMenu(
