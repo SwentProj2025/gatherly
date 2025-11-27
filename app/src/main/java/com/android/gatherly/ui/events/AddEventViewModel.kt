@@ -189,8 +189,12 @@ class AddEventViewModel(
   fun updateDate(updatedDate: String) {
     val dateError =
         try {
-          dateFormat.parse(updatedDate)
-          true
+          val date = dateFormat.parse(updatedDate) ?: throw IllegalArgumentException()
+          val dateTimestamp = Timestamp(date)
+
+          val currentTimestamp = Timestamp.now()
+
+          dateTimestamp >= currentTimestamp
         } catch (_: ParseException) {
           false
         }
@@ -221,8 +225,36 @@ class AddEventViewModel(
   fun updateEndTime(updatedEndTime: String) {
     val endTimeError =
         try {
-          timeFormat.parse(updatedEndTime)
-          true
+          val endTime = timeFormat.parse(updatedEndTime) ?: throw IllegalArgumentException()
+
+          val dateCheck =
+              if (!uiState.dateError && uiState.date.isNotBlank()) {
+                val currentTimestamp = Timestamp.now()
+                val sdfDateAndTime = SimpleDateFormat("dd/MM/yyyy HH:mm")
+                val dateAndTime =
+                    sdfDateAndTime.parse(uiState.date + " " + updatedEndTime)
+                        ?: throw IllegalArgumentException()
+                val dateAndTimeTimestamp = Timestamp(dateAndTime)
+
+                dateAndTimeTimestamp < currentTimestamp
+              } else {
+                false
+              }
+
+          val startTimeCheck =
+              if (!uiState.startTimeError && uiState.startTime.isNotBlank()) {
+                val endTimeTimestamp = Timestamp(endTime)
+
+                val startTime =
+                    timeFormat.parse(uiState.startTime) ?: throw IllegalArgumentException()
+                val startTimeTimestamp = Timestamp(startTime)
+
+                endTimeTimestamp <= startTimeTimestamp
+              } else {
+                false
+              }
+
+          !(startTimeCheck || dateCheck)
         } catch (_: ParseException) {
           false
         }

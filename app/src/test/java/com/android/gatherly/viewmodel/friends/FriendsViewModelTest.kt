@@ -1,5 +1,6 @@
 package com.android.gatherly.viewmodel.friends
 
+import com.android.gatherly.model.badge.BadgeType
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
@@ -201,13 +202,15 @@ class FriendsViewModelTest {
 
           override suspend fun allUnregisterEvent(eventId: String, participants: List<String>) {}
 
-          override suspend fun deleteUserProfile(uid: String) {}
+          override suspend fun addBadge(uid: String, badgeId: String) {
+            TODO("Not yet implemented")
+          }
 
-          override suspend fun updateBadges(
-              userProfile: Profile,
-              createdTodosCount: Int?,
-              completedTodosCount: Int?
-          ) {}
+          override suspend fun incrementBadge(uid: String, type: BadgeType) {
+            TODO("Not yet implemented")
+          }
+
+          override suspend fun deleteUserProfile(uid: String) {}
         }
     val errorViewModel =
         FriendsViewModel(repository = throwingRepository, authProvider = { mockitoUtils.mockAuth })

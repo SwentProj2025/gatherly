@@ -17,9 +17,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Celebration
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults.buttonColors
 import androidx.compose.material3.Card
@@ -63,24 +60,15 @@ import com.android.gatherly.ui.theme.GatherlyTheme
 import com.android.gatherly.ui.theme.theme_status_ongoing
 import com.android.gatherly.ui.theme.theme_status_past
 import com.android.gatherly.ui.theme.theme_status_upcoming
+import com.android.gatherly.utils.GatherlyAlertDialog
 import java.util.Locale
 import kotlinx.coroutines.launch
 
 object EventsScreenTestTags {
 
-  const val EVENT_POPUP = "EventPopUp"
-
   const val ALL_LISTS = "EventsLists"
 
   const val CREATE_EVENT_BUTTON = "CreateANewEvent"
-
-  const val EDIT_EVENT_BUTTON = "EditEvent"
-
-  const val GOBACK_EVENT_BUTTON = "GoBackOverview"
-
-  const val PARTICIPATE_BUTTON = "Participate"
-
-  const val UNREGISTER_BUTTON = "Unregister"
 
   const val EMPTY_BROWSER_LIST_MSG = "EmptyBrowserEvents"
 
@@ -97,10 +85,6 @@ object EventsScreenTestTags {
   const val EVENT_DATE = "EventDate"
 
   const val EVENT_TITLE = "EventTitle"
-
-  const val POPUP_DESCRIPTION = "EventDescription"
-
-  const val POPUP_TITLE = "PopupTitle"
 
   const val EVENT_STATUS_INDICATOR_UPCOMING = "EventStatusIndicatorGreen"
   const val EVENT_STATUS_INDICATOR_ONGOING = "EventStatusIndicatorYellow"
@@ -265,7 +249,18 @@ fun EventsScreen(
                     color = MaterialTheme.colorScheme.onBackground)
               }
 
-              if (browserEvents.isNotEmpty()) {
+              if (uiState.isLoading) {
+                // Events are loading so display that text
+                item {
+                  Text(
+                      stringResource(R.string.events_loading),
+                      modifier = Modifier.fillMaxWidth().padding(8.dp),
+                      textAlign = TextAlign.Center,
+                      style = MaterialTheme.typography.titleMedium,
+                      fontWeight = FontWeight.Bold,
+                      color = MaterialTheme.colorScheme.onBackground)
+                }
+              } else if (browserEvents.isNotEmpty()) {
                 items(browserEvents.size) { index ->
                   BrowserEventsItem(
                       event = browserEvents[index],
@@ -396,38 +391,52 @@ fun EventsScreen(
         // -- EVENT POP UPS --
 
         selectedBrowserEvent.value?.let { event ->
-          BrowserEventsPopUp(
-              event = event,
-              shouldShowDialog = isPopupOnBrowser,
-              participate = {
-                eventsViewModel.onParticipate(
-                    eventId = event.id, currentUserId = currentUserIdFromVM)
-                coroutineScope.launch { eventsViewModel.refreshEvents(currentUserIdFromVM) }
+          GatherlyAlertDialog(
+              titleText = event.title,
+              bodyText = event.description,
+              dismissText = stringResource(R.string.goback_button_title),
+              confirmText = stringResource(R.string.participate_button_title),
+              onDismiss = { isPopupOnBrowser.value = false },
+              onConfirm = {
+                if (!uiState.isAnon) {
+                  eventsViewModel.onParticipate(
+                      eventId = event.id, currentUserId = currentUserIdFromVM)
+                  coroutineScope.launch { eventsViewModel.refreshEvents(currentUserIdFromVM) }
+                  isPopupOnBrowser.value = false
+                }
               },
-              isAnon = uiState.isAnon)
+              confirmEnabled = !uiState.isAnon)
           selectedBrowserEvent.value = if (isPopupOnBrowser.value) event else null
         }
 
         selectedUpcomingEvent.value?.let { event ->
-          UpComingEventsPopUp(
-              event = event,
-              shouldShowDialog = isPopupOnUpcoming,
-              unparticipate = {
+          GatherlyAlertDialog(
+              titleText = event.title,
+              bodyText = event.description,
+              dismissText = stringResource(R.string.goback_button_title),
+              confirmText = stringResource(R.string.unregister_button_title),
+              onDismiss = { isPopupOnUpcoming.value = false },
+              onConfirm = {
                 eventsViewModel.onUnregister(
                     eventId = event.id, currentUserId = currentUserIdFromVM)
 
                 coroutineScope.launch { eventsViewModel.refreshEvents(currentUserIdFromVM) }
+                isPopupOnUpcoming.value = false
               })
           selectedUpcomingEvent.value = if (isPopupOnUpcoming.value) event else null
         }
 
         selectedYourEvent.value?.let { event ->
-          MyOwnEventsPopUp(
-              event = event,
-              shouldShowDialog = isPopupOnYourE,
-              cancelYourEvent = {
+          GatherlyAlertDialog(
+              titleText = event.title,
+              bodyText = event.description,
+              dismissText = stringResource(R.string.goback_button_title),
+              confirmText = stringResource(R.string.edit_button_title),
+              onDismiss = { isPopupOnYourE.value = false },
+              onConfirm = {
                 navigateToEditEvent(event)
                 coroutineScope.launch { eventsViewModel.refreshEvents(currentUserIdFromVM) }
+                isPopupOnYourE.value = false
               })
           selectedYourEvent.value = if (isPopupOnYourE.value) event else null
         }
@@ -585,235 +594,6 @@ fun MyOwnEventsItem(event: Event, onClick: () -> Unit) {
           }
         }
       }
-}
-/**
- * Displays PopUp when clicking on an event : UNPARTICIPATE OPTION click
- *
- * @param events The [Event] item to display.
- */
-@Composable
-fun UpComingEventsPopUp(
-    event: Event,
-    shouldShowDialog: MutableState<Boolean>,
-    unparticipate: () -> Unit
-) {
-  AlertDialog(
-      containerColor = MaterialTheme.colorScheme.surfaceVariant,
-      titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-      textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-      title = {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement =
-                Arrangement.spacedBy(
-                    dimensionResource(R.dimen.events_popup_horizontalArrangement_size)),
-            modifier = Modifier.fillMaxWidth()) {
-              // Status indicator circle
-              BoxStatusColor(event.status)
-              // Event tilte
-              Text(
-                  text = event.title,
-                  modifier = Modifier.testTag(EventsScreenTestTags.POPUP_TITLE),
-                  textAlign = TextAlign.Start,
-                  style = MaterialTheme.typography.titleLarge,
-                  color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-      },
-      text = {
-        Text(
-            text = event.description,
-            modifier = Modifier.testTag(EventsScreenTestTags.POPUP_DESCRIPTION),
-            textAlign = TextAlign.Center,
-        )
-      },
-      icon = { Icons.Outlined.Celebration },
-      modifier = Modifier.testTag(EventsScreenTestTags.EVENT_POPUP),
-      dismissButton = {
-        Button(
-            colors =
-                buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
-            onClick = { shouldShowDialog.value = false },
-            modifier = Modifier.testTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON)) {
-              Text(
-                  text = stringResource(R.string.goback_button_title),
-                  color = MaterialTheme.colorScheme.onPrimaryContainer)
-            }
-      },
-      onDismissRequest = { shouldShowDialog.value = false },
-      confirmButton = {
-        Button(
-            colors =
-                buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
-            onClick = {
-              unparticipate()
-              shouldShowDialog.value = false
-            },
-            modifier = Modifier.testTag(EventsScreenTestTags.UNREGISTER_BUTTON)) {
-              Text(
-                  text = stringResource(R.string.unregister_button_title),
-                  color = MaterialTheme.colorScheme.onPrimaryContainer)
-            }
-      },
-  )
-}
-
-/**
- * Displays PopUp when clicking on an event : PARTICIPATE OPTION
- *
- * @param events The [Event] item to display.
- */
-@Composable
-fun BrowserEventsPopUp(
-    event: Event,
-    shouldShowDialog: MutableState<Boolean>,
-    participate: () -> Unit,
-    isAnon: Boolean
-) {
-  AlertDialog(
-      containerColor = MaterialTheme.colorScheme.surfaceVariant,
-      titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-      textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-      title = {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement =
-                Arrangement.spacedBy(
-                    dimensionResource(R.dimen.events_popup_horizontalArrangement_size)),
-            modifier = Modifier.fillMaxWidth()) {
-              // Status indicator circle
-              BoxStatusColor(event.status)
-              // Event title
-              Text(
-                  text = event.title,
-                  modifier = Modifier.testTag(EventsScreenTestTags.POPUP_TITLE),
-                  textAlign = TextAlign.Start,
-                  style = MaterialTheme.typography.titleLarge,
-                  color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-      },
-      text = {
-        Text(
-            text = event.description,
-            modifier = Modifier.testTag(EventsScreenTestTags.POPUP_DESCRIPTION),
-            textAlign = TextAlign.Center,
-        )
-      },
-      icon = { Icons.Outlined.Celebration },
-      modifier = Modifier.testTag(EventsScreenTestTags.EVENT_POPUP),
-      dismissButton = {
-        Button(
-            colors =
-                buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
-            onClick = { shouldShowDialog.value = false },
-            modifier = Modifier.testTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON)) {
-              Text(
-                  text = stringResource(R.string.goback_button_title),
-                  color = MaterialTheme.colorScheme.onPrimaryContainer)
-            }
-      },
-      onDismissRequest = { shouldShowDialog.value = false },
-      confirmButton = {
-        Button(
-            colors =
-                buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
-            onClick = {
-              if (!isAnon) {
-                participate()
-                shouldShowDialog.value = false
-              }
-            },
-            enabled = !isAnon,
-            modifier = Modifier.testTag(EventsScreenTestTags.PARTICIPATE_BUTTON)) {
-              Text(
-                  text = stringResource(R.string.participate_button_title),
-                  color = MaterialTheme.colorScheme.onPrimaryContainer)
-            }
-      },
-  )
-}
-
-/**
- * Displays PopUp when clicking on an event : CANCELED OPTION click
- *
- * @param events The [Event] item to display.
- */
-@Composable
-fun MyOwnEventsPopUp(
-    event: Event,
-    shouldShowDialog: MutableState<Boolean>,
-    cancelYourEvent: () -> Unit
-) {
-  AlertDialog(
-      containerColor = MaterialTheme.colorScheme.surfaceVariant,
-      titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-      textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-      title = {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement =
-                Arrangement.spacedBy(
-                    dimensionResource(R.dimen.events_popup_horizontalArrangement_size)),
-            modifier = Modifier.fillMaxWidth()) {
-              // Status indicator circle
-              BoxStatusColor(event.status)
-
-              // Event title
-              Text(
-                  text = event.title,
-                  modifier = Modifier.testTag(EventsScreenTestTags.POPUP_TITLE),
-                  textAlign = TextAlign.Start,
-                  style = MaterialTheme.typography.titleLarge,
-                  color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-      },
-      text = {
-        Text(
-            text = event.description,
-            modifier = Modifier.testTag(EventsScreenTestTags.POPUP_DESCRIPTION),
-            textAlign = TextAlign.Center,
-        )
-      },
-      icon = { Icons.Outlined.Celebration },
-      modifier = Modifier.testTag(EventsScreenTestTags.EVENT_POPUP),
-      dismissButton = {
-        Button(
-            colors =
-                buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
-            onClick = { shouldShowDialog.value = false },
-            modifier = Modifier.testTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON)) {
-              Text(
-                  text = stringResource(R.string.goback_button_title),
-                  color = MaterialTheme.colorScheme.onPrimaryContainer)
-            }
-      },
-      onDismissRequest = { shouldShowDialog.value = false },
-      confirmButton = {
-        Button(
-            colors =
-                buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
-            onClick = {
-              cancelYourEvent()
-              shouldShowDialog.value = false
-            },
-            modifier = Modifier.testTag(EventsScreenTestTags.EDIT_EVENT_BUTTON)) {
-              Text(
-                  text = stringResource(R.string.edit_button_title),
-                  color = MaterialTheme.colorScheme.onPrimaryContainer)
-            }
-      },
-  )
 }
 
 /** Helper function : Return the color associated to the event status */

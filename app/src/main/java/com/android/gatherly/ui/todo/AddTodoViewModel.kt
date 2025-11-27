@@ -1,5 +1,6 @@
 package com.android.gatherly.ui.todo
 
+import android.annotation.SuppressLint
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.map.Location
@@ -10,12 +11,13 @@ import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.model.todo.ToDosRepositoryProvider
-import com.android.gatherly.utils.addTodo_updateBadges
+import com.android.gatherly.utils.addTodo
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.ktx.Firebase
 import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -46,8 +48,17 @@ data class AddTodoUiState(
     val saveError: String? = null,
     val saveSuccess: Boolean = false,
     val isLocLoading: Boolean = false,
-    val suggestions: List<Location> = emptyList()
-)
+    val suggestions: List<Location> = emptyList(),
+    val pastTime: Boolean = false
+) {
+  val isValid: Boolean
+    get() =
+        !(titleError != null ||
+            descriptionError != null ||
+            assigneeError != null ||
+            dueDateError != null ||
+            dueTimeError != null)
+}
 
 // create a HTTP Client for Nominatim
 private var client: OkHttpClient =
@@ -74,6 +85,7 @@ private var client: OkHttpClient =
  *
  * @param todoRepository The repository responsible for persisting ToDo items.
  */
+@SuppressLint("SimpleDateFormat")
 class AddTodoViewModel(
     private val todoRepository: ToDosRepository = ToDosRepositoryProvider.repository,
     private val profileRepository: ProfileRepository = ProfileRepositoryProvider.repository,
@@ -88,6 +100,7 @@ class AddTodoViewModel(
   // Chosen location
   private var chosenLocation: Location? = null
   private lateinit var ownerId: String
+  private val dateSDF = SimpleDateFormat("dd/MM/yyyy")
 
   /** Clears the error message in the UI state. */
   fun clearErrorMsg() {
@@ -97,6 +110,11 @@ class AddTodoViewModel(
   /** Clears the save success flag in the UI state. */
   fun clearSaveSuccess() {
     _uiState.value = _uiState.value.copy(saveSuccess = false)
+  }
+
+  /** Clear the past time error */
+  fun clearPastTime() {
+    _uiState.value = _uiState.value.copy(pastTime = false)
   }
 
   /**
@@ -178,9 +196,8 @@ class AddTodoViewModel(
     val regex = Regex("""\d{2}/\d{2}/\d{4}""")
     if (!regex.matches(date)) return false
     return try {
-      val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-      sdf.isLenient = false
-      sdf.parse(date)
+      dateSDF.isLenient = false
+      dateSDF.parse(date)
       true
     } catch (e: Exception) {
       false
@@ -233,6 +250,49 @@ class AddTodoViewModel(
     }
   }
 
+  /** Checks that the todo time is valid before saving */
+  fun checkTodoTime() {
+    val validated =
+        _uiState.value.copy(
+            titleError = if (_uiState.value.title.isBlank()) "Title cannot be empty" else null,
+            descriptionError =
+                if (_uiState.value.description.isBlank()) "Description cannot be empty" else null,
+            assigneeError =
+                if (_uiState.value.assignee.isBlank()) "Assignee cannot be empty" else null,
+            dueDateError =
+                if (!isValidDate(_uiState.value.dueDate)) "Invalid format (dd/MM/yyyy)" else null,
+            dueTimeError =
+                if (!isValidTime(_uiState.value.dueTime)) "Invalid time (HH:mm)" else null)
+    _uiState.value = validated
+
+    // Abort if validation failed
+    if (!uiState.value.isValid) {
+      return
+    }
+    lateinit var dateAndTime: Date
+    if (validated.dueDate.isBlank()) {
+      saveTodo()
+      return
+    }
+    if (validated.dueTime.isBlank()) {
+      dateAndTime =
+          dateSDF.parse(validated.dueDate) ?: throw IllegalArgumentException("Invalid date")
+    } else {
+      val sdfDateAndTime = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+      dateAndTime =
+          sdfDateAndTime.parse(validated.dueDate + " " + validated.dueTime)
+              ?: throw IllegalArgumentException("Invalid date or time")
+    }
+    val dueDateAndTime = Timestamp(dateAndTime)
+    val currentTimestamp = Timestamp.now()
+
+    if (dueDateAndTime < currentTimestamp) {
+      _uiState.value = _uiState.value.copy(pastTime = true)
+    } else {
+      saveTodo()
+    }
+  }
+
   /**
    * Attempts to create and save a new [ToDo] entry to the repository.
    *
@@ -242,30 +302,7 @@ class AddTodoViewModel(
    * @throws IllegalArgumentException If the provided date or time format is invalid.
    */
   fun saveTodo() {
-    val validated =
-        _uiState.value.copy(
-            titleError = if (_uiState.value.title.isBlank()) "Title cannot be empty" else null,
-            descriptionError =
-                if (_uiState.value.description.isBlank()) "Description cannot be empty" else null,
-            assigneeError =
-                if (_uiState.value.assignee.isBlank()) "Assignee cannot be empty" else null,
-            locationError =
-                if (_uiState.value.location.isBlank()) "Location cannot be empty" else null,
-            dueDateError =
-                if (!isValidDate(_uiState.value.dueDate)) "Invalid format (dd/MM/yyyy)" else null,
-            dueTimeError =
-                if (!isValidTime(_uiState.value.dueTime)) "Invalid time (HH:mm)" else null)
-    _uiState.value = validated
-
-    // Abort if validation failed
-    if (_uiState.value.titleError != null ||
-        _uiState.value.descriptionError != null ||
-        _uiState.value.assigneeError != null ||
-        _uiState.value.dueDateError != null ||
-        _uiState.value.dueTimeError != null) {
-      return
-    }
-
+    val validated = uiState.value
     viewModelScope.launch {
       _uiState.value = _uiState.value.copy(isSaving = true, saveError = null)
       try {
@@ -274,9 +311,8 @@ class AddTodoViewModel(
                 ?: throw IllegalStateException("User not authenticated.")
 
         val uid = todoRepository.getNewUid()
-        val sdfDate = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
         val date =
-            sdfDate.parse(validated.dueDate) ?: throw IllegalArgumentException("Invalid date")
+            dateSDF.parse(validated.dueDate) ?: throw IllegalArgumentException("Invalid date")
 
         val dueDateTimestamp = Timestamp(date)
         val dueTimeTimestamp =
@@ -297,7 +333,7 @@ class AddTodoViewModel(
                 status = ToDoStatus.ONGOING,
                 ownerId = ownerId)
 
-        addTodo_updateBadges(todoRepository, profileRepository, todo, ownerId)
+        addTodo(todoRepository, profileRepository, todo, ownerId)
         _uiState.value = _uiState.value.copy(isSaving = false, saveSuccess = true)
       } catch (e: Exception) {
         _uiState.value = _uiState.value.copy(isSaving = false, saveError = e.message)
