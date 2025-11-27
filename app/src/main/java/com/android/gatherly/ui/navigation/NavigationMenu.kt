@@ -76,6 +76,8 @@ sealed class Tab(val name: String, val icon: ImageVector, val destination: Scree
   object AddTodo : Tab("Add To-Do", Icons.Outlined.Add, Screen.AddToDo)
 
   object EditTodo : Tab("Edit To-Do", Icons.Outlined.Edit, Screen.Task)
+
+  object AddGroup : Tab("Add Group", Icons.Outlined.GroupAdd, Screen.AddGroupScreen)
 }
 
 private val bottomtabs =
@@ -145,16 +147,13 @@ fun BottomNavigationMenu(
  * @param onTabSelected A callback function that is invoked when a tab is selected. It takes a [Tab]
  *   as a parameter.
  * @param modifier A [Modifier] for this component. Default is [Modifier].
- * @param onSignedOut A callback function that is invoked when the user chooses to sign out. Default
- *   is an empty function.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopNavigationMenu(
     selectedTab: Tab,
     onTabSelected: (Tab) -> Unit,
-    modifier: Modifier = Modifier,
-    onSignedOut: () -> Unit = {}
+    modifier: Modifier = Modifier
 ) {
   CenterAlignedTopAppBar(
       title = {
@@ -167,7 +166,7 @@ fun TopNavigationMenu(
               Icon(imageVector = Tab.HomePage.icon, contentDescription = Tab.HomePage.name)
             }
       },
-      actions = { TopDropdownMenu(onTabSelected = onTabSelected, onSignedOut = onSignedOut) },
+      actions = { TopDropdownMenu(onTabSelected = onTabSelected) },
       modifier =
           modifier.fillMaxWidth().height(60.dp).testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
       colors = topAppColor())
@@ -219,22 +218,19 @@ fun TopNavigationMenuSettings(
  * @param onTabSelected A callback function that is invoked when a tab is selected. It takes a [Tab]
  *   as a parameter.
  * @param modifier A [Modifier] for this component. Default is [Modifier].
- * @param onSignedOut A callback function that is invoked when the user chooses to sign out. Default
- *   is an empty function.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TopNavigationMenu_HomePage(
     selectedTab: Tab,
     onTabSelected: (Tab) -> Unit,
-    modifier: Modifier = Modifier,
-    onSignedOut: () -> Unit = {}
+    modifier: Modifier = Modifier
 ) {
   CenterAlignedTopAppBar(
       title = {
         Text(text = selectedTab.name, modifier = Modifier.testTag(NavigationTestTags.TOP_BAR_TITLE))
       },
-      actions = { TopDropdownMenu(onTabSelected = onTabSelected, onSignedOut = onSignedOut) },
+      actions = { TopDropdownMenu(onTabSelected = onTabSelected) },
       modifier =
           modifier.fillMaxWidth().height(60.dp).testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
       colors = topAppColor())
@@ -282,11 +278,7 @@ fun TopNavigationMenu_Profile(
  * A top navigation menu with the title and a go back button
  *
  * @param selectedTab The currently selected tab.
- * @param onTabSelected A callback function that is invoked when a tab is selected. It takes a [Tab]
- *   as a parameter.
  * @param modifier A [Modifier] for this component. Default is [Modifier].
- * @param onSignedOut A callback function that is invoked when the user chooses to sign out. Default
- *   is an empty function.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -320,11 +312,9 @@ fun TopNavigationMenu_Goback(
  *
  * @param onTabSelected A callback function that is invoked when a tab is selected. It takes a [Tab]
  *   as a parameter.
- * @param onSignedOut A callback function that is invoked when the user chooses to sign out. Default
- *   is an empty function.
  */
 @Composable
-fun TopDropdownMenu(onTabSelected: (Tab) -> Unit, onSignedOut: () -> Unit = {}) {
+fun TopDropdownMenu(onTabSelected: (Tab) -> Unit) {
   var expanded by remember { mutableStateOf(false) }
 
   Box {
@@ -349,6 +339,8 @@ fun TopDropdownMenu(onTabSelected: (Tab) -> Unit, onSignedOut: () -> Unit = {}) 
               onClick = { onTabSelected(Tab.Profile) },
               modifier = Modifier.testTag(NavigationTestTags.PROFILE_TAB))
 
+          AddGroupDropdownItem(onTabSelected = onTabSelected)
+
           // Settings section
           DropdownMenuItem(
               text = {
@@ -362,18 +354,6 @@ fun TopDropdownMenu(onTabSelected: (Tab) -> Unit, onSignedOut: () -> Unit = {}) 
               },
               onClick = { onTabSelected(Tab.Settings) },
               modifier = Modifier.testTag(NavigationTestTags.SETTINGS_TAB))
-
-          // Logout section
-          DropdownMenuItem(
-              text = { Text(Tab.SignOut.name, color = MaterialTheme.colorScheme.onSurfaceVariant) },
-              leadingIcon = {
-                Icon(
-                    Icons.Outlined.Logout,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant)
-              },
-              onClick = { onSignedOut() },
-              modifier = Modifier.testTag(NavigationTestTags.LOGOUT_TAB))
         }
   }
 }
@@ -412,6 +392,8 @@ fun TopDropdownMenuForSettings(onTabSelected: (Tab) -> Unit, onSignedOut: () -> 
               onClick = { onTabSelected(Tab.Profile) },
               modifier = Modifier.testTag(NavigationTestTags.PROFILE_TAB))
 
+          AddGroupDropdownItem(onTabSelected = onTabSelected)
+
           // Logout section
           DropdownMenuItem(
               text = { Text(Tab.SignOut.name, color = MaterialTheme.colorScheme.onSurfaceVariant) },
@@ -449,6 +431,8 @@ fun TopDropdownMenuForProfile(onTabSelected: (Tab) -> Unit, onSignedOut: () -> U
         expanded = expanded,
         onDismissRequest = { expanded = false },
         containerColor = MaterialTheme.colorScheme.surfaceVariant) {
+          AddGroupDropdownItem(onTabSelected = onTabSelected)
+
           // Settings section
           DropdownMenuItem(
               text = {
@@ -502,4 +486,24 @@ fun topAppColor(): TopAppBarColors {
       titleContentColor = MaterialTheme.colorScheme.primary,
       actionIconContentColor = MaterialTheme.colorScheme.primary,
   )
+}
+
+/**
+ * An Add Group section in the dropdown menu.
+ *
+ * @param onTabSelected A callback function that is invoked when a tab is selected. It takes a [Tab]
+ *   as a parameter.
+ */
+@Composable
+fun AddGroupDropdownItem(onTabSelected: (Tab) -> Unit) {
+  DropdownMenuItem(
+      text = { Text(Tab.AddGroup.name, color = MaterialTheme.colorScheme.onSurfaceVariant) },
+      leadingIcon = {
+        Icon(
+            imageVector = Tab.AddGroup.icon,
+            contentDescription = Tab.AddGroup.name,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant)
+      },
+      onClick = { onTabSelected(Tab.AddGroup) },
+      modifier = Modifier.testTag(NavigationTestTags.ADDGROUP_TAB))
 }

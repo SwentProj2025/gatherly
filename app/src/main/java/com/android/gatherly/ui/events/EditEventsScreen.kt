@@ -47,6 +47,9 @@ import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
 import com.android.gatherly.ui.theme.GatherlyTheme
+import com.android.gatherly.utils.DatePickerInputField
+import com.android.gatherly.utils.GatherlyAlertDialog
+import com.android.gatherly.utils.GatherlyDatePicker
 import kotlinx.coroutines.delay
 
 object EditEventsScreenTestTags {
@@ -96,6 +99,7 @@ fun EditEventsScreen(
 
   val ui = editEventsViewModel.uiState
   val context = LocalContext.current
+  val shouldShowDialog = remember { mutableStateOf(false) }
 
   val screenPadding = dimensionResource(id = R.dimen.padding_screen)
   val fieldSpacing = dimensionResource(id = R.dimen.spacing_between_fields)
@@ -114,6 +118,9 @@ fun EditEventsScreen(
 
   // Profile state for the dropdown visibility
   var showProfilesDropdown by remember { mutableStateOf(false) }
+
+  // Date state for the alert dialog visibilty
+  var showDatePicker by remember { mutableStateOf(false) }
 
   // Toasts
   LaunchedEffect(ui.displayToast, ui.toastString) {
@@ -350,21 +357,16 @@ fun EditEventsScreen(
 
               item {
                 // Date
-                OutlinedTextField(
+                DatePickerInputField(
                     value = ui.date,
-                    onValueChange = { editEventsViewModel.updateDate(it) },
-                    label = { Text(stringResource(R.string.events_date_field_label)) },
-                    placeholder = { Text("dd/MM/yyyy") },
-                    isError = ui.dateError,
-                    supportingText = {
-                      if (ui.dateError) {
-                        Text(
-                            "Use format dd/MM/yyyy",
-                            modifier = Modifier.testTag(EditEventsScreenTestTags.ERROR_MESSAGE))
-                      }
-                    },
+                    label = stringResource(R.string.events_date_field_label),
+                    isErrorMessage = if (!ui.dateError) null else "Invalid format or past date",
+                    onClick = { showDatePicker = true },
                     colors = textFieldColors,
-                    modifier = Modifier.fillMaxWidth().testTag(EditEventsScreenTestTags.INPUT_DATE))
+                    testTag =
+                        Pair(
+                            AddEventScreenTestTags.INPUT_DATE,
+                            AddEventScreenTestTags.ERROR_MESSAGE))
               }
 
               item {
@@ -398,7 +400,7 @@ fun EditEventsScreen(
                     supportingText = {
                       if (ui.endTimeError) {
                         Text(
-                            "Use format HH:mm",
+                            "Invalid format, past date or ending time before starting time",
                             modifier = Modifier.testTag(EditEventsScreenTestTags.ERROR_MESSAGE))
                       }
                     },
@@ -438,10 +440,7 @@ fun EditEventsScreen(
               item {
                 // Delete
                 TextButton(
-                    onClick = {
-                      editEventsViewModel.deleteEvent()
-                      onSave()
-                    },
+                    onClick = { shouldShowDialog.value = true },
                     modifier = Modifier.fillMaxWidth().testTag(EditEventsScreenTestTags.BTN_DELETE),
                     colors =
                         ButtonDefaults.textButtonColors(
@@ -457,6 +456,24 @@ fun EditEventsScreen(
                     }
               }
             }
+        if (shouldShowDialog.value) {
+          GatherlyAlertDialog(
+              titleText = stringResource(R.string.events_delete_warning),
+              bodyText = stringResource(R.string.events_delete_warning_text),
+              dismissText = stringResource(R.string.cancel),
+              confirmText = stringResource(R.string.delete),
+              onDismiss = { shouldShowDialog.value = false },
+              onConfirm = {
+                editEventsViewModel.deleteEvent()
+                shouldShowDialog.value = false
+              },
+              isImportantWarning = true)
+        }
+        GatherlyDatePicker(
+            show = showDatePicker,
+            initialDate = ui.date,
+            onDateSelected = { selectedDate -> editEventsViewModel.updateDate(selectedDate) },
+            onDismiss = { showDatePicker = false })
       }
 }
 

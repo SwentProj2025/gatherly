@@ -3,25 +3,37 @@ package com.android.gatherly.viewmodel.map
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
+import android.os.Looper
 import androidx.core.content.ContextCompat
 import com.android.gatherly.model.event.Event
+import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsLocalRepository
+import com.android.gatherly.model.event.EventsRepository
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosLocalRepository
+import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.ui.map.EPFL_LATLNG
 import com.android.gatherly.ui.map.MapViewModel
+import com.android.gatherly.utils.MapCoordinator
+import com.android.gatherly.utils.createLocationRequest
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.tasks.Task
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.unmockkAll
+import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -50,6 +62,14 @@ class MapViewModelTests {
   @OptIn(ExperimentalCoroutinesApi::class)
   @Before
   fun setup() {
+    // Mocking for static android classes
+    mockkStatic(ContextCompat::class)
+    mockkStatic(Looper::class)
+
+    // Prevent "Stub!" error when Looper is called
+    every { Looper.getMainLooper() } returns mockk(relaxed = true)
+    // Mocking for extension function (prevent stub error for createLocationRequest)
+    mockkStatic("com.android.gatherly.utils.LocationUtilsKt")
     Dispatchers.setMain(testDispatcher)
   }
 
@@ -58,6 +78,8 @@ class MapViewModelTests {
   @After
   fun tearDown() {
     Dispatchers.resetMain()
+    // Clean up static mocks
+    unmockkAll()
   }
 
   /** Test data objects used across multiple test cases. */
@@ -154,7 +176,11 @@ class MapViewModelTests {
           todosRepo.addTodo(todo)
         }
 
-        val vm = MapViewModel(todosRepository = todosRepo, eventsRepository = eventsRepo)
+        val vm =
+            MapViewModel(
+                todosRepository = todosRepo,
+                eventsRepository = eventsRepo,
+                coordinator = mockk(relaxed = true))
         advanceUntilIdle()
 
         val expectedList: List<ToDo> =
@@ -177,7 +203,11 @@ class MapViewModelTests {
       runTest(testDispatcher) {
         val todosRepo = ToDosLocalRepository()
         val eventsRepo = EventsLocalRepository()
-        val vm = MapViewModel(todosRepository = todosRepo, eventsRepository = eventsRepo)
+        val vm =
+            MapViewModel(
+                todosRepository = todosRepo,
+                eventsRepository = eventsRepo,
+                coordinator = mockk(relaxed = true))
 
         assertNull(vm.uiState.value.selectedItemId)
 
@@ -197,7 +227,11 @@ class MapViewModelTests {
       runTest(testDispatcher) {
         val todosRepo = ToDosLocalRepository()
         val eventsRepo = EventsLocalRepository()
-        val vm = MapViewModel(todosRepository = todosRepo, eventsRepository = eventsRepo)
+        val vm =
+            MapViewModel(
+                todosRepository = todosRepo,
+                eventsRepository = eventsRepo,
+                coordinator = mockk(relaxed = true))
 
         vm.onSelectedItem("todo1")
         assertEquals("todo1", vm.uiState.value.selectedItemId)
@@ -214,7 +248,11 @@ class MapViewModelTests {
       runTest(testDispatcher) {
         val todosRepo = ToDosLocalRepository()
         val eventsRepo = EventsLocalRepository()
-        val vm = MapViewModel(todosRepository = todosRepo, eventsRepository = eventsRepo)
+        val vm =
+            MapViewModel(
+                todosRepository = todosRepo,
+                eventsRepository = eventsRepo,
+                coordinator = mockk(relaxed = true))
 
         assertNull(vm.uiState.value.selectedItemId)
 
@@ -236,7 +274,11 @@ class MapViewModelTests {
           eventsRepo.addEvent(event)
         }
 
-        val vm = MapViewModel(todosRepository = todosRepo, eventsRepository = eventsRepo)
+        val vm =
+            MapViewModel(
+                todosRepository = todosRepo,
+                eventsRepository = eventsRepo,
+                coordinator = mockk(relaxed = true))
         advanceUntilIdle()
 
         vm.changeView()
@@ -268,7 +310,11 @@ class MapViewModelTests {
           eventRepo.addEvent(event)
         }
 
-        val vm = MapViewModel(todosRepository = todoRepo, eventsRepository = eventRepo)
+        val vm =
+            MapViewModel(
+                todosRepository = todoRepo,
+                eventsRepository = eventRepo,
+                coordinator = mockk(relaxed = true))
         advanceUntilIdle()
 
         val expectedTodosList: List<ToDo> =
@@ -304,7 +350,11 @@ class MapViewModelTests {
       runTest(testDispatcher) {
         val todosRepo = ToDosLocalRepository()
         val eventsRepo = EventsLocalRepository()
-        val vm = MapViewModel(todosRepository = todosRepo, eventsRepository = eventsRepo)
+        val vm =
+            MapViewModel(
+                todosRepository = todosRepo,
+                eventsRepository = eventsRepo,
+                coordinator = mockk(relaxed = true))
         advanceUntilIdle()
 
         // Set initial camera position
@@ -329,7 +379,11 @@ class MapViewModelTests {
       runTest(testDispatcher) {
         val todosRepo = ToDosLocalRepository()
         val eventsRepo = EventsLocalRepository()
-        val vm = MapViewModel(todosRepository = todosRepo, eventsRepository = eventsRepo)
+        val vm =
+            MapViewModel(
+                todosRepository = todosRepo,
+                eventsRepository = eventsRepo,
+                coordinator = mockk(relaxed = true))
         advanceUntilIdle()
 
         vm.changeView() // Switch to events view
@@ -350,7 +404,11 @@ class MapViewModelTests {
         val todosRepo = ToDosLocalRepository()
         val eventsRepo = EventsLocalRepository()
         val mockContext = mockk<Context>(relaxed = true)
-        val vm = MapViewModel(todosRepository = todosRepo, eventsRepository = eventsRepo)
+        val vm =
+            MapViewModel(
+                todosRepository = todosRepo,
+                eventsRepository = eventsRepo,
+                coordinator = mockk(relaxed = true))
         advanceUntilIdle()
 
         assertNull(vm.uiState.value.cameraPos)
@@ -372,7 +430,11 @@ class MapViewModelTests {
         todosRepo.addTodo(MapViewModelTestsTodos.incompleteTodoWithLocation1)
 
         val mockContext = mockk<Context>(relaxed = true)
-        val vm = MapViewModel(todosRepository = todosRepo, eventsRepository = eventsRepo)
+        val vm =
+            MapViewModel(
+                todosRepository = todosRepo,
+                eventsRepository = eventsRepo,
+                coordinator = mockk(relaxed = true))
         advanceUntilIdle()
 
         vm.onItemConsulted(MapViewModelTestsTodos.incompleteTodoWithLocation1.uid)
@@ -396,7 +458,11 @@ class MapViewModelTests {
         eventsRepo.addEvent(MapViewModelTestsEvents.upcomingEventWithLocation1)
 
         val mockContext = mockk<Context>(relaxed = true)
-        val vm = MapViewModel(todosRepository = todosRepo, eventsRepository = eventsRepo)
+        val vm =
+            MapViewModel(
+                todosRepository = todosRepo,
+                eventsRepository = eventsRepo,
+                coordinator = mockk(relaxed = true))
         advanceUntilIdle()
 
         vm.changeView() // Switch to events
@@ -424,7 +490,8 @@ class MapViewModelTests {
             MapViewModel(
                 todosRepository = todosRepo,
                 eventsRepository = eventsRepo,
-                fusedLocationClient = null)
+                fusedLocationClient = null,
+                coordinator = mockk(relaxed = true))
         advanceUntilIdle()
 
         val result = vm.fetchLocationToCenterOn(mockContext)
@@ -447,9 +514,17 @@ class MapViewModelTests {
         val mockTask = mockk<Task<Void>>(relaxed = true)
         val mockLocation = mockk<Location>()
 
+        // Mock the top-level function to avoid "Method not mocked" crash
+        every { createLocationRequest() } returns mockk(relaxed = true)
+
+        // Mock permissions
         every {
           ContextCompat.checkSelfPermission(
               mockContext, android.Manifest.permission.ACCESS_FINE_LOCATION)
+        } returns PackageManager.PERMISSION_GRANTED
+        every {
+          ContextCompat.checkSelfPermission(
+              mockContext, android.Manifest.permission.ACCESS_COARSE_LOCATION)
         } returns PackageManager.PERMISSION_GRANTED
 
         every { mockLocation.latitude } returns 50.1231
@@ -458,7 +533,7 @@ class MapViewModelTests {
         var capturedCallback: LocationCallback? = null
 
         every {
-          mockClient.requestLocationUpdates(any(), any<LocationCallback>(), isNull())
+          mockClient.requestLocationUpdates(any(), any<LocationCallback>(), any<Looper>())
         } answers
             {
               capturedCallback = secondArg()
@@ -474,24 +549,28 @@ class MapViewModelTests {
             MapViewModel(
                 todosRepository = todosRepo,
                 eventsRepository = eventsRepo,
-                fusedLocationClient = mockClient)
+                fusedLocationClient = mockClient,
+                coordinator = mockk(relaxed = true))
 
-        advanceUntilIdle()
-
+        // Start the call
         var result: LatLng? = null
         val job = launch { result = vm.fetchLocationToCenterOn(mockContext) }
 
+        // Unlike other tests, advanceUntilIdle() here would force the 5s timeout to trigger
+        // This makes the function return the EPFL fallback, thus failing the test
+
+        // Trigger the callback
         assertNotNull("Callback should have been captured", capturedCallback)
         capturedCallback?.onLocationResult(locationResult)
 
+        // Now it is safe to advance, allowing the flow to emit and the function to return
         advanceUntilIdle()
 
         val expectedLatLng = LatLng(50.1231, 2.3253)
         assertNotNull(result)
         assertEquals(expectedLatLng, result)
-        job.cancel() // cleanup
+        job.cancel()
       }
-
   /**
    * Verifies that starting and stopping location updates manages the location job without crashing.
    */
@@ -504,16 +583,23 @@ class MapViewModelTests {
         val mockClient = mockk<FusedLocationProviderClient>(relaxed = true)
         val mockContext = mockk<Context>(relaxed = true)
 
+        // Mock both permissions to ensure the flow passes the check
         every {
           ContextCompat.checkSelfPermission(
               mockContext, android.Manifest.permission.ACCESS_FINE_LOCATION)
+        } returns PackageManager.PERMISSION_GRANTED
+
+        every {
+          ContextCompat.checkSelfPermission(
+              mockContext, android.Manifest.permission.ACCESS_COARSE_LOCATION)
         } returns PackageManager.PERMISSION_GRANTED
 
         val vm =
             MapViewModel(
                 todosRepository = todosRepo,
                 eventsRepository = eventsRepo,
-                fusedLocationClient = mockClient)
+                fusedLocationClient = mockClient,
+                coordinator = mockk(relaxed = true))
         advanceUntilIdle()
 
         vm.startLocationUpdates(mockContext)
@@ -524,5 +610,276 @@ class MapViewModelTests {
 
         // Just verify it doesn't crash
         assertTrue(true)
+      }
+
+  /** Verifies that navigating to a different screen clears the camera position in the UI state. */
+  @OptIn(ExperimentalCoroutinesApi::class)
+  @Test
+  fun onNavigationToDifferentScreen_updatesCameraPosToNull() =
+      runTest(testDispatcher) {
+        val todosRepo = ToDosLocalRepository()
+        val eventsRepo = EventsLocalRepository()
+        val mockContext = mockk<Context>(relaxed = true)
+        val vm =
+            MapViewModel(
+                todosRepository = todosRepo,
+                eventsRepository = eventsRepo,
+                coordinator = mockk(relaxed = true))
+        advanceUntilIdle()
+
+        vm.initialiseCameraPosition(mockContext)
+        advanceUntilIdle()
+        assertNotNull(vm.uiState.value.cameraPos)
+
+        vm.onNavigationToDifferentScreen()
+
+        assertNull(vm.uiState.value.cameraPos)
+      }
+
+  /**
+   * Verifies that if permissions are denied (SecurityException), the ViewModel catches it and
+   * returns the fallback (EPFL) instead of crashing.
+   */
+  @OptIn(ExperimentalCoroutinesApi::class)
+  @Test
+  fun fetchLocationToCenterOn_whenPermissionDenied_ReturnsEPFL() =
+      runTest(testDispatcher) {
+        val todosRepo = ToDosLocalRepository()
+        val eventsRepo = EventsLocalRepository()
+        val mockContext = mockk<Context>()
+        // We don't need to mock the client deeply because LocationUtils checks permission first
+        val mockClient = mockk<FusedLocationProviderClient>(relaxed = true)
+
+        // Mock permissions as DENIED
+        every {
+          ContextCompat.checkSelfPermission(
+              mockContext, android.Manifest.permission.ACCESS_FINE_LOCATION)
+        } returns PackageManager.PERMISSION_DENIED
+
+        every {
+          ContextCompat.checkSelfPermission(
+              mockContext, android.Manifest.permission.ACCESS_COARSE_LOCATION)
+        } returns PackageManager.PERMISSION_DENIED
+
+        val vm =
+            MapViewModel(
+                todosRepository = todosRepo,
+                eventsRepository = eventsRepo,
+                fusedLocationClient = mockClient,
+                coordinator = mockk(relaxed = true))
+
+        advanceUntilIdle()
+
+        val result = vm.fetchLocationToCenterOn(mockContext)
+
+        assertEquals(EPFL_LATLNG, result)
+      }
+
+  /**
+   * Verifies Android 12+ compatibility fix. Ensures that if the user selects "Approximate" (Coarse)
+   * only, the map still centers on them (doesn't fallback to EPFL).
+   */
+  @OptIn(ExperimentalCoroutinesApi::class)
+  @Test
+  fun fetchLocationToCenterOn_withOnlyCoarsePermission_returnsCurrentLocation() =
+      runTest(testDispatcher) {
+        val todosRepo = ToDosLocalRepository()
+        val eventsRepo = EventsLocalRepository()
+        val mockContext = mockk<Context>()
+        val mockClient = mockk<FusedLocationProviderClient>(relaxed = true)
+        val mockTask = mockk<Task<Void>>(relaxed = true)
+        val mockLocation = mockk<Location>()
+
+        // Mock top-level function
+        every { createLocationRequest() } returns mockk(relaxed = true)
+
+        // Fine is DENIED, but Coarse is GRANTED
+        every {
+          ContextCompat.checkSelfPermission(
+              mockContext, android.Manifest.permission.ACCESS_FINE_LOCATION)
+        } returns PackageManager.PERMISSION_DENIED
+
+        every {
+          ContextCompat.checkSelfPermission(
+              mockContext, android.Manifest.permission.ACCESS_COARSE_LOCATION)
+        } returns PackageManager.PERMISSION_GRANTED
+
+        every { mockLocation.latitude } returns 50.1231
+        every { mockLocation.longitude } returns 2.3253
+
+        var capturedCallback: LocationCallback? = null
+
+        every {
+          mockClient.requestLocationUpdates(any(), any<LocationCallback>(), any<Looper>())
+        } answers
+            {
+              capturedCallback = secondArg()
+              mockTask
+            }
+        every { mockClient.removeLocationUpdates(any<LocationCallback>()) } returns mockTask
+
+        val locationResult = mockk<LocationResult>(relaxed = true)
+        every { locationResult.locations } returns listOf(mockLocation)
+
+        val vm = MapViewModel(todosRepo, eventsRepo, mockClient, mockk(relaxed = true))
+
+        var result: LatLng? = null
+        val job = launch { result = vm.fetchLocationToCenterOn(mockContext) }
+
+        assertNotNull("Callback should capture even with only Coarse permission", capturedCallback)
+        capturedCallback?.onLocationResult(locationResult)
+
+        advanceUntilIdle()
+
+        assertEquals(LatLng(50.1231, 2.3253), result)
+
+        job.cancel()
+      }
+
+  /**
+   * Verifies that [MapViewModel.initialiseCameraPosition] checks the coordinator, consumes the
+   * event ID, and centers the camera on that event.
+   */
+  @OptIn(ExperimentalCoroutinesApi::class)
+  @Test
+  fun initialiseCameraPosition_withCoordinatorRequest_centersOnEvent() =
+      runTest(testDispatcher) {
+        val targetEventId = "target_event"
+        val targetLocation = com.android.gatherly.model.map.Location(46.5, 6.6, "Test Loc")
+
+        val targetEvent =
+            Event(
+                id = targetEventId,
+                title = "Target Event",
+                description = "Desc",
+                creatorName = "Creator",
+                location = targetLocation,
+                date = com.google.firebase.Timestamp.now(),
+                startTime = com.google.firebase.Timestamp.now(),
+                endTime = com.google.firebase.Timestamp.now(),
+                creatorId = "creatorId",
+                participants = emptyList(),
+                status = EventStatus.UPCOMING)
+
+        // We mock the Repositories to strictly control data return and avoid local repo issues
+        val eventsRepo = mockk<com.android.gatherly.model.event.EventsRepository>()
+        val todosRepo = mockk<com.android.gatherly.model.todo.ToDosRepository>(relaxed = true)
+        val mockContext = mockk<Context>(relaxed = true)
+        val mockCoordinator = mockk<MapCoordinator>(relaxed = true)
+
+        coEvery { eventsRepo.getAllEvents() } returns listOf(targetEvent)
+        every { mockCoordinator.getUnconsumedEventId() } returns targetEventId
+
+        // Initialise ViewModel
+        val vm =
+            MapViewModel(
+                todosRepository = todosRepo,
+                eventsRepository = eventsRepo,
+                fusedLocationClient = null,
+                coordinator = mockCoordinator)
+
+        // Advance to allow the init block (loadingDataJob) to complete and populate eventsList
+        advanceUntilIdle()
+
+        // Initialise Camera
+        vm.initialiseCameraPosition(mockContext)
+        advanceUntilIdle()
+
+        val state = vm.uiState.value
+
+        // Verify the coordinator was marked as consumed
+        verify { mockCoordinator.markConsumed() }
+
+        // Verify logic switched to Events view
+        assertTrue("Should switch to events page", state.displayEventsPage)
+
+        // Verify camera position matches event location
+        val expectedLatLng = LatLng(targetLocation.latitude, targetLocation.longitude)
+        assertEquals(expectedLatLng, state.cameraPos)
+        // ============================ RACE CONDITION TESTS ============================ /
+
+        /**
+         * Verifies that [MapViewModel.initialiseCameraPosition] suspends execution until the data
+         * (Events/ToDos) has finished loading.
+         *
+         * This simulates a network delay to ensure the camera logic waits for the `loadingDataJob`
+         * to complete before attempting to calculate the center position.
+         */
+        @OptIn(ExperimentalCoroutinesApi::class)
+        @Test
+        fun initialiseCameraPosition_waitsForDataLoading_beforeSettingCamera() =
+            runTest(testDispatcher) {
+              // Mock repositories to simulate a slow network fetch
+              val mockTodosRepo = mockk<ToDosRepository>()
+              val mockEventsRepo = mockk<EventsRepository>()
+
+              // Simulate a 1000ms delay in fetching todos
+              // This forces the viewModel's init block to take 1 second to finish.
+              coEvery { mockTodosRepo.getAllTodos() } coAnswers
+                  {
+                    delay(1000)
+                    emptyList()
+                  }
+              coEvery { mockEventsRepo.getAllEvents() } returns emptyList()
+
+              val mockContext = mockk<Context>(relaxed = true)
+
+              // Initialize ViewModel (The init block starts the 1000ms fetch immediately)
+              val vm = MapViewModel(mockTodosRepo, mockEventsRepo, coordinator = MapCoordinator())
+
+              // Launch camera initialization (suspending)
+              // We want to assert the state while it is waiting.
+              val job = launch { vm.initialiseCameraPosition(mockContext) }
+
+              // Immediately after launch, cameraPos should be null
+              // The join() should be blocking execution because the 1000ms delay isn't over.
+              assertNull(
+                  "Camera should not be set while data is loading", vm.uiState.value.cameraPos)
+
+              // Advance time to finish the fetch (1000ms delay + 1ms buffer)
+              advanceTimeBy(1001)
+
+              // Now that data is loaded, the join() releases.
+              // The function proceeds and sets the camera (falling back to EPFL since lists are
+              // empty).
+              assertNotNull("Camera should be set after data loads", vm.uiState.value.cameraPos)
+              assertEquals(EPFL_LATLNG, vm.uiState.value.cameraPos)
+
+              job.cancel()
+            }
+
+        /**
+         * Verifies that [MapViewModel] handles empty data repositories gracefully without crashing.
+         *
+         * This ensures the removal of `lateinit` prevents UninitializedPropertyAccessException even
+         * if the repositories return no data immediately.
+         */
+        @OptIn(ExperimentalCoroutinesApi::class)
+        @Test
+        fun initialiseCameraPosition_withEmptyData_doesNotCrashAndUsesFallback() =
+            runTest(testDispatcher) {
+              // Mock repositories to return empty lists immediately
+              val mockTodosRepo = mockk<ToDosRepository>()
+              val mockEventsRepo = mockk<EventsRepository>()
+
+              coEvery { mockTodosRepo.getAllTodos() } returns emptyList()
+              coEvery { mockEventsRepo.getAllEvents() } returns emptyList()
+
+              val mockContext = mockk<Context>(relaxed = true)
+
+              // Initialize ViewModel
+              val vm = MapViewModel(mockTodosRepo, mockEventsRepo, coordinator = MapCoordinator())
+
+              // Let the init block finish
+              advanceUntilIdle()
+
+              // Call the function that previously crashed
+              vm.initialiseCameraPosition(mockContext)
+              advanceUntilIdle()
+
+              // Verify it fell back to EPFL (default) instead of crashing
+              assertEquals(EPFL_LATLNG, vm.uiState.value.cameraPos)
+              assertTrue(vm.uiState.value.itemsList.isEmpty())
+            }
       }
 }

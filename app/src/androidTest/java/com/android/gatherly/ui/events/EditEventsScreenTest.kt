@@ -3,9 +3,12 @@ package com.android.gatherly.ui.events
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.gatherly.model.event.Event
@@ -16,7 +19,9 @@ import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.ui.todo.AddToDoScreenTestTags
+import com.android.gatherly.utils.AlertDialogTestTags
 import com.google.firebase.Timestamp
+import java.util.Date
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -96,6 +101,8 @@ class EditEventsScreenTest {
           friendUids = emptyList())
 
   /*----------------------------------------Event-----------------------------------------------*/
+  private val oneHourLater = Timestamp(Date(System.currentTimeMillis() + 3600_000))
+  private val twoHoursLater = Timestamp(Date(System.currentTimeMillis() + 7200_000))
   val event: Event =
       Event(
           id = "0",
@@ -104,8 +111,8 @@ class EditEventsScreenTest {
           creatorName = "my name :)",
           location = null,
           date = Timestamp.now(),
-          startTime = Timestamp.now(),
-          endTime = Timestamp.now(),
+          startTime = oneHourLater,
+          endTime = twoHoursLater,
           creatorId = ownerProfile.uid,
           participants = listOf(ownerProfile.uid, participantProfile.uid),
           status = EventStatus.UPCOMING)
@@ -142,6 +149,21 @@ class EditEventsScreenTest {
     composeTestRule.waitUntil(timeoutMillis = 5000L) {
       composeTestRule.onNodeWithTag(EditEventsScreenTestTags.PARTICIPANT_MENU).isDisplayed()
     }
+  }
+
+  /**
+   * Check that when scrolling to the delete button, then pressing it shows the delete alert dialog
+   */
+  @Test
+  fun deleteTodoShowsAlertDialog() {
+    composeTestRule
+        .onNodeWithTag(EditEventsScreenTestTags.LIST)
+        .performScrollToNode(hasTestTag(EditEventsScreenTestTags.BTN_DELETE))
+    composeTestRule
+        .onNodeWithTag(EditEventsScreenTestTags.BTN_DELETE)
+        .assertIsDisplayed()
+        .performClick()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.ALERT).assertIsDisplayed()
   }
 
   // This function fills the profile repository with the created profiles, and the event repository

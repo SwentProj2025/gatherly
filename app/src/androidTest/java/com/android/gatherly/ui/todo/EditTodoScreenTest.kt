@@ -1,14 +1,25 @@
 package com.android.gatherly.ui.todo
 
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.todo.ToDosLocalRepository
+import com.android.gatherly.utils.AlertDialogTestTags
 import com.android.gatherly.utils.GatherlyTest
 import com.android.gatherly.utils.MockitoUtils
+import com.android.gatherly.utils.TestDates.currentDateTimestamp
+import com.android.gatherly.utils.TestDates.currentDay
+import com.android.gatherly.utils.TestDates.currentMonth
+import com.android.gatherly.utils.TestDates.futureDate
+import com.android.gatherly.utils.TestDates.futureYear
+import com.android.gatherly.utils.TestDates.pastYear
+import com.android.gatherly.utils.openDatePicker
+import com.android.gatherly.utils.selectDateFromPicker
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -39,10 +50,14 @@ class EditTodoScreenTest : GatherlyTest() {
     composeTestRule.setContent {
       EditToDoScreen(todoUid = todo1.uid, editTodoViewModel = editTodoViewModel)
     }
+    composeTestRule
+        .onNodeWithTag(EditToDoScreenTestTags.MORE_OPTIONS)
+        .assertIsDisplayed()
+        .performClick()
   }
 
   private fun fill_repository() = runTest {
-    repository.addTodo(todo1)
+    repository.addTodo(toDo = todo1.copy(dueDate = currentDateTimestamp))
     advanceUntilIdle()
   }
 
@@ -60,8 +75,7 @@ class EditTodoScreenTest : GatherlyTest() {
     composeTestRule.onNodeWithTag(EditToDoScreenTestTags.TODO_DELETE).assertExists()
     composeTestRule.onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_TITLE).assertExists()
     composeTestRule.onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_DESCRIPTION).assertExists()
-    composeTestRule.onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_ASSIGNEE).assertExists()
-    composeTestRule.onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_LOCATION).assertExists()
+    composeTestRule.onNodeWithTag(LocationSuggestionsTestTags.INPUT).assertExists()
     composeTestRule.onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_DATE).assertExists()
     composeTestRule.onNodeWithTag(EditToDoScreenTestTags.ERROR_MESSAGE).assertIsNotDisplayed()
   }
@@ -89,24 +103,10 @@ class EditTodoScreenTest : GatherlyTest() {
   }
 
   @Test
-  fun canEnterAssigneeName() {
-    val text = "testAssignee"
-    composeTestRule.enterEditTodoAssignee(text)
-    composeTestRule
-        .onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_ASSIGNEE)
-        .assertTextContains(text)
-    composeTestRule
-        .onNodeWithTag(EditToDoScreenTestTags.ERROR_MESSAGE, useUnmergedTree = true)
-        .assertIsNotDisplayed()
-  }
-
-  @Test
   fun canEnterLocation() {
     val text = "testLocation"
     composeTestRule.enterEditTodoLocation(text)
-    composeTestRule
-        .onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_LOCATION)
-        .assertTextContains(text)
+    composeTestRule.onNodeWithTag(LocationSuggestionsTestTags.INPUT).assertTextContains(text)
     composeTestRule
         .onNodeWithTag(EditToDoScreenTestTags.ERROR_MESSAGE, useUnmergedTree = true)
         .assertIsNotDisplayed()
@@ -114,16 +114,11 @@ class EditTodoScreenTest : GatherlyTest() {
 
   @Test
   fun canEnterAValidDate() {
-    val text = "10/02/2023"
-    composeTestRule.enterEditTodoDate(text)
-    composeTestRule.onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_DATE).assertTextContains(text)
-  }
-
-  @Test
-  fun canEnterAnInvalidDate() {
-    val invalidDate = "invalid date" // Invalid date format
-    composeTestRule.enterEditTodoDate(invalidDate)
-    composeTestRule.checkErrorMessageIsDisplayedForEditTodo()
+    composeTestRule.openDatePicker(EditToDoScreenTestTags.INPUT_TODO_DATE)
+    composeTestRule.selectDateFromPicker(currentDay, currentMonth, futureYear)
+    composeTestRule
+        .onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_DATE)
+        .assertTextContains(futureDate, ignoreCase = true)
   }
 
   @Test
@@ -138,5 +133,23 @@ class EditTodoScreenTest : GatherlyTest() {
     val invalidTime = "25:80" // Invalid time format
     composeTestRule.enterEditTodoTime(invalidTime)
     composeTestRule.checkErrorMessageIsDisplayedForEditTodo()
+  }
+
+  @Test
+  fun enterPastDate() {
+    composeTestRule.openDatePicker(EditToDoScreenTestTags.INPUT_TODO_DATE)
+    composeTestRule.selectDateFromPicker(currentDay, currentMonth, pastYear)
+    composeTestRule.onNodeWithTag(EditToDoScreenTestTags.TODO_SAVE).performClick()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.ALERT).assertIsDisplayed()
+  }
+
+  /** Check that pressing the delete button shows the alert dialog */
+  @Test
+  fun deleteTodoShowsAlertDialog() {
+    composeTestRule
+        .onNodeWithTag(EditToDoScreenTestTags.TODO_DELETE)
+        .assertIsDisplayed()
+        .performClick()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.ALERT).assertIsDisplayed()
   }
 }

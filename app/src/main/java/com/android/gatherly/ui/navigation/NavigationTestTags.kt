@@ -25,6 +25,7 @@ object NavigationTestTags {
   const val TOP_BAR_TITLE = "TopBarTitle"
 
   const val ADDEVENT_TAB = "AddEventTab"
+  const val ADDGROUP_TAB = "AddGroupTab"
   const val EDITEVENT_TAB = "EditEventTab"
   const val FINDFRIENDS_TAB = "FindFriendsTab"
 
@@ -44,5 +45,6 @@ object NavigationTestTags {
         is Tab.AddEvent -> ADDEVENT_TAB
         is Tab.EditEvent -> EDITEVENT_TAB
         is Tab.FindFriends -> FINDFRIENDS_TAB
+        is Tab.AddGroup -> ADDGROUP_TAB
       }
 }

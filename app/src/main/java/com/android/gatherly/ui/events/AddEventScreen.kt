@@ -4,7 +4,6 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -45,6 +44,8 @@ import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
 import com.android.gatherly.ui.theme.GatherlyTheme
+import com.android.gatherly.utils.DatePickerInputField
+import com.android.gatherly.utils.GatherlyDatePicker
 import kotlinx.coroutines.delay
 
 object AddEventScreenTestTags {
@@ -90,7 +91,6 @@ fun AddEventScreen(
 
   val screenPadding = dimensionResource(id = R.dimen.padding_screen)
   val fieldSpacing = dimensionResource(id = R.dimen.spacing_between_fields)
-  val buttonSpacing = dimensionResource(id = R.dimen.spacing_between_buttons)
 
   val textFieldColors =
       TextFieldDefaults.colors(
@@ -105,6 +105,9 @@ fun AddEventScreen(
 
   // Profile state for the dropdown visibility
   var showProfilesDropdown by remember { mutableStateOf(false) }
+
+  // Date state for the alert dialog visibilty
+  var showDatePicker by remember { mutableStateOf(false) }
 
   // Toasts
   LaunchedEffect(ui.displayToast, ui.toastString) {
@@ -339,21 +342,17 @@ fun AddEventScreen(
 
               item {
                 // Date
-                OutlinedTextField(
+                DatePickerInputField(
                     value = ui.date,
-                    onValueChange = { addEventViewModel.updateDate(it) },
-                    label = { Text(stringResource(R.string.events_date_field_label)) },
-                    placeholder = { Text("dd/MM/yyyy") },
-                    isError = ui.dateError,
-                    supportingText = {
-                      if (ui.dateError) {
-                        Text(
-                            "Use format dd/MM/yyyy",
-                            modifier = Modifier.testTag(AddEventScreenTestTags.ERROR_MESSAGE))
-                      }
-                    },
+                    label = stringResource(R.string.events_date_field_label),
+                    isErrorMessage = if (!ui.dateError) null else "Invalid format or past date",
+                    onClick = { showDatePicker = true },
                     colors = textFieldColors,
-                    modifier = Modifier.fillMaxWidth().testTag(AddEventScreenTestTags.INPUT_DATE))
+                    testTag =
+                        Pair(
+                            AddEventScreenTestTags.INPUT_DATE,
+                            AddEventScreenTestTags.ERROR_MESSAGE),
+                )
               }
 
               item {
@@ -386,7 +385,7 @@ fun AddEventScreen(
                     supportingText = {
                       if (ui.endTimeError) {
                         Text(
-                            "Use format HH:mm",
+                            "Invalid format, past date or ending time before starting time",
                             modifier = Modifier.testTag(AddEventScreenTestTags.ERROR_MESSAGE))
                       }
                     },
@@ -395,8 +394,6 @@ fun AddEventScreen(
               }
 
               item {
-                Spacer(modifier = Modifier.height(buttonSpacing))
-
                 // Save
                 Button(
                     onClick = { addEventViewModel.saveEvent() },
@@ -407,7 +404,6 @@ fun AddEventScreen(
                     enabled =
                         !ui.nameError &&
                             !ui.descriptionError &&
-                            !ui.creatorNameError &&
                             !ui.dateError &&
                             !ui.startTimeError &&
                             !ui.endTimeError &&
@@ -423,6 +419,12 @@ fun AddEventScreen(
                     }
               }
             }
+
+        GatherlyDatePicker(
+            show = showDatePicker,
+            initialDate = ui.date,
+            onDateSelected = { selectedDate -> addEventViewModel.updateDate(selectedDate) },
+            onDismiss = { showDatePicker = false })
       }
 }
 

@@ -4,6 +4,7 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.hasAnyDescendant
 import androidx.compose.ui.test.hasTestTag
@@ -18,9 +19,12 @@ import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsLocalRepository
 import com.android.gatherly.model.event.EventsRepository
 import com.android.gatherly.model.map.Location
+import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.ui.navigation.NavigationTestTags
+import com.android.gatherly.utils.AlertDialogTestTags
+import com.android.gatherly.utils.MapCoordinator
 import com.android.gatherly.utils.MockitoUtils
 import com.android.gatherly.utils.UI_WAIT_TIMEOUT
 import com.google.firebase.Timestamp
@@ -45,12 +49,15 @@ class EventsOverviewScreenTest {
   private lateinit var profileRepository: ProfileRepository
   private lateinit var eventsViewModel: EventsViewModel
   private lateinit var mockitoUtils: MockitoUtils
+  private lateinit var mapCoordinator: MapCoordinator
 
   @Before
   fun setUp() {
     eventsRepository = EventsLocalRepository()
     profileRepository = ProfileLocalRepository()
     currentUserId = ""
+
+    mapCoordinator = MapCoordinator()
 
     // Mock Firebase Auth
     mockitoUtils = MockitoUtils()
@@ -70,7 +77,12 @@ class EventsOverviewScreenTest {
             eventsRepository = eventsRepository,
             profileRepository = profileRepository,
             authProvider = { mockitoUtils.mockAuth })
-    composeTestRule.setContent { EventsScreen(eventsViewModel = eventsViewModel) }
+    composeTestRule.setContent {
+      EventsScreen(
+          eventsViewModel = eventsViewModel,
+          actions = EventsScreenActions(),
+          coordinator = mapCoordinator)
+    }
   }
 
   /** Helper function to create an event for the current user */
@@ -230,7 +242,7 @@ class EventsOverviewScreenTest {
     composeTestRule
         .onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
         .assertTextContains("Events", substring = true, ignoreCase = true)
-    composeTestRule.onNodeWithTag(EventsScreenTestTags.EVENT_POPUP).assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.ALERT).assertIsNotDisplayed()
     composeTestRule.onNodeWithTag(EventsScreenTestTags.BROWSE_TITLE).assertIsDisplayed()
     composeTestRule.onNodeWithTag(EventsScreenTestTags.EMPTY_BROWSER_LIST_MSG).assertIsDisplayed()
     composeTestRule.onNodeWithTag(EventsScreenTestTags.UPCOMING_TITLE).assertIsDisplayed()
@@ -328,6 +340,8 @@ class EventsOverviewScreenTest {
 
     setContent(bobId)
 
+    profileRepository.addProfile(Profile(uid = "bobId", name = "Test User", profilePicture = ""))
+
     composeTestRule.waitForIdle()
 
     // Check that the event created by Alice show up in the Bob's browser list
@@ -342,21 +356,18 @@ class EventsOverviewScreenTest {
     // Click on the event item
     composeTestRule.clickEventItem(eventByAlice)
     // Check that the popup is displayed
-    composeTestRule.onNodeWithTag(EventsScreenTestTags.EVENT_POPUP).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.ALERT).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.DISMISS_BTN).assertIsDisplayed()
 
     // Click on Participate button
     composeTestRule
-        .onNodeWithTag(EventsScreenTestTags.PARTICIPATE_BUTTON)
+        .onNodeWithTag(AlertDialogTestTags.CONFIRM_BTN)
         .assertIsDisplayed()
         .performClick()
 
     // Wait until the popup is closed
     composeTestRule.waitUntil(UI_WAIT_TIMEOUT) {
-      composeTestRule
-          .onAllNodesWithTag(EventsScreenTestTags.EVENT_POPUP)
-          .fetchSemanticsNodes()
-          .isEmpty()
+      composeTestRule.onAllNodesWithTag(AlertDialogTestTags.ALERT).fetchSemanticsNodes().isEmpty()
     }
     composeTestRule.waitForIdle()
 
@@ -404,6 +415,8 @@ class EventsOverviewScreenTest {
 
     setContent(bobId)
 
+    profileRepository.addProfile(Profile(uid = "bobId", name = "Test User", profilePicture = ""))
+
     // Verify that Alice's event is displayed
     composeTestRule.waitUntil(UI_WAIT_TIMEOUT) {
       runBlocking { eventsRepository.getAllEvents().contains(eventByAlice) }
@@ -420,9 +433,9 @@ class EventsOverviewScreenTest {
 
     // Click on the event item and participate button
     composeTestRule.clickEventItem(eventByAlice)
-    composeTestRule.onNodeWithTag(EventsScreenTestTags.EVENT_POPUP).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.ALERT).assertIsDisplayed()
     composeTestRule
-        .onNodeWithTag(EventsScreenTestTags.PARTICIPATE_BUTTON)
+        .onNodeWithTag(AlertDialogTestTags.CONFIRM_BTN)
         .assertIsDisplayed()
         .performClick()
 
@@ -447,12 +460,12 @@ class EventsOverviewScreenTest {
 
     // Click on the event item and unregister button
     composeTestRule.clickEventItem(eventByAlice)
-    composeTestRule.onNodeWithTag(EventsScreenTestTags.EVENT_POPUP).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(EventsScreenTestTags.POPUP_TITLE).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(EventsScreenTestTags.POPUP_DESCRIPTION).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.ALERT).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.TITLE).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.BODY).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.DISMISS_BTN).assertIsDisplayed()
     composeTestRule
-        .onNodeWithTag(EventsScreenTestTags.UNREGISTER_BUTTON)
+        .onNodeWithTag(AlertDialogTestTags.CONFIRM_BTN)
         .assertIsDisplayed()
         .performClick()
 
@@ -508,13 +521,13 @@ class EventsOverviewScreenTest {
         .assertIsDisplayed()
     // Click on Bob's event item and verify the popup
     composeTestRule.clickEventItem(eventByBob)
-    composeTestRule.onNodeWithTag(EventsScreenTestTags.EVENT_POPUP).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(EventsScreenTestTags.POPUP_TITLE).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(EventsScreenTestTags.POPUP_DESCRIPTION).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.ALERT).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.DISMISS_BTN).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.TITLE).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.BODY).assertIsDisplayed()
     // Click on the Edit button
     composeTestRule
-        .onNodeWithTag(EventsScreenTestTags.EDIT_EVENT_BUTTON)
+        .onNodeWithTag(AlertDialogTestTags.CONFIRM_BTN)
         .assertIsDisplayed()
         .performClick()
   }
@@ -545,15 +558,15 @@ class EventsOverviewScreenTest {
         .onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(eventByBob))
         .assertIsDisplayed()
     composeTestRule.clickEventItem(eventByBob)
-    composeTestRule.onNodeWithTag(EventsScreenTestTags.EVENT_POPUP).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(EventsScreenTestTags.POPUP_TITLE).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(EventsScreenTestTags.POPUP_DESCRIPTION).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.ALERT).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.TITLE).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.BODY).assertIsDisplayed()
     // Click on the Cancel button and verify that the popup is closed
     composeTestRule
-        .onNodeWithTag(EventsScreenTestTags.GOBACK_EVENT_BUTTON)
+        .onNodeWithTag(AlertDialogTestTags.DISMISS_BTN)
         .assertIsDisplayed()
         .performClick()
-    composeTestRule.onNodeWithTag(EventsScreenTestTags.EVENT_POPUP).assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.ALERT).assertIsNotDisplayed()
   }
 
   /**
@@ -582,6 +595,8 @@ class EventsOverviewScreenTest {
   @Test
   fun testEventDisplayAllStatusCorrectly() = runTest {
     val currentUserId = "bobId"
+
+    profileRepository.addProfile(Profile(uid = "bobId", name = "Test User", profilePicture = ""))
 
     val listEvents: List<Event> =
         listOf(
@@ -641,6 +656,8 @@ class EventsOverviewScreenTest {
   @Test
   fun testFilterBarWorksCorrectly() = runTest {
     val currentUserId = "bobId"
+
+    profileRepository.addProfile(Profile(uid = "bobId", name = "Test User", profilePicture = ""))
 
     val listUpcoming: List<Event> =
         listOf(upcomingEvent, upcomingEventCreated, upcomingEventParticipate)
@@ -762,7 +779,12 @@ class EventsOverviewScreenTest {
             eventsRepository = eventsRepository,
             profileRepository = profileRepository,
             authProvider = { mockitoUtils.mockAuth })
-    composeTestRule.setContent { EventsScreen(eventsViewModel = eventsViewModel) }
+    composeTestRule.setContent {
+      EventsScreen(
+          eventsViewModel = eventsViewModel,
+          actions = EventsScreenActions(),
+          coordinator = mapCoordinator)
+    }
 
     composeTestRule.onNodeWithTag(EventsScreenTestTags.BROWSE_TITLE).assertIsDisplayed()
     composeTestRule.onNodeWithTag(EventsScreenTestTags.UPCOMING_TITLE).assertIsNotDisplayed()
@@ -770,6 +792,100 @@ class EventsOverviewScreenTest {
     composeTestRule.onNodeWithTag(EventsScreenTestTags.CREATE_EVENT_BUTTON).assertIsNotDisplayed()
   }
 
+  /**
+   * Test: scenario: Log in as Bob, view an event with a location. Click on the event to open
+   * details. Click "See on Map". Verifies that the MapCoordinator receives the request to center on
+   * that event.
+   */
+  @Test
+  fun testSeeOnMapButtonTriggersCoordinator() = runTest {
+    val bobId = "bobId"
+
+    // Create an event with a valid location
+    val eventWithLocation =
+        createYourEvent(bobId).copy(id = "loc_event", location = Location(46.5, 6.5, "Test Place"))
+    eventsRepository.addEvent(eventWithLocation)
+
+    setContent(bobId)
+
+    composeTestRule.waitForIdle()
+
+    // Open the event dialog
+    composeTestRule.clickEventItem(eventWithLocation)
+
+    // Verify the "See on map" button (Neutral button) is displayed
+    composeTestRule
+        .onNodeWithTag(AlertDialogTestTags.NEUTRAL_BTN) //
+        .assertIsDisplayed()
+        .performClick()
+
+    // Verify the coordinator received the ID
+    // We check the internal state of our local coordinator instance
+    assert(mapCoordinator.getUnconsumedEventId() == eventWithLocation.id)
+  }
+
+  /**
+   * Test: Verifies that the "See on Map" button is disabled when the event does not have a valid
+   * location.
+   */
+  @Test
+  fun testSeeOnMapButtonDisabledWhenNoLocation() = runTest {
+    val bobId = "bobId"
+
+    // Create an event with NO location
+    val eventNoLocation = createYourEvent(bobId).copy(id = "no_loc_event", location = null)
+    eventsRepository.addEvent(eventNoLocation)
+
+    setContent(bobId)
+
+    composeTestRule.waitForIdle()
+
+    // Open the event dialog
+    composeTestRule.clickEventItem(eventNoLocation)
+
+    // Find the button and assert it is displayed but disabled
+    composeTestRule
+        .onNodeWithTag(AlertDialogTestTags.NEUTRAL_BTN)
+        .assertIsDisplayed()
+        .assertIsNotEnabled()
+  }
+
+  /**
+   * Test: Verifies that clicking "See on Map" performs two actions:
+   * 1. Sends the event ID to the MapCoordinator.
+   * 2. Dismisses (closes) the Alert Dialog.
+   */
+  @Test
+  fun testSeeOnMapDismissesDialog() = runTest {
+    val bobId = "bobId"
+    val eventWithLocation =
+        createYourEvent(bobId)
+            .copy(id = "loc_event_dismiss", location = Location(46.5, 6.5, "Test Place"))
+    eventsRepository.addEvent(eventWithLocation)
+
+    setContent(bobId)
+    composeTestRule.waitForIdle()
+
+    // Open the event dialog
+    composeTestRule.clickEventItem(eventWithLocation)
+
+    // Verify dialog is open
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.ALERT).assertIsDisplayed()
+
+    // Click "See on map"
+    composeTestRule
+        .onNodeWithTag(AlertDialogTestTags.NEUTRAL_BTN) //
+        .performClick()
+
+    // Assert that coordinator received the ID
+    assert(mapCoordinator.getUnconsumedEventId() == eventWithLocation.id)
+
+    // Assert that dialog is closed
+    composeTestRule.waitForIdle()
+    composeTestRule
+        .onNodeWithTag(AlertDialogTestTags.ALERT) //
+        .assertIsNotDisplayed()
+  }
   /** Helper function to scroll to a specific event item in a list */
   private fun ComposeTestRule.scrollToEvent(event: Event) {
     onNodeWithTag(EventsScreenTestTags.ALL_LISTS)
