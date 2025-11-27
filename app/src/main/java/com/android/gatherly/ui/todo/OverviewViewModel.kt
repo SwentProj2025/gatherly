@@ -1,7 +1,5 @@
 package com.android.gatherly.ui.todo
 
-import androidx.credentials.ClearCredentialStateRequest
-import androidx.credentials.CredentialManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.profile.ProfileRepository
@@ -11,8 +9,6 @@ import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.model.todo.ToDosRepositoryProvider
 import com.android.gatherly.utils.editTodo
-import com.google.firebase.Firebase
-import com.google.firebase.auth.auth
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -31,8 +27,7 @@ data class OverviewUIState(
     val todos: List<ToDo> = emptyList(),
     val sortOrder: TodoSortOrder = TodoSortOrder.ALPHABETICAL,
     val errorMsg: String? = null,
-    val isLoading: Boolean = false,
-    val signedOut: Boolean = false
+    val isLoading: Boolean = false
 )
 
 /**
@@ -140,17 +135,8 @@ class OverviewViewModel(
   private fun applySortOrder(list: List<ToDo>): List<ToDo> {
     return when (_uiState.value.sortOrder) {
       TodoSortOrder.ALPHABETICAL -> list.sortedBy { it.name.lowercase() }
-      TodoSortOrder.DATE_ASC -> list.sortedBy { it.dueDate.toDate() }
-      TodoSortOrder.DATE_DESC -> list.sortedByDescending { it.dueDate.toDate() }
-    }
-  }
-
-  /** Initiates sign-out */
-  fun onSignedOut(credentialManager: CredentialManager): Unit {
-    viewModelScope.launch {
-      _uiState.value = _uiState.value.copy(signedOut = true)
-      Firebase.auth.signOut()
-      credentialManager.clearCredentialState(ClearCredentialStateRequest())
+      TodoSortOrder.DATE_ASC -> list.sortedBy { it.dueDate?.toDate() }
+      TodoSortOrder.DATE_DESC -> list.sortedByDescending { it.dueDate?.toDate() }
     }
   }
 }
