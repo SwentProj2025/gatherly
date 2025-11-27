@@ -126,9 +126,7 @@ abstract class GatherlyTest() {
   fun ComposeTestRule.enterAddTodoLocation(location: String) =
       onNodeWithTag(LocationSuggestionsTestTags.INPUT).performTextInput(location)
 
-  fun ComposeTestRule.enterAddTodoDetails(
-      todo: ToDo
-  ) {
+  fun ComposeTestRule.enterAddTodoDetails(todo: ToDo) {
     enterAddTodoTitle(todo.name)
     enterAddTodoDescription(todo.description)
     enterAddTodoLocation(todo.location?.name ?: "Any")

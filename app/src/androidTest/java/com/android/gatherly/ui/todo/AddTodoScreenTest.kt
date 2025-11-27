@@ -15,9 +15,9 @@ import com.android.gatherly.utils.MockitoUtils
 import com.android.gatherly.utils.openDatePicker
 import com.android.gatherly.utils.selectDateFromPicker
 import com.google.firebase.Timestamp
-import kotlinx.coroutines.test.runTest
 import java.time.LocalDate
 import java.util.Calendar
+import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
