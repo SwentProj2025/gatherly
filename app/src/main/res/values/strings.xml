@@ -9,12 +9,10 @@
     <string name="todos_ongoing_section_label">Ongoing</string>
     <string name="todos_completed_section_label">Completed</string>
     <string name="no_todos_text">You have no ToDos yet.</string>
-    <string name="todos_title_field_label">Title</string>
+    <string name="todos_title_field_label">Title*</string>
     <string name="todos_title_field_placeholder">Task Title</string>
     <string name="todos_description_field_label">Description</string>
     <string name="todos_description_placeholder">Describe the task</string>
-    <string name="todos_assignee_field_label">Assignee</string>
-    <string name="todos_assignee_placeholder">Assign a person</string>
     <string name="todos_location_field_label">Location</string>
     <string name="todos_search_bar_label">Search todos…</string>
     <string name="todos_location_field_placeholder">Enter an Address or Location</string>
@@ -36,6 +34,8 @@
     <string name="todos_date_ascending_sort_button_text">Date ascending</string>
     <string name="todos_alphabetical_sort_button_text">Alphabetical</string>
     <string name="todos_sort_menu_check_icon_label">Selected</string>
+    <string name="todos_advanced_settings">More Options</string>
+    <string name="todos_loading">Loading your todos …</string>
 
     <!-- Sign In Page. -->
     <string name="web_client_id">854490974901-rc0seqlo7nbm1net10ujpte2ckkrsgn2.apps.googleusercontent.com</string>
@@ -106,11 +106,15 @@
     <string name="events_participant_placeholder">Add or remove a participant</string>
     <string name="events_delete_warning">Warning! You are deleting an event</string>
     <string name="events_delete_warning_text">This action cannot be reversed. Are you sure?</string>
+    <string name="events_loading">Loading events …</string>
 
     <!-- General -->
     <string name="delete">Yes, Delete</string>
     <string name="cancel">No, Cancel</string>
     <string name="saving">Saving…</string>
+    <string name="log_out">Yes, Sign out</string>
+    <string name="anon_log_out">You are logging out</string>
+    <string name="anon_log_out_text">Because you are signed in anonymously, signing out will cause you to lose all your current data. Are you sure?</string>
 
     <!-- HomePage -->
     <string name="homepage_arrow_icon_description">Navigate</string>

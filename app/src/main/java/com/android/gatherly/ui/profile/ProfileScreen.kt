@@ -26,6 +26,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,6 +51,7 @@ import com.android.gatherly.ui.navigation.Screen
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Profile
 import com.android.gatherly.ui.theme.GatherlyTheme
+import com.android.gatherly.utils.GatherlyAlertDialog
 import com.android.gatherly.utils.profilePicturePainter
 
 /** Contains test tags used for UI testing on the Profile screen. */
@@ -82,6 +85,7 @@ fun ProfileScreen(
   val uiState by profileViewModel.uiState.collectAsState()
   val profile = uiState.profile
   val context = LocalContext.current
+  val shouldShowLogOutWarning = remember { mutableStateOf(false) }
 
   // Fetch profile when the screen is recomposed
   LaunchedEffect(Unit) { profileViewModel.loadUserProfile() }
@@ -111,7 +115,13 @@ fun ProfileScreen(
             selectedTab = Tab.Profile,
             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
             modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
-            onSignedOut = { profileViewModel.signOut(credentialManager) })
+            onSignedOut = {
+              if (uiState.isAnon) {
+                shouldShowLogOutWarning.value = true
+              } else {
+                profileViewModel.signOut(credentialManager)
+              }
+            })
       },
       bottomBar = {
         BottomNavigationMenu(
@@ -302,6 +312,20 @@ fun ProfileScreen(
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center)
               }
+        }
+
+        if (shouldShowLogOutWarning.value) {
+          GatherlyAlertDialog(
+              titleText = stringResource(R.string.anon_log_out),
+              bodyText = stringResource(R.string.anon_log_out_text),
+              dismissText = stringResource(R.string.cancel),
+              confirmText = stringResource(R.string.log_out),
+              onDismiss = { shouldShowLogOutWarning.value = false },
+              onConfirm = {
+                profileViewModel.signOut(credentialManager)
+                shouldShowLogOutWarning.value = false
+              },
+              isImportantWarning = true)
         }
       })
 }

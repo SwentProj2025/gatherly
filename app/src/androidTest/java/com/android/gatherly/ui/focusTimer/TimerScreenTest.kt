@@ -41,7 +41,6 @@ class TimerScreenTest {
           uid = "1",
           name = "Buy groceries",
           description = "Milk, eggs, bread",
-          assigneeName = "Alice",
           dueDate = Timestamp.now(),
           dueTime = null,
           location = null,

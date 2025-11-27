@@ -3,6 +3,7 @@ package com.android.gatherly.viewmodel.map
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
+import android.os.Looper
 import androidx.core.content.ContextCompat
 import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.event.EventsLocalRepository
@@ -11,6 +12,7 @@ import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.ui.map.EPFL_LATLNG
 import com.android.gatherly.ui.map.MapViewModel
+import com.android.gatherly.utils.createLocationRequest
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationResult
@@ -18,6 +20,8 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.tasks.Task
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.unmockkAll
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
@@ -50,6 +54,14 @@ class MapViewModelTests {
   @OptIn(ExperimentalCoroutinesApi::class)
   @Before
   fun setup() {
+    // Mocking for static android classes
+    mockkStatic(ContextCompat::class)
+    mockkStatic(Looper::class)
+
+    // Prevent "Stub!" error when Looper is called
+    every { Looper.getMainLooper() } returns mockk(relaxed = true)
+    // Mocking for extension function (prevent stub error for createLocationRequest)
+    mockkStatic("com.android.gatherly.utils.LocationUtilsKt")
     Dispatchers.setMain(testDispatcher)
   }
 
@@ -58,6 +70,8 @@ class MapViewModelTests {
   @After
   fun tearDown() {
     Dispatchers.resetMain()
+    // Clean up static mocks
+    unmockkAll()
   }
 
   /** Test data objects used across multiple test cases. */
@@ -447,9 +461,17 @@ class MapViewModelTests {
         val mockTask = mockk<Task<Void>>(relaxed = true)
         val mockLocation = mockk<Location>()
 
+        // Mock the top-level function to avoid "Method not mocked" crash
+        every { createLocationRequest() } returns mockk(relaxed = true)
+
+        // Mock permissions
         every {
           ContextCompat.checkSelfPermission(
               mockContext, android.Manifest.permission.ACCESS_FINE_LOCATION)
+        } returns PackageManager.PERMISSION_GRANTED
+        every {
+          ContextCompat.checkSelfPermission(
+              mockContext, android.Manifest.permission.ACCESS_COARSE_LOCATION)
         } returns PackageManager.PERMISSION_GRANTED
 
         every { mockLocation.latitude } returns 50.1231
@@ -458,7 +480,7 @@ class MapViewModelTests {
         var capturedCallback: LocationCallback? = null
 
         every {
-          mockClient.requestLocationUpdates(any(), any<LocationCallback>(), isNull())
+          mockClient.requestLocationUpdates(any(), any<LocationCallback>(), any<Looper>())
         } answers
             {
               capturedCallback = secondArg()
@@ -476,22 +498,25 @@ class MapViewModelTests {
                 eventsRepository = eventsRepo,
                 fusedLocationClient = mockClient)
 
-        advanceUntilIdle()
-
+        // Start the call
         var result: LatLng? = null
         val job = launch { result = vm.fetchLocationToCenterOn(mockContext) }
 
+        // Unlike other tests, advanceUntilIdle() here would force the 5s timeout to trigger
+        // This makes the function return the EPFL fallback, thus failing the test
+
+        // Trigger the callback
         assertNotNull("Callback should have been captured", capturedCallback)
         capturedCallback?.onLocationResult(locationResult)
 
+        // Now it is safe to advance, allowing the flow to emit and the function to return
         advanceUntilIdle()
 
         val expectedLatLng = LatLng(50.1231, 2.3253)
         assertNotNull(result)
         assertEquals(expectedLatLng, result)
-        job.cancel() // cleanup
+        job.cancel()
       }
-
   /**
    * Verifies that starting and stopping location updates manages the location job without crashing.
    */
@@ -504,9 +529,15 @@ class MapViewModelTests {
         val mockClient = mockk<FusedLocationProviderClient>(relaxed = true)
         val mockContext = mockk<Context>(relaxed = true)
 
+        // Mock both permissions to ensure the flow passes the check
         every {
           ContextCompat.checkSelfPermission(
               mockContext, android.Manifest.permission.ACCESS_FINE_LOCATION)
+        } returns PackageManager.PERMISSION_GRANTED
+
+        every {
+          ContextCompat.checkSelfPermission(
+              mockContext, android.Manifest.permission.ACCESS_COARSE_LOCATION)
         } returns PackageManager.PERMISSION_GRANTED
 
         val vm =
@@ -543,5 +574,104 @@ class MapViewModelTests {
         vm.onNavigationToDifferentScreen()
 
         assertNull(vm.uiState.value.cameraPos)
+      }
+
+  /**
+   * Verifies that if permissions are denied (SecurityException), the ViewModel catches it and
+   * returns the fallback (EPFL) instead of crashing.
+   */
+  @OptIn(ExperimentalCoroutinesApi::class)
+  @Test
+  fun fetchLocationToCenterOn_whenPermissionDenied_ReturnsEPFL() =
+      runTest(testDispatcher) {
+        val todosRepo = ToDosLocalRepository()
+        val eventsRepo = EventsLocalRepository()
+        val mockContext = mockk<Context>()
+        // We don't need to mock the client deeply because LocationUtils checks permission first
+        val mockClient = mockk<FusedLocationProviderClient>(relaxed = true)
+
+        // Mock permissions as DENIED
+        every {
+          ContextCompat.checkSelfPermission(
+              mockContext, android.Manifest.permission.ACCESS_FINE_LOCATION)
+        } returns PackageManager.PERMISSION_DENIED
+
+        every {
+          ContextCompat.checkSelfPermission(
+              mockContext, android.Manifest.permission.ACCESS_COARSE_LOCATION)
+        } returns PackageManager.PERMISSION_DENIED
+
+        val vm =
+            MapViewModel(
+                todosRepository = todosRepo,
+                eventsRepository = eventsRepo,
+                fusedLocationClient = mockClient)
+
+        advanceUntilIdle()
+
+        val result = vm.fetchLocationToCenterOn(mockContext)
+
+        assertEquals(EPFL_LATLNG, result)
+      }
+
+  /**
+   * Verifies Android 12+ compatibility fix. Ensures that if the user selects "Approximate" (Coarse)
+   * only, the map still centers on them (doesn't fallback to EPFL).
+   */
+  @OptIn(ExperimentalCoroutinesApi::class)
+  @Test
+  fun fetchLocationToCenterOn_withOnlyCoarsePermission_returnsCurrentLocation() =
+      runTest(testDispatcher) {
+        val todosRepo = ToDosLocalRepository()
+        val eventsRepo = EventsLocalRepository()
+        val mockContext = mockk<Context>()
+        val mockClient = mockk<FusedLocationProviderClient>(relaxed = true)
+        val mockTask = mockk<Task<Void>>(relaxed = true)
+        val mockLocation = mockk<Location>()
+
+        // Mock top-level function
+        every { createLocationRequest() } returns mockk(relaxed = true)
+
+        // Fine is DENIED, but Coarse is GRANTED
+        every {
+          ContextCompat.checkSelfPermission(
+              mockContext, android.Manifest.permission.ACCESS_FINE_LOCATION)
+        } returns PackageManager.PERMISSION_DENIED // <--- User said "No Precise"
+
+        every {
+          ContextCompat.checkSelfPermission(
+              mockContext, android.Manifest.permission.ACCESS_COARSE_LOCATION)
+        } returns PackageManager.PERMISSION_GRANTED // <--- User said "Approximate OK"
+
+        every { mockLocation.latitude } returns 50.1231
+        every { mockLocation.longitude } returns 2.3253
+
+        var capturedCallback: LocationCallback? = null
+
+        every {
+          mockClient.requestLocationUpdates(any(), any<LocationCallback>(), any<Looper>())
+        } answers
+            {
+              capturedCallback = secondArg()
+              mockTask
+            }
+        every { mockClient.removeLocationUpdates(any<LocationCallback>()) } returns mockTask
+
+        val locationResult = mockk<LocationResult>(relaxed = true)
+        every { locationResult.locations } returns listOf(mockLocation)
+
+        val vm = MapViewModel(todosRepo, eventsRepo, mockClient)
+
+        var result: LatLng? = null
+        val job = launch { result = vm.fetchLocationToCenterOn(mockContext) }
+
+        assertNotNull("Callback should capture even with only Coarse permission", capturedCallback)
+        capturedCallback?.onLocationResult(locationResult)
+
+        advanceUntilIdle()
+
+        assertEquals(LatLng(50.1231, 2.3253), result)
+
+        job.cancel()
       }
 }
