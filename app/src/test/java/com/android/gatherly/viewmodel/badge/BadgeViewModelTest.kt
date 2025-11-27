@@ -13,6 +13,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 
@@ -70,5 +71,47 @@ class BadgeViewModelTest {
     advanceUntilIdle()
   }
 
-  @Test fun uiStateIsCorrectlyInstantiated() = runTest {}
+  @Test
+  fun uiStateIsCorrectlyInstantiated() = runTest {
+    vm.refresh()
+
+    val uiState = vm.uiState
+
+    assertEquals(
+        Triple(
+            "Silver ToDo Created Badge",
+            "You created 5 ToDos!",
+            "app/src/main/res/drawable/badges/todos/Silver Todo Created.png"),
+        uiState.value.badgeTodoCreated)
+    assertEquals(
+        Triple(
+            "Diamond ToDo Completed Badge",
+            "You completed 20 ToDos!",
+            "app/src/main/res/drawable/badges/todos/Diamond Todo Completed.png"),
+        uiState.value.badgeTodoCompleted)
+    assertEquals(
+        Triple(
+            "Bronze Event Created Badge",
+            "You created 3 Events!",
+            "app/src/main/res/drawable/badges/events/Bronze Event Created.png"),
+        uiState.value.badgeEventCreated)
+    assertEquals(
+        Triple(
+            "Blank Event Participated Badge",
+            "Participate to your first Todo to get a Badge!",
+            "app/src/main/res/drawable/badges/events/Blank Events.png"),
+        uiState.value.badgeEventParticipated)
+    assertEquals(
+        Triple(
+            "Blank Friend Badge",
+            "Add your first Friend to get a Badge!",
+            "app/src/main/res/drawable/badges/friends/Blank Friends.png"),
+        uiState.value.badgeFriendAdded)
+    assertEquals(
+        Triple(
+            "Blank Focus Session Badge",
+            "Complete your first Focus Session to get a Badge!",
+            "app/src/main/res/drawable/badges/focusSessions/Blank FocusSession.png"),
+        uiState.value.badgeFocusSessionCompleted)
+  }
 }
