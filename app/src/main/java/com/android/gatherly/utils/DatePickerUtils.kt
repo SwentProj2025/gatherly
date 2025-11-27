@@ -24,6 +24,21 @@ object DatePickerTestTags {
   const val DATE_PICKER_SAVE = "datePickerSaveButton"
 }
 
+/**
+ * Helper function who displays a Material3 Date Picker dialog allowing the user to select a date.
+ *
+ * The dialog is shown only when [show] is true. It initializes with the provided [initialDate] if
+ * valid and formats the selected date using the specified [dateFormat].
+ *
+ * Once a date is selected and confirmed, the formatted date is returned via [onDateSelected], and
+ * the dialog is dismissed via [onDismiss].
+ *
+ * @param show Controls whether the Date Picker dialog is visible.
+ * @param initialDate Initial date displayed in the picker, formatted as defined by [dateFormat].
+ * @param onDateSelected Callback triggered when a date is selected and confirmed.
+ * @param onDismiss Callback triggered when the dialog is dismissed.
+ * @param dateFormat Format used to parse and display the date (default: "dd/MM/yyyy").
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GatherlyDatePicker(
@@ -68,6 +83,23 @@ fun GatherlyDatePicker(
       }
 }
 
+/**
+ * Helper function : Read-only input date field that displays a selected date and triggers the Date
+ * Picker when clicked.
+ *
+ * This composable shows an outlined text field styled for date input, with optional error handling
+ *
+ * @param value Current value displayed in the field.
+ * @param label Label displayed above the input field.
+ * @param placeholder Placeholder text when the field is empty.
+ * @param isError Indicates whether the field is in an error state.
+ * @param errorMessage Error message displayed when [isError] is true.
+ * @param onClick Callback invoked when the field is clicked.
+ * @param modifier Modifier applied to the root container.
+ * @param testTagInput Test tag for the input field.
+ * @param testTagError Test tag for the error message.
+ * @param colors Color configuration for the text field.
+ */
 @Composable
 fun DatePickerInputField(
     value: String,

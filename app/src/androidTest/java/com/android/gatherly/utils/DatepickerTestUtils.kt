@@ -12,6 +12,13 @@ import androidx.compose.ui.test.performClick
 import java.time.LocalDate
 import java.time.Month
 
+/**
+ * Selects a specific date from the Date Picker component and confirms the selection.
+ *
+ * @param day The day of the month to select (1-31).
+ * @param month The month to select (1-12).
+ * @param year The year to select.
+ */
 fun ComposeTestRule.selectDateFromPicker(day: Int, month: Int, year: Int) {
   val monthString = Month.of(month).name
   navigateInDatePicker(year, monthString, day)
@@ -21,11 +28,23 @@ fun ComposeTestRule.selectDateFromPicker(day: Int, month: Int, year: Int) {
   }
 }
 
+/**
+ * Helper function to open the date picker dialog depending on which screen we are
+ *
+ * @param testTag the date field that we need to click on to open the date picker compose
+ */
 fun ComposeTestRule.openDatePicker(testTag: String) {
   onNodeWithTag(testTag).performClick()
   waitUntil(UI_WAIT_TIMEOUT) { onAllNodes(isRoot()).fetchSemanticsNodes().size > 1 }
 }
 
+/**
+ * Helper function: which navigates through the whole DatePicker to choose the specific date
+ *
+ * @param targetYear year to select
+ * @param targetMonth string of the month we want to
+ * @param targetDay specific day we want to click on when the correct page month and year is display
+ */
 fun ComposeTestRule.navigateInDatePicker(targetYear: Int, targetMonth: String, targetDay: Int) {
   val currentYear = LocalDate.now().year
   val monthYearFormatter = targetMonth.lowercase().replaceFirstChar { it.uppercase() }
