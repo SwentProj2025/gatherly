@@ -302,7 +302,6 @@ class HomePageScreenTest {
               uid = "scroll_todo$i",
               name = "Task $i",
               description = "Description $i",
-              assigneeName = "Assignee $i",
               dueDate = Timestamp.now(),
               dueTime = null,
               location = null,

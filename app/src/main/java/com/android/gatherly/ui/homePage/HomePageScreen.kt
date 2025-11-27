@@ -128,7 +128,7 @@ fun HomePageScreen(
     onClickFocusButton: () -> Unit = {},
     onClickTodoTitle: () -> Unit = {},
     onClickFriendsSection: () -> Unit = {},
-    onClickTodo: (ToDo) -> Unit,
+    onClickTodo: (ToDo) -> Unit = {},
     onClickEventsTitle: () -> Unit = {}
 ) {
 
