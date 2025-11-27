@@ -4,7 +4,6 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -45,6 +44,8 @@ import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
 import com.android.gatherly.ui.theme.GatherlyTheme
+import com.android.gatherly.utils.DatePickerInputField
+import com.android.gatherly.utils.GatherlyDatePicker
 import kotlinx.coroutines.delay
 
 object AddEventScreenTestTags {
@@ -105,6 +106,9 @@ fun AddEventScreen(
 
   // Profile state for the dropdown visibility
   var showProfilesDropdown by remember { mutableStateOf(false) }
+
+  // Date state for the alert dialog visibilty
+  var showDatePicker by remember { mutableStateOf(false) }
 
   // Toasts
   LaunchedEffect(ui.displayToast, ui.toastString) {
@@ -339,21 +343,15 @@ fun AddEventScreen(
 
               item {
                 // Date
-                OutlinedTextField(
+                DatePickerInputField(
                     value = ui.date,
-                    onValueChange = { addEventViewModel.updateDate(it) },
-                    label = { Text(stringResource(R.string.events_date_field_label)) },
-                    placeholder = { Text("dd/MM/yyyy") },
+                    label = stringResource(R.string.events_date_field_label),
                     isError = ui.dateError,
-                    supportingText = {
-                      if (ui.dateError) {
-                        Text(
-                            "Invalid format or past date",
-                            modifier = Modifier.testTag(AddEventScreenTestTags.ERROR_MESSAGE))
-                      }
-                    },
+                    errorMessage = "Invalid format or past date",
+                    onClick = { showDatePicker = true },
                     colors = textFieldColors,
-                    modifier = Modifier.fillMaxWidth().testTag(AddEventScreenTestTags.INPUT_DATE))
+                    testTagInput = AddEventScreenTestTags.INPUT_DATE,
+                    testTagError = AddEventScreenTestTags.ERROR_MESSAGE)
               }
 
               item {
@@ -395,8 +393,6 @@ fun AddEventScreen(
               }
 
               item {
-                Spacer(modifier = Modifier.height(buttonSpacing))
-
                 // Save
                 Button(
                     onClick = { addEventViewModel.saveEvent() },
@@ -407,7 +403,6 @@ fun AddEventScreen(
                     enabled =
                         !ui.nameError &&
                             !ui.descriptionError &&
-                            !ui.creatorNameError &&
                             !ui.dateError &&
                             !ui.startTimeError &&
                             !ui.endTimeError &&
@@ -423,6 +418,12 @@ fun AddEventScreen(
                     }
               }
             }
+
+        GatherlyDatePicker(
+            show = showDatePicker,
+            initialDate = ui.date,
+            onDateSelected = { selectedDate -> addEventViewModel.updateDate(selectedDate) },
+            onDismiss = { showDatePicker = false })
       }
 }
 

@@ -27,6 +27,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
@@ -43,7 +44,9 @@ import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
 import com.android.gatherly.ui.theme.GatherlyTheme
+import com.android.gatherly.utils.DatePickerInputField
 import com.android.gatherly.utils.GatherlyAlertDialog
+import com.android.gatherly.utils.GatherlyDatePicker
 import kotlinx.coroutines.delay
 
 // Portions of the code in this file are copy-pasted from the Bootcamp solution provided by the
@@ -120,6 +123,9 @@ fun AddToDoScreen(
   val fieldSpacing = dimensionResource(id = R.dimen.spacing_between_fields)
   val inputHeight = dimensionResource(id = R.dimen.input_height)
 
+  // Date state for the alert dialog visibilty
+  var showDatePicker by remember { mutableStateOf(false) }
+
   LaunchedEffect(errorMsg) {
     if (errorMsg != null) {
       Toast.makeText(context, errorMsg, Toast.LENGTH_SHORT).show()
@@ -151,25 +157,30 @@ fun AddToDoScreen(
             goBack = goBack)
       },
       content = { paddingValues ->
-        LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(paddingValues).padding(screenPadding),
-            verticalArrangement = Arrangement.spacedBy(fieldSpacing)) {
+          LazyColumn(
+              modifier = Modifier.fillMaxSize().padding(paddingValues).padding(screenPadding),
+              verticalArrangement = Arrangement.spacedBy(fieldSpacing)
+          ) {
               // Title Input
               item {
-                OutlinedTextField(
-                    value = todoUIState.title,
-                    onValueChange = { addTodoViewModel.onTitleChanged(it) },
-                    label = { Text(stringResource(R.string.todos_title_field_label)) },
-                    placeholder = { Text(stringResource(R.string.todos_title_field_placeholder)) },
-                    isError = todoUIState.titleError != null,
-                    supportingText = {
-                      todoUIState.titleError?.let {
-                        Text(it, modifier = Modifier.testTag(AddToDoScreenTestTags.ERROR_MESSAGE))
-                      }
-                    },
-                    colors = toDoTextFieldColors,
-                    modifier =
-                        Modifier.fillMaxWidth().testTag(AddToDoScreenTestTags.INPUT_TODO_TITLE))
+                  OutlinedTextField(
+                      value = todoUIState.title,
+                      onValueChange = { addTodoViewModel.onTitleChanged(it) },
+                      label = { Text(stringResource(R.string.todos_title_field_label)) },
+                      placeholder = { Text(stringResource(R.string.todos_title_field_placeholder)) },
+                      isError = todoUIState.titleError != null,
+                      supportingText = {
+                          todoUIState.titleError?.let {
+                              Text(
+                                  it,
+                                  modifier = Modifier.testTag(AddToDoScreenTestTags.ERROR_MESSAGE)
+                              )
+                          }
+                      },
+                      colors = toDoTextFieldColors,
+                      modifier =
+                          Modifier.fillMaxWidth().testTag(AddToDoScreenTestTags.INPUT_TODO_TITLE)
+                  )
               }
 
               // Description Input
@@ -189,9 +200,10 @@ fun AddToDoScreen(
               }
 
               item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically) {
+                  Row(
+                      modifier = Modifier.fillMaxWidth(),
+                      verticalAlignment = Alignment.CenterVertically
+                  ) {
                       Icon(
                           imageVector = Icons.Default.ChevronRight,
                           contentDescription = null,
@@ -199,12 +211,14 @@ fun AddToDoScreen(
                               Modifier.rotate(90f * expandAdvanced.value.compareTo(false))
                                   .clickable(
                                       onClick = { expandAdvanced.value = !expandAdvanced.value })
-                                  .testTag(AddToDoScreenTestTags.MORE_OPTIONS))
+                                  .testTag(AddToDoScreenTestTags.MORE_OPTIONS)
+                      )
 
                       Text(
                           text = stringResource(R.string.todos_advanced_settings),
-                          modifier = Modifier.weight(1f))
-                    }
+                          modifier = Modifier.weight(1f)
+                      )
+                  }
               }
 
               if (expandAdvanced.value) {
@@ -219,58 +233,70 @@ fun AddToDoScreen(
                       textFieldColors = toDoTextFieldColors)
                 }
 
-                // Due Date Input
-                item {
-                  DateInputField(
-                      initialDate = todoUIState.dueDate,
-                      onDateChanged = { addTodoViewModel.onDateChanged(it) },
-                      dueDateError = todoUIState.dueDateError,
-                      textFieldColors = toDoTextFieldColors,
-                      testTagInput = AddToDoScreenTestTags.INPUT_TODO_DATE,
-                      testTagErrorMessage = AddToDoScreenTestTags.ERROR_MESSAGE,
-                  )
-                }
+                  // Due Date Input
+                  item {
+                      DatePickerInputField(
+                          value = todoUIState.dueDate,
+                          label = stringResource(R.string.todos_date_field_label),
+                          isError = (todoUIState.dueDateError != null),
+                          errorMessage = "Invalid format or past date",
+                          onClick = { showDatePicker = true },
+                          colors = toDoTextFieldColors,
+                          testTagInput = AddToDoScreenTestTags.INPUT_TODO_DATE,
+                          testTagError = AddToDoScreenTestTags.ERROR_MESSAGE
+                      )
+                  }
 
-                // Due Time Input
-                item {
-                  TimeInputField(
-                      initialTime = todoUIState.dueTime,
-                      onTimeChanged = { addTodoViewModel.onTimeChanged(it) },
-                      dueTimeError = todoUIState.dueTimeError,
-                      textFieldColors = toDoTextFieldColors,
-                      testTagInput = AddToDoScreenTestTags.INPUT_TODO_TIME,
-                      testTagErrorMessage = AddToDoScreenTestTags.ERROR_MESSAGE,
-                  )
-                }
+                  // Due Time Input
+                  item {
+                      TimeInputField(
+                          initialTime = todoUIState.dueTime,
+                          onTimeChanged = { addTodoViewModel.onTimeChanged(it) },
+                          dueTimeError = todoUIState.dueTimeError,
+                          textFieldColors = toDoTextFieldColors,
+                          testTagInput = AddToDoScreenTestTags.INPUT_TODO_TIME,
+                          testTagErrorMessage = AddToDoScreenTestTags.ERROR_MESSAGE,
+                      )
+                  }
+
+
+                  item { Spacer(modifier = Modifier.height(fieldSpacing)) }
+
+                  // Save Button
+                  item {
+                      Button(
+                          onClick = { addTodoViewModel.checkTodoTime() },
+                          modifier = Modifier.fillMaxWidth()
+                              .testTag(AddToDoScreenTestTags.TODO_SAVE),
+                          colors =
+                              ButtonDefaults.buttonColors(
+                                  containerColor = MaterialTheme.colorScheme.secondary
+                              ),
+                          enabled = todoUIState.isValid
+                      ) {
+                          SavingText(todoUIState = todoUIState)
+                      }
+                  }
               }
+          }
+          if (todoUIState.pastTime) {
+              GatherlyAlertDialog(
+                  titleText = stringResource(R.string.todos_past_warning),
+                  bodyText = stringResource(R.string.todos_past_warning_text),
+                  dismissText = stringResource(R.string.cancel),
+                  confirmText = stringResource(R.string.todos_create),
+                  onDismiss = { addTodoViewModel.clearPastTime() },
+                  onConfirm = {
+                      addTodoViewModel.saveTodo()
+                      addTodoViewModel.clearPastTime()
+                  })
+          }
 
-              item { Spacer(modifier = Modifier.height(fieldSpacing)) }
-
-              // Save Button
-              item {
-                Button(
-                    onClick = { addTodoViewModel.checkTodoTime() },
-                    modifier = Modifier.fillMaxWidth().testTag(AddToDoScreenTestTags.TODO_SAVE),
-                    colors =
-                        ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.secondary),
-                    enabled = todoUIState.isValid) {
-                      SavingText(todoUIState = todoUIState)
-                    }
-              }
-            }
-        if (todoUIState.pastTime) {
-          GatherlyAlertDialog(
-              titleText = stringResource(R.string.todos_past_warning),
-              bodyText = stringResource(R.string.todos_past_warning_text),
-              dismissText = stringResource(R.string.cancel),
-              confirmText = stringResource(R.string.todos_create),
-              onDismiss = { addTodoViewModel.clearPastTime() },
-              onConfirm = {
-                addTodoViewModel.saveTodo()
-                addTodoViewModel.clearPastTime()
-              })
-        }
+          GatherlyDatePicker(
+              show = showDatePicker,
+              initialDate = todoUIState.dueDate,
+              onDateSelected = { selectedDate -> addTodoViewModel.onDateChanged(selectedDate) },
+              onDismiss = { showDatePicker = false })
       })
 }
 

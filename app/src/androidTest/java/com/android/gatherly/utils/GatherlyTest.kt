@@ -109,8 +109,16 @@ abstract class GatherlyTest() {
   fun ComposeTestRule.enterAddTodoDescription(description: String) =
       onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_DESCRIPTION).performTextInput(description)
 
-  fun ComposeTestRule.enterAddTodoDate(date: String) =
-      onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_DATE).performTextInput(date)
+  fun ComposeTestRule.enterAddTodoDate(date: String) = {
+    openDatePicker(AddToDoScreenTestTags.INPUT_TODO_DATE)
+    val parts = date.split("/")
+    if (parts.size == 3) {
+      val day = parts[0].toInt()
+      val month = parts[1].toInt()
+      val year = parts[2].toInt()
+      selectDateFromPicker(day, month, year)
+    }
+  }
 
   fun ComposeTestRule.enterAddTodoTime(time: String) =
       onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_TIME).performTextInput(time)
@@ -119,12 +127,10 @@ abstract class GatherlyTest() {
       onNodeWithTag(LocationSuggestionsTestTags.INPUT).performTextInput(location)
 
   fun ComposeTestRule.enterAddTodoDetails(
-      todo: ToDo,
-      date: String = todo.dueDate?.toDateString() ?: ""
+      todo: ToDo
   ) {
     enterAddTodoTitle(todo.name)
     enterAddTodoDescription(todo.description)
-    enterAddTodoDate(date)
     enterAddTodoLocation(todo.location?.name ?: "Any")
   }
 
