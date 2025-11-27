@@ -20,8 +20,8 @@ import org.junit.Test
 /**
  * Unit tests for [BadgeViewModel] using a fake in-memory repository.
  *
- * These tests verify event list categorization, user participation flows, and event editing
- * functionality.
+ * This class verifies that the badgeViewModel correctly receives and sends the badges' information
+ * to the BadgeScreen
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class BadgeViewModelTest {
@@ -71,6 +71,10 @@ class BadgeViewModelTest {
     advanceUntilIdle()
   }
 
+  /**
+   * Checks that the highest ranked badge is sent to the UI and that non obtained badge are
+   * correctly set to blank
+   */
   @Test
   fun uiStateIsCorrectlyInstantiated() = runTest {
     vm.refresh()

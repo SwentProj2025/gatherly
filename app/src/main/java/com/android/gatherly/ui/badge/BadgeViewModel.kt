@@ -14,6 +14,22 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+/**
+ * UI state for the Badge ViewModel
+ *
+ * @param badgeTodoCreated the title, description and icon of the highest ranked Badge of type Todo
+ *   Created
+ * @param badgeTodoCompleted the title, description and icon of the highest ranked Badge of type
+ *   Todo Completed
+ * @param badgeEventCreated the title, description and icon of the highest ranked Badge of type
+ *   Event Created
+ * @param badgeEventParticipated the title, description and icon of the highest ranked Badge of type
+ *   Event Participated
+ * @param badgeFriendAdded the title, description and icon of the highest ranked Badge of type
+ *   Friend Added
+ * @param badgeFocusSessionCompleted the title, description and icon of the highest ranked Badge of
+ *   type Focus Session Completed
+ */
 data class UIState(
     val badgeTodoCreated: Triple<String, String, String> =
         Triple(
@@ -47,6 +63,11 @@ data class UIState(
             "app/src/main/res/drawable/badges/focusSessions/Blank FocusSession.png"),
 )
 
+/**
+ * ViewModel for the Badge screen.
+ *
+ * @param repository the repository to fetch the list of badgeIds from the profile
+ */
 class BadgeViewModel(
     private val repository: ProfileRepository,
     private val authProvider: () -> FirebaseAuth = { Firebase.auth }
@@ -60,14 +81,17 @@ class BadgeViewModel(
    */
   val uiState: StateFlow<UIState> = _uiState.asStateFlow()
 
+  /** Initializes the ViewModel by loading the profile of the current user. */
   init {
     loadUserBadges()
   }
 
+  /** Manual refresh for tests */
   fun refresh() {
     loadUserBadges()
   }
 
+  /** Load the user's profile and it's badgeIds list to get the UI state */
   private fun loadUserBadges() {
     viewModelScope.launch {
       val uid = authProvider().currentUser?.uid ?: return@launch
@@ -77,6 +101,12 @@ class BadgeViewModel(
     }
   }
 
+  /**
+   * Links each badge Id from the user's badgeIds list to the actual Badge and filters the highest
+   * ranked badge to send to the UI
+   *
+   * @param profile the user's profile
+   */
   private fun buildUiStateFromProfile(profile: Profile): UIState {
 
     val userBadges: List<Badge> =
