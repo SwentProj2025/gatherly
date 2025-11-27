@@ -2,9 +2,11 @@ package com.android.gatherly.ui.authentication
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.setValue
@@ -74,12 +76,15 @@ fun InitProfileScreen(
 
   LaunchedEffect(currentUser?.uid) { currentUser?.uid?.let { settingsViewModel.loadProfile(it) } }
 
+  val scrollState = rememberScrollState()
+
   Scaffold(containerColor = MaterialTheme.colorScheme.background) { paddingValues ->
     Column(
         modifier =
             Modifier.fillMaxSize()
                 .padding(paddingValues)
-                .padding(horizontal = dimensionResource(id = R.dimen.padding_regular)),
+                .padding(horizontal = dimensionResource(id = R.dimen.padding_regular))
+                .verticalScroll(scrollState),
         horizontalAlignment = Alignment.CenterHorizontally) {
           Spacer(
               modifier =
@@ -219,7 +224,9 @@ fun InitProfileScreen(
                     fontWeight = FontWeight.Medium)
               }
 
-          Spacer(modifier = Modifier.weight(1f))
+          Spacer(
+              modifier =
+                  Modifier.height(dimensionResource(id = R.dimen.spacing_between_fields_regular)))
         }
   }
 }

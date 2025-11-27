@@ -160,131 +160,139 @@ fun OverviewScreen(
             }
       },
       content = { pd ->
-        Box(
-            modifier =
-                Modifier.fillMaxSize().clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null) {
-                      focusManager.clearFocus()
-                    }) {
-              var searchQuery by remember { mutableStateOf("") }
+        if (uiState.isLoading) {
+          Box(contentAlignment = Alignment.Center) {
+            Text(modifier = Modifier.padding(pd), text = stringResource(R.string.todos_loading))
+          }
+        } else {
+          Box(
+              modifier =
+                  Modifier.fillMaxSize().clickable(
+                      interactionSource = remember { MutableInteractionSource() },
+                      indication = null) {
+                        focusManager.clearFocus()
+                      }) {
+                var searchQuery by remember { mutableStateOf("") }
 
-              Column(modifier = Modifier.padding(pd)) {
-                Row(
-                    modifier =
-                        Modifier.fillMaxWidth()
-                            .height(dimensionResource(R.dimen.todo_overview_top_row_height))
-                            .padding(
-                                bottom =
-                                    dimensionResource(R.dimen.todos_overview_vertical_padding))) {
-                      OutlinedTextField(
-                          value = searchQuery,
-                          onValueChange = { newText ->
-                            searchQuery = newText
-                            overviewViewModel.searchTodos(newText)
-                          },
-                          modifier =
-                              Modifier.weight(1f)
-                                  .padding(
-                                      horizontal =
-                                          dimensionResource(
-                                              R.dimen.todos_overview_horizontal_padding))
-                                  .testTag(OverviewScreenTestTags.SEARCH_BAR),
-                          label = { Text(stringResource(R.string.todos_search_bar_label)) },
-                          singleLine = true,
-                          colors =
-                              OutlinedTextFieldDefaults.colors(
-                                  focusedContainerColor = MaterialTheme.colorScheme.background,
-                                  unfocusedContainerColor = MaterialTheme.colorScheme.background,
-                                  unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-                                  focusedTextColor = MaterialTheme.colorScheme.onBackground,
-                              ))
-                      SortMenu(
-                          currentOrder = uiState.sortOrder,
-                          onSortSelected = { overviewViewModel.setSortOrder(it) })
-                    }
-
-                if (todos.isNotEmpty()) {
-                  LazyColumn(
-                      contentPadding =
-                          PaddingValues(
-                              vertical =
-                                  dimensionResource(id = R.dimen.todos_overview_vertical_padding)),
+                Column(modifier = Modifier.padding(pd)) {
+                  Row(
                       modifier =
                           Modifier.fillMaxWidth()
+                              .height(dimensionResource(R.dimen.todo_overview_top_row_height))
                               .padding(
-                                  horizontal =
-                                      dimensionResource(
-                                          id = R.dimen.todos_overview_horizontal_padding))
-                              .padding(pd)
-                              .testTag(OverviewScreenTestTags.TODO_LIST)) {
-
-                        // ONGOING SECTION
-                        if (ongoingTodos.isNotEmpty()) {
-                          item {
-                            Text(
-                                text = stringResource(R.string.todos_ongoing_section_label),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                modifier =
-                                    Modifier.padding(
-                                        vertical =
+                                  bottom =
+                                      dimensionResource(R.dimen.todos_overview_vertical_padding))) {
+                        OutlinedTextField(
+                            value = searchQuery,
+                            onValueChange = { newText ->
+                              searchQuery = newText
+                              overviewViewModel.searchTodos(newText)
+                            },
+                            modifier =
+                                Modifier.weight(1f)
+                                    .padding(
+                                        horizontal =
                                             dimensionResource(
-                                                id =
-                                                    R.dimen
-                                                        .todos_overview_section_text_vertical_padding)))
-                          }
-                          items(ongoingTodos.size) { index ->
-                            ToDoItem(
-                                todo = ongoingTodos[index],
-                                onClick = { onSelectTodo(ongoingTodos[index]) },
-                                isChecked = false,
-                                onCheckedChange = { checked ->
-                                  val newStatus =
-                                      if (checked) ToDoStatus.ENDED else ToDoStatus.ONGOING
-                                  overviewViewModel.onCheckboxChanged(
-                                      ongoingTodos[index].uid, newStatus)
-                                })
-                          }
-                        }
-
-                        // COMPLETED SECTION
-                        if (completedTodos.isNotEmpty()) {
-                          item {
-                            Text(
-                                text = stringResource(R.string.todos_completed_section_label),
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                modifier =
-                                    Modifier.padding(
-                                        vertical =
-                                            dimensionResource(
-                                                id =
-                                                    R.dimen
-                                                        .todos_overview_section_text_vertical_padding)))
-                          }
-                          items(completedTodos.size) { index ->
-                            ToDoItem(
-                                todo = completedTodos[index],
-                                onClick = { onSelectTodo(completedTodos[index]) },
-                                isChecked = true,
-                                onCheckedChange = { checked ->
-                                  val newStatus =
-                                      if (checked) ToDoStatus.ENDED else ToDoStatus.ONGOING
-                                  overviewViewModel.onCheckboxChanged(
-                                      completedTodos[index].uid, newStatus)
-                                })
-                          }
-                        }
+                                                R.dimen.todos_overview_horizontal_padding))
+                                    .testTag(OverviewScreenTestTags.SEARCH_BAR),
+                            label = { Text(stringResource(R.string.todos_search_bar_label)) },
+                            singleLine = true,
+                            colors =
+                                OutlinedTextFieldDefaults.colors(
+                                    focusedContainerColor = MaterialTheme.colorScheme.background,
+                                    unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                                    unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+                                    focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                                ))
+                        SortMenu(
+                            currentOrder = uiState.sortOrder,
+                            onSortSelected = { overviewViewModel.setSortOrder(it) })
                       }
-                } else {
-                  Text(
-                      modifier =
-                          Modifier.padding(pd).testTag(OverviewScreenTestTags.EMPTY_TODO_LIST_MSG),
-                      text = stringResource(R.string.no_todos_text))
+
+                  if (todos.isNotEmpty()) {
+                    LazyColumn(
+                        contentPadding =
+                            PaddingValues(
+                                vertical =
+                                    dimensionResource(
+                                        id = R.dimen.todos_overview_vertical_padding)),
+                        modifier =
+                            Modifier.fillMaxWidth()
+                                .padding(
+                                    horizontal =
+                                        dimensionResource(
+                                            id = R.dimen.todos_overview_horizontal_padding))
+                                .padding(pd)
+                                .testTag(OverviewScreenTestTags.TODO_LIST)) {
+
+                          // ONGOING SECTION
+                          if (ongoingTodos.isNotEmpty()) {
+                            item {
+                              Text(
+                                  text = stringResource(R.string.todos_ongoing_section_label),
+                                  style = MaterialTheme.typography.titleMedium,
+                                  fontWeight = FontWeight.Bold,
+                                  modifier =
+                                      Modifier.padding(
+                                          vertical =
+                                              dimensionResource(
+                                                  id =
+                                                      R.dimen
+                                                          .todos_overview_section_text_vertical_padding)))
+                            }
+                            items(ongoingTodos.size) { index ->
+                              ToDoItem(
+                                  todo = ongoingTodos[index],
+                                  onClick = { onSelectTodo(ongoingTodos[index]) },
+                                  isChecked = false,
+                                  onCheckedChange = { checked ->
+                                    val newStatus =
+                                        if (checked) ToDoStatus.ENDED else ToDoStatus.ONGOING
+                                    overviewViewModel.onCheckboxChanged(
+                                        ongoingTodos[index].uid, newStatus)
+                                  })
+                            }
+                          }
+
+                          // COMPLETED SECTION
+                          if (completedTodos.isNotEmpty()) {
+                            item {
+                              Text(
+                                  text = stringResource(R.string.todos_completed_section_label),
+                                  style = MaterialTheme.typography.titleMedium,
+                                  fontWeight = FontWeight.Bold,
+                                  modifier =
+                                      Modifier.padding(
+                                          vertical =
+                                              dimensionResource(
+                                                  id =
+                                                      R.dimen
+                                                          .todos_overview_section_text_vertical_padding)))
+                            }
+                            items(completedTodos.size) { index ->
+                              ToDoItem(
+                                  todo = completedTodos[index],
+                                  onClick = { onSelectTodo(completedTodos[index]) },
+                                  isChecked = true,
+                                  onCheckedChange = { checked ->
+                                    val newStatus =
+                                        if (checked) ToDoStatus.ENDED else ToDoStatus.ONGOING
+                                    overviewViewModel.onCheckboxChanged(
+                                        completedTodos[index].uid, newStatus)
+                                  })
+                            }
+                          }
+                        }
+                  } else {
+                    Text(
+                        modifier =
+                            Modifier.padding(pd)
+                                .testTag(OverviewScreenTestTags.EMPTY_TODO_LIST_MSG),
+                        text = stringResource(R.string.no_todos_text))
+                  }
                 }
               }
-            }
+        }
       })
 }
 
@@ -429,8 +437,10 @@ fun ToDoItem(
                     fontWeight = FontWeight.Medium)
                 Text(
                     text =
-                        SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-                            .format(todo.dueDate.toDate()),
+                        todo.dueDate?.let {
+                          SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                              .format(todo.dueDate.toDate())
+                        } ?: "",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
