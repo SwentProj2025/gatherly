@@ -25,6 +25,8 @@
     <string name="todos_save_button_text">Save</string>
     <string name="todos_back_button_desc">Back</string>
     <string name="todos_delete_button_text">Delete</string>
+    <string name="todos_delete_warning">Warning! You are deleting a todo</string>
+    <string name="todos_delete_warning_text">This action cannot be reversed. Are you sure?</string>
     <string name="todos_past_warning">Warning! You are creating a todo in the past</string>
     <string name="todos_past_warning_text">Are you sure you want to create a todo with a past deadline?</string>
     <string name="todos_create">Yes, Create</string>

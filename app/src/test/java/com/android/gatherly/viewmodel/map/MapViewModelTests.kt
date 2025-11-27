@@ -7,9 +7,11 @@ import android.os.Looper
 import androidx.core.content.ContextCompat
 import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.event.EventsLocalRepository
+import com.android.gatherly.model.event.EventsRepository
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosLocalRepository
+import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.ui.map.EPFL_LATLNG
 import com.android.gatherly.ui.map.MapViewModel
 import com.android.gatherly.utils.createLocationRequest
@@ -18,14 +20,17 @@ import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.tasks.Task
+import io.mockk.coEvery
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -673,5 +678,89 @@ class MapViewModelTests {
         assertEquals(LatLng(50.1231, 2.3253), result)
 
         job.cancel()
+      }
+
+  // ============================ RACE CONDITION TESTS ============================ /
+
+  /**
+   * Verifies that [MapViewModel.initialiseCameraPosition] suspends execution until the data
+   * (Events/ToDos) has finished loading.
+   *
+   * This simulates a network delay to ensure the camera logic waits for the `loadingDataJob` to
+   * complete before attempting to calculate the center position.
+   */
+  @OptIn(ExperimentalCoroutinesApi::class)
+  @Test
+  fun initialiseCameraPosition_waitsForDataLoading_beforeSettingCamera() =
+      runTest(testDispatcher) {
+        // Mock repositories to simulate a slow network fetch
+        val mockTodosRepo = mockk<ToDosRepository>()
+        val mockEventsRepo = mockk<EventsRepository>()
+
+        // Simulate a 1000ms delay in fetching todos
+        // This forces the viewModel's init block to take 1 second to finish.
+        coEvery { mockTodosRepo.getAllTodos() } coAnswers
+            {
+              delay(1000)
+              emptyList()
+            }
+        coEvery { mockEventsRepo.getAllEvents() } returns emptyList()
+
+        val mockContext = mockk<Context>(relaxed = true)
+
+        // Initialize ViewModel (The init block starts the 1000ms fetch immediately)
+        val vm = MapViewModel(mockTodosRepo, mockEventsRepo)
+
+        // Launch camera initialization (suspending)
+        // We want to assert the state while it is waiting.
+        val job = launch { vm.initialiseCameraPosition(mockContext) }
+
+        // Immediately after launch, cameraPos should be null
+        // The join() should be blocking execution because the 1000ms delay isn't over.
+        assertNull("Camera should not be set while data is loading", vm.uiState.value.cameraPos)
+
+        // Advance time to finish the fetch (1000ms delay + 1ms buffer)
+        advanceTimeBy(1001)
+
+        // Now that data is loaded, the join() releases.
+        // The function proceeds and sets the camera (falling back to EPFL since lists are empty).
+        assertNotNull("Camera should be set after data loads", vm.uiState.value.cameraPos)
+        assertEquals(EPFL_LATLNG, vm.uiState.value.cameraPos)
+
+        job.cancel()
+      }
+
+  /**
+   * Verifies that [MapViewModel] handles empty data repositories gracefully without crashing.
+   *
+   * This ensures the removal of `lateinit` prevents UninitializedPropertyAccessException even if
+   * the repositories return no data immediately.
+   */
+  @OptIn(ExperimentalCoroutinesApi::class)
+  @Test
+  fun initialiseCameraPosition_withEmptyData_doesNotCrashAndUsesFallback() =
+      runTest(testDispatcher) {
+        // Mock repositories to return empty lists immediately
+        val mockTodosRepo = mockk<ToDosRepository>()
+        val mockEventsRepo = mockk<EventsRepository>()
+
+        coEvery { mockTodosRepo.getAllTodos() } returns emptyList()
+        coEvery { mockEventsRepo.getAllEvents() } returns emptyList()
+
+        val mockContext = mockk<Context>(relaxed = true)
+
+        // Initialize ViewModel
+        val vm = MapViewModel(mockTodosRepo, mockEventsRepo)
+
+        // Let the init block finish
+        advanceUntilIdle()
+
+        // Call the function that previously crashed
+        vm.initialiseCameraPosition(mockContext)
+        advanceUntilIdle()
+
+        // Verify it fell back to EPFL (default) instead of crashing
+        assertEquals(EPFL_LATLNG, vm.uiState.value.cameraPos)
+        assertTrue(vm.uiState.value.itemsList.isEmpty())
       }
 }
