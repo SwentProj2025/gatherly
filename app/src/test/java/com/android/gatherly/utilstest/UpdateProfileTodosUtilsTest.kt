@@ -28,7 +28,6 @@ class UpdateProfileTodosUtilsTest {
           name = "Test Task",
           status = ToDoStatus.ONGOING,
           description = "Test Description",
-          assigneeName = "Test User",
           dueDate = Timestamp.now(),
           dueTime = null,
           location = null)

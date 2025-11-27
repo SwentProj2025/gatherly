@@ -71,7 +71,6 @@ class MapScreenTest {
           uid = todoId,
           name = "Buy Snacks",
           description = "Chips and soda",
-          assigneeName = "Alice",
           dueDate = Timestamp(Date()),
           dueTime = null,
           location = Location(46.5191, 6.5668, "EPFL SG"),

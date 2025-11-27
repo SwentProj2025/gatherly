@@ -541,8 +541,10 @@ fun ToDoSheet(toDo: ToDo, onGoToToDo: () -> Unit, onClose: () -> Unit) {
 
   val formattedDate =
       remember(toDo.dueDate) {
-        val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-        sdf.format(toDo.dueDate.toDate())
+        toDo.dueDate?.let { date ->
+          val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+          sdf.format(date.toDate())
+        } ?: ""
       }
 
   Column(
