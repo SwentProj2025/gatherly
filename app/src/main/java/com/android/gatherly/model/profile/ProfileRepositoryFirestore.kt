@@ -2,10 +2,10 @@ package com.android.gatherly.model.profile
 
 import android.net.Uri
 import android.util.Log
-import com.android.gatherly.model.badge.ProfileBadges
-import com.android.gatherly.model.badge.Rank
+import com.android.gatherly.model.badge.Badge
+import com.android.gatherly.model.badge.BadgeRank
+import com.android.gatherly.model.badge.BadgeType
 import com.android.gatherly.model.friends.Friends
-import com.android.gatherly.model.todo.ToDoStatus
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
@@ -346,7 +346,8 @@ class ProfileRepositoryFirestore(
     val birthday = doc.getTimestamp("birthday")
     val profilePicture = doc.getString("profilePicture") ?: return null
     val status = ProfileStatus.fromString(doc.getString("status"))
-    val badges: ProfileBadges = doc.get("badges", ProfileBadges::class.java) ?: ProfileBadges.blank
+    val badgeIds = doc.get("badgeIds") as? List<String> ?: emptyList()
+    val badgeCount = doc.get("badgeCount") as? Map<String, Long> ?: emptyMap()
     val focusPoints: Double = doc.getDouble("focusPoints") ?: 0.0
 
     return Profile(
@@ -363,7 +364,8 @@ class ProfileRepositoryFirestore(
         birthday = birthday,
         profilePicture = profilePicture,
         status = status,
-        badges = badges,
+        badgeIds = badgeIds,
+        badgeCount = badgeCount,
         focusPoints = focusPoints)
   }
 
@@ -388,7 +390,8 @@ class ProfileRepositoryFirestore(
         "birthday" to profile.birthday,
         "profilePicture" to profile.profilePicture,
         "status" to profile.status.value,
-        "badges" to profile.badges,
+        "badgeIds" to profile.badgeIds,
+        "badgeCount" to profile.badgeCount,
         "focusPoints" to profile.focusPoints)
   }
 
@@ -423,6 +426,7 @@ class ProfileRepositoryFirestore(
     val docRef = profilesCollection.document(currentUserId)
     val friendId = getProfileByUsername(friend)?.uid
     docRef.update("friendUids", FieldValue.arrayUnion(friendId)).await()
+    incrementBadge(currentUserId, BadgeType.FRIENDS_ADDED)
   }
 
   override suspend fun deleteFriend(friend: String, currentUserId: String) {
@@ -466,31 +470,32 @@ class ProfileRepositoryFirestore(
 
   // -- BADGES GESTION PART --
 
+  override suspend fun addBadge(uid: String, badgeId: String) {
+    val docRef = profilesCollection.document(uid)
+    docRef.update("badgeIds", FieldValue.arrayUnion(badgeId)).await()
+  }
+
+  override suspend fun incrementBadge(uid: String, type: BadgeType) {
+    val docRef = profilesCollection.document(uid)
+    val fieldName = "badgeCount.${type.name}"
+
+    docRef.update(fieldName, FieldValue.increment(1)).await()
+
+    awardBadgeFor(uid, type, docRef.get().await().getLong(fieldName) ?: 0L)
+  }
+
   /**
-   * @param createdTodosCount will not be used in this implementation
-   * @param completedTodosCount will not be used in this implementation
+   * Converts a count to a rank, then finds the matching badge in Badges enum and adds it to
+   * profile.
    */
-  override suspend fun updateBadges(
-      userProfile: Profile,
-      createdTodosCount: Int?,
-      completedTodosCount: Int?
-  ) {
-    val docRef = profilesCollection.document(userProfile.uid)
-    val todoDocRef = db.collection("users").document(userProfile.uid).collection("todos")
-    val createdTodosCount = todoDocRef.get().await().size()
+  private suspend fun awardBadgeFor(uid: String, type: BadgeType, count: Long) {
+    val rank = countToRank(count)
+    if (rank == BadgeRank.BLANK) return
 
-    val completedTodosCount =
-        todoDocRef.whereEqualTo("status", ToDoStatus.ENDED.name).get().await().size()
+    // Find the matching Badge enum entry for this type + rank
+    val badge = Badge.entries.firstOrNull { it.type == type && it.rank == rank } ?: return
 
-    val updateBadges =
-        ProfileBadges(
-            addFriends = rank(userProfile.friendUids.size),
-            createdTodos = rank(createdTodosCount),
-            completedTodos = rank(completedTodosCount),
-            participateEvent = rank(userProfile.participatingEventIds.size),
-            createEvent = rank(userProfile.ownedEventIds.size),
-            focusSessionPoint = rank(userProfile.focusSessionIds.size))
-    docRef.update("badges", updateBadges).await()
+    addBadge(uid, badge.id)
   }
 
   override suspend fun updateFocusPoints(uid: String, points: Double) {
@@ -499,13 +504,15 @@ class ProfileRepositoryFirestore(
     updateProfile(profile)
   }
 
-  private fun rank(count: Int): Rank =
+  /** Shared thresholds from count to BadgeRank. */
+  private fun countToRank(count: Long): BadgeRank =
       when {
-        count >= 20 -> Rank.LEGEND
-        count >= 10 -> Rank.DIAMOND
-        count >= 5 -> Rank.GOLD
-        count >= 3 -> Rank.BRONZE
-        count >= 1 -> Rank.STARTING
-        else -> Rank.BLANK
+        count >= 30 -> BadgeRank.LEGEND
+        count >= 20 -> BadgeRank.DIAMOND
+        count >= 10 -> BadgeRank.GOLD
+        count >= 5 -> BadgeRank.SILVER
+        count >= 3 -> BadgeRank.BRONZE
+        count >= 1 -> BadgeRank.STARTING
+        else -> BadgeRank.BLANK
       }
 }
