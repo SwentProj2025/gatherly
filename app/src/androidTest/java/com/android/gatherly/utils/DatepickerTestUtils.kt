@@ -9,8 +9,48 @@ import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import com.google.firebase.Timestamp
 import java.time.LocalDate
 import java.time.Month
+import java.util.Calendar
+
+object TestDates {
+  private val currentDate = LocalDate.now()
+
+  val currentMonth = currentDate.month.value
+  val currentDay = currentDate.dayOfMonth
+  val currentYear = currentDate.year
+
+  val pastYear = currentYear - 1
+  val futureYear = currentYear + 1
+
+  val futureDate = "$currentDay/$currentMonth/$futureYear"
+  val pastDate = "$currentDay/$currentMonth/$pastYear"
+
+  val calendar =
+      Calendar.getInstance().apply {
+        set(Calendar.YEAR, futureYear)
+        set(Calendar.MONTH, currentMonth - 1)
+        set(Calendar.DAY_OF_MONTH, currentDay)
+      }
+  val futureDueDate: Timestamp = Timestamp(calendar.time)
+
+  val calendarPast =
+      Calendar.getInstance().apply {
+        set(Calendar.YEAR, pastYear)
+        set(Calendar.MONTH, currentMonth - 1)
+        set(Calendar.DAY_OF_MONTH, currentDay)
+      }
+  val pastDueDate: Timestamp = Timestamp(calendarPast.time)
+
+  val calendarCurrent =
+      Calendar.getInstance().apply {
+        set(Calendar.YEAR, currentYear)
+        set(Calendar.MONTH, currentMonth - 1)
+        set(Calendar.DAY_OF_MONTH, currentDay)
+      }
+  val currentDateTimestamp: Timestamp = Timestamp(calendarCurrent.time)
+}
 
 /**
  * Selects a specific date from the Date Picker component and confirms the selection.

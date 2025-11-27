@@ -230,12 +230,13 @@ fun AddToDoScreen(
                   DatePickerInputField(
                       value = todoUIState.dueDate,
                       label = stringResource(R.string.todos_date_field_label),
-                      isError = (todoUIState.dueDateError != null),
-                      errorMessage = "Invalid format or past date",
+                      isErrorMessage = todoUIState.dueDateError,
                       onClick = { showDatePicker = true },
                       colors = toDoTextFieldColors,
-                      testTagInput = AddToDoScreenTestTags.INPUT_TODO_DATE,
-                      testTagError = AddToDoScreenTestTags.ERROR_MESSAGE)
+                      testTag =
+                          Pair(
+                              AddToDoScreenTestTags.INPUT_TODO_DATE,
+                              AddToDoScreenTestTags.ERROR_MESSAGE))
                 }
 
                 // Due Time Input

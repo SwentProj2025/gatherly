@@ -91,7 +91,6 @@ fun AddEventScreen(
 
   val screenPadding = dimensionResource(id = R.dimen.padding_screen)
   val fieldSpacing = dimensionResource(id = R.dimen.spacing_between_fields)
-  val buttonSpacing = dimensionResource(id = R.dimen.spacing_between_buttons)
 
   val textFieldColors =
       TextFieldDefaults.colors(
@@ -346,12 +345,14 @@ fun AddEventScreen(
                 DatePickerInputField(
                     value = ui.date,
                     label = stringResource(R.string.events_date_field_label),
-                    isError = ui.dateError,
-                    errorMessage = "Invalid format or past date",
+                    isErrorMessage = if (!ui.dateError) null else "Invalid format or past date",
                     onClick = { showDatePicker = true },
                     colors = textFieldColors,
-                    testTagInput = AddEventScreenTestTags.INPUT_DATE,
-                    testTagError = AddEventScreenTestTags.ERROR_MESSAGE)
+                    testTag =
+                        Pair(
+                            AddEventScreenTestTags.INPUT_DATE,
+                            AddEventScreenTestTags.ERROR_MESSAGE),
+                )
               }
 
               item {

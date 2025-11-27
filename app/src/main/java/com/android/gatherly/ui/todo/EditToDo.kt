@@ -215,12 +215,13 @@ fun EditToDoScreen(
                 DatePickerInputField(
                     value = todoUIState.dueDate,
                     label = stringResource(R.string.todos_date_field_label),
-                    isError = (todoUIState.dueDateError != null),
-                    errorMessage = "Invalid format or past date",
+                    isErrorMessage = todoUIState.dueDateError,
                     onClick = { showDatePicker = true },
                     colors = toDoTextFieldColors,
-                    testTagInput = EditToDoScreenTestTags.INPUT_TODO_DATE,
-                    testTagError = EditToDoScreenTestTags.ERROR_MESSAGE)
+                    testTag =
+                        Pair(
+                            EditToDoScreenTestTags.INPUT_TODO_DATE,
+                            EditToDoScreenTestTags.ERROR_MESSAGE))
               }
 
               // Due Time Input

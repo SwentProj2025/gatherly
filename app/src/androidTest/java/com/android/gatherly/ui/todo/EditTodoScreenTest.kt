@@ -12,11 +12,14 @@ import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.utils.AlertDialogTestTags
 import com.android.gatherly.utils.GatherlyTest
 import com.android.gatherly.utils.MockitoUtils
+import com.android.gatherly.utils.TestDates.currentDateTimestamp
+import com.android.gatherly.utils.TestDates.currentDay
+import com.android.gatherly.utils.TestDates.currentMonth
+import com.android.gatherly.utils.TestDates.futureDate
+import com.android.gatherly.utils.TestDates.futureYear
+import com.android.gatherly.utils.TestDates.pastYear
 import com.android.gatherly.utils.openDatePicker
 import com.android.gatherly.utils.selectDateFromPicker
-import com.google.firebase.Timestamp
-import java.time.LocalDate
-import java.util.Calendar
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -31,22 +34,6 @@ class EditTodoScreenTest : GatherlyTest() {
   private lateinit var editTodoViewModel: EditTodoViewModel
   private lateinit var profileRepository: ProfileRepository
   private lateinit var mockitoUtils: MockitoUtils
-
-  private val currentMonth = LocalDate.now().month.value
-  private val currentDay = LocalDate.now().dayOfMonth
-  private val currentYear = LocalDate.now().year
-  private val pastYear = currentYear.minus(1)
-  private val futureYear = currentYear.plus(1)
-
-  private val futureDate = "$currentDay/$currentMonth/$futureYear"
-
-  val calendar =
-      Calendar.getInstance().apply {
-        set(Calendar.YEAR, currentYear)
-        set(Calendar.MONTH, currentMonth - 1)
-        set(Calendar.DAY_OF_MONTH, currentDay)
-      }
-  val currentDate: Timestamp = Timestamp(calendar.time)
 
   @Before
   fun setUp() {
@@ -70,7 +57,7 @@ class EditTodoScreenTest : GatherlyTest() {
   }
 
   private fun fill_repository() = runTest {
-    repository.addTodo(toDo = todo1.copy(dueDate = currentDate))
+    repository.addTodo(toDo = todo1.copy(dueDate = currentDateTimestamp))
     advanceUntilIdle()
   }
 

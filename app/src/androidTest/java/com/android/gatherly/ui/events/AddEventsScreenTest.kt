@@ -17,10 +17,15 @@ import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.utils.MockitoUtils
+import com.android.gatherly.utils.TestDates.currentDay
+import com.android.gatherly.utils.TestDates.currentMonth
+import com.android.gatherly.utils.TestDates.futureDate
+import com.android.gatherly.utils.TestDates.futureYear
+import com.android.gatherly.utils.TestDates.pastDate
+import com.android.gatherly.utils.TestDates.pastYear
 import com.android.gatherly.utils.openDatePicker
 import com.android.gatherly.utils.selectDateFromPicker
 import com.google.firebase.Timestamp
-import java.time.LocalDate
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -109,15 +114,6 @@ class AddEventsScreenTest {
           friendUids = emptyList())
 
   /*----------------------------------------Event-----------------------------------------------*/
-
-  private val currentMonth = LocalDate.now().month.value
-  private val currentDay = LocalDate.now().dayOfMonth
-  private val currentYear = LocalDate.now().year
-  private val pastYear = currentYear.minus(1)
-  private val futureYear = currentYear.plus(1)
-
-  private val futureDate = "$currentDay/$currentMonth/$futureYear"
-  private val pastDate = "$currentDay/$currentMonth/$pastYear"
 
   val event: Event =
       Event(

@@ -358,12 +358,13 @@ fun EditEventsScreen(
                 DatePickerInputField(
                     value = ui.date,
                     label = stringResource(R.string.events_date_field_label),
-                    isError = ui.dateError,
-                    errorMessage = "Invalid format or past date",
+                    isErrorMessage = if (!ui.dateError) null else "Invalid format or past date",
                     onClick = { showDatePicker = true },
                     colors = textFieldColors,
-                    testTagInput = AddEventScreenTestTags.INPUT_DATE,
-                    testTagError = AddEventScreenTestTags.ERROR_MESSAGE)
+                    testTag =
+                        Pair(
+                            AddEventScreenTestTags.INPUT_DATE,
+                            AddEventScreenTestTags.ERROR_MESSAGE))
               }
 
               item {

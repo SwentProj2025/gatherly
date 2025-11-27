@@ -24,6 +24,8 @@ object DatePickerTestTags {
   const val DATE_PICKER_SAVE = "datePickerSaveButton"
 }
 
+private const val placeholder: String = "dd/MM/yyyy"
+
 /**
  * Helper function who displays a Material3 Date Picker dialog allowing the user to select a date.
  *
@@ -92,25 +94,20 @@ fun GatherlyDatePicker(
  * @param value Current value displayed in the field.
  * @param label Label displayed above the input field.
  * @param placeholder Placeholder text when the field is empty.
- * @param isError Indicates whether the field is in an error state.
- * @param errorMessage Error message displayed when [isError] is true.
+ * @param isErrorMessage Indicates whether the field is in an error state with a specific message.
  * @param onClick Callback invoked when the field is clicked.
  * @param modifier Modifier applied to the root container.
- * @param testTagInput Test tag for the input field.
- * @param testTagError Test tag for the error message.
+ * @param testTag will represent (testTagInput: String,testTagError: String)
  * @param colors Color configuration for the text field.
  */
 @Composable
 fun DatePickerInputField(
+    modifier: Modifier = Modifier,
     value: String,
     label: String,
-    placeholder: String = "dd/MM/yyyy",
-    isError: Boolean,
-    errorMessage: String = "",
+    isErrorMessage: String?,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    testTagInput: String,
-    testTagError: String,
+    testTag: Pair<String, String>,
     colors: TextFieldColors
 ) {
   Box(modifier = modifier.fillMaxWidth()) {
@@ -120,14 +117,14 @@ fun DatePickerInputField(
         readOnly = true,
         label = { Text(label) },
         placeholder = { Text(placeholder) },
-        isError = isError,
+        isError = isErrorMessage != null,
         supportingText = {
-          if (isError && errorMessage.isNotBlank()) {
-            Text(errorMessage, modifier = Modifier.testTag(testTagError))
+          if (isErrorMessage != null) {
+            Text(isErrorMessage, modifier = Modifier.testTag(testTag.second))
           }
         },
         colors = colors,
-        modifier = Modifier.fillMaxWidth().testTag(testTagInput))
+        modifier = Modifier.fillMaxWidth().testTag(testTag.first))
 
     Box(modifier = Modifier.matchParentSize().clickable { onClick() })
   }
