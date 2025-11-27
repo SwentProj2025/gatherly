@@ -63,18 +63,6 @@ class UpdateProfileEventsUtilsTest {
     coVerify { profileRepository.incrementBadge(creatorId, BadgeType.EVENTS_CREATED) }
   }
 
-  /**
-   * @Test fun userParticipate_updateBadges_updatesEventProfileAndCounter() = runTest { val eventId
-   *   = "eventABC" val userId = "userXYZ"
-   *
-   * userParticipate( eventsRepository = eventsRepository, profileRepository = profileRepository,
-   * eventId = eventId, userId = userId)
-   *
-   * // Event + profile links coVerify { eventsRepository.addParticipant(eventId, userId) } coVerify
-   * { profileRepository.participateEvent(eventId, userId) }
-   *
-   * // Counter increment once coVerify { profileRepository.incrementParticipatedEvent(userId) } }
-   */
   @Test
   fun userUnregister_updateBadges_updatesEventProfileButDoesNotChangeCounters() = runTest {
     val eventId = "eventDEF"
