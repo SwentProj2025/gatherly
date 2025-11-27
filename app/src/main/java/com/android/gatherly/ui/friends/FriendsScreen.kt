@@ -10,6 +10,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -123,6 +124,7 @@ fun FriendsScreen(
     friendsViewModel: FriendsViewModel = viewModel(factory = FriendsViewModel.provideFactory()),
     goBack: () -> Unit = {},
     onFindFriends: () -> Unit = {},
+    onClickFriend: (Profile) -> Unit = {}
 ) {
 
   // Retrieve the necessary values for the implementation from the ViewModel
@@ -194,7 +196,8 @@ fun FriendsScreen(
                   showUnfollowMessage = true
                 },
                 onFindFriends = onFindFriends,
-                profiles = uiState.profiles)
+                profiles = uiState.profiles,
+                onClickFriend = onClickFriend)
           }
           // --- UNFOLLOW A FRIEND ANIMATION ---
           if (showUnfollowMessage) {
@@ -216,7 +219,8 @@ private fun FriendItem(
     friend: String,
     unfollow: () -> Unit,
     modifier: Modifier = Modifier,
-    profilePicUrl: String? = null
+    profilePicUrl: String? = null,
+    onClickFriend: () -> Unit
 ) {
   Card(
       border =
@@ -240,7 +244,7 @@ private fun FriendItem(
             verticalAlignment = Alignment.CenterVertically,
         ) {
 
-          // -- Placeholder Profile Picture --
+          // -- Profile Picture --
           Image(
               painter = profilePicturePainter(profilePicUrl),
               contentDescription = "Profile picture of ${friend}",
@@ -263,7 +267,8 @@ private fun FriendItem(
                 color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Medium,
                 modifier =
-                    Modifier.testTag(FriendsScreenTestTags.getTestTagForFriendUsername(friend)))
+                    Modifier.testTag(FriendsScreenTestTags.getTestTagForFriendUsername(friend))
+                        .clickable { onClickFriend() })
           }
           // -- SPACER
           Spacer(
@@ -384,7 +389,8 @@ private fun FriendsListContent(
     onSearchQueryChange: (String) -> Unit,
     onUnfollowFriend: (String) -> Unit,
     onFindFriends: () -> Unit,
-    profiles: Map<String, Profile>
+    profiles: Map<String, Profile>,
+    onClickFriend: (Profile) -> Unit
 ) {
   LazyColumn(
       contentPadding = PaddingValues(vertical = dimensionResource(R.dimen.padding_small)),
@@ -409,6 +415,7 @@ private fun FriendsListContent(
 
           // --- FRIENDS' ITEM ---
           items(items = filteredFriends, key = { it }) { friend ->
+            val friendProfile = profiles[friend] ?: return@items
             FriendItem(
                 friend = friend,
                 unfollow = { onUnfollowFriend(friend) },
@@ -418,7 +425,8 @@ private fun FriendsListContent(
                     Modifier.animateItemPlacement(
                         animationSpec =
                             tween(durationMillis = ANIMATION_TIME, easing = LinearOutSlowInEasing)),
-                profilePicUrl = profiles[friend]?.profilePicture)
+                profilePicUrl = friendProfile.profilePicture,
+                onClickFriend = { onClickFriend(friendProfile) })
           }
         }
 

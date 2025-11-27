@@ -10,6 +10,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -125,6 +126,7 @@ private const val ANIMATION_LOADING_DELAY: Long = 2000
 fun FindFriendsScreen(
     friendsViewModel: FriendsViewModel = viewModel(factory = FriendsViewModel.provideFactory()),
     goBack: () -> Unit = {},
+    onClickFriend: (Profile) -> Unit = {}
 ) {
 
   // Retrieve the necessary values for the implementation from the ViewModel
@@ -195,7 +197,8 @@ fun FindFriendsScreen(
                       currentUserId = currentUserIdFromVM, friend = friend)
                   showFollowMessage = true
                 },
-                profiles = uiState.profiles)
+                profiles = uiState.profiles,
+                onClickFriend = onClickFriend)
           }
 
           // --- FOLLOW A FRIEND ANIMATION ---
@@ -218,7 +221,8 @@ private fun FriendItem(
     friend: String,
     follow: () -> Unit,
     modifier: Modifier = Modifier,
-    profilePicUrl: String? = null
+    profilePicUrl: String? = null,
+    onClickFriend: () -> Unit
 ) {
   Card(
       border =
@@ -266,7 +270,8 @@ private fun FriendItem(
                 color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Medium,
                 modifier =
-                    Modifier.testTag(FindFriendsScreenTestTags.getTestTagForFriendUsername(friend)))
+                    Modifier.testTag(FindFriendsScreenTestTags.getTestTagForFriendUsername(friend))
+                        .clickable { onClickFriend() })
           }
 
           // -- SPACER
@@ -388,7 +393,8 @@ private fun FriendsListContent(
     searchQuery: String,
     onSearchQueryChange: (String) -> Unit,
     onFollowFriend: (String) -> Unit,
-    profiles: Map<String, Profile>
+    profiles: Map<String, Profile>,
+    onClickFriend: (Profile) -> Unit
 ) {
   LazyColumn(
       contentPadding = PaddingValues(vertical = dimensionResource(R.dimen.padding_small)),
@@ -414,6 +420,7 @@ private fun FriendsListContent(
           // --- USER' ITEM ---
 
           items(items = filteredNotFriends, key = { it }) { friend ->
+            val friendProfile = profiles[friend] ?: return@items
             FriendItem(
                 friend = friend,
                 follow = { onFollowFriend(friend) },
@@ -423,7 +430,8 @@ private fun FriendsListContent(
                     Modifier.animateItemPlacement(
                         animationSpec =
                             tween(durationMillis = ANIMATION_TIME, easing = LinearOutSlowInEasing)),
-                profilePicUrl = profiles[friend]?.profilePicture)
+                profilePicUrl = friendProfile.profilePicture,
+                onClickFriend = { onClickFriend(friendProfile) })
           }
         }
       }

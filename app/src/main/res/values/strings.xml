@@ -153,6 +153,12 @@
     <string name="friends_unfollow_message">You just lose a friend</string>
     <string name="friends_follow_message">You just got a new friend</string>
 
+    <!-- User Profile Screen -->
+    <string name="user_profile_no_user">User not found</string>
+    <string name="user_profile_picture_description">Profile Picture</string>
+    <string name="user_profile_friends">Friends</string>
+    <string name="user_profile_focus_points">Focus points</string>
+
     <!-- Add Group Screen -->
     <string name="add_group_button_label">Add New Group</string>
     <string name="group_name_bar_label">Group Name</string>
