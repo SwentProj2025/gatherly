@@ -264,7 +264,7 @@ fun GatherlyApp(
             onFindFriends = { navigationActions.navigateTo(Screen.FindFriendsScreen) },
             goBack = { navigationActions.goBack() },
             onClickFriend = { profile ->
-              navigationActions.navigateTo(Screen.UserProfileScreen(profile.uid))
+              navigationActions.navigateTo(Screen.UserProfile(profile.uid))
             })
       }
 
@@ -272,11 +272,11 @@ fun GatherlyApp(
         FindFriendsScreen(
             goBack = { navigationActions.goBack() },
             onClickFriend = { profile ->
-              navigationActions.navigateTo(Screen.UserProfileScreen(profile.uid))
+              navigationActions.navigateTo(Screen.UserProfile(profile.uid))
             })
       }
 
-      composable(Screen.UserProfileScreen.route) { entry ->
+      composable(Screen.UserProfile.route) { entry ->
         val uid = entry.arguments?.getString("uid")
 
         if (uid != null) {

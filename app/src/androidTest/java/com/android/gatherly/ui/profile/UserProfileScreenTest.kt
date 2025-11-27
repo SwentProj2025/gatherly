@@ -38,6 +38,7 @@ class UserProfileScreenTest {
     composeRule.setContent { UserProfileScreen(uid = testProfile.uid, viewModel = viewModel) }
   }
 
+  /** Verifies all the components of the screen are displayed* */
   @Test
   fun profileComponents_areDisplayed() {
     setContent()
@@ -46,5 +47,15 @@ class UserProfileScreenTest {
     composeRule.onNodeWithTag(UserProfileScreenTestTags.NAME).assertIsDisplayed()
     composeRule.onNodeWithTag(UserProfileScreenTestTags.USERNAME).assertIsDisplayed()
     composeRule.onNodeWithTag(UserProfileScreenTestTags.SCHOOL_INFO).assertIsDisplayed()
+    composeRule.onNodeWithTag(UserProfileScreenTestTags.USER_STATUS).assertIsDisplayed()
+  }
+
+  /** Verifies the snackBar is correctly displayed when an error occurs* */
+  @Test
+  fun failedProfileLoadingDisplaysSnackBar() {
+    composeRule.setContent { UserProfileScreen(uid = "missing_user", viewModel = viewModel) }
+
+    composeRule.onNodeWithTag(UserProfileScreenTestTags.ERROR_SNACKBAR).assertIsDisplayed()
+    composeRule.onNodeWithTag(UserProfileScreenTestTags.EMPTY_STATE).assertIsDisplayed()
   }
 }

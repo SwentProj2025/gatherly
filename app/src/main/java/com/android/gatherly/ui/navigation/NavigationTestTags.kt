@@ -46,5 +46,6 @@ object NavigationTestTags {
         is Tab.EditEvent -> EDITEVENT_TAB
         is Tab.FindFriends -> FINDFRIENDS_TAB
         is Tab.AddGroup -> ADDGROUP_TAB
+        is Tab.UserProfile -> PROFILE_TAB
       }
 }

@@ -73,6 +73,8 @@ sealed class Tab(val name: String, val icon: ImageVector, val destination: Scree
 
   object FindFriends : Tab("Find Friends", Icons.Outlined.GroupAdd, Screen.FindFriendsScreen)
 
+  object UserProfile : Tab("User Profile", Icons.Outlined.AccountCircle, Screen.UserProfileScreen)
+
   object AddTodo : Tab("Add To-Do", Icons.Outlined.Add, Screen.AddToDo)
 
   object EditTodo : Tab("Edit To-Do", Icons.Outlined.Edit, Screen.Task)

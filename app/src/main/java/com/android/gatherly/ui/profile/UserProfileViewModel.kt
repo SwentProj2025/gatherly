@@ -48,13 +48,13 @@ class UserProfileViewModel(
         val profile = repository.getProfileByUid(uid)
         if (profile == null) {
           Log.d("UserProfileViewModel", "Profile not found")
-          setErrorMsg("Profile not found")
+          setErrorMsg("Error : Profile not found. Try quitting and coming back to the screen.")
         } else {
           _uiState.value = UserProfileState(isLoading = false, profile = profile)
         }
       } catch (e: Exception) {
         Log.e("UserProfileViewModel", "Error loading profile", e)
-        setErrorMsg(e.message)
+        setErrorMsg("Error while loading Profile. Try quitting and coming back to the screen.")
       }
     }
   }

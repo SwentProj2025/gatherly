@@ -1,6 +1,7 @@
 package com.android.gatherly.ui.profile
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,12 +30,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
+import com.android.gatherly.model.profile.ProfileStatus
 import com.android.gatherly.ui.navigation.BottomNavigationMenu
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.NavigationTestTags
@@ -43,13 +47,13 @@ import com.android.gatherly.ui.navigation.TopNavigationMenu_Profile
 import com.android.gatherly.utils.profilePicturePainter
 
 object UserProfileScreenTestTags {
-  const val LOADING_INDICATOR = "userProfile_loading"
   const val PROFILE_PICTURE = "userProfile_profilePicture"
   const val USERNAME = "userProfile_username"
   const val NAME = "userProfile_name"
   const val SCHOOL_INFO = "userProfile_schoolInfo"
   const val ERROR_SNACKBAR = "userProfile_errorSnackbar"
   const val EMPTY_STATE = "userProfile_emptyState"
+  const val USER_STATUS = "user_status"
 }
 
 @Composable
@@ -59,12 +63,17 @@ fun UserProfileScreen(
     viewModel: UserProfileViewModel = viewModel()
 ) {
 
-  val snackbarHostState = remember { SnackbarHostState() }
+  val snackBarHostState = remember { SnackbarHostState() }
   val uiState by viewModel.uiState.collectAsState()
   val profile = uiState.profile
 
   LaunchedEffect(uid) { viewModel.loadUserProfile(uid) }
-
+  LaunchedEffect(uiState.errorMessage) {
+    uiState.errorMessage?.let { msg ->
+      snackBarHostState.showSnackbar(message = msg, withDismissAction = true)
+      viewModel.clearErrorMsg()
+    }
+  }
   val paddingRegular = dimensionResource(id = R.dimen.padding_regular)
   val paddingMedium = dimensionResource(id = R.dimen.padding_medium)
   val spacingRegular = dimensionResource(id = R.dimen.spacing_between_fields_regular)
@@ -76,12 +85,12 @@ fun UserProfileScreen(
   Scaffold(
       snackbarHost = {
         SnackbarHost(
-            hostState = snackbarHostState,
+            hostState = snackBarHostState,
             modifier = Modifier.testTag(UserProfileScreenTestTags.ERROR_SNACKBAR))
       },
       topBar = {
         TopNavigationMenu_Profile(
-            selectedTab = Tab.Profile,
+            selectedTab = Tab.UserProfile,
             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
             modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
             onSignedOut = {})
@@ -93,19 +102,12 @@ fun UserProfileScreen(
             modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU))
       },
       content = { padding ->
-        uiState.errorMessage?.let { error ->
-          LaunchedEffect(error) {
-            snackbarHostState.showSnackbar(error)
-            viewModel.clearErrorMsg()
-          }
-        }
         when {
           uiState.isLoading -> {
             Box(
                 modifier = Modifier.fillMaxSize().padding(padding),
                 contentAlignment = Alignment.Center) {
-                  CircularProgressIndicator(
-                      Modifier.testTag(UserProfileScreenTestTags.LOADING_INDICATOR))
+                  CircularProgressIndicator()
                 }
           }
           profile == null -> {
@@ -125,20 +127,10 @@ fun UserProfileScreen(
                         .padding(padding)
                         .padding(horizontal = paddingRegular, vertical = paddingMedium),
                 horizontalAlignment = Alignment.CenterHorizontally) {
-                  Image(
-                      painter = profilePicturePainter(profile.profilePicture),
-                      contentDescription =
-                          stringResource(id = R.string.user_profile_picture_description),
-                      modifier =
-                          Modifier.testTag(UserProfileScreenTestTags.PROFILE_PICTURE)
-                              .size(profilePictureSize)
-                              .border(
-                                  profilePictureBorder,
-                                  MaterialTheme.colorScheme.outline,
-                                  CircleShape)
-                              .clip(CircleShape),
-                      contentScale = ContentScale.Crop)
-
+                  ProfilePictureWithStatus(
+                      profilePictureUrl = profile.profilePicture,
+                      status = profile.status,
+                      size = profilePictureSize)
                   Spacer(Modifier.height(spacingRegular))
 
                   Text(
@@ -194,4 +186,61 @@ fun UserProfileScreen(
           }
         }
       })
+}
+
+/**
+ * Small colored status dot used to represent a user's presence state. (Green = Online, Red =
+ * Offline, Blue = Focused)
+ *
+ * @param status The current [ProfileStatus] to display.
+ * @param modifier Optional modifier for positioning.
+ * @param size The diameter of the indicator.
+ */
+@Composable
+fun StatusIndicator(status: ProfileStatus, modifier: Modifier = Modifier, size: Dp) {
+  val color =
+      when (status) {
+        ProfileStatus.ONLINE -> Color.Green
+        ProfileStatus.FOCUSED -> Color.Blue
+        ProfileStatus.OFFLINE -> Color.Red
+      }
+
+  Box(modifier = modifier.size(size).clip(CircleShape).background(color))
+}
+
+/**
+ * Displays a user profile picture with a status indicator in the bottom-right corner.
+ *
+ * @param profilePictureUrl URL of the user's profile picture.
+ * @param status The current [ProfileStatus] to display (Online, Offline, Focused).
+ * @param modifier Optional [Modifier] for layout or styling.
+ * @param size Diameter of the profile picture box.
+ */
+@Composable
+fun ProfilePictureWithStatus(
+    profilePictureUrl: String,
+    status: ProfileStatus,
+    modifier: Modifier = Modifier,
+    size: Dp
+) {
+  Box(modifier = modifier.size(size)) {
+    Image(
+        painter = profilePicturePainter(profilePictureUrl),
+        contentDescription = stringResource(id = R.string.user_profile_picture_description),
+        modifier =
+            Modifier.testTag(UserProfileScreenTestTags.PROFILE_PICTURE)
+                .fillMaxSize()
+                .border(
+                    width = dimensionResource(id = R.dimen.profile_pic_border),
+                    color = MaterialTheme.colorScheme.outline,
+                    shape = CircleShape)
+                .clip(CircleShape),
+        contentScale = ContentScale.Crop)
+
+    StatusIndicator(
+        status = status,
+        modifier =
+            Modifier.align(Alignment.BottomEnd).testTag(UserProfileScreenTestTags.USER_STATUS),
+        size = size * 0.25f)
+  }
 }
