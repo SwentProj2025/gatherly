@@ -10,7 +10,6 @@ import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.model.todo.ToDosRepositoryProvider
-import com.android.gatherly.utils.deleteTodo_updateBadges
 import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -30,15 +29,12 @@ import okhttp3.OkHttpClient
 data class EditTodoUIState(
     val title: String = "",
     val description: String = "",
-    val assignee: String = "",
     val dueDate: String = "",
     val dueTime: String = "",
     val location: String = "",
     val status: ToDoStatus = ToDoStatus.ONGOING,
     val errorMsg: String? = null,
     val titleError: String? = null,
-    val descriptionError: String? = null,
-    val assigneeError: String? = null,
     val dueDateError: String? = null,
     val dueTimeError: String? = null,
     val isSaving: Boolean = false,
@@ -48,12 +44,7 @@ data class EditTodoUIState(
     val pastTime: Boolean = false
 ) {
   val isValid: Boolean
-    get() =
-        !(titleError != null ||
-            descriptionError != null ||
-            assigneeError != null ||
-            dueDateError != null ||
-            dueTimeError != null)
+    get() = titleError == null && dueDateError == null && dueTimeError == null && !isSaving
 }
 
 // create a HTTP Client for Nominatim
@@ -136,12 +127,11 @@ class EditTodoViewModel(
             EditTodoUIState(
                 title = todo.name,
                 description = todo.description,
-                assignee = todo.assigneeName,
                 dueDate =
-                    todo.dueDate.let {
+                    todo.dueDate?.let {
                       val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
                       return@let dateFormat.format(todo.dueDate.toDate())
-                    },
+                    } ?: "",
                 dueTime =
                     todo.dueTime?.let {
                       val dateFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
@@ -159,10 +149,6 @@ class EditTodoViewModel(
     val validated =
         _uiState.value.copy(
             titleError = if (_uiState.value.title.isBlank()) "Title cannot be empty" else null,
-            descriptionError =
-                if (_uiState.value.description.isBlank()) "Description cannot be empty" else null,
-            assigneeError =
-                if (_uiState.value.assignee.isBlank()) "Assignee cannot be empty" else null,
             dueDateError =
                 if (!isValidDate(_uiState.value.dueDate)) "Invalid format (dd/MM/yyyy)" else null,
             dueTimeError =
@@ -207,8 +193,11 @@ class EditTodoViewModel(
    */
   fun editTodo(id: String): Boolean {
     val state = uiState.value
-    val sdfDate = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-    val date = sdfDate.parse(state.dueDate) ?: throw IllegalArgumentException("Invalid date")
+    val date =
+        if (state.dueDate.isNotBlank()) {
+          val sdfTime = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+          Timestamp(sdfTime.parse(state.dueDate)!!)
+        } else null
 
     val time =
         if (state.dueTime.isNotBlank()) {
@@ -224,9 +213,8 @@ class EditTodoViewModel(
           todo =
               ToDo(
                   name = state.title,
-                  description = state.description,
-                  assigneeName = state.assignee,
-                  dueDate = Timestamp(date),
+                  description = state.description.ifBlank { state.title },
+                  dueDate = date,
                   dueTime = time,
                   location = chosenLocation,
                   status = state.status,
@@ -267,7 +255,8 @@ class EditTodoViewModel(
       _uiState.value = _uiState.value.copy(isSaving = true, errorMsg = null)
       try {
         val ownerId = todoRepository.getTodo(todoID).ownerId
-        deleteTodo_updateBadges(todoRepository, profileRepository, todoID, ownerId)
+
+        todoRepository.deleteTodo(todoID = todoID)
         _uiState.value = _uiState.value.copy(isSaving = false, saveSuccess = true)
       } catch (e: Exception) {
         _uiState.value =
@@ -293,19 +282,7 @@ class EditTodoViewModel(
    *   set.
    */
   fun onDescriptionChanged(newDescription: String) {
-    val errMsg = if (newDescription.isBlank()) "Description cannot be empty" else null
-    _uiState.value = _uiState.value.copy(descriptionError = errMsg, description = newDescription)
-  }
-
-  /**
-   * Updates the assignee field and validates that it is not blank.
-   *
-   * @param newAssignee The new assignee name entered by the user. If blank, a validation error is
-   *   set.
-   */
-  fun onAssigneeChanged(newAssignee: String) {
-    val errMsg = if (newAssignee.isBlank()) "Assignee cannot be empty" else null
-    _uiState.value = _uiState.value.copy(assigneeError = errMsg, assignee = newAssignee)
+    _uiState.value = _uiState.value.copy(description = newDescription)
   }
 
   /**
@@ -344,6 +321,7 @@ class EditTodoViewModel(
    * @return `true` if the format and date are valid, `false` otherwise.
    */
   private fun isValidDate(date: String): Boolean {
+    if (date.isBlank()) return true
     val regex = Regex("""\d{2}/\d{2}/\d{4}""")
     if (!regex.matches(date)) return false
     try {

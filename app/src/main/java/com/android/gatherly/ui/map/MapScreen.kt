@@ -40,13 +40,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
 import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.ui.navigation.BottomNavigationMenu
-import com.android.gatherly.ui.navigation.HandleSignedOutState
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
@@ -121,8 +119,6 @@ private object Dimensions {
  * A composable screen displaying ToDos and Events as interactive markers on a Google Map.
  *
  * @param viewModel An optional MapViewModel to manage the UI state, used for testing.
- * @param credentialManager The CredentialManager for handling user sign-out.
- * @param onSignedOut Callback invoked when the user signs out.
  * @param navigationActions Navigation actions for switching between app sections.
  * @param goToEvent Callback to navigate to the Event detail page.
  * @param goToToDo Callback to navigate to the [ToDo] detail page.
@@ -131,8 +127,6 @@ private object Dimensions {
 @Composable
 fun MapScreen(
     viewModel: MapViewModel? = null,
-    credentialManager: CredentialManager = CredentialManager.create(LocalContext.current),
-    onSignedOut: () -> Unit = {},
     navigationActions: NavigationActions? = null,
     goToEvent: (String) -> Unit = {},
     goToToDo: () -> Unit = {},
@@ -164,8 +158,6 @@ fun MapScreen(
 
   /** Variable to track location permission status */
   var isLocationPermissionGranted by remember { mutableStateOf(false) }
-
-  HandleSignedOutState(uiState.onSignedOut, onSignedOut)
 
   /** Handle permission request for location access * */
   val permissionLauncher =
@@ -250,8 +242,7 @@ fun MapScreen(
         TopNavigationMenu(
             selectedTab = Tab.Map,
             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
-            modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
-            onSignedOut = { vm.signOut(credentialManager) })
+            modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU))
       },
       bottomBar = {
         BottomNavigationMenu(
@@ -545,8 +536,10 @@ fun ToDoSheet(toDo: ToDo, onGoToToDo: () -> Unit, onClose: () -> Unit) {
 
   val formattedDate =
       remember(toDo.dueDate) {
-        val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-        sdf.format(toDo.dueDate.toDate())
+        toDo.dueDate?.let { date ->
+          val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+          sdf.format(date.toDate())
+        } ?: ""
       }
 
   Column(

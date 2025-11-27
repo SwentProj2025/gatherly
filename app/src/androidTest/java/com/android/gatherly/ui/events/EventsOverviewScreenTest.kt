@@ -19,6 +19,7 @@ import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsLocalRepository
 import com.android.gatherly.model.event.EventsRepository
 import com.android.gatherly.model.map.Location
+import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.ui.navigation.NavigationTestTags
@@ -339,6 +340,8 @@ class EventsOverviewScreenTest {
 
     setContent(bobId)
 
+    profileRepository.addProfile(Profile(uid = "bobId", name = "Test User", profilePicture = ""))
+
     composeTestRule.waitForIdle()
 
     // Check that the event created by Alice show up in the Bob's browser list
@@ -411,6 +414,8 @@ class EventsOverviewScreenTest {
     val bobId = "bobId"
 
     setContent(bobId)
+
+    profileRepository.addProfile(Profile(uid = "bobId", name = "Test User", profilePicture = ""))
 
     // Verify that Alice's event is displayed
     composeTestRule.waitUntil(UI_WAIT_TIMEOUT) {
@@ -591,6 +596,8 @@ class EventsOverviewScreenTest {
   fun testEventDisplayAllStatusCorrectly() = runTest {
     val currentUserId = "bobId"
 
+    profileRepository.addProfile(Profile(uid = "bobId", name = "Test User", profilePicture = ""))
+
     val listEvents: List<Event> =
         listOf(
             upcomingEvent,
@@ -649,6 +656,8 @@ class EventsOverviewScreenTest {
   @Test
   fun testFilterBarWorksCorrectly() = runTest {
     val currentUserId = "bobId"
+
+    profileRepository.addProfile(Profile(uid = "bobId", name = "Test User", profilePicture = ""))
 
     val listUpcoming: List<Event> =
         listOf(upcomingEvent, upcomingEventCreated, upcomingEventParticipate)

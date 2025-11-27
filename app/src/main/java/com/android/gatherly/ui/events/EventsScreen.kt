@@ -36,7 +36,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
@@ -45,13 +44,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
 import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.ui.navigation.BottomNavigationMenu
-import com.android.gatherly.ui.navigation.HandleSignedOutState
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Screen
@@ -133,7 +130,6 @@ data class EventsScreenActions(
  * Each section allows interaction with the events, such as participating, unregistering, or editing
  * events. The screen also includes navigation menus and a button to create new events.
  *
- * @param credentialManager Manages user credentials for sign-in/sign-out operations.
  * @param onSignedOut Callback invoked when the user signs out.
  * @param onAddEvent Callback to navigate to the event creation screen.
  * @param navigateToEditEvent Callback to navigate to the event editing screen with the selected
@@ -224,8 +220,7 @@ fun EventsScreen(
         TopNavigationMenu(
             selectedTab = Tab.Events,
             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
-            modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
-            onSignedOut = { eventsViewModel.signOut(credentialManager) })
+            modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU))
       },
       bottomBar = {
         BottomNavigationMenu(
