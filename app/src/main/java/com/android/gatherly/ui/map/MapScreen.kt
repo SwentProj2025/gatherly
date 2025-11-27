@@ -1,6 +1,7 @@
 package com.android.gatherly.ui.map
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -39,13 +40,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
 import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.ui.navigation.BottomNavigationMenu
-import com.android.gatherly.ui.navigation.HandleSignedOutState
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
@@ -61,6 +60,7 @@ import com.google.maps.android.compose.rememberCameraPositionState
 import com.google.maps.android.compose.rememberMarkerState
 import java.text.SimpleDateFormat
 import java.util.Locale
+import kotlinx.coroutines.launch
 
 // Portions of the code in this file are copy-pasted from the Bootcamp solution provided by the
 // SwEnt staff.
@@ -118,8 +118,6 @@ private object Dimensions {
  * A composable screen displaying ToDos and Events as interactive markers on a Google Map.
  *
  * @param viewModel An optional MapViewModel to manage the UI state, used for testing.
- * @param credentialManager The CredentialManager for handling user sign-out.
- * @param onSignedOut Callback invoked when the user signs out.
  * @param navigationActions Navigation actions for switching between app sections.
  * @param goToEvent Callback to navigate to the Event detail page.
  * @param goToToDo Callback to navigate to the [ToDo] detail page.
@@ -128,12 +126,16 @@ private object Dimensions {
 @Composable
 fun MapScreen(
     viewModel: MapViewModel? = null,
-    credentialManager: CredentialManager = CredentialManager.create(LocalContext.current),
-    onSignedOut: () -> Unit = {},
     navigationActions: NavigationActions? = null,
     goToEvent: (String) -> Unit = {},
     goToToDo: () -> Unit = {},
-    runInitialisation: Boolean = true
+    runInitialisation: Boolean = true,
+    isLocationPermissionGrantedProvider: (Context) -> Boolean = { ctx ->
+      (ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION) ==
+          PackageManager.PERMISSION_GRANTED) ||
+          (ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_COARSE_LOCATION) ==
+              PackageManager.PERMISSION_GRANTED)
+    }
 ) {
   /** Location services setup * */
   val context = LocalContext.current
@@ -147,33 +149,62 @@ fun MapScreen(
 
   val uiState by vm.uiState.collectAsState()
 
-  HandleSignedOutState(uiState.onSignedOut, onSignedOut)
+  /** Coroutine scope for launching permission requests * */
+  val scope = rememberCoroutineScope()
 
-  // Initialize camera position on first composition if runInitialisation is true
-  if (runInitialisation) {
-    LaunchedEffect(Unit) { vm.initialiseCameraPosition(context) }
-  }
+  /** Variable to track location permission status */
+  var isLocationPermissionGranted by remember { mutableStateOf(false) }
 
   /** Handle permission request for location access * */
   val permissionLauncher =
-      rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+      rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+          permissions ->
+        val isGranted =
+            permissions.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false) ||
+                permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false)
+
+        isLocationPermissionGranted = isGranted
+
         if (isGranted) {
           vm.startLocationUpdates(context)
+        }
+
+        // Run initialization regardless of the result
+        // If granted, it tries to fetch user location
+        // If denied, it catches the error and falls back to EPFL (Default)
+        if (runInitialisation) {
+          scope.launch { vm.initialiseCameraPosition(context) }
         }
       }
 
   /** Check permission and start location updates * */
   LaunchedEffect(Unit) {
-    val hasPermission =
-        ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) ==
-            PackageManager.PERMISSION_GRANTED
+    // Check if we already have permissions (Fine OR Coarse)
+
+    val hasPermission = isLocationPermissionGrantedProvider(context)
 
     if (hasPermission) {
-      // Permission already granted - start updates
+      // Already existing permissions
+      // Set the blue dot state
+      isLocationPermissionGranted = true
+
+      // Start the location data stream
       vm.startLocationUpdates(context)
+
+      // Initialize Camera
+      if (runInitialisation) {
+        vm.initialiseCameraPosition(context)
+      }
     } else {
-      // Ask user for permission (dialog box)
-      permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+      // No initial permission granted
+
+      // Disable blue dot to prevent crash
+      isLocationPermissionGranted = false
+
+      // Launch the dialog
+      permissionLauncher.launch(
+          arrayOf(
+              Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
     }
   }
 
@@ -207,8 +238,7 @@ fun MapScreen(
         TopNavigationMenu(
             selectedTab = Tab.Map,
             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
-            modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
-            onSignedOut = { vm.signOut(credentialManager) })
+            modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU))
       },
       bottomBar = {
         BottomNavigationMenu(
@@ -255,8 +285,8 @@ fun MapScreen(
                   Modifier.fillMaxSize().padding(pd).testTag(MapScreenTestTags.GOOGLE_MAP_SCREEN),
               cameraPositionState = cameraPositionState,
               onMapClick = { _ -> vm.clearSelection() },
-              properties = MapProperties(isMyLocationEnabled = true),
-              uiSettings = MapUiSettings(myLocationButtonEnabled = true)) {
+              properties = MapProperties(isMyLocationEnabled = isLocationPermissionGranted),
+              uiSettings = MapUiSettings(myLocationButtonEnabled = isLocationPermissionGranted)) {
                 uiState.itemsList.forEach { item ->
                   when (item) {
                     // -------------------------------- Todo Marker UI
@@ -499,17 +529,16 @@ fun ToDoIcon(toDo: ToDo) {
  */
 @Composable
 fun ToDoSheet(toDo: ToDo, onGoToToDo: () -> Unit, onClose: () -> Unit) {
+
   val formattedDate =
       remember(toDo.dueDate) {
-        val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-        sdf.format(toDo.dueDate.toDate())
+        toDo.dueDate?.let { date ->
+          val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+          sdf.format(date.toDate())
+        } ?: ""
       }
 
-  Card(
-      colors =
-          CardDefaults.cardColors(
-              containerColor = MaterialTheme.colorScheme.secondary,
-              contentColor = MaterialTheme.colorScheme.onSecondary),
+  Column(
       modifier =
           Modifier.fillMaxWidth()
               .padding(Dimensions.rowColPadding)
@@ -517,7 +546,7 @@ fun ToDoSheet(toDo: ToDo, onGoToToDo: () -> Unit, onClose: () -> Unit) {
         Text(
             text = toDo.name.uppercase(),
             style = MaterialTheme.typography.titleLarge,
-            color = MaterialTheme.colorScheme.onSecondary,
+            color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.testTag(MapScreenTestTags.TODO_TITLE_SHEET))
 
         Spacer(modifier = Modifier.size(Dimensions.spacerPadding))
@@ -527,14 +556,14 @@ fun ToDoSheet(toDo: ToDo, onGoToToDo: () -> Unit, onClose: () -> Unit) {
                 Modifier.padding(Dimensions.textPadding).testTag(MapScreenTestTags.TODO_DUE_DATE),
             text = formattedDate,
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSecondary)
+            color = MaterialTheme.colorScheme.onBackground)
         Text(
             modifier =
                 Modifier.padding(Dimensions.textPadding)
                     .testTag(MapScreenTestTags.TODO_DESCRIPTION),
             text = toDo.description,
             style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSecondary)
+            color = MaterialTheme.colorScheme.onBackground)
 
         Spacer(modifier = Modifier.size(Dimensions.spacerPadding))
 

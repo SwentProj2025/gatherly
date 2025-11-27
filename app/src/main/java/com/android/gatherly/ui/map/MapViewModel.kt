@@ -4,8 +4,6 @@ package com.android.gatherly.ui.map
 
 import android.content.Context
 import android.location.Location as AndroidLocation
-import androidx.credentials.ClearCredentialStateRequest
-import androidx.credentials.CredentialManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
@@ -24,7 +22,6 @@ import com.android.gatherly.utils.locationFlow
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.Firebase
-import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -52,7 +49,6 @@ const val LOCATION_FETCH_TIMEOUT = 5000L
  * @property lastConsultedEventId ID of the most recently consulted `Event`.
  * @property cameraPos Current camera position on the map.
  * @property errorMsg Error message to display, or null if no error.
- * @property onSignedOut Flag indicating whether the user has signed out.
  * @property displayEventsPage Flag indicating whether events are being displayed (vs todos).
  * @property currentUserLocation The user's current location, if available.
  */
@@ -63,7 +59,6 @@ data class UIState(
     val lastConsultedEventId: String? = null,
     val cameraPos: LatLng? = null,
     val errorMsg: String? = null,
-    val onSignedOut: Boolean = false,
     val displayEventsPage: Boolean = false,
     val currentUserLocation: LatLng? = null
 )
@@ -249,31 +244,24 @@ class MapViewModel(
     }
 
     // Try current user location with timeout
-    val currentLocation =
-        withTimeoutOrNull(LOCATION_FETCH_TIMEOUT) {
-          fusedLocationClient?.locationFlow(context)?.first()
-        }
+    try {
+      val currentLocation =
+          withTimeoutOrNull(LOCATION_FETCH_TIMEOUT) {
+            fusedLocationClient?.locationFlow(context)?.first()
+          }
 
-    if (currentLocation != null) {
-      return LatLng(currentLocation.latitude, currentLocation.longitude)
+      if (currentLocation != null) {
+        return LatLng(currentLocation.latitude, currentLocation.longitude)
+      }
+    } catch (e: Exception) {
+      // Permission denied or other error
+      // Ignore this to fall back to EPFL default
     }
 
     // Fallback to EPFL
     return EPFL_LATLNG
   }
 
-  /**
-   * Signs out the current user and clears credential state.
-   *
-   * @param credentialManager The credential manager to clear stored credentials.
-   */
-  fun signOut(credentialManager: CredentialManager) {
-    viewModelScope.launch {
-      _uiState.value = _uiState.value.copy(onSignedOut = true)
-      Firebase.auth.signOut()
-      credentialManager.clearCredentialState(ClearCredentialStateRequest())
-    }
-  }
   /** Factory method to provide a MapViewModel with default dependencies. */
   companion object {
     fun provideFactory(
