@@ -77,7 +77,10 @@ class EventsOverviewScreenTest {
             profileRepository = profileRepository,
             authProvider = { mockitoUtils.mockAuth })
     composeTestRule.setContent {
-      EventsScreen(eventsViewModel = eventsViewModel, coordinator = mapCoordinator)
+      EventsScreen(
+          eventsViewModel = eventsViewModel,
+          actions = EventsScreenActions(),
+          coordinator = mapCoordinator)
     }
   }
 
@@ -768,7 +771,10 @@ class EventsOverviewScreenTest {
             profileRepository = profileRepository,
             authProvider = { mockitoUtils.mockAuth })
     composeTestRule.setContent {
-      EventsScreen(eventsViewModel = eventsViewModel, coordinator = mapCoordinator)
+      EventsScreen(
+          eventsViewModel = eventsViewModel,
+          actions = EventsScreenActions(),
+          coordinator = mapCoordinator)
     }
 
     composeTestRule.onNodeWithTag(EventsScreenTestTags.BROWSE_TITLE).assertIsDisplayed()

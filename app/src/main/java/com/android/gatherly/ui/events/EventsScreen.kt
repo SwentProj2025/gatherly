@@ -117,6 +117,13 @@ enum class EventFilter {
   PAST
 }
 
+/** Actions that can be performed on the Events screen. */
+data class EventsScreenActions(
+    val onSignedOut: () -> Unit = {},
+    val onAddEvent: () -> Unit = {},
+    val navigateToEditEvent: (Event) -> Unit = {}
+)
+
 /**
  * The Events screen displays a list of events categorized into three sections:
  * - Browse Events: Events neither created by nor participated in by the current user.
@@ -138,13 +145,11 @@ enum class EventFilter {
 @Composable
 fun EventsScreen(
     credentialManager: CredentialManager = CredentialManager.create(LocalContext.current),
-    onSignedOut: () -> Unit = {},
-    onAddEvent: () -> Unit = {},
-    navigateToEditEvent: (Event) -> Unit = {},
     navigationActions: NavigationActions? = null,
     eventsViewModel: EventsViewModel = viewModel(factory = EventsViewModel.provideFactory()),
     eventId: String? = null,
-    coordinator: MapCoordinator
+    coordinator: MapCoordinator,
+    actions: EventsScreenActions
 ) {
 
   val coroutineScope = rememberCoroutineScope()
@@ -212,7 +217,7 @@ fun EventsScreen(
     }
   }
 
-  HandleSignedOutState(uiState.signedOut, onSignedOut)
+  HandleSignedOutState(uiState.signedOut, actions.onSignedOut)
 
   Scaffold(
       topBar = {
@@ -373,7 +378,7 @@ fun EventsScreen(
 
                 item {
                   Button(
-                      onClick = { onAddEvent() },
+                      onClick = { actions.onAddEvent() },
                       modifier =
                           Modifier.fillMaxWidth()
                               .height(80.dp)
@@ -450,7 +455,7 @@ fun EventsScreen(
               confirmText = stringResource(R.string.edit_button_title),
               onDismiss = { isPopupOnYourE.value = false },
               onConfirm = {
-                navigateToEditEvent(event)
+                actions.navigateToEditEvent(event)
                 coroutineScope.launch { eventsViewModel.refreshEvents(currentUserIdFromVM) }
                 isPopupOnYourE.value = false
               },
@@ -720,5 +725,7 @@ private fun getFilteredEvents(
 @Preview(showBackground = true)
 @Composable
 fun EventsScreenPreview() {
-  GatherlyTheme(darkTheme = true) { EventsScreen(coordinator = MapCoordinator()) }
+  GatherlyTheme(darkTheme = true) {
+    EventsScreen(coordinator = MapCoordinator(), actions = EventsScreenActions())
+  }
 }

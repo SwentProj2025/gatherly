@@ -25,6 +25,7 @@ import com.android.gatherly.ui.authentication.SignInScreen
 import com.android.gatherly.ui.events.AddEventScreen
 import com.android.gatherly.ui.events.EditEventsScreen
 import com.android.gatherly.ui.events.EventsScreen
+import com.android.gatherly.ui.events.EventsScreenActions
 import com.android.gatherly.ui.focusTimer.TimerScreen
 import com.android.gatherly.ui.friends.FindFriendsScreen
 import com.android.gatherly.ui.friends.FriendsScreen
@@ -188,11 +189,13 @@ fun GatherlyApp(
         EventsScreen(
             navigationActions = navigationActions,
             credentialManager = credentialManager,
-            onSignedOut = { navigationActions.navigateTo(Screen.SignIn) },
-            onAddEvent = { navigationActions.navigateTo(Screen.AddEventScreen) },
-            navigateToEditEvent = { event ->
-              navigationActions.navigateTo(Screen.EditEvent(event.id))
-            },
+            actions =
+                EventsScreenActions(
+                    onSignedOut = { navigationActions.navigateTo(Screen.SignIn) },
+                    onAddEvent = { navigationActions.navigateTo(Screen.AddEventScreen) },
+                    navigateToEditEvent = { event ->
+                      navigationActions.navigateTo(Screen.EditEvent(event.id))
+                    }),
             coordinator = mapCoordinator)
       }
 
@@ -202,11 +205,13 @@ fun GatherlyApp(
           EventsScreen(
               navigationActions = navigationActions,
               credentialManager = credentialManager,
-              onSignedOut = { navigationActions.navigateTo(Screen.SignIn) },
-              onAddEvent = { navigationActions.navigateTo(Screen.AddEventScreen) },
-              navigateToEditEvent = { event ->
-                navigationActions.navigateTo(Screen.EditEvent(event.id))
-              },
+              actions =
+                  EventsScreenActions(
+                      onSignedOut = { navigationActions.navigateTo(Screen.SignIn) },
+                      onAddEvent = { navigationActions.navigateTo(Screen.AddEventScreen) },
+                      navigateToEditEvent = { event ->
+                        navigationActions.navigateTo(Screen.EditEvent(event.id))
+                      }),
               eventId = it,
               coordinator = mapCoordinator)
         }

@@ -22,6 +22,7 @@ import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.ui.events.EventsScreen
+import com.android.gatherly.ui.events.EventsScreenActions
 import com.android.gatherly.ui.events.EventsScreenTestTags
 import com.android.gatherly.ui.events.EventsViewModel
 import com.android.gatherly.ui.todo.OverviewScreenTestTags
@@ -481,9 +482,7 @@ class MapScreenTest {
         EventsScreen(
             eventsViewModel = eventsVM,
             eventId = navigatedEventId,
-            onSignedOut = {},
-            onAddEvent = {},
-            navigateToEditEvent = {},
+            actions = EventsScreenActions(),
             coordinator = mapCoordinator)
       }
     }
@@ -546,9 +545,7 @@ class MapScreenTest {
         EventsScreen(
             eventsViewModel = eventsVM,
             eventId = navigatedEventId,
-            onSignedOut = {},
-            onAddEvent = {},
-            navigateToEditEvent = {},
+            actions = EventsScreenActions(),
             coordinator = mapCoordinator)
       }
     }
@@ -606,9 +603,7 @@ class MapScreenTest {
         EventsScreen(
             eventsViewModel = eventsVM,
             eventId = navigatedEventId,
-            onSignedOut = {},
-            onAddEvent = {},
-            navigateToEditEvent = {},
+            actions = EventsScreenActions(),
             coordinator = mapCoordinator)
       }
     }
