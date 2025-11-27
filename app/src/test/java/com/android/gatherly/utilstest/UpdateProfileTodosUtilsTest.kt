@@ -1,27 +1,26 @@
 package com.android.gatherly.utilstest
 
-import com.android.gatherly.model.profile.Profile
+import com.android.gatherly.model.badge.BadgeType
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosRepository
-import com.android.gatherly.utils.addTodo_updateBadges
-import com.android.gatherly.utils.deleteTodo_updateBadges
-import com.android.gatherly.utils.editTodo_updateBadges
+import com.android.gatherly.utils.addTodo
+import com.android.gatherly.utils.editTodo
 import com.google.firebase.Timestamp
 import io.mockk.coEvery
 import io.mockk.coVerify
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.runs
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
 
 class UpdateProfileTodosUtilsTest {
-
   private val todoRepository = mockk<ToDosRepository>()
   private val profileRepository = mockk<ProfileRepository>()
   private val currentUserId = "user123"
-  private val mockProfile = Profile(uid = currentUserId, name = "Test User")
   private val mockTodo =
       ToDo(
           uid = "todo456",
@@ -36,61 +35,70 @@ class UpdateProfileTodosUtilsTest {
 
   @Before
   fun setup() {
-    coEvery { profileRepository.getProfileByUid(currentUserId) } returns mockProfile
-    coEvery { todoRepository.addTodo(any()) } returns Unit
-    coEvery { todoRepository.deleteTodo(any()) } returns Unit
+    coEvery { todoRepository.addTodo(any()) } just runs
+
+    coEvery { todoRepository.deleteTodo(any()) } just runs
     coEvery { todoRepository.getTodo(any()) } returns mockTodo
-    coEvery { todoRepository.editTodo(any(), any()) } returns Unit
-    coEvery { profileRepository.updateBadges(any()) } returns Unit
+    coEvery { todoRepository.editTodo(any(), any()) } just runs
+
+    coEvery { profileRepository.incrementBadge(any(), any()) } just runs
   }
 
-  /** Test adding a ToDo and ensuring badges are updated accordingly. */
+  /** Test adding a ToDo calls addTodo and increments "created todos" exactly once. */
   @Test
-  fun testAddTodoUpdateBadgesSuccess() = runTest {
-    addTodo_updateBadges(todoRepository, profileRepository, mockTodo, currentUserId)
-    coVerify {
+  fun testAddTodoUpdateBadges_callsIncrementCreatedTodo() = runTest {
+    addTodo(todoRepository, profileRepository, mockTodo, currentUserId)
+
+    coVerify(exactly = 1) {
       todoRepository.addTodo(mockTodo)
-      profileRepository.updateBadges(mockProfile)
+      profileRepository.incrementBadge(currentUserId, BadgeType.TODOS_CREATED)
     }
   }
 
-  /** Test adding a ToDo when profile retrieval fails, ensuring badges are not updated. */
+  /** When status goes from ONGOING -> ENDED, we increment "completed todos" once. */
   @Test
-  fun testAddTodoUpdateBadgesFail() = runTest {
-    coEvery { profileRepository.getProfileByUid(currentUserId) } returns null
-    addTodo_updateBadges(todoRepository, profileRepository, mockTodo, currentUserId)
-    coVerify(exactly = 1) { todoRepository.addTodo(mockTodo) }
-    coVerify(exactly = 0) { profileRepository.updateBadges(any()) }
-  }
-
-  /** Test deleting a ToDo and ensuring badges are updated accordingly. */
-  @Test
-  fun testDeleteTodoUpdateBadgesSuccess() = runTest {
-    val todoId = "someId"
-
-    deleteTodo_updateBadges(todoRepository, profileRepository, todoId, currentUserId)
-    coVerify {
-      todoRepository.deleteTodo(todoID = todoId)
-      profileRepository.updateBadges(mockProfile)
-    }
-  }
-
-  /** Test updating a ToDo's status and ensuring badges are updated accordingly. */
-  @Test
-  fun testEditTodoUpdateBadgesSuccess() = runTest {
+  fun testEditTodoUpdateBadges_ongoingToEnded_incrementsCompletedTodo() = runTest {
     val todoId = "task123"
+    val existing = mockTodo.copy(uid = todoId, status = ToDoStatus.ONGOING)
     val newStatus = ToDoStatus.ENDED
-    val initialTodo = mockTodo.copy(uid = todoId, status = ToDoStatus.ONGOING)
-    val expectedUpdatedTodo = initialTodo.copy(status = newStatus)
+    val expectedUpdated = existing.copy(status = newStatus)
 
-    coEvery { todoRepository.getTodo(todoId) } returns initialTodo
+    coEvery { todoRepository.getTodo(todoId) } returns existing
 
-    editTodo_updateBadges(todoRepository, profileRepository, todoId, newStatus, currentUserId)
+    editTodo(
+        todoRepository = todoRepository,
+        profileRepository = profileRepository,
+        todoID = todoId,
+        newStatus = newStatus,
+        currentUserId = currentUserId)
 
-    coVerify() {
+    coVerify {
       todoRepository.getTodo(todoId)
-      todoRepository.editTodo(todoId, expectedUpdatedTodo)
-      profileRepository.updateBadges(mockProfile)
+      todoRepository.editTodo(todoId, expectedUpdated)
+      profileRepository.incrementBadge(currentUserId, BadgeType.TODOS_COMPLETED)
+    }
+  }
+
+  /** When status goes from ENDED -> ONGOING, we do NOT increment "completed todos". */
+  @Test
+  fun testEditTodoUpdateBadges_endedToOngoing_doesNotIncrementCompletedTodo() = runTest {
+    val todoId = "task789"
+    val existing = mockTodo.copy(uid = todoId, status = ToDoStatus.ENDED)
+    val newStatus = ToDoStatus.ONGOING
+    val expectedUpdated = existing.copy(status = newStatus)
+
+    coEvery { todoRepository.getTodo(todoId) } returns existing
+
+    editTodo(
+        todoRepository = todoRepository,
+        profileRepository = profileRepository,
+        todoID = todoId,
+        newStatus = newStatus,
+        currentUserId = currentUserId)
+
+    coVerify {
+      todoRepository.getTodo(todoId)
+      todoRepository.editTodo(todoId, expectedUpdated)
     }
   }
 }

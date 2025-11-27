@@ -10,7 +10,6 @@ import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.model.todo.ToDosRepositoryProvider
-import com.android.gatherly.utils.deleteTodo_updateBadges
 import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -267,7 +266,8 @@ class EditTodoViewModel(
       _uiState.value = _uiState.value.copy(isSaving = true, errorMsg = null)
       try {
         val ownerId = todoRepository.getTodo(todoID).ownerId
-        deleteTodo_updateBadges(todoRepository, profileRepository, todoID, ownerId)
+
+        todoRepository.deleteTodo(todoID = todoID)
         _uiState.value = _uiState.value.copy(isSaving = false, saveSuccess = true)
       } catch (e: Exception) {
         _uiState.value =
