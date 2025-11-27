@@ -235,9 +235,7 @@ fun GatherlyApp(
         route = Screen.BadgeScreen.name,
     ) {
       composable(Screen.BadgeScreen.route) {
-        BadgeScreen(
-            navigationActions = navigationActions,
-            goBack = { navigationActions.navigateTo(Screen.ProfileScreen) })
+        BadgeScreen(goBack = { navigationActions.navigateTo(Screen.ProfileScreen) })
       }
     }
 

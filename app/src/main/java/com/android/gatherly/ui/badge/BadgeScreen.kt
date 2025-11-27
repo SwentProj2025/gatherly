@@ -28,7 +28,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
-import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
@@ -59,7 +58,6 @@ fun BadgeScreen(
     viewModel: BadgeViewModel =
         BadgeViewModel(
             repository = ProfileRepositoryFirestore(Firebase.firestore, Firebase.storage)),
-    navigationActions: NavigationActions? = null,
     goBack: () -> Unit = {},
 ) {
 
