@@ -238,6 +238,12 @@ class ProfileLocalRepository : ProfileRepository {
     awardBadge(uid, type, currentValue + 1)
   }
 
+  override suspend fun updateFocusPoints(uid: String, points: Double) {
+    var profile = getProfileByUid(uid) ?: throw IllegalArgumentException("Profile doesn't exist")
+    profile = profile.copy(focusPoints = profile.focusPoints + points)
+    updateProfile(profile)
+  }
+
   // ---------- helpers ----------
 
   private suspend fun awardBadge(uid: String, type: BadgeType, count: Long) {
