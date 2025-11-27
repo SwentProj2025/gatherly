@@ -1,4 +1,4 @@
-package com.android.gatherly.ui.events
+package com.android.gatherly.utils
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardOptions
@@ -28,6 +28,8 @@ import com.android.gatherly.R
  * @param textFieldColors The colors to be used for the text field.
  * @param testTagInput The test tag used for the time input field.
  * @param testTagErrorMessage The test tag used for the error message text.
+ * @param isStarting if null it's mean that it's deadline date, if true/false it's a starting/ending
+ *   time
  */
 @Composable
 fun TimeInputField(
@@ -38,7 +40,7 @@ fun TimeInputField(
     textFieldColors: TextFieldColors,
     testTagInput: String,
     testTagErrorMessage: String,
-    isStarting: Boolean
+    isStarting: Boolean? = null
 ) {
   var timeFieldValue by remember { mutableStateOf(TextFieldValue("")) }
   timeFieldValue = timeFieldValue.copy(text = initialTime)
@@ -68,10 +70,10 @@ fun TimeInputField(
       placeholder = { Text(stringResource(R.string.todos_time_field_placeholder)) },
       isError = dueTimeError,
       supportingText = {
-        if (dueTimeError && isStarting) {
+        if (dueTimeError && (isStarting != false)) {
           Text("Use format HH:mm", modifier = Modifier.testTag(testTagErrorMessage))
         }
-        if (dueTimeError && !isStarting) {
+        if (dueTimeError && isStarting == false) {
           Text(
               "Invalid format, past date or ending time before starting time",
               modifier = Modifier.testTag(testTagErrorMessage))

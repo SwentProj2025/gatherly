@@ -34,6 +34,7 @@ import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
 import com.android.gatherly.ui.theme.GatherlyTheme
 import com.android.gatherly.utils.GatherlyAlertDialog
+import com.android.gatherly.utils.TimeInputField
 import kotlinx.coroutines.delay
 
 // Portions of the code in this file are copy-pasted from the Bootcamp solution provided by the
@@ -222,11 +223,12 @@ fun AddToDoScreen(
                 TimeInputField(
                     initialTime = todoUIState.dueTime,
                     onTimeChanged = { addTodoViewModel.onTimeChanged(it) },
-                    dueTimeError = todoUIState.dueTimeError,
+                    dueTimeError = (todoUIState.dueTimeError == null),
+                    label = stringResource(R.string.todos_time_field_label),
                     textFieldColors = textFieldColors,
                     testTagInput = AddToDoScreenTestTags.INPUT_TODO_TIME,
                     testTagErrorMessage = AddToDoScreenTestTags.ERROR_MESSAGE,
-                )
+                    isStarting = null)
               }
 
               item { Spacer(modifier = Modifier.height(fieldSpacing)) }
@@ -258,10 +260,6 @@ fun AddToDoScreen(
               dismissText = stringResource(R.string.cancel),
               confirmText = stringResource(R.string.todos_create),
               onDismiss = { addTodoViewModel.clearPastTime() },
-              creatorText = null,
-              dateText = null,
-              startTimeText = null,
-              endTimeText = null,
               onConfirm = {
                 addTodoViewModel.saveTodo()
                 addTodoViewModel.clearPastTime()

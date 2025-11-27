@@ -18,10 +18,10 @@ fun GatherlyAlertDialog(
     bodyText: String,
     dismissText: String,
     confirmText: String,
-    creatorText: String?,
-    dateText: String?,
-    startTimeText: String?,
-    endTimeText: String?,
+    creatorText: String? = null,
+    dateText: String? = null,
+    startTimeText: String? = null,
+    endTimeText: String? = null,
     onDismiss: () -> Unit,
     onConfirm: () -> Unit,
     isImportantWarning: Boolean = false,
@@ -125,7 +125,7 @@ private fun GatherlyDialogTitleContent(
   }
 
   Text(
-      text = "On $dateText From $startTimeText to $endTimeText",
+      text = "On $dateText from $startTimeText to $endTimeText",
       textAlign = TextAlign.End,
       style = MaterialTheme.typography.bodyMedium,
       modifier = Modifier.fillMaxWidth().testTag(AlertDialogTestTags.DATE_TEXT))

@@ -40,6 +40,7 @@ import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
 import com.android.gatherly.ui.theme.GatherlyTheme
 import com.android.gatherly.utils.GatherlyAlertDialog
+import com.android.gatherly.utils.TimeInputField
 import kotlinx.coroutines.delay
 
 // Portions of the code in this file are copy-pasted from the Bootcamp solution provided by the
@@ -238,7 +239,8 @@ fun EditToDoScreen(
                 TimeInputField(
                     initialTime = todoUIState.dueTime,
                     onTimeChanged = { editTodoViewModel.onTimeChanged(it) },
-                    dueTimeError = todoUIState.dueTimeError,
+                    dueTimeError = (todoUIState.dueTimeError == null),
+                    label = stringResource(R.string.todos_time_field_label),
                     textFieldColors = textFieldColors,
                     testTagInput = EditToDoScreenTestTags.INPUT_TODO_TIME,
                     testTagErrorMessage = EditToDoScreenTestTags.ERROR_MESSAGE,
@@ -311,10 +313,6 @@ fun EditToDoScreen(
               dismissText = stringResource(R.string.cancel),
               confirmText = stringResource(R.string.todos_edit),
               onDismiss = { editTodoViewModel.clearPastTime() },
-              creatorText = null,
-              dateText = null,
-              startTimeText = null,
-              endTimeText = null,
               onConfirm = {
                 editTodoViewModel.editTodo(todoUid)
                 editTodoViewModel.clearPastTime()
