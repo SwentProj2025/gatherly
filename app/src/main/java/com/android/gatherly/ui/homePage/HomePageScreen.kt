@@ -126,8 +126,10 @@ fun HomePageScreen(
     homePageViewModel: HomePageViewModel = viewModel(),
     navigationActions: NavigationActions? = null,
     onClickFocusButton: () -> Unit = {},
-    onClickTodo: () -> Unit = {},
+    onClickTodoTitle: () -> Unit = {},
     onClickFriendsSection: () -> Unit = {},
+    onClickTodo: (ToDo) -> Unit,
+    onClickEventsTitle: () -> Unit = {}
 ) {
 
   val lifecycle = LocalLifecycleOwner.current.lifecycle
@@ -161,7 +163,8 @@ fun HomePageScreen(
               text = stringResource(id = R.string.homepage_upcoming_events_title),
               modifier =
                   Modifier.padding(horizontal = screenPadding)
-                      .testTag(HomePageScreenTestTags.UPCOMING_EVENTS_TITLE))
+                      .testTag(HomePageScreenTestTags.UPCOMING_EVENTS_TITLE)
+                      .clickable { onClickEventsTitle() })
 
           Spacer(modifier = Modifier.height(sectionSpacing))
 
@@ -178,11 +181,12 @@ fun HomePageScreen(
               text = stringResource(id = R.string.homepage_upcoming_tasks_title),
               modifier =
                   Modifier.padding(horizontal = screenPadding)
-                      .testTag(HomePageScreenTestTags.UPCOMING_TASKS_TITLE))
+                      .testTag(HomePageScreenTestTags.UPCOMING_TASKS_TITLE)
+                      .clickable { onClickTodoTitle() })
 
           Spacer(modifier = Modifier.height(sectionSpacing))
 
-          TaskList(todos = uiState.todos, onClickTodo)
+          TaskList(todos = uiState.todos, onClickTodoTitle, onClickTodo)
 
           Spacer(modifier = Modifier.height(verticalSpacing))
 
@@ -363,14 +367,18 @@ fun FriendsSection(
  * in tests.
  */
 @Composable
-fun TaskList(todos: List<ToDo>, onClickTodo: () -> Unit = {}) {
+fun TaskList(
+    todos: List<ToDo>,
+    onClickTodoTitle: () -> Unit = {},
+    onClickTodo: (ToDo) -> Unit = {}
+) {
   Column(
       modifier =
           Modifier.height(dimensionResource(id = R.dimen.homepage_task_section_height))
               .fillMaxWidth()) {
         if (todos.isEmpty()) {
           TextButton(
-              onClick = onClickTodo,
+              onClick = onClickTodoTitle,
               modifier =
                   Modifier.padding(horizontal = dimensionResource(id = R.dimen.padding_small))
                       .testTag(HomePageScreenTestTags.EMPTY_TASK_LIST_TEXT_BUTTON)) {
@@ -387,7 +395,7 @@ fun TaskList(todos: List<ToDo>, onClickTodo: () -> Unit = {}) {
                   TaskItem(
                       modifier = Modifier.testTag(getTaskItemTestTag(todo.uid)),
                       text = todo.description,
-                      onClick = onClickTodo)
+                      onClick = { onClickTodo(todo) })
                 }
               }
         }

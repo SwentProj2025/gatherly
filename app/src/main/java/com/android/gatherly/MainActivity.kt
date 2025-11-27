@@ -100,8 +100,10 @@ fun GatherlyApp(
         HomePageScreen(
             navigationActions = navigationActions,
             onClickFocusButton = { navigationActions.navigateTo(Screen.FocusTimerScreen) },
-            onClickTodo = { navigationActions.navigateTo(Screen.OverviewToDo) },
-            onClickFriendsSection = { navigationActions.navigateTo(Screen.FriendsScreen) })
+            onClickTodoTitle = { navigationActions.navigateTo(Screen.OverviewToDo) },
+            onClickFriendsSection = { navigationActions.navigateTo(Screen.FriendsScreen) },
+            onClickTodo = { navigationActions.navigateTo(Screen.EditToDo(it.uid)) },
+            onClickEventsTitle = { navigationActions.navigateTo(Screen.EventsScreen) })
       }
     }
 
