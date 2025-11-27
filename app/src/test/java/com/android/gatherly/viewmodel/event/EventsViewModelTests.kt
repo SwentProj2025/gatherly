@@ -64,12 +64,7 @@ class EventsViewModelTests {
     for (event in EventsViewModelTestsData.allTestEvents) {
       repo.addEvent(event)
     }
-    profileRepo.addProfile(
-        Profile(
-            uid = "testUser123",
-            name = "Test User",
-            profilePicture = "" // or any dummy string, your data class default is ""
-            ))
+    profileRepo.addProfile(Profile(uid = "testUser123", name = "Test User", profilePicture = ""))
     advanceUntilIdle()
   }
 

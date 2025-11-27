@@ -1,8 +1,6 @@
 package com.android.gatherly.ui.homePage
 
 import android.util.Log
-import androidx.credentials.ClearCredentialStateRequest
-import androidx.credentials.CredentialManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.event.Event
@@ -32,7 +30,6 @@ data class HomePageUIState(
     val todos: List<ToDo> = emptyList(),
     val timerString: String = "Are you ready to focus?",
     val errorMsg: String? = null,
-    val signedOut: Boolean = false,
     val isAnon: Boolean = true
 )
 
@@ -94,14 +91,5 @@ class HomePageViewModel(
    */
   private fun getDrawableEvents(events: List<Event>): List<Event> {
     return events.filter { it.status != EventStatus.PAST && it.location != null }
-  }
-
-  /** Initiates sign-out */
-  fun signOut(credentialManager: CredentialManager): Unit {
-    viewModelScope.launch {
-      _uiState.value = _uiState.value.copy(signedOut = true)
-      Firebase.auth.signOut()
-      credentialManager.clearCredentialState(ClearCredentialStateRequest())
-    }
   }
 }
