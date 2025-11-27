@@ -49,11 +49,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
 import com.android.gatherly.ui.navigation.BottomNavigationMenu
-import com.android.gatherly.ui.navigation.HandleSignedOutState
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
@@ -79,15 +77,8 @@ object FocusTimerScreenTestTags {
 @Composable
 fun TimerScreen(
     timerViewModel: TimerViewModel = viewModel(),
-    credentialManager: CredentialManager = CredentialManager.create(LocalContext.current),
-    onSignedOut: () -> Unit = {},
     navigationActions: NavigationActions? = null,
 ) {
-
-  val uiState by timerViewModel.uiState.collectAsState()
-
-  // If the user signs out, call onSignedOut()
-  HandleSignedOutState(uiState.signedOut, onSignedOut)
 
   // Scaffold to have top bar and bottom bar
   Scaffold(
@@ -95,8 +86,7 @@ fun TimerScreen(
         TopNavigationMenu(
             selectedTab = Tab.Timer,
             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
-            modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
-            onSignedOut = { timerViewModel.signOut(credentialManager) })
+            modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU))
       },
       bottomBar = {
         BottomNavigationMenu(

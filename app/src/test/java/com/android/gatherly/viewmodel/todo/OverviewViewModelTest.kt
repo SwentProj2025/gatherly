@@ -1,6 +1,7 @@
 package com.android.gatherly.viewmodel.todo
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.todo.ToDo
@@ -79,7 +80,6 @@ class OverviewViewModelTest {
         uid = toDosRepository.getNewUid(),
         name = name,
         description = description,
-        assigneeName = assignee,
         dueDate = now,
         dueTime = null,
         location = null,
@@ -179,6 +179,9 @@ class OverviewViewModelTest {
         // create and add a todo
         val todo = makeTodo("Status Change Test")
         toDosRepository.addTodo(todo)
+
+        profileRepository.addProfile(
+            Profile(uid = "user123", name = "Test User", profilePicture = ""))
 
         advanceUntilIdle()
 
