@@ -30,13 +30,15 @@ import com.android.gatherly.R
  * @param testTagErrorMessage The test tag used for the error message text.
  */
 @Composable
-fun StartTimeInputField(
+fun TimeInputField(
     initialTime: String = "",
     onTimeChanged: (String) -> Unit = {},
     dueTimeError: Boolean,
+    label: String,
     textFieldColors: TextFieldColors,
     testTagInput: String,
     testTagErrorMessage: String,
+    isStarting: Boolean
 ) {
   var timeFieldValue by remember { mutableStateOf(TextFieldValue("")) }
   timeFieldValue = timeFieldValue.copy(text = initialTime)
@@ -62,69 +64,14 @@ fun StartTimeInputField(
 
         onTimeChanged(formatted)
       },
-      label = { Text(stringResource(R.string.events_start_time_field_label)) },
+      label = { Text(label) },
       placeholder = { Text(stringResource(R.string.todos_time_field_placeholder)) },
       isError = dueTimeError,
       supportingText = {
-        if (dueTimeError) {
+        if (dueTimeError && isStarting) {
           Text("Use format HH:mm", modifier = Modifier.testTag(testTagErrorMessage))
         }
-      },
-      colors = textFieldColors,
-      keyboardOptions =
-          KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Next),
-      modifier = Modifier.fillMaxWidth().testTag(testTagInput),
-  )
-}
-
-/**
- * A reusable composable that displays a time input field with a numerical keyboard. This component
- * is designed to format the time input as "HH:mm" while the user types.
- *
- * @param onTimeChanged Callback triggered whenever the user edits the time.
- * @param dueTimeError A boolean used to display an error message below the input field.
- * @param textFieldColors The colors to be used for the text field.
- * @param testTagInput The test tag used for the time input field.
- * @param testTagErrorMessage The test tag used for the error message text.
- */
-@Composable
-fun EndTimeInputField(
-    initialTime: String = "",
-    onTimeChanged: (String) -> Unit = {},
-    dueTimeError: Boolean,
-    textFieldColors: TextFieldColors,
-    testTagInput: String,
-    testTagErrorMessage: String,
-) {
-  var timeFieldValue by remember { mutableStateOf(TextFieldValue("")) }
-  timeFieldValue = timeFieldValue.copy(text = initialTime)
-  OutlinedTextField(
-      value = timeFieldValue,
-      onValueChange = { newValue ->
-        val oldText = timeFieldValue.text
-        val newText = newValue.text
-
-        // Detect if user is deleting (backspace)
-        val isDeleting = newText.length < oldText.length
-
-        val formatted = formatTimeInput(newText)
-
-        // Calculate new cursor position
-        val newCursorPos =
-            when {
-              isDeleting -> newValue.selection.start.coerceAtMost(formatted.length)
-              else -> formatted.length // keep cursor at end when typing
-            }
-
-        timeFieldValue = newValue.copy(text = formatted, selection = TextRange(newCursorPos))
-
-        onTimeChanged(formatted)
-      },
-      label = { Text(stringResource(R.string.events_end_time_field_label)) },
-      placeholder = { Text(stringResource(R.string.todos_time_field_placeholder)) },
-      isError = dueTimeError,
-      supportingText = {
-        if (dueTimeError) {
+        if (dueTimeError && !isStarting) {
           Text(
               "Invalid format, past date or ending time before starting time",
               modifier = Modifier.testTag(testTagErrorMessage))
@@ -142,12 +89,10 @@ fun EndTimeInputField(
  * and a delimiter is inserted at the appropriate position.
  */
 private fun formatTimeInput(input: String): String {
-  // Remove any non-digit characters
-  val digits = input.filter { it.isDigit() }.take(4) // Limit to HHmm
+  val digits = input.filter { it.isDigit() }.take(4)
   return buildString {
     for (i in digits.indices) {
       append(digits[i])
-      // Add colon after hour (2 digits)
       if (i == 1) append(':')
     }
   }

@@ -348,26 +348,28 @@ fun EditEventsScreen(
 
               item {
                 // Start time
-                StartTimeInputField(
+                TimeInputField(
                     initialTime = ui.startTime,
                     onTimeChanged = { editEventsViewModel.updateStartTime(it) },
                     dueTimeError = ui.startTimeError,
+                    label = stringResource(R.string.events_start_time_field_label),
                     textFieldColors = textFieldColors,
                     testTagInput = EditEventsScreenTestTags.INPUT_START,
                     testTagErrorMessage = EditEventsScreenTestTags.ERROR_MESSAGE,
-                )
+                    isStarting = true)
               }
 
               item {
                 // End time
-                EndTimeInputField(
+                TimeInputField(
                     initialTime = ui.endTime,
                     onTimeChanged = { editEventsViewModel.updateEndTime(it) },
                     dueTimeError = ui.endTimeError,
+                    label = stringResource(R.string.events_end_time_field_label),
                     textFieldColors = textFieldColors,
                     testTagInput = EditEventsScreenTestTags.INPUT_END,
                     testTagErrorMessage = EditEventsScreenTestTags.ERROR_MESSAGE,
-                )
+                    isStarting = false)
               }
 
               item {

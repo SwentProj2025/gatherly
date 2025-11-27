@@ -40,21 +40,11 @@ fun GatherlyAlertDialog(
               style = MaterialTheme.typography.titleLarge,
               modifier = Modifier.fillMaxWidth().testTag(AlertDialogTestTags.TITLE))
 
-          if (dateText == null || startTimeText == null || endTimeText == null) return@Column
-
-          if (creatorText != null) {
-            Text(
-                text = "By $creatorText",
-                textAlign = TextAlign.End,
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier.fillMaxWidth().testTag(AlertDialogTestTags.CREATOR_TEXT))
-          }
-
-          Text(
-              text = "On $dateText From $startTimeText to $endTimeText",
-              textAlign = TextAlign.End,
-              style = MaterialTheme.typography.bodyMedium,
-              modifier = Modifier.fillMaxWidth().testTag(AlertDialogTestTags.DATE_TEXT))
+          GatherlyDialogTitleContent(
+              creatorText = creatorText,
+              dateText = dateText,
+              startTimeText = startTimeText,
+              endTimeText = endTimeText)
         }
       },
       text = {
@@ -106,6 +96,39 @@ fun GatherlyAlertDialog(
             }
       },
   )
+}
+
+/**
+ * Helper function: Display all the information displayed only for the event alert dialog.
+ *
+ * @param creatorText the name of the creator of the event
+ * @param dateText the date of the event
+ * @param startTimeText the starting time of the event
+ * @param endTimeText the ending time of the event
+ */
+@Composable
+private fun GatherlyDialogTitleContent(
+    creatorText: String?,
+    dateText: String?,
+    startTimeText: String?,
+    endTimeText: String?
+) {
+
+  if (dateText == null || startTimeText == null || endTimeText == null) return
+
+  if (creatorText != null) {
+    Text(
+        text = "By $creatorText",
+        textAlign = TextAlign.End,
+        style = MaterialTheme.typography.bodyMedium,
+        modifier = Modifier.fillMaxWidth().testTag(AlertDialogTestTags.CREATOR_TEXT))
+  }
+
+  Text(
+      text = "On $dateText From $startTimeText to $endTimeText",
+      textAlign = TextAlign.End,
+      style = MaterialTheme.typography.bodyMedium,
+      modifier = Modifier.fillMaxWidth().testTag(AlertDialogTestTags.DATE_TEXT))
 }
 
 object AlertDialogTestTags {

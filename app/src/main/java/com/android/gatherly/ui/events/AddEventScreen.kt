@@ -337,26 +337,28 @@ fun AddEventScreen(
 
               item {
                 // Start time
-                StartTimeInputField(
+                TimeInputField(
                     initialTime = ui.startTime,
                     onTimeChanged = { addEventViewModel.updateStartTime(it) },
+                    label = stringResource(R.string.events_start_time_field_label),
                     dueTimeError = ui.startTimeError,
                     textFieldColors = textFieldColors,
                     testTagInput = AddEventScreenTestTags.INPUT_START,
                     testTagErrorMessage = AddEventScreenTestTags.ERROR_MESSAGE,
-                )
+                    isStarting = true)
               }
 
               item {
                 // End time
-                EndTimeInputField(
+                TimeInputField(
                     initialTime = ui.endTime,
                     onTimeChanged = { addEventViewModel.updateEndTime(it) },
                     dueTimeError = ui.endTimeError,
+                    label = stringResource(R.string.events_end_time_field_label),
                     textFieldColors = textFieldColors,
                     testTagInput = AddEventScreenTestTags.INPUT_END,
                     testTagErrorMessage = AddEventScreenTestTags.ERROR_MESSAGE,
-                )
+                    isStarting = false)
               }
 
               item { Spacer(modifier = Modifier.height(buttonSpacing)) }
