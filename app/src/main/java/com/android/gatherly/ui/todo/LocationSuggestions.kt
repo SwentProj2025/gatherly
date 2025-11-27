@@ -11,7 +11,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.material3.TextFieldColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -38,8 +38,6 @@ import kotlin.collections.isNotEmpty
  * @param onLocationChanged Callback triggered whenever the user edits the location text.
  * @param onSelectLocation Callback invoked when a suggestion is selected from the dropdown.
  * @param modifier The modifier to apply to the outer Box of this component.
- * @param testTagInput The test tag used for the location input field.
- * @param testTagDropdown The test tag used for the dropdown menu.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,8 +47,7 @@ fun LocationSuggestions(
     onLocationChanged: (String) -> Unit,
     onSelectLocation: (Location) -> Unit,
     modifier: Modifier = Modifier,
-    testTagInput: String,
-    testTagDropdown: String,
+    textFieldColors: TextFieldColors
 ) {
   val suggestionLimit = integerResource(R.integer.todo_location_number_of_suggestions)
   val suggestionTextLimit = integerResource(R.integer.todo_location_suggestion_length)
@@ -58,15 +55,6 @@ fun LocationSuggestions(
   val etc = stringResource(R.string.todos_location_text_etc)
   val label = stringResource(R.string.todos_location_field_label)
   val placeholder = stringResource(R.string.todos_location_field_placeholder)
-
-  val textFieldColors =
-      TextFieldDefaults.colors(
-          focusedContainerColor = MaterialTheme.colorScheme.background,
-          unfocusedContainerColor = MaterialTheme.colorScheme.background,
-          unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-          focusedTextColor = MaterialTheme.colorScheme.onBackground,
-          errorTextColor = MaterialTheme.colorScheme.onBackground,
-      )
 
   var showLocationDropdown by remember { mutableStateOf(false) }
 
@@ -80,7 +68,7 @@ fun LocationSuggestions(
         label = { Text(label) },
         placeholder = { Text(placeholder) },
         colors = textFieldColors,
-        modifier = Modifier.fillMaxWidth().testTag(testTagInput))
+        modifier = Modifier.fillMaxWidth().testTag(LocationSuggestionsTestTags.INPUT))
 
     DropdownMenu(
         expanded = showLocationDropdown && suggestions.isNotEmpty(),
@@ -88,7 +76,7 @@ fun LocationSuggestions(
         properties = PopupProperties(focusable = false),
         containerColor = MaterialTheme.colorScheme.surfaceVariant,
         modifier =
-            Modifier.testTag(testTagDropdown)
+            Modifier.testTag(LocationSuggestionsTestTags.DROPDOWN)
                 .fillMaxWidth()
                 .heightIn(dimensionResource(R.dimen.todo_location_dropdown_height))) {
           suggestions.filterNotNull().take(suggestionLimit).forEach { loc ->
@@ -121,4 +109,9 @@ fun LocationSuggestions(
           }
         }
   }
+}
+
+object LocationSuggestionsTestTags {
+  const val INPUT = "input"
+  const val DROPDOWN = "dropdown"
 }
