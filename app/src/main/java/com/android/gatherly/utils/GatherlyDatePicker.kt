@@ -19,12 +19,9 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-
-
 object DatePickerTestTags {
-    const val DATE_PICKER_DIALOG = "datePickerDialog"
-    const val DATE_PICKER_SAVE = "datePickerSaveButton"
-
+  const val DATE_PICKER_DIALOG = "datePickerDialog"
+  const val DATE_PICKER_SAVE = "datePickerSaveButton"
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

@@ -12,13 +12,14 @@ import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.utils.AlertDialogTestTags
 import com.android.gatherly.utils.GatherlyTest
 import com.android.gatherly.utils.MockitoUtils
+import com.android.gatherly.utils.openDatePicker
 import com.android.gatherly.utils.selectDateFromPicker
 import com.google.firebase.Timestamp
+import java.time.LocalDate
+import java.util.Calendar
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import java.time.LocalDate
-import java.util.Calendar
 
 class AddTodoScreenTest : GatherlyTest() {
   @get:Rule val composeTestRule = createComposeRule()
@@ -35,21 +36,21 @@ class AddTodoScreenTest : GatherlyTest() {
 
   private val futureDate = "$currentDay/$currentMonth/$futureYear"
 
-  val calendar = Calendar.getInstance().apply {
-    set(Calendar.YEAR, futureYear)
-    set(Calendar.MONTH, currentMonth - 1)
-    set(Calendar.DAY_OF_MONTH, currentDay)
-  }
+  val calendar =
+      Calendar.getInstance().apply {
+        set(Calendar.YEAR, futureYear)
+        set(Calendar.MONTH, currentMonth - 1)
+        set(Calendar.DAY_OF_MONTH, currentDay)
+      }
   val futureDueDate: Timestamp = Timestamp(calendar.time)
 
-  val calendar2 = Calendar.getInstance().apply {
-    set(Calendar.YEAR, pastYear)
-    set(Calendar.MONTH, currentMonth - 1)
-    set(Calendar.DAY_OF_MONTH, currentDay)
-  }
+  val calendar2 =
+      Calendar.getInstance().apply {
+        set(Calendar.YEAR, pastYear)
+        set(Calendar.MONTH, currentMonth - 1)
+        set(Calendar.DAY_OF_MONTH, currentDay)
+      }
   val pastDueDate: Timestamp = Timestamp(calendar2.time)
-
-  private val pastDate = "$currentDay/$currentMonth/$pastYear"
 
   @Before
   fun setUp() {
@@ -132,11 +133,12 @@ class AddTodoScreenTest : GatherlyTest() {
 
   @Test
   fun canEnterAValidDate() {
+    composeTestRule.openDatePicker(AddToDoScreenTestTags.INPUT_TODO_DATE)
     composeTestRule.selectDateFromPicker(currentDay, currentMonth, futureYear)
-    composeTestRule.onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_DATE)
-      .assertTextContains(futureDate, ignoreCase = true)
+    composeTestRule
+        .onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_DATE)
+        .assertTextContains(futureDate, ignoreCase = true)
   }
-
 
   @Test
   fun canEnterAValidTime() {
@@ -162,7 +164,8 @@ class AddTodoScreenTest : GatherlyTest() {
 
   @Test
   fun savingWithInvalidDescriptionShouldDoNothing() = checkNoTodoWereAdded {
-    composeTestRule.enterAddTodoDetails(todo = todo1.copy(description = " ", dueDate = futureDueDate))
+    composeTestRule.enterAddTodoDetails(
+        todo = todo1.copy(description = " ", dueDate = futureDueDate))
     composeTestRule.clickOnSaveForAddTodo()
     composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag(AddToDoScreenTestTags.TODO_SAVE).assertExists()
@@ -170,7 +173,8 @@ class AddTodoScreenTest : GatherlyTest() {
 
   @Test
   fun savingWithInvalidAssigneeShouldDoNothing() = checkNoTodoWereAdded {
-    composeTestRule.enterAddTodoDetails(todo = todo1.copy(assigneeName = " ", dueDate = futureDueDate))
+    composeTestRule.enterAddTodoDetails(
+        todo = todo1.copy(assigneeName = " ", dueDate = futureDueDate))
     composeTestRule.clickOnSaveForAddTodo()
     composeTestRule.waitForIdle()
     composeTestRule.onNodeWithTag(AddToDoScreenTestTags.TODO_SAVE).assertExists()

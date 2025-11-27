@@ -1,19 +1,15 @@
 package com.android.gatherly.utils
 
-import android.util.Log
 import androidx.activity.ComponentActivity
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasAnyDescendant
 import androidx.compose.ui.test.hasTestTag
-import androidx.compose.ui.test.isRoot
 import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
@@ -33,9 +29,6 @@ import java.util.Locale
 import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
-import java.time.LocalDate
-import java.time.Month
-import java.time.format.DateTimeFormatter
 
 // Portions of the code in this file are copy-pasted from the Bootcamp solution provided by the
 // SwEnt staff.
@@ -126,15 +119,16 @@ abstract class GatherlyTest() {
   fun ComposeTestRule.enterAddTodoAssignee(assignee: String) =
       onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_ASSIGNEE).performTextInput(assignee)
 
-    fun ComposeTestRule.enterAddTodoDate(date: String) {
-        val parts = date.split("/")
-        if (parts.size == 3) {
-            val day = parts[0].toInt()
-            val month = parts[1].toInt()
-            val year = parts[2].toInt()
-            selectDateFromPicker(day, month, year)
-        }
+  fun ComposeTestRule.enterAddTodoDate(date: String) {
+    openDatePicker(AddToDoScreenTestTags.INPUT_TODO_DATE)
+    val parts = date.split("/")
+    if (parts.size == 3) {
+      val day = parts[0].toInt()
+      val month = parts[1].toInt()
+      val year = parts[2].toInt()
+      selectDateFromPicker(day, month, year)
     }
+  }
 
   fun ComposeTestRule.enterAddTodoTime(time: String) =
       onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_TIME).performTextInput(time)
