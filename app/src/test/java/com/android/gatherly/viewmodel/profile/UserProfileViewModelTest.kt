@@ -66,7 +66,9 @@ class UserProfileViewModelTest {
 
     val state = viewModel.uiState.value
     assertNull(state.profile)
-    assertEquals("Profile not found", state.errorMessage)
+    assertEquals(
+        "Error : Profile not found. Try quitting and coming back to the screen.",
+        state.errorMessage)
   }
   /** Tests the clear Error Message Function* */
   @Test
