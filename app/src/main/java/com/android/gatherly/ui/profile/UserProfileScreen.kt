@@ -43,7 +43,7 @@ import com.android.gatherly.ui.navigation.BottomNavigationMenu
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
-import com.android.gatherly.ui.navigation.TopNavigationMenu_Profile
+import com.android.gatherly.ui.navigation.TopNavigationMenu
 import com.android.gatherly.utils.profilePicturePainter
 
 object UserProfileScreenTestTags {
@@ -88,11 +88,10 @@ fun UserProfileScreen(
             modifier = Modifier.testTag(UserProfileScreenTestTags.ERROR_SNACKBAR))
       },
       topBar = {
-        TopNavigationMenu_Profile(
+        TopNavigationMenu(
             selectedTab = Tab.UserProfile,
             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
-            modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
-            onSignedOut = {})
+            modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU))
       },
       bottomBar = {
         BottomNavigationMenu(
