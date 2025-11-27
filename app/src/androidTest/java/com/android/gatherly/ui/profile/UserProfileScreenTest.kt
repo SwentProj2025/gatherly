@@ -25,7 +25,8 @@ class UserProfileScreenTest {
           username = "userProfile_alice",
           school = "EPFL",
           schoolYear = "2025",
-          friendUids = emptyList())
+          friendUids = emptyList(),
+          bio = "userProfile_bio")
 
   @Before
   fun setUp() {
@@ -48,6 +49,7 @@ class UserProfileScreenTest {
     composeRule.onNodeWithTag(UserProfileScreenTestTags.USERNAME).assertIsDisplayed()
     composeRule.onNodeWithTag(UserProfileScreenTestTags.SCHOOL_INFO).assertIsDisplayed()
     composeRule.onNodeWithTag(UserProfileScreenTestTags.USER_STATUS).assertIsDisplayed()
+    composeRule.onNodeWithTag(UserProfileScreenTestTags.USER_BIO).assertIsDisplayed()
   }
 
   /** Verifies the snackBar is correctly displayed when an error occurs* */

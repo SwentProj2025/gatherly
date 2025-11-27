@@ -72,6 +72,7 @@
     <string name="settings_alert_dialog_option_camera">Take Photo</string>
     <string name="settings_alert_dialog_option_gallery">Choose from Gallery</string>
     <string name="settings_alert_dialog_option_cancel">Cancel</string>
+    <string name="settings_label_bio">Bio :</string>
 
     <!-- Profile Page -->
     <string name="profile_screen_title">Profile</string>
@@ -115,6 +116,8 @@
     <string name="log_out">Yes, Sign out</string>
     <string name="anon_log_out">You are logging out</string>
     <string name="anon_log_out_text">Because you are signed in anonymously, signing out will cause you to lose all your current data. Are you sure?</string>
+    <string name="user_default_bio">Hey there! I am using Gatherly.</string>
+
 
     <!-- HomePage -->
     <string name="homepage_arrow_icon_description">Navigate</string>

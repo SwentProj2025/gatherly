@@ -35,6 +35,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
@@ -54,8 +56,12 @@ object UserProfileScreenTestTags {
   const val ERROR_SNACKBAR = "userProfile_errorSnackbar"
   const val EMPTY_STATE = "userProfile_emptyState"
   const val USER_STATUS = "user_status"
+  const val USER_BIO = "userProfile_bio"
 }
 
+/**
+ * Screen displaying infos of a user profile (not of the current user but of friends for example)
+ */
 @Composable
 fun UserProfileScreen(
     uid: String,
@@ -157,6 +163,19 @@ fun UserProfileScreen(
                         style = MaterialTheme.typography.titleSmall,
                         modifier = Modifier.testTag(UserProfileScreenTestTags.SCHOOL_INFO))
                   }
+
+                  Spacer(Modifier.height(spacingSmall))
+                  val bioText =
+                      profile.bio.ifBlank { stringResource(id = R.string.user_default_bio) }
+                  Text(
+                      text = bioText,
+                      style = MaterialTheme.typography.titleSmall,
+                      fontStyle = FontStyle.Italic,
+                      textAlign = TextAlign.Center,
+                      modifier =
+                          Modifier.fillMaxWidth()
+                              .padding(horizontal = spacingRegular)
+                              .testTag(UserProfileScreenTestTags.USER_BIO))
 
                   Spacer(Modifier.height(spacingLarge))
 

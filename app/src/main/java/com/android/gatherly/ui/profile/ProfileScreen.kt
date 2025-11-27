@@ -37,6 +37,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -65,6 +66,7 @@ object ProfileScreenTestTags {
   const val PROFILE_FOCUS_SESSIONS = "profileFocusSessions"
   const val PROFILE_GROUPS = "profileGroups"
   const val GOOGLE_BUTTON = "googleButton"
+  const val USER_BIO = "profileBio"
 }
 
 /**
@@ -249,6 +251,21 @@ fun ProfileScreen(
                     fontWeight = FontWeight.Light,
                     modifier = Modifier.testTag(ProfileScreenTestTags.PROFILE_SCHOOL))
 
+                Spacer(modifier = Modifier.height(fieldSpacingSmall))
+
+                // Bio (shows default if blank)
+                val bioText: String =
+                    profile?.bio?.ifBlank { stringResource(id = R.string.user_default_bio) }
+                        ?: stringResource(id = R.string.user_default_bio)
+                Text(
+                    text = bioText,
+                    style = MaterialTheme.typography.titleSmall,
+                    textAlign = TextAlign.Center,
+                    fontStyle = FontStyle.Italic,
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .padding(horizontal = fieldSpacingMedium)
+                            .testTag(ProfileScreenTestTags.USER_BIO))
                 Spacer(modifier = Modifier.height(fieldSpacingMedium))
 
                 // Friends and Focus points

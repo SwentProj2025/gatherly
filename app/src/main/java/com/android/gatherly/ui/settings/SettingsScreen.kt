@@ -57,6 +57,7 @@ object SettingsScreenTestTags {
   const val PROFILE_PICTURE_URL_NOT_EMPTY = "settings_profile_picture_url_not_empty"
   const val GOOGLE_BUTTON = "google_button"
   const val LOADING = "loading"
+  const val BIO_FIELD = "settings_bio_field"
 }
 
 /**
@@ -297,6 +298,13 @@ fun SettingsScreen(
                           value = uiState.schoolYear,
                           onValueChange = { settingsViewModel.editSchoolYear(it) },
                           testTag = SettingsScreenTestTags.SCHOOL_YEAR_FIELD)
+                      Spacer(modifier = Modifier.height(fieldSpacingRegular))
+
+                      SettingsField(
+                          label = stringResource(R.string.settings_label_bio),
+                          value = uiState.bio,
+                          onValueChange = { settingsViewModel.editBio(it) },
+                          testTag = SettingsScreenTestTags.BIO_FIELD)
                     }
 
                 Spacer(modifier = Modifier.height(fieldSpacingMedium))
