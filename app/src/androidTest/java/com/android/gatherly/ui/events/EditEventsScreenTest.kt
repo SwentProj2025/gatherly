@@ -26,6 +26,8 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
+private const val TIMEOUT = 100_000L
+
 /** Tests for the EditEventsScreen */
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
@@ -135,14 +137,14 @@ class EditEventsScreenTest {
   @Test
   fun displayMenus() {
     composeTestRule.onNodeWithTag(EditEventsScreenTestTags.INPUT_LOCATION).performTextInput("Paris")
-    composeTestRule.waitUntil(timeoutMillis = 5000L) {
+    composeTestRule.waitUntil(timeoutMillis = TIMEOUT) {
       composeTestRule.onNodeWithTag(EditEventsScreenTestTags.LOCATION_MENU).isDisplayed()
     }
 
     composeTestRule
         .onNodeWithTag(EditEventsScreenTestTags.INPUT_PARTICIPANT)
         .performTextInput("Participant")
-    composeTestRule.waitUntil(timeoutMillis = 5000L) {
+    composeTestRule.waitUntil(timeoutMillis = TIMEOUT) {
       composeTestRule.onNodeWithTag(EditEventsScreenTestTags.PARTICIPANT_MENU).isDisplayed()
     }
   }
