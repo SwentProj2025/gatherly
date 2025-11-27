@@ -25,6 +25,8 @@
     <string name="todos_save_button_text">Save</string>
     <string name="todos_back_button_desc">Back</string>
     <string name="todos_delete_button_text">Delete</string>
+    <string name="todos_delete_warning">Warning! You are deleting a todo</string>
+    <string name="todos_delete_warning_text">This action cannot be reversed. Are you sure?</string>
     <string name="todos_past_warning">Warning! You are creating a todo in the past</string>
     <string name="todos_past_warning_text">Are you sure you want to create a todo with a past deadline?</string>
     <string name="todos_create">Yes, Create</string>
@@ -112,6 +114,9 @@
     <string name="delete">Yes, Delete</string>
     <string name="cancel">No, Cancel</string>
     <string name="saving">Saving…</string>
+    <string name="log_out">Yes, Sign out</string>
+    <string name="anon_log_out">You are logging out</string>
+    <string name="anon_log_out_text">Because you are signed in anonymously, signing out will cause you to lose all your current data. Are you sure?</string>
 
     <!-- HomePage -->
     <string name="homepage_arrow_icon_description">Navigate</string>

@@ -123,6 +123,18 @@ class Milestone1End2End : FirestoreGatherlyTest() {
 
     // wait for drop down menu to appear
     composeTestRule.waitUntil(TIMEOUT) {
+      composeTestRule.onNodeWithTag(NavigationTestTags.SETTINGS_TAB).isDisplayed()
+    }
+
+    // go to settings screen
+    composeTestRule.onNodeWithTag(NavigationTestTags.SETTINGS_TAB).performClick()
+
+    // click on drop down menu
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.waitForIdle()
+
+    // wait for drop down menu to appear
+    composeTestRule.waitUntil(TIMEOUT) {
       composeTestRule.onNodeWithTag(NavigationTestTags.LOGOUT_TAB).isDisplayed()
     }
 
