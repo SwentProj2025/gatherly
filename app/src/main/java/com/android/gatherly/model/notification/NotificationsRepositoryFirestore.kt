@@ -38,7 +38,7 @@ class NotificationsRepositoryFirestore(private val db: FirebaseFirestore) :
         db.collection("users")
             .document(userId)
             .collection("notifications")
-            .orderBy("emissionTime", Query.Direction.DESCENDING)
+            .orderBy("emissionTime", Query.Direction.ASCENDING)
             .get()
             .await()
     return querySnapshot.documents.mapNotNull { doc -> snapshotToNotification(doc) }
