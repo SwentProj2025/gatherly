@@ -8,11 +8,11 @@ import com.android.gatherly.model.profile.ProfileRepository
 /**
  * Synchronises the user's friends list with all pending friend-related notifications.
  *
- * For every FRIEND_ACCEPTED or FRIEND_REJECTED notification addressed to [userId], this:
- * - updates the friends list (for FRIEND_ACCEPTED)
- * - deletes the processed notification
- *
- * Returns the fresh up-to-date profile for the user.
+ * For every FRIEND_ACCEPTED, FRIEND_REJECTED, REMOVE_FRIEND, FRIEND_REQUEST_CANCELLED notification
+ * addressed to [userId], this:
+ * - updates the friends list if needed
+ * - updates pending states of current user's requests if needed
+ * - deletes the processed notification Returns the fresh up-to-date profile for the user.
  */
 suspend fun getProfileWithSyncedFriendNotifications(
     profileRepository: ProfileRepository,

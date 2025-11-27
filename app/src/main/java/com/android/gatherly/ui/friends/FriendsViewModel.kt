@@ -24,6 +24,18 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+/**
+ * UI model for the Friends screen.
+ *
+ * @property errorMsg optional message to display on network or logic errors
+ * @property friends list of usernames that are confirmed friends
+ * @property listNoFriends list of usernames that are not friends
+ * @property pendingSentUsernames usernames for which the current user has sent a pending friend
+ *   request
+ * @property currentUserId the uid of the logged-in user
+ * @property isLoading controls the loading indicator
+ * @property profiles cached map of usernames to Profile for quick UI access
+ */
 data class FriendsUIState(
     val errorMsg: String? = null,
     val friends: List<String> = emptyList(),
@@ -34,6 +46,13 @@ data class FriendsUIState(
     val profiles: Map<String, Profile> = emptyMap()
 )
 
+/**
+ * ViewModel responsible for all friend-related operations:
+ * - Refresh friends
+ * - Sending friend requests
+ * - Cancelling friend requests
+ * - Removing existing friends
+ */
 class FriendsViewModel(
     private val repository: ProfileRepository,
     private val notificationsRepository: NotificationsRepository =
@@ -93,7 +112,7 @@ class FriendsViewModel(
   }
 
   /**
-   * Handles user unfollowing a friend.
+   * Handles user unfollowing a friend. Should be deleted when ui is updated.
    *
    * @param friend the username of the friend to unfollow
    * @param currentUserId the ID of the current user
@@ -114,7 +133,7 @@ class FriendsViewModel(
   }
 
   /**
-   * Handles user following a new friend.
+   * Handles user following a new friend. Should be deleted when ui is updated.
    *
    * @param friend the username of the friend to follow
    * @param currentUserId the ID of the current user
@@ -139,6 +158,12 @@ class FriendsViewModel(
     }
   }
 
+  /**
+   * Sends a friend request notification to another user.
+   *
+   * @param friendUserId the UID of the user receiving the request
+   * @param currentUserId the UID of the sender
+   */
   fun sendFriendRequest(friendUserId: String, currentUserId: String) {
     viewModelScope.launch {
       try {
@@ -174,6 +199,12 @@ class FriendsViewModel(
     }
   }
 
+  /**
+   * Removes an existing friend.
+   *
+   * @param friendUserId UID of the friend to remove
+   * @param currentUserId UID of the user performing the removal
+   */
   fun removeFriend(friendUserId: String, currentUserId: String) {
     viewModelScope.launch {
       try {
@@ -207,6 +238,12 @@ class FriendsViewModel(
     }
   }
 
+  /**
+   * Cancels a previously sent friend request by sending a cancel notification.
+   *
+   * @param recipientId UID of the user who originally received the request
+   * @param currentUserId UID of the sender who is cancelling
+   */
   fun cancelPendingFriendRequest(recipientId: String, currentUserId: String) {
     viewModelScope.launch {
       try {
