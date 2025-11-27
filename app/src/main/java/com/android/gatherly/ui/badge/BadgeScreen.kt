@@ -22,11 +22,15 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.android.gatherly.ui.navigation.NavigationActions
+import com.android.gatherly.ui.navigation.NavigationTestTags
+import com.android.gatherly.ui.navigation.Tab
+import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
@@ -37,11 +41,18 @@ fun BadgeScreen(
         BadgeViewModel(
             repository = ProfileRepositoryFirestore(Firebase.firestore, Firebase.storage)),
     navigationActions: NavigationActions? = null,
+    goBack: () -> Unit = {},
 ) {
 
   val uiState by viewModel.uiState.collectAsState()
 
   Scaffold(
+      topBar = {
+        TopNavigationMenu_Goback(
+            selectedTab = Tab.Badge,
+            modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
+            goBack = goBack)
+      },
       content = { padding ->
         LazyColumn(
             contentPadding = PaddingValues(vertical = 8.dp),

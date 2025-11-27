@@ -80,6 +80,7 @@ fun ProfileScreen(
     profileViewModel: ProfileViewModel = viewModel(),
     credentialManager: CredentialManager = CredentialManager.create(LocalContext.current),
     onSignedOut: () -> Unit = {},
+    onBadgeClicked: () -> Unit = {},
     navigationActions: NavigationActions? = null,
 ) {
   val uiState by profileViewModel.uiState.collectAsState()
@@ -311,6 +312,25 @@ fun ProfileScreen(
                     text = stringResource(R.string.profile_empty_groups_message),
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center)
+
+                // Badges
+                Spacer(modifier = Modifier.height(fieldSpacingSmall))
+                Button(
+                    onClick = onBadgeClicked,
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .height(dimensionResource(R.dimen.homepage_focus_button_height)),
+                    shape =
+                        RoundedCornerShape(
+                            dimensionResource(id = R.dimen.homepage_save_button_corner_radius)),
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.secondary)) {
+                      Text(
+                          text = "Go to Badges",
+                          color = MaterialTheme.colorScheme.onSecondary,
+                          style = MaterialTheme.typography.titleMedium)
+                    }
               }
         }
 
