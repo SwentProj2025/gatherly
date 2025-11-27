@@ -470,7 +470,6 @@ class MapScreenTest {
         EventsScreen(
             eventsViewModel = eventsVM,
             eventId = navigatedEventId,
-            onSignedOut = {},
             onAddEvent = {},
             navigateToEditEvent = {})
       }
@@ -534,7 +533,6 @@ class MapScreenTest {
         EventsScreen(
             eventsViewModel = eventsVM,
             eventId = navigatedEventId,
-            onSignedOut = {},
             onAddEvent = {},
             navigateToEditEvent = {})
       }
@@ -593,7 +591,6 @@ class MapScreenTest {
         EventsScreen(
             eventsViewModel = eventsVM,
             eventId = navigatedEventId,
-            onSignedOut = {},
             onAddEvent = {},
             navigateToEditEvent = {})
       }
