@@ -114,7 +114,13 @@ enum class EventFilter {
   PAST
 }
 
-/** Actions that can be performed on the Events screen. */
+/**
+ * Actions that can be performed on the Events screen.
+ *
+ * @param onSignedOut Callback invoked when the user signs out.
+ * @param onAddEvent Callback to navigate to the event creation screen.
+ * @param navigateToEditEvent Callback to navigate to the event editing screen with the selected
+ */
 data class EventsScreenActions(
     val onSignedOut: () -> Unit = {},
     val onAddEvent: () -> Unit = {},
@@ -130,17 +136,15 @@ data class EventsScreenActions(
  * Each section allows interaction with the events, such as participating, unregistering, or editing
  * events. The screen also includes navigation menus and a button to create new events.
  *
- * @param onSignedOut Callback invoked when the user signs out.
- * @param onAddEvent Callback to navigate to the event creation screen.
- * @param navigateToEditEvent Callback to navigate to the event editing screen with the selected
- *   event
  * @param navigationActions Handles navigation between different tabs/screens.
  * @param eventsViewModel The ViewModel managing the state and logic for the Events screen,
  *   instantiated with a factory provider defined in the ViewModel's companion object.
+ * @param eventId Optional event ID for deep linking to a specific event's details.
+ * @param coordinator The MapCoordinator to handle map-related actions.
+ * @param actions The actions that can be performed on the Events screen.
  */
 @Composable
 fun EventsScreen(
-    credentialManager: CredentialManager = CredentialManager.create(LocalContext.current),
     navigationActions: NavigationActions? = null,
     eventsViewModel: EventsViewModel = viewModel(factory = EventsViewModel.provideFactory()),
     eventId: String? = null,
@@ -213,7 +217,7 @@ fun EventsScreen(
     }
   }
 
-  HandleSignedOutState(uiState.signedOut, actions.onSignedOut)
+  // HandleSignedOutState(uiState.signedOut, actions.onSignedOut) // TODO: DELETE
 
   Scaffold(
       topBar = {

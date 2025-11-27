@@ -278,19 +278,6 @@ class MapViewModel(
     return EPFL_LATLNG
   }
 
-  /**
-   * Signs out the current user and clears credential state.
-   *
-   * @param credentialManager The credential manager to clear stored credentials.
-   */
-  fun signOut(credentialManager: CredentialManager) {
-    viewModelScope.launch {
-      _uiState.value = _uiState.value.copy(onSignedOut = true)
-      Firebase.auth.signOut()
-      credentialManager.clearCredentialState(ClearCredentialStateRequest())
-    }
-  }
-
   /** Factory method to provide a MapViewModel with default dependencies. */
   companion object {
     fun provideFactory(

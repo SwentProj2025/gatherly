@@ -179,7 +179,6 @@ fun GatherlyApp(
       composable(Screen.EventsScreen.route) {
         EventsScreen(
             navigationActions = navigationActions,
-            credentialManager = credentialManager,
             actions =
                 EventsScreenActions(
                     onSignedOut = { navigationActions.navigateTo(Screen.SignIn) },
@@ -195,7 +194,6 @@ fun GatherlyApp(
         uid?.let {
           EventsScreen(
               navigationActions = navigationActions,
-              credentialManager = credentialManager,
               actions =
                   EventsScreenActions(
                       onSignedOut = { navigationActions.navigateTo(Screen.SignIn) },
