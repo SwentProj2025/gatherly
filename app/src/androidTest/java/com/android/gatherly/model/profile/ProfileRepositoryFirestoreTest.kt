@@ -1207,4 +1207,54 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
         assertEquals(pointsToAdd, profileAfter.focusPoints, 0.01)
         assertEquals(0.0, profileAfter.weeklyPoints, 0.01)
       }
+
+  @Test
+  fun addPendingSentFriendUid_addsUidToList() = runTest {
+    val auth = FirebaseEmulator.auth
+    val firestore = FirebaseEmulator.firestore
+    val storage = FirebaseEmulator.storage
+    val repo = ProfileRepositoryFirestore(firestore, storage)
+
+    // Create User A
+    auth.signInAnonymously().await()
+    val userAUid = auth.currentUser!!.uid
+    repo.initProfileIfMissing(userAUid, "alice.png")
+
+    val targetUid = "targetUser123"
+
+    // Add pending request
+    repo.addPendingSentFriendUid(userAUid, targetUid)
+
+    val profileA = repo.getProfileByUid(userAUid)
+
+    assertNotNull(profileA)
+    assertTrue(profileA!!.pendingSentFriendsUids.contains(targetUid))
+  }
+
+  @Test
+  fun removePendingSentFriendUid_removesUidFromList() = runTest {
+    val auth = FirebaseEmulator.auth
+    val firestore = FirebaseEmulator.firestore
+    val storage = FirebaseEmulator.storage
+    val repo = ProfileRepositoryFirestore(firestore, storage)
+
+    // Create User A
+    auth.signInAnonymously().await()
+    val userAUid = auth.currentUser!!.uid
+    repo.initProfileIfMissing(userAUid, "alice.png")
+
+    val targetUid = "targetUser456"
+
+    // First add it
+    repo.addPendingSentFriendUid(userAUid, targetUid)
+
+    // Now remove it
+    repo.removePendingSentFriendUid(userAUid, targetUid)
+
+    val profileA = repo.getProfileByUid(userAUid)
+
+    assertNotNull(profileA)
+    assertFalse(profileA!!.pendingSentFriendsUids.contains(targetUid))
+  }
+
 }
