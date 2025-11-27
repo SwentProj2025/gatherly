@@ -1,8 +1,10 @@
 package com.android.gatherly.viewmodel.badge
 
 import com.android.gatherly.R
+import com.android.gatherly.model.badge.BadgeType
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
+import com.android.gatherly.ui.badge.BadgeUI
 import com.android.gatherly.ui.badge.BadgeViewModel
 import com.android.gatherly.utilstest.MockitoUtils
 import com.android.gatherly.viewmodel.event.EventsViewModelTestsData
@@ -83,32 +85,36 @@ class BadgeViewModelTest {
     val uiState = vm.uiState
 
     assertEquals(
-        Triple("Silver ToDo Created Badge", "You created 5 ToDos!", R.drawable.google_logo),
-        uiState.value.badgeTodoCreated)
+        BadgeUI(
+            "Silver ToDo Created Badge", "You created 5 ToDos!", R.drawable.silver_todo_created),
+        uiState.value.topBadges[BadgeType.TODOS_CREATED])
     assertEquals(
-        Triple("Diamond ToDo Completed Badge", "You completed 20 ToDos!", R.drawable.google_logo),
-        uiState.value.badgeTodoCompleted)
+        BadgeUI(
+            "Diamond ToDo Completed Badge",
+            "You completed 20 ToDos!",
+            R.drawable.diamond_todo_completed),
+        uiState.value.topBadges[BadgeType.TODOS_COMPLETED])
     assertEquals(
-        Triple(
+        BadgeUI(
             "Bronze Event Created Badge", "You created 3 Events!", R.drawable.bronze_event_created),
-        uiState.value.badgeEventCreated)
+        uiState.value.topBadges[BadgeType.EVENTS_CREATED])
     assertEquals(
-        Triple(
+        BadgeUI(
             "Blank Event Participated Badge",
             "Participate to your first Todo to get a Badge!",
             R.drawable.blank_event_participated),
-        uiState.value.badgeEventParticipated)
+        uiState.value.topBadges[BadgeType.EVENTS_PARTICIPATED])
     assertEquals(
-        Triple(
+        BadgeUI(
             "Blank Friend Badge",
             "Add your first Friend to get a Badge!",
             R.drawable.blank_friends),
-        uiState.value.badgeFriendAdded)
+        uiState.value.topBadges[BadgeType.FRIENDS_ADDED])
     assertEquals(
-        Triple(
+        BadgeUI(
             "Blank Focus Session Badge",
             "Complete your first Focus Session to get a Badge!",
             R.drawable.blank_focus_session),
-        uiState.value.badgeFocusSessionCompleted)
+        uiState.value.topBadges[BadgeType.FOCUS_SESSIONS_COMPLETED])
   }
 }

@@ -18,50 +18,41 @@ import kotlinx.coroutines.launch
 /**
  * UI state for the Badge ViewModel
  *
- * @param badgeTodoCreated the title, description and icon of the highest ranked Badge of type Todo
- *   Created
- * @param badgeTodoCompleted the title, description and icon of the highest ranked Badge of type
- *   Todo Completed
- * @param badgeEventCreated the title, description and icon of the highest ranked Badge of type
- *   Event Created
- * @param badgeEventParticipated the title, description and icon of the highest ranked Badge of type
- *   Event Participated
- * @param badgeFriendAdded the title, description and icon of the highest ranked Badge of type
- *   Friend Added
- * @param badgeFocusSessionCompleted the title, description and icon of the highest ranked Badge of
- *   type Focus Session Completed
+ * @param topBadges Map containing the BadgeUI of the highest rank badge for each BadgeType
  */
 data class UIState(
-    val badgeTodoCreated: Triple<String, String, Int> =
-        Triple(
-            "Blank Todo Created Badge",
-            "Create your first Todo to get a Badge!",
-            R.drawable.blank_todo_created),
-    val badgeTodoCompleted: Triple<String, String, Int> =
-        Triple(
-            "Blank Todo Completed Badge",
-            "Complete your first Todo to get a Badge!",
-            R.drawable.blank_todo_completed),
-    val badgeEventCreated: Triple<String, String, Int> =
-        Triple(
-            "Blank Event Created Badge",
-            "Create your first Event to get a Badge!",
-            R.drawable.blank_event_created),
-    val badgeEventParticipated: Triple<String, String, Int> =
-        Triple(
-            "Blank Event Participated Badge",
-            "Participate to your first Todo to get a Badge!",
-            R.drawable.blank_event_participated),
-    val badgeFriendAdded: Triple<String, String, Int> =
-        Triple(
-            "Blank Friend Badge",
-            "Add your first Friend to get a Badge!",
-            R.drawable.blank_friends),
-    val badgeFocusSessionCompleted: Triple<String, String, Int> =
-        Triple(
-            "Blank Focus Session Badge",
-            "Complete your first Focus Session to get a Badge!",
-            R.drawable.blank_friends),
+    val topBadges: Map<BadgeType, BadgeUI> =
+        mapOf<BadgeType, BadgeUI>(
+            BadgeType.TODOS_CREATED to
+                BadgeUI(
+                    "Blank Todo Created Badge",
+                    "Create your first Todo to get a Badge!",
+                    R.drawable.blank_todo_created),
+            BadgeType.TODOS_COMPLETED to
+                BadgeUI(
+                    "Blank Todo Completed Badge",
+                    "Complete your first Todo to get a Badge!",
+                    R.drawable.blank_todo_completed),
+            BadgeType.EVENTS_CREATED to
+                BadgeUI(
+                    "Blank Event Created Badge",
+                    "Create your first Event to get a Badge!",
+                    R.drawable.blank_event_created),
+            BadgeType.EVENTS_PARTICIPATED to
+                BadgeUI(
+                    "Blank Event Participated Badge",
+                    "Participate to your first Todo to get a Badge!",
+                    R.drawable.blank_event_participated),
+            BadgeType.FRIENDS_ADDED to
+                BadgeUI(
+                    "Blank Friend Badge",
+                    "Add your first Friend to get a Badge!",
+                    R.drawable.blank_friends),
+            BadgeType.FOCUS_SESSIONS_COMPLETED to
+                BadgeUI(
+                    "Blank Focus Session Badge",
+                    "Complete your first Focus Session to get a Badge!",
+                    R.drawable.blank_focus_session)),
 )
 
 /**
@@ -116,25 +107,14 @@ class BadgeViewModel(
     fun highestBadgeOfType(type: BadgeType): Badge? =
         userBadges.filter { it.type == type }.maxByOrNull { it.rank.ordinal }
 
-    fun Badge.toTriple(): Triple<String, String, Int> =
-        Triple(this.title, this.description, this.iconRes)
+    fun Badge.toBadgeUI(): BadgeUI = BadgeUI(this.title, this.description, this.iconRes)
 
     val default = UIState()
 
     return default.copy(
-        badgeTodoCreated =
-            highestBadgeOfType(BadgeType.TODOS_CREATED)?.toTriple() ?: default.badgeTodoCreated,
-        badgeTodoCompleted =
-            highestBadgeOfType(BadgeType.TODOS_COMPLETED)?.toTriple() ?: default.badgeTodoCompleted,
-        badgeEventCreated =
-            highestBadgeOfType(BadgeType.EVENTS_CREATED)?.toTriple() ?: default.badgeEventCreated,
-        badgeEventParticipated =
-            highestBadgeOfType(BadgeType.EVENTS_PARTICIPATED)?.toTriple()
-                ?: default.badgeEventParticipated,
-        badgeFriendAdded =
-            highestBadgeOfType(BadgeType.FRIENDS_ADDED)?.toTriple() ?: default.badgeFriendAdded,
-        badgeFocusSessionCompleted =
-            highestBadgeOfType(BadgeType.FOCUS_SESSIONS_COMPLETED)?.toTriple()
-                ?: default.badgeFocusSessionCompleted)
+        topBadges =
+            default.topBadges.mapValues { (badgeType, defaultUi) ->
+              highestBadgeOfType(badgeType)?.toBadgeUI() ?: defaultUi
+            })
   }
 }
