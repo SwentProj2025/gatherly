@@ -21,5 +21,6 @@ data class Profile(
     val status: ProfileStatus = ProfileStatus.OFFLINE,
     val badgeIds: List<String> = emptyList(),
     val badgeCount: Map<String, Long> = emptyMap(),
+    val focusPoints: Double = 0.0,
     val bio: String = ""
 )

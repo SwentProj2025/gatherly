@@ -191,9 +191,9 @@ fun UserProfileScreen(
                               style = MaterialTheme.typography.bodySmall)
                         }
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                          // Focus Points count is currently a placeholder, will be changed on next
-                          // sprint once focus points are implemented
-                          Text(text = "0", style = MaterialTheme.typography.titleMedium)
+                          Text(
+                              text = profile.focusPoints.toString(),
+                              style = MaterialTheme.typography.titleMedium)
                           Text(
                               stringResource(id = R.string.user_profile_focus_points),
                               style = MaterialTheme.typography.bodySmall)

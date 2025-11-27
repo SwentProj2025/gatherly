@@ -12,6 +12,14 @@ import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.utils.AlertDialogTestTags
 import com.android.gatherly.utils.GatherlyTest
 import com.android.gatherly.utils.MockitoUtils
+import com.android.gatherly.utils.TestDates.currentDateTimestamp
+import com.android.gatherly.utils.TestDates.currentDay
+import com.android.gatherly.utils.TestDates.currentMonth
+import com.android.gatherly.utils.TestDates.futureDate
+import com.android.gatherly.utils.TestDates.futureYear
+import com.android.gatherly.utils.TestDates.pastYear
+import com.android.gatherly.utils.openDatePicker
+import com.android.gatherly.utils.selectDateFromPicker
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -49,7 +57,7 @@ class EditTodoScreenTest : GatherlyTest() {
   }
 
   private fun fill_repository() = runTest {
-    repository.addTodo(todo1)
+    repository.addTodo(toDo = todo1.copy(dueDate = currentDateTimestamp))
     advanceUntilIdle()
   }
 
@@ -106,16 +114,11 @@ class EditTodoScreenTest : GatherlyTest() {
 
   @Test
   fun canEnterAValidDate() {
-    val text = "10/02/2023"
-    composeTestRule.enterEditTodoDate(text)
-    composeTestRule.onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_DATE).assertTextContains(text)
-  }
-
-  @Test
-  fun canEnterAnInvalidDate() {
-    val invalidDate = "13-13-1313" // Invalid date format
-    composeTestRule.enterEditTodoDate(invalidDate)
-    composeTestRule.checkErrorMessageIsDisplayedForEditTodo()
+    composeTestRule.openDatePicker(EditToDoScreenTestTags.INPUT_TODO_DATE)
+    composeTestRule.selectDateFromPicker(currentDay, currentMonth, futureYear)
+    composeTestRule
+        .onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_DATE)
+        .assertTextContains(futureDate, ignoreCase = true)
   }
 
   @Test
@@ -134,7 +137,8 @@ class EditTodoScreenTest : GatherlyTest() {
 
   @Test
   fun enterPastDate() {
-    composeTestRule.enterEditTodoDate("12/12/2012")
+    composeTestRule.openDatePicker(EditToDoScreenTestTags.INPUT_TODO_DATE)
+    composeTestRule.selectDateFromPicker(currentDay, currentMonth, pastYear)
     composeTestRule.onNodeWithTag(EditToDoScreenTestTags.TODO_SAVE).performClick()
     composeTestRule.onNodeWithTag(AlertDialogTestTags.ALERT).assertIsDisplayed()
   }
