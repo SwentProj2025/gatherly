@@ -61,7 +61,7 @@ sealed class Screen(
 
   object AddGroupScreen : Screen(route = "add_group_screen", name = "Add a New Group")
 
-  object BadgeScreen : Screen(route = "badges", name = "Badges")
+  object BadgeScreen : Screen(route = "badge_screen", name = "Badges")
 }
 
 open class NavigationActions(

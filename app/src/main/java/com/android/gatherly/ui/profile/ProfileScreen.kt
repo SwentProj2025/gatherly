@@ -327,7 +327,7 @@ fun ProfileScreen(
                         ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.secondary)) {
                       Text(
-                          text = "Go to Badges",
+                          text = stringResource(R.string.placeholder_button_badge_title),
                           color = MaterialTheme.colorScheme.onSecondary,
                           style = MaterialTheme.typography.titleMedium)
                     }

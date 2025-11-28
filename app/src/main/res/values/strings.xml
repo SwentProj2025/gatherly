@@ -91,6 +91,8 @@
     <string name="profile_empty_focus_sessions_message">Focus session data not available yet.</string>
     <string name="profile_empty_groups_message">You currently have no groups.</string>
     <string name="profile_anon_message">You are currently signed in anonymously, create an account to have a profile.</string>
+    <string name="placeholder_button_badge_title">Go to Badges</string>
+
 
     <!-- Events -->
     <string name="events_title_field_label">Title</string>
