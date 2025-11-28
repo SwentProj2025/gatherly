@@ -60,6 +60,15 @@ sealed class Screen(
   object InitProfileScreen : Screen(route = "init_profile_screen", name = "Complete your profile")
 
   object AddGroupScreen : Screen(route = "add_group_screen", name = "Add a New Group")
+
+  object UserProfileScreen : Screen(route = "user_profile", name = "User Profile")
+
+  data class UserProfile(val uid: String) :
+      Screen(route = "user_profile_screen/$uid", name = "User Profile") {
+    companion object {
+      const val route = "user_profile_screen/{uid}"
+    }
+  }
 }
 
 open class NavigationActions(

@@ -45,6 +45,7 @@ object InitProfileScreenTestTags {
   const val USERNAME_ERROR = "initProfile_username_error"
   const val NAME_FIELD_ERROR = "initProfile_name_field_error"
   const val BIRTHDAY_FIELD_ERROR = "initProfile_birthday_field_error"
+  const val BIO_FIELD = "initProfile_bio_field"
 }
 /**
  * This screen is shown right after first login, to force the user to fill in a profile. Same fields
@@ -199,6 +200,14 @@ fun InitProfileScreen(
               value = uiState.schoolYear,
               onValueChange = { settingsViewModel.editSchoolYear(it) },
               testTag = InitProfileScreenTestTags.SCHOOL_YEAR_FIELD)
+          Spacer(
+              modifier =
+                  Modifier.height(dimensionResource(id = R.dimen.spacing_between_fields_regular)))
+          SettingsField(
+              label = stringResource(R.string.settings_label_bio),
+              value = uiState.bio,
+              onValueChange = { settingsViewModel.editBio(it) },
+              testTag = InitProfileScreenTestTags.BIO_FIELD)
 
           Spacer(
               modifier =

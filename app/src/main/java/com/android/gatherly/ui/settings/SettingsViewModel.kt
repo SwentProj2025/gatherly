@@ -61,6 +61,7 @@ data class SettingsUiState(
     val navigateToInit: Boolean = false,
     val isAnon: Boolean = true,
     val isSaving: Boolean = false,
+    val bio: String = ""
 ) {
   val isValid: Boolean
     get() =
@@ -139,7 +140,9 @@ class SettingsViewModel(
                       else ""
                     },
                 isLoadingProfile = false,
-                isAnon = authProvider().currentUser?.isAnonymous ?: true)
+                isAnon = authProvider().currentUser?.isAnonymous ?: true,
+                bio = profile.bio,
+            )
       } catch (e: Exception) {
         Log.e("SettingsViewModel", "Error loading Profile by uid: $profileUID", e)
         setErrorMsg("Failed to load Profile: ${e.message}")
@@ -194,7 +197,9 @@ class SettingsViewModel(
                 school = state.school,
                 schoolYear = state.schoolYear,
                 profilePicture = newProfilePictureUrl,
-                birthday = birthdayDate?.let { Timestamp(it) })
+                birthday = birthdayDate?.let { Timestamp(it) },
+                bio = state.bio,
+            )
 
         repository.updateProfile(updatedProfile)
         clearErrorMsg()
@@ -351,5 +356,9 @@ class SettingsViewModel(
     } else {
       repository.updateUsername(id, originalProfile?.username, state.username)
     }
+  }
+
+  fun editBio(newBio: String) {
+    _uiState.value = _uiState.value.copy(bio = newBio)
   }
 }

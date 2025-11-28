@@ -349,6 +349,7 @@ class ProfileRepositoryFirestore(
     val badgeIds = doc.get("badgeIds") as? List<String> ?: emptyList()
     val badgeCount = doc.get("badgeCount") as? Map<String, Long> ?: emptyMap()
     val focusPoints: Double = doc.getDouble("focusPoints") ?: 0.0
+    val bio = doc.getString("bio") ?: ""
 
     return Profile(
         uid = uid,
@@ -366,7 +367,8 @@ class ProfileRepositoryFirestore(
         status = status,
         badgeIds = badgeIds,
         badgeCount = badgeCount,
-        focusPoints = focusPoints)
+        focusPoints = focusPoints,
+        bio = bio)
   }
 
   /**
@@ -392,7 +394,8 @@ class ProfileRepositoryFirestore(
         "status" to profile.status.value,
         "badgeIds" to profile.badgeIds,
         "badgeCount" to profile.badgeCount,
-        "focusPoints" to profile.focusPoints)
+        "focusPoints" to profile.focusPoints,
+        "bio" to profile.bio)
   }
 
   // -- FRIENDS GESTION PART --

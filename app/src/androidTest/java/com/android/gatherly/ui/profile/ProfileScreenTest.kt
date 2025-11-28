@@ -21,7 +21,8 @@ class ProfileScreenTest {
           username = "defaultusername",
           school = "University",
           schoolYear = "Year",
-          friendUids = emptyList())
+          friendUids = emptyList(),
+          bio = "profileScreenTestBio")
 
   private lateinit var profileRepository: ProfileRepository
   private lateinit var profileViewModel: ProfileViewModel
@@ -60,6 +61,12 @@ class ProfileScreenTest {
         .onNodeWithTag(ProfileScreenTestTags.PROFILE_USERNAME)
         .assertExists()
         .assertTextContains("@defaultusername")
+  }
+
+  @Test
+  fun userBio_IsDisplayed() {
+    setContent()
+    composeTestRule.onNodeWithTag(ProfileScreenTestTags.USER_BIO).assertIsDisplayed()
   }
 
   @Test
