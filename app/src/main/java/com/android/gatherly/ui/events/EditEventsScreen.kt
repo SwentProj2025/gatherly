@@ -47,7 +47,9 @@ import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
 import com.android.gatherly.ui.theme.GatherlyTheme
+import com.android.gatherly.utils.DatePickerInputField
 import com.android.gatherly.utils.GatherlyAlertDialog
+import com.android.gatherly.utils.GatherlyDatePicker
 import com.android.gatherly.utils.TimeInputField
 import kotlinx.coroutines.delay
 
@@ -117,6 +119,9 @@ fun EditEventsScreen(
 
   // Profile state for the dropdown visibility
   var showProfilesDropdown by remember { mutableStateOf(false) }
+
+  // Date state for the alert dialog visibilty
+  var showDatePicker by remember { mutableStateOf(false) }
 
   // Toasts
   LaunchedEffect(ui.displayToast, ui.toastString) {
@@ -332,21 +337,16 @@ fun EditEventsScreen(
               }
               item {
                 // Date
-                OutlinedTextField(
+                DatePickerInputField(
                     value = ui.date,
-                    onValueChange = { editEventsViewModel.updateDate(it) },
-                    label = { Text(stringResource(R.string.events_date_field_label)) },
-                    placeholder = { Text("dd/MM/yyyy") },
-                    isError = ui.dateError,
-                    supportingText = {
-                      if (ui.dateError) {
-                        Text(
-                            "Invalid format or past date",
-                            modifier = Modifier.testTag(EditEventsScreenTestTags.ERROR_MESSAGE))
-                      }
-                    },
+                    label = stringResource(R.string.events_date_field_label),
+                    isErrorMessage = if (!ui.dateError) null else "Invalid format or past date",
+                    onClick = { showDatePicker = true },
                     colors = textFieldColors,
-                    modifier = Modifier.fillMaxWidth().testTag(EditEventsScreenTestTags.INPUT_DATE))
+                    testTag =
+                        Pair(
+                            AddEventScreenTestTags.INPUT_DATE,
+                            AddEventScreenTestTags.ERROR_MESSAGE))
               }
 
               item {
@@ -435,6 +435,11 @@ fun EditEventsScreen(
               },
               isImportantWarning = true)
         }
+        GatherlyDatePicker(
+            show = showDatePicker,
+            initialDate = ui.date,
+            onDateSelected = { selectedDate -> editEventsViewModel.updateDate(selectedDate) },
+            onDismiss = { showDatePicker = false })
       }
 }
 

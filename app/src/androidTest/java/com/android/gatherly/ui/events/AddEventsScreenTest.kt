@@ -3,6 +3,7 @@ package com.android.gatherly.ui.events
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
+import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -15,8 +16,15 @@ import com.android.gatherly.model.event.EventsRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
-import com.android.gatherly.ui.todo.AddToDoScreenTestTags
 import com.android.gatherly.utils.MockitoUtils
+import com.android.gatherly.utils.TestDates.currentDay
+import com.android.gatherly.utils.TestDates.currentMonth
+import com.android.gatherly.utils.TestDates.futureDate
+import com.android.gatherly.utils.TestDates.futureYear
+import com.android.gatherly.utils.TestDates.pastDate
+import com.android.gatherly.utils.TestDates.pastYear
+import com.android.gatherly.utils.openDatePicker
+import com.android.gatherly.utils.selectDateFromPicker
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -106,6 +114,7 @@ class AddEventsScreenTest {
           friendUids = emptyList())
 
   /*----------------------------------------Event-----------------------------------------------*/
+
   val event: Event =
       Event(
           id = "0",
@@ -131,7 +140,7 @@ class AddEventsScreenTest {
     composeTestRule.onNodeWithTag(AddEventScreenTestTags.INPUT_START).assertIsDisplayed()
     composeTestRule.onNodeWithTag(AddEventScreenTestTags.INPUT_END).assertIsDisplayed()
     composeTestRule
-        .onNodeWithTag(AddToDoScreenTestTags.ERROR_MESSAGE, useUnmergedTree = true)
+        .onNodeWithTag(AddEventScreenTestTags.ERROR_MESSAGE, useUnmergedTree = true)
         .assertIsNotDisplayed()
     composeTestRule.onNodeWithTag(AddEventScreenTestTags.BTN_SAVE)
   }
@@ -150,6 +159,28 @@ class AddEventsScreenTest {
     composeTestRule.waitUntil(timeoutMillis = 5000L) {
       composeTestRule.onNodeWithTag(AddEventScreenTestTags.PARTICIPANT_MENU).isDisplayed()
     }
+  }
+
+  /** Check that the date input are working */
+  @Test
+  fun testDatePickerWorkingCorrectly() {
+    composeTestRule.openDatePicker(AddEventScreenTestTags.INPUT_DATE)
+    composeTestRule.selectDateFromPicker(currentDay, currentMonth, futureYear)
+    composeTestRule
+        .onNodeWithTag(AddEventScreenTestTags.INPUT_DATE)
+        .assertTextContains(futureDate, ignoreCase = true)
+    composeTestRule.onNodeWithTag(AddEventScreenTestTags.ERROR_MESSAGE).assertIsNotDisplayed()
+  }
+
+  /** Check that if the date is already past shows an error message */
+  @Test
+  fun testPastDateShowErrror() {
+    composeTestRule.openDatePicker(AddEventScreenTestTags.INPUT_DATE)
+    composeTestRule.selectDateFromPicker(currentDay, currentMonth, pastYear)
+    composeTestRule
+        .onNodeWithTag(AddEventScreenTestTags.INPUT_DATE)
+        .assertTextContains(pastDate, ignoreCase = true)
+    composeTestRule.onNodeWithTag(AddEventScreenTestTags.ERROR_MESSAGE)
   }
 
   // This function fills the profile repository with the created profiles, and the event repository

@@ -10,6 +10,7 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.core.app.ActivityOptionsCompat
 import com.android.gatherly.model.event.EventsLocalRepository
 import com.android.gatherly.model.todo.ToDosLocalRepository
+import com.android.gatherly.utils.MapCoordinator
 import com.google.android.gms.location.FusedLocationProviderClient
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -35,8 +36,9 @@ class MapScreenCoverageTest {
     val todoRepo = ToDosLocalRepository()
     val eventsRepo = EventsLocalRepository()
     val locationClient: FusedLocationProviderClient? = null
+    val mapCoordinator = MapCoordinator()
 
-    val realViewModel = MapViewModel(todoRepo, eventsRepo, locationClient)
+    val realViewModel = MapViewModel(todoRepo, eventsRepo, locationClient, mapCoordinator)
     val spyViewModel = spyk(realViewModel)
 
     // =========================================================================================
@@ -85,7 +87,9 @@ class MapScreenCoverageTest {
       CompositionLocalProvider(
           androidx.activity.compose.LocalActivityResultRegistryOwner provides registryOwner) {
             MapScreen(
-                viewModel = spyViewModel, isLocationPermissionGrantedProvider = { _ -> false })
+                viewModel = spyViewModel,
+                isLocationPermissionGrantedProvider = { _ -> false },
+                coordinator = mapCoordinator)
           }
     }
 

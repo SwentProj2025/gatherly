@@ -19,6 +19,9 @@ import com.android.gatherly.ui.todo.AddToDoScreenTestTags
 import com.android.gatherly.ui.todo.OverviewScreenTestTags
 import com.android.gatherly.utils.FirebaseEmulator
 import com.android.gatherly.utils.FirestoreGatherlyTest
+import com.android.gatherly.utils.openDatePicker
+import com.android.gatherly.utils.selectDateFromPicker
+import java.time.LocalDate
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -79,9 +82,9 @@ class Milestone1End2End : FirestoreGatherlyTest() {
     composeTestRule
         .onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_DESCRIPTION)
         .performTextInput("Description")
-    composeTestRule
-        .onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_DATE)
-        .performTextInput("20/12/2025")
+    composeTestRule.openDatePicker(AddToDoScreenTestTags.INPUT_TODO_DATE)
+    composeTestRule.selectDateFromPicker(
+        LocalDate.now().dayOfMonth, LocalDate.now().month.value, LocalDate.now().year.plus(1))
     composeTestRule.onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_TIME).performTextInput("10:00")
     composeTestRule.onNodeWithTag(AddToDoScreenTestTags.TODO_SAVE).performClick()
     composeTestRule.waitForIdle()

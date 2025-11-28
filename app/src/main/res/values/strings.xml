@@ -106,6 +106,7 @@
     <string name="events_participant_placeholder">Add or remove a participant</string>
     <string name="events_delete_warning">Warning! You are deleting an event</string>
     <string name="events_delete_warning_text">This action cannot be reversed. Are you sure?</string>
+    <string name="see_on_map_button_title">See on map</string>
     <string name="events_loading">Loading events …</string>
 
     <!-- General -->

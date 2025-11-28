@@ -1127,4 +1127,20 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     assertNotNull(profileB)
     assertEquals("bob", profileB!!.username)
   }
+
+  @OptIn(ExperimentalCoroutinesApi::class)
+  @Test
+  fun addFocusPointsWorks() = runTest {
+    val uid = FirebaseEmulator.auth.currentUser!!.uid
+    repository.initProfileIfMissing(uid, "pic.png")
+
+    val profileBefore = repository.getProfileByUid(uid)!!
+    assertEquals(0.0, profileBefore.focusPoints, 0.01)
+
+    val pointsToAdd = 23.9
+    repository.updateFocusPoints(uid, pointsToAdd)
+
+    val profileAfter = repository.getProfileByUid(uid)!!
+    assertEquals(pointsToAdd, profileAfter.focusPoints, 0.01)
+  }
 }

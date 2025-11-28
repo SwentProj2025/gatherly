@@ -49,6 +49,7 @@ import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu
+import com.android.gatherly.utils.MapCoordinator
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -135,7 +136,8 @@ fun MapScreen(
           PackageManager.PERMISSION_GRANTED) ||
           (ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_COARSE_LOCATION) ==
               PackageManager.PERMISSION_GRANTED)
-    }
+    },
+    coordinator: MapCoordinator
 ) {
   /** Location services setup * */
   val context = LocalContext.current
@@ -145,7 +147,9 @@ fun MapScreen(
   val vm: MapViewModel =
       viewModel
           ?: viewModel(
-              factory = MapViewModel.provideFactory(fusedLocationClient = fusedLocationClient))
+              factory =
+                  MapViewModel.provideFactory(
+                      fusedLocationClient = fusedLocationClient, coordinator = coordinator))
 
   val uiState by vm.uiState.collectAsState()
 

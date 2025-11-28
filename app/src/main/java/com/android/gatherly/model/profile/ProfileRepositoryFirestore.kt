@@ -348,6 +348,7 @@ class ProfileRepositoryFirestore(
     val status = ProfileStatus.fromString(doc.getString("status"))
     val badgeIds = doc.get("badgeIds") as? List<String> ?: emptyList()
     val badgeCount = doc.get("badgeCount") as? Map<String, Long> ?: emptyMap()
+    val focusPoints: Double = doc.getDouble("focusPoints") ?: 0.0
 
     return Profile(
         uid = uid,
@@ -364,7 +365,8 @@ class ProfileRepositoryFirestore(
         profilePicture = profilePicture,
         status = status,
         badgeIds = badgeIds,
-        badgeCount = badgeCount)
+        badgeCount = badgeCount,
+        focusPoints = focusPoints)
   }
 
   /**
@@ -389,7 +391,8 @@ class ProfileRepositoryFirestore(
         "profilePicture" to profile.profilePicture,
         "status" to profile.status.value,
         "badgeIds" to profile.badgeIds,
-        "badgeCount" to profile.badgeCount)
+        "badgeCount" to profile.badgeCount,
+        "focusPoints" to profile.focusPoints)
   }
 
   // -- FRIENDS GESTION PART --
@@ -493,6 +496,12 @@ class ProfileRepositoryFirestore(
     val badge = Badge.entries.firstOrNull { it.type == type && it.rank == rank } ?: return
 
     addBadge(uid, badge.id)
+  }
+
+  override suspend fun updateFocusPoints(uid: String, points: Double) {
+    var profile = getProfileByUid(uid) ?: throw IllegalArgumentException("Profile doesn't exist")
+    profile = profile.copy(focusPoints = profile.focusPoints + points)
+    updateProfile(profile)
   }
 
   /** Shared thresholds from count to BadgeRank. */

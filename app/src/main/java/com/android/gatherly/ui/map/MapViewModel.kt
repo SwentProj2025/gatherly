@@ -16,6 +16,7 @@ import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.model.todo.ToDosRepositoryFirestore
 import com.android.gatherly.utils.GenericViewModelFactory
+import com.android.gatherly.utils.MapCoordinator
 import com.android.gatherly.utils.locationFlow
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.maps.model.LatLng
@@ -96,11 +97,13 @@ private fun getDrawableEvents(events: List<Event>): List<Event> {
  * @property todosRepository Repository for accessing todo data.
  * @property eventsRepository Repository for accessing event data.
  * @property fusedLocationClient Client for accessing device location services.
+ * @property coordinator Coordinator for handling navigation-triggered map centering.
  */
 class MapViewModel(
     private val todosRepository: ToDosRepository = ToDosRepositoryFirestore(Firebase.firestore),
     private val eventsRepository: EventsRepository = EventsRepositoryFirestore(Firebase.firestore),
-    private val fusedLocationClient: FusedLocationProviderClient? = null
+    private val fusedLocationClient: FusedLocationProviderClient? = null,
+    private val coordinator: MapCoordinator
 ) : ViewModel() {
 
   /** StateFlow that emits the current UI state for the Map screen. */
@@ -122,14 +125,12 @@ class MapViewModel(
    * @param context The context used to access location services.
    */
   fun startLocationUpdates(context: Context) {
-    locationJob?.cancel() // Cancel existing if any
+    locationJob?.cancel()
     locationJob =
         viewModelScope.launch {
           fusedLocationClient?.locationFlow(context)?.collect { location: AndroidLocation ->
             val latLng = LatLng(location.latitude, location.longitude)
-            _uiState.update {
-              it.copy(currentUserLocation = latLng)
-            } // update is safer for concurrent updates
+            _uiState.update { it.copy(currentUserLocation = latLng) }
           }
         }
   }
@@ -224,16 +225,16 @@ class MapViewModel(
   /**
    * Fetches the location to center the map on based on a priority chain:
    * 1. Last consulted `ToDo` (if any)
-   * 2. Last consulted `Event` (if any)
-   * 3. User's current location (with 5-second timeout)
-   * 4. EPFL default location (fallback)
+   * 2. Unconsumed event from coordinator (navigation-triggered)
+   * 3. Last consulted `Event` (if any)
+   * 4. User's current location (with 5-second timeout)
+   * 5. EPFL default location (fallback)
    *
    * @param context The context used to access location services.
    * @return The LatLng position to center the camera on.
    */
   @Suppress("SuspendFunctionOnCoroutineScope")
   suspend fun fetchLocationToCenterOn(context: Context): LatLng {
-    // Check for last consulted `ToDo`
     if (_uiState.value.lastConsultedTodoId != null) {
       val todo = todoList.find { it.uid == _uiState.value.lastConsultedTodoId }
       if (todo?.location != null) {
@@ -241,7 +242,18 @@ class MapViewModel(
       }
     }
 
-    // Check for last consulted event
+    coordinator.getUnconsumedEventId()?.let { eventId ->
+      eventsList
+          .find { it.id == eventId }
+          ?.location
+          ?.let { location ->
+            coordinator.markConsumed()
+            // Switch to events view and update itemsList
+            _uiState.update { it.copy(displayEventsPage = true, itemsList = eventsList) }
+            return toLatLng(location)
+          }
+    }
+
     if (_uiState.value.lastConsultedEventId != null) {
       val event = eventsList.find { it.id == _uiState.value.lastConsultedEventId }
       if (event?.location != null) {
@@ -249,7 +261,6 @@ class MapViewModel(
       }
     }
 
-    // Try current user location with timeout
     try {
       val currentLocation =
           withTimeoutOrNull(LOCATION_FETCH_TIMEOUT) {
@@ -264,7 +275,6 @@ class MapViewModel(
       // Ignore this to fall back to EPFL default
     }
 
-    // Fallback to EPFL
     return EPFL_LATLNG
   }
 
@@ -273,10 +283,11 @@ class MapViewModel(
     fun provideFactory(
         todosRepository: ToDosRepository = ToDosRepositoryFirestore(Firebase.firestore),
         eventsRepository: EventsRepository = EventsRepositoryFirestore(Firebase.firestore),
-        fusedLocationClient: FusedLocationProviderClient? = null
+        fusedLocationClient: FusedLocationProviderClient? = null,
+        coordinator: MapCoordinator
     ): ViewModelProvider.Factory {
       return GenericViewModelFactory {
-        MapViewModel(todosRepository, eventsRepository, fusedLocationClient)
+        MapViewModel(todosRepository, eventsRepository, fusedLocationClient, coordinator)
       }
     }
   }
