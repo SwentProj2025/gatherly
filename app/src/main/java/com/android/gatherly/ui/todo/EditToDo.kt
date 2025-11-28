@@ -231,7 +231,7 @@ fun EditToDoScreen(
                 TimeInputField(
                     initialTime = todoUIState.dueTime,
                     onTimeChanged = { editTodoViewModel.onTimeChanged(it) },
-                    dueTimeError = (todoUIState.dueTimeError == null),
+                    dueTimeError = (todoUIState.dueTimeError != null),
                     label = stringResource(R.string.todos_time_field_label),
                     textFieldColors = toDoTextFieldColors,
                     testTagInput = EditToDoScreenTestTags.INPUT_TODO_TIME,

@@ -246,12 +246,12 @@ fun AddToDoScreen(
                   TimeInputField(
                       initialTime = todoUIState.dueTime,
                       onTimeChanged = { addTodoViewModel.onTimeChanged(it) },
-                      dueTimeError = (todoUIState.dueTimeError == null),
+                      dueTimeError = (todoUIState.dueTimeError != null),
                       label = stringResource(R.string.todos_time_field_label),
                       textFieldColors = toDoTextFieldColors,
                       testTagInput = AddToDoScreenTestTags.INPUT_TODO_TIME,
                       testTagErrorMessage = AddToDoScreenTestTags.ERROR_MESSAGE,
-                      isStarting = null)
+                  )
                 }
               }
 
