@@ -1,8 +1,9 @@
 package com.android.gatherly.model.profile
 
 import android.net.Uri
-import com.android.gatherly.model.badge.ProfileBadges
-import com.android.gatherly.model.badge.Rank
+import com.android.gatherly.model.badge.Badge
+import com.android.gatherly.model.badge.BadgeRank
+import com.android.gatherly.model.badge.BadgeType
 import com.android.gatherly.model.friends.Friends
 
 /**
@@ -142,12 +143,14 @@ class ProfileLocalRepository : ProfileRepository {
 
   override suspend fun addFriend(friend: String, currentUserId: String) {
     val currentProfile = getProfileByUid(currentUserId) ?: return
-    val friendId = getProfileByUsername(friend)?.uid
+    val friendId = getProfileByUsername(friend)?.uid ?: return
+
     if (!currentProfile.friendUids.contains(friendId)) {
       val updatedFriends = currentProfile.friendUids + friendId
-      val updatedProfile = currentProfile.copy(friendUids = updatedFriends as List<String>)
+      val updatedProfile = currentProfile.copy(friendUids = updatedFriends)
       updateProfile(updatedProfile)
     }
+    incrementBadge(currentUserId, BadgeType.FRIENDS_ADDED)
   }
 
   // ---- STATUS GESTION PART ----
@@ -185,6 +188,7 @@ class ProfileLocalRepository : ProfileRepository {
       val updatedProfile = currentProfile.copy(participatingEventIds = updateEventIds)
       updateProfile(updatedProfile)
     }
+    incrementBadge(currentUserId, BadgeType.EVENTS_PARTICIPATED)
   }
 
   override suspend fun allParticipateEvent(eventId: String, participants: List<String>) {
@@ -206,34 +210,58 @@ class ProfileLocalRepository : ProfileRepository {
 
   // ---- BADGE GESTION PART ----
 
-  override suspend fun updateBadges(
-      userProfile: Profile,
-      createdTodosCount: Int?,
-      completedTodosCount: Int?
-  ) {
+  override suspend fun addBadge(uid: String, badgeId: String) {
+    val profile =
+        getProfileByUid(uid) ?: throw NoSuchElementException("Profile not found for uid=$uid")
 
-    if (createdTodosCount == null || completedTodosCount == null) {
-      return
-    }
-    val updatedBadges =
-        ProfileBadges(
-            addFriends = rank(userProfile.friendUids.size),
-            createdTodos = rank(createdTodosCount),
-            completedTodos = rank(completedTodosCount),
-            createEvent = rank(userProfile.ownedEventIds.size),
-            participateEvent = rank(userProfile.participatingEventIds.size),
-            focusSessionPoint = rank(userProfile.focusSessionIds.size))
-    val updatedProfile = userProfile.copy(badges = updatedBadges)
-    updateProfile(updatedProfile)
+    val currentBadgesSet = profile.badgeIds.toMutableSet()
+    currentBadgesSet.add(badgeId)
+
+    updateProfile(profile.copy(badgeIds = currentBadgesSet.toList()))
   }
 
-  private fun rank(count: Int): Rank =
+  // ---- COUNTERS + BADGES (LOCAL) ----
+  override suspend fun incrementBadge(uid: String, type: BadgeType) {
+    val profile =
+        getProfileByUid(uid) ?: throw NoSuchElementException("Profile not found for uid=$uid")
+
+    val badgeCount = profile.badgeCount
+    val key = type.name
+    val currentValue: Long
+
+    val updated =
+        badgeCount.toMutableMap().apply {
+          currentValue = this[key] ?: 0L
+          this[key] = currentValue + 1
+        }
+    updateProfile(profile.copy(badgeCount = updated))
+    awardBadge(uid, type, currentValue + 1)
+  }
+
+  override suspend fun updateFocusPoints(uid: String, points: Double) {
+    var profile = getProfileByUid(uid) ?: throw IllegalArgumentException("Profile doesn't exist")
+    profile = profile.copy(focusPoints = profile.focusPoints + points)
+    updateProfile(profile)
+  }
+
+  // ---------- helpers ----------
+
+  private suspend fun awardBadge(uid: String, type: BadgeType, count: Long) {
+    val rank = countToRank(count)
+    if (rank == BadgeRank.BLANK) return
+
+    val badge = Badge.entries.firstOrNull { it.type == type && it.rank == rank } ?: return
+    addBadge(uid, badge.id)
+  }
+
+  private fun countToRank(count: Long): BadgeRank =
       when {
-        count >= 20 -> Rank.LEGEND
-        count >= 10 -> Rank.DIAMOND
-        count >= 5 -> Rank.GOLD
-        count >= 3 -> Rank.BRONZE
-        count >= 1 -> Rank.STARTING
-        else -> Rank.BLANK
+        count >= 30 -> BadgeRank.LEGEND
+        count >= 20 -> BadgeRank.DIAMOND
+        count >= 10 -> BadgeRank.GOLD
+        count >= 5 -> BadgeRank.SILVER
+        count >= 3 -> BadgeRank.BRONZE
+        count >= 1 -> BadgeRank.STARTING
+        else -> BadgeRank.BLANK
       }
 }

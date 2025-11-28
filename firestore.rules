@@ -113,7 +113,7 @@ service cloud.firestore {
           allow delete: if request.auth != null
             && resource.data.creatorId == request.auth.uid;
         }
-
+    
         // --- NOTIFICATIONS ---
 
         match /users/{userId}/notifications/{notificationId} {
@@ -130,6 +130,13 @@ service cloud.firestore {
           // Update/Delete: Only the recipient can modify their own notifications
           allow update, delete: if request.auth != null
                                 && request.auth.uid == userId;
+        }
+
+        // Allow read and write only if the userId corresponds to the requesters id
+        match /points/{pointsId} {
+          allow read: if request.auth != null && request.auth.uid == resource.data.userId;
+          allow create, update: if request.auth != null && request.auth.uid == request.resource.data.userId;
+          allow delete: if request.auth != null
         }
 
   }

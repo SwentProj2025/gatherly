@@ -1,6 +1,7 @@
 package com.android.gatherly.ui.todo
 
 import android.widget.Toast
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -20,13 +22,16 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
@@ -39,7 +44,9 @@ import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
 import com.android.gatherly.ui.theme.GatherlyTheme
+import com.android.gatherly.utils.DatePickerInputField
 import com.android.gatherly.utils.GatherlyAlertDialog
+import com.android.gatherly.utils.GatherlyDatePicker
 import kotlinx.coroutines.delay
 
 // Portions of the code in this file are copy-pasted from the Bootcamp solution provided by the
@@ -52,12 +59,6 @@ object EditToDoScreenTestTags {
 
   /** Tag for the To-Do description input field. */
   const val INPUT_TODO_DESCRIPTION = "inputTodoDescription"
-
-  /** Tag for the To-Do assignee input field. */
-  const val INPUT_TODO_ASSIGNEE = "inputTodoAssignee"
-
-  /** Tag for the To-Do location input field. */
-  const val INPUT_TODO_LOCATION = "inputTodoLocation"
 
   /** Tag for the To-Do due date input field. */
   const val INPUT_TODO_DATE = "inputTodoDate"
@@ -75,7 +76,7 @@ object EditToDoScreenTestTags {
   const val ERROR_MESSAGE = "errorMessage"
 
   /** Tag for displaying error messages under text fields. */
-  const val LOCATION_MENU = "locationMenu"
+  const val MORE_OPTIONS = "moreOptions"
 }
 
 private const val DELAY = 1000L
@@ -102,19 +103,15 @@ fun EditToDoScreen(
   val todoUIState by editTodoViewModel.uiState.collectAsState()
   val errorMsg = todoUIState.errorMsg
   val context = LocalContext.current
+  val shouldShowDialog = remember { mutableStateOf(false) }
+  val expandAdvanced = remember { mutableStateOf(false) }
 
   val screenPadding = dimensionResource(id = R.dimen.padding_screen)
   val fieldSpacing = dimensionResource(id = R.dimen.spacing_between_fields)
   val buttonSpacing = dimensionResource(id = R.dimen.spacing_between_buttons)
 
-  val textFieldColors =
-      TextFieldDefaults.colors(
-          focusedContainerColor = MaterialTheme.colorScheme.background,
-          unfocusedContainerColor = MaterialTheme.colorScheme.background,
-          unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-          focusedTextColor = MaterialTheme.colorScheme.onBackground,
-          errorTextColor = MaterialTheme.colorScheme.onBackground,
-      )
+  // Date state for the alert dialog visibilty
+  var showDatePicker by remember { mutableStateOf(false) }
 
   // Search location when input changes
   LaunchedEffect(todoUIState.location) {
@@ -164,7 +161,7 @@ fun EditToDoScreen(
                         Text(it, modifier = Modifier.testTag(EditToDoScreenTestTags.ERROR_MESSAGE))
                       }
                     },
-                    colors = textFieldColors,
+                    colors = toDoTextFieldColors,
                     modifier =
                         Modifier.fillMaxWidth().testTag(EditToDoScreenTestTags.INPUT_TODO_TITLE))
               }
@@ -176,13 +173,7 @@ fun EditToDoScreen(
                     onValueChange = { editTodoViewModel.onDescriptionChanged(it) },
                     label = { Text(stringResource(R.string.todos_description_field_label)) },
                     placeholder = { Text(stringResource(R.string.todos_description_placeholder)) },
-                    isError = todoUIState.descriptionError != null,
-                    supportingText = {
-                      todoUIState.descriptionError?.let {
-                        Text(it, modifier = Modifier.testTag(EditToDoScreenTestTags.ERROR_MESSAGE))
-                      }
-                    },
-                    colors = textFieldColors,
+                    colors = toDoTextFieldColors,
                     modifier =
                         Modifier.fillMaxWidth()
                             .testTag(EditToDoScreenTestTags.INPUT_TODO_DESCRIPTION),
@@ -190,22 +181,23 @@ fun EditToDoScreen(
                     maxLines = integerResource(R.integer.todo_description_max_lines))
               }
 
-              // Assignee Input
               item {
-                OutlinedTextField(
-                    value = todoUIState.assignee,
-                    onValueChange = { editTodoViewModel.onAssigneeChanged(it) },
-                    label = { Text(stringResource(R.string.todos_assignee_field_label)) },
-                    placeholder = { Text(stringResource(R.string.todos_assignee_placeholder)) },
-                    isError = todoUIState.assigneeError != null,
-                    supportingText = {
-                      todoUIState.assigneeError?.let {
-                        Text(it, modifier = Modifier.testTag(EditToDoScreenTestTags.ERROR_MESSAGE))
-                      }
-                    },
-                    colors = textFieldColors,
-                    modifier =
-                        Modifier.fillMaxWidth().testTag(EditToDoScreenTestTags.INPUT_TODO_ASSIGNEE))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically) {
+                      Icon(
+                          imageVector = Icons.Default.ChevronRight,
+                          contentDescription = null,
+                          modifier =
+                              Modifier.rotate(if (expandAdvanced.value) 90f else 0f)
+                                  .clickable(
+                                      onClick = { expandAdvanced.value = !expandAdvanced.value })
+                                  .testTag(EditToDoScreenTestTags.MORE_OPTIONS))
+
+                      Text(
+                          text = stringResource(R.string.todos_advanced_settings),
+                          modifier = Modifier.weight(1f))
+                    }
               }
 
               // Location Input with dropdown
@@ -216,21 +208,21 @@ fun EditToDoScreen(
                     onLocationChanged = { editTodoViewModel.onLocationChanged(it) },
                     onSelectLocation = { loc -> editTodoViewModel.selectLocation(loc) },
                     modifier = Modifier.fillMaxWidth(),
-                    testTagInput = EditToDoScreenTestTags.INPUT_TODO_LOCATION,
-                    testTagDropdown = EditToDoScreenTestTags.LOCATION_MENU,
-                )
+                    textFieldColors = toDoTextFieldColors)
               }
 
               // Due Date Input
               item {
-                DateInputField(
-                    initialDate = todoUIState.dueDate,
-                    onDateChanged = { editTodoViewModel.onDateChanged(it) },
-                    dueDateError = todoUIState.dueDateError,
-                    textFieldColors = textFieldColors,
-                    testTagInput = EditToDoScreenTestTags.INPUT_TODO_DATE,
-                    testTagErrorMessage = EditToDoScreenTestTags.ERROR_MESSAGE,
-                )
+                DatePickerInputField(
+                    value = todoUIState.dueDate,
+                    label = stringResource(R.string.todos_date_field_label),
+                    isErrorMessage = todoUIState.dueDateError,
+                    onClick = { showDatePicker = true },
+                    colors = toDoTextFieldColors,
+                    testTag =
+                        Pair(
+                            EditToDoScreenTestTags.INPUT_TODO_DATE,
+                            EditToDoScreenTestTags.ERROR_MESSAGE))
               }
 
               // Due Time Input
@@ -239,7 +231,7 @@ fun EditToDoScreen(
                     initialTime = todoUIState.dueTime,
                     onTimeChanged = { editTodoViewModel.onTimeChanged(it) },
                     dueTimeError = todoUIState.dueTimeError,
-                    textFieldColors = textFieldColors,
+                    textFieldColors = toDoTextFieldColors,
                     testTagInput = EditToDoScreenTestTags.INPUT_TODO_TIME,
                     testTagErrorMessage = EditToDoScreenTestTags.ERROR_MESSAGE,
                 )
@@ -283,7 +275,7 @@ fun EditToDoScreen(
               // Delete Button
               item {
                 TextButton(
-                    onClick = { editTodoViewModel.deleteToDo(todoUid) },
+                    onClick = { shouldShowDialog.value = true },
                     modifier = Modifier.fillMaxWidth().testTag(EditToDoScreenTestTags.TODO_DELETE),
                     // TextButton has no background by default
                     colors =
@@ -304,6 +296,21 @@ fun EditToDoScreen(
                     }
               }
             }
+
+        if (shouldShowDialog.value) {
+          GatherlyAlertDialog(
+              titleText = stringResource(R.string.todos_delete_warning),
+              bodyText = stringResource(R.string.todos_delete_warning_text),
+              dismissText = stringResource(R.string.cancel),
+              confirmText = stringResource(R.string.delete),
+              onDismiss = { shouldShowDialog.value = false },
+              onConfirm = {
+                editTodoViewModel.deleteToDo(todoID = todoUid)
+                shouldShowDialog.value = false
+              },
+              isImportantWarning = true)
+        }
+
         if (todoUIState.pastTime) {
           GatherlyAlertDialog(
               titleText = stringResource(R.string.todos_past_warning),
@@ -316,6 +323,11 @@ fun EditToDoScreen(
                 editTodoViewModel.clearPastTime()
               })
         }
+        GatherlyDatePicker(
+            show = showDatePicker,
+            initialDate = todoUIState.dueDate,
+            onDateSelected = { selectedDate -> editTodoViewModel.onDateChanged(selectedDate) },
+            onDismiss = { showDatePicker = false })
       })
 }
 

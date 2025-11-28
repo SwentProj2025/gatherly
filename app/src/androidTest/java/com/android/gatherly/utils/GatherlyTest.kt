@@ -21,6 +21,7 @@ import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.ui.todo.AddToDoScreenTestTags
 import com.android.gatherly.ui.todo.EditToDoScreenTestTags
+import com.android.gatherly.ui.todo.LocationSuggestionsTestTags
 import com.android.gatherly.ui.todo.OverviewScreenTestTags
 import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
@@ -45,7 +46,6 @@ abstract class GatherlyTest() {
           uid = "0",
           name = "Buy groceries",
           description = "Milk, eggs, bread, and butter",
-          assigneeName = "Alice",
           dueDate = Timestamp.Companion.fromDate(2025, Calendar.SEPTEMBER, 1),
           dueTime = Timestamp.now(),
           location = Location(46.5191, 6.5668, "Lausanne Coop"),
@@ -57,7 +57,6 @@ abstract class GatherlyTest() {
           uid = "1",
           name = "Walk the dog",
           description = "Take Fido for a walk in the park",
-          assigneeName = "Bob",
           dueDate = Timestamp.Companion.fromDate(2025, Calendar.OCTOBER, 15),
           location = Location(46.5210, 6.5790, "Parc de Mon Repos"),
           dueTime = Timestamp.now(),
@@ -69,7 +68,6 @@ abstract class GatherlyTest() {
           uid = "2",
           name = "Read a book",
           description = "Finish reading 'Clean Code'",
-          assigneeName = "Charlie",
           dueDate = Timestamp.Companion.fromDate(2025, Calendar.NOVEMBER, 10),
           location = Location(46.5200, 6.5800, "City Library"),
           dueTime = Timestamp.now(),
@@ -86,11 +84,6 @@ abstract class GatherlyTest() {
     onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_DESCRIPTION).performTextInput(description)
   }
 
-  fun ComposeTestRule.enterEditTodoAssignee(assignee: String) {
-    onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_ASSIGNEE).performTextClearance()
-    onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_ASSIGNEE).performTextInput(assignee)
-  }
-
   fun ComposeTestRule.enterEditTodoDate(date: String) {
     onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_DATE).performTextClearance()
     onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_DATE).performTextInput(date)
@@ -102,8 +95,8 @@ abstract class GatherlyTest() {
   }
 
   fun ComposeTestRule.enterEditTodoLocation(location: String) {
-    onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_LOCATION).performTextClearance()
-    onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_LOCATION).performTextInput(location)
+    onNodeWithTag(LocationSuggestionsTestTags.INPUT).performTextClearance()
+    onNodeWithTag(LocationSuggestionsTestTags.INPUT).performTextInput(location)
   }
 
   fun ComposeTestRule.checkErrorMessageIsDisplayedForEditTodo() =
@@ -116,23 +109,26 @@ abstract class GatherlyTest() {
   fun ComposeTestRule.enterAddTodoDescription(description: String) =
       onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_DESCRIPTION).performTextInput(description)
 
-  fun ComposeTestRule.enterAddTodoAssignee(assignee: String) =
-      onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_ASSIGNEE).performTextInput(assignee)
-
-  fun ComposeTestRule.enterAddTodoDate(date: String) =
-      onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_DATE).performTextInput(date)
+  fun ComposeTestRule.enterAddTodoDate(date: String) = {
+    openDatePicker(AddToDoScreenTestTags.INPUT_TODO_DATE)
+    val parts = date.split("/")
+    if (parts.size == 3) {
+      val day = parts[0].toInt()
+      val month = parts[1].toInt()
+      val year = parts[2].toInt()
+      selectDateFromPicker(day, month, year)
+    }
+  }
 
   fun ComposeTestRule.enterAddTodoTime(time: String) =
       onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_TIME).performTextInput(time)
 
   fun ComposeTestRule.enterAddTodoLocation(location: String) =
-      onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_LOCATION).performTextInput(location)
+      onNodeWithTag(LocationSuggestionsTestTags.INPUT).performTextInput(location)
 
-  fun ComposeTestRule.enterAddTodoDetails(todo: ToDo, date: String = todo.dueDate.toDateString()) {
+  fun ComposeTestRule.enterAddTodoDetails(todo: ToDo) {
     enterAddTodoTitle(todo.name)
     enterAddTodoDescription(todo.description)
-    enterAddTodoAssignee(todo.assigneeName)
-    enterAddTodoDate(date)
     enterAddTodoLocation(todo.location?.name ?: "Any")
   }
 
@@ -193,8 +189,7 @@ abstract class GatherlyTest() {
   fun ToDo.Equals(other: ToDo): Boolean =
       name == other.name &&
           description == other.description &&
-          assigneeName == other.assigneeName &&
-          dueDate.toDateString() == other.dueDate.toDateString() &&
+          (dueDate?.toDateString() ?: "") == (other.dueDate?.toDateString() ?: "") &&
           status == other.status
 
   fun ToDosRepository.getTodoByName(name: String): ToDo = runBlocking {
