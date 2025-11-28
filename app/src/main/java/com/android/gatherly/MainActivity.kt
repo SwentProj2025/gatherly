@@ -22,6 +22,7 @@ import com.android.gatherly.model.profile.ProfileStatus
 import com.android.gatherly.model.profile.UserStatusManager
 import com.android.gatherly.ui.authentication.InitProfileScreen
 import com.android.gatherly.ui.authentication.SignInScreen
+import com.android.gatherly.ui.badge.BadgeScreen
 import com.android.gatherly.ui.events.AddEventScreen
 import com.android.gatherly.ui.events.EditEventsScreen
 import com.android.gatherly.ui.events.EventsScreen
@@ -236,7 +237,18 @@ fun GatherlyApp(
         ProfileScreen(
             navigationActions = navigationActions,
             credentialManager = credentialManager,
+            onBadgeClicked = { navigationActions.navigateTo(Screen.BadgeScreen) },
             onSignedOut = { navigationActions.navigateTo(Screen.SignIn) })
+      }
+    }
+
+    // BADGE COMPOSABLE  ------------------------------
+    navigation(
+        startDestination = Screen.BadgeScreen.route,
+        route = Screen.BadgeScreen.name,
+    ) {
+      composable(Screen.BadgeScreen.route) {
+        BadgeScreen(goBack = { navigationActions.navigateTo(Screen.ProfileScreen) })
       }
     }
 
