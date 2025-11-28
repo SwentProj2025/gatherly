@@ -27,6 +27,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
@@ -43,7 +44,9 @@ import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
 import com.android.gatherly.ui.theme.GatherlyTheme
+import com.android.gatherly.utils.DatePickerInputField
 import com.android.gatherly.utils.GatherlyAlertDialog
+import com.android.gatherly.utils.GatherlyDatePicker
 import kotlinx.coroutines.delay
 
 // Portions of the code in this file are copy-pasted from the Bootcamp solution provided by the
@@ -119,6 +122,9 @@ fun AddToDoScreen(
   val screenPadding = dimensionResource(id = R.dimen.padding_screen)
   val fieldSpacing = dimensionResource(id = R.dimen.spacing_between_fields)
   val inputHeight = dimensionResource(id = R.dimen.input_height)
+
+  // Date state for the alert dialog visibilty
+  var showDatePicker by remember { mutableStateOf(false) }
 
   LaunchedEffect(errorMsg) {
     if (errorMsg != null) {
@@ -221,14 +227,16 @@ fun AddToDoScreen(
 
                 // Due Date Input
                 item {
-                  DateInputField(
-                      initialDate = todoUIState.dueDate,
-                      onDateChanged = { addTodoViewModel.onDateChanged(it) },
-                      dueDateError = todoUIState.dueDateError,
-                      textFieldColors = toDoTextFieldColors,
-                      testTagInput = AddToDoScreenTestTags.INPUT_TODO_DATE,
-                      testTagErrorMessage = AddToDoScreenTestTags.ERROR_MESSAGE,
-                  )
+                  DatePickerInputField(
+                      value = todoUIState.dueDate,
+                      label = stringResource(R.string.todos_date_field_label),
+                      isErrorMessage = todoUIState.dueDateError,
+                      onClick = { showDatePicker = true },
+                      colors = toDoTextFieldColors,
+                      testTag =
+                          Pair(
+                              AddToDoScreenTestTags.INPUT_TODO_DATE,
+                              AddToDoScreenTestTags.ERROR_MESSAGE))
                 }
 
                 // Due Time Input
@@ -242,21 +250,21 @@ fun AddToDoScreen(
                       testTagErrorMessage = AddToDoScreenTestTags.ERROR_MESSAGE,
                   )
                 }
-              }
 
-              item { Spacer(modifier = Modifier.height(fieldSpacing)) }
+                item { Spacer(modifier = Modifier.height(fieldSpacing)) }
 
-              // Save Button
-              item {
-                Button(
-                    onClick = { addTodoViewModel.checkTodoTime() },
-                    modifier = Modifier.fillMaxWidth().testTag(AddToDoScreenTestTags.TODO_SAVE),
-                    colors =
-                        ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.secondary),
-                    enabled = todoUIState.isValid) {
-                      SavingText(todoUIState = todoUIState)
-                    }
+                // Save Button
+                item {
+                  Button(
+                      onClick = { addTodoViewModel.checkTodoTime() },
+                      modifier = Modifier.fillMaxWidth().testTag(AddToDoScreenTestTags.TODO_SAVE),
+                      colors =
+                          ButtonDefaults.buttonColors(
+                              containerColor = MaterialTheme.colorScheme.secondary),
+                      enabled = todoUIState.isValid) {
+                        SavingText(todoUIState = todoUIState)
+                      }
+                }
               }
             }
         if (todoUIState.pastTime) {
@@ -271,6 +279,12 @@ fun AddToDoScreen(
                 addTodoViewModel.clearPastTime()
               })
         }
+
+        GatherlyDatePicker(
+            show = showDatePicker,
+            initialDate = todoUIState.dueDate,
+            onDateSelected = { selectedDate -> addTodoViewModel.onDateChanged(selectedDate) },
+            onDismiss = { showDatePicker = false })
       })
 }
 

@@ -28,6 +28,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
@@ -43,7 +44,9 @@ import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
 import com.android.gatherly.ui.theme.GatherlyTheme
+import com.android.gatherly.utils.DatePickerInputField
 import com.android.gatherly.utils.GatherlyAlertDialog
+import com.android.gatherly.utils.GatherlyDatePicker
 import kotlinx.coroutines.delay
 
 // Portions of the code in this file are copy-pasted from the Bootcamp solution provided by the
@@ -106,6 +109,9 @@ fun EditToDoScreen(
   val screenPadding = dimensionResource(id = R.dimen.padding_screen)
   val fieldSpacing = dimensionResource(id = R.dimen.spacing_between_fields)
   val buttonSpacing = dimensionResource(id = R.dimen.spacing_between_buttons)
+
+  // Date state for the alert dialog visibilty
+  var showDatePicker by remember { mutableStateOf(false) }
 
   // Search location when input changes
   LaunchedEffect(todoUIState.location) {
@@ -194,41 +200,41 @@ fun EditToDoScreen(
                     }
               }
 
-              if (expandAdvanced.value) {
-                // Location Input with dropdown
-                item {
-                  LocationSuggestions(
-                      location = todoUIState.location,
-                      suggestions = todoUIState.suggestions,
-                      onLocationChanged = { editTodoViewModel.onLocationChanged(it) },
-                      onSelectLocation = { loc -> editTodoViewModel.selectLocation(loc) },
-                      modifier = Modifier.fillMaxWidth(),
-                      textFieldColors = toDoTextFieldColors)
-                }
+              // Location Input with dropdown
+              item {
+                LocationSuggestions(
+                    location = todoUIState.location,
+                    suggestions = todoUIState.suggestions,
+                    onLocationChanged = { editTodoViewModel.onLocationChanged(it) },
+                    onSelectLocation = { loc -> editTodoViewModel.selectLocation(loc) },
+                    modifier = Modifier.fillMaxWidth(),
+                    textFieldColors = toDoTextFieldColors)
+              }
 
-                // Due Date Input
-                item {
-                  DateInputField(
-                      initialDate = todoUIState.dueDate,
-                      onDateChanged = { editTodoViewModel.onDateChanged(it) },
-                      dueDateError = todoUIState.dueDateError,
-                      textFieldColors = toDoTextFieldColors,
-                      testTagInput = EditToDoScreenTestTags.INPUT_TODO_DATE,
-                      testTagErrorMessage = EditToDoScreenTestTags.ERROR_MESSAGE,
-                  )
-                }
+              // Due Date Input
+              item {
+                DatePickerInputField(
+                    value = todoUIState.dueDate,
+                    label = stringResource(R.string.todos_date_field_label),
+                    isErrorMessage = todoUIState.dueDateError,
+                    onClick = { showDatePicker = true },
+                    colors = toDoTextFieldColors,
+                    testTag =
+                        Pair(
+                            EditToDoScreenTestTags.INPUT_TODO_DATE,
+                            EditToDoScreenTestTags.ERROR_MESSAGE))
+              }
 
-                // Due Time Input
-                item {
-                  TimeInputField(
-                      initialTime = todoUIState.dueTime,
-                      onTimeChanged = { editTodoViewModel.onTimeChanged(it) },
-                      dueTimeError = todoUIState.dueTimeError,
-                      textFieldColors = toDoTextFieldColors,
-                      testTagInput = EditToDoScreenTestTags.INPUT_TODO_TIME,
-                      testTagErrorMessage = EditToDoScreenTestTags.ERROR_MESSAGE,
-                  )
-                }
+              // Due Time Input
+              item {
+                TimeInputField(
+                    initialTime = todoUIState.dueTime,
+                    onTimeChanged = { editTodoViewModel.onTimeChanged(it) },
+                    dueTimeError = todoUIState.dueTimeError,
+                    textFieldColors = toDoTextFieldColors,
+                    testTagInput = EditToDoScreenTestTags.INPUT_TODO_TIME,
+                    testTagErrorMessage = EditToDoScreenTestTags.ERROR_MESSAGE,
+                )
               }
 
               item { Spacer(modifier = Modifier.height(fieldSpacing)) }
@@ -317,6 +323,11 @@ fun EditToDoScreen(
                 editTodoViewModel.clearPastTime()
               })
         }
+        GatherlyDatePicker(
+            show = showDatePicker,
+            initialDate = todoUIState.dueDate,
+            onDateSelected = { selectedDate -> editTodoViewModel.onDateChanged(selectedDate) },
+            onDismiss = { showDatePicker = false })
       })
 }
 
