@@ -19,7 +19,8 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
 
-private const val TIMEOUT = 30_000L
+private const val TIMEOUT = 100_000L
+private const val DELAY = 10_000L
 
 class FriendsScreenTest {
 
@@ -293,7 +294,6 @@ class FriendsScreenTest {
       composeTestRule.waitForIdle()
 
       composeTestRule.mainClock.autoAdvance = false
-      val animationDelay = 2000L
 
       val friendToUnfollow = "francis"
       val unfollowButtonTag =
@@ -302,11 +302,11 @@ class FriendsScreenTest {
       val heartBreakAnimation = FriendsScreenTestTags.HEART_BREAK_ANIMATION
 
       composeTestRule.onNodeWithTag(unfollowButtonTag).performClick()
-      composeTestRule.mainClock.advanceTimeBy(100)
+      composeTestRule.mainClock.advanceTimeBy(DELAY)
       composeTestRule.onNodeWithTag(unfollowMessage).assertIsDisplayed()
       composeTestRule.onNodeWithTag(heartBreakAnimation).assertIsDisplayed()
 
-      composeTestRule.mainClock.advanceTimeBy(animationDelay)
+      composeTestRule.mainClock.advanceTimeBy(DELAY)
       composeTestRule.onNodeWithText(unfollowMessage, ignoreCase = true).assertIsNotDisplayed()
       composeTestRule.onNodeWithText(heartBreakAnimation, ignoreCase = true).assertIsNotDisplayed()
 

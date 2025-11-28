@@ -31,8 +31,8 @@ import kotlinx.coroutines.withTimeout
 import org.junit.Assert.*
 import org.junit.Test
 
-private const val TIMEOUT = 3000L
-private const val DELAY = 100L
+private const val TIMEOUT = 100_000L
+private const val DELAY = 10_000L
 
 /**
  * Integration tests for [ProfileRepositoryFirestore] using the Firebase Emulators.

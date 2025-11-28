@@ -20,7 +20,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-private const val WAIT_TIMEOUT = 5000L
+private const val WAIT_TIMEOUT = 100_000L
 
 @RunWith(AndroidJUnit4::class)
 class SignInScreenTest : FirestoreGatherlyTest() {

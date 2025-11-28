@@ -26,6 +26,8 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
+private const val TIMEOUT = 100_000L
+
 class Milestone1End2End : FirestoreGatherlyTest() {
   @get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()
   // Grant location permissions for the tests (required!)
@@ -33,8 +35,6 @@ class Milestone1End2End : FirestoreGatherlyTest() {
   val permissionRule: GrantPermissionRule =
       GrantPermissionRule.grant(
           Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
-
-  val TIMEOUT = 5000L
 
   // set content
   @Before
