@@ -11,6 +11,7 @@ import java.util.Calendar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
@@ -91,11 +92,15 @@ class FocusPointsViewModelTest {
     pointsRepository.addPoints(points1)
     pointsRepository.addPoints(points2)
 
+    advanceUntilIdle()
+
     pointsViewModel.loadPointsHistory()
+
+    advanceUntilIdle()
 
     val focusHistory = pointsViewModel.uiState.value.focusHistory
 
-    assert(focusHistory.size == 2)
+    assert(focusHistory.size == 2) { focusHistory.size }
     assert(focusHistory == listOf(points2, points1))
   }
 }
