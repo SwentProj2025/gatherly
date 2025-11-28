@@ -65,7 +65,8 @@ class ProfileViewModelIntegrationTest {
     mockitoUtils.chooseCurrentUser(uid)
 
     profileViewModel =
-        ProfileViewModel(repository = profileRepository, authProvider = { mockitoUtils.mockAuth })
+        ProfileViewModel(
+            profileRepository = profileRepository, authProvider = { mockitoUtils.mockAuth })
     profileViewModel.loadUserProfile()
 
     // Wait until loading completes and profile is available
@@ -85,7 +86,8 @@ class ProfileViewModelIntegrationTest {
     mockitoUtils.chooseCurrentUser(uid)
 
     profileViewModel =
-        ProfileViewModel(repository = profileRepository, authProvider = { mockitoUtils.mockAuth })
+        ProfileViewModel(
+            profileRepository = profileRepository, authProvider = { mockitoUtils.mockAuth })
     profileViewModel.loadUserProfile()
 
     // Wait until loading completes and an error appears
@@ -101,7 +103,8 @@ class ProfileViewModelIntegrationTest {
     mockitoUtils.unauthenticatedCurrentUser()
 
     profileViewModel =
-        ProfileViewModel(repository = profileRepository, authProvider = { mockitoUtils.mockAuth })
+        ProfileViewModel(
+            profileRepository = profileRepository, authProvider = { mockitoUtils.mockAuth })
     profileViewModel.loadUserProfile()
 
     // Wait until loading completes and an error appears
