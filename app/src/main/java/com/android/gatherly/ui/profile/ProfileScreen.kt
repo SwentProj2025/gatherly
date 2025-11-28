@@ -69,6 +69,7 @@ object ProfileScreenTestTags {
   const val GROUP_ROW = "groupRow"
   const val GROUP_ROW_NAME = "groupRowName"
   const val GROUP_ROW_MEMBER_COUNT = "groupRowMembers"
+  const val NO_GROUPS_TEXT = "noGroupsText"
   const val GOOGLE_BUTTON = "googleButton"
 }
 
@@ -321,7 +322,8 @@ fun ProfileScreen(
                   Text(
                       text = stringResource(R.string.profile_empty_groups_message),
                       style = MaterialTheme.typography.bodyMedium,
-                      textAlign = TextAlign.Center)
+                      textAlign = TextAlign.Center,
+                      modifier = Modifier.testTag(ProfileScreenTestTags.NO_GROUPS_TEXT))
                 } else {
                   GroupsOverview(
                       groupsToMembers = groupsToMembers, modifier = Modifier.fillMaxWidth())

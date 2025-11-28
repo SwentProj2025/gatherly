@@ -43,6 +43,8 @@ fun GroupsOverview(groupsToMembers: Map<Group, List<Profile>>, modifier: Modifie
   val borderWidth = dimensionResource(id = R.dimen.group_overview_avatar_border_width)
   val roundedCorner = dimensionResource(id = R.dimen.rounded_corner_shape_large)
   val pictureContentDescription = stringResource(R.string.profile_picture_description)
+  val oneMember = stringResource(R.string.group_members_text_singular)
+  val multipleMembers = stringResource(R.string.group_members_text_plural)
 
   // Width needed for 3 avatars + spacing between them
   val maxAvatarWidth =
@@ -58,7 +60,7 @@ fun GroupsOverview(groupsToMembers: Map<Group, List<Profile>>, modifier: Modifie
         val groups = groupsToMembers.keys.toList()
         groups.forEachIndexed { index, group ->
           val groupSize = group.memberIds.size
-          val memberText = if (groupSize == 1) "member" else "members"
+          val memberText = if (groupSize == 1) oneMember else multipleMembers
           val membersProfile = groupsToMembers[group] ?: emptyList()
           Row(
               modifier =

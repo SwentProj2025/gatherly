@@ -120,10 +120,12 @@ class ProfileViewModel(
           updatedMap.put(group, groupsMembersProfile)
         }
         _uiState.value = _uiState.value.copy(groupsToMembers = updatedMap, isLoading = false)
-      } catch (e: Exception) {
+      } catch (_: Exception) {
         _uiState.value =
             _uiState.value.copy(
-                groupsToMembers = emptyMap(), isLoading = false, errorMessage = e.message)
+                groupsToMembers = emptyMap(),
+                isLoading = false,
+                errorMessage = "Failed to load groups")
       }
     }
   }

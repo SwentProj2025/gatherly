@@ -48,10 +48,13 @@ class ProfileScreenTest {
 
   private lateinit var mockitoUtils: MockitoUtils
 
-  private fun setContent(isAnon: Boolean = false) {
+  private fun setContent(isAnon: Boolean = false, hasGroups: Boolean = true) {
     profileRepository = ProfileLocalRepository()
     groupsRepository = GroupsLocalRepository()
-    fill_repository()
+    fill_profile_repository()
+    if (hasGroups) {
+      fill_groups_repository()
+    }
 
     // Mock Firebase Auth
     mockitoUtils = MockitoUtils()
@@ -65,11 +68,12 @@ class ProfileScreenTest {
     composeTestRule.setContent { ProfileScreen(profileViewModel = profileViewModel) }
   }
 
-  fun fill_repository() = runTest {
+  fun fill_groups_repository() = runTest {
     groupsRepository.addGroup(group1)
     groupsRepository.addGroup(group2)
-    profileRepository.addProfile(profile)
   }
+
+  fun fill_profile_repository() = runTest { profileRepository.addProfile(profile) }
 
   @Test
   fun profilePicture_IsDisplayed() {
@@ -140,6 +144,16 @@ class ProfileScreenTest {
     composeTestRule
         .onNodeWithTag("${ProfileScreenTestTags.GROUP_ROW_MEMBER_COUNT}_1")
         .assertTextContains("1 member")
+  }
+
+  @Test
+  fun groupsOverview_Displayed_WhenUserHasNoGroups() = runTest {
+    setContent(isAnon = false, hasGroups = false)
+
+    composeTestRule
+        .onNodeWithTag(ProfileScreenTestTags.GROUPS_OVERVIEW_CONTAINER)
+        .assertDoesNotExist()
+    composeTestRule.onNodeWithTag(ProfileScreenTestTags.NO_GROUPS_TEXT).assertExists()
   }
 
   /** Check that the anonymous user sees the "upgrade with google" button */
