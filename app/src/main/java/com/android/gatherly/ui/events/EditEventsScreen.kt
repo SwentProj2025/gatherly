@@ -56,7 +56,6 @@ import kotlinx.coroutines.delay
 object EditEventsScreenTestTags {
   const val INPUT_NAME = "EVENT_NAME"
   const val INPUT_DESCRIPTION = "EVENT_DESCRIPTION"
-  const val INPUT_CREATOR = "EVENT_CREATOR"
   const val INPUT_LOCATION = "EVENT_LOCATION"
   const val INPUT_DATE = "EVENT_DATE"
   const val INPUT_START = "EVENT_START_TIME"

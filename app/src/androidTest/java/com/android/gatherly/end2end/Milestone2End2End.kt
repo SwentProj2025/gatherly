@@ -115,10 +115,6 @@ class Milestone2End2End : FirestoreGatherlyTest() {
         .onNodeWithTag(AddEventScreenTestTags.INPUT_DESCRIPTION)
         .assertIsDisplayed()
         .performTextInput("Description for my great event")
-    composeTestRule
-        .onNodeWithTag(AddEventScreenTestTags.INPUT_CREATOR)
-        .assertIsDisplayed()
-        .performTextInput("User1")
     composeTestRule.openDatePicker(AddEventScreenTestTags.INPUT_DATE)
     composeTestRule.selectDateFromPicker(
         LocalDate.now().dayOfMonth, LocalDate.now().month.value, LocalDate.now().year.plus(1))
