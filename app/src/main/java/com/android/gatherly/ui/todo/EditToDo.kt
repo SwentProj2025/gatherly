@@ -47,6 +47,7 @@ import com.android.gatherly.ui.theme.GatherlyTheme
 import com.android.gatherly.utils.DatePickerInputField
 import com.android.gatherly.utils.GatherlyAlertDialog
 import com.android.gatherly.utils.GatherlyDatePicker
+import com.android.gatherly.utils.TimeInputField
 import kotlinx.coroutines.delay
 
 // Portions of the code in this file are copy-pasted from the Bootcamp solution provided by the
@@ -230,7 +231,8 @@ fun EditToDoScreen(
                 TimeInputField(
                     initialTime = todoUIState.dueTime,
                     onTimeChanged = { editTodoViewModel.onTimeChanged(it) },
-                    dueTimeError = todoUIState.dueTimeError,
+                    dueTimeError = (todoUIState.dueTimeError != null),
+                    label = stringResource(R.string.todos_time_field_label),
                     textFieldColors = toDoTextFieldColors,
                     testTagInput = EditToDoScreenTestTags.INPUT_TODO_TIME,
                     testTagErrorMessage = EditToDoScreenTestTags.ERROR_MESSAGE,

@@ -462,6 +462,8 @@ class EventsOverviewScreenTest {
     composeTestRule.clickEventItem(eventByAlice)
     composeTestRule.onNodeWithTag(AlertDialogTestTags.ALERT).assertIsDisplayed()
     composeTestRule.onNodeWithTag(AlertDialogTestTags.TITLE).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.DATE_TEXT).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.CREATOR_TEXT).assertIsDisplayed()
     composeTestRule.onNodeWithTag(AlertDialogTestTags.BODY).assertIsDisplayed()
     composeTestRule.onNodeWithTag(AlertDialogTestTags.DISMISS_BTN).assertIsDisplayed()
     composeTestRule
@@ -524,6 +526,8 @@ class EventsOverviewScreenTest {
     composeTestRule.onNodeWithTag(AlertDialogTestTags.ALERT).assertIsDisplayed()
     composeTestRule.onNodeWithTag(AlertDialogTestTags.DISMISS_BTN).assertIsDisplayed()
     composeTestRule.onNodeWithTag(AlertDialogTestTags.TITLE).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.DATE_TEXT).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.CREATOR_TEXT).assertIsNotDisplayed()
     composeTestRule.onNodeWithTag(AlertDialogTestTags.BODY).assertIsDisplayed()
     // Click on the Edit button
     composeTestRule
@@ -560,6 +564,8 @@ class EventsOverviewScreenTest {
     composeTestRule.clickEventItem(eventByBob)
     composeTestRule.onNodeWithTag(AlertDialogTestTags.ALERT).assertIsDisplayed()
     composeTestRule.onNodeWithTag(AlertDialogTestTags.TITLE).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.DATE_TEXT).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.CREATOR_TEXT).assertIsNotDisplayed()
     composeTestRule.onNodeWithTag(AlertDialogTestTags.BODY).assertIsDisplayed()
     // Click on the Cancel button and verify that the popup is closed
     composeTestRule

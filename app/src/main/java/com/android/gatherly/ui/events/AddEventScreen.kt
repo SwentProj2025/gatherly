@@ -4,6 +4,7 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -46,13 +47,13 @@ import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
 import com.android.gatherly.ui.theme.GatherlyTheme
 import com.android.gatherly.utils.DatePickerInputField
 import com.android.gatherly.utils.GatherlyDatePicker
+import com.android.gatherly.utils.TimeInputField
 import kotlinx.coroutines.delay
 
 object AddEventScreenTestTags {
   const val LAZY_LIST = "LAZY_LIST"
   const val INPUT_NAME = "EVENT_NAME"
   const val INPUT_DESCRIPTION = "EVENT_DESCRIPTION"
-  const val INPUT_CREATOR = "EVENT_CREATOR"
   const val INPUT_LOCATION = "EVENT_LOCATION"
   const val LOCATION_SUGGESTION = "EVENT_LOCATION"
   const val INPUT_DATE = "EVENT_DATE"
@@ -91,6 +92,7 @@ fun AddEventScreen(
 
   val screenPadding = dimensionResource(id = R.dimen.padding_screen)
   val fieldSpacing = dimensionResource(id = R.dimen.spacing_between_fields)
+  val buttonSpacing = dimensionResource(id = R.dimen.spacing_between_buttons)
 
   val textFieldColors =
       TextFieldDefaults.colors(
@@ -192,26 +194,6 @@ fun AddEventScreen(
                     modifier =
                         Modifier.fillMaxWidth().testTag(AddEventScreenTestTags.INPUT_DESCRIPTION),
                     minLines = 3)
-              }
-
-              item {
-                // Creator name
-                OutlinedTextField(
-                    value = ui.creatorName,
-                    onValueChange = { addEventViewModel.updateCreatorName(it) },
-                    label = { Text(stringResource(R.string.events_creator_field_label)) },
-                    placeholder = { Text(stringResource(R.string.events_creator_placeholder)) },
-                    isError = ui.creatorNameError,
-                    supportingText = {
-                      if (ui.creatorNameError) {
-                        Text(
-                            "Creator name is required",
-                            modifier = Modifier.testTag(AddEventScreenTestTags.ERROR_MESSAGE))
-                      }
-                    },
-                    colors = textFieldColors,
-                    modifier =
-                        Modifier.fillMaxWidth().testTag(AddEventScreenTestTags.INPUT_CREATOR))
               }
 
               item {
@@ -357,41 +339,31 @@ fun AddEventScreen(
 
               item {
                 // Start time
-                OutlinedTextField(
-                    value = ui.startTime,
-                    onValueChange = { addEventViewModel.updateStartTime(it) },
-                    label = { Text(stringResource(R.string.events_start_time_field_label)) },
-                    placeholder = { Text("HH:mm") },
-                    isError = ui.startTimeError,
-                    supportingText = {
-                      if (ui.startTimeError) {
-                        Text(
-                            "Use format HH:mm",
-                            modifier = Modifier.testTag(AddEventScreenTestTags.ERROR_MESSAGE))
-                      }
-                    },
-                    colors = textFieldColors,
-                    modifier = Modifier.fillMaxWidth().testTag(AddEventScreenTestTags.INPUT_START))
+                TimeInputField(
+                    initialTime = ui.startTime,
+                    onTimeChanged = { addEventViewModel.updateStartTime(it) },
+                    label = stringResource(R.string.events_start_time_field_label),
+                    dueTimeError = ui.startTimeError,
+                    textFieldColors = textFieldColors,
+                    testTagInput = AddEventScreenTestTags.INPUT_START,
+                    testTagErrorMessage = AddEventScreenTestTags.ERROR_MESSAGE,
+                    isStarting = true)
               }
 
               item {
                 // End time
-                OutlinedTextField(
-                    value = ui.endTime,
-                    onValueChange = { addEventViewModel.updateEndTime(it) },
-                    label = { Text(stringResource(R.string.events_end_time_field_label)) },
-                    placeholder = { Text("HH:mm") },
-                    isError = ui.endTimeError,
-                    supportingText = {
-                      if (ui.endTimeError) {
-                        Text(
-                            "Invalid format, past date or ending time before starting time",
-                            modifier = Modifier.testTag(AddEventScreenTestTags.ERROR_MESSAGE))
-                      }
-                    },
-                    colors = textFieldColors,
-                    modifier = Modifier.fillMaxWidth().testTag(AddEventScreenTestTags.INPUT_END))
+                TimeInputField(
+                    initialTime = ui.endTime,
+                    onTimeChanged = { addEventViewModel.updateEndTime(it) },
+                    dueTimeError = ui.endTimeError,
+                    label = stringResource(R.string.events_end_time_field_label),
+                    textFieldColors = textFieldColors,
+                    testTagInput = AddEventScreenTestTags.INPUT_END,
+                    testTagErrorMessage = AddEventScreenTestTags.ERROR_MESSAGE,
+                    isStarting = false)
               }
+
+              item { Spacer(modifier = Modifier.height(buttonSpacing)) }
 
               item {
                 // Save
