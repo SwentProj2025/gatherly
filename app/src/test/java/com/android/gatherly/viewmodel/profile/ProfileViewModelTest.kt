@@ -1,5 +1,7 @@
 package com.android.gatherly.viewmodel.profile
 
+import com.android.gatherly.model.group.GroupsLocalRepository
+import com.android.gatherly.model.group.GroupsRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
@@ -32,6 +34,7 @@ class ProfileViewModelIntegrationTest {
 
   private lateinit var profileViewModel: ProfileViewModel
   private lateinit var profileRepository: ProfileRepository
+  private lateinit var groupsRepository: GroupsRepository
   private lateinit var mockitoUtils: MockitoUtils
 
   // initialize this so that tests control all coroutines and can wait on them
@@ -47,6 +50,7 @@ class ProfileViewModelIntegrationTest {
 
     // initialize repos and profileViewModel
     profileRepository = ProfileLocalRepository()
+    groupsRepository = GroupsLocalRepository()
   }
 
   @After
@@ -66,7 +70,9 @@ class ProfileViewModelIntegrationTest {
 
     profileViewModel =
         ProfileViewModel(
-            profileRepository = profileRepository, authProvider = { mockitoUtils.mockAuth })
+            profileRepository = profileRepository,
+            groupsRepository = groupsRepository,
+            authProvider = { mockitoUtils.mockAuth })
     profileViewModel.loadUserProfile()
 
     // Wait until loading completes and profile is available
@@ -87,7 +93,9 @@ class ProfileViewModelIntegrationTest {
 
     profileViewModel =
         ProfileViewModel(
-            profileRepository = profileRepository, authProvider = { mockitoUtils.mockAuth })
+            profileRepository = profileRepository,
+            groupsRepository = groupsRepository,
+            authProvider = { mockitoUtils.mockAuth })
     profileViewModel.loadUserProfile()
 
     // Wait until loading completes and an error appears
@@ -104,7 +112,9 @@ class ProfileViewModelIntegrationTest {
 
     profileViewModel =
         ProfileViewModel(
-            profileRepository = profileRepository, authProvider = { mockitoUtils.mockAuth })
+            profileRepository = profileRepository,
+            groupsRepository = groupsRepository,
+            authProvider = { mockitoUtils.mockAuth })
     profileViewModel.loadUserProfile()
 
     // Wait until loading completes and an error appears
