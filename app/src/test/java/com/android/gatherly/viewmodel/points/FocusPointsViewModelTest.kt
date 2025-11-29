@@ -16,6 +16,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -84,7 +85,7 @@ class FocusPointsViewModelTest {
   fun noFocusPointsHistoryGivesEmptyList() = runTest {
     val focusHistory = pointsViewModel.uiState.value.focusHistory
 
-    assert(focusHistory == emptyList<Points>())
+    assertEquals(emptyList<Points>(), focusHistory)
   }
 
   @Test
@@ -100,7 +101,7 @@ class FocusPointsViewModelTest {
 
     val focusHistory = pointsViewModel.uiState.value.focusHistory
 
-    assert(focusHistory.size == 2) { focusHistory.size }
-    assert(focusHistory == listOf(points2, points1))
+    assertEquals(2, focusHistory.size)
+    assertEquals(listOf(points2, points1), focusHistory)
   }
 }

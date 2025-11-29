@@ -9,7 +9,7 @@ import com.android.gatherly.model.focusSession.FocusSessionsRepository
 import com.android.gatherly.model.focusSession.FocusSessionsRepositoryProvider
 import com.android.gatherly.model.points.Points
 import com.android.gatherly.model.points.PointsRepository
-import com.android.gatherly.model.points.PointsRepositoryFirestore
+import com.android.gatherly.model.points.PointsRepositoryProvider
 import com.android.gatherly.model.points.PointsSource
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryProvider
@@ -23,7 +23,6 @@ import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
-import com.google.firebase.firestore.firestore
 import java.util.Timer
 import kotlin.concurrent.fixedRateTimer
 import kotlin.math.floor
@@ -71,7 +70,7 @@ data class TimerState(
  */
 class TimerViewModel(
     private val todoRepository: ToDosRepository = ToDosRepositoryProvider.repository,
-    private val pointsRepository: PointsRepository = PointsRepositoryFirestore(Firebase.firestore),
+    private val pointsRepository: PointsRepository = PointsRepositoryProvider.repository,
     private val profileRepository: ProfileRepository = ProfileRepositoryProvider.repository,
     private val userStatusManager: UserStatusManager = UserStatusManager(),
     private val focusSessionsRepository: FocusSessionsRepository =

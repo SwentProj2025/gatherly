@@ -4,9 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.points.Points
 import com.android.gatherly.model.points.PointsRepository
-import com.android.gatherly.model.points.PointsRepositoryFirestore
-import com.google.firebase.Firebase
-import com.google.firebase.firestore.firestore
+import com.android.gatherly.model.points.PointsRepositoryProvider
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,7 +13,7 @@ import kotlinx.coroutines.launch
 data class FocusPointsUIState(val focusHistory: List<Points> = emptyList())
 
 class FocusPointsViewModel(
-    private val pointsRepository: PointsRepository = PointsRepositoryFirestore(Firebase.firestore)
+    private val pointsRepository: PointsRepository = PointsRepositoryProvider.repository
 ) : ViewModel() {
 
   private val _uiState = MutableStateFlow(FocusPointsUIState())

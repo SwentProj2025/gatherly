@@ -10,7 +10,6 @@ import com.android.gatherly.model.profile.ProfileRepository
  *
  * @param pointsRepository The repository to call for [Points] instance update
  * @param profileRepository The repository to call for focus points update in the profile
- * @param uid The users id
  * @param points The [Points] instance to add
  */
 suspend fun updateFocusPoints(
