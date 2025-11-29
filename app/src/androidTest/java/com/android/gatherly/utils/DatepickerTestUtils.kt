@@ -1,6 +1,9 @@
 package com.android.gatherly.utils
 
+import androidx.compose.ui.test.filterToOne
+import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isNotDisplayed
 import androidx.compose.ui.test.isRoot
@@ -13,6 +16,7 @@ import com.google.firebase.Timestamp
 import java.time.LocalDate
 import java.time.Month
 import java.util.Calendar
+import java.util.Locale
 
 object TestDates {
   private val currentDate = LocalDate.now()
@@ -87,16 +91,23 @@ fun ComposeTestRule.openDatePicker(testTag: String) {
  */
 fun ComposeTestRule.navigateInDatePicker(targetYear: Int, targetMonth: String, targetDay: Int) {
   val currentYear = LocalDate.now().year
-  val monthYearFormatter = targetMonth.lowercase().replaceFirstChar { it.uppercase() }
-  val headerSubstring = "$monthYearFormatter $currentYear"
 
-  onNodeWithContentDescription(headerSubstring).performClick()
-  onNode(hasText("Navigate to year $targetYear") and hasClickAction(), useUnmergedTree = true)
+  val locale = Locale.getDefault()
+  val monthInLocale =
+      Month.valueOf(targetMonth.uppercase()).getDisplayName(java.time.format.TextStyle.FULL, locale)
+
+  // Click header to open year selector
+  onNodeWithContentDescription("$monthInLocale $currentYear").performClick()
+  waitForIdle()
+
+  // Find year button by checking if text CONTAINS the year
+  onAllNodes(hasClickAction() and hasText(targetYear.toString(), substring = true))
+      .onFirst()
       .performClick()
 
-  val dayTextFragment = "$monthYearFormatter $targetDay, $targetYear"
-
-  onAllNodes(hasText(dayTextFragment, substring = true), useUnmergedTree = true)
-      .onFirst()
+  // Find day button by checking if text CONTAINS the day
+  waitForIdle()
+  onAllNodes(hasClickAction() and hasText(targetDay.toString(), substring = true))
+      .filterToOne(hasAnyAncestor(hasTestTag(DatePickerTestTags.DATE_PICKER_DIALOG)))
       .performClick()
 }
