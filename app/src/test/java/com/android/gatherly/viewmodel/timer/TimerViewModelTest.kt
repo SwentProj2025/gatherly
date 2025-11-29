@@ -3,6 +3,10 @@ package com.android.gatherly.viewmodel.timer
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.gatherly.model.focusSession.FocusSessionsLocalRepository
 import com.android.gatherly.model.focusSession.FocusSessionsRepository
+import com.android.gatherly.model.points.PointsLocalRepository
+import com.android.gatherly.model.points.PointsRepository
+import com.android.gatherly.model.profile.ProfileLocalRepository
+import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileStatus
 import com.android.gatherly.model.profile.UserStatusManager
 import com.android.gatherly.model.todo.ToDo
@@ -10,6 +14,7 @@ import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.ui.focusTimer.TimerViewModel
+import com.android.gatherly.utilstest.MockitoUtils
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -46,6 +51,9 @@ class TimerViewModelTest {
   private lateinit var toDosRepository: ToDosRepository
   private lateinit var viewModel: TimerViewModel
   private lateinit var statusManagerMock: UserStatusManager
+  private lateinit var mockitoUtils: MockitoUtils
+  private lateinit var profileRepository: ProfileRepository
+  private lateinit var pointsRepository: PointsRepository
   private lateinit var focusSessionsRepository: FocusSessionsRepository
 
   private fun makeTodo(
@@ -75,14 +83,21 @@ class TimerViewModelTest {
     Dispatchers.setMain(testDispatcher)
 
     toDosRepository = ToDosLocalRepository()
+    profileRepository = ProfileLocalRepository()
+    pointsRepository = PointsLocalRepository()
 
     statusManagerMock = mock()
+    mockitoUtils = MockitoUtils()
+    mockitoUtils.chooseCurrentUser("fakeUid")
     focusSessionsRepository = FocusSessionsLocalRepository()
     viewModel =
         TimerViewModel(
             todoRepository = toDosRepository,
+            pointsRepository = pointsRepository,
+            profileRepository = profileRepository,
             userStatusManager = statusManagerMock,
-            focusSessionsRepository = focusSessionsRepository)
+            focusSessionsRepository = focusSessionsRepository,
+            authProvider = { mockitoUtils.mockAuth })
   }
 
   @After
