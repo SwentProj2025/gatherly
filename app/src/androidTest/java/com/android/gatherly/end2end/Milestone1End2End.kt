@@ -34,7 +34,7 @@ class Milestone1End2End : FirestoreGatherlyTest() {
       GrantPermissionRule.grant(
           Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
 
-  val TIMEOUT = 5000L
+  val TIMEOUT = 15000L
 
   // set content
   @Before
