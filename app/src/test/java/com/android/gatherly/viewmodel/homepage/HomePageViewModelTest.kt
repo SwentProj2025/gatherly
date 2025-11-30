@@ -86,7 +86,7 @@ private var friendlessProfile: Profile =
         groupIds = emptyList(),
         friendUids = emptyList())
 
-private val friendsList = listOf(friend1Profile, friend2Profile, friend3Profile)
+private val friendsList = listOf(friend1Profile, friend2Profile, friend3Profile, friend4Profile)
 
 /*----------------------------------------ToDos-----------------------------------------------*/
 
@@ -95,7 +95,6 @@ private var todo1: ToDo =
         uid = "todo1",
         name = "Todo1",
         description = "Desc",
-        assigneeName = "Assignee",
         dueDate = Timestamp(1728000000, 0),
         dueTime = null,
         location = Location(latitude = 46.5186, longitude = 6.5661, name = "Rolex Learning Center"),
@@ -107,7 +106,6 @@ private var todo2: ToDo =
         uid = "todo2",
         name = "Todo2",
         description = "Desc",
-        assigneeName = "Assignee",
         dueDate = Timestamp(1728000000, 0),
         dueTime = null,
         location = Location(latitude = 46.5190, longitude = 6.5668, name = "BC Building"),
@@ -119,7 +117,6 @@ private var todo3: ToDo =
         uid = "todo3",
         name = "Todo3",
         description = "Desc",
-        assigneeName = "Assignee",
         dueDate = Timestamp(1728000000, 0),
         dueTime = null,
         location = null,
@@ -131,7 +128,6 @@ private var todo4: ToDo =
         uid = "todo4",
         name = "Todo4",
         description = "Desc",
-        assigneeName = "Assignee",
         dueDate = Timestamp(1728000000, 0),
         dueTime = null,
         location = null,
@@ -196,7 +192,7 @@ class HomePageViewModelTest {
     // so that tests can wait on coroutines
     Dispatchers.setMain(testDispatcher)
     displayableTodos = listOf(todo1, todo2)
-    upcomingTodos = listOf(todo1, todo2, todo3)
+    upcomingTodos = listOf(todo1, todo2, todo3, todo4)
 
     // initialize repos and viewModel
     profileRepository = ProfileLocalRepository()

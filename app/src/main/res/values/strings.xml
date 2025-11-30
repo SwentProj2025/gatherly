@@ -9,12 +9,10 @@
     <string name="todos_ongoing_section_label">Ongoing</string>
     <string name="todos_completed_section_label">Completed</string>
     <string name="no_todos_text">You have no ToDos yet.</string>
-    <string name="todos_title_field_label">Title</string>
+    <string name="todos_title_field_label">Title*</string>
     <string name="todos_title_field_placeholder">Task Title</string>
     <string name="todos_description_field_label">Description</string>
     <string name="todos_description_placeholder">Describe the task</string>
-    <string name="todos_assignee_field_label">Assignee</string>
-    <string name="todos_assignee_placeholder">Assign a person</string>
     <string name="todos_location_field_label">Location</string>
     <string name="todos_search_bar_label">Search todos…</string>
     <string name="todos_location_field_placeholder">Enter an Address or Location</string>
@@ -27,6 +25,8 @@
     <string name="todos_save_button_text">Save</string>
     <string name="todos_back_button_desc">Back</string>
     <string name="todos_delete_button_text">Delete</string>
+    <string name="todos_delete_warning">Warning! You are deleting a todo</string>
+    <string name="todos_delete_warning_text">This action cannot be reversed. Are you sure?</string>
     <string name="todos_past_warning">Warning! You are creating a todo in the past</string>
     <string name="todos_past_warning_text">Are you sure you want to create a todo with a past deadline?</string>
     <string name="todos_create">Yes, Create</string>
@@ -36,6 +36,8 @@
     <string name="todos_date_ascending_sort_button_text">Date ascending</string>
     <string name="todos_alphabetical_sort_button_text">Alphabetical</string>
     <string name="todos_sort_menu_check_icon_label">Selected</string>
+    <string name="todos_advanced_settings">More Options</string>
+    <string name="todos_loading">Loading your todos …</string>
 
     <!-- Sign In Page. -->
     <string name="web_client_id">854490974901-rc0seqlo7nbm1net10ujpte2ckkrsgn2.apps.googleusercontent.com</string>
@@ -89,28 +91,33 @@
     <string name="profile_empty_focus_sessions_message">Focus session data not available yet.</string>
     <string name="profile_empty_groups_message">You currently have no groups.</string>
     <string name="profile_anon_message">You are currently signed in anonymously, create an account to have a profile.</string>
+    <string name="placeholder_button_badge_title">Go to Badges</string>
+
 
     <!-- Events -->
-    <string name="events_title_field_label">Title</string>
+    <string name="events_title_field_label">Title (*)</string>
     <string name="events_title_field_placeholder">Task Title</string>
-    <string name="events_description_field_label">Description</string>
+    <string name="events_description_field_label">Description (*)</string>
     <string name="events_description_placeholder">Describe the task</string>
-    <string name="events_creator_field_label">Creator</string>
-    <string name="events_creator_placeholder">Assign a creator</string>
-    <string name="events_start_time_field_label">Start Time</string>
-    <string name="events_end_time_field_label">End Time</string>
-    <string name="events_date_field_label">Due Date</string>
+    <string name="events_start_time_field_label">Start Time (*)</string>
+    <string name="events_end_time_field_label">End Time (*)</string>
+    <string name="events_date_field_label">Due Date (*)</string>
     <string name="events_location_field_label">Location</string>
     <string name="events_location_field_placeholder">Enter an Address or Location</string>
     <string name="events_participant_field_label">Participant</string>
     <string name="events_participant_placeholder">Add or remove a participant</string>
     <string name="events_delete_warning">Warning! You are deleting an event</string>
     <string name="events_delete_warning_text">This action cannot be reversed. Are you sure?</string>
+    <string name="see_on_map_button_title">See on map</string>
+    <string name="events_loading">Loading events …</string>
 
     <!-- General -->
     <string name="delete">Yes, Delete</string>
     <string name="cancel">No, Cancel</string>
     <string name="saving">Saving…</string>
+    <string name="log_out">Yes, Sign out</string>
+    <string name="anon_log_out">You are logging out</string>
+    <string name="anon_log_out_text">Because you are signed in anonymously, signing out will cause you to lose all your current data. Are you sure?</string>
 
     <!-- HomePage -->
     <string name="homepage_arrow_icon_description">Navigate</string>
@@ -119,6 +126,9 @@
     <string name="homepage_profile_image_description">Friend Profile Picture</string>
     <string name="homepage_upcoming_events_title">Upcoming events</string>
     <string name="homepage_upcoming_tasks_title">My upcoming tasks</string>
+    <string name="homepage_empty_task_list_message">You don\'t have any todos, click here to add some !</string>
+    <string name="homepage_no_friends_message">Add friends</string>
+    <string name="homepage_add_friend_icon_description">Add friends icon</string>
 
     <string name="goback_button_title">Go back</string>
     <string name="unregister_button_title">Unregister</string>

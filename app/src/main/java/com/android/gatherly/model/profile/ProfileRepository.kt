@@ -1,6 +1,7 @@
 package com.android.gatherly.model.profile
 
 import android.net.Uri
+import com.android.gatherly.model.badge.BadgeType
 import com.android.gatherly.model.friends.Friends
 
 /**
@@ -215,17 +216,26 @@ interface ProfileRepository {
   // -- BADGES GESTION PART --
 
   /**
-   * Triggers the badges that the user won
+   * The user obtains a badge in his profile via the badgeId
    *
-   * @param userProfile corresponds to the profile of the user we want to know his badges
-   * @param createdTodosCount number of todos created by the user, null for the
-   *   ProfileRepositoryFirestore but can be set for testing purposes with ProfileLocalRepository
-   * @param completedTodosCount number of todos completed by the user, null for the
-   *   ProfileRepositoryFirestore but can be set for testing purposes with ProfileLocalRepository
+   * @param uid the user's profile id
+   * @param badgeId the badge that the user just gained
    */
-  suspend fun updateBadges(
-      userProfile: Profile,
-      createdTodosCount: Int? = null,
-      completedTodosCount: Int? = null
-  )
+  suspend fun addBadge(uid: String, badgeId: String)
+
+  /**
+   * The user's count is updated accordingly to the action that has been done is his profile
+   *
+   * @param uid the user's profile id
+   * @param type the type of action that needs it's count incremented
+   */
+  suspend fun incrementBadge(uid: String, type: BadgeType)
+
+  /**
+   * Adds the given number of points to the user's total number of points
+   *
+   * @param uid The profile to update
+   * @param points The number of points to add
+   */
+  suspend fun updateFocusPoints(uid: String, points: Double)
 }

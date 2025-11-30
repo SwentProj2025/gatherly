@@ -1,6 +1,7 @@
 package com.android.gatherly.ui.homePage
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -15,10 +16,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -27,26 +30,32 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
-import androidx.credentials.CredentialManager
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
 import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.profile.Profile
+import com.android.gatherly.model.profile.ProfileStatus
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.ui.navigation.BottomNavigationMenu
-import com.android.gatherly.ui.navigation.HandleSignedOutState
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
@@ -76,7 +85,30 @@ object HomePageScreenTestTags {
   const val FRIENDS_SECTION = "friendsSection"
   const val MINI_MAP_CARD = "miniMapCard"
   const val FRIEND_AVATAR_PREFIX = "friendAvatar_"
+  const val FRIEND_STATUS_PREFIX = "friendStatus_"
+  const val EMPTY_TASK_LIST_TEXT_BUTTON = "emptyTaskListTextButton"
+  const val ADD_FRIENDS_ICON = "addFriendsIcon"
+  const val ADD_FRIENDS_TEXT = "addFriendsText"
+  const val FRIENDS_LAZY_COLUMN = "friendsLazyColumn"
+  const val TASKS_LAZY_COLUMN = "tasksLazyColumn"
 }
+
+/**
+ * Generates a unique test tag for a taskItem
+ *
+ * @param todoUid The unique identifier of the todo
+ * @return The generated test tag for the taskItem
+ */
+fun getTaskItemTestTag(todoUid: String) = "${HomePageScreenTestTags.TASK_ITEM_PREFIX}$todoUid"
+
+/**
+ * Generates a unique test tag for a friend's status
+ *
+ * @param friendUid The unique identifier of the friend.
+ * @return The generated test tag for the friend's status.
+ */
+fun getFriendStatusTestTag(friendUid: String) =
+    "${HomePageScreenTestTags.FRIEND_STATUS_PREFIX}$friendUid"
 
 /**
  * Main Home Page screen composable.
@@ -92,16 +124,20 @@ object HomePageScreenTestTags {
 @Composable
 fun HomePageScreen(
     homePageViewModel: HomePageViewModel = viewModel(),
-    credentialManager: CredentialManager = CredentialManager.create(LocalContext.current),
-    onSignedOut: () -> Unit = {},
     navigationActions: NavigationActions? = null,
     onClickFocusButton: () -> Unit = {},
-    onClickTodo: () -> Unit = {},
+    onClickTodoTitle: () -> Unit = {},
     onClickFriendsSection: () -> Unit = {},
+    onClickTodo: (ToDo) -> Unit = {},
+    onClickEventsTitle: () -> Unit = {}
 ) {
-  val uiState by homePageViewModel.uiState.collectAsState()
 
-  HandleSignedOutState(uiState.signedOut, onSignedOut)
+  val lifecycle = LocalLifecycleOwner.current.lifecycle
+
+  LaunchedEffect(lifecycle) {
+    lifecycle.repeatOnLifecycle(Lifecycle.State.RESUMED) { homePageViewModel.updateUI() }
+  }
+  val uiState by homePageViewModel.uiState.collectAsState()
 
   val screenPadding = dimensionResource(id = R.dimen.padding_screen)
   val verticalSpacing = dimensionResource(id = R.dimen.spacing_between_fields_medium)
@@ -111,8 +147,7 @@ fun HomePageScreen(
       topBar = {
         TopNavigationMenu_HomePage(
             selectedTab = Tab.HomePage,
-            onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
-            onSignedOut = { homePageViewModel.signOut(credentialManager) })
+            onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) })
       },
       bottomBar = {
         BottomNavigationMenu(
@@ -128,7 +163,8 @@ fun HomePageScreen(
               text = stringResource(id = R.string.homepage_upcoming_events_title),
               modifier =
                   Modifier.padding(horizontal = screenPadding)
-                      .testTag(HomePageScreenTestTags.UPCOMING_EVENTS_TITLE))
+                      .testTag(HomePageScreenTestTags.UPCOMING_EVENTS_TITLE)
+                      .clickable { onClickEventsTitle() })
 
           Spacer(modifier = Modifier.height(sectionSpacing))
 
@@ -145,11 +181,12 @@ fun HomePageScreen(
               text = stringResource(id = R.string.homepage_upcoming_tasks_title),
               modifier =
                   Modifier.padding(horizontal = screenPadding)
-                      .testTag(HomePageScreenTestTags.UPCOMING_TASKS_TITLE))
+                      .testTag(HomePageScreenTestTags.UPCOMING_TASKS_TITLE)
+                      .clickable { onClickTodoTitle() })
 
           Spacer(modifier = Modifier.height(sectionSpacing))
 
-          TaskList(todos = uiState.todos, onClickTodo)
+          TaskList(todos = uiState.todos, onClickTodoTitle, onClickTodo)
 
           Spacer(modifier = Modifier.height(verticalSpacing))
 
@@ -198,12 +235,15 @@ fun EventsAndFriendsSection(
               .height(dimensionResource(id = R.dimen.homepage_events_section_height))) {
         Spacer(modifier = Modifier.width(spacingRegular))
 
-        MiniMap(todos = todos, events = events, modifier = Modifier.weight(1f))
+        MiniMap(todos = todos, events = events, modifier = Modifier.weight(0.8f))
 
         Spacer(modifier = Modifier.width(spacingRegular))
 
         if (!isAnon) {
-          FriendsSection(onClickFriendsSection = onClickFriendsSection, friends = friends)
+          FriendsSection(
+              onClickFriendsSection = onClickFriendsSection,
+              friends = friends,
+              modifier = Modifier.weight(0.2f))
           Spacer(modifier = Modifier.width(spacingRegular))
         }
       }
@@ -265,6 +305,8 @@ fun MiniMap(todos: List<ToDo>, events: List<Event>, modifier: Modifier) {
 fun FriendAvatar(
     modifier: Modifier = Modifier,
     profilePicUrl: String? = null,
+    status: ProfileStatus,
+    statusTag: String
 ) {
   val size = dimensionResource(id = R.dimen.homepage_friend_profile_pic_size)
   Box(modifier = modifier.size(size)) {
@@ -273,19 +315,30 @@ fun FriendAvatar(
         contentDescription = stringResource(id = R.string.homepage_profile_image_description),
         modifier = Modifier.fillMaxSize().clip(CircleShape),
         contentScale = ContentScale.Crop)
+
+    StatusIndicator(
+        status = status,
+        modifier = Modifier.align(Alignment.BottomEnd).testTag(statusTag),
+        size = size * 0.25f)
   }
 }
 
 /** Displays a bordered section with friend avatars and a label. The entire section is clickable. */
 @Composable
-fun FriendsSection(onClickFriendsSection: () -> Unit, friends: List<Profile>) {
+fun FriendsSection(
+    modifier: Modifier = Modifier,
+    onClickFriendsSection: () -> Unit,
+    friends: List<Profile>
+) {
 
   val roundedCornerPercentage = 50
+  val arrangement = if (friends.isEmpty()) Arrangement.Bottom else Arrangement.SpaceBetween
   Column(
       horizontalAlignment = Alignment.CenterHorizontally,
-      verticalArrangement = Arrangement.SpaceBetween,
+      verticalArrangement = arrangement,
       modifier =
-          Modifier.testTag(HomePageScreenTestTags.FRIENDS_SECTION)
+          modifier
+              .testTag(HomePageScreenTestTags.FRIENDS_SECTION)
               .border(
                   width = dimensionResource(id = R.dimen.homepage_friends_section_border_width),
                   color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.8f),
@@ -301,20 +354,11 @@ fun FriendsSection(onClickFriendsSection: () -> Unit, friends: List<Profile>) {
                           id = R.dimen.homepage_friends_section_vertical_border_padding),
                   horizontal = dimensionResource(id = R.dimen.padding_small))
               .fillMaxHeight()) {
-        Column(
-            verticalArrangement =
-                Arrangement.spacedBy(dimensionResource(id = R.dimen.spacing_between_fields))) {
-              friends.forEach { friend ->
-                FriendAvatar(
-                    profilePicUrl = friend.profilePicture,
-                    modifier = Modifier.testTag(getFriendAvatarTestTag(friend.uid)))
-              }
-            }
-
-        Text(
-            text = stringResource(R.string.homepage_friends_section_label),
-            color = MaterialTheme.colorScheme.onBackground,
-            style = MaterialTheme.typography.bodySmall)
+        if (friends.isEmpty()) {
+          EmptyFriendsView()
+        } else {
+          PopulatedFriendsView(friends)
+        }
       }
 }
 
@@ -323,15 +367,39 @@ fun FriendsSection(onClickFriendsSection: () -> Unit, friends: List<Profile>) {
  * in tests.
  */
 @Composable
-fun TaskList(todos: List<ToDo>, onClickTodo: () -> Unit = {}) {
-  Column {
-    todos.forEach { todo ->
-      TaskItem(
-          modifier = Modifier.testTag("${HomePageScreenTestTags.TASK_ITEM_PREFIX}${todo.uid}"),
-          text = todo.description,
-          onClick = onClickTodo)
-    }
-  }
+fun TaskList(
+    todos: List<ToDo>,
+    onClickTodoTitle: () -> Unit = {},
+    onClickTodo: (ToDo) -> Unit = {}
+) {
+  Column(
+      modifier =
+          Modifier.height(dimensionResource(id = R.dimen.homepage_task_section_height))
+              .fillMaxWidth()) {
+        if (todos.isEmpty()) {
+          TextButton(
+              onClick = onClickTodoTitle,
+              modifier =
+                  Modifier.padding(horizontal = dimensionResource(id = R.dimen.padding_small))
+                      .testTag(HomePageScreenTestTags.EMPTY_TASK_LIST_TEXT_BUTTON)) {
+                Text(
+                    text = stringResource(id = R.string.homepage_empty_task_list_message),
+                    color = MaterialTheme.colorScheme.onBackground)
+              }
+        } else {
+
+          LazyColumn(
+              modifier = Modifier.weight(1f).testTag(HomePageScreenTestTags.TASKS_LAZY_COLUMN)) {
+                items(todos.size) { index ->
+                  val todo = todos[index]
+                  TaskItem(
+                      modifier = Modifier.testTag(getTaskItemTestTag(todo.uid)),
+                      text = todo.description,
+                      onClick = { onClickTodo(todo) })
+                }
+              }
+        }
+      }
 }
 
 /** A single clickable task item with a description and arrow icon. */
@@ -397,3 +465,76 @@ fun FocusSection(modifier: Modifier = Modifier, timerString: String = "", onClic
  */
 fun getFriendAvatarTestTag(friendUid: String) =
     "${HomePageScreenTestTags.FRIEND_AVATAR_PREFIX}$friendUid"
+
+/**
+ * Small colored status dot used to represent a user's presence state. (Green = Online, Red =
+ * Offline, Blue = Focused)
+ *
+ * @param status The current [ProfileStatus] to display.
+ * @param modifier Optional modifier for positioning.
+ * @param size The diameter of the indicator.
+ */
+@Composable
+fun StatusIndicator(status: ProfileStatus, modifier: Modifier = Modifier, size: Dp) {
+  val color =
+      when (status) {
+        ProfileStatus.ONLINE -> Color.Green
+        ProfileStatus.FOCUSED -> Color.Blue
+        ProfileStatus.OFFLINE -> Color.Red
+      }
+
+  Box(modifier = modifier.size(size).clip(CircleShape).background(color))
+}
+
+/**
+ * Displays the empty state of the friends section.
+ *
+ * Shows a "add friend" icon and a message prompting the user to add friends.
+ */
+@Composable
+private fun EmptyFriendsView() {
+  Icon(
+      imageVector = Icons.Default.PersonAdd,
+      contentDescription = stringResource(id = R.string.homepage_add_friend_icon_description),
+      tint = MaterialTheme.colorScheme.onBackground,
+      modifier =
+          Modifier.size(dimensionResource(id = R.dimen.homepage_add_friends_icon_size))
+              .testTag(HomePageScreenTestTags.ADD_FRIENDS_ICON))
+  Text(
+      text = stringResource(id = R.string.homepage_no_friends_message),
+      style = MaterialTheme.typography.bodySmall,
+      textAlign = TextAlign.Center,
+      modifier = Modifier.testTag(HomePageScreenTestTags.ADD_FRIENDS_TEXT))
+}
+
+/**
+ * Displays the populated state of the friends section.
+ *
+ * Shows a vertical column of friend avatars and a label at the bottom.
+ *
+ * @param friends List of [Profile] representing the user's friends.
+ */
+@Composable
+private fun PopulatedFriendsView(friends: List<Profile>) {
+  Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    LazyColumn(
+        modifier = Modifier.weight(1f).testTag(HomePageScreenTestTags.FRIENDS_LAZY_COLUMN),
+        verticalArrangement =
+            Arrangement.spacedBy(dimensionResource(id = R.dimen.spacing_between_fields)),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+      items(friends.size) { index ->
+        val friend = friends[index]
+        FriendAvatar(
+            profilePicUrl = friend.profilePicture,
+            modifier = Modifier.testTag(getFriendAvatarTestTag(friend.uid)),
+            status = friend.status,
+            statusTag = getFriendStatusTestTag(friend.uid))
+      }
+    }
+    Text(
+        text = stringResource(R.string.homepage_friends_section_label),
+        color = MaterialTheme.colorScheme.onBackground,
+        style = MaterialTheme.typography.bodySmall)
+  }
+}

@@ -2,6 +2,7 @@ package com.android.gatherly.end2end
 
 import android.Manifest
 import androidx.activity.ComponentActivity
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -18,6 +19,9 @@ import com.android.gatherly.ui.todo.AddToDoScreenTestTags
 import com.android.gatherly.ui.todo.OverviewScreenTestTags
 import com.android.gatherly.utils.FirebaseEmulator
 import com.android.gatherly.utils.FirestoreGatherlyTest
+import com.android.gatherly.utils.openDatePicker
+import com.android.gatherly.utils.selectDateFromPicker
+import java.time.LocalDate
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -69,17 +73,18 @@ class Milestone1End2End : FirestoreGatherlyTest() {
       composeTestRule.onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_TITLE).isDisplayed()
     }
 
+    composeTestRule
+        .onNodeWithTag(AddToDoScreenTestTags.MORE_OPTIONS)
+        .assertIsDisplayed()
+        .performClick()
     // input information and save
     composeTestRule.onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_TITLE).performTextInput("Title")
     composeTestRule
         .onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_DESCRIPTION)
         .performTextInput("Description")
-    composeTestRule
-        .onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_ASSIGNEE)
-        .performTextInput("Assignee")
-    composeTestRule
-        .onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_DATE)
-        .performTextInput("20/12/2025")
+    composeTestRule.openDatePicker(AddToDoScreenTestTags.INPUT_TODO_DATE)
+    composeTestRule.selectDateFromPicker(
+        LocalDate.now().dayOfMonth, LocalDate.now().month.value, LocalDate.now().year.plus(1))
     composeTestRule.onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_TIME).performTextInput("10:00")
     composeTestRule.onNodeWithTag(AddToDoScreenTestTags.TODO_SAVE).performClick()
     composeTestRule.waitForIdle()
@@ -111,6 +116,18 @@ class Milestone1End2End : FirestoreGatherlyTest() {
 
     // stop timer
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.STOP_BUTTON).performClick()
+
+    // click on drop down menu
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.waitForIdle()
+
+    // wait for drop down menu to appear
+    composeTestRule.waitUntil(TIMEOUT) {
+      composeTestRule.onNodeWithTag(NavigationTestTags.SETTINGS_TAB).isDisplayed()
+    }
+
+    // go to settings screen
+    composeTestRule.onNodeWithTag(NavigationTestTags.SETTINGS_TAB).performClick()
 
     // click on drop down menu
     composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()

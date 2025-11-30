@@ -12,6 +12,8 @@ import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.gatherly.model.focusSession.FocusSessionsLocalRepository
 import com.android.gatherly.model.focusSession.FocusSessionsRepository
+import com.android.gatherly.model.points.PointsLocalRepository
+import com.android.gatherly.model.points.PointsRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
@@ -41,7 +43,6 @@ class TimerScreenTest {
           uid = "1",
           name = "Buy groceries",
           description = "Milk, eggs, bread",
-          assigneeName = "Alice",
           dueDate = Timestamp.now(),
           dueTime = null,
           location = null,
@@ -54,6 +55,7 @@ class TimerScreenTest {
 
   private lateinit var mockitoUtils: MockitoUtils
   private lateinit var profileRepository: ProfileRepository
+  private lateinit var pointsRepository: PointsRepository
   private lateinit var userStatusManager: UserStatusManager
   private val fakeUid = "test-user"
 
@@ -63,6 +65,7 @@ class TimerScreenTest {
     focusSessionsRepository = FocusSessionsLocalRepository()
     // Add a todo in the repository to test linking
     profileRepository = ProfileLocalRepository()
+    pointsRepository = PointsLocalRepository()
     fill_repository()
 
     mockitoUtils = MockitoUtils()
@@ -72,8 +75,11 @@ class TimerScreenTest {
     timerViewModel =
         TimerViewModel(
             todoRepository = toDosRepository,
+            pointsRepository = pointsRepository,
+            profileRepository = profileRepository,
             userStatusManager = userStatusManager,
-            focusSessionsRepository = focusSessionsRepository)
+            focusSessionsRepository = focusSessionsRepository,
+            authProvider = { mockitoUtils.mockAuth })
 
     composeTestRule.setContent { TimerScreen(timerViewModel) }
   }

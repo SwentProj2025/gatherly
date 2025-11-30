@@ -47,12 +47,15 @@ import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
 import com.android.gatherly.ui.theme.GatherlyTheme
+import com.android.gatherly.utils.DatePickerInputField
+import com.android.gatherly.utils.GatherlyAlertDialog
+import com.android.gatherly.utils.GatherlyDatePicker
+import com.android.gatherly.utils.TimeInputField
 import kotlinx.coroutines.delay
 
 object EditEventsScreenTestTags {
   const val INPUT_NAME = "EVENT_NAME"
   const val INPUT_DESCRIPTION = "EVENT_DESCRIPTION"
-  const val INPUT_CREATOR = "EVENT_CREATOR"
   const val INPUT_LOCATION = "EVENT_LOCATION"
   const val INPUT_DATE = "EVENT_DATE"
   const val INPUT_START = "EVENT_START_TIME"
@@ -96,6 +99,7 @@ fun EditEventsScreen(
 
   val ui = editEventsViewModel.uiState
   val context = LocalContext.current
+  val shouldShowDialog = remember { mutableStateOf(false) }
 
   val screenPadding = dimensionResource(id = R.dimen.padding_screen)
   val fieldSpacing = dimensionResource(id = R.dimen.spacing_between_fields)
@@ -114,6 +118,9 @@ fun EditEventsScreen(
 
   // Profile state for the dropdown visibility
   var showProfilesDropdown by remember { mutableStateOf(false) }
+
+  // Date state for the alert dialog visibilty
+  var showDatePicker by remember { mutableStateOf(false) }
 
   // Toasts
   LaunchedEffect(ui.displayToast, ui.toastString) {
@@ -198,26 +205,6 @@ fun EditEventsScreen(
                     modifier =
                         Modifier.fillMaxWidth().testTag(EditEventsScreenTestTags.INPUT_DESCRIPTION),
                     minLines = 3)
-              }
-
-              item {
-                // Creator name
-                OutlinedTextField(
-                    value = ui.creatorName,
-                    onValueChange = { editEventsViewModel.updateCreatorName(it) },
-                    label = { Text(stringResource(R.string.events_creator_field_label)) },
-                    placeholder = { Text(stringResource(R.string.events_creator_placeholder)) },
-                    isError = ui.creatorNameError,
-                    supportingText = {
-                      if (ui.creatorNameError) {
-                        Text(
-                            "Creator name is required",
-                            modifier = Modifier.testTag(EditEventsScreenTestTags.ERROR_MESSAGE))
-                      }
-                    },
-                    colors = textFieldColors,
-                    modifier =
-                        Modifier.fillMaxWidth().testTag(EditEventsScreenTestTags.INPUT_CREATOR))
               }
 
               item {
@@ -347,63 +334,44 @@ fun EditEventsScreen(
                       }
                 }
               }
-
               item {
                 // Date
-                OutlinedTextField(
+                DatePickerInputField(
                     value = ui.date,
-                    onValueChange = { editEventsViewModel.updateDate(it) },
-                    label = { Text(stringResource(R.string.events_date_field_label)) },
-                    placeholder = { Text("dd/MM/yyyy") },
-                    isError = ui.dateError,
-                    supportingText = {
-                      if (ui.dateError) {
-                        Text(
-                            "Invalid format or past date",
-                            modifier = Modifier.testTag(EditEventsScreenTestTags.ERROR_MESSAGE))
-                      }
-                    },
+                    label = stringResource(R.string.events_date_field_label),
+                    isErrorMessage = if (!ui.dateError) null else "Invalid format or past date",
+                    onClick = { showDatePicker = true },
                     colors = textFieldColors,
-                    modifier = Modifier.fillMaxWidth().testTag(EditEventsScreenTestTags.INPUT_DATE))
+                    testTag =
+                        Pair(
+                            AddEventScreenTestTags.INPUT_DATE,
+                            AddEventScreenTestTags.ERROR_MESSAGE))
               }
 
               item {
                 // Start time
-                OutlinedTextField(
-                    value = ui.startTime,
-                    onValueChange = { editEventsViewModel.updateStartTime(it) },
-                    label = { Text(stringResource(R.string.events_start_time_field_label)) },
-                    placeholder = { Text("HH:mm") },
-                    isError = ui.startTimeError,
-                    supportingText = {
-                      if (ui.startTimeError) {
-                        Text(
-                            "Use format HH:mm",
-                            modifier = Modifier.testTag(EditEventsScreenTestTags.ERROR_MESSAGE))
-                      }
-                    },
-                    colors = textFieldColors,
-                    modifier =
-                        Modifier.fillMaxWidth().testTag(EditEventsScreenTestTags.INPUT_START))
+                TimeInputField(
+                    initialTime = ui.startTime,
+                    onTimeChanged = { editEventsViewModel.updateStartTime(it) },
+                    dueTimeError = ui.startTimeError,
+                    label = stringResource(R.string.events_start_time_field_label),
+                    textFieldColors = textFieldColors,
+                    testTagInput = EditEventsScreenTestTags.INPUT_START,
+                    testTagErrorMessage = EditEventsScreenTestTags.ERROR_MESSAGE,
+                    isStarting = true)
               }
 
               item {
                 // End time
-                OutlinedTextField(
-                    value = ui.endTime,
-                    onValueChange = { editEventsViewModel.updateEndTime(it) },
-                    label = { Text(stringResource(R.string.events_end_time_field_label)) },
-                    placeholder = { Text("HH:mm") },
-                    isError = ui.endTimeError,
-                    supportingText = {
-                      if (ui.endTimeError) {
-                        Text(
-                            "Invalid format, past date or ending time before starting time",
-                            modifier = Modifier.testTag(EditEventsScreenTestTags.ERROR_MESSAGE))
-                      }
-                    },
-                    colors = textFieldColors,
-                    modifier = Modifier.fillMaxWidth().testTag(EditEventsScreenTestTags.INPUT_END))
+                TimeInputField(
+                    initialTime = ui.endTime,
+                    onTimeChanged = { editEventsViewModel.updateEndTime(it) },
+                    dueTimeError = ui.endTimeError,
+                    label = stringResource(R.string.events_end_time_field_label),
+                    textFieldColors = textFieldColors,
+                    testTagInput = EditEventsScreenTestTags.INPUT_END,
+                    testTagErrorMessage = EditEventsScreenTestTags.ERROR_MESSAGE,
+                    isStarting = false)
               }
 
               item {
@@ -419,7 +387,6 @@ fun EditEventsScreen(
                     enabled =
                         !ui.nameError &&
                             !ui.descriptionError &&
-                            !ui.creatorNameError &&
                             !ui.dateError &&
                             !ui.startTimeError &&
                             !ui.endTimeError &&
@@ -438,10 +405,7 @@ fun EditEventsScreen(
               item {
                 // Delete
                 TextButton(
-                    onClick = {
-                      editEventsViewModel.deleteEvent()
-                      onSave()
-                    },
+                    onClick = { shouldShowDialog.value = true },
                     modifier = Modifier.fillMaxWidth().testTag(EditEventsScreenTestTags.BTN_DELETE),
                     colors =
                         ButtonDefaults.textButtonColors(
@@ -457,6 +421,24 @@ fun EditEventsScreen(
                     }
               }
             }
+        if (shouldShowDialog.value) {
+          GatherlyAlertDialog(
+              titleText = stringResource(R.string.events_delete_warning),
+              bodyText = stringResource(R.string.events_delete_warning_text),
+              dismissText = stringResource(R.string.cancel),
+              confirmText = stringResource(R.string.delete),
+              onDismiss = { shouldShowDialog.value = false },
+              onConfirm = {
+                editEventsViewModel.deleteEvent()
+                shouldShowDialog.value = false
+              },
+              isImportantWarning = true)
+        }
+        GatherlyDatePicker(
+            show = showDatePicker,
+            initialDate = ui.date,
+            onDateSelected = { selectedDate -> editEventsViewModel.updateDate(selectedDate) },
+            onDismiss = { showDatePicker = false })
       }
 }
 

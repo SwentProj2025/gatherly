@@ -31,6 +31,7 @@ import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
 import com.android.gatherly.ui.navigation.*
+import com.android.gatherly.utils.GatherlyAlertDialog
 import com.android.gatherly.utils.profilePicturePainter
 import java.io.File
 
@@ -81,6 +82,7 @@ fun SettingsScreen(
 
   val uiState by settingsViewModel.uiState.collectAsState()
   val context = LocalContext.current
+  val shouldShowLogOutWarning = remember { mutableStateOf(false) }
 
   var showPhotoPickerDialog by remember { mutableStateOf(false) }
 
@@ -137,7 +139,10 @@ fun SettingsScreen(
             selectedTab = Tab.Settings,
             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
             modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
-            onSignedOut = { settingsViewModel.signOut(credentialManager) })
+            onSignedOut = {
+              signOutAlertIfAnon(
+                  uiState, shouldShowLogOutWarning, settingsViewModel, credentialManager)
+            })
       },
       containerColor = MaterialTheme.colorScheme.background,
       content = { paddingValues ->
@@ -316,7 +321,34 @@ fun SettingsScreen(
                     }
               }
         }
+
+        if (shouldShowLogOutWarning.value) {
+          GatherlyAlertDialog(
+              titleText = stringResource(R.string.anon_log_out),
+              bodyText = stringResource(R.string.anon_log_out_text),
+              dismissText = stringResource(R.string.cancel),
+              confirmText = stringResource(R.string.log_out),
+              onDismiss = { shouldShowLogOutWarning.value = false },
+              onConfirm = {
+                settingsViewModel.signOut(credentialManager)
+                shouldShowLogOutWarning.value = false
+              },
+              isImportantWarning = true)
+        }
       })
+}
+
+fun signOutAlertIfAnon(
+    uiState: SettingsUiState,
+    shouldShowLogOutWarning: MutableState<Boolean>,
+    settingsViewModel: SettingsViewModel,
+    credentialManager: CredentialManager
+) {
+  if (uiState.isAnon) {
+    shouldShowLogOutWarning.value = true
+  } else {
+    settingsViewModel.signOut(credentialManager)
+  }
 }
 
 /**

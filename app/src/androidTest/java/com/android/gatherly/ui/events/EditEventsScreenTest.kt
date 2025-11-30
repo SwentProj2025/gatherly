@@ -3,9 +3,12 @@ package com.android.gatherly.ui.events
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.gatherly.model.event.Event
@@ -16,6 +19,7 @@ import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.ui.todo.AddToDoScreenTestTags
+import com.android.gatherly.utils.AlertDialogTestTags
 import com.google.firebase.Timestamp
 import java.util.Date
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -118,7 +122,6 @@ class EditEventsScreenTest {
   fun displayAllComponents() {
     composeTestRule.onNodeWithTag(EditEventsScreenTestTags.INPUT_NAME).assertIsDisplayed()
     composeTestRule.onNodeWithTag(EditEventsScreenTestTags.INPUT_DESCRIPTION).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(EditEventsScreenTestTags.INPUT_CREATOR).assertIsDisplayed()
     composeTestRule.onNodeWithTag(EditEventsScreenTestTags.INPUT_PARTICIPANT).assertIsDisplayed()
     composeTestRule.onNodeWithTag(EditEventsScreenTestTags.INPUT_LOCATION).assertIsDisplayed()
     composeTestRule.onNodeWithTag(EditEventsScreenTestTags.INPUT_DATE).assertIsDisplayed()
@@ -145,6 +148,21 @@ class EditEventsScreenTest {
     composeTestRule.waitUntil(timeoutMillis = 5000L) {
       composeTestRule.onNodeWithTag(EditEventsScreenTestTags.PARTICIPANT_MENU).isDisplayed()
     }
+  }
+
+  /**
+   * Check that when scrolling to the delete button, then pressing it shows the delete alert dialog
+   */
+  @Test
+  fun deleteTodoShowsAlertDialog() {
+    composeTestRule
+        .onNodeWithTag(EditEventsScreenTestTags.LIST)
+        .performScrollToNode(hasTestTag(EditEventsScreenTestTags.BTN_DELETE))
+    composeTestRule
+        .onNodeWithTag(EditEventsScreenTestTags.BTN_DELETE)
+        .assertIsDisplayed()
+        .performClick()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.ALERT).assertIsDisplayed()
   }
 
   // This function fills the profile repository with the created profiles, and the event repository
