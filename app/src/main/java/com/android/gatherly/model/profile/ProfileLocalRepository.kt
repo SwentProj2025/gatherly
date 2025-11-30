@@ -238,9 +238,13 @@ class ProfileLocalRepository : ProfileRepository {
     awardBadge(uid, type, currentValue + 1)
   }
 
-  override suspend fun updateFocusPoints(uid: String, points: Double) {
+  override suspend fun updateFocusPoints(uid: String, points: Double, addToLeaderboard: Boolean) {
     var profile = getProfileByUid(uid) ?: throw IllegalArgumentException("Profile doesn't exist")
-    profile = profile.copy(focusPoints = profile.focusPoints + points)
+    val leaderboard = if (addToLeaderboard) points else 0.0
+    profile =
+        profile.copy(
+            focusPoints = profile.focusPoints + points,
+            weeklyPoints = profile.weeklyPoints + leaderboard)
     updateProfile(profile)
   }
 

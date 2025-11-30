@@ -232,10 +232,12 @@ interface ProfileRepository {
   suspend fun incrementBadge(uid: String, type: BadgeType)
 
   /**
-   * Adds the given number of points to the user's total number of points
+   * Adds the given number of points to the user's total number of points.
    *
    * @param uid The profile to update
    * @param points The number of points to add
+   * @param addToLeaderboard True if the points should also be added to the users weekly point
+   *   count. False if these points should not count towards the leaderboard.
    */
-  suspend fun updateFocusPoints(uid: String, points: Double)
+  suspend fun updateFocusPoints(uid: String, points: Double, addToLeaderboard: Boolean = true)
 }

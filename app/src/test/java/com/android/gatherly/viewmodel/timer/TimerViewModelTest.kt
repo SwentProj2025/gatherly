@@ -203,7 +203,7 @@ class TimerViewModelTest {
     advanceUntilIdle()
 
     // Trigger reload
-    viewModel.getAllTodos()
+    viewModel.loadUI()
 
     advanceUntilIdle()
 
