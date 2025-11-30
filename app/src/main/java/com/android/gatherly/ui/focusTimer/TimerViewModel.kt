@@ -7,14 +7,25 @@ import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.focusSession.FocusSession
 import com.android.gatherly.model.focusSession.FocusSessionsRepository
 import com.android.gatherly.model.focusSession.FocusSessionsRepositoryProvider
+import com.android.gatherly.model.points.Points
+import com.android.gatherly.model.points.PointsRepository
+import com.android.gatherly.model.points.PointsRepositoryProvider
+import com.android.gatherly.model.points.PointsSource
+import com.android.gatherly.model.profile.ProfileRepository
+import com.android.gatherly.model.profile.ProfileRepositoryProvider
 import com.android.gatherly.model.profile.ProfileStatus
 import com.android.gatherly.model.profile.UserStatusManager
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.model.todo.ToDosRepositoryProvider
+import com.android.gatherly.utils.updateFocusPoints
+import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.auth
 import java.util.Timer
 import kotlin.concurrent.fixedRateTimer
+import kotlin.math.floor
 import kotlin.math.max
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
@@ -47,7 +58,8 @@ data class TimerState(
     val isStarted: Boolean = false,
     val errorMsg: String? = null,
     val linkedTodo: ToDo? = null,
-    val allTodos: List<ToDo> = emptyList()
+    val allTodos: List<ToDo> = emptyList(),
+    val pointsGained: Double = 0.0
 )
 
 /**
@@ -58,9 +70,12 @@ data class TimerState(
  */
 class TimerViewModel(
     private val todoRepository: ToDosRepository = ToDosRepositoryProvider.repository,
+    private val pointsRepository: PointsRepository = PointsRepositoryProvider.repository,
+    private val profileRepository: ProfileRepository = ProfileRepositoryProvider.repository,
     private val userStatusManager: UserStatusManager = UserStatusManager(),
     private val focusSessionsRepository: FocusSessionsRepository =
         FocusSessionsRepositoryProvider.repository,
+    private val authProvider: () -> FirebaseAuth = { Firebase.auth }
 ) : ViewModel() {
 
   private val _uiState = MutableStateFlow(TimerState())
@@ -208,6 +223,9 @@ class TimerViewModel(
 
   /** Ends the timer and resets the state. */
   fun endTimer() {
+    val pointsGained = _uiState.value.pointsGained
+    _uiState.value = _uiState.value.copy(pointsGained = 0.0)
+
     val state = _uiState.value
     if (!state.isStarted) return
 
@@ -241,6 +259,21 @@ class TimerViewModel(
         focusSessionsRepository.updateFocusSession(sessionId, updatedSession)
       } catch (_: Exception) {
         setError("Failed to finalize focus session")
+      }
+    }
+
+    // add focus points to profile
+    viewModelScope.launch {
+      try {
+        val points =
+            Points(
+                userId = authProvider().currentUser?.uid!!,
+                obtained = pointsGained,
+                reason = PointsSource.Timer(elapsedTime.inWholeMinutes.toInt()),
+                dateObtained = Timestamp.now())
+        updateFocusPoints(pointsRepository, profileRepository, points)
+      } catch (_: Exception) {
+        setError("Failed to add focus points to profile")
       }
     }
 
@@ -294,6 +327,13 @@ class TimerViewModel(
           val sinceStart = startedAt?.let { difference(it, now) } ?: Duration.ZERO
           val elapsed = elapsedTime + sinceStart
           val remaining = max(0, (state.plannedDuration - elapsed).inWholeSeconds).seconds
+
+          // if we are on the minute, gain a focus depending on the time that has passed (every 5
+          // minutes, the points gained increases by 5%)
+          if (elapsed.inWholeSeconds % 60 == 0L) {
+            val bonus = 1 + floor(elapsed.inWholeMinutes / 5.0) * 0.05
+            _uiState.value = _uiState.value.copy(pointsGained = _uiState.value.pointsGained + bonus)
+          }
 
           _uiState.value = state.copy(remainingTime = remaining)
           updateClock(remaining)
