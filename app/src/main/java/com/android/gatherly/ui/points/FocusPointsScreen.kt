@@ -2,8 +2,12 @@ package com.android.gatherly.ui.points
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
@@ -20,9 +24,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
 import com.android.gatherly.model.points.PointsSource
@@ -52,33 +59,38 @@ fun FocusPointsScreen(
   Scaffold(
       topBar = {
         TopNavigationMenu_Goback(
-            selectedTab = Tab.Events, // TODO change this
+            selectedTab = Tab.FocusPoints,
             modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
             goBack = goBack)
       }) { paddingVal ->
         Column(modifier = Modifier.padding(paddingVal)) {
-          Row {
-            Text(
-                text = stringResource(R.string.focus_points_acquisition),
-                color = MaterialTheme.colorScheme.onBackground)
+          Row(
+              verticalAlignment = Alignment.CenterVertically,
+              modifier = Modifier.padding(dimensionResource(R.dimen.padding_screen))) {
+                Text(
+                    text = stringResource(R.string.focus_points_acquisition),
+                    color = MaterialTheme.colorScheme.onBackground,
+                    modifier = Modifier.weight(1f))
 
-            IconButton(
-                onClick = { showInfo.value = true },
-                modifier = Modifier.testTag(FocusPointsTestTags.INFO_BUTTON)) {
-                  Icon(
-                      imageVector = Icons.Default.Info,
-                      contentDescription = "Info button",
-                      tint = MaterialTheme.colorScheme.onBackground)
-                }
-          }
+                IconButton(
+                    onClick = { showInfo.value = true },
+                    modifier = Modifier.testTag(FocusPointsTestTags.INFO_BUTTON)) {
+                      Icon(
+                          imageVector = Icons.Default.Info,
+                          contentDescription = "Info button",
+                          tint = MaterialTheme.colorScheme.onBackground)
+                    }
+              }
 
           if (ui.value.focusHistory.isEmpty()) {
             Text(
                 text = stringResource(R.string.focus_points_no_history),
                 color = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.testTag(FocusPointsTestTags.NO_HISTORY))
+                modifier =
+                    Modifier.testTag(FocusPointsTestTags.NO_HISTORY)
+                        .padding(dimensionResource(R.dimen.padding_screen)))
           } else {
-            LazyColumn {
+            LazyColumn(modifier = Modifier.padding(dimensionResource(R.dimen.padding_screen))) {
               for (points in ui.value.focusHistory) {
                 item {
                   Card(
@@ -86,21 +98,36 @@ fun FocusPointsScreen(
                           CardDefaults.cardColors(
                               containerColor = MaterialTheme.colorScheme.surfaceVariant,
                               contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
-                      modifier = Modifier.testTag(FocusPointsTestTags.HISTORY_CARD)) {
-                        Column(verticalArrangement = Arrangement.SpaceEvenly) {
-                          Text(text = "+ ${points.obtained} points")
+                      modifier =
+                          Modifier.testTag(FocusPointsTestTags.HISTORY_CARD)
+                              .padding(vertical = dimensionResource(R.dimen.padding_small))
+                              .fillMaxWidth()
+                              .height(dimensionResource(R.dimen.focus_item_height))) {
+                        Column(
+                            verticalArrangement = Arrangement.SpaceEvenly,
+                            modifier =
+                                Modifier.padding(dimensionResource(R.dimen.padding_screen))) {
+                              Text(
+                                  text = "+ ${points.obtained} points",
+                                  fontWeight = FontWeight.Bold)
 
-                          when (points.reason) {
-                            is PointsSource.Timer -> "Focused for ${points.reason.minutes} minutes"
-                            is PointsSource.Badge -> "Obtained the ${points.reason.badgeName} badge"
-                            is PointsSource.Leaderboard ->
-                                "Reached ${points.reason.rank} on your friends leaderboard"
-                          }
+                              val reasonText =
+                                  when (points.reason) {
+                                    is PointsSource.Timer ->
+                                        "Focused for ${points.reason.minutes} minutes"
+                                    is PointsSource.Badge ->
+                                        "Obtained the ${points.reason.badgeName} badge"
+                                    is PointsSource.Leaderboard ->
+                                        "Reached ${points.reason.rank} on your friends leaderboard"
+                                  }
 
-                          val sdf = SimpleDateFormat("dd/MM/yyyy 'at' HH:mm")
+                              Text(text = reasonText)
 
-                          Text(text = "Obtained on: ${sdf.format(points.dateObtained.toDate())}")
-                        }
+                              val sdf = SimpleDateFormat("dd/MM/yyyy 'at' HH:mm")
+
+                              Text(
+                                  text = "Obtained on: ${sdf.format(points.dateObtained.toDate())}")
+                            }
                       }
                 }
               }
@@ -108,38 +135,68 @@ fun FocusPointsScreen(
           }
         }
 
+        val screenFit = 0.9f
+
         if (showInfo.value) {
-          Card(
-              colors =
-                  CardDefaults.cardColors(
-                      containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                      contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
-              modifier = Modifier.testTag(FocusPointsTestTags.INFO_CARD)) {
-                Column {
-                  Row {
-                    Text(text = stringResource(R.string.focus_points_how_to_obtain))
+          Box(
+              contentAlignment = Alignment.Center,
+              modifier = Modifier.padding(paddingVal).fillMaxSize()) {
+                Card(
+                    colors =
+                        CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
+                    modifier =
+                        Modifier.testTag(FocusPointsTestTags.INFO_CARD).fillMaxSize(screenFit)) {
+                      LazyColumn(
+                          modifier = Modifier.padding(dimensionResource(R.dimen.padding_screen))) {
+                            item {
+                              Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = stringResource(R.string.focus_points_how_to_obtain),
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.weight(1f))
 
-                    IconButton(
-                        onClick = { showInfo.value = false },
-                        modifier = Modifier.testTag(FocusPointsTestTags.DISMISS_BUTTON)) {
-                          Icon(
-                              imageVector = Icons.Default.Cancel,
-                              contentDescription = "Dismiss info")
-                        }
-                  }
+                                IconButton(
+                                    onClick = { showInfo.value = false },
+                                    modifier =
+                                        Modifier.testTag(FocusPointsTestTags.DISMISS_BUTTON)) {
+                                      Icon(
+                                          imageVector = Icons.Default.Cancel,
+                                          contentDescription = "Dismiss info")
+                                    }
+                              }
+                            }
 
-                  Text(text = stringResource(R.string.focus_points_focus_sessions))
+                            item {
+                              Text(
+                                  text = stringResource(R.string.focus_points_focus_sessions),
+                                  fontWeight = FontWeight.Bold)
+                            }
 
-                  Text(text = stringResource(R.string.focus_points_focus_sessions_text))
+                            item {
+                              Text(text = stringResource(R.string.focus_points_focus_sessions_text))
+                            }
 
-                  Text(text = stringResource(R.string.focus_points_badges))
+                            item {
+                              Text(
+                                  text = stringResource(R.string.focus_points_badges),
+                                  fontWeight = FontWeight.Bold)
+                            }
 
-                  Text(text = stringResource(R.string.focus_points_badges_text))
+                            item { Text(text = stringResource(R.string.focus_points_badges_text)) }
 
-                  Text(text = stringResource(R.string.focus_points_leaderboard))
+                            item {
+                              Text(
+                                  text = stringResource(R.string.focus_points_leaderboard),
+                                  fontWeight = FontWeight.Bold)
+                            }
 
-                  Text(text = stringResource(R.string.focus_points_leaderboard_text))
-                }
+                            item {
+                              Text(text = stringResource(R.string.focus_points_leaderboard_text))
+                            }
+                          }
+                    }
               }
         }
       }

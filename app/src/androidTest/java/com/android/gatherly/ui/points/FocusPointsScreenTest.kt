@@ -47,7 +47,7 @@ class FocusPointsScreenTest {
   @Test
   fun focusHistoryIsDisplayed() {
     fill_repository()
-    focusPointsViewModel.loadUI()
+    focusPointsViewModel.loadPointsHistory()
     composeTestRule.onNodeWithTag(FocusPointsTestTags.HISTORY_CARD).assertIsDisplayed()
   }
 

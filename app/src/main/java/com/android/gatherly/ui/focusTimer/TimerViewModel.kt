@@ -320,7 +320,7 @@ class TimerViewModel(
     cancelTicking()
     timer =
         fixedRateTimer(name = "focus-timer", daemon = true, period = 1000L, initialDelay = 1000L) {
-          val state = _uiState.value
+          var state = _uiState.value
           if (!state.isStarted || state.isPaused) return@fixedRateTimer
 
           val now = Timestamp.now()
@@ -332,7 +332,7 @@ class TimerViewModel(
           // minutes, the points gained increases by 5%)
           if (elapsed.inWholeSeconds % 60 == 0L) {
             val bonus = 1 + floor(elapsed.inWholeMinutes / 5.0) * 0.05
-            _uiState.value = _uiState.value.copy(pointsGained = _uiState.value.pointsGained + bonus)
+            state = state.copy(pointsGained = state.pointsGained + bonus)
           }
 
           _uiState.value = state.copy(remainingTime = remaining)
