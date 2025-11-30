@@ -3,6 +3,8 @@ package com.android.gatherly.viewmodel.timer
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.gatherly.model.focusSession.FocusSessionsLocalRepository
 import com.android.gatherly.model.focusSession.FocusSessionsRepository
+import com.android.gatherly.model.notification.NotificationsLocalRepository
+import com.android.gatherly.model.notification.NotificationsRepository
 import com.android.gatherly.model.points.PointsLocalRepository
 import com.android.gatherly.model.points.PointsRepository
 import com.android.gatherly.model.profile.ProfileLocalRepository
@@ -54,11 +56,11 @@ class TimerViewModelTest {
   private lateinit var mockitoUtils: MockitoUtils
   private lateinit var profileRepository: ProfileRepository
   private lateinit var pointsRepository: PointsRepository
+  private lateinit var notificationsRepository: NotificationsRepository
   private lateinit var focusSessionsRepository: FocusSessionsRepository
 
   private fun makeTodo(
       name: String,
-      assignee: String = "user",
       description: String = "lorem ipsum",
       ownerId: String = "user123"
   ): ToDo {
@@ -85,6 +87,7 @@ class TimerViewModelTest {
     toDosRepository = ToDosLocalRepository()
     profileRepository = ProfileLocalRepository()
     pointsRepository = PointsLocalRepository()
+    notificationsRepository = NotificationsLocalRepository()
 
     statusManagerMock = mock()
     mockitoUtils = MockitoUtils()
@@ -95,6 +98,7 @@ class TimerViewModelTest {
             todoRepository = toDosRepository,
             pointsRepository = pointsRepository,
             profileRepository = profileRepository,
+            notificationsRepository = notificationsRepository,
             userStatusManager = statusManagerMock,
             focusSessionsRepository = focusSessionsRepository,
             authProvider = { mockitoUtils.mockAuth })
