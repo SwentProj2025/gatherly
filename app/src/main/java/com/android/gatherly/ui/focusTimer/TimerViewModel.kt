@@ -223,6 +223,7 @@ class TimerViewModel(
 
   /** Ends the timer and resets the state. */
   fun endTimer() {
+    val pointsGained = _uiState.value.pointsGained
     _uiState.value = _uiState.value.copy(pointsGained = 0.0)
 
     val state = _uiState.value
@@ -267,7 +268,7 @@ class TimerViewModel(
         val points =
             Points(
                 userId = authProvider().currentUser?.uid!!,
-                obtained = _uiState.value.pointsGained,
+                obtained = pointsGained,
                 reason = PointsSource.Timer(elapsedTime.inWholeMinutes.toInt()),
                 dateObtained = Timestamp.now())
         updateFocusPoints(pointsRepository, profileRepository, points)
