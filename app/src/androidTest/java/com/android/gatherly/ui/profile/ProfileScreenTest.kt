@@ -79,9 +79,9 @@ class ProfileScreenTest {
         .assertExists()
         .assertTextEquals("0")
     composeTestRule
-        .onNodeWithTag(ProfileScreenTestTags.PROFILE_FOCUS_POINTS_COUNT)
+        .onNodeWithTag(ProfileScreenTestTags.PROFILE_FOCUS_POINTS_COUNT, useUnmergedTree = true)
         .assertExists()
-        .assertTextEquals("0")
+        .assertTextEquals("0.0")
   }
 
   @Test
