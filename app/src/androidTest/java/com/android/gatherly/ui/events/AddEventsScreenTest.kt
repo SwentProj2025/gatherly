@@ -176,6 +176,7 @@ class AddEventsScreenTest {
     }
   }
 
+  /** Check that the date inputs are working correctly */
   @Test
   fun testDatePickerWorkingCorrectly() {
     composeTestRule.openDatePicker(AddEventScreenTestTags.INPUT_DATE)
@@ -190,6 +191,7 @@ class AddEventsScreenTest {
     composeTestRule.onNodeWithTag(AddEventScreenTestTags.ERROR_MESSAGE).assertIsNotDisplayed()
   }
 
+  /** Check that inputting a past date shows an error message */
   @Test
   fun testPastDateShowError() {
     composeTestRule.openDatePicker(AddEventScreenTestTags.INPUT_DATE)
