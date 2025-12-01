@@ -53,6 +53,7 @@ data class UIState(
                     "Blank Focus Session Badge",
                     "Complete your first Focus Session to get a Badge!",
                     R.drawable.blank_focus_session)),
+    val isLoading: Boolean = false,
 )
 
 /**

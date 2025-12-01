@@ -173,32 +173,6 @@ class AddEventsViewModelTest {
     }
   }
 
-  /*------------------------------Creator name tests--------------------------------------------*/
-  // Creator name accepts valid string
-  @Test
-  fun canEnterEventCreatorName() {
-    runTest {
-      val creatorNameString = "creator"
-      addEventViewModel.updateCreatorName(creatorNameString)
-      assert(!addEventViewModel.uiState.creatorNameError) {
-        "Entering a creator name should not make an error"
-      }
-      assert(addEventViewModel.uiState.creatorName == creatorNameString) {
-        "Entering a creator name should work"
-      }
-    }
-  }
-
-  // Creator name does not accept blank string
-  @Test
-  fun cannotEnterEmptyEventCreatorName() {
-    runTest {
-      val blankString = " "
-      addEventViewModel.updateCreatorName(blankString)
-      assert(addEventViewModel.uiState.creatorNameError) { "Blank creator name should be wrong" }
-    }
-  }
-
   /*----------------------------------Due date tests--------------------------------------------*/
   // Due date accepts valid due date
   @Test
@@ -481,7 +455,6 @@ class AddEventsViewModelTest {
     runTest {
       addEventViewModel.updateName(event1.title)
       addEventViewModel.updateDescription(event1.description)
-      addEventViewModel.updateCreatorName(event1.creatorName)
       addEventViewModel.updateDate(SimpleDateFormat("dd/MM/yyyy").format(event1.date.toDate()))
       addEventViewModel.updateStartTime(SimpleDateFormat("HH:mm").format(event1.startTime.toDate()))
       addEventViewModel.updateEndTime(SimpleDateFormat("HH:mm").format(event1.endTime.toDate()))

@@ -92,17 +92,17 @@
     <string name="profile_empty_focus_sessions_message">Focus session data not available yet.</string>
     <string name="profile_empty_groups_message">You currently have no groups.</string>
     <string name="profile_anon_message">You are currently signed in anonymously, create an account to have a profile.</string>
+    <string name="placeholder_button_badge_title">Go to Badges</string>
+
 
     <!-- Events -->
-    <string name="events_title_field_label">Title</string>
+    <string name="events_title_field_label">Title (*)</string>
     <string name="events_title_field_placeholder">Task Title</string>
-    <string name="events_description_field_label">Description</string>
+    <string name="events_description_field_label">Description (*)</string>
     <string name="events_description_placeholder">Describe the task</string>
-    <string name="events_creator_field_label">Creator</string>
-    <string name="events_creator_placeholder">Assign a creator</string>
-    <string name="events_start_time_field_label">Start Time</string>
-    <string name="events_end_time_field_label">End Time</string>
-    <string name="events_date_field_label">Due Date</string>
+    <string name="events_start_time_field_label">Start Time (*)</string>
+    <string name="events_end_time_field_label">End Time (*)</string>
+    <string name="events_date_field_label">Due Date (*)</string>
     <string name="events_location_field_label">Location</string>
     <string name="events_location_field_placeholder">Enter an Address or Location</string>
     <string name="events_participant_field_label">Participant</string>
@@ -129,6 +129,9 @@
     <string name="homepage_profile_image_description">Friend Profile Picture</string>
     <string name="homepage_upcoming_events_title">Upcoming events</string>
     <string name="homepage_upcoming_tasks_title">My upcoming tasks</string>
+    <string name="homepage_empty_task_list_message">You don\'t have any todos, click here to add some !</string>
+    <string name="homepage_no_friends_message">Add friends</string>
+    <string name="homepage_add_friend_icon_description">Add friends icon</string>
 
     <string name="goback_button_title">Go back</string>
     <string name="unregister_button_title">Unregister</string>

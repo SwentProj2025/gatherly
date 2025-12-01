@@ -30,6 +30,8 @@ object NavigationTestTags {
   const val FINDFRIENDS_TAB = "FindFriendsTab"
   const val USER_PROFILE_TAB = "UserProfileTab"
 
+  const val BADGE_TAB = "BadgeTab"
+
   fun getTabTestTag(tab: Tab): String =
       when (tab) {
         is Tab.Overview -> OVERVIEW_TAB
@@ -47,6 +49,7 @@ object NavigationTestTags {
         is Tab.EditEvent -> EDITEVENT_TAB
         is Tab.FindFriends -> FINDFRIENDS_TAB
         is Tab.AddGroup -> ADDGROUP_TAB
+        is Tab.Badge -> BADGE_TAB
         is Tab.UserProfile -> USER_PROFILE_TAB
       }
 }

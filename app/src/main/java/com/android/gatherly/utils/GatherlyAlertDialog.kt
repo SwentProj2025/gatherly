@@ -24,6 +24,10 @@ fun GatherlyAlertDialog(
     bodyText: String,
     dismissText: String,
     confirmText: String,
+    creatorText: String? = null,
+    dateText: String? = null,
+    startTimeText: String? = null,
+    endTimeText: String? = null,
     onDismiss: () -> Unit,
     onConfirm: () -> Unit,
     isImportantWarning: Boolean = false,
@@ -38,10 +42,19 @@ fun GatherlyAlertDialog(
       textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
       modifier = Modifier.testTag(AlertDialogTestTags.ALERT),
       title = {
-        Text(
-            text = titleText,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.testTag(AlertDialogTestTags.TITLE))
+        Column {
+          Text(
+              text = titleText,
+              textAlign = TextAlign.Center,
+              style = MaterialTheme.typography.titleLarge,
+              modifier = Modifier.fillMaxWidth().testTag(AlertDialogTestTags.TITLE))
+
+          GatherlyDialogTitleContent(
+              creatorText = creatorText,
+              dateText = dateText,
+              startTimeText = startTimeText,
+              endTimeText = endTimeText)
+        }
       },
       text = {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -65,7 +78,6 @@ fun GatherlyAlertDialog(
           }
         }
       },
-      dismissButton = null,
 
       // Entire button logic here, to get spacing
       confirmButton = {
@@ -125,6 +137,39 @@ fun GatherlyAlertDialog(
   )
 }
 
+/**
+ * Helper function: Display all the information displayed only for the event alert dialog.
+ *
+ * @param creatorText the name of the creator of the event
+ * @param dateText the date of the event
+ * @param startTimeText the starting time of the event
+ * @param endTimeText the ending time of the event
+ */
+@Composable
+private fun GatherlyDialogTitleContent(
+    creatorText: String?,
+    dateText: String?,
+    startTimeText: String?,
+    endTimeText: String?
+) {
+
+  if (dateText == null || startTimeText == null || endTimeText == null) return
+
+  if (creatorText != null) {
+    Text(
+        text = "By $creatorText",
+        textAlign = TextAlign.End,
+        style = MaterialTheme.typography.bodyMedium,
+        modifier = Modifier.fillMaxWidth().testTag(AlertDialogTestTags.CREATOR_TEXT))
+  }
+
+  Text(
+      text = "On $dateText from $startTimeText to $endTimeText",
+      textAlign = TextAlign.End,
+      style = MaterialTheme.typography.bodyMedium,
+      modifier = Modifier.fillMaxWidth().testTag(AlertDialogTestTags.DATE_TEXT))
+}
+
 object AlertDialogTestTags {
   const val ALERT = "alert"
   const val TITLE = "title"
@@ -132,4 +177,8 @@ object AlertDialogTestTags {
   const val DISMISS_BTN = "dismissButton"
   const val CONFIRM_BTN = "confirmButton"
   const val NEUTRAL_BTN = "neutralButton"
+
+  const val CREATOR_TEXT = "creatorText"
+
+  const val DATE_TEXT = "dateText"
 }
