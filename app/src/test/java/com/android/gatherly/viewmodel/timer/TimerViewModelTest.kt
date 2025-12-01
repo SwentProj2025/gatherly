@@ -89,6 +89,10 @@ class TimerViewModelTest {
     pointsRepository = PointsLocalRepository()
     notificationsRepository = NotificationsLocalRepository()
 
+    runTest {
+      profileRepository.initProfileIfMissing(uid = "fakeUid", defaultPhotoUrl = "default.png")
+    }
+
     statusManagerMock = mock()
     mockitoUtils = MockitoUtils()
     mockitoUtils.chooseCurrentUser("fakeUid")
