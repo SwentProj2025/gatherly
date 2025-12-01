@@ -113,10 +113,10 @@ class TimerViewModel(
         val profile =
             getProfileWithSyncedFriendNotifications(
                 profileRepository, notificationsRepository, authProvider().currentUser?.uid!!)!!
-        val leaderboard =
-            profile.friendUids
-                .map { friend -> profileRepository.getProfileByUid(friend)!! }
-                .sortedByDescending { it.weeklyPoints }
+        val allFriends =
+            profile.friendUids.map { friend -> profileRepository.getProfileByUid(friend)!! } +
+                profile
+        val leaderboard = allFriends.sortedByDescending { it.weeklyPoints }
         _uiState.value = _uiState.value.copy(leaderboard = leaderboard)
       } catch (_: Exception) {
         setError("Failed to load ui state")

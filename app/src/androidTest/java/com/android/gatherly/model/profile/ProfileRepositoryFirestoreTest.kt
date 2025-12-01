@@ -1128,6 +1128,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     assertEquals("bob", profileB!!.username)
   }
 
+  /** Check that adding focus points adds focus points to global points and weekly points */
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun addFocusPointsWorks() = runTest {
@@ -1138,9 +1139,28 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     assertEquals(0.0, profileBefore.focusPoints, 0.01)
 
     val pointsToAdd = 23.9
-    repository.updateFocusPoints(uid, pointsToAdd)
+    repository.updateFocusPoints(uid = uid, points = pointsToAdd, addToLeaderboard = true)
 
     val profileAfter = repository.getProfileByUid(uid)!!
     assertEquals(pointsToAdd, profileAfter.focusPoints, 0.01)
+    assertEquals(pointsToAdd, profileAfter.weeklyPoints, 0.01)
+  }
+
+  /** Check that adding focus points without adding to weekly points only adds to global points */
+  @OptIn(ExperimentalCoroutinesApi::class)
+  @Test
+  fun addFocusPointsNoLeaderboardWorks() = runTest {
+    val uid = FirebaseEmulator.auth.currentUser!!.uid
+    repository.initProfileIfMissing(uid, "pic.png")
+
+    val profileBefore = repository.getProfileByUid(uid)!!
+    assertEquals(0.0, profileBefore.focusPoints, 0.01)
+
+    val pointsToAdd = 23.9
+    repository.updateFocusPoints(uid = uid, points = pointsToAdd, addToLeaderboard = false)
+
+    val profileAfter = repository.getProfileByUid(uid)!!
+    assertEquals(pointsToAdd, profileAfter.focusPoints, 0.01)
+    assertEquals(0.0, profileAfter.weeklyPoints, 0.01)
   }
 }
