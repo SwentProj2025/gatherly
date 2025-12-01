@@ -54,7 +54,7 @@ class HomePageViewModel(
         val todos = toDosRepository.getAllTodos()
         val events = eventsRepository.getAllEvents()
         val profile = profileRepository.getProfileByUid(authProvider().currentUser?.uid!!)!!
-        val friends = profile.friendUids.take(3).map { profileRepository.getProfileByUid(it)!! }
+        val friends = profile.friendUids.map { profileRepository.getProfileByUid(it)!! }
         val isAnon = authProvider().currentUser?.isAnonymous ?: true
 
         _uiState.value =
@@ -62,7 +62,7 @@ class HomePageViewModel(
                 displayableTodos = getDrawableTodos(todos),
                 displayableEvents = getDrawableEvents(events),
                 friends = friends,
-                todos = todos.take(3),
+                todos = todos,
                 isAnon = isAnon)
       } catch (e: Exception) {
         _uiState.value = _uiState.value.copy(errorMsg = "There was an error loading your home page")
