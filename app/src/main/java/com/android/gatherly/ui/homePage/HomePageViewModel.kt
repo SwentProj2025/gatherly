@@ -61,7 +61,7 @@ class HomePageViewModel(
         val profile =
             getProfileWithSyncedFriendNotifications(
                 profileRepository, notificationsRepository, authProvider().currentUser?.uid!!)!!
-        val friends = profile.friendUids.take(3).map { profileRepository.getProfileByUid(it)!! }
+        val friends = profile.friendUids.map { profileRepository.getProfileByUid(it)!! }
         val isAnon = authProvider().currentUser?.isAnonymous ?: true
 
         _uiState.value =
