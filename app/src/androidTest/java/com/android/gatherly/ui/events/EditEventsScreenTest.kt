@@ -15,6 +15,8 @@ import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsLocalRepository
 import com.android.gatherly.model.event.EventsRepository
+import com.android.gatherly.model.map.FakeNominatimLocationRepository
+import com.android.gatherly.model.map.Location
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
@@ -40,13 +42,16 @@ class EditEventsScreenTest {
   private lateinit var editEventsViewModel: EditEventsViewModel
   private lateinit var eventsRepository: EventsRepository
   private lateinit var profileRepository: ProfileRepository
+  private lateinit var fakeNominatimClient: FakeNominatimLocationRepository
 
   @Before
   fun setUp() {
     // initialize repos and viewModel
     profileRepository = ProfileLocalRepository()
     eventsRepository = EventsLocalRepository()
-    editEventsViewModel = EditEventsViewModel(profileRepository, eventsRepository)
+    fakeNominatimClient = FakeNominatimLocationRepository()
+    editEventsViewModel =
+        EditEventsViewModel(profileRepository, eventsRepository, fakeNominatimClient)
 
     // fill the profile and events repositories with profiles and event
     fill_repositories()
@@ -137,6 +142,13 @@ class EditEventsScreenTest {
   /** Check that menus are displayed */
   @Test
   fun displayMenus() {
+    fakeNominatimClient.setSearchResults(
+        "Paris",
+        listOf(
+            Location(latitude = 48.8566, longitude = 2.3522, name = "Paris, France"),
+            Location(
+                latitude = 48.8534, longitude = 2.3488, name = "Paris, Île-de-France, France")))
+
     composeTestRule.onNodeWithTag(EditEventsScreenTestTags.INPUT_LOCATION).performTextInput("Paris")
     composeTestRule.waitUntil(timeoutMillis = 5000L) {
       composeTestRule.onNodeWithTag(EditEventsScreenTestTags.LOCATION_MENU).isDisplayed()

@@ -92,7 +92,17 @@ class Milestone2End2End : FirestoreGatherlyTest() {
       composeTestRule.onNodeWithTag(EventsScreenTestTags.BROWSE_TITLE).isDisplayed()
     }
 
-    // Scroll to bottom
+    // Wait for the create event button to actually exist in the compose tree
+    composeTestRule.waitUntil(TIMEOUT) {
+      try {
+        composeTestRule.onNodeWithTag(EventsScreenTestTags.CREATE_EVENT_BUTTON).assertExists()
+        true
+      } catch (e: AssertionError) {
+        false
+      }
+    }
+
+    // Now scroll to it
     composeTestRule
         .onNodeWithTag(EventsScreenTestTags.ALL_LISTS)
         .performScrollToNode(hasTestTag(EventsScreenTestTags.CREATE_EVENT_BUTTON))
@@ -102,9 +112,6 @@ class Milestone2End2End : FirestoreGatherlyTest() {
         .onNodeWithTag(EventsScreenTestTags.CREATE_EVENT_BUTTON)
         .assertIsDisplayed()
         .performClick()
-    composeTestRule.waitUntil(TIMEOUT) {
-      composeTestRule.onNodeWithTag(AddEventScreenTestTags.INPUT_NAME).isDisplayed()
-    }
 
     // Input event details
     composeTestRule
@@ -218,14 +225,17 @@ class Milestone2End2End : FirestoreGatherlyTest() {
     // Navigate to profile
     composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).assertIsDisplayed().performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).assertIsDisplayed().performClick()
-    composeTestRule.waitUntil(TIMEOUT) {
-      composeTestRule.onNodeWithTag(ProfileScreenTestTags.PROFILE_USERNAME).isDisplayed()
-    }
 
-    // Check that the username changed
-    composeTestRule
-        .onNodeWithTag(ProfileScreenTestTags.PROFILE_USERNAME)
-        .assertIsDisplayed()
-        .assertTextContains("different_username", substring = true)
+    // Wait for the username to actually update with the new value
+    composeTestRule.waitUntil(TIMEOUT) {
+      try {
+        composeTestRule
+            .onNodeWithTag(ProfileScreenTestTags.PROFILE_USERNAME)
+            .assertTextContains("different_username", substring = true)
+        true
+      } catch (e: AssertionError) {
+        false
+      }
+    }
   }
 }

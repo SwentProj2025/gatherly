@@ -47,6 +47,11 @@ class Milestone1End2End : FirestoreGatherlyTest() {
   // an end to end test with what was implemented in the M1
   @Test
   fun testAddTodoThenTimer() {
+    // Wait for compose hierarchy to be ready before any interaction
+    composeTestRule.waitUntil(TIMEOUT) {
+      composeTestRule.onNodeWithTag(SignInScreenTestTags.ANONYMOUS_BUTTON).isDisplayed()
+    }
+
     // sign in anonymously
     composeTestRule.onNodeWithTag(SignInScreenTestTags.ANONYMOUS_BUTTON).performClick()
 
@@ -102,7 +107,10 @@ class Milestone1End2End : FirestoreGatherlyTest() {
     composeTestRule.waitUntil(TIMEOUT) {
       composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.START_BUTTON).isDisplayed()
     }
-
+    // Wait for the todo dropdown to be populated
+    composeTestRule.waitUntil(TIMEOUT) {
+      composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.TODO_TO_CHOOSE).isDisplayed()
+    }
     // choose my todo, start 1 minute timer
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.TODO_TO_CHOOSE).performClick()
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.MINUTES_TEXT).performTextClearance()
