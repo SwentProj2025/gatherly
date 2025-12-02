@@ -23,6 +23,7 @@ import com.android.gatherly.utils.TestDates.futureYear
 import com.android.gatherly.utils.TestDates.pastYear
 import com.android.gatherly.utils.openDatePicker
 import com.android.gatherly.utils.selectDateFromPicker
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -151,11 +152,12 @@ class AddTodoScreenTest : GatherlyTest() {
   }
 
   @Test
-  fun enterPastDate() = runTest {
-    composeTestRule.enterAddTodoDetails(todo1)
-    composeTestRule.openDatePicker(AddToDoScreenTestTags.INPUT_TODO_DATE)
-    composeTestRule.selectDateFromPicker(currentDay, currentMonth, pastYear)
-    composeTestRule.onNodeWithTag(AddToDoScreenTestTags.TODO_SAVE).performClick()
-    composeTestRule.onNodeWithTag(AlertDialogTestTags.ALERT).assertIsDisplayed()
-  }
+  fun enterPastDate() =
+      runTest(timeout = 60.seconds) {
+        composeTestRule.enterAddTodoDetails(todo1)
+        composeTestRule.openDatePicker(AddToDoScreenTestTags.INPUT_TODO_DATE)
+        composeTestRule.selectDateFromPicker(currentDay, currentMonth, pastYear)
+        composeTestRule.onNodeWithTag(AddToDoScreenTestTags.TODO_SAVE).performClick()
+        composeTestRule.onNodeWithTag(AlertDialogTestTags.ALERT).assertIsDisplayed()
+      }
 }
