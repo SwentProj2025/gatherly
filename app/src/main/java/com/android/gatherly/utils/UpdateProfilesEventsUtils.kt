@@ -77,9 +77,9 @@ suspend fun createEvent(
   profileRepository.allParticipateEvent(event.id, participants)
 
   profileRepository.incrementBadge(creatorId, BadgeType.EVENTS_CREATED)
-    if (participants.contains(creatorId)) {
-        profileRepository.incrementBadge(creatorId, BadgeType.EVENTS_PARTICIPATED)
-    }
+  if (participants.contains(creatorId)) {
+    profileRepository.incrementBadge(creatorId, BadgeType.EVENTS_PARTICIPATED)
+  }
 }
 
 /**
