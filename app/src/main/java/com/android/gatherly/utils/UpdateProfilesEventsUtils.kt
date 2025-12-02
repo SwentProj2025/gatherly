@@ -3,6 +3,8 @@ package com.android.gatherly.utils
 import com.android.gatherly.model.badge.BadgeType
 import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.event.EventsRepository
+import com.android.gatherly.model.group.Group
+import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 
 /**
@@ -31,6 +33,9 @@ suspend fun userParticipate(
   profileRepository.participateEvent(eventId, userId)
 }
 
+suspend fun registerGroup(profileRepository: ProfileRepository, group: Group): List<Profile> {
+  return group.memberIds.mapNotNull { id -> profileRepository.getProfileByUid(id) }
+}
 /**
  * Function util: unregister the user from this event:
  * * from eventsRepository pov : Delete the userId from the event participants list

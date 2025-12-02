@@ -18,7 +18,8 @@ data class Event(
     val endTime: Timestamp,
     val creatorId: String,
     val participants: List<String>, // contains userIds
-    val status: EventStatus
+    val status: EventStatus,
+    val state: EventState
 ) : DisplayedMapElement
 
 /** Represents the state of an [Event] item. */
@@ -26,6 +27,13 @@ enum class EventStatus {
   UPCOMING,
   ONGOING,
   PAST
+}
+
+/** Represents the kind of an [Event] item.*/
+enum class EventState {
+    PUBLIC,
+    PRIVATE_FRIENDS,
+    PRIVATE_GROUP
 }
 
 /**

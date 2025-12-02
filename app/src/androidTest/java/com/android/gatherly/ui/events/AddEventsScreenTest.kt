@@ -13,6 +13,8 @@ import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsLocalRepository
 import com.android.gatherly.model.event.EventsRepository
+import com.android.gatherly.model.group.GroupsLocalRepository
+import com.android.gatherly.model.group.GroupsRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
@@ -44,6 +46,7 @@ class AddEventsScreenTest {
   private lateinit var addEventsViewModel: AddEventViewModel
   private lateinit var eventsRepository: EventsRepository
   private lateinit var profileRepository: ProfileRepository
+  private lateinit var groupsRepository: GroupsRepository
   private lateinit var mockitoUtils: MockitoUtils
 
   @Before
@@ -51,6 +54,7 @@ class AddEventsScreenTest {
 
     profileRepository = ProfileLocalRepository()
     eventsRepository = EventsLocalRepository()
+    groupsRepository = GroupsLocalRepository()
 
     fill_repositories()
 
@@ -62,7 +66,8 @@ class AddEventsScreenTest {
         AddEventViewModel(
             profileRepository = profileRepository,
             eventsRepository = eventsRepository,
-            authProvider = { mockitoUtils.mockAuth })
+            authProvider = { mockitoUtils.mockAuth },
+            groupsRepository = groupsRepository)
 
     composeTestRule.setContent { AddEventScreen(addEventsViewModel) }
   }
