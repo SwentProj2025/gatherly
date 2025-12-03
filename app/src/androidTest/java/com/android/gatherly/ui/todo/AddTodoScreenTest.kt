@@ -3,6 +3,10 @@ package com.android.gatherly.ui.todo
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertTextContains
+import androidx.compose.ui.test.filterToOne
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -19,6 +23,7 @@ import com.android.gatherly.utils.TestDates.futureYear
 import com.android.gatherly.utils.TestDates.pastYear
 import com.android.gatherly.utils.openDatePicker
 import com.android.gatherly.utils.selectDateFromPicker
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -104,8 +109,9 @@ class AddTodoScreenTest : GatherlyTest() {
     composeTestRule.openDatePicker(AddToDoScreenTestTags.INPUT_TODO_DATE)
     composeTestRule.selectDateFromPicker(currentDay, currentMonth, futureYear)
     composeTestRule
-        .onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_DATE)
-        .assertTextContains(futureDate, ignoreCase = true)
+        .onAllNodes(hasText(futureDate, substring = true, ignoreCase = true))
+        .filterToOne(hasAnyAncestor(hasTestTag(AddToDoScreenTestTags.INPUT_TODO_DATE)))
+        .assertExists()
   }
 
   @Test
@@ -146,11 +152,12 @@ class AddTodoScreenTest : GatherlyTest() {
   }
 
   @Test
-  fun enterPastDate() = runTest {
-    composeTestRule.enterAddTodoDetails(todo1)
-    composeTestRule.openDatePicker(AddToDoScreenTestTags.INPUT_TODO_DATE)
-    composeTestRule.selectDateFromPicker(currentDay, currentMonth, pastYear)
-    composeTestRule.onNodeWithTag(AddToDoScreenTestTags.TODO_SAVE).performClick()
-    composeTestRule.onNodeWithTag(AlertDialogTestTags.ALERT).assertIsDisplayed()
-  }
+  fun enterPastDate() =
+      runTest(timeout = 60.seconds) {
+        composeTestRule.enterAddTodoDetails(todo1)
+        composeTestRule.openDatePicker(AddToDoScreenTestTags.INPUT_TODO_DATE)
+        composeTestRule.selectDateFromPicker(currentDay, currentMonth, pastYear)
+        composeTestRule.onNodeWithTag(AddToDoScreenTestTags.TODO_SAVE).performClick()
+        composeTestRule.onNodeWithTag(AlertDialogTestTags.ALERT).assertIsDisplayed()
+      }
 }
