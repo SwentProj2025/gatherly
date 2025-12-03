@@ -1,7 +1,6 @@
 package com.android.gatherly.ui.events
 
 import android.annotation.SuppressLint
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -17,6 +16,7 @@ import com.android.gatherly.model.group.Group
 import com.android.gatherly.model.group.GroupsRepository
 import com.android.gatherly.model.group.GroupsRepositoryFirestore
 import com.android.gatherly.model.map.Location
+import com.android.gatherly.model.map.LocationRepository
 import com.android.gatherly.model.map.NominatimLocationRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
@@ -118,7 +118,7 @@ class AddEventViewModel(
     private val profileRepository: ProfileRepository,
     private val groupsRepository: GroupsRepository,
     private val eventsRepository: EventsRepository,
-    private val nominatimClient: NominatimLocationRepository = NominatimLocationRepository(client),
+    private val nominatimClient: LocationRepository = NominatimLocationRepository(client),
     private val authProvider: () -> FirebaseAuth = { Firebase.auth }
 ) : ViewModel() {
   // State with a private set
@@ -290,9 +290,13 @@ class AddEventViewModel(
 
   /** Updates the event status to a private friends only event */
   fun updateEventToPrivateFriends() {
-      val friendsOnly = uiState.participants.filter {
-          participant -> currentProfile.friendUids.contains(participant.uid)}
-    uiState = uiState.copy(state = EventState.PRIVATE_FRIENDS, isGroupEvent = null, participants = friendsOnly)
+    val friendsOnly =
+        uiState.participants.filter { participant ->
+          currentProfile.friendUids.contains(participant.uid)
+        }
+    uiState =
+        uiState.copy(
+            state = EventState.PRIVATE_FRIENDS, isGroupEvent = null, participants = friendsOnly)
   }
 
   /** Updates the event status to a public Event */
@@ -304,7 +308,9 @@ class AddEventViewModel(
    * Updates the event status to a private Event where the user have to choose a group to invite to
    */
   fun updateEventToPrivateGroup() {
-    uiState = uiState.copy(state = EventState.PRIVATE_GROUP, isGroupEvent = null, participants = emptyList())
+    uiState =
+        uiState.copy(
+            state = EventState.PRIVATE_GROUP, isGroupEvent = null, participants = emptyList())
   }
 
   /*----------------------------------Participants----------------------------------------------*/
@@ -555,20 +561,25 @@ class AddEventViewModel(
         profileRepository: ProfileRepository =
             ProfileRepositoryFirestore(Firebase.firestore, Firebase.storage),
         eventsRepository: EventsRepository = EventsRepositoryFirestore(Firebase.firestore),
+        nominatimClient: NominatimLocationRepository = NominatimLocationRepository(client),
         groupsRepository: GroupsRepository = GroupsRepositoryFirestore(Firebase.firestore)
     ): ViewModelProvider.Factory {
       return GenericViewModelFactory {
-        AddEventViewModel(profileRepository, groupsRepository, eventsRepository)
+        AddEventViewModel(
+            profileRepository = profileRepository,
+            eventsRepository = eventsRepository,
+            nominatimClient = nominatimClient,
+            groupsRepository = groupsRepository)
       }
     }
   }
 
-    /**
-     * Helper function : to search a prefix string in the name of profiles given by the list
-     *
-     * @param prefix substring to search
-     * @param list list of profile where we want to find the substring in their name
-     */
+  /**
+   * Helper function : to search a prefix string in the name of profiles given by the list
+   *
+   * @param prefix substring to search
+   * @param list list of profile where we want to find the substring in their name
+   */
   private fun searchGivenListByNamePrefix(prefix: String, list: List<Profile>): List<Profile> {
     val trimmedPrefix = prefix.trim()
     if (trimmedPrefix.isEmpty()) {

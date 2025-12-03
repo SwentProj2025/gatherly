@@ -3,18 +3,24 @@ package com.android.gatherly.ui.events
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
-import androidx.compose.ui.test.assertTextContains
+import androidx.compose.ui.test.filterToOne
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.gatherly.model.event.Event
+import com.android.gatherly.model.event.EventState
 import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsLocalRepository
 import com.android.gatherly.model.event.EventsRepository
 import com.android.gatherly.model.group.GroupsLocalRepository
 import com.android.gatherly.model.group.GroupsRepository
+import com.android.gatherly.model.map.FakeNominatimLocationRepository
+import com.android.gatherly.model.map.Location
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
@@ -49,16 +55,17 @@ class AddEventsScreenTest {
   private lateinit var groupsRepository: GroupsRepository
   private lateinit var mockitoUtils: MockitoUtils
 
+  private lateinit var fakeNominatimClient: FakeNominatimLocationRepository
+
   @Before
   fun setUp() {
-
     profileRepository = ProfileLocalRepository()
     eventsRepository = EventsLocalRepository()
     groupsRepository = GroupsLocalRepository()
+    fakeNominatimClient = FakeNominatimLocationRepository()
 
     fill_repositories()
 
-    // Mock Firebase Auth
     mockitoUtils = MockitoUtils()
     mockitoUtils.chooseCurrentUser("0")
 
@@ -66,6 +73,7 @@ class AddEventsScreenTest {
         AddEventViewModel(
             profileRepository = profileRepository,
             eventsRepository = eventsRepository,
+            nominatimClient = fakeNominatimClient,
             authProvider = { mockitoUtils.mockAuth },
             groupsRepository = groupsRepository)
 
@@ -132,7 +140,8 @@ class AddEventsScreenTest {
           endTime = Timestamp.now(),
           creatorId = ownerProfile.uid,
           participants = listOf(ownerProfile.uid, participantProfile.uid),
-          status = EventStatus.UPCOMING)
+          status = EventStatus.UPCOMING,
+          state = EventState.PUBLIC)
 
   /** Check that all components are displayed */
   @Test
@@ -153,6 +162,14 @@ class AddEventsScreenTest {
   /** Check that menus are displayed */
   @Test
   fun displayMenus() {
+    fakeNominatimClient.setSearchResults(
+        "Paris",
+        listOf(
+            Location(latitude = 48.8566, longitude = 2.3522, name = "Paris, France"),
+            Location(
+                latitude = 48.8534, longitude = 2.3488, name = "Paris, Île-de-France, France")))
+
+    // Then we can perform the test
     composeTestRule.onNodeWithTag(AddEventScreenTestTags.INPUT_LOCATION).performTextInput("Paris")
     composeTestRule.waitUntil(timeoutMillis = 5000L) {
       composeTestRule.onNodeWithTag(AddEventScreenTestTags.LOCATION_MENU).isDisplayed()
@@ -166,28 +183,40 @@ class AddEventsScreenTest {
     }
   }
 
-  /** Check that the date input are working */
+  /** Check that the date inputs are working correctly */
   @Test
   fun testDatePickerWorkingCorrectly() {
     composeTestRule.openDatePicker(AddEventScreenTestTags.INPUT_DATE)
     composeTestRule.selectDateFromPicker(currentDay, currentMonth, futureYear)
+
+    // Find nodes with the date text, filter to one within our tagged container
     composeTestRule
-        .onNodeWithTag(AddEventScreenTestTags.INPUT_DATE)
-        .assertTextContains(futureDate, ignoreCase = true)
+        .onAllNodes(hasText(futureDate, substring = true, ignoreCase = true))
+        .filterToOne(hasAnyAncestor(hasTestTag(AddEventScreenTestTags.INPUT_DATE)))
+        .assertExists()
+
     composeTestRule.onNodeWithTag(AddEventScreenTestTags.ERROR_MESSAGE).assertIsNotDisplayed()
   }
 
-  /** Check that if the date is already past shows an error message */
+  /** Check that inputting a past date shows an error message */
   @Test
-  fun testPastDateShowErrror() {
+  fun testPastDateShowError() {
     composeTestRule.openDatePicker(AddEventScreenTestTags.INPUT_DATE)
     composeTestRule.selectDateFromPicker(currentDay, currentMonth, pastYear)
-    composeTestRule
-        .onNodeWithTag(AddEventScreenTestTags.INPUT_DATE)
-        .assertTextContains(pastDate, ignoreCase = true)
-    composeTestRule.onNodeWithTag(AddEventScreenTestTags.ERROR_MESSAGE)
-  }
 
+    // Verify the past date was set
+    composeTestRule
+        .onAllNodes(hasText(pastDate, substring = true, ignoreCase = true))
+        .filterToOne(hasAnyAncestor(hasTestTag(AddEventScreenTestTags.INPUT_DATE)))
+        .assertExists()
+
+    // Check that the date field shows an error state
+    composeTestRule
+        .onNode(
+            hasAnyAncestor(hasTestTag(AddEventScreenTestTags.INPUT_DATE)) and
+                hasText("Invalid format or past date", substring = true, ignoreCase = true))
+        .assertExists()
+  }
   // This function fills the profile repository with the created profiles, and the event repository
   // with the created event
   fun fill_repositories() {

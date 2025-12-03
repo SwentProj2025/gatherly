@@ -29,11 +29,11 @@ enum class EventStatus {
   PAST
 }
 
-/** Represents the kind of an [Event] item.*/
+/** Represents the kind of an [Event] item. */
 enum class EventState {
-    PUBLIC,
-    PRIVATE_FRIENDS,
-    PRIVATE_GROUP
+  PUBLIC,
+  PRIVATE_FRIENDS,
+  PRIVATE_GROUP
 }
 
 /**

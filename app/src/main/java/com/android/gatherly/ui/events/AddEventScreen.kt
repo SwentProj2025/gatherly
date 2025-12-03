@@ -178,7 +178,7 @@ fun AddEventScreen(
     }
   }
 
-    // Search participant when input changes
+  // Search participant when input changes
   LaunchedEffect(ui.participant, ui.state) {
     if (ui.participant.isNotBlank()) {
       delay(1000)
@@ -213,8 +213,8 @@ fun AddEventScreen(
                     .testTag(AddEventScreenTestTags.LAZY_LIST),
             verticalArrangement = Arrangement.spacedBy(fieldSpacing)) {
 
-            // Switch button to choose between private and public
-            item {
+              // Switch button to choose between private and public
+              item {
                 Row {
                   SwitchPublicPrivate(
                       checked = isPublicEvent,

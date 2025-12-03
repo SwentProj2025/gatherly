@@ -114,8 +114,8 @@ class EventsRepositoryFirestore(private val db: FirebaseFirestore) : EventsRepos
     val participants =
         (doc.get("participants") as? List<*>)?.filterIsInstance<String>() ?: emptyList()
     val status = EventStatus.valueOf(statusStr)
-      val stateStr = doc.getString("state") ?: return null
-      val state = EventState.valueOf(stateStr)
+    val stateStr = doc.getString("state") ?: return null
+    val state = EventState.valueOf(stateStr)
 
     val event =
         Event(
