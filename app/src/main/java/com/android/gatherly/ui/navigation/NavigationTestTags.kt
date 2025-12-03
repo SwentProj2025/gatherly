@@ -28,6 +28,7 @@ object NavigationTestTags {
   const val ADDGROUP_TAB = "AddGroupTab"
   const val EDITEVENT_TAB = "EditEventTab"
   const val FINDFRIENDS_TAB = "FindFriendsTab"
+  const val USER_PROFILE_TAB = "UserProfileTab"
 
   const val BADGE_TAB = "BadgeTab"
 
@@ -49,5 +50,6 @@ object NavigationTestTags {
         is Tab.FindFriends -> FINDFRIENDS_TAB
         is Tab.AddGroup -> ADDGROUP_TAB
         is Tab.Badge -> BADGE_TAB
+        is Tab.UserProfile -> USER_PROFILE_TAB
       }
 }

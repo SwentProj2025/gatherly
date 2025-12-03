@@ -62,6 +62,15 @@ sealed class Screen(
   object AddGroupScreen : Screen(route = "add_group_screen", name = "Add a New Group")
 
   object BadgeScreen : Screen(route = "badge_screen", name = "Badges")
+
+  object UserProfileScreen : Screen(route = "user_profile", name = "User Profile")
+
+  data class UserProfile(val uid: String) :
+      Screen(route = "user_profile_screen/$uid", name = "User Profile") {
+    companion object {
+      const val route = "user_profile_screen/{uid}"
+    }
+  }
 }
 
 open class NavigationActions(
