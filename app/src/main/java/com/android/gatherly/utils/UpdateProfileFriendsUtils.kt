@@ -1,6 +1,5 @@
 package com.android.gatherly.utils
 
-import android.util.Log
 import com.android.gatherly.model.notification.NotificationType
 import com.android.gatherly.model.notification.NotificationsRepository
 import com.android.gatherly.model.profile.Profile
@@ -20,10 +19,6 @@ suspend fun getProfileWithSyncedFriendNotifications(
     notificationsRepository: NotificationsRepository,
     userId: String
 ): Profile? {
-  if (userId.isBlank()) {
-    Log.w("FriendSync", "User ID blank – skipping sync")
-    return null
-  }
   val notifications = notificationsRepository.getUserNotifications(userId)
 
   for (notification in notifications) {
