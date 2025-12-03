@@ -4,6 +4,7 @@ package com.android.gatherly.ui.focusTimer
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.android.gatherly.model.badge.BadgeType
 import com.android.gatherly.model.focusSession.FocusSession
 import com.android.gatherly.model.focusSession.FocusSessionsRepository
 import com.android.gatherly.model.focusSession.FocusSessionsRepositoryProvider
@@ -274,6 +275,16 @@ class TimerViewModel(
         updateFocusPoints(pointsRepository, profileRepository, points)
       } catch (_: Exception) {
         setError("Failed to add focus points to profile")
+      }
+    }
+
+    // add badge to profile
+    viewModelScope.launch {
+      try {
+        profileRepository.incrementBadge(
+            authProvider().currentUser?.uid!!, BadgeType.FOCUS_SESSIONS_COMPLETED)
+      } catch (_: Exception) {
+        setError("Failed to update the badge in the profile")
       }
     }
 
