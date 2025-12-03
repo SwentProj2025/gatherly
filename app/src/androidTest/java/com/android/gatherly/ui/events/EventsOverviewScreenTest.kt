@@ -14,6 +14,7 @@ import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.performTextInput
 import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsLocalRepository
@@ -892,9 +893,174 @@ class EventsOverviewScreenTest {
         .onNodeWithTag(AlertDialogTestTags.ALERT) //
         .assertIsNotDisplayed()
   }
+
   /** Helper function to scroll to a specific event item in a list */
   private fun ComposeTestRule.scrollToEvent(event: Event) {
     onNodeWithTag(EventsScreenTestTags.ALL_LISTS)
         .performScrollToNode(hasTestTag(EventsScreenTestTags.getTestTagForEventItem(event)))
+  }
+
+  // --- TEST SEARCH / FILTER EVENTS ---
+  private val eventA =
+      Event(
+          id = "eventA",
+          title = "Alpha Event",
+          description = "Event starting with A",
+          creatorName = "User1",
+          location = Location(46.520278, 6.565556, "EPFL"),
+          date = tomorrowTimestamp,
+          startTime = Timestamp(start),
+          endTime = Timestamp(finish),
+          creatorId = "user1",
+          participants = listOf(),
+          status = EventStatus.UPCOMING)
+
+  private val eventB =
+      Event(
+          id = "eventB",
+          title = "Beta Event",
+          description = "Event starting with B",
+          creatorName = "User2",
+          location = Location(46.520278, 6.565556, "EPFL"),
+          date = Timestamp(Date.from(Instant.now().plus(2, ChronoUnit.DAYS))), // Later date
+          startTime = Timestamp(start),
+          endTime = Timestamp(finish),
+          creatorId = "user2",
+          participants = listOf(),
+          status = EventStatus.UPCOMING)
+
+  private val eventC =
+      Event(
+          id = "eventC",
+          title = "Gamma Event",
+          description = "Event starting with C",
+          creatorName = "User3",
+          location = Location(46.520278, 6.565556, "EPFL"),
+          date = Timestamp(Date.from(Instant.now().plus(3, ChronoUnit.DAYS))), // Latest date
+          startTime = Timestamp(start),
+          endTime = Timestamp(finish),
+          creatorId = "user3",
+          participants = listOf(),
+          status = EventStatus.UPCOMING)
+
+  private val eventZebra =
+      Event(
+          id = "zebra",
+          title = "Zebra Event",
+          description = "Animal themed event",
+          creatorName = "User4",
+          location = Location(46.520278, 6.565556, "EPFL"),
+          date = tomorrowTimestamp,
+          startTime = Timestamp(start),
+          endTime = Timestamp(finish),
+          creatorId = "user4",
+          participants = listOf(),
+          status = EventStatus.UPCOMING)
+
+  private val eventAlphaBeta =
+      Event(
+          id = "alphabeta",
+          title = "Alpha Beta Event",
+          description = "Combined name event",
+          creatorName = "User5",
+          location = Location(46.520278, 6.565556, "EPFL"),
+          date = tomorrowTimestamp,
+          startTime = Timestamp(start),
+          endTime = Timestamp(finish),
+          creatorId = "user5",
+          participants = listOf(),
+          status = EventStatus.UPCOMING)
+
+  /** Test: Search bar filters events correctly by title */
+  @Test
+  fun searchBarFiltersEventsByTitle() = runTest {
+    val events = listOf(eventA, eventB, eventC, eventZebra, eventAlphaBeta)
+    events.forEach { eventsRepository.addEvent(it) }
+    profileRepository.addProfile(
+        Profile(uid = currentUserId, name = "Test User", profilePicture = ""))
+
+    setContent(currentUserId)
+
+    composeTestRule.waitForIdle()
+
+    events.forEach { event ->
+      composeTestRule
+          .onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(event))
+          .assertIsDisplayed()
+    }
+
+    composeTestRule.onNodeWithTag(EventsScreenTestTags.SEARCH_BAR)
+        .performTextInput("Alpha")
+
+      composeTestRule.waitUntil(timeoutMillis = 10000L) {
+          composeTestRule
+              .onAllNodesWithTag(EventsScreenTestTags.getTestTagForEventItem(eventB))
+              .fetchSemanticsNodes()
+              .isEmpty()
+      }
+    composeTestRule
+        .onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(eventA))
+        .assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(eventAlphaBeta))
+        .assertIsDisplayed()
+
+      composeTestRule.onNodeWithTag(EventsScreenTestTags
+          .getTestTagForEventItem(eventB)).assertIsNotDisplayed()
+      composeTestRule.onNodeWithTag(EventsScreenTestTags
+          .getTestTagForEventItem(eventC)).assertIsNotDisplayed()
+      composeTestRule.onNodeWithTag(EventsScreenTestTags
+          .getTestTagForEventItem(eventZebra)).assertIsNotDisplayed()
+  }
+
+  /** Test: Empty search shows all events */
+  @Test
+  fun emptySearchShowsAllEvents() = runTest {
+    val events = listOf(eventA, eventB, eventC)
+    events.forEach { eventsRepository.addEvent(it) }
+    profileRepository.addProfile(
+        Profile(uid = currentUserId, name = "Test User", profilePicture = ""))
+
+    setContent(currentUserId)
+    composeTestRule.waitForIdle()
+
+    composeTestRule.onNodeWithTag(EventsScreenTestTags.SEARCH_BAR).performTextInput("Gamma")
+
+    composeTestRule.waitForIdle()
+
+    composeTestRule
+        .onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(eventC))
+        .assertIsDisplayed()
+
+    composeTestRule.onNodeWithTag(EventsScreenTestTags.SEARCH_BAR).performTextInput("")
+
+    composeTestRule.waitForIdle()
+
+    events.forEach { event ->
+      composeTestRule
+          .onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(event))
+          .assertIsDisplayed()
+    }
+  }
+
+  /** Test: Sorting by alphabetical order works correctly */
+  @Test
+  fun sortByAlphabeticalOrderWorks() = runTest {
+    val events = listOf(eventZebra, eventC, eventB, eventA, eventAlphaBeta)
+    events.forEach { eventsRepository.addEvent(it) }
+    profileRepository.addProfile(
+        Profile(uid = currentUserId, name = "Test User", profilePicture = ""))
+
+    setContent(currentUserId)
+    composeTestRule.waitForIdle()
+
+    composeTestRule.onNodeWithTag(EventsScreenTestTags.SORT_MENU_BUTTON).performClick()
+
+    composeTestRule.waitForIdle()
+    composeTestRule.onNodeWithTag(EventsScreenTestTags.SORT_ALPHABETIC_BUTTON).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(EventsScreenTestTags.SORT_PROX_BUTTON).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(EventsScreenTestTags.SORT_DATE_BUTTON).performClick()
+
+    composeTestRule.waitForIdle()
   }
 }

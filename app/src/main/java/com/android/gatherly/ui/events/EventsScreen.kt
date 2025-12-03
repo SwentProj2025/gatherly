@@ -110,6 +110,10 @@ object EventsScreenTestTags {
   const val SEARCH_BAR = "SearchBar"
   const val SORT_MENU_BUTTON = "SortMenuButton"
 
+  const val SORT_ALPHABETIC_BUTTON = "SortAlphabetic"
+  const val SORT_DATE_BUTTON = "SortDateButton"
+  const val SORT_PROX_BUTTON = "SortProxButton"
+
   /**
    * Returns a unique test tag for the card or container representing a given [Event] item.
    *
@@ -837,7 +841,8 @@ fun SortMenu(currentOrder: EventSortOrder, onSortSelected: (EventSortOrder) -> U
                           contentDescription =
                               stringResource(R.string.events_sort_menu_check_icon_label))
                     }
-                  })
+                  },
+                  modifier = Modifier.testTag(EventsScreenTestTags.SORT_DATE_BUTTON))
               DropdownMenuItem(
                   text = {
                     Text(
@@ -855,7 +860,8 @@ fun SortMenu(currentOrder: EventSortOrder, onSortSelected: (EventSortOrder) -> U
                           contentDescription =
                               stringResource(R.string.events_sort_menu_check_icon_label))
                     }
-                  })
+                  },
+                  modifier = Modifier.testTag(EventsScreenTestTags.SORT_ALPHABETIC_BUTTON))
               DropdownMenuItem(
                   text = {
                     Text(
@@ -873,7 +879,8 @@ fun SortMenu(currentOrder: EventSortOrder, onSortSelected: (EventSortOrder) -> U
                           contentDescription =
                               stringResource(R.string.events_sort_menu_check_icon_label))
                     }
-                  })
+                  },
+                  modifier = Modifier.testTag(EventsScreenTestTags.SORT_PROX_BUTTON))
             }
       }
 }
