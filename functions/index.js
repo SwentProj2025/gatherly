@@ -59,30 +59,62 @@ exports.weeklyReset = onSchedule(
           const rank = friendDataList.findIndex((u) => u.userId === userId);
 
           // ---- If rank = 0 / 1 / 2 -> Give reward ----
+
+          const userRef = db.collection("profiles").doc(userId);
           if (rank == 0) {
-            await db.collection("points").add({
+            const achievementRef = db.collection("points").doc();
+            const batch = db.batch();
+
+            batch.set(achievementRef, {
               userId: userId,
               rank: "first",
               obtained: 100.0,
               dateObtained: admin.firestore.Timestamp.now(),
               reason: "Leaderboard",
             });
+
+            batch.update(userRef, {
+              focusPoints: admin.firestore.FieldValue.increment(100.0)
+            });
+
+            await batch.commit();
+            console.log("Achievement added and user points updated!");
           } else if (rank == 1) {
-            await db.collection("points").add({
+            const achievementRef = db.collection("points").doc();
+            const batch = db.batch();
+
+            batch.set(achievementRef, {
               userId: userId,
               rank: "second",
               obtained: 75.0,
               dateObtained: admin.firestore.Timestamp.now(),
               reason: "Leaderboard",
             });
+
+            batch.update(userRef, {
+              focusPoints: admin.firestore.FieldValue.increment(75.0)
+            });
+
+            await batch.commit();
+            console.log("Achievement added and user points updated!");
           } else if (rank == 2) {
-            await db.collection("points").add({
+            const achievementRef = db.collection("points").doc();
+            const batch = db.batch();
+
+            batch.set(achievementRef, {
               userId: userId,
               rank: "third",
               obtained: 50.0,
               dateObtained: admin.firestore.Timestamp.now(),
               reason: "Leaderboard",
             });
+
+            batch.update(userRef, {
+              focusPoints: admin.firestore.FieldValue.increment(50.0)
+            });
+
+            await batch.commit();
+            console.log("Achievement added and user points updated!");
           }
         }
 
