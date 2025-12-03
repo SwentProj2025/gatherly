@@ -110,6 +110,8 @@
     <string name="events_delete_warning_text">This action cannot be reversed. Are you sure?</string>
     <string name="see_on_map_button_title">See on map</string>
     <string name="events_loading">Loading events …</string>
+    <string name="events_search_bar_label">Search todos…</string>
+    <string name="events_sort_menu_check_icon_label">Selected</string>
 
     <!-- General -->
     <string name="delete">Yes, Delete</string>

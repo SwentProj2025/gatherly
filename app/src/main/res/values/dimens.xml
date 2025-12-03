@@ -107,5 +107,6 @@
     <dimen name="events_popup_horizontalArrangement_size">12.dp</dimen>
     <dimen name="events_filter_bar_vertical_size">10.dp</dimen>
     <dimen name="events_filter_button_height">35.dp</dimen>
+    <dimen name="events_horizontal_padding">16dp</dimen>
 
 </resources>
