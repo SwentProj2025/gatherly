@@ -160,6 +160,7 @@ class EditEventsViewModel(
       creatorId = event.creatorId
       creatorName = event.creatorName
       participants = event.participants
+        currentProfile = profileRepository.getProfileByUid(creatorId)!!
     }
   }
 

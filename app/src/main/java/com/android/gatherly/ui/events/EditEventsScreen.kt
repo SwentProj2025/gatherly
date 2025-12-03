@@ -454,6 +454,20 @@ fun EditEventsScreen(
               },
               isImportantWarning = true)
         }
+
+      if (showWarningPublicEvent){
+          GatherlyAlertDialog(
+              titleText = "Make the event public",
+              bodyText = "This action is unreversible, the event will be open to everyone",
+              dismissText = stringResource(R.string.cancel),
+              confirmText = "Make it public",
+              onDismiss = {showWarningPublicEvent = false},
+              onConfirm = {
+                  editEventsViewModel.updatePrivateEventToPublicEvent()
+                  showWarningPublicEvent = false
+              }
+          )
+      }
         GatherlyDatePicker(
             show = showDatePicker,
             initialDate = ui.date,
