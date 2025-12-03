@@ -177,33 +177,36 @@ fun FriendsScreen(
             goBack = goBack)
       },
       content = { padding ->
-        Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier =
+                Modifier.fillMaxSize()
+                    .padding(padding)
+                    .padding(horizontal = dimensionResource(R.dimen.padding_screen))) {
 
-          // --- LOADING PROFILE ANIMATION ---
-          if (isLoading) {
-            LoadingAnimationContent(padding)
-          } else {
+              // --- LOADING PROFILE ANIMATION ---
+              if (isLoading) {
+                LoadingAnimationContent()
+              } else {
 
-            // --- SHOWING FRIENDS PROFILES ITEMS ---
-            FriendsListContent(
-                padding = padding,
-                filteredFriends = filteredFriends,
-                searchQuery = searchQuery,
-                onSearchQueryChange = { searchQuery = it },
-                onUnfollowFriend = { friend ->
-                  friendsViewModel.unfollowFriend(
-                      currentUserId = currentUserIdFromVM, friend = friend)
-                  showUnfollowMessage = true
-                },
-                onFindFriends = onFindFriends,
-                profiles = uiState.profiles,
-                onClickFriend = onClickFriend)
-          }
-          // --- UNFOLLOW A FRIEND ANIMATION ---
-          if (showUnfollowMessage) {
-            FloatingMessage(text = messageText, modifier = Modifier.fillMaxSize().padding(padding))
-          }
-        }
+                // --- SHOWING FRIENDS PROFILES ITEMS ---
+                FriendsListContent(
+                    filteredFriends = filteredFriends,
+                    searchQuery = searchQuery,
+                    onSearchQueryChange = { searchQuery = it },
+                    onUnfollowFriend = { friend ->
+                      friendsViewModel.unfollowFriend(
+                          currentUserId = currentUserIdFromVM, friend = friend)
+                      showUnfollowMessage = true
+                    },
+                    onFindFriends = onFindFriends,
+                    profiles = uiState.profiles,
+                    onClickFriend = onClickFriend)
+              }
+              // --- UNFOLLOW A FRIEND ANIMATION ---
+              if (showUnfollowMessage) {
+                FloatingMessage(text = messageText, modifier = Modifier.fillMaxSize())
+              }
+            }
       })
 }
 
@@ -356,10 +359,10 @@ private fun FloatingMessage(text: String, modifier: Modifier = Modifier) {
  * @param padding
  */
 @Composable
-private fun LoadingAnimationContent(padding: PaddingValues) {
+private fun LoadingAnimationContent() {
   val loadingComposition by
       rememberLottieComposition(LottieCompositionSpec.RawRes(ANIMATION_LOADING))
-  Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+  Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
     LottieAnimation(
         composition = loadingComposition,
         iterations = LottieConstants.IterateForever,
@@ -383,7 +386,6 @@ private fun LoadingAnimationContent(padding: PaddingValues) {
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun FriendsListContent(
-    padding: PaddingValues,
     filteredFriends: List<String>,
     searchQuery: String,
     onSearchQueryChange: (String) -> Unit,
@@ -394,19 +396,14 @@ private fun FriendsListContent(
 ) {
   LazyColumn(
       contentPadding = PaddingValues(vertical = dimensionResource(R.dimen.padding_small)),
-      modifier =
-          Modifier.fillMaxWidth()
-              .padding(horizontal = dimensionResource(R.dimen.padding_screen))
-              .padding(padding)) {
+      modifier = Modifier.fillMaxWidth()) {
 
         // --- NO PROFILE ITEM NEED TO BE DISPLAYED ---
         if (filteredFriends.isEmpty()) {
           item {
             Text(
                 text = stringResource(R.string.friends_empty_list_msg),
-                modifier =
-                    Modifier.padding(dimensionResource(R.dimen.padding_screen))
-                        .testTag(FriendsScreenTestTags.EMPTY_LIST_MSG))
+                modifier = Modifier.testTag(FriendsScreenTestTags.EMPTY_LIST_MSG))
           }
         } else {
 
