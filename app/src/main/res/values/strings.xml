@@ -87,6 +87,7 @@
     <string name="profile_friends_label">Friends</string>
     <string name="profile_focus_points_label">Focus points</string>
     <string name="profile_focus_sessions_section_title">Your Focus sessions</string>
+    <string name="profile_badges_section_title">Your Badges</string>
     <string name="profile_groups_section_title">Your Groups</string>
     <string name="profile_empty_focus_sessions_message">Focus session data not available yet.</string>
     <string name="profile_empty_groups_message">You currently have no groups.</string>

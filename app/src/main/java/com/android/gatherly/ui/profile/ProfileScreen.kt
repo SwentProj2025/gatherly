@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -40,9 +41,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
+import com.android.gatherly.ui.badge.BadgeUI
 import com.android.gatherly.ui.navigation.BottomNavigationMenu
 import com.android.gatherly.ui.navigation.HandleSignedOutState
 import com.android.gatherly.ui.navigation.NavigationActions
@@ -65,6 +68,13 @@ object ProfileScreenTestTags {
   const val PROFILE_FOCUS_SESSIONS = "profileFocusSessions"
   const val PROFILE_GROUPS = "profileGroups"
   const val GOOGLE_BUTTON = "googleButton"
+
+  const val PROFILE_BADGES = "profileBadges"
+
+  /** Test tag for the Badge Items */
+  fun badgeTest(title: String): String {
+    return "badge_$title"
+  }
 }
 
 /**
@@ -314,22 +324,46 @@ fun ProfileScreen(
                     textAlign = TextAlign.Center)
 
                 // Badges
-                Spacer(modifier = Modifier.height(fieldSpacingSmall))
-                Button(
-                    onClick = onBadgeClicked,
+                Spacer(modifier = Modifier.height(fieldSpacingLarge))
+
+                Text(
+                    text = stringResource(R.string.profile_badges_section_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
                     modifier =
-                        Modifier.fillMaxWidth()
-                            .height(dimensionResource(R.dimen.homepage_focus_button_height)),
-                    shape =
-                        RoundedCornerShape(
-                            dimensionResource(id = R.dimen.homepage_save_button_corner_radius)),
-                    colors =
-                        ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.secondary)) {
-                      Text(
-                          text = stringResource(R.string.placeholder_button_badge_title),
-                          color = MaterialTheme.colorScheme.onSecondary,
-                          style = MaterialTheme.typography.titleMedium)
+                        Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PROFILE_BADGES))
+
+                Spacer(modifier = Modifier.height(fieldSpacingRegular))
+
+                val badges = uiState.topBadges.values.toList()
+                val listCreatedBadge = badges[0]
+                val listCompletedBadge = badges[1]
+                val eventCreatedBadge = badges[2]
+                val eventParticipatedBadge = badges[3]
+                val friendsBadge = badges[4]
+                val focusSessionBadge = badges[5]
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center) {
+                      BadgeIcon(listCreatedBadge)
+                      BadgeIcon(listCompletedBadge)
+                    }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center) {
+                      BadgeIcon(focusSessionBadge)
+                      Spacer(modifier = Modifier.width(110.dp))
+                      BadgeIcon(eventCreatedBadge)
+                    }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center) {
+                      BadgeIcon(friendsBadge)
+                      BadgeIcon(eventParticipatedBadge)
                     }
               }
         }
@@ -348,6 +382,14 @@ fun ProfileScreen(
               isImportantWarning = true)
         }
       })
+}
+
+@Composable
+fun BadgeIcon(badgeUi: BadgeUI) {
+  Image(
+      painter = painterResource(badgeUi.icon),
+      contentDescription = badgeUi.title,
+      modifier = Modifier.size(90.dp).testTag(ProfileScreenTestTags.badgeTest(badgeUi.title)))
 }
 
 // Helper function to preview the timer screen
