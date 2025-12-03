@@ -28,10 +28,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
+import com.android.gatherly.model.points.Points
 import com.android.gatherly.model.points.PointsSource
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
@@ -108,25 +110,21 @@ fun FocusPointsScreen(
                             modifier =
                                 Modifier.padding(dimensionResource(R.dimen.padding_screen))) {
                               Text(
-                                  text = "+ ${points.obtained} points",
+                                  text =
+                                      stringResource(R.string.focus_points_gained, points.obtained),
                                   fontWeight = FontWeight.Bold)
 
-                              val reasonText =
-                                  when (points.reason) {
-                                    is PointsSource.Timer ->
-                                        "Focused for ${points.reason.minutes} minutes"
-                                    is PointsSource.Badge ->
-                                        "Obtained the ${points.reason.badgeName} badge"
-                                    is PointsSource.Leaderboard ->
-                                        "Reached ${points.reason.rank} on your friends leaderboard"
-                                  }
+                              val reasonText = reasonText(points = points)
 
                               Text(text = reasonText)
 
-                              val sdf = SimpleDateFormat("dd/MM/yyyy 'at' HH:mm")
+                              val sdf = SimpleDateFormat(stringResource(R.string.focus_date_format))
 
                               Text(
-                                  text = "Obtained on: ${sdf.format(points.dateObtained.toDate())}")
+                                  text =
+                                      stringResource(
+                                          R.string.focus_points_date,
+                                          sdf.format(points.dateObtained.toDate())))
                             }
                       }
                 }
@@ -200,4 +198,16 @@ fun FocusPointsScreen(
               }
         }
       }
+}
+
+@Composable
+private fun reasonText(points: Points): String {
+  return when (points.reason) {
+    is PointsSource.Timer ->
+        pluralStringResource(
+            R.plurals.focus_history_timer, points.reason.minutes, points.reason.minutes)
+    is PointsSource.Badge -> stringResource(R.string.focus_history_badge, points.reason.badgeName)
+    is PointsSource.Leaderboard ->
+        stringResource(R.string.focus_history_leaderboard, points.reason.rank)
+  }
 }
