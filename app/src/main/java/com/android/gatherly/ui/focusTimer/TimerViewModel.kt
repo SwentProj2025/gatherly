@@ -466,4 +466,8 @@ class TimerViewModel(
     cancelTicking()
     super.onCleared()
   }
+
+  fun isCurrentUser(uid: String): Boolean {
+    return uid == authProvider().currentUser?.uid!!
+  }
 }
