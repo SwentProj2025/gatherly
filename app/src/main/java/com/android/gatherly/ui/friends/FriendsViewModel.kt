@@ -3,10 +3,13 @@ package com.android.gatherly.ui.friends
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.android.gatherly.model.notification.NotificationsRepository
+import com.android.gatherly.model.notification.NotificationsRepositoryProvider
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.android.gatherly.utils.GenericViewModelFactory
+import com.android.gatherly.utils.getProfileWithSyncedFriendNotifications
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.auth.ktx.auth
@@ -29,6 +32,8 @@ data class FriendsUIState(
 
 class FriendsViewModel(
     private val repository: ProfileRepository,
+    private val notificationsRepository: NotificationsRepository =
+        NotificationsRepositoryProvider.repository,
     private val authProvider: () -> FirebaseAuth = { Firebase.auth }
 ) : ViewModel() {
 
@@ -52,8 +57,11 @@ class FriendsViewModel(
   suspend fun refreshFriends(currentUserId: String) {
     _uiState.value = _uiState.value.copy(isLoading = true)
     try {
+      getProfileWithSyncedFriendNotifications(
+          profileRepository = repository,
+          notificationsRepository = notificationsRepository,
+          userId = currentUserId)
       val friendsData = repository.getFriendsAndNonFriendsUsernames(currentUserId)
-
       val allUsernames = friendsData.friendUsernames + friendsData.nonFriendUsernames
       val profiles =
           allUsernames

@@ -4,13 +4,17 @@ package com.android.gatherly.ui.focusTimer
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.android.gatherly.model.badge.BadgeType
 import com.android.gatherly.model.focusSession.FocusSession
 import com.android.gatherly.model.focusSession.FocusSessionsRepository
 import com.android.gatherly.model.focusSession.FocusSessionsRepositoryProvider
+import com.android.gatherly.model.notification.NotificationsRepository
+import com.android.gatherly.model.notification.NotificationsRepositoryProvider
 import com.android.gatherly.model.points.Points
 import com.android.gatherly.model.points.PointsRepository
 import com.android.gatherly.model.points.PointsRepositoryProvider
 import com.android.gatherly.model.points.PointsSource
+import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryProvider
 import com.android.gatherly.model.profile.ProfileStatus
@@ -18,6 +22,7 @@ import com.android.gatherly.model.profile.UserStatusManager
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.model.todo.ToDosRepositoryProvider
+import com.android.gatherly.utils.getProfileWithSyncedFriendNotifications
 import com.android.gatherly.utils.updateFocusPoints
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
@@ -47,6 +52,7 @@ import kotlinx.coroutines.launch
  * @param errorMsg An optional error message to be displayed in the UI
  * @param linkedTodo The ToDo item linked to this timer session, if any
  * @param allTodos A list of all ToDo items available for linking
+ * @param leaderboard A list of all friend profiles ordered by number of weekly points
  */
 data class TimerState(
     val plannedDuration: Duration = Duration.ZERO,
@@ -59,6 +65,7 @@ data class TimerState(
     val errorMsg: String? = null,
     val linkedTodo: ToDo? = null,
     val allTodos: List<ToDo> = emptyList(),
+    val leaderboard: List<Profile> = emptyList(),
     val pointsGained: Double = 0.0
 )
 
@@ -72,6 +79,8 @@ class TimerViewModel(
     private val todoRepository: ToDosRepository = ToDosRepositoryProvider.repository,
     private val pointsRepository: PointsRepository = PointsRepositoryProvider.repository,
     private val profileRepository: ProfileRepository = ProfileRepositoryProvider.repository,
+    private val notificationsRepository: NotificationsRepository =
+        NotificationsRepositoryProvider.repository,
     private val userStatusManager: UserStatusManager = UserStatusManager(),
     private val focusSessionsRepository: FocusSessionsRepository =
         FocusSessionsRepositoryProvider.repository,
@@ -91,18 +100,27 @@ class TimerViewModel(
   private var currentSessionId: String? = null
 
   init {
-    getAllTodos()
+    loadUI()
   }
 
-  /** Fetches all todos from the repository and updates the UI state. */
-  fun getAllTodos() {
+  /** Loads the UI state by fetching all todos and leaderboard information */
+  fun loadUI() {
     viewModelScope.launch {
       _uiState.value = _uiState.value.copy()
       try {
         val todos = todoRepository.getAllTodos()
         _uiState.value = _uiState.value.copy(allTodos = todos)
-      } catch (e: Exception) {
-        setError("Failed to load todos")
+
+        val profile =
+            getProfileWithSyncedFriendNotifications(
+                profileRepository, notificationsRepository, authProvider().currentUser?.uid!!)!!
+        val allFriends =
+            profile.friendUids.map { friend -> profileRepository.getProfileByUid(friend)!! } +
+                profile
+        val leaderboard = allFriends.sortedByDescending { it.weeklyPoints }
+        _uiState.value = _uiState.value.copy(leaderboard = leaderboard)
+      } catch (_: Exception) {
+        setError("Failed to load ui state")
       }
     }
   }
@@ -274,6 +292,16 @@ class TimerViewModel(
         updateFocusPoints(pointsRepository, profileRepository, points)
       } catch (_: Exception) {
         setError("Failed to add focus points to profile")
+      }
+    }
+
+    // add badge to profile
+    viewModelScope.launch {
+      try {
+        profileRepository.incrementBadge(
+            authProvider().currentUser?.uid!!, BadgeType.FOCUS_SESSIONS_COMPLETED)
+      } catch (_: Exception) {
+        setError("Failed to update the badge in the profile")
       }
     }
 
