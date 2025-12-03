@@ -6,11 +6,11 @@ import com.android.gatherly.model.focusSession.FocusSessionsRepositoryFirestore
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.GoogleAuthProvider
 import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
-import kotlin.time.Duration.Companion.seconds
 
 // This class contains code adapted from the groups repository tests.
 
@@ -66,24 +66,25 @@ open class FirestoreFocusSessionsGatherlyTest {
    * @throws IllegalStateException if the Firebase emulator is not running
    */
   @Before
-  open fun setUp() = runTest (timeout = 120.seconds) {
-    if (!FirebaseEmulator.isRunning) {
-      error("Firebase emulator must be running! Use: firebase emulators:start")
-    }
+  open fun setUp() =
+      runTest(timeout = 120.seconds) {
+        if (!FirebaseEmulator.isRunning) {
+          error("Firebase emulator must be running! Use: firebase emulators:start")
+        }
 
-    // Seed users in emulator
-    FirebaseEmulator.createGoogleUser(user1Token)
-    FirebaseEmulator.createGoogleUser(user2Token)
+        // Seed users in emulator
+        FirebaseEmulator.createGoogleUser(user1Token)
+        FirebaseEmulator.createGoogleUser(user2Token)
 
-    // Sign in as user1 by default
-    signInWithToken(user1Token)
-    user1Id = FirebaseEmulator.auth.currentUser!!.uid
+        // Sign in as user1 by default
+        signInWithToken(user1Token)
+        user1Id = FirebaseEmulator.auth.currentUser!!.uid
 
-    // Switch back to user1
-    signInWithToken(user1Token)
+        // Switch back to user1
+        signInWithToken(user1Token)
 
-    repository = FocusSessionsRepositoryFirestore(FirebaseEmulator.firestore)
-  }
+        repository = FocusSessionsRepositoryFirestore(FirebaseEmulator.firestore)
+      }
 
   /**
    * Cleans up the test environment after each test.
@@ -96,10 +97,11 @@ open class FirestoreFocusSessionsGatherlyTest {
    * Logs are included for debugging purposes to track user cleanup.
    */
   @After
-  open fun tearDown() = runTest (timeout = 120.seconds) {
-    FirebaseEmulator.clearAuthEmulator()
-    FirebaseEmulator.clearFirestoreEmulator()
-  }
+  open fun tearDown() =
+      runTest(timeout = 120.seconds) {
+        FirebaseEmulator.clearAuthEmulator()
+        FirebaseEmulator.clearFirestoreEmulator()
+      }
 
   /**
    * Sign in with the given fake JWT token.

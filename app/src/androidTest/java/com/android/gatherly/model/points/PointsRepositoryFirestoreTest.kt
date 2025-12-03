@@ -6,45 +6,48 @@ import java.lang.IllegalArgumentException
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlinx.coroutines.test.runTest
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.test.runTest
 
 class PointsRepositoryFirestoreTest : FirestorePointsGatherlyTest() {
 
   /** Tests that adding a points instance stores it correctly in the Firebase */
   @Test
-  fun addPointsStoresInFirebase() = runTest (timeout = 120.seconds) {
-    val pointsCountBefore = getPointsCount()
-    assertEquals(0, pointsCountBefore)
+  fun addPointsStoresInFirebase() =
+      runTest(timeout = 120.seconds) {
+        val pointsCountBefore = getPointsCount()
+        assertEquals(0, pointsCountBefore)
 
-    repository.addPoints(points1.copy(userId = FirebaseEmulator.auth.currentUser?.uid ?: ""))
+        repository.addPoints(points1.copy(userId = FirebaseEmulator.auth.currentUser?.uid ?: ""))
 
-    val pointsCountAfter = getPointsCount()
-    assertEquals(1, pointsCountAfter)
-  }
+        val pointsCountAfter = getPointsCount()
+        assertEquals(1, pointsCountAfter)
+      }
 
   /**
    * Tests that adding then retrieving points returns the correct list, from most to least recent
    */
   @Test
-  fun getPointsReturnsCorrectList() = runTest (timeout = 120.seconds) {
-    val currentUserPoints1 = points1.copy(userId = FirebaseEmulator.auth.currentUser?.uid ?: "")
-    val currentUserPoints2 = points2.copy(userId = FirebaseEmulator.auth.currentUser?.uid ?: "")
-    repository.addPoints(currentUserPoints1)
-    repository.addPoints(currentUserPoints2)
+  fun getPointsReturnsCorrectList() =
+      runTest(timeout = 120.seconds) {
+        val currentUserPoints1 = points1.copy(userId = FirebaseEmulator.auth.currentUser?.uid ?: "")
+        val currentUserPoints2 = points2.copy(userId = FirebaseEmulator.auth.currentUser?.uid ?: "")
+        repository.addPoints(currentUserPoints1)
+        repository.addPoints(currentUserPoints2)
 
-    val pointsList = repository.getAllPoints()
+        val pointsList = repository.getAllPoints()
 
-    assertEquals(2, pointsList.size)
-    assertEquals(listOf(currentUserPoints2, currentUserPoints1), pointsList)
-  }
+        assertEquals(2, pointsList.size)
+        assertEquals(listOf(currentUserPoints2, currentUserPoints1), pointsList)
+      }
 
   /**
    * Tests that trying to add a points instance with the incorrect user id throws an
    * [IllegalArgumentException]
    */
   @Test
-  fun cannotAddPointsWithIncorrectId() = runTest (timeout = 120.seconds) {
-    assertFailsWith<IllegalArgumentException> { repository.addPoints(points1) }
-  }
+  fun cannotAddPointsWithIncorrectId() =
+      runTest(timeout = 120.seconds) {
+        assertFailsWith<IllegalArgumentException> { repository.addPoints(points1) }
+      }
 }
