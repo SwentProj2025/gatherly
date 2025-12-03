@@ -121,6 +121,7 @@ class AddEventsScreenTest {
   val friendProfile: Profile =
       Profile(
           uid = "f1",
+          username = "fifi",
           name = "friend",
           focusSessionIds = emptyList(),
           participatingEventIds = emptyList(),

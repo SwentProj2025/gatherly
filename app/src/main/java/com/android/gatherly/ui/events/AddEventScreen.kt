@@ -481,11 +481,12 @@ private fun ParticipantsFieldItem(
 
           // TrailingIcon to visualise the added participants
           trailingIcon = {
-            AddedParticipantsIcon(
+            AddedParticipantsIconAdd(
                 participants = ui.participants,
                 showAddedParticipantsDropDown =
                     remember { mutableStateOf(showAddedParticipantsDropDown) },
-                showProfilesDropdown = showProfilesDropdown)
+                showProfilesDropdown = showProfilesDropdown,
+                onIconClicked = { isExpanded -> showAddedParticipantsDropDown = isExpanded })
           })
 
       // -- DROPDOWN Participants Suggestions --
@@ -544,16 +545,20 @@ private fun ParticipantsSuggestionsDropdown(
  * @param showProfilesDropdown boolean to handle the visibility of the suggestion dropdown
  */
 @Composable
-private fun AddedParticipantsIcon(
+private fun AddedParticipantsIconAdd(
     participants: List<Profile>,
     showAddedParticipantsDropDown: MutableState<Boolean>,
-    showProfilesDropdown: MutableState<Boolean>
+    showProfilesDropdown: MutableState<Boolean>,
+    onIconClicked: (Boolean) -> Unit = {}
 ) {
   if (participants.isEmpty()) return
 
   IconButton(
       onClick = {
-        showAddedParticipantsDropDown.value = !showAddedParticipantsDropDown.value
+        val newState = !showAddedParticipantsDropDown.value
+        showAddedParticipantsDropDown.value = newState
+        onIconClicked(newState)
+        // Cacher le dropdown des suggestions quand on montre les participants ajoutés
         showProfilesDropdown.value = false
       },
       modifier = Modifier.testTag(AddEventScreenTestTags.BUTTON_SEE_ADDED_PARTICIPANT)) {
@@ -642,14 +647,12 @@ private fun DropDownParticipants(
                 if (isAlreadyParticipant) {
                   IconButton(
                       onClick = { addEventViewModel.deleteParticipant(profile.uid) },
-                      modifier =
-                          Modifier.testTag(
-                              AddEventScreenTestTags.getTestTagProfileRemoveItem(profile.uid))) {
-                        Icon(
-                            Icons.Filled.Remove,
-                            contentDescription = "Remove",
-                            tint = MaterialTheme.colorScheme.error)
-                      }
+                  ) {
+                    Icon(
+                        Icons.Filled.Remove,
+                        contentDescription = "Remove",
+                        tint = MaterialTheme.colorScheme.error)
+                  }
                   // Possibility to register the suggested profile to the event
                 } else {
                   IconButton(
@@ -665,7 +668,9 @@ private fun DropDownParticipants(
                 }
               }
         },
-        onClick = {})
+        onClick = {},
+        modifier =
+            Modifier.testTag(AddEventScreenTestTags.getTestTagProfileRemoveItem(profile.uid)))
   }
 }
 
