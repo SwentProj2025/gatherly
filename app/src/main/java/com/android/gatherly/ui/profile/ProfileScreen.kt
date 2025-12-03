@@ -2,6 +2,7 @@ package com.android.gatherly.ui.profile
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -347,23 +348,23 @@ fun ProfileScreen(
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center) {
-                      BadgeIcon(listCreatedBadge)
-                      BadgeIcon(listCompletedBadge)
+                      BadgeIcon(listCreatedBadge, onClick = onBadgeClicked)
+                      BadgeIcon(listCompletedBadge, onClick = onBadgeClicked)
                     }
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center) {
-                      BadgeIcon(focusSessionBadge)
+                      BadgeIcon(focusSessionBadge, onClick = onBadgeClicked)
                       Spacer(modifier = Modifier.width(110.dp))
-                      BadgeIcon(eventCreatedBadge)
+                      BadgeIcon(eventCreatedBadge, onClick = onBadgeClicked)
                     }
 
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center) {
-                      BadgeIcon(friendsBadge)
-                      BadgeIcon(eventParticipatedBadge)
+                      BadgeIcon(friendsBadge, onClick = onBadgeClicked)
+                      BadgeIcon(eventParticipatedBadge, onClick = onBadgeClicked)
                     }
               }
         }
@@ -385,11 +386,14 @@ fun ProfileScreen(
 }
 
 @Composable
-fun BadgeIcon(badgeUi: BadgeUI) {
+fun BadgeIcon(badgeUi: BadgeUI, onClick: () -> Unit = {}) {
   Image(
       painter = painterResource(badgeUi.icon),
       contentDescription = badgeUi.title,
-      modifier = Modifier.size(90.dp).testTag(ProfileScreenTestTags.badgeTest(badgeUi.title)))
+      modifier =
+          Modifier.size(90.dp)
+              .clickable(onClick = onClick)
+              .testTag(ProfileScreenTestTags.badgeTest(badgeUi.title)))
 }
 
 // Helper function to preview the timer screen
