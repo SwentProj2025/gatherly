@@ -64,6 +64,9 @@
     <dimen name="homepage_add_friends_icon_size">30.dp</dimen>
     <dimen name="homepage_task_section_height">200.dp</dimen>
 
+    <!-- Settings Screen -->
+    <dimen name="settings_status_dialog_selector_size">20.dp</dimen>
+
     <!-- SignIn Screen -->
     <dimen name="sign_in_top_spacing">80.dp</dimen>
     <dimen name="sign_in_top_buttons_spacing">60.dp</dimen>
