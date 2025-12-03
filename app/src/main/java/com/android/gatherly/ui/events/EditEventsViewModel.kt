@@ -427,7 +427,7 @@ class EditEventsViewModel(
       val suggestedGroups =
           allGroups.filter { group -> group.name.startsWith(trimmedString, ignoreCase = true) }
 
-      uiState = uiState.copy(suggestedGroups = allGroups)
+      uiState = uiState.copy(suggestedGroups = suggestedGroups)
     }
   }
 

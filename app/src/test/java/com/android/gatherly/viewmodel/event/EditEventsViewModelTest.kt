@@ -6,6 +6,7 @@ import com.android.gatherly.model.event.EventState
 import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsLocalRepository
 import com.android.gatherly.model.event.EventsRepository
+import com.android.gatherly.model.group.Group
 import com.android.gatherly.model.group.GroupsLocalRepository
 import com.android.gatherly.model.group.GroupsRepository
 import com.android.gatherly.model.map.FakeNominatimLocationRepository
@@ -23,6 +24,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -61,10 +63,14 @@ class EditEventsViewModelTest {
         EditEventsViewModel(
             profileRepository = profileRepository,
             eventsRepository = eventsRepository,
-            groupsRepository = groupsRepository)
+            groupsRepository = groupsRepository,
+            nominatimClient = fakeNominatimClient)
 
     // set the event to edit
-    editEventsViewModel.setEventValues(event.id)
+    runTest {
+      editEventsViewModel.setEventValues(event.id)
+      advanceUntilIdle()
+    }
   }
 
   @After
@@ -113,6 +119,26 @@ class EditEventsViewModelTest {
       Profile(
           uid = "0",
           name = "Owner",
+          focusSessionIds = emptyList(),
+          participatingEventIds = emptyList(),
+          groupIds = emptyList(),
+          friendUids = emptyList())
+
+  val friend1 =
+      Profile(
+          uid = "friend1",
+          username = "alice",
+          name = "Alice",
+          focusSessionIds = emptyList(),
+          participatingEventIds = emptyList(),
+          groupIds = emptyList(),
+          friendUids = emptyList())
+
+  val friend2 =
+      Profile(
+          uid = "friend2",
+          username = "bob",
+          name = "Bob",
           focusSessionIds = emptyList(),
           participatingEventIds = emptyList(),
           groupIds = emptyList(),
@@ -509,6 +535,107 @@ class EditEventsViewModelTest {
       profileRepository.addProfile(ownerProfile)
       eventsRepository.addEvent(event)
       advanceUntilIdle()
+    }
+  }
+
+  @Test
+  fun searchGroupsNameByString_returnsFilteredGroups() {
+    runTest {
+      val group1 =
+          Group(
+              "group1",
+              name = "Sports Group",
+              creatorId = "0",
+              description = "",
+              memberIds = listOf("0"),
+              adminIds = listOf("0"))
+      val group2 =
+          Group(
+              "group2",
+              name = "Study Group",
+              creatorId = "0",
+              description = "",
+              memberIds = listOf("0"),
+              adminIds = listOf("0"))
+      val group3 =
+          Group(
+              "group3",
+              name = "Party Group",
+              creatorId = "1",
+              description = "",
+              memberIds = listOf("1"),
+              adminIds = listOf("1"))
+
+      groupsRepository.addGroup(group1)
+      groupsRepository.addGroup(group2)
+      groupsRepository.addGroup(group3)
+
+      // Update owner profile to have groups
+      val updatedOwner = ownerProfile.copy(groupIds = listOf("group1", "group2"))
+      profileRepository.updateProfile(updatedOwner)
+
+      editEventsViewModel.setEventValues(event.id)
+      advanceUntilIdle()
+
+      // Search for groups starting with "Sp"
+      editEventsViewModel.updateGroup("Sp")
+      editEventsViewModel.searchGroupsNameByString("Sp")
+      advanceUntilIdle()
+
+      assertEquals(1, editEventsViewModel.uiState.suggestedGroups.size)
+      assertEquals("Sports Group", editEventsViewModel.uiState.suggestedGroups[0].name)
+    }
+  }
+
+  @Test
+  fun updateGroup_updatesGroupString() {
+    runTest {
+      val groupName = "My Group"
+      editEventsViewModel.updateGroup(groupName)
+
+      assertEquals(groupName, editEventsViewModel.uiState.group)
+    }
+  }
+
+  @Test
+  fun updatePrivateEventToPublicEvent_changesState() {
+    runTest {
+      // First set event to private
+      editEventsViewModel.setEventValues(event.id)
+      advanceUntilIdle()
+
+      // Change state to something else
+      val privateEvent = event.copy(state = EventState.PRIVATE_FRIENDS)
+      eventsRepository.editEvent(event.id, privateEvent)
+      editEventsViewModel.setEventValues(event.id)
+      advanceUntilIdle()
+
+      assertNotEquals(EventState.PUBLIC, editEventsViewModel.uiState.state)
+
+      // Call method
+      editEventsViewModel.updatePrivateEventToPublicEvent()
+
+      assertEquals(EventState.PUBLIC, editEventsViewModel.uiState.state)
+    }
+  }
+
+  @Test
+  fun searchFriendsProfileByString_returnsFilteredFriends() {
+    runTest {
+      profileRepository.addProfile(friend1)
+      profileRepository.addProfile(friend2)
+      profileRepository.addFriend(friend1.username, ownerProfile.uid)
+      profileRepository.addFriend(friend2.username, ownerProfile.uid)
+
+      editEventsViewModel.setEventValues(event.id)
+      advanceUntilIdle()
+
+      // Search for friends starting with "Al"
+      editEventsViewModel.searchFriendsProfileByString("Al")
+      advanceUntilIdle()
+
+      assertEquals(1, editEventsViewModel.uiState.suggestedFriendsProfile.size)
+      assertEquals("Alice", editEventsViewModel.uiState.suggestedFriendsProfile[0].name)
     }
   }
 }

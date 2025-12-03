@@ -511,42 +511,15 @@ private fun ParticipantsFieldItemEdit(
 
           // TrailingIcon to visualise the added participants
           trailingIcon = {
-            if (ui.participants.isNotEmpty()) {
-              IconButton(
-                  onClick = {
-                    showAddedParticipantsDropDown = !showAddedParticipantsDropDown
-                    showProfilesDropdown.value = false
-                  },
-                  modifier =
-                      Modifier.testTag(EditEventsScreenTestTags.BUTTON_SEE_ADDED_PARTICIPANT)) {
-                    Icon(
-                        imageVector = Icons.Filled.ContactPage,
-                        contentDescription = "See the participant profiles",
-                    )
-                  }
-            }
+            AddedParticipantsIcon(
+                participants = ui.participants,
+                showAddedParticipantsDropDown =
+                    remember { mutableStateOf(showAddedParticipantsDropDown) },
+                showProfilesDropdown = showProfilesDropdown)
           })
 
-      // Participants suggestions dropdown
-      DropdownMenu(
-          expanded =
-              showProfilesDropdown.value &&
-                  (ui.suggestedProfiles.isNotEmpty() || ui.suggestedFriendsProfile.isNotEmpty()),
-          onDismissRequest = { showProfilesDropdown.value = false },
-          properties = PopupProperties(focusable = false),
-          containerColor = MaterialTheme.colorScheme.surfaceVariant,
-          modifier =
-              Modifier.testTag(EditEventsScreenTestTags.PARTICIPANT_MENU)
-                  .fillMaxWidth()
-                  .height(200.dp)) {
-            val listToShow =
-                if (ui.state == EventState.PRIVATE_FRIENDS) ui.suggestedFriendsProfile
-                else ui.suggestedProfiles
-
-            if (listToShow.isNotEmpty()) {
-              DropDownParticipants(ui, listToShow, editEventsViewModel)
-            }
-          }
+      // -- DROPDOWN Participants Suggestions --
+      ParticipantsSuggestionsDropdown(ui, editEventsViewModel, showProfilesDropdown)
     }
 
     if (showAddedParticipantsDropDown && ui.participants.isNotEmpty()) {
@@ -561,6 +534,74 @@ private fun ParticipantsFieldItemEdit(
           currentUserId = ui.currentUserId)
     }
   }
+}
+
+/**
+ * Helper composable function : Handle the Icon visibility that will show the participants profiles
+ *
+ * @param participants list of profile already register as participant for the event
+ * @param showAddedParticipantsDropDown boolean to handle the visibility of the dropdown
+ * @param showProfilesDropdown boolean to handle the visibility of the suggestion dropdown
+ */
+@Composable
+private fun AddedParticipantsIcon(
+    participants: List<Profile>,
+    showAddedParticipantsDropDown: MutableState<Boolean>,
+    showProfilesDropdown: MutableState<Boolean>
+) {
+  if (participants.isEmpty()) return
+
+  IconButton(
+      onClick = {
+        showAddedParticipantsDropDown.value = !showAddedParticipantsDropDown.value
+        showProfilesDropdown.value = false
+      },
+      modifier = Modifier.testTag(EditEventsScreenTestTags.BUTTON_SEE_ADDED_PARTICIPANT)) {
+        Icon(
+            imageVector = Icons.Filled.ContactPage,
+            contentDescription = "See the participant profiles",
+        )
+      }
+}
+
+/**
+ * Helper composable function: Handles the dropdown menu
+ *
+ * @param ui EditEvent Ui state
+ * @param editEventsViewModel the viewModel used for our implementation
+ * @param showProfilesDropdown the boolean to handles the visibility of this dropdown
+ */
+@Composable
+private fun ParticipantsSuggestionsDropdown(
+    ui: EditEventsUIState,
+    editEventsViewModel: EditEventsViewModel,
+    showProfilesDropdown: MutableState<Boolean>
+) {
+  val listToShow =
+      if (ui.state == EventState.PRIVATE_FRIENDS) ui.suggestedFriendsProfile
+      else ui.suggestedProfiles
+
+  if (listToShow.isEmpty()) return
+
+  DropdownMenu(
+      expanded =
+          showProfilesDropdown.value &&
+              (ui.suggestedProfiles.isNotEmpty() || ui.suggestedFriendsProfile.isNotEmpty()),
+      onDismissRequest = { showProfilesDropdown.value = false },
+      properties = PopupProperties(focusable = false),
+      containerColor = MaterialTheme.colorScheme.surfaceVariant,
+      modifier =
+          Modifier.testTag(EditEventsScreenTestTags.PARTICIPANT_MENU)
+              .fillMaxWidth()
+              .height(200.dp)) {
+        val listToShow =
+            if (ui.state == EventState.PRIVATE_FRIENDS) ui.suggestedFriendsProfile
+            else ui.suggestedProfiles
+
+        if (listToShow.isNotEmpty()) {
+          DropDownParticipants(ui, listToShow, editEventsViewModel)
+        }
+      }
 }
 
 /**
@@ -679,10 +720,9 @@ private fun DropDownGroup(
     editEventsViewModel: EditEventsViewModel
 ) {
   val group = ui.isGroupEvent
-  val isAlreadyParticipant = (group != null)
 
   // When the user already choose a group to invite
-  if (isAlreadyParticipant) {
+  if (group != null) {
     // Item of the dropdown : invited group
     DropdownMenuItem(
         text = {
@@ -691,7 +731,7 @@ private fun DropDownGroup(
                   Modifier.fillMaxWidth().testTag(EditEventsScreenTestTags.GROUP_SUGGESTION_ITEM),
               horizontalArrangement = Arrangement.SpaceBetween) {
                 // Name of the group invited
-                Text(group?.name ?: "", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(group.name, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
                 // Possibility to unregister this group
                 IconButton(
