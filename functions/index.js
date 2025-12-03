@@ -17,6 +17,75 @@ exports.weeklyReset = onSchedule(
         const db = admin.firestore();
         const usersSnapshot = await db.collection("profiles").get();
 
+        for (const userDoc of usersSnapshot.docs) {
+          const userData = userDoc.data();
+          const userId = userDoc.id;
+
+          const friends = userData.friends || []; // array of userIDs
+
+          if (friends.length === 0) continue;
+
+          // ---- Fetch friends weeklyPoints IN BATCHES ----
+          const friendChunks = [];
+          for (let i = 0; i < friends.length; i += 10) {
+            friendChunks.push(friends.slice(i, i + 10));
+          }
+          const friendDataList = [];
+
+          for (const chunk of friendChunks) {
+            const friendsSnapshot = await db
+                .collection("profiles")
+                .where(admin.firestore.FieldPath.documentId(), "in", chunk)
+                .get();
+
+            friendsSnapshot.forEach((doc) => {
+              friendDataList.push({
+                userId: doc.id,
+                weeklyPoints: doc.data().weeklyPoints || 0.0,
+              });
+            });
+          }
+
+          // Add the user themselves to the ranking
+          friendDataList.push({
+            userId: userId,
+            weeklyPoints: userData.weeklyPoints || 0.0,
+          });
+
+          // ---- Sort leaderboard ----
+          friendDataList.sort((a, b) => b.weeklyPoints - a.weeklyPoints);
+
+          // ---- Find user rank ----
+          const rank = friendDataList.findIndex((u) => u.userId === userId);
+
+          // ---- If rank = 0 / 1 / 2 -> Give reward ----
+          if (rank == 0) {
+            await db.collection("points").add({
+              userId: userId,
+              rank: "first",
+              obtained: 100.0,
+              dateObtained: admin.firestore.Timestamp.now(),
+              reason: "Leaderboard",
+            });
+          } else if (rank == 1) {
+            await db.collection("points").add({
+              userId: userId,
+              rank: "second",
+              obtained: 75.0,
+              dateObtained: admin.firestore.Timestamp.now(),
+              reason: "Leaderboard",
+            });
+          } else if (rank == 2) {
+            await db.collection("points").add({
+              userId: userId,
+              rank: "third",
+              obtained: 50.0,
+              dateObtained: admin.firestore.Timestamp.now(),
+              reason: "Leaderboard",
+            });
+          }
+        }
+
         const batch = db.batch();
         usersSnapshot.forEach((doc) => {
           batch.update(doc.ref, {weeklyPoints: 0.0});
