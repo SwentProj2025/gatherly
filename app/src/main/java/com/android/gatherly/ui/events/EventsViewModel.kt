@@ -45,9 +45,7 @@ data class UIState(
     val sortOrder: EventSortOrder = EventSortOrder.DATE_ASC,
 )
 
-/**
- * Data class with all the needed events list
- */
+/** Data class with all the needed events list */
 private data class ProcessedEvents(
     val fullEventList: List<Event>,
     val participatedEventList: List<Event>,
@@ -60,12 +58,11 @@ private data class ProcessedEvents(
  * - [DATE_ASC]: Sort events by increasing date (earliest first)
  * - [ALPHABETICAL]: Sort events by their name in alphabetical order (A -> Z).
  * - [PROXIMITY]: Sort events by their proximity (nearest first)
- *
  */
 enum class EventSortOrder {
-    DATE_ASC,
-    ALPHABETICAL,
-    PROXIMITY
+  DATE_ASC,
+  ALPHABETICAL,
+  PROXIMITY
 }
 
 /**
@@ -102,9 +99,9 @@ class EventsViewModel(
   /** StateFlow exposing the event currently being edited, or null if no edit is in progress. */
   val editEventRequest: StateFlow<Event?> = _editEventRequest.asStateFlow()
 
-    private val _searchQuery = MutableStateFlow("")
-    /** StateFLow exposing the string research by the user */
-    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+  private val _searchQuery = MutableStateFlow("")
+  /** StateFLow exposing the string research by the user */
+  val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
   /**
    * Initializes the ViewModel by loading all events for the current user. Events are automatically
@@ -123,11 +120,11 @@ class EventsViewModel(
     _uiState.value = _uiState.value.copy(isLoading = true)
     val events = eventsRepository.getAllEvents()
 
-      val processedEvents = processEvents(events, currentUserId)
+    val processedEvents = processEvents(events, currentUserId)
 
     _uiState.value =
         _uiState.value.copy(
-            fullEventList =  processedEvents.fullEventList,
+            fullEventList = processedEvents.fullEventList,
             participatedEventList = processedEvents.participatedEventList,
             createdEventList = processedEvents.createdEventList,
             globalEventList = processedEvents.globalEventList,
@@ -219,84 +216,76 @@ class EventsViewModel(
     }
   }
 
-    /** Invoked when users type in the search bar to filter [Event]s according to the typed query. */
-    fun searchEvents(query: String) {
-        _searchQuery.value = query
-        viewModelScope.launch {
-            val currentUserId = _uiState.value.currentUserId
-            if (currentUserId.isNotBlank()) {
-                refreshEvents(currentUserId)
-            }
-        }
+  /** Invoked when users type in the search bar to filter [Event]s according to the typed query. */
+  fun searchEvents(query: String) {
+    _searchQuery.value = query
+    viewModelScope.launch {
+      val currentUserId = _uiState.value.currentUserId
+      if (currentUserId.isNotBlank()) {
+        refreshEvents(currentUserId)
+      }
     }
+  }
 
-    /**
-     * Updates the current sorting order of the UI and applies it immediately to the currently
-     * displayed list of [Event]s.
-     *
-     * @param order The new [EventSortOrder] selected by the user.
-     */
-    fun setSortOrder(order: EventSortOrder) {
-        _uiState.value = _uiState.value.copy(sortOrder = order)
-        viewModelScope.launch {
-            val currentUserId = _uiState.value.currentUserId
-            if (currentUserId.isNotBlank()) {
-                refreshEvents(currentUserId)
-            }
-        }
+  /**
+   * Updates the current sorting order of the UI and applies it immediately to the currently
+   * displayed list of [Event]s.
+   *
+   * @param order The new [EventSortOrder] selected by the user.
+   */
+  fun setSortOrder(order: EventSortOrder) {
+    _uiState.value = _uiState.value.copy(sortOrder = order)
+    viewModelScope.launch {
+      val currentUserId = _uiState.value.currentUserId
+      if (currentUserId.isNotBlank()) {
+        refreshEvents(currentUserId)
+      }
     }
+  }
 
-    /**
-     * Applies the current sorting rule to the given list of [TODO]s and return it.
-     *
-     * @param list The list of [TODO]s to sort.
-     * @return A new list sorted according to the active sort order.
-     */
-    private fun applySortOrder(list: List<Event>): List<Event> {
-        return when (_uiState.value.sortOrder) {
-            EventSortOrder.ALPHABETICAL -> list.sortedBy { it.title.lowercase() }
-            EventSortOrder.DATE_ASC -> list.sortedBy { it.date.toDate() }
-            EventSortOrder.PROXIMITY -> list // TODO
-        }
+  /**
+   * Applies the current sorting rule to the given list of [TODO]s and return it.
+   *
+   * @param list The list of [TODO]s to sort.
+   * @return A new list sorted according to the active sort order.
+   */
+  private fun applySortOrder(list: List<Event>): List<Event> {
+    return when (_uiState.value.sortOrder) {
+      EventSortOrder.ALPHABETICAL -> list.sortedBy { it.title.lowercase() }
+      EventSortOrder.DATE_ASC -> list.sortedBy { it.date.toDate() }
+      EventSortOrder.PROXIMITY -> list // TODO
     }
+  }
 
-    /**
-     * Handle the evolution of the list, depending on the searching, sorting needed
-     *
-     * @param allEvents list of all the events
-     * @param currentUserId the id of the current user
-     */
-    private fun processEvents(
-        allEvents: List<Event>,
-        currentUserId: String
-    ): ProcessedEvents {
-        val searchFiltered = if (_searchQuery.value.isNotBlank()) {
-            val normalized = _searchQuery.value.trim().lowercase()
-            allEvents.filter { event ->
-                event.title.lowercase().contains(normalized) ||
-                        event.description.lowercase().contains(normalized)
-            }
+  /**
+   * Handle the evolution of the list, depending on the searching, sorting needed
+   *
+   * @param allEvents list of all the events
+   * @param currentUserId the id of the current user
+   */
+  private fun processEvents(allEvents: List<Event>, currentUserId: String): ProcessedEvents {
+    val searchFiltered =
+        if (_searchQuery.value.isNotBlank()) {
+          val normalized = _searchQuery.value.trim().lowercase()
+          allEvents.filter { event -> event.title.lowercase().contains(normalized) }
         } else {
-            allEvents
+          allEvents
         }
 
-        val sorted = applySortOrder(searchFiltered)
+    val sorted = applySortOrder(searchFiltered)
 
-        val participatedEventList = sorted.filter {
-            it.participants.contains(currentUserId) && it.creatorId != currentUserId
-        }
+    val participatedEventList =
+        sorted.filter { it.participants.contains(currentUserId) && it.creatorId != currentUserId }
 
-        val createdEventList = sorted.filter { it.creatorId == currentUserId }
+    val createdEventList = sorted.filter { it.creatorId == currentUserId }
 
-        val globalEventList = sorted.filter {
-            it.creatorId != currentUserId && !it.participants.contains(currentUserId)
-        }
+    val globalEventList =
+        sorted.filter { it.creatorId != currentUserId && !it.participants.contains(currentUserId) }
 
-        return ProcessedEvents(
-            fullEventList = sorted,
-            participatedEventList = participatedEventList,
-            createdEventList = createdEventList,
-            globalEventList = globalEventList
-        )
-    }
+    return ProcessedEvents(
+        fullEventList = sorted,
+        participatedEventList = participatedEventList,
+        createdEventList = createdEventList,
+        globalEventList = globalEventList)
+  }
 }

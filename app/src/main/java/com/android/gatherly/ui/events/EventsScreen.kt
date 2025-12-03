@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -20,9 +19,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults.buttonColors
 import androidx.compose.material3.Card
@@ -71,9 +70,7 @@ import com.android.gatherly.ui.theme.GatherlyTheme
 import com.android.gatherly.ui.theme.theme_status_ongoing
 import com.android.gatherly.ui.theme.theme_status_past
 import com.android.gatherly.ui.theme.theme_status_upcoming
-import com.android.gatherly.ui.todo.OverviewScreenTestTags
 import com.android.gatherly.ui.todo.SortMenu
-import com.android.gatherly.ui.todo.TodoSortOrder
 import com.android.gatherly.utils.DateParser.dateToString
 import com.android.gatherly.utils.DateParser.timeToString
 import com.android.gatherly.utils.GatherlyAlertDialog
@@ -110,8 +107,8 @@ object EventsScreenTestTags {
   const val FILTER_UPCOMING_BUTTON = "FilterUpcomingButton"
   const val FILTER_ONGOING_BUTTON = "FilterOngoingButton"
   const val FILTER_PAST_BUTTON = "FilterPastButton"
-    const val SEARCH_BAR = "SearchBar"
-    const val SORT_MENU_BUTTON = "SortMenuButton"
+  const val SEARCH_BAR = "SearchBar"
+  const val SORT_MENU_BUTTON = "SortMenuButton"
 
   /**
    * Returns a unique test tag for the card or container representing a given [Event] item.
@@ -195,10 +192,10 @@ fun EventsScreen(
   val isPopupOnUpcoming = remember { mutableStateOf(false) }
   val isPopupOnYourE = remember { mutableStateOf(false) }
 
-    // Handle the string typed by the user in the search event bar
-    var searchQuery by remember { mutableStateOf("") }
+  // Handle the string typed by the user in the search event bar
+  var searchQuery by remember { mutableStateOf("") }
 
-    // Handle deep linking to a specific event if eventId is provided
+  // Handle deep linking to a specific event if eventId is provided
   val eventIdAlreadyProcessed = remember(eventId) { mutableStateOf(false) }
   if (eventId != null && !eventIdAlreadyProcessed.value) {
 
@@ -264,46 +261,40 @@ fun EventsScreen(
                     .padding(padding)
                     .testTag(EventsScreenTestTags.ALL_LISTS)) {
 
-            // ---- SEARCH EVENT BAR ----
-            item {
-                Row(
+              // ---- SEARCH EVENT BAR ----
+              item {
+                SortMenu(
+                    currentOrder = uiState.sortOrder,
+                    onSortSelected = { eventsViewModel.setSortOrder(it) })
+              }
+              item {
+                OutlinedTextField(
+                    value = searchQuery,
+                    onValueChange = { newText ->
+                      searchQuery = newText
+                      eventsViewModel.searchEvents(newText)
+                    },
+                    leadingIcon = {
+                      Icon(
+                          imageVector = Icons.Default.Search,
+                          contentDescription = "Search icon",
+                          tint = MaterialTheme.colorScheme.onBackground)
+                    },
                     modifier =
-                        Modifier.fillMaxWidth()
-                            .height(dimensionResource(R.dimen.todo_overview_top_row_height))
-                            .padding(
-                                bottom =
-                                    dimensionResource(R.dimen.todos_overview_vertical_padding))) {
-                    OutlinedTextField(
-                        value = searchQuery,
-                        onValueChange = { newText ->
-                            searchQuery = newText
-                            eventsViewModel.searchEvents(newText)
-                        },
-                        modifier =
-                            Modifier
-                                .padding(
-                                    horizontal =
-                                        dimensionResource(
-                                            R.dimen.events_horizontal_padding
-                                        )
-                                )
-                                .testTag(EventsScreenTestTags.SEARCH_BAR),
-                        label = { Text(stringResource(R.string.events_search_bar_label)) },
-                        singleLine = true,
-                        colors =
-                            OutlinedTextFieldDefaults.colors(
-                                focusedContainerColor = MaterialTheme.colorScheme.background,
-                                unfocusedContainerColor = MaterialTheme.colorScheme.background,
-                                unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-                                focusedTextColor = MaterialTheme.colorScheme.onBackground,
-                            )
-                    )
-
-                    SortMenu(
-                        currentOrder = uiState.sortOrder,
-                        onSortSelected = { eventsViewModel.setSortOrder(it) })
-                }
-            }
+                        Modifier.padding(
+                                horizontal = dimensionResource(R.dimen.events_horizontal_padding))
+                            .testTag(EventsScreenTestTags.SEARCH_BAR),
+                    label = { Text(stringResource(R.string.events_search_bar_label)) },
+                    singleLine = true,
+                    colors =
+                        OutlinedTextFieldDefaults.colors(
+                            focusedContainerColor = MaterialTheme.colorScheme.background,
+                            unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                            unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+                            focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                        ),
+                    shape = RoundedCornerShape(24.dp))
+              }
 
               // -- FILTER BAR --
               item { FilterBar(selectedFilter) }
@@ -798,7 +789,6 @@ private fun getFilteredEvents(
   }
 }
 
-
 /**
  * Displays a button that opens a dropdown menu allowing the user to choose a sorting order for the
  * Event list.
@@ -812,80 +802,79 @@ private fun getFilteredEvents(
  */
 @Composable
 fun SortMenu(currentOrder: EventSortOrder, onSortSelected: (EventSortOrder) -> Unit) {
-    var expanded by remember { mutableStateOf(false) }
+  var expanded by remember { mutableStateOf(false) }
 
-    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxHeight()) {
+  Box(
+      modifier = Modifier.fillMaxWidth().padding(end = 16.dp),
+      contentAlignment = Alignment.CenterEnd) {
         IconButton(
             modifier = Modifier.fillMaxHeight().testTag(EventsScreenTestTags.SORT_MENU_BUTTON),
             onClick = { expanded = true },
         ) {
-            Icon(
-                imageVector = Icons.Filled.FilterList,
-                contentDescription = "Sorting button",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant)
+          Icon(
+              imageVector = Icons.Filled.FilterList,
+              contentDescription = "Sorting button",
+              tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
             containerColor = MaterialTheme.colorScheme.surfaceVariant) {
-            DropdownMenuItem(
-                text = {
-                    Text(
-                        text = "Date sorting",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
-                },
-                onClick = {
+              DropdownMenuItem(
+                  text = {
+                    Text(text = "Date sorting", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                  },
+                  onClick = {
                     onSortSelected(EventSortOrder.DATE_ASC)
                     expanded = false
-                },
-                trailingIcon = {
+                  },
+                  trailingIcon = {
                     if (currentOrder == EventSortOrder.DATE_ASC) {
-                        Icon(
-                            Icons.Default.Check,
-                            contentDescription =
-                                stringResource(R.string.events_sort_menu_check_icon_label))
+                      Icon(
+                          Icons.Default.Check,
+                          contentDescription =
+                              stringResource(R.string.events_sort_menu_check_icon_label))
                     }
-                })
-            DropdownMenuItem(
-                text = {
+                  })
+              DropdownMenuItem(
+                  text = {
                     Text(
                         text = "Alphabetical sorting",
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
-                },
-                onClick = {
+                  },
+                  onClick = {
                     onSortSelected(EventSortOrder.ALPHABETICAL)
                     expanded = false
-                },
-                trailingIcon = {
+                  },
+                  trailingIcon = {
                     if (currentOrder == EventSortOrder.ALPHABETICAL) {
-                        Icon(
-                            Icons.Default.Check,
-                            contentDescription =
-                                stringResource(R.string.events_sort_menu_check_icon_label))
+                      Icon(
+                          Icons.Default.Check,
+                          contentDescription =
+                              stringResource(R.string.events_sort_menu_check_icon_label))
                     }
-                })
-            DropdownMenuItem(
-                text = {
+                  })
+              DropdownMenuItem(
+                  text = {
                     Text(
                         text = "Proximity sorting",
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
-                },
-                onClick = {
+                  },
+                  onClick = {
                     onSortSelected(EventSortOrder.PROXIMITY)
                     expanded = false
-                },
-                trailingIcon = {
+                  },
+                  trailingIcon = {
                     if (currentOrder == EventSortOrder.PROXIMITY) {
-                        Icon(
-                            Icons.Default.Check,
-                            contentDescription =
-                                stringResource(R.string.events_sort_menu_check_icon_label))
+                      Icon(
+                          Icons.Default.Check,
+                          contentDescription =
+                              stringResource(R.string.events_sort_menu_check_icon_label))
                     }
-                })
-        }
-    }
+                  })
+            }
+      }
 }
-
 
 @Preview(showBackground = true)
 @Composable
