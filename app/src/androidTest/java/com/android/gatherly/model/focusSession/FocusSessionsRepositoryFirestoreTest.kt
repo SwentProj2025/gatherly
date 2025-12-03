@@ -8,6 +8,7 @@ import junit.framework.TestCase.fail
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertNotEquals
 import org.junit.Test
+import kotlin.time.Duration.Companion.seconds
 
 // This class contains code adapted from the groups repository tests.
 
@@ -23,7 +24,7 @@ class FocusSessionsRepositoryFirestoreTest : FirestoreFocusSessionsGatherlyTest(
    * Verifies that multiple focus sessions can be added and retrieved with getAllFocusSessions().
    */
   @Test
-  fun add_and_getAll_works() = runTest {
+  fun add_and_getAll_works() = runTest (timeout = 120.seconds) {
     repository.addFocusSession(session1)
     repository.addFocusSession(session2)
 
@@ -35,7 +36,7 @@ class FocusSessionsRepositoryFirestoreTest : FirestoreFocusSessionsGatherlyTest(
 
   /** Verifies that getUserFocusSessions() only returns sessions belonging to the current user. */
   @Test
-  fun getUserFocusSessions_returns_only_current_user_sessions() = runTest {
+  fun getUserFocusSessions_returns_only_current_user_sessions() = runTest (timeout = 120.seconds) {
     // user1 adds a session
     repository.addFocusSession(session1)
 
@@ -50,7 +51,7 @@ class FocusSessionsRepositoryFirestoreTest : FirestoreFocusSessionsGatherlyTest(
 
   /** Verifies that getFocusSession() returns the correct session. */
   @Test
-  fun getFocusSession_returns_correct_session() = runTest {
+  fun getFocusSession_returns_correct_session() = runTest (timeout = 120.seconds) {
     repository.addFocusSession(session1)
 
     val retrieved = repository.getFocusSession(session1.focusSessionId)
@@ -65,7 +66,7 @@ class FocusSessionsRepositoryFirestoreTest : FirestoreFocusSessionsGatherlyTest(
 
   /** Verifies that getFocusSession() throws a NoSuchElementException when session not found. */
   @Test
-  fun getFocusSession_throws_when_not_found() = runTest {
+  fun getFocusSession_throws_when_not_found() = runTest (timeout = 120.seconds) {
     try {
       repository.getFocusSession("non_existing_id")
       fail("Expected NoSuchElementException")
@@ -76,7 +77,7 @@ class FocusSessionsRepositoryFirestoreTest : FirestoreFocusSessionsGatherlyTest(
 
   /** Verifies that addFocusSession correctly stores and assigns creatorId. */
   @Test
-  fun addFocusSession_stores_creator_correctly() = runTest {
+  fun addFocusSession_stores_creator_correctly() = runTest (timeout = 120.seconds) {
     val testSession = session1.copy(creatorId = "someone_else")
     repository.addFocusSession(testSession)
 
@@ -91,7 +92,7 @@ class FocusSessionsRepositoryFirestoreTest : FirestoreFocusSessionsGatherlyTest(
 
   /** Verifies that a session can be edited by its creator. */
   @Test
-  fun updateFocusSession_updates_existing_session() = runTest {
+  fun updateFocusSession_updates_existing_session() = runTest (timeout = 120.seconds) {
     repository.addFocusSession(session1)
 
     val updatedFocusSession = session1.copy(linkedTodoId = "updated_todo")
@@ -109,7 +110,7 @@ class FocusSessionsRepositoryFirestoreTest : FirestoreFocusSessionsGatherlyTest(
 
   /** Verifies that only the creator can edit their focus session. */
   @Test
-  fun editFocusSessionLinkedTodo_throws_security_exception_when_not_creator() = runTest {
+  fun editFocusSessionLinkedTodo_throws_security_exception_when_not_creator() = runTest (timeout = 120.seconds) {
     repository.addFocusSession(session1)
 
     val updatedFocusSession = session1.copy(linkedTodoId = "updated_todo")
@@ -124,7 +125,7 @@ class FocusSessionsRepositoryFirestoreTest : FirestoreFocusSessionsGatherlyTest(
 
   /** Verifies that a session can be deleted by its creator. */
   @Test
-  fun deleteFocusSession_removes_session() = runTest {
+  fun deleteFocusSession_removes_session() = runTest (timeout = 120.seconds) {
     repository.addFocusSession(session3)
     repository.addFocusSession(session2)
     assertEquals(2, repository.getAllFocusSessions().size)
@@ -138,7 +139,7 @@ class FocusSessionsRepositoryFirestoreTest : FirestoreFocusSessionsGatherlyTest(
 
   /** Verifies that only the creator can delete their focus session. */
   @Test
-  fun deleteFocusSession_throws_security_exception_when_not_creator() = runTest {
+  fun deleteFocusSession_throws_security_exception_when_not_creator() = runTest (timeout = 120.seconds) {
     repository.addFocusSession(session1)
 
     signInWithToken(user2Token)
@@ -152,7 +153,7 @@ class FocusSessionsRepositoryFirestoreTest : FirestoreFocusSessionsGatherlyTest(
 
   /** Verifies that sessions with null linkedTodoId are stored correctly. */
   @Test
-  fun addFocusSession_with_null_linkedTodoId_stores_correctly() = runTest {
+  fun addFocusSession_with_null_linkedTodoId_stores_correctly() = runTest (timeout = 120.seconds) {
     val testSession = session3.copy(linkedTodoId = null)
     repository.addFocusSession(testSession)
     val retrieved = repository.getFocusSession(testSession.focusSessionId)

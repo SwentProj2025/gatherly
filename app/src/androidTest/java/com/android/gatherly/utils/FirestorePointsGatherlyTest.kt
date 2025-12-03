@@ -12,6 +12,7 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Base class for Firestore-based Android tests using the Firebase Emulator Suite and a
@@ -72,7 +73,7 @@ open class FirestorePointsGatherlyTest {
 
   @After
   open fun tearDown() {
-    runTest { clearPoints() }
+    runTest (timeout = 120.seconds) { clearPoints() }
     FirebaseEmulator.clearAuthEmulator()
     FirebaseEmulator.clearFirestoreEmulator()
   }

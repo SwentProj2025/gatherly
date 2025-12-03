@@ -30,6 +30,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import org.junit.Assert.*
 import org.junit.Test
+import kotlin.time.Duration.Companion.seconds
 
 private const val TIMEOUT = 3000L
 private const val DELAY = 100L
@@ -43,7 +44,7 @@ private const val DELAY = 100L
 class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
 
   @Test
-  fun initProfileIfMissing_createsProfileWhenAbsent() = runTest {
+  fun initProfileIfMissing_createsProfileWhenAbsent() = runTest (timeout = 120.seconds) {
     val uid = FirebaseEmulator.auth.currentUser!!.uid
 
     val created = repository.initProfileIfMissing(uid, defaultPhotoUrl = "default.png")
@@ -57,7 +58,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   }
 
   @Test
-  fun initProfileIfMissing_returnsFalseWhenAlreadyExists() = runTest {
+  fun initProfileIfMissing_returnsFalseWhenAlreadyExists() = runTest (timeout = 120.seconds) {
     val uid = FirebaseEmulator.auth.currentUser!!.uid
 
     repository.initProfileIfMissing(uid, "photo1.png")
@@ -69,7 +70,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   }
 
   @Test
-  fun updateProfile_updatesExistingProfile() = runTest {
+  fun updateProfile_updatesExistingProfile() = runTest (timeout = 120.seconds) {
     val uid = FirebaseEmulator.auth.currentUser!!.uid
     repository.initProfileIfMissing(uid, "pic1.png")
 
@@ -84,13 +85,13 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   }
 
   @Test(expected = NoSuchElementException::class)
-  fun updateProfile_throwsIfNotExists() = runTest {
+  fun updateProfile_throwsIfNotExists() = runTest (timeout = 120.seconds) {
     val fake = Profile(uid = "nonexistent", name = "Ghost")
     repository.updateProfile(fake)
   }
 
   @Test
-  fun deleteProfile_removesItFromDatabase() = runTest {
+  fun deleteProfile_removesItFromDatabase() = runTest (timeout = 120.seconds) {
     val uid = FirebaseEmulator.auth.currentUser!!.uid
     repository.initProfileIfMissing(uid, "p.png")
 
@@ -100,7 +101,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   }
 
   @Test
-  fun isUidRegistered_returnsTrueOnlyIfExists() = runTest {
+  fun isUidRegistered_returnsTrueOnlyIfExists() = runTest (timeout = 120.seconds) {
     val uid = FirebaseEmulator.auth.currentUser!!.uid
     assertFalse(repository.isUidRegistered(uid))
 
@@ -109,7 +110,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   }
 
   @Test
-  fun searchProfilesByNamePrefix_returnsMatchingProfiles() = runTest {
+  fun searchProfilesByNamePrefix_returnsMatchingProfiles() = runTest (timeout = 120.seconds) {
     val auth = FirebaseEmulator.auth
     val firestore = FirebaseEmulator.firestore
     val storage = FirebaseEmulator.storage
@@ -137,7 +138,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   }
 
   @Test
-  fun registerUsername_failsIfProfileDoesNotExist() = runTest {
+  fun registerUsername_failsIfProfileDoesNotExist() = runTest (timeout = 120.seconds) {
     val uid = FirebaseEmulator.auth.currentUser!!.uid
     try {
       repository.registerUsername(uid, "newuser")
@@ -148,7 +149,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   }
 
   @Test
-  fun registerUsername_updatesProfileWhenProfileExists() = runTest {
+  fun registerUsername_updatesProfileWhenProfileExists() = runTest (timeout = 120.seconds) {
     val uid = FirebaseEmulator.auth.currentUser!!.uid
     val created = repository.initProfileIfMissing(uid, "pic.png")
     val snap = FirebaseEmulator.firestore.collection("profiles").document(uid).get().await()
@@ -163,7 +164,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   }
 
   @Test
-  fun updateUsername_replacesOldUsername() = runTest {
+  fun updateUsername_replacesOldUsername() = runTest (timeout = 120.seconds) {
     val uid = FirebaseEmulator.auth.currentUser!!.uid
     repository.initProfileIfMissing(uid, "pic.png")
     repository.registerUsername(uid, "oldname")
@@ -176,7 +177,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   }
 
   @Test
-  fun getProfileByUsername_returnsCorrectProfile() = runTest {
+  fun getProfileByUsername_returnsCorrectProfile() = runTest (timeout = 120.seconds) {
     val uid = FirebaseEmulator.auth.currentUser!!.uid
     repository.initProfileIfMissing(uid, "photo.png")
     repository.registerUsername(uid, "charlie")
@@ -187,7 +188,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   }
 
   @Test
-  fun userCannotEditAnotherUserProfile_dueToRules() = runTest {
+  fun userCannotEditAnotherUserProfile_dueToRules() = runTest (timeout = 120.seconds) {
     val auth = FirebaseEmulator.auth
     val firestore = FirebaseEmulator.firestore
     val storage = FirebaseEmulator.storage
@@ -215,7 +216,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   }
 
   @Test
-  fun userCanReadOtherUserProfile_whenAuthenticated() = runTest {
+  fun userCanReadOtherUserProfile_whenAuthenticated() = runTest (timeout = 120.seconds) {
     val auth = FirebaseEmulator.auth
     val firestore = FirebaseEmulator.firestore
     val storage = FirebaseEmulator.storage
@@ -236,7 +237,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   }
 
   @Test
-  fun isUsernameAvailable_behavesCorrectly() = runTest {
+  fun isUsernameAvailable_behavesCorrectly() = runTest (timeout = 120.seconds) {
     val uid = FirebaseEmulator.auth.currentUser!!.uid
     repository.initProfileIfMissing(uid, "photo.png")
 
@@ -253,7 +254,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   }
 
   @Test
-  fun testGetListNoFriends() = runTest {
+  fun testGetListNoFriends() = runTest (timeout = 120.seconds) {
     val auth = FirebaseEmulator.auth
     val firestore = FirebaseEmulator.firestore
     val storage = FirebaseEmulator.storage
@@ -308,7 +309,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   }
 
   @Test
-  fun testAddFriend() = runTest {
+  fun testAddFriend() = runTest (timeout = 120.seconds) {
     val auth = FirebaseEmulator.auth
     val firestore = FirebaseEmulator.firestore
     val storage = FirebaseEmulator.storage
@@ -349,7 +350,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   }
 
   @Test
-  fun deleteFriend_removesUidFromFriendList() = runTest {
+  fun deleteFriend_removesUidFromFriendList() = runTest (timeout = 120.seconds) {
     val auth = FirebaseEmulator.auth
     val firestore = FirebaseEmulator.firestore
     val storage = FirebaseEmulator.storage
@@ -408,7 +409,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   }
 
   @Test
-  fun updateProfilePic_overwritesExistingFile() = runTest {
+  fun updateProfilePic_overwritesExistingFile() = runTest (timeout = 120.seconds) {
     val uid = FirebaseEmulator.auth.currentUser!!.uid
     withTimeout(TIMEOUT) { while (FirebaseEmulator.auth.currentUser == null) delay(DELAY) }
     repository.initProfileIfMissing(uid, "pic.png")
@@ -443,7 +444,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   }
 
   @Test
-  fun updateProfilePic_withFileUri_uploadsSuccessfully() = runTest {
+  fun updateProfilePic_withFileUri_uploadsSuccessfully() = runTest (timeout = 120.seconds) {
     val uid = FirebaseEmulator.auth.currentUser!!.uid
     repository.initProfileIfMissing(uid, "")
 
@@ -470,7 +471,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
 
   // This code was partly generated by chat gpt:
   @Test
-  fun updateProfilePic_contentUri_uploadsSuccessfully() = runTest {
+  fun updateProfilePic_contentUri_uploadsSuccessfully() = runTest (timeout = 120.seconds) {
     val uid = FirebaseEmulator.auth.currentUser!!.uid
     repository.initProfileIfMissing(uid, "")
 
@@ -511,7 +512,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
 
   /** Test: Verifies that the friendUsernames list and nonFriendUsernames list are correctly set. */
   @Test
-  fun test_getFriendsAndNonFriendsUsernames_success() = runTest {
+  fun test_getFriendsAndNonFriendsUsernames_success() = runTest (timeout = 120.seconds) {
     val auth = FirebaseEmulator.auth
     val firestore = FirebaseEmulator.firestore
     val storage = FirebaseEmulator.storage
@@ -563,12 +564,12 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
 
   /** Test : */
   @Test(expected = NoSuchElementException::class)
-  fun test_getFriendsAndNonFriendsUsernames_throwsIfProfileMissing() = runTest {
+  fun test_getFriendsAndNonFriendsUsernames_throwsIfProfileMissing() = runTest (timeout = 120.seconds) {
     repository.getFriendsAndNonFriendsUsernames("non_existent_uid")
   }
 
   @Test
-  fun deleteUserProfile_removesAllDataAndFreesUsername() = runTest {
+  fun deleteUserProfile_removesAllDataAndFreesUsername() = runTest (timeout = 120.seconds) {
     val uid = FirebaseEmulator.auth.currentUser!!.uid
     repository.initProfileIfMissing(uid, "pic.png")
     repository.registerUsername(uid, "testuser")
@@ -596,7 +597,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   }
 
   @Test
-  fun initProfileIfMissing_setsDefaultStatusOffline() = runTest {
+  fun initProfileIfMissing_setsDefaultStatusOffline() = runTest (timeout = 120.seconds) {
     val uid = FirebaseEmulator.auth.currentUser!!.uid
 
     repository.initProfileIfMissing(uid, defaultPhotoUrl = "default.png")
@@ -608,7 +609,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   }
 
   @Test
-  fun updateStatus_savesCorrectlyInFirestore() = runTest {
+  fun updateStatus_savesCorrectlyInFirestore() = runTest (timeout = 120.seconds) {
     val uid = FirebaseEmulator.auth.currentUser!!.uid
     repository.initProfileIfMissing(uid, defaultPhotoUrl = "default.png")
 
@@ -625,7 +626,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   }
 
   @Test
-  fun getProfileByUid_convertsStatusStringToEnum() = runTest {
+  fun getProfileByUid_convertsStatusStringToEnum() = runTest (timeout = 120.seconds) {
     val uid = FirebaseEmulator.auth.currentUser!!.uid
     repository.initProfileIfMissing(uid, defaultPhotoUrl = "default.png")
 
@@ -651,7 +652,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
 
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
-  fun testCreateEvent() = runTest {
+  fun testCreateEvent() = runTest (timeout = 120.seconds) {
     val auth = FirebaseEmulator.auth
     val firestore = FirebaseEmulator.firestore
     val storage = FirebaseEmulator.storage
@@ -676,7 +677,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
 
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
-  fun testDeleteEvent() = runTest {
+  fun testDeleteEvent() = runTest (timeout = 120.seconds) {
     val auth = FirebaseEmulator.auth
     val firestore = FirebaseEmulator.firestore
     val storage = FirebaseEmulator.storage
@@ -708,7 +709,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   }
 
   @Test
-  fun testParticipateEvent() = runTest {
+  fun testParticipateEvent() = runTest (timeout = 120.seconds) {
     val auth = FirebaseEmulator.auth
     val firestore = FirebaseEmulator.firestore
     val storage = FirebaseEmulator.storage
@@ -746,7 +747,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   }
 
   @Test
-  fun testUnregisterEvent() = runTest {
+  fun testUnregisterEvent() = runTest (timeout = 120.seconds) {
     val auth = FirebaseEmulator.auth
     val firestore = FirebaseEmulator.firestore
     val storage = FirebaseEmulator.storage
@@ -791,7 +792,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   }
 
   @Test
-  fun testAllParticipateEvent() = runTest {
+  fun testAllParticipateEvent() = runTest (timeout = 120.seconds) {
     val auth = FirebaseEmulator.auth
     val firestore = FirebaseEmulator.firestore
     val storage = FirebaseEmulator.storage
@@ -842,7 +843,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   }
 
   @Test
-  fun testAllUnregisterEvent() = runTest {
+  fun testAllUnregisterEvent() = runTest (timeout = 120.seconds) {
     val auth = FirebaseEmulator.auth
     val firestore = FirebaseEmulator.firestore
     val storage = FirebaseEmulator.storage
@@ -930,7 +931,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   }
 
   @Test
-  fun testAddBadgesCorrectlyCreatedEvent() = runTest {
+  fun testAddBadgesCorrectlyCreatedEvent() = runTest (timeout = 120.seconds) {
     val auth = FirebaseEmulator.auth
     val firestore = FirebaseEmulator.firestore
     val storage = FirebaseEmulator.storage
@@ -1007,7 +1008,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   }
 
   @Test
-  fun deleteUserProfile_removesUserFromAllGroups() = runTest {
+  fun deleteUserProfile_removesUserFromAllGroups() = runTest (timeout = 120.seconds) {
     val firestore = FirebaseEmulator.firestore
     val storage = FirebaseEmulator.storage
     val auth = FirebaseEmulator.auth
@@ -1067,7 +1068,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   }
 
   @Test
-  fun deleteUserProfile_deletesAllUserOwnedDocuments() = runTest {
+  fun deleteUserProfile_deletesAllUserOwnedDocuments() = runTest (timeout = 120.seconds) {
     val firestore = FirebaseEmulator.firestore
     val storage = FirebaseEmulator.storage
     val auth = FirebaseEmulator.auth
@@ -1099,7 +1100,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   }
 
   @Test
-  fun deleteUserProfile_doesNotAffectOtherUsersData() = runTest {
+  fun deleteUserProfile_doesNotAffectOtherUsersData() = runTest (timeout = 120.seconds) {
     val firestore = FirebaseEmulator.firestore
     val storage = FirebaseEmulator.storage
     val auth = FirebaseEmulator.auth
@@ -1130,7 +1131,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
 
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
-  fun addFocusPointsWorks() = runTest {
+  fun addFocusPointsWorks() = runTest (timeout = 120.seconds) {
     val uid = FirebaseEmulator.auth.currentUser!!.uid
     repository.initProfileIfMissing(uid, "pic.png")
 

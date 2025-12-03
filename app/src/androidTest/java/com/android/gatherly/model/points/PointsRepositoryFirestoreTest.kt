@@ -7,12 +7,13 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlinx.coroutines.test.runTest
+import kotlin.time.Duration.Companion.seconds
 
 class PointsRepositoryFirestoreTest : FirestorePointsGatherlyTest() {
 
   /** Tests that adding a points instance stores it correctly in the Firebase */
   @Test
-  fun addPointsStoresInFirebase() = runTest {
+  fun addPointsStoresInFirebase() = runTest (timeout = 120.seconds) {
     val pointsCountBefore = getPointsCount()
     assertEquals(0, pointsCountBefore)
 
@@ -26,7 +27,7 @@ class PointsRepositoryFirestoreTest : FirestorePointsGatherlyTest() {
    * Tests that adding then retrieving points returns the correct list, from most to least recent
    */
   @Test
-  fun getPointsReturnsCorrectList() = runTest {
+  fun getPointsReturnsCorrectList() = runTest (timeout = 120.seconds) {
     val currentUserPoints1 = points1.copy(userId = FirebaseEmulator.auth.currentUser?.uid ?: "")
     val currentUserPoints2 = points2.copy(userId = FirebaseEmulator.auth.currentUser?.uid ?: "")
     repository.addPoints(currentUserPoints1)
@@ -43,7 +44,7 @@ class PointsRepositoryFirestoreTest : FirestorePointsGatherlyTest() {
    * [IllegalArgumentException]
    */
   @Test
-  fun cannotAddPointsWithIncorrectId() = runTest {
+  fun cannotAddPointsWithIncorrectId() = runTest (timeout = 120.seconds) {
     assertFailsWith<IllegalArgumentException> { repository.addPoints(points1) }
   }
 }

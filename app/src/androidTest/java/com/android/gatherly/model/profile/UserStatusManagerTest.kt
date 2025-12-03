@@ -5,11 +5,12 @@ import com.android.gatherly.utils.FirestoreGatherlyProfileTest
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import kotlin.time.Duration.Companion.seconds
 
 class UserStatusManagerTest : FirestoreGatherlyProfileTest() {
 
   @Test
-  fun setStatus_updatesUserStatusInFirestore() = runTest {
+  fun setStatus_updatesUserStatusInFirestore() = runTest (timeout = 120.seconds) {
     val auth = FirebaseEmulator.auth
     val uid = auth.currentUser!!.uid
 

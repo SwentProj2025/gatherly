@@ -10,6 +10,7 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
+import kotlin.time.Duration.Companion.seconds
 
 // This class contains code adapted from the groups repository tests.
 
@@ -65,7 +66,7 @@ open class FirestoreFocusSessionsGatherlyTest {
    * @throws IllegalStateException if the Firebase emulator is not running
    */
   @Before
-  open fun setUp() = runTest {
+  open fun setUp() = runTest (timeout = 120.seconds) {
     if (!FirebaseEmulator.isRunning) {
       error("Firebase emulator must be running! Use: firebase emulators:start")
     }
@@ -95,7 +96,7 @@ open class FirestoreFocusSessionsGatherlyTest {
    * Logs are included for debugging purposes to track user cleanup.
    */
   @After
-  open fun tearDown() = runTest {
+  open fun tearDown() = runTest (timeout = 120.seconds) {
     FirebaseEmulator.clearAuthEmulator()
     FirebaseEmulator.clearFirestoreEmulator()
   }

@@ -7,6 +7,7 @@ import java.util.NoSuchElementException
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
 import org.junit.Test
+import kotlin.time.Duration.Companion.seconds
 
 /**
  * Integration tests for [ToDosRepositoryFirestore] using the Firebase Emulator Suite.
@@ -17,7 +18,7 @@ import org.junit.Test
 class ToDosRepositoryFirestoreTest : FirestoreGatherlyTest() {
 
   @Test
-  fun add_and_getAll_works() = runTest {
+  fun add_and_getAll_works() = runTest (timeout = 120.seconds) {
     repository.addTodo(todo1)
     repository.addTodo(todo2)
 
@@ -28,7 +29,7 @@ class ToDosRepositoryFirestoreTest : FirestoreGatherlyTest() {
   }
 
   @Test
-  fun getTodo_returns_exact_todo() = runTest {
+  fun getTodo_returns_exact_todo() = runTest (timeout = 120.seconds) {
     repository.addTodo(todo1)
 
     val retrieved = repository.getTodo(todo1.uid)
@@ -39,7 +40,7 @@ class ToDosRepositoryFirestoreTest : FirestoreGatherlyTest() {
   }
 
   @Test
-  fun getTodo_throws_when_not_found() = runTest {
+  fun getTodo_throws_when_not_found() = runTest (timeout = 120.seconds) {
     try {
       repository.getTodo("non_existing_id")
       fail("Expected NoSuchElementException to be thrown")
@@ -49,7 +50,7 @@ class ToDosRepositoryFirestoreTest : FirestoreGatherlyTest() {
   }
 
   @Test
-  fun addTodo_with_location_and_dueTime_stores_correctly() = runTest {
+  fun addTodo_with_location_and_dueTime_stores_correctly() = runTest (timeout = 120.seconds) {
     val todoWithExtras =
         todo1.copy(uid = "x1", location = Location(46.52, 6.57, "EPFL"), dueTime = Timestamp.now())
 
@@ -62,7 +63,7 @@ class ToDosRepositoryFirestoreTest : FirestoreGatherlyTest() {
   }
 
   @Test
-  fun editTodo_updates_existing_todo() = runTest {
+  fun editTodo_updates_existing_todo() = runTest (timeout = 120.seconds) {
     repository.addTodo(todo1)
 
     val updated =
@@ -77,7 +78,7 @@ class ToDosRepositoryFirestoreTest : FirestoreGatherlyTest() {
   }
 
   @Test
-  fun deleteTodo_removes_it() = runTest {
+  fun deleteTodo_removes_it() = runTest (timeout = 120.seconds) {
     repository.addTodo(todo1)
     repository.addTodo(todo2)
     assertEquals(2, getTodosCount())
@@ -89,7 +90,7 @@ class ToDosRepositoryFirestoreTest : FirestoreGatherlyTest() {
   }
 
   @Test
-  fun deleteTodo_throws_if_not_found() = runTest {
+  fun deleteTodo_throws_if_not_found() = runTest (timeout = 120.seconds) {
     try {
       repository.deleteTodo("invalid_id")
       fail("Expected NoSuchElementException to be thrown")
@@ -99,7 +100,7 @@ class ToDosRepositoryFirestoreTest : FirestoreGatherlyTest() {
   }
 
   @Test
-  fun toggleStatus_flips_status_correctly() = runTest {
+  fun toggleStatus_flips_status_correctly() = runTest (timeout = 120.seconds) {
     repository.addTodo(todo1)
     val original = repository.getTodo(todo1.uid)
     assertEquals(ToDoStatus.ONGOING, original.status)
@@ -114,7 +115,7 @@ class ToDosRepositoryFirestoreTest : FirestoreGatherlyTest() {
   }
 
   @Test
-  fun getAllEndedTodos_returns_only_completed() = runTest {
+  fun getAllEndedTodos_returns_only_completed() = runTest (timeout = 120.seconds) {
     val ended = todo1.copy(uid = "a", status = ToDoStatus.ENDED)
     val ongoing = todo2.copy(uid = "b", status = ToDoStatus.ONGOING)
     val ended2 = todo3.copy(uid = "c", status = ToDoStatus.ENDED)
