@@ -12,6 +12,7 @@ import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsRepository
 import com.android.gatherly.model.event.EventsRepositoryFirestore
 import com.android.gatherly.model.map.Location
+import com.android.gatherly.model.map.LocationRepository
 import com.android.gatherly.model.map.NominatimLocationRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
@@ -97,7 +98,7 @@ private var client: OkHttpClient =
 class AddEventViewModel(
     private val profileRepository: ProfileRepository,
     private val eventsRepository: EventsRepository,
-    private val nominatimClient: NominatimLocationRepository = NominatimLocationRepository(client),
+    private val nominatimClient: LocationRepository = NominatimLocationRepository(client),
     private val authProvider: () -> FirebaseAuth = { Firebase.auth }
 ) : ViewModel() {
   // State with a private set
@@ -438,9 +439,12 @@ class AddEventViewModel(
     fun provideFactory(
         profileRepository: ProfileRepository =
             ProfileRepositoryFirestore(Firebase.firestore, Firebase.storage),
-        eventsRepository: EventsRepository = EventsRepositoryFirestore(Firebase.firestore)
+        eventsRepository: EventsRepository = EventsRepositoryFirestore(Firebase.firestore),
+        nominatimClient: NominatimLocationRepository = NominatimLocationRepository(client)
     ): ViewModelProvider.Factory {
-      return GenericViewModelFactory { AddEventViewModel(profileRepository, eventsRepository) }
+      return GenericViewModelFactory {
+        AddEventViewModel(profileRepository, eventsRepository, nominatimClient)
+      }
     }
   }
 }

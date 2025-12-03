@@ -110,7 +110,7 @@ fun DatePickerInputField(
     testTag: Pair<String, String>,
     colors: TextFieldColors
 ) {
-  Box(modifier = modifier.fillMaxWidth()) {
+  Box(modifier = modifier.fillMaxWidth().testTag(testTag.first)) { // Tag OUTER box
     OutlinedTextField(
         value = value,
         onValueChange = {},
@@ -124,8 +124,8 @@ fun DatePickerInputField(
           }
         },
         colors = colors,
-        modifier = Modifier.fillMaxWidth().testTag(testTag.first))
+        modifier = Modifier.fillMaxWidth()) // No tag here
 
-    Box(modifier = Modifier.matchParentSize().clickable { onClick() })
+    Box(modifier = Modifier.matchParentSize().clickable { onClick() }) // No tag here either
   }
 }
