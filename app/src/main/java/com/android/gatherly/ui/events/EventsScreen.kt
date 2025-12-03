@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -263,44 +262,41 @@ fun EventsScreen(
                     .testTag(EventsScreenTestTags.ALL_LISTS)) {
 
               // ---- SEARCH EVENT BAR ----
-            item {
+              item {
                 Row {
-                    OutlinedTextField(
-                        value = searchQuery,
-                        onValueChange = { newText ->
-                            searchQuery = newText
-                            eventsViewModel.searchEvents(newText)
-                        },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Default.Search,
-                                contentDescription = "Search icon",
-                                tint = MaterialTheme.colorScheme.onBackground)
-                        },
-                        modifier =
-                            Modifier.testTag(EventsScreenTestTags.SEARCH_BAR)
-                                .padding(
-                                    horizontal =
-                                        dimensionResource(
-                                            R.dimen.events_horizontal_padding)),
-                        label = { Text(stringResource(R.string.events_search_bar_label)) },
-                        singleLine = true,
-                        colors =
-                            OutlinedTextFieldDefaults.colors(
-                                focusedContainerColor = MaterialTheme.colorScheme.background,
-                                unfocusedContainerColor = MaterialTheme.colorScheme.background,
-                                unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-                                focusedTextColor = MaterialTheme.colorScheme.onBackground,
-                            ),
-                        shape = RoundedCornerShape(24.dp))
+                  OutlinedTextField(
+                      value = searchQuery,
+                      onValueChange = { newText ->
+                        searchQuery = newText
+                        eventsViewModel.searchEvents(newText)
+                      },
+                      leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Default.Search,
+                            contentDescription = "Search icon",
+                            tint = MaterialTheme.colorScheme.onBackground)
+                      },
+                      modifier =
+                          Modifier.testTag(EventsScreenTestTags.SEARCH_BAR)
+                              .padding(
+                                  horizontal =
+                                      dimensionResource(R.dimen.events_horizontal_padding)),
+                      label = { Text(stringResource(R.string.events_search_bar_label)) },
+                      singleLine = true,
+                      colors =
+                          OutlinedTextFieldDefaults.colors(
+                              focusedContainerColor = MaterialTheme.colorScheme.background,
+                              unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                              unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+                              focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                          ),
+                      shape = RoundedCornerShape(24.dp))
 
-                    SortMenu(
-                        currentOrder = uiState.sortOrder,
-                        onSortSelected = { eventsViewModel.setSortOrder(it) }
-                    )
-
+                  SortMenu(
+                      currentOrder = uiState.sortOrder,
+                      onSortSelected = { eventsViewModel.setSortOrder(it) })
                 }
-            }
+              }
 
               // -- FILTER BAR --
               item { FilterBar(selectedFilter) }
