@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -28,8 +29,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.android.gatherly.R
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
@@ -85,6 +89,44 @@ fun BadgeScreen(
           LazyColumn(
               contentPadding = PaddingValues(vertical = 8.dp),
               modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(padding)) {
+                item {
+                  Text(
+                      text = stringResource(R.string.todos_badge_title),
+                      style = MaterialTheme.typography.titleMedium,
+                      fontWeight = FontWeight.Bold,
+                      textAlign = TextAlign.Left)
+                  Spacer(modifier = Modifier.height(4.dp))
+
+                  Spacer(modifier = Modifier.height(10.dp))
+                }
+
+                item {
+                  Text(
+                      text = stringResource(R.string.events_badge_title),
+                      style = MaterialTheme.typography.titleMedium,
+                      fontWeight = FontWeight.Bold,
+                      textAlign = TextAlign.Left)
+                  Spacer(modifier = Modifier.height(4.dp))
+                }
+
+                item {
+                  Text(
+                      text = stringResource(R.string.friends_badge_title),
+                      style = MaterialTheme.typography.titleMedium,
+                      fontWeight = FontWeight.Bold,
+                      textAlign = TextAlign.Left)
+                  Spacer(modifier = Modifier.height(4.dp))
+                }
+
+                item {
+                  Text(
+                      text = stringResource(R.string.focus_session_badge_title),
+                      style = MaterialTheme.typography.titleMedium,
+                      fontWeight = FontWeight.Bold,
+                      textAlign = TextAlign.Left)
+                  Spacer(modifier = Modifier.height(4.dp))
+                }
+
                 items(uiState.topBadges.values.toList()) { badgeUi -> BadgeItem(badgeUi) }
               }
         }
