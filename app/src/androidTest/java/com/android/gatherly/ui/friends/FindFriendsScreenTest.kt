@@ -8,6 +8,8 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
+import com.android.gatherly.model.notification.NotificationsLocalRepository
+import com.android.gatherly.model.notification.NotificationsRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
@@ -27,6 +29,7 @@ class FindFriendsScreenTest {
   private lateinit var currentUserId: String
   private lateinit var friendsViewModel: FriendsViewModel
   private lateinit var profileRepository: ProfileRepository
+  private lateinit var notificationsRepository: NotificationsRepository
   private lateinit var mockitoUtils: MockitoUtils
 
   /**
@@ -37,6 +40,7 @@ class FindFriendsScreenTest {
   private fun setContentwithBobUID() {
     runTest {
       profileRepository = ProfileLocalRepository()
+      notificationsRepository = NotificationsLocalRepository()
 
       addProfiles()
       profileRepository.addProfile(bobProfile)
@@ -49,7 +53,10 @@ class FindFriendsScreenTest {
       mockitoUtils.chooseCurrentUser(currentUserId)
 
       friendsViewModel =
-          FriendsViewModel(profileRepository, authProvider = { mockitoUtils.mockAuth })
+          FriendsViewModel(
+              profileRepository,
+              notificationsRepository = notificationsRepository,
+              authProvider = { mockitoUtils.mockAuth })
 
       addProfiles()
 
@@ -65,7 +72,7 @@ class FindFriendsScreenTest {
   private fun setContentwithAliceUID() {
     runTest {
       profileRepository = ProfileLocalRepository()
-
+      notificationsRepository = NotificationsLocalRepository()
       addProfiles()
       profileRepository.addProfile(aliceProfile)
       advanceUntilIdle()
@@ -77,7 +84,10 @@ class FindFriendsScreenTest {
       mockitoUtils.chooseCurrentUser(currentUserId)
 
       friendsViewModel =
-          FriendsViewModel(profileRepository, authProvider = { mockitoUtils.mockAuth })
+          FriendsViewModel(
+              profileRepository,
+              notificationsRepository = notificationsRepository,
+              authProvider = { mockitoUtils.mockAuth })
 
       composeTestRule.setContent { FindFriendsScreen(friendsViewModel) }
     }
@@ -255,7 +265,7 @@ class FindFriendsScreenTest {
   fun testLoadingAnimation() {
     runTest {
       profileRepository = ProfileLocalRepository()
-
+      notificationsRepository = NotificationsLocalRepository()
       addProfiles()
       profileRepository.addProfile(aliceProfile)
 
@@ -265,7 +275,8 @@ class FindFriendsScreenTest {
       mockitoUtils = MockitoUtils()
       mockitoUtils.chooseCurrentUser(currentUserId)
 
-      friendsViewModel = FriendsViewModel(profileRepository, { mockitoUtils.mockAuth })
+      friendsViewModel =
+          FriendsViewModel(profileRepository, notificationsRepository, { mockitoUtils.mockAuth })
 
       composeTestRule.setContent { FindFriendsScreen(friendsViewModel) }
 
