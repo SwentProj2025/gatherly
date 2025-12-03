@@ -20,7 +20,7 @@ data class Event(
     val creatorId: String,
     val participants: List<String>, // contains userIds
     val status: EventStatus,
-    val state: EventState,
+    val state: EventState = EventState.PUBLIC,
     val group: Group? = null,
 ) : DisplayedMapElement
 
