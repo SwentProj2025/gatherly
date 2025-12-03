@@ -521,7 +521,11 @@ class AddEventViewModel(
       val eventId = eventsRepository.getNewId()
 
       // List of the ID of every participants
-      val participants = uiState.participants.map { it.uid }
+      val participants: List<String> =
+          if (uiState.state != EventState.PRIVATE_GROUP) uiState.participants.map { it.uid }
+          else {
+            uiState.isGroupEvent?.memberIds!!
+          }
 
       // Create new event
       val event =
@@ -537,7 +541,8 @@ class AddEventViewModel(
               creatorId = currentProfile.uid,
               participants = participants,
               status = EventStatus.UPCOMING,
-              state = uiState.state)
+              state = uiState.state,
+              group = uiState.isGroupEvent)
 
       // Save in event repository
       viewModelScope.launch {

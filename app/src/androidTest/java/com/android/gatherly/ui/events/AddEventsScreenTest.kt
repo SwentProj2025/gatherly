@@ -10,6 +10,7 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.gatherly.model.event.Event
@@ -117,6 +118,15 @@ class AddEventsScreenTest {
           groupIds = emptyList(),
           friendUids = emptyList())
 
+  val friendProfile: Profile =
+      Profile(
+          uid = "f1",
+          name = "friend",
+          focusSessionIds = emptyList(),
+          participatingEventIds = emptyList(),
+          groupIds = emptyList(),
+          friendUids = listOf("0"))
+
   var ownerProfile: Profile =
       Profile(
           uid = "0",
@@ -124,7 +134,7 @@ class AddEventsScreenTest {
           focusSessionIds = emptyList(),
           participatingEventIds = emptyList(),
           groupIds = emptyList(),
-          friendUids = emptyList())
+          friendUids = listOf("f1"))
 
   /*----------------------------------------Event-----------------------------------------------*/
 
@@ -217,6 +227,146 @@ class AddEventsScreenTest {
                 hasText("Invalid format or past date", substring = true, ignoreCase = true))
         .assertExists()
   }
+
+  /** Test: verifies that switch private/public works correctly */
+  @Test
+  fun testPrivateButtonsAreDisplayedWhenSwitchOff() {
+    composeTestRule
+        .onNodeWithTag(AddEventScreenTestTags.SWITCH_PUBLIC_PRIVATE_EVENT)
+        .assertIsDisplayed()
+        .performClick()
+
+    composeTestRule
+        .onNodeWithTag(AddEventScreenTestTags.BUTTON_PRIVATE_FRIENDS_EVENT)
+        .assertIsDisplayed()
+
+    composeTestRule
+        .onNodeWithTag(AddEventScreenTestTags.BUTTON_PRIVATE_GROUP_EVENT)
+        .assertIsDisplayed()
+
+    composeTestRule.onNodeWithTag(AddEventScreenTestTags.SWITCH_PUBLIC_PRIVATE_EVENT).performClick()
+
+    composeTestRule
+        .onNodeWithTag(AddEventScreenTestTags.BUTTON_PRIVATE_FRIENDS_EVENT)
+        .assertIsNotDisplayed()
+
+    composeTestRule
+        .onNodeWithTag(AddEventScreenTestTags.BUTTON_PRIVATE_GROUP_EVENT)
+        .assertIsNotDisplayed()
+  }
+
+  /** Test: verifies that friends only and group buttons work correctly */
+  @Test
+  fun testPrivateButtonsAreDisplayed() {
+    composeTestRule
+        .onNodeWithTag(AddEventScreenTestTags.SWITCH_PUBLIC_PRIVATE_EVENT)
+        .assertIsDisplayed()
+        .performClick()
+
+    composeTestRule
+        .onNodeWithTag(AddEventScreenTestTags.BUTTON_PRIVATE_FRIENDS_EVENT)
+        .assertIsDisplayed()
+
+    composeTestRule.onNodeWithTag(AddEventScreenTestTags.INPUT_PARTICIPANT).assertIsDisplayed()
+
+    composeTestRule.onNodeWithTag(AddEventScreenTestTags.INPUT_GROUP).assertIsNotDisplayed()
+
+    composeTestRule
+        .onNodeWithTag(AddEventScreenTestTags.BUTTON_PRIVATE_GROUP_EVENT)
+        .assertIsDisplayed()
+        .performClick()
+
+    composeTestRule.onNodeWithTag(AddEventScreenTestTags.INPUT_PARTICIPANT).assertIsNotDisplayed()
+
+    composeTestRule.onNodeWithTag(AddEventScreenTestTags.INPUT_GROUP).assertIsDisplayed()
+  }
+
+  /** Test: Verifies that group suggestion working correctly */
+  /* TODO : NEED TO FIX THE GROUP IMPLEMENTATION
+  @Test
+  fun testGroupSuggestionsAppear() = runTest {
+    groupsRepository.addGroup(
+        Group(
+            gid = "G1",
+            name = "MyGroup",
+            memberIds = listOf(ownerProfile.uid),
+            creatorId = ownerProfile.uid,
+            description = "",
+            adminIds = listOf(ownerProfile.uid)))
+
+    composeTestRule.onNodeWithTag(AddEventScreenTestTags.SWITCH_PUBLIC_PRIVATE_EVENT).performClick()
+    composeTestRule.onNodeWithTag(AddEventScreenTestTags.BUTTON_PRIVATE_GROUP_EVENT).performClick()
+
+    composeTestRule.onNodeWithTag(AddEventScreenTestTags.INPUT_GROUP).performTextInput("My")
+
+    composeTestRule.waitUntil(timeoutMillis = 5000L) {
+      composeTestRule.onNodeWithTag(AddEventScreenTestTags.GROUP_MENU).isDisplayed()
+    }
+      composeTestRule.onNodeWithTag(AddEventScreenTestTags
+          .getTestTagGroupSuggestionItem("G1")).assertIsDisplayed()
+
+      composeTestRule.onNodeWithTag(AddEventScreenTestTags
+          .getTestTagGroupSuggestionAdd("G1")).assertIsDisplayed().performClick()
+
+      composeTestRule.onNodeWithTag(AddEventScreenTestTags
+          .getTestTagGroupSuggestionAdd("G1")).assertIsNotDisplayed()
+
+      composeTestRule.onNodeWithTag(AddEventScreenTestTags
+          .getTestTagProfileRemoveItem("G1")).assertIsDisplayed()
+    }
+   */
+
+  /** Test: Verify that the suggestion works for private friends event */
+  @Test
+  fun testFriendsSuggestionsAppear() {
+    val nameParticipant = friendProfile.name
+    val uidParticipant = friendProfile.uid
+
+    composeTestRule.onNodeWithTag(AddEventScreenTestTags.SWITCH_PUBLIC_PRIVATE_EVENT).performClick()
+    composeTestRule
+        .onNodeWithTag(AddEventScreenTestTags.BUTTON_PRIVATE_FRIENDS_EVENT)
+        .performClick()
+
+    composeTestRule
+        .onNodeWithTag(AddEventScreenTestTags.INPUT_PARTICIPANT)
+        .performTextInput(nameParticipant)
+
+    composeTestRule.waitUntil(timeoutMillis = 10000L) {
+      composeTestRule
+          .onAllNodes(hasTestTag(AddEventScreenTestTags.PARTICIPANT_MENU))
+          .fetchSemanticsNodes()
+          .isNotEmpty()
+    }
+
+    composeTestRule
+        .onNodeWithTag(
+            AddEventScreenTestTags.getTestTagProfileSuggestionItem(uidParticipant),
+            useUnmergedTree = true)
+        .assertIsDisplayed()
+
+    composeTestRule
+        .onNodeWithTag(AddEventScreenTestTags.getTestTagProfileAddItem(uidParticipant))
+        .assertIsDisplayed()
+        .performClick()
+
+    composeTestRule
+        .onNodeWithTag(AddEventScreenTestTags.BUTTON_SEE_ADDED_PARTICIPANT)
+        .assertIsDisplayed()
+        .performClick()
+
+    composeTestRule
+        .onNodeWithTag(
+            AddEventScreenTestTags.getTestTagAddedProfileItem(uidParticipant),
+            useUnmergedTree = true)
+        .assertIsDisplayed()
+
+    composeTestRule
+        .onNodeWithTag(
+            AddEventScreenTestTags.getTestTagAddedProfileRemoveItem(uidParticipant),
+            useUnmergedTree = true)
+        .assertIsDisplayed()
+  }
+
   // This function fills the profile repository with the created profiles, and the event repository
   // with the created event
   fun fill_repositories() {
@@ -225,9 +375,11 @@ class AddEventsScreenTest {
       profileRepository.addProfile(profile2)
       profileRepository.addProfile(profile3)
       profileRepository.addProfile(participantProfile)
+      profileRepository.addProfile(friendProfile)
       profileRepository.addProfile(ownerProfile)
       eventsRepository.addEvent(event)
       profileRepository.createEvent(event.id, ownerProfile.uid)
+      profileRepository.addFriend(friendProfile.username, ownerProfile.uid)
       advanceUntilIdle()
     }
   }

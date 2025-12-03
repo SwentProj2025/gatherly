@@ -88,25 +88,30 @@ object AddEventScreenTestTags {
 
   const val GROUP_MENU = "GROUP_MENU"
   const val LOCATION_MENU = "LOCATION_MENU"
-
-  const val PROFILE_SUGGESTION_ITEM = "EVENT_PROFILE_SUGGESTION_ITEM"
-  const val PROFILE_SUGGESTION_ADD = "EVENT_PROFILE_SUGGESTION_ADD"
-  const val PROFILE_SUGGESTION_REMOVE = "EVENT_PROFILE_SUGGESTION_REMOVE"
-
   const val BUTTON_SEE_ADDED_PARTICIPANT = " EVENT_BUTTON_ADDED_PARTICIPANT"
-
-  const val PROFILE_ADDED_ITEM = "EVENT_PROFILE_ADDED_ITEM"
-
-  const val PROFILE_ADDED_REMOVE = "EVENT_PROFILE_ADDED_REMOVE"
-  const val GROUP_SUGGESTION_ITEM = "EVENT_GROUP_SUGGESTION_ITEM"
-  const val GROUP_SUGGESTION_ADD = "EVENT_GROUP_SUGGESTION_ADD"
-  const val GROUP_SUGGESTION_REMOVE = "EVENT_GROUP_REMOVE"
-
   const val SWITCH_PUBLIC_PRIVATE_EVENT = "EVENT_SWITCH_PUBLIC_PRIVATE"
 
   const val BUTTON_PRIVATE_FRIENDS_EVENT = "EVENT_BUTTON_PRIVATE_FRIENDS"
 
   const val BUTTON_PRIVATE_GROUP_EVENT = "EVENT_BUTTON_PRIVATE_GROUP"
+
+  fun getTestTagProfileSuggestionItem(profileId: String): String =
+      "profileSuggestionItem ${profileId}"
+
+  fun getTestTagProfileAddItem(profileId: String): String = "profileAddedItem ${profileId}"
+
+  fun getTestTagProfileRemoveItem(profileId: String): String = "profileRemoveItem ${profileId}"
+
+  fun getTestTagAddedProfileItem(profileId: String): String = "addedProfileItem ${profileId}"
+
+  fun getTestTagAddedProfileRemoveItem(profileId: String): String =
+      "addedProfileRemoveItem ${profileId}"
+
+  fun getTestTagGroupSuggestionItem(groupId: String): String = "groupSuggestionItem ${groupId}"
+
+  fun getTestTagGroupSuggestionAdd(groupId: String): String = "groupSuggestionAdd ${groupId}"
+
+  fun getTestTagGroupSuggestionRemove(groupId: String): String = "groupSuggestionRemove ${groupId}"
 }
 
 /**
@@ -591,21 +596,24 @@ private fun DropDownParticipants(
     DropdownMenuItem(
         text = {
           Row(
-              modifier =
-                  Modifier.fillMaxWidth().testTag(AddEventScreenTestTags.PROFILE_SUGGESTION_ITEM),
+              modifier = Modifier.fillMaxWidth(),
               horizontalArrangement = Arrangement.SpaceBetween) {
 
                 // Name of the suggested profile
                 Text(
                     profile.name,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.titleLarge.copy(fontSize = 19.sp))
+                    style = MaterialTheme.typography.titleLarge.copy(fontSize = 19.sp),
+                    modifier =
+                        Modifier.testTag(
+                            AddEventScreenTestTags.getTestTagProfileSuggestionItem(profile.uid)))
                 // If already participant, possibility to unregister him
                 if (isAlreadyParticipant) {
                   IconButton(
                       onClick = { addEventViewModel.deleteParticipant(profile.uid) },
                       modifier =
-                          Modifier.testTag(AddEventScreenTestTags.PROFILE_SUGGESTION_REMOVE)) {
+                          Modifier.testTag(
+                              AddEventScreenTestTags.getTestTagProfileRemoveItem(profile.uid))) {
                         Icon(
                             Icons.Filled.Remove,
                             contentDescription = "Remove",
@@ -615,7 +623,9 @@ private fun DropDownParticipants(
                 } else {
                   IconButton(
                       onClick = { addEventViewModel.addParticipant(profile) },
-                      modifier = Modifier.testTag(AddEventScreenTestTags.PROFILE_SUGGESTION_ADD)) {
+                      modifier =
+                          Modifier.testTag(
+                              AddEventScreenTestTags.getTestTagProfileAddItem(profile.uid))) {
                         Icon(
                             Icons.Filled.Add,
                             contentDescription = "Add",
@@ -647,12 +657,14 @@ private fun DropDownGroup(
 
   // When the user already choose a group to invite
   if (isAlreadyParticipant) {
+    val groupId = group?.gid!!
     // Item of the dropdown : invited group
     DropdownMenuItem(
         text = {
           Row(
               modifier =
-                  Modifier.fillMaxWidth().testTag(AddEventScreenTestTags.GROUP_SUGGESTION_ITEM),
+                  Modifier.fillMaxWidth()
+                      .testTag(AddEventScreenTestTags.getTestTagGroupSuggestionItem(groupId)),
               horizontalArrangement = Arrangement.SpaceBetween) {
                 // Name of the group invited
                 Text(group?.name ?: "", color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -660,7 +672,9 @@ private fun DropDownGroup(
                 // Possibility to unregister this group
                 IconButton(
                     onClick = { addEventViewModel.removeGroup() },
-                    modifier = Modifier.testTag(AddEventScreenTestTags.GROUP_SUGGESTION_REMOVE)) {
+                    modifier =
+                        Modifier.testTag(
+                            AddEventScreenTestTags.getTestTagGroupSuggestionRemove(groupId))) {
                       Icon(
                           Icons.Filled.Remove,
                           contentDescription = "Remove",
@@ -678,14 +692,20 @@ private fun DropDownGroup(
           text = {
             Row(
                 modifier =
-                    Modifier.fillMaxWidth().testTag(AddEventScreenTestTags.GROUP_SUGGESTION_ITEM),
+                    Modifier.fillMaxWidth()
+                        .testTag(
+                            AddEventScreenTestTags.getTestTagGroupSuggestionItem(
+                                groupSuggestion.gid)),
                 horizontalArrangement = Arrangement.SpaceBetween) {
                   // Name of the suggested group
                   Text(groupSuggestion.name, color = MaterialTheme.colorScheme.onSurfaceVariant)
                   // Possibility to invite this group to event
                   IconButton(
                       onClick = { addEventViewModel.inviteGroup(groupSuggestion.name) },
-                      modifier = Modifier.testTag(AddEventScreenTestTags.GROUP_SUGGESTION_ADD)) {
+                      modifier =
+                          Modifier.testTag(
+                              AddEventScreenTestTags.getTestTagGroupSuggestionAdd(
+                                  groupSuggestion.gid))) {
                         Icon(
                             Icons.Filled.Add,
                             contentDescription = "Add",
@@ -820,12 +840,16 @@ private fun AddedParticipantsDisplay(
                             modifier =
                                 Modifier.weight(1f)
                                     .padding(end = 8.dp)
-                                    .testTag(AddEventScreenTestTags.PROFILE_ADDED_ITEM))
+                                    .testTag(
+                                        AddEventScreenTestTags.getTestTagAddedProfileItem(
+                                            profile.uid)))
                         IconButton(
                             onClick = { onRemoveParticipant(profile.uid) },
                             modifier =
                                 Modifier.size(24.dp)
-                                    .testTag(AddEventScreenTestTags.PROFILE_ADDED_REMOVE)) {
+                                    .testTag(
+                                        AddEventScreenTestTags.getTestTagAddedProfileRemoveItem(
+                                            profile.uid))) {
                               Icon(
                                   Icons.Filled.Remove,
                                   contentDescription = "Supprimer ${profile.name}",

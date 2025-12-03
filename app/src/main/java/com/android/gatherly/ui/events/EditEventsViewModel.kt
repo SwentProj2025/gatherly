@@ -154,7 +154,8 @@ class EditEventsViewModel(
               endTime = timeFormat.format(event.endTime.toDate()),
               participants = event.participants.map { profileRepository.getProfileByUid(it)!! },
               state = event.state,
-              currentUserId = event.creatorId)
+              currentUserId = event.creatorId,
+              isGroupEvent = event.group)
       eventId = event.id
       creatorId = event.creatorId
       creatorName = event.creatorName
@@ -516,7 +517,8 @@ class EditEventsViewModel(
               creatorId = creatorId,
               participants = uiState.participants.map { it.uid },
               status = EventStatus.UPCOMING,
-              state = uiState.state)
+              state = uiState.state,
+              group = uiState.isGroupEvent)
 
       // Save in event repository
       viewModelScope.launch {

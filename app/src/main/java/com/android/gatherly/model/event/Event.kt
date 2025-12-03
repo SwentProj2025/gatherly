@@ -1,5 +1,6 @@
 package com.android.gatherly.model.event
 
+import com.android.gatherly.model.group.Group
 import com.android.gatherly.model.map.DisplayedMapElement
 import com.android.gatherly.model.map.Location
 import com.google.firebase.Timestamp
@@ -19,7 +20,8 @@ data class Event(
     val creatorId: String,
     val participants: List<String>, // contains userIds
     val status: EventStatus,
-    val state: EventState
+    val state: EventState,
+    val group: Group? = null,
 ) : DisplayedMapElement
 
 /** Represents the state of an [Event] item. */
