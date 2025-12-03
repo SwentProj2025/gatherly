@@ -3,6 +3,10 @@ package com.android.gatherly.ui.todo
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertTextContains
+import androidx.compose.ui.test.filterToOne
+import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -117,8 +121,9 @@ class EditTodoScreenTest : GatherlyTest() {
     composeTestRule.openDatePicker(EditToDoScreenTestTags.INPUT_TODO_DATE)
     composeTestRule.selectDateFromPicker(currentDay, currentMonth, futureYear)
     composeTestRule
-        .onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_DATE)
-        .assertTextContains(futureDate, ignoreCase = true)
+        .onAllNodes(hasText(futureDate, substring = true, ignoreCase = true))
+        .filterToOne(hasAnyAncestor(hasTestTag(EditToDoScreenTestTags.INPUT_TODO_DATE)))
+        .assertExists()
   }
 
   @Test
