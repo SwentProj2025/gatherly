@@ -349,6 +349,7 @@ class ProfileRepositoryFirestore(
     val badgeIds = doc.get("badgeIds") as? List<String> ?: emptyList()
     val badgeCount = doc.get("badgeCount") as? Map<String, Long> ?: emptyMap()
     val focusPoints: Double = doc.getDouble("focusPoints") ?: 0.0
+    val weeklyPoints: Double = doc.getDouble("weeklyPoints") ?: 0.0
 
     return Profile(
         uid = uid,
@@ -366,7 +367,8 @@ class ProfileRepositoryFirestore(
         status = status,
         badgeIds = badgeIds,
         badgeCount = badgeCount,
-        focusPoints = focusPoints)
+        focusPoints = focusPoints,
+        weeklyPoints = weeklyPoints)
   }
 
   /**
@@ -392,7 +394,8 @@ class ProfileRepositoryFirestore(
         "status" to profile.status.value,
         "badgeIds" to profile.badgeIds,
         "badgeCount" to profile.badgeCount,
-        "focusPoints" to profile.focusPoints)
+        "focusPoints" to profile.focusPoints,
+        "weeklyPoints" to profile.weeklyPoints)
   }
 
   // -- FRIENDS GESTION PART --
@@ -498,9 +501,13 @@ class ProfileRepositoryFirestore(
     addBadge(uid, badge.id)
   }
 
-  override suspend fun updateFocusPoints(uid: String, points: Double) {
+  override suspend fun updateFocusPoints(uid: String, points: Double, addToLeaderboard: Boolean) {
     var profile = getProfileByUid(uid) ?: throw IllegalArgumentException("Profile doesn't exist")
-    profile = profile.copy(focusPoints = profile.focusPoints + points)
+    val leaderboard = if (addToLeaderboard) points else 0.0
+    profile =
+        profile.copy(
+            focusPoints = profile.focusPoints + points,
+            weeklyPoints = profile.weeklyPoints + leaderboard)
     updateProfile(profile)
   }
 

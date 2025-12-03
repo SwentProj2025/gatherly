@@ -212,7 +212,11 @@ class FriendsViewModelTest {
 
           override suspend fun deleteUserProfile(uid: String) {}
 
-          override suspend fun updateFocusPoints(uid: String, points: Double) {}
+          override suspend fun updateFocusPoints(
+              uid: String,
+              points: Double,
+              addToLeaderboard: Boolean
+          ) {}
         }
     val errorViewModel =
         FriendsViewModel(repository = throwingRepository, authProvider = { mockitoUtils.mockAuth })

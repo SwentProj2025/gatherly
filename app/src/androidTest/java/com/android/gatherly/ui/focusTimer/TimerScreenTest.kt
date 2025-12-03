@@ -12,6 +12,8 @@ import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.gatherly.model.focusSession.FocusSessionsLocalRepository
 import com.android.gatherly.model.focusSession.FocusSessionsRepository
+import com.android.gatherly.model.notification.NotificationsLocalRepository
+import com.android.gatherly.model.notification.NotificationsRepository
 import com.android.gatherly.model.points.PointsLocalRepository
 import com.android.gatherly.model.points.PointsRepository
 import com.android.gatherly.model.profile.Profile
@@ -56,6 +58,7 @@ class TimerScreenTest {
   private lateinit var mockitoUtils: MockitoUtils
   private lateinit var profileRepository: ProfileRepository
   private lateinit var pointsRepository: PointsRepository
+  private lateinit var notificationsRepository: NotificationsRepository
   private lateinit var userStatusManager: UserStatusManager
   private val fakeUid = "test-user"
 
@@ -66,6 +69,7 @@ class TimerScreenTest {
     // Add a todo in the repository to test linking
     profileRepository = ProfileLocalRepository()
     pointsRepository = PointsLocalRepository()
+    notificationsRepository = NotificationsLocalRepository()
     fill_repository()
 
     mockitoUtils = MockitoUtils()
@@ -77,6 +81,7 @@ class TimerScreenTest {
             todoRepository = toDosRepository,
             pointsRepository = pointsRepository,
             profileRepository = profileRepository,
+            notificationsRepository = notificationsRepository,
             userStatusManager = userStatusManager,
             focusSessionsRepository = focusSessionsRepository,
             authProvider = { mockitoUtils.mockAuth })
