@@ -167,6 +167,7 @@ class OverviewViewModelTest {
         overviewViewModel.refreshUIState()
 
         waitUntilLoaded(overviewViewModel)
+        delay(500) // wait for state propagation
 
         val updatedCount = overviewViewModel.uiState.value.todos.size
         assertEquals(2, updatedCount)
@@ -222,6 +223,7 @@ class OverviewViewModelTest {
         // WHEN searching for "lunch"
         overviewViewModel.searchTodos("lunch")
         advanceUntilIdle()
+        delay(500) // wait for state propagation
 
         val filtered = overviewViewModel.uiState.value.todos
         assertEquals(1, filtered.size)
@@ -359,6 +361,7 @@ class OverviewViewModelTest {
 
         overviewViewModel.refreshUIState()
         waitUntilLoaded(overviewViewModel)
+        delay(500) // wait for state propagation
 
         val sortedAfterRefresh = overviewViewModel.uiState.value.todos
         assertEquals(listOf(todo1.uid, todo2.uid, todo3.uid), sortedAfterRefresh.map { it.uid })
