@@ -86,6 +86,9 @@ object FocusTimerScreenTestTags {
   const val LINKED_TODO = "LINKED_TODO"
   const val TIMER_TIME = "TIMER_TIME"
   const val TIMER_CIRCLE = "TIMER_CIRCLE"
+  const val TIMER_SELECT = "TIMER_CIRCLE"
+  const val LEADERBOARD_SELECT = "TIMER_CIRCLE"
+  const val LEADERBOARD_LIST = "LEADERBOARD_LIST"
 }
 
 @Composable
@@ -147,7 +150,9 @@ fun TimerScreenContent(timerViewModel: TimerViewModel) {
                           if (selectedTimer.value) MaterialTheme.colorScheme.onPrimary
                           else MaterialTheme.colorScheme.background),
               shape = RoundedCornerShape(dimensionResource(R.dimen.rounded_corner_shape_large)),
-              modifier = Modifier.height(dimensionResource(R.dimen.events_filter_button_height))) {
+              modifier =
+                  Modifier.height(dimensionResource(R.dimen.events_filter_button_height))
+                      .testTag(FocusTimerScreenTestTags.TIMER_SELECT)) {
                 Text(text = stringResource(R.string.timer_select))
               }
 
@@ -163,7 +168,9 @@ fun TimerScreenContent(timerViewModel: TimerViewModel) {
                           if (!selectedTimer.value) MaterialTheme.colorScheme.onPrimary
                           else MaterialTheme.colorScheme.background),
               shape = RoundedCornerShape(dimensionResource(R.dimen.rounded_corner_shape_large)),
-              modifier = Modifier.height(dimensionResource(R.dimen.events_filter_button_height))) {
+              modifier =
+                  Modifier.height(dimensionResource(R.dimen.events_filter_button_height))
+                      .testTag(FocusTimerScreenTestTags.LEADERBOARD_LIST)) {
                 Text(text = stringResource(R.string.leaderboard_select))
               }
         }
@@ -188,7 +195,8 @@ fun TimerScreenContent(timerViewModel: TimerViewModel) {
 @Composable
 fun Leaderboard(uiState: TimerState, timerViewModel: TimerViewModel) {
   LazyColumn(
-      modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+      modifier = Modifier.fillMaxWidth().testTag(FocusTimerScreenTestTags.LEADERBOARD_LIST),
+      horizontalAlignment = Alignment.CenterHorizontally) {
         for (i in uiState.leaderboard.indices) {
           val friend = uiState.leaderboard[i]
 
