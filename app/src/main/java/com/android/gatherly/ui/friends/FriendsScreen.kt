@@ -70,8 +70,9 @@ object FriendsScreenTestTags {
   const val EMPTY_LIST_MSG = "messageEmptyList"
   const val LOADING_ANIMATION = "loadingAnimation"
   const val HEART_BREAK_ANIMATION = "heartBreakAnimation"
-
-  const val UNFOLLOWING_TEXT_ANIMATION = "unfollowingTextAnimation"
+  const val UNFRIENDING_TEXT_ANIMATION = "unfriendingTextAnimation"
+  const val FRIENDS_SECTION_TITLE = "friendsSectionTitle"
+  const val PENDING_SECTION_TITLE = "pendingSectionTitle"
 
   /**
    * Returns a unique test tag for the card or container representing a given [Profile.username]
@@ -83,6 +84,17 @@ object FriendsScreenTestTags {
   fun getTestTagForFriendItem(friend: String): String = "friendItem${friend}"
 
   /**
+   * Returns a unique test tag for the card or container representing a given [Profile.username]
+   * item.
+   *
+   * @param pendingFriend The [Profile.username] item of a chosen pending friend whose test tag will
+   *   be generated.
+   * @return A string uniquely identifying the pending friend username item in the UI.
+   */
+  fun getTestTagForPendingFriendItem(pendingFriend: String): String =
+      "pendingFriendItem${pendingFriend}"
+
+  /**
    * Returns a unique test tag for the card container representing a given [Profile.username] item.
    *
    * @param friend The [Profile.username] TExt item of a chosen friend whose test tag will be
@@ -90,6 +102,17 @@ object FriendsScreenTestTags {
    * @return A string uniquely identifying the Friend username Text item in the UI.
    */
   fun getTestTagForFriendUsername(friend: String): String = "friendUsername${friend}"
+
+  /**
+   * Returns a unique test tag for the text in the card container representing a given
+   * [Profile.username] item.
+   *
+   * @param pendingFriend The [Profile.username] Text item of a chosen pending friend whose test tag
+   *   will be generated.
+   * @return A string uniquely identifying the pending friend username Text item in the UI.
+   */
+  fun getTestTagForPendingFriendUsername(pendingFriend: String): String =
+      "pendingFriendUsername${pendingFriend}"
 
   /**
    * Returns a unique test tag for the card or container representing a given
@@ -102,13 +125,34 @@ object FriendsScreenTestTags {
   fun getTestTagForFriendProfilePicture(friend: String): String = "friendProfilePicture${friend}"
 
   /**
+   * Returns a unique test tag for the card or container representing a given
+   * [Profile.profilePicture] item.
+   *
+   * @param pendingFriend The [Profile.profilePicture] item of a chosen pending friend
+   *   [Profile.username] whose test tag will be generated.
+   * @return A string uniquely identifying the pending friend username item in the UI.
+   */
+  fun getTestTagForPendingFriendProfilePicture(pendingFriend: String): String =
+      "pendingFriendProfilePicture${pendingFriend}"
+
+  /**
    * Returns a unique test tag for the card or container representing a given [Profile.username]
    * item.
    *
-   * @param friend The [Button] item for unfollowing button whose test tag will be generated.
+   * @param friend The [Button] item for unfriending button whose test tag will be generated.
    * @return A string uniquely identifying the Friend username item in the UI.
    */
-  fun getTestTagForFriendUnfollowButton(friend: String): String = "friendUnfollowingButton${friend}"
+  fun getTestTagForFriendUnfriendButton(friend: String): String = "friendUnfriendingButton${friend}"
+
+  /**
+   * Returns a unique test tag for the [Button] used to cancel a friend request. item.
+   *
+   * @param friend The [Button] item for canceling a friend request whose test tag will be
+   *   generated.
+   * @return A string uniquely identifying the pending friend username item in the UI.
+   */
+  fun getTestTagForPendingFriendCancelRequestButton(friend: String): String =
+      "pendingFriendCancelRequestButton${friend}"
 }
 
 // Private values with the json animation files
@@ -128,28 +172,26 @@ fun FriendsScreen(
   // Retrieve the necessary values for the implementation from the ViewModel
   val uiState by friendsViewModel.uiState.collectAsState()
   val friendsList = uiState.friends
+  val pendingSentUsernames = uiState.pendingSentUsernames
   val currentUserIdFromVM = uiState.currentUserId
 
   // Holds the current text entered by the friend username in the search bar
   var searchQuery by remember { mutableStateOf("") }
 
   // Holds the boolean that determines when to trigger the animation
-  // after the current user unfollows a profile
-  var showUnfollowMessage by remember { mutableStateOf(false) }
+  // after the current user unfriends a profile
+  var showUnfriendMessage by remember { mutableStateOf(false) }
 
-  // Holds the text displayed during the unfollow animation
-  val messageText = stringResource(R.string.friends_unfollow_message)
+  // Holds the text displayed during the unfriend animation
+  val messageText = stringResource(R.string.friends_unfriend_message)
 
   // Value used to determine when the profile loading animation should appear
-  val isLoading = uiState.isLoading && !showUnfollowMessage
+  val isLoading = uiState.isLoading && !showUnfriendMessage
 
   // Update the list depending on whether the current user types something in the search bar
-  val filteredFriends =
-      if (searchQuery.isBlank()) {
-        friendsList
-      } else {
-        friendsList.filter { friend -> friend.contains(searchQuery, ignoreCase = true) }
-      }
+  val filteredFriends = filterUsers(searchQuery, friendsList)
+
+  val filteredPendingRequests = filterUsers(searchQuery, pendingSentUsernames)
 
   // Refresh friends profile when there is an update in the current user profile
   LaunchedEffect(currentUserIdFromVM) {
@@ -159,10 +201,10 @@ fun FriendsScreen(
   }
 
   // Triggers the temporary message box when needed
-  LaunchedEffect(showUnfollowMessage) {
-    if (showUnfollowMessage) {
+  LaunchedEffect(showUnfriendMessage) {
+    if (showUnfriendMessage) {
       kotlinx.coroutines.delay(ANIMATION_LOADING_DELAY)
-      showUnfollowMessage = false
+      showUnfriendMessage = false
     }
   }
 
@@ -185,36 +227,58 @@ fun FriendsScreen(
             // --- SHOWING FRIENDS PROFILES ITEMS ---
             FriendsListContent(
                 padding = padding,
-                filteredFriends = filteredFriends,
-                searchQuery = searchQuery,
-                onSearchQueryChange = { searchQuery = it },
-                onUnfollowFriend = { friend ->
-                  friendsViewModel.unfollowFriend(
-                      currentUserId = currentUserIdFromVM, friend = friend)
-                  showUnfollowMessage = true
-                },
-                onFindFriends = onFindFriends,
-                profiles = uiState.profiles)
+                data =
+                    FriendsListData(
+                        filteredFriends = filteredFriends,
+                        filteredPendingRequests = filteredPendingRequests,
+                        searchQuery = searchQuery,
+                        profiles = uiState.profiles),
+                actions =
+                    FriendsListActions(
+                        onSearchQueryChange = { searchQuery = it },
+                        onUnfriend = { username ->
+                          val friendUid =
+                              uiState.profiles[username]?.uid ?: return@FriendsListActions
+                          friendsViewModel.removeFriend(
+                              friendUserId = friendUid, currentUserId = currentUserIdFromVM)
+                          showUnfriendMessage = true
+                        },
+                        onCancel = { username ->
+                          val recipientUid =
+                              uiState.profiles[username]?.uid ?: return@FriendsListActions
+                          friendsViewModel.cancelPendingFriendRequest(
+                              recipientId = recipientUid, currentUserId = currentUserIdFromVM)
+                        },
+                        onFindFriends = onFindFriends))
           }
-          // --- UNFOLLOW A FRIEND ANIMATION ---
-          if (showUnfollowMessage) {
+          // --- UNFRIEND A FRIEND ANIMATION ---
+          if (showUnfriendMessage) {
             FloatingMessage(text = messageText, modifier = Modifier.fillMaxSize().padding(padding))
           }
         }
       })
 }
 
+/** Helper function to filter username list using search query. */
+private fun filterUsers(searchQuery: String, usernameList: List<String>): List<String> {
+  return if (searchQuery.isBlank()) {
+    usernameList
+  } else {
+    usernameList.filter { username -> username.contains(searchQuery, ignoreCase = true) }
+  }
+}
+
 /**
  * Helper function : Composable helper that displays a single user profile item in the friends list.
  *
  * @param friend Username of the friend to display.
- * @param unfollow Callback triggered when the "Unfollow" button is clicked.
+ * @param unfriend Callback triggered when the "Unfriend" button is clicked.
  * @param modifier Optional [Modifier] for layout customization.
  */
 @Composable
 private fun FriendItem(
     friend: String,
-    unfollow: () -> Unit,
+    unfriend: () -> Unit,
     modifier: Modifier = Modifier,
     profilePicUrl: String? = null
 ) {
@@ -243,7 +307,7 @@ private fun FriendItem(
           // -- Placeholder Profile Picture --
           Image(
               painter = profilePicturePainter(profilePicUrl),
-              contentDescription = "Profile picture of ${friend}",
+              contentDescription = "Profile picture of $friend",
               contentScale = ContentScale.Crop,
               modifier =
                   Modifier.size(dimensionResource(R.dimen.friends_item_profile_picture_size))
@@ -269,13 +333,88 @@ private fun FriendItem(
           Spacer(
               modifier = Modifier.width(dimensionResource(R.dimen.spacing_between_fields_regular)))
 
-          // -- Unfollow button --
+          // -- Unfriend button --
           Button(
-              onClick = unfollow,
+              onClick = unfriend,
               modifier =
                   Modifier.wrapContentWidth()
-                      .testTag(FriendsScreenTestTags.getTestTagForFriendUnfollowButton(friend))) {
-                Text(stringResource(R.string.friends_unfollow_button_title))
+                      .testTag(FriendsScreenTestTags.getTestTagForFriendUnfriendButton(friend))) {
+                Text(stringResource(R.string.friends_unfriend_button_title))
+              }
+        }
+      }
+}
+
+@Composable
+private fun PendingRequestItem(
+    friendUsername: String,
+    onCancel: () -> Unit,
+    modifier: Modifier = Modifier,
+    profilePicUrl: String?
+) {
+  Card(
+      border =
+          BorderStroke(
+              dimensionResource(R.dimen.friends_item_card_border_width),
+              MaterialTheme.colorScheme.primary),
+      shape = RoundedCornerShape(dimensionResource(R.dimen.friends_item_card_rounded_corner_shape)),
+      colors =
+          CardDefaults.cardColors(
+              containerColor = MaterialTheme.colorScheme.secondaryContainer,
+              contentColor = MaterialTheme.colorScheme.onSecondaryContainer),
+      modifier =
+          modifier
+              .fillMaxWidth()
+              .padding(vertical = dimensionResource(R.dimen.friends_item_card_padding_vertical))
+              .testTag(FriendsScreenTestTags.getTestTagForPendingFriendItem(friendUsername))) {
+        Row(
+            modifier =
+                Modifier.fillMaxWidth()
+                    .padding(dimensionResource(R.dimen.friends_item_card_padding)),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+
+          // -- Placeholder Profile Picture --
+          Image(
+              painter = profilePicturePainter(profilePicUrl),
+              contentDescription = "Profile picture of $friendUsername",
+              contentScale = ContentScale.Crop,
+              modifier =
+                  Modifier.size(dimensionResource(R.dimen.friends_item_profile_picture_size))
+                      .clip(CircleShape)
+                      .testTag(
+                          FriendsScreenTestTags.getTestTagForPendingFriendProfilePicture(
+                              friendUsername)))
+
+          // -- SPACER
+          Spacer(
+              modifier =
+                  Modifier.width(dimensionResource(R.dimen.spacing_between_fields_smaller_regular)))
+
+          Column(modifier = Modifier.weight(1f)) {
+            // -- Username Text --
+            Text(
+                text = friendUsername,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.Medium,
+                modifier =
+                    Modifier.testTag(
+                        FriendsScreenTestTags.getTestTagForPendingFriendUsername(friendUsername)))
+          }
+          // -- SPACER
+          Spacer(
+              modifier = Modifier.width(dimensionResource(R.dimen.spacing_between_fields_regular)))
+
+          // -- Cancel request button --
+          Button(
+              onClick = onCancel,
+              modifier =
+                  Modifier.wrapContentWidth()
+                      .testTag(
+                          FriendsScreenTestTags.getTestTagForPendingFriendCancelRequestButton(
+                              friendUsername))) {
+                Text(stringResource(R.string.friends_cancel_request_button_title))
               }
         }
       }
@@ -285,7 +424,7 @@ private fun FriendItem(
 
 /**
  * Helper function: Composable helper that displays a floating message animation when the user
- * follows a profile.
+ * unfriend a profile.
  *
  * The animation consists of a Lottie heart breaking animation followed by a message box.
  *
@@ -329,7 +468,7 @@ private fun FloatingMessage(text: String, modifier: Modifier = Modifier) {
                             defaultElevation = dimensionResource(R.dimen.padding_extra_small)),
                     modifier =
                         Modifier.padding(bottom = dimensionResource(R.dimen.padding_large))
-                            .testTag(FriendsScreenTestTags.UNFOLLOWING_TEXT_ANIMATION)) {
+                            .testTag(FriendsScreenTestTags.UNFRIENDING_TEXT_ANIMATION)) {
                       Text(
                           text = text,
                           color = MaterialTheme.colorScheme.onSecondary,
@@ -364,27 +503,37 @@ private fun LoadingAnimationContent(padding: PaddingValues) {
   }
 }
 
+/** Bundles all UI data needed to render the friends list section. */
+data class FriendsListData(
+    val filteredFriends: List<String>,
+    val filteredPendingRequests: List<String>,
+    val searchQuery: String,
+    val profiles: Map<String, Profile>
+)
+
+/** Bundles all callbacks used by FriendsListContent. */
+data class FriendsListActions(
+    val onSearchQueryChange: (String) -> Unit,
+    val onUnfriend: (String) -> Unit,
+    val onCancel: (String) -> Unit,
+    val onFindFriends: () -> Unit
+)
+
 /**
  * Helper function: Composable helper that display the different items when there exist user
  * profiles to display, the search bar. If there is currently no user available this display a
  * specific message instead.
  *
  * @param padding : PaddingValues from the LazyColumn
- * @param filteredFriends : List of the friends username
- * @param searchQuery : value written in the search bar
- * @param onSearchQueryChange : function will remember the value written in the search bar
- * @param onUnfollowFriend : function to unfollow a friend from current user pov
+ * @param data : all UI data needed to render the friends list section
+ * @param actions : all callbacks used by FriendsListContent
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun FriendsListContent(
     padding: PaddingValues,
-    filteredFriends: List<String>,
-    searchQuery: String,
-    onSearchQueryChange: (String) -> Unit,
-    onUnfollowFriend: (String) -> Unit,
-    onFindFriends: () -> Unit,
-    profiles: Map<String, Profile>
+    data: FriendsListData,
+    actions: FriendsListActions,
 ) {
   LazyColumn(
       contentPadding = PaddingValues(vertical = dimensionResource(R.dimen.padding_small)),
@@ -392,9 +541,64 @@ private fun FriendsListContent(
           Modifier.fillMaxWidth()
               .padding(horizontal = dimensionResource(R.dimen.padding_screen))
               .padding(padding)) {
+        item { SearchBarContent(data.searchQuery, actions.onSearchQueryChange) }
 
-        // --- NO PROFILE ITEM NEED TO BE DISPLAYED ---
-        if (filteredFriends.isEmpty()) {
+        if (data.filteredFriends.isNotEmpty()) {
+          item {
+            Text(
+                text = stringResource(R.string.friends_list_title),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                modifier =
+                    Modifier.padding(vertical = dimensionResource(R.dimen.padding_small))
+                        .testTag(FriendsScreenTestTags.FRIENDS_SECTION_TITLE))
+          }
+
+          items(items = data.filteredFriends, key = { it }) { friend ->
+            FriendItem(
+                friend = friend,
+                unfriend = { actions.onUnfriend(friend) },
+
+                // -- Animation slide up when an item disappear
+                modifier =
+                    Modifier.animateItem(
+                        fadeInSpec = null,
+                        fadeOutSpec = null,
+                        placementSpec =
+                            tween(durationMillis = ANIMATION_TIME, easing = LinearOutSlowInEasing)),
+                profilePicUrl = data.profiles[friend]?.profilePicture)
+          }
+        }
+
+        if (data.filteredPendingRequests.isNotEmpty()) {
+          item {
+            Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_medium)))
+            Text(
+                text = stringResource(R.string.friends_pending_list_title),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                modifier =
+                    Modifier.padding(vertical = dimensionResource(R.dimen.padding_small))
+                        .testTag(FriendsScreenTestTags.PENDING_SECTION_TITLE))
+          }
+
+          items(items = data.filteredPendingRequests, key = { it }) { pendingUsername ->
+            PendingRequestItem(
+                friendUsername = pendingUsername,
+                onCancel = { actions.onCancel(pendingUsername) },
+
+                // -- Animation slide up when an item disappear
+                modifier =
+                    Modifier.animateItem(
+                        fadeInSpec = null,
+                        fadeOutSpec = null,
+                        placementSpec =
+                            tween(durationMillis = ANIMATION_TIME, easing = LinearOutSlowInEasing)),
+                profilePicUrl = data.profiles[pendingUsername]?.profilePicture)
+          }
+        }
+
+        if (data.filteredFriends.isEmpty() && data.filteredPendingRequests.isEmpty()) {
           item {
             Text(
                 text = stringResource(R.string.friends_empty_list_msg),
@@ -402,28 +606,8 @@ private fun FriendsListContent(
                     Modifier.padding(dimensionResource(R.dimen.padding_screen))
                         .testTag(FriendsScreenTestTags.EMPTY_LIST_MSG))
           }
-        } else {
-
-          // --- SEARCH BAR ---
-          item { SearchBarContent(searchQuery, onSearchQueryChange) }
-
-          // --- FRIENDS' ITEM ---
-          items(items = filteredFriends, key = { it }) { friend ->
-            FriendItem(
-                friend = friend,
-                unfollow = { onUnfollowFriend(friend) },
-
-                // -- Animation slide up when an item disappear
-                modifier =
-                    Modifier.animateItemPlacement(
-                        animationSpec =
-                            tween(durationMillis = ANIMATION_TIME, easing = LinearOutSlowInEasing)),
-                profilePicUrl = profiles[friend]?.profilePicture)
-          }
         }
-
-        // -- BUTTON NAVIGATE TO FIND FRIENDS SCREEN
-        item { FindFriendButton(onFindFriends) }
+        item { FindFriendButton(actions.onFindFriends) }
       }
 }
 

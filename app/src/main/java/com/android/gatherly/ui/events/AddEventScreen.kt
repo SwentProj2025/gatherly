@@ -3,18 +3,30 @@ package com.android.gatherly.ui.events
 import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CornerSize
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ContactPage
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ButtonDefaults.buttonColors
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -23,10 +35,13 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,9 +53,13 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
+import com.android.gatherly.model.event.EventState
+import com.android.gatherly.model.group.Group
+import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
@@ -64,13 +83,35 @@ object AddEventScreenTestTags {
 
   const val INPUT_PARTICIPANT = "EVENT_PARTICIPANT_SEARCH"
 
+  const val INPUT_GROUP = "EVENT_GROUP_SEARCH"
   const val PARTICIPANT_MENU = "PARTICIPANT_MENU"
 
+  const val GROUP_MENU = "GROUP_MENU"
   const val LOCATION_MENU = "LOCATION_MENU"
+  const val BUTTON_SEE_ADDED_PARTICIPANT = " EVENT_BUTTON_ADDED_PARTICIPANT"
+  const val SWITCH_PUBLIC_PRIVATE_EVENT = "EVENT_SWITCH_PUBLIC_PRIVATE"
 
-  const val PROFILE_SUGGESTION_ITEM = "EVENT_PROFILE_SUGGESTION_ITEM"
-  const val PROFILE_SUGGESTION_ADD = "EVENT_PROFILE_SUGGESTION_ADD"
-  const val PROFILE_SUGGESTION_REMOVE = "EVENT_PROFILE_SUGGESTION_REMOVE"
+  const val BUTTON_PRIVATE_FRIENDS_EVENT = "EVENT_BUTTON_PRIVATE_FRIENDS"
+
+  const val BUTTON_PRIVATE_GROUP_EVENT = "EVENT_BUTTON_PRIVATE_GROUP"
+
+  fun getTestTagProfileSuggestionItem(profileId: String): String =
+      "profileSuggestionItem ${profileId}"
+
+  fun getTestTagProfileAddItem(profileId: String): String = "profileAddedItem ${profileId}"
+
+  fun getTestTagProfileRemoveItem(profileId: String): String = "profileRemoveItem ${profileId}"
+
+  fun getTestTagAddedProfileItem(profileId: String): String = "addedProfileItem ${profileId}"
+
+  fun getTestTagAddedProfileRemoveItem(profileId: String): String =
+      "addedProfileRemoveItem ${profileId}"
+
+  fun getTestTagGroupSuggestionItem(groupId: String): String = "groupSuggestionItem ${groupId}"
+
+  fun getTestTagGroupSuggestionAdd(groupId: String): String = "groupSuggestionAdd ${groupId}"
+
+  fun getTestTagGroupSuggestionRemove(groupId: String): String = "groupSuggestionRemove ${groupId}"
 }
 
 /**
@@ -106,10 +147,18 @@ fun AddEventScreen(
   var showLocationDropdown by remember { mutableStateOf(false) }
 
   // Profile state for the dropdown visibility
-  var showProfilesDropdown by remember { mutableStateOf(false) }
+  val showProfilesDropdown = remember { mutableStateOf(false) }
 
-  // Date state for the alert dialog visibilty
+  // Group state for the dropdown visibility
+  val showGroupDropDown = remember { mutableStateOf(false) }
+
+  // Date state for the alert dialog visibility
   var showDatePicker by remember { mutableStateOf(false) }
+
+  // Boolean values indicating the currently selected event type
+  val isPrivateFriendsEvent = (ui.state == EventState.PRIVATE_FRIENDS)
+  val isPrivateGroupEvent = (ui.state == EventState.PRIVATE_GROUP)
+  val isPublicEvent = (ui.state == EventState.PUBLIC)
 
   // Toasts
   LaunchedEffect(ui.displayToast, ui.toastString) {
@@ -135,10 +184,22 @@ fun AddEventScreen(
   }
 
   // Search participant when input changes
-  LaunchedEffect(ui.participant) {
+  LaunchedEffect(ui.participant, ui.state) {
     if (ui.participant.isNotBlank()) {
       delay(1000)
-      addEventViewModel.searchProfileByString(ui.participant)
+      if (isPrivateFriendsEvent) {
+        addEventViewModel.searchFriendsProfileByString(ui.participant)
+      } else if (isPublicEvent) {
+        addEventViewModel.searchProfileByString(ui.participant)
+      }
+    }
+  }
+
+  // Search groups when input changes
+  LaunchedEffect(ui.group) {
+    if (ui.group.isNotBlank() && (isPrivateGroupEvent)) {
+      delay(1000)
+      addEventViewModel.searchGroupsNameByString(ui.group)
     }
   }
 
@@ -156,6 +217,27 @@ fun AddEventScreen(
                     .padding(screenPadding)
                     .testTag(AddEventScreenTestTags.LAZY_LIST),
             verticalArrangement = Arrangement.spacedBy(fieldSpacing)) {
+
+              // Switch button to choose between private and public
+              item {
+                Row {
+                  EventStateSwitch(
+                      checked = isPublicEvent,
+                      onCheckedChange = { isPublic ->
+                        if (isPublic) {
+                          addEventViewModel.updateEventToPublic()
+                        } else {
+                          addEventViewModel.updateEventToPrivateFriends()
+                        }
+                      })
+
+                  Text(
+                      text =
+                          if (isPublicEvent) stringResource(R.string.events_public_state_label)
+                          else stringResource(R.string.events_private_state_label),
+                      style = MaterialTheme.typography.bodyMedium)
+                }
+              }
               item {
                 // Name
                 OutlinedTextField(
@@ -196,77 +278,34 @@ fun AddEventScreen(
                     minLines = 3)
               }
 
-              item {
-                // Participants search with dropdown and + / - actions
-                Box(modifier = Modifier.fillMaxWidth()) {
-                  OutlinedTextField(
-                      value = ui.participant,
-                      onValueChange = {
-                        addEventViewModel.updateParticipant(it)
-                        showProfilesDropdown = it.isNotBlank()
-                      },
-                      label = { Text(stringResource(R.string.events_participant_field_label)) },
-                      placeholder = {
-                        Text(stringResource(R.string.events_participant_placeholder))
-                      },
-                      colors = textFieldColors,
-                      modifier =
-                          Modifier.fillMaxWidth().testTag(AddEventScreenTestTags.INPUT_PARTICIPANT))
+              if (isPublicEvent) {
 
-                  DropdownMenu(
-                      expanded = showProfilesDropdown && ui.suggestedProfiles.isNotEmpty(),
-                      onDismissRequest = { showProfilesDropdown = false },
-                      properties = PopupProperties(focusable = false),
-                      containerColor = MaterialTheme.colorScheme.surfaceVariant,
-                      modifier =
-                          Modifier.testTag(AddEventScreenTestTags.PARTICIPANT_MENU)
-                              .fillMaxWidth()
-                              .height(200.dp)) {
-                        ui.suggestedProfiles.forEach { profile ->
-                          val isAlreadyParticipant = ui.participants.any { it.uid == profile.uid }
-                          DropdownMenuItem(
-                              text = {
-                                Row(
-                                    modifier =
-                                        Modifier.fillMaxWidth()
-                                            .testTag(
-                                                AddEventScreenTestTags.PROFILE_SUGGESTION_ITEM),
-                                    horizontalArrangement = Arrangement.SpaceBetween) {
-                                      Text(
-                                          profile.name,
-                                          color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                      if (isAlreadyParticipant) {
-                                        IconButton(
-                                            onClick = {
-                                              addEventViewModel.deleteParticipant(profile.uid)
-                                            },
-                                            modifier =
-                                                Modifier.testTag(
-                                                    AddEventScreenTestTags
-                                                        .PROFILE_SUGGESTION_REMOVE)) {
-                                              Icon(
-                                                  Icons.Filled.Remove,
-                                                  contentDescription = "Remove",
-                                                  tint = MaterialTheme.colorScheme.error)
-                                            }
-                                      } else {
-                                        IconButton(
-                                            onClick = { addEventViewModel.addParticipant(profile) },
-                                            modifier =
-                                                Modifier.testTag(
-                                                    AddEventScreenTestTags
-                                                        .PROFILE_SUGGESTION_ADD)) {
-                                              Icon(
-                                                  Icons.Filled.Add,
-                                                  contentDescription = "Add",
-                                                  tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                                            }
-                                      }
-                                    }
-                              },
-                              onClick = {})
-                        }
-                      }
+                item {
+                  // Participants search with dropdown and + / - actions
+                  ParticipantsFieldItem(
+                      ui, addEventViewModel, textFieldColors, showProfilesDropdown)
+                }
+              } else {
+
+                item {
+                  // Buttons to choose the type of the event
+                  PrivateEventButtons(
+                      isFriendsOnly = isPrivateFriendsEvent,
+                      onFriendsOnlySelected = { addEventViewModel.updateEventToPrivateFriends() },
+                      onGroupSelected = { addEventViewModel.updateEventToPrivateGroup() })
+                }
+
+                if (isPrivateFriendsEvent) {
+                  item {
+                    // Participants friends search with dropdown and + / - actions
+                    ParticipantsFieldItem(
+                        ui, addEventViewModel, textFieldColors, showProfilesDropdown)
+                  }
+                } else {
+                  item {
+                    // Group search with dropdown and + / - actions
+                    GroupFieldItem(ui, addEventViewModel, textFieldColors, showGroupDropDown)
+                  }
                 }
               }
 
@@ -404,4 +443,455 @@ fun AddEventScreen(
 @Composable
 fun AddEventScreenPreview() {
   GatherlyTheme(darkTheme = true) { AddEventScreen() }
+}
+
+/**
+ * Helper composable function: Item where the user will write the participants he wants to invite to
+ * his event.
+ *
+ * @param ui the UiState of the AddEvent
+ * @param addEventViewModel the viewModel needed
+ * @param textFieldColors the colors theme to use for our implementation
+ * @param showProfilesDropdown the boolean who will be updated whether the user clicked/wrote
+ */
+@Composable
+private fun ParticipantsFieldItem(
+    ui: AddEventUiState,
+    addEventViewModel: AddEventViewModel,
+    textFieldColors: TextFieldColors,
+    showProfilesDropdown: MutableState<Boolean>
+) {
+
+  var showAddedParticipantsDropDown by remember { mutableStateOf(false) }
+
+  Column(modifier = Modifier.fillMaxWidth()) {
+    Box(modifier = Modifier.fillMaxWidth()) {
+
+      // Text field where to writ the participant name
+      OutlinedTextField(
+          value = ui.participant,
+          onValueChange = {
+            addEventViewModel.updateParticipant(it)
+            showProfilesDropdown.value = it.isNotBlank()
+          },
+          label = { Text(stringResource(R.string.events_participant_field_label)) },
+          placeholder = { Text(stringResource(R.string.events_participant_placeholder)) },
+          colors = textFieldColors,
+          modifier = Modifier.fillMaxWidth().testTag(AddEventScreenTestTags.INPUT_PARTICIPANT),
+
+          // TrailingIcon to visualise the added participants
+          trailingIcon = {
+            AddedParticipantsIconAdd(
+                participants = ui.participants,
+                showAddedParticipantsDropDown =
+                    remember { mutableStateOf(showAddedParticipantsDropDown) },
+                showProfilesDropdown = showProfilesDropdown,
+                onIconClicked = { isExpanded -> showAddedParticipantsDropDown = isExpanded })
+          })
+
+      // -- DROPDOWN Participants Suggestions --
+      ParticipantsSuggestionsDropdown(ui, addEventViewModel, showProfilesDropdown)
+    }
+
+    if (showAddedParticipantsDropDown && ui.participants.isNotEmpty()) {
+      AddedParticipantsDisplay(
+          participants = ui.participants,
+          onRemoveParticipant = { uid ->
+            if (uid != ui.currentUserId) {
+              addEventViewModel.deleteParticipant(uid)
+              if (ui.participants.size == 1) showAddedParticipantsDropDown = false
+            }
+          },
+          currentUserId = ui.currentUserId)
+    }
+  }
+}
+
+/**
+ * Helper composable function: Handles the dropdown menu
+ *
+ * @param ui AddEventUiState
+ * @param addEventViewModel the viewModel used for our implementation
+ * @param showProfilesDropdown the boolean to handles the visibility of this dropdown
+ */
+@Composable
+private fun ParticipantsSuggestionsDropdown(
+    ui: AddEventUiState,
+    addEventViewModel: AddEventViewModel,
+    showProfilesDropdown: MutableState<Boolean>
+) {
+  val listToShow =
+      if (ui.state == EventState.PRIVATE_FRIENDS) ui.suggestedFriendsProfile
+      else ui.suggestedProfiles
+
+  if (listToShow.isEmpty()) return
+
+  DropdownMenu(
+      expanded = showProfilesDropdown.value,
+      onDismissRequest = { showProfilesDropdown.value = false },
+      properties = PopupProperties(focusable = false),
+      containerColor = MaterialTheme.colorScheme.surfaceVariant,
+      modifier =
+          Modifier.testTag(AddEventScreenTestTags.PARTICIPANT_MENU).fillMaxWidth().height(200.dp)) {
+        ParticipantsDropdown(ui, listToShow, addEventViewModel)
+      }
+}
+
+/**
+ * Helper composable function : Handle the Icon visibility that will show the participants profiles
+ *
+ * @param participants list of profile already register as participant for the event
+ * @param showAddedParticipantsDropDown boolean to handle the visibility of the dropdown
+ * @param showProfilesDropdown boolean to handle the visibility of the suggestion dropdown
+ */
+@Composable
+private fun AddedParticipantsIconAdd(
+    participants: List<Profile>,
+    showAddedParticipantsDropDown: MutableState<Boolean>,
+    showProfilesDropdown: MutableState<Boolean>,
+    onIconClicked: (Boolean) -> Unit = {}
+) {
+  if (participants.isEmpty()) return
+
+  IconButton(
+      onClick = {
+        val newState = !showAddedParticipantsDropDown.value
+        showAddedParticipantsDropDown.value = newState
+        onIconClicked(newState)
+        showProfilesDropdown.value = false
+      },
+      modifier = Modifier.testTag(AddEventScreenTestTags.BUTTON_SEE_ADDED_PARTICIPANT)) {
+        Icon(
+            imageVector = Icons.Filled.ContactPage,
+            contentDescription = "See the participant profiles",
+        )
+      }
+}
+
+/**
+ * Helper composable function: Item where the user will write the group he wants to invite to his
+ * event.
+ *
+ * @param ui the UiState of the AddEvent
+ * @param addEventViewModel the viewModel needed
+ * @param textFieldColors the colors theme to use for our implementation
+ * @param showGroupDropDown the boolean who will be updated whether the user clicked/wrote
+ */
+@Composable
+private fun GroupFieldItem(
+    ui: AddEventUiState,
+    addEventViewModel: AddEventViewModel,
+    textFieldColors: TextFieldColors,
+    showGroupDropDown: MutableState<Boolean>
+) {
+  Box(modifier = Modifier.fillMaxWidth()) {
+    // Text field where the user write the group name he wants to invite
+    OutlinedTextField(
+        value = ui.group,
+        onValueChange = {
+          addEventViewModel.updateGroup(it)
+          showGroupDropDown.value = it.isNotBlank()
+        },
+        label = { Text(stringResource(R.string.events_group_field_label)) },
+        placeholder = { Text(stringResource(R.string.events_group_placeholder)) },
+        colors = textFieldColors,
+        modifier = Modifier.fillMaxWidth().testTag(AddEventScreenTestTags.INPUT_GROUP))
+
+    // Group suggestions dropdown
+    DropdownMenu(
+        expanded = showGroupDropDown.value && ui.suggestedGroups.isNotEmpty(),
+        onDismissRequest = { showGroupDropDown.value = false },
+        properties = PopupProperties(focusable = false),
+        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+        modifier =
+            Modifier.testTag(AddEventScreenTestTags.GROUP_MENU).fillMaxWidth().height(200.dp)) {
+          GroupDropDown(ui, ui.suggestedGroups, addEventViewModel)
+        }
+  }
+}
+
+/**
+ * Helper composable function : the drop down used for public event or private friends only event
+ *
+ * @param ui UiState used for AddEvent
+ * @param listSuggestedProfiles list of profiles suggested depending on what the user wrote in the
+ *   text field
+ * @param addEventViewModel viewModel used for AddEvent implementation
+ */
+@Composable
+private fun ParticipantsDropdown(
+    ui: AddEventUiState,
+    listSuggestedProfiles: List<Profile>,
+    addEventViewModel: AddEventViewModel
+) {
+  listSuggestedProfiles.forEach { profile ->
+    val isAlreadyParticipant = ui.participants.any { it.uid == profile.uid }
+
+    // Item of the dropdown : suggested profile
+    DropdownMenuItem(
+        text = {
+          Row(
+              modifier = Modifier.fillMaxWidth(),
+              horizontalArrangement = Arrangement.SpaceBetween) {
+
+                // Name of the suggested profile
+                Text(
+                    profile.name,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.titleLarge.copy(fontSize = 19.sp),
+                    modifier =
+                        Modifier.testTag(
+                            AddEventScreenTestTags.getTestTagProfileSuggestionItem(profile.uid)))
+                // If already participant, possibility to unregister him
+                if (isAlreadyParticipant) {
+                  IconButton(
+                      onClick = { addEventViewModel.deleteParticipant(profile.uid) },
+                  ) {
+                    Icon(
+                        Icons.Filled.Remove,
+                        contentDescription = "Remove",
+                        tint = MaterialTheme.colorScheme.error)
+                  }
+                  // Possibility to register the suggested profile to the event
+                } else {
+                  IconButton(
+                      onClick = { addEventViewModel.addParticipant(profile) },
+                      modifier =
+                          Modifier.testTag(
+                              AddEventScreenTestTags.getTestTagProfileAddItem(profile.uid))) {
+                        Icon(
+                            Icons.Filled.Add,
+                            contentDescription = "Add",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                      }
+                }
+              }
+        },
+        onClick = {},
+        modifier =
+            Modifier.testTag(AddEventScreenTestTags.getTestTagProfileRemoveItem(profile.uid)))
+  }
+}
+
+/**
+ * Helper composable function : the drop down used for private group event
+ *
+ * @param ui UiState used for AddEvent
+ * @param listSuggestedGroups list of groups name suggested depending on what the user wrote in the
+ *   text field
+ * @param addEventViewModel viewModel used for AddEvent implementation
+ */
+@Composable
+private fun GroupDropDown(
+    ui: AddEventUiState,
+    listSuggestedGroups: List<Group>,
+    addEventViewModel: AddEventViewModel
+) {
+  val group = ui.isGroupEvent
+
+  // When the user already choose a group to invite
+  if (group != null) {
+    val groupId: String = group.gid
+    // Item of the dropdown : invited group
+    DropdownMenuItem(
+        text = {
+          Row(
+              modifier =
+                  Modifier.fillMaxWidth()
+                      .testTag(AddEventScreenTestTags.getTestTagGroupSuggestionItem(groupId)),
+              horizontalArrangement = Arrangement.SpaceBetween) {
+                // Name of the group invited
+                Text(group.name, color = MaterialTheme.colorScheme.onSurfaceVariant)
+
+                // Possibility to unregister this group
+                IconButton(
+                    onClick = { addEventViewModel.removeGroup() },
+                    modifier =
+                        Modifier.testTag(
+                            AddEventScreenTestTags.getTestTagGroupSuggestionRemove(groupId))) {
+                      Icon(
+                          Icons.Filled.Remove,
+                          contentDescription = "Remove",
+                          tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+              }
+        },
+        onClick = {})
+
+    // When the user did not yet choose a group to invite
+  } else {
+    listSuggestedGroups.forEach { groupSuggestion ->
+      // Item of the dropdown : suggested group
+      DropdownMenuItem(
+          text = {
+            Row(
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .testTag(
+                            AddEventScreenTestTags.getTestTagGroupSuggestionItem(
+                                groupSuggestion.gid)),
+                horizontalArrangement = Arrangement.SpaceBetween) {
+                  // Name of the suggested group
+                  Text(groupSuggestion.name, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                  // Possibility to invite this group to event
+                  IconButton(
+                      onClick = { addEventViewModel.inviteGroup(groupSuggestion.name) },
+                      modifier =
+                          Modifier.testTag(
+                              AddEventScreenTestTags.getTestTagGroupSuggestionAdd(
+                                  groupSuggestion.gid))) {
+                        Icon(
+                            Icons.Filled.Add,
+                            contentDescription = "Add",
+                            tint = MaterialTheme.colorScheme.error)
+                      }
+                }
+          },
+          onClick = {})
+    }
+  }
+}
+
+/**
+ * Helper composable function: Create a switch to choose between private or public event
+ *
+ * @param checked boolean to know if the user wants to create a public event
+ * @param onCheckedChange function to apply depending on the chosen event
+ */
+@Composable
+private fun EventStateSwitch(checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+  Switch(
+      checked = checked,
+      onCheckedChange = onCheckedChange,
+      thumbContent =
+          if (checked) {
+            {
+              Icon(
+                  imageVector = Icons.Filled.LockOpen,
+                  contentDescription = "Public Event",
+                  modifier = Modifier.size(19.dp))
+            }
+          } else {
+            {
+              Icon(
+                  imageVector = Icons.Filled.Lock,
+                  contentDescription = "Private Event",
+                  modifier = Modifier.size(19.dp))
+            }
+          },
+      modifier =
+          Modifier.size(60.dp, 40.dp).testTag(AddEventScreenTestTags.SWITCH_PUBLIC_PRIVATE_EVENT),
+  )
+}
+
+/**
+ * Helper composable function: create 2 buttons to let the user choose between private friends or
+ * private group event.
+ *
+ * @param isFriendsOnly boolean to know if the user choose or not private friends only event
+ * @param onFriendsOnlySelected function to apply when the user choose private friends only event
+ * @param onGroupSelected function to apply when the user choose private group event
+ */
+@Composable
+private fun PrivateEventButtons(
+    isFriendsOnly: Boolean,
+    onFriendsOnlySelected: () -> Unit,
+    onGroupSelected: () -> Unit
+) {
+  Row(
+      modifier =
+          Modifier.fillMaxWidth()
+              .padding(vertical = dimensionResource(R.dimen.events_filter_bar_vertical_size)),
+      horizontalArrangement = Arrangement.SpaceEvenly) {
+        // Button private friends only event
+        Button(
+            onClick = onFriendsOnlySelected,
+            colors =
+                buttonColors(
+                    containerColor =
+                        if (isFriendsOnly) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor =
+                        if (isFriendsOnly) MaterialTheme.colorScheme.onPrimary
+                        else MaterialTheme.colorScheme.background),
+            shape = RoundedCornerShape(dimensionResource(R.dimen.rounded_corner_shape_large)),
+            modifier =
+                Modifier.testTag(AddEventScreenTestTags.BUTTON_PRIVATE_FRIENDS_EVENT)
+                    .height(dimensionResource(R.dimen.events_filter_button_height))) {
+              Text(text = stringResource(R.string.events_private_friends_label))
+            }
+
+        // Button private group event
+        Button(
+            onClick = onGroupSelected,
+            colors =
+                buttonColors(
+                    containerColor =
+                        if (!isFriendsOnly) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.surfaceVariant,
+                    contentColor =
+                        if (!isFriendsOnly) MaterialTheme.colorScheme.onPrimary
+                        else MaterialTheme.colorScheme.background),
+            shape = RoundedCornerShape(dimensionResource(R.dimen.rounded_corner_shape_large)),
+            modifier =
+                Modifier.testTag(AddEventScreenTestTags.BUTTON_PRIVATE_GROUP_EVENT)
+                    .height(dimensionResource(R.dimen.events_filter_button_height))) {
+              Text(text = stringResource(R.string.events_private_group_label))
+            }
+      }
+}
+
+/**
+ * Helper composable function : Dropdown specific to show the added participants
+ *
+ * @param participants list of the profile added as participate to the event
+ * @param onRemoveParticipant function to apply when the user choose to unregister a profile
+ * @param currentUserId the id of the currentUserId
+ */
+@Composable
+private fun AddedParticipantsDisplay(
+    participants: List<Profile>,
+    onRemoveParticipant: (String) -> Unit,
+    currentUserId: String
+) {
+  Card(
+      modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+      shape = RoundedCornerShape(CornerSize(8.dp)),
+      colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
+        LazyColumn(
+            modifier = Modifier.heightIn(max = 200.dp).padding(4.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)) {
+              items(participants) { profile ->
+                if (profile.uid != currentUserId) {
+                  Row(
+                      modifier =
+                          Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
+                      horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text(
+                            text = profile.name,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodyLarge,
+                            modifier =
+                                Modifier.weight(1f)
+                                    .padding(end = 8.dp)
+                                    .testTag(
+                                        AddEventScreenTestTags.getTestTagAddedProfileItem(
+                                            profile.uid)))
+                        IconButton(
+                            onClick = { onRemoveParticipant(profile.uid) },
+                            modifier =
+                                Modifier.size(24.dp)
+                                    .testTag(
+                                        AddEventScreenTestTags.getTestTagAddedProfileRemoveItem(
+                                            profile.uid))) {
+                              Icon(
+                                  Icons.Filled.Remove,
+                                  contentDescription = "Delete ${profile.name}",
+                                  tint = MaterialTheme.colorScheme.error)
+                            }
+                      }
+                }
+              }
+            }
+      }
 }

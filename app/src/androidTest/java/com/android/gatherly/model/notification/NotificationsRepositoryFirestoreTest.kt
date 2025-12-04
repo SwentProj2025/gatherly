@@ -306,7 +306,7 @@ class NotificationsRepositoryFirestoreTest : FirestoreNotificationsGatherlyTest(
         for (i in 0 until userNotifications.size - 1) {
           val current = userNotifications[i]
           val next = userNotifications[i + 1]
-          assertTrue(current.emissionTime.seconds >= next.emissionTime.seconds)
+          assertTrue(current.emissionTime.seconds <= next.emissionTime.seconds)
         }
       }
 }

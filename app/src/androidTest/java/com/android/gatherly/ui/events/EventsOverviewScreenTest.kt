@@ -98,8 +98,7 @@ class EventsOverviewScreenTest {
         endTime = Timestamp(finish),
         creatorId = currentUserId,
         participants = listOf("Gabriel", "Sofija"),
-        status = EventStatus.UPCOMING,
-    )
+        status = EventStatus.UPCOMING)
   }
 
   // Upcoming EVENT

@@ -67,4 +67,9 @@ class GroupsLocalRepository : GroupsRepository {
   override suspend fun removeAdmin(groupId: String, userId: String) {
     TODO("GroupsLocalRepository.removeAdmin Not yet implemented")
   }
+
+  override suspend fun getGroupByName(groupName: String): Group {
+    return groups.find { it.name == groupName }
+        ?: throw NoSuchElementException("GroupsLocalRepository.getGroupByName: Group not found")
+  }
 }
