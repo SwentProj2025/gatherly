@@ -18,8 +18,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.android.gatherly.R
 
 @Composable
 fun GatherlyAlertDialog(
@@ -57,19 +59,24 @@ fun GatherlyAlertDialog(
 
             // Button to view attendees
             if (numberAttendees != null) {
-              Spacer(modifier = Modifier.height(12.dp))
+              Spacer(
+                  modifier =
+                      Modifier.height(dimensionResource(R.dimen.spacing_between_fields_height)))
 
               Button(
                   colors =
                       buttonColors(
                           containerColor = MaterialTheme.colorScheme.secondaryContainer,
                           contentColor = MaterialTheme.colorScheme.onSecondaryContainer),
-                  contentPadding = PaddingValues(horizontal = 4.dp, vertical = 2.dp),
+                  contentPadding =
+                      PaddingValues(
+                          horizontal = dimensionResource(R.dimen.padding_extra_small),
+                          vertical = dimensionResource(R.dimen.padding_extra_small_vertical)),
                   onClick = { onOpenAttendeesList?.invoke() },
                   modifier =
                       Modifier.testTag(AlertDialogTestTags.ATTENDEES_BTN)
-                          .height(32.dp)
-                          .widthIn(min = 32.dp)) {
+                          .height(dimensionResource(R.dimen.padding_large))
+                          .widthIn(min = dimensionResource(R.dimen.padding_large))) {
                     BoxNumberAttendees(numberAttendees)
                   }
             }
@@ -90,7 +97,9 @@ fun GatherlyAlertDialog(
               modifier = Modifier.testTag(AlertDialogTestTags.BODY))
 
           neutralText?.let { text ->
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(
+                modifier =
+                    Modifier.height(dimensionResource(id = R.dimen.spacing_between_fields_regular)))
             Button(
                 colors =
                     buttonColors(

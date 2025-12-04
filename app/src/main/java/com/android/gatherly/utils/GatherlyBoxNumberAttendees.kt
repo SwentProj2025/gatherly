@@ -27,7 +27,7 @@ fun BoxNumberAttendees(numberAttendees: Int, modifier: Modifier = Modifier) {
     Spacer(modifier = Modifier.width(6.dp))
 
     Text(
-        text = numberAttendees.toString(),
+        text = "$numberAttendees",
         style = MaterialTheme.typography.bodyMedium,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         fontWeight = FontWeight.Medium)

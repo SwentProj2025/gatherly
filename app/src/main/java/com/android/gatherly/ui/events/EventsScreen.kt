@@ -776,12 +776,11 @@ fun AlertDialogListAttendees(
 ) {
   if (showAttendeesDialog.value) {
 
-    var listNameAttendees by remember { mutableStateOf<List<String>>(emptyList()) }
-
     LaunchedEffect(event.participants) {
-      listNameAttendees =
-          eventsViewModel.getNamesParticipants(event.participants, uiState.currentUserId)
+      eventsViewModel.loadParticipantsNames(event.participants, uiState.currentUserId)
     }
+
+    val listNameAttendees by eventsViewModel.participantsNames.collectAsState()
 
     AlertDialog(
         onDismissRequest = { showAttendeesDialog.value = false },
@@ -791,7 +790,7 @@ fun AlertDialogListAttendees(
           Button(
               onClick = { showAttendeesDialog.value = false },
               modifier = Modifier.testTag(EventsScreenTestTags.ATTENDEES_ALERT_DIALOG_CANCEL)) {
-                Text("Closes")
+                Text(stringResource(R.string.events_alert_dialog_button_label))
               }
         },
         containerColor = MaterialTheme.colorScheme.surfaceVariant,

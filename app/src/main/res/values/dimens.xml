@@ -1,5 +1,6 @@
 <resources>
     <!-- Padding -->
+    <dimen name="padding_extra_small_vertical">2dp</dimen>
     <dimen name="padding_extra_small">4dp</dimen>
     <dimen name="padding_small">8dp</dimen>
     <dimen name="padding_screen">16dp</dimen>
@@ -21,6 +22,7 @@
     <dimen name="spacing_between_fields_regular">16dp</dimen>
     <dimen name="spacing_between_fields_medium">24dp</dimen>
     <dimen name="spacing_between_fields_large">32dp</dimen>
+    <dimen name="spacing_between_fields_height">12dp</dimen>
 
     <!-- Component Sizes -->
     <dimen name="input_height">100dp</dimen>

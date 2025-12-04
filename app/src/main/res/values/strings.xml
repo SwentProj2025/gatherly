@@ -116,7 +116,7 @@
     <string name="events_private_state_label">Private event</string>
     <string name="events_private_friends_label">Friends only</string>
     <string name="events_private_group_label">Group to invite</string>
-
+    <string name="events_alert_dialog_button_label">Close</string>
 
     <!-- General -->
     <string name="delete">Yes, Delete</string>
