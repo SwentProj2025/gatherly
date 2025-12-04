@@ -158,7 +158,10 @@ fun TimerScreenContent(timerViewModel: TimerViewModel) {
 
           // Leaderboard selected
           Button(
-              onClick = { selectedTimer.value = false },
+              onClick = {
+                selectedTimer.value = false
+                timerViewModel.loadUI()
+              },
               colors =
                   buttonColors(
                       containerColor =
@@ -296,7 +299,7 @@ fun TimerStarted(uiState: TimerState, timerViewModel: TimerViewModel, corner: Dp
                 buildAnnotatedString {
                   append(stringResource(R.string.timer_linked_todo))
                   withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                    append(uiState.linkedTodo?.name ?: "")
+                    append(uiState.linkedTodo?.name)
                   }
                 },
             color = MaterialTheme.colorScheme.onBackground,
