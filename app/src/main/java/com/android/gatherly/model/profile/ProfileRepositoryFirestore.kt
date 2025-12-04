@@ -331,6 +331,8 @@ class ProfileRepositoryFirestore(
    *
    * @param doc The snapshot to convert.
    * @return The [Profile], or null if required fields are missing.
+   *
+   * TODO: refactor unchecked cast and use indexed accessor.
    */
   private fun snapshotToProfile(doc: DocumentSnapshot): Profile? {
     val uid = doc.getString("uid") ?: return null
