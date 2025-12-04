@@ -980,7 +980,6 @@ class EventsOverviewScreenTest {
         Profile(uid = currentUserId, name = "Test User", profilePicture = ""))
 
     setContent(currentUserId)
-
     composeTestRule.waitForIdle()
 
     events.forEach { event ->
@@ -991,12 +990,37 @@ class EventsOverviewScreenTest {
 
     composeTestRule.onNodeWithTag(EventsScreenTestTags.SEARCH_BAR).performTextInput("Alpha")
 
-    composeTestRule.waitUntil(timeoutMillis = 10000L) {
-      composeTestRule
-          .onAllNodesWithTag(EventsScreenTestTags.getTestTagForEventItem(eventB))
-          .fetchSemanticsNodes()
-          .isEmpty()
+    composeTestRule.waitUntil(timeoutMillis = 10_000L) {
+      val aVisible =
+          composeTestRule
+              .onAllNodesWithTag(EventsScreenTestTags.getTestTagForEventItem(eventA))
+              .fetchSemanticsNodes()
+              .isNotEmpty()
+      val alphaVisible =
+          composeTestRule
+              .onAllNodesWithTag(EventsScreenTestTags.getTestTagForEventItem(eventAlphaBeta))
+              .fetchSemanticsNodes()
+              .isNotEmpty()
+      val bAbsent =
+          composeTestRule
+              .onAllNodesWithTag(EventsScreenTestTags.getTestTagForEventItem(eventB))
+              .fetchSemanticsNodes()
+              .isEmpty()
+      val cAbsent =
+          composeTestRule
+              .onAllNodesWithTag(EventsScreenTestTags.getTestTagForEventItem(eventC))
+              .fetchSemanticsNodes()
+              .isEmpty()
+      val zebraAbsent =
+          composeTestRule
+              .onAllNodesWithTag(EventsScreenTestTags.getTestTagForEventItem(eventZebra))
+              .fetchSemanticsNodes()
+              .isEmpty()
+
+      aVisible && alphaVisible && bAbsent && cAbsent && zebraAbsent
     }
+
+    // Asserts finales
     composeTestRule
         .onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(eventA))
         .assertIsDisplayed()

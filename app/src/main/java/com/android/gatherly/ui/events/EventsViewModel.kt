@@ -217,14 +217,9 @@ class EventsViewModel(
   }
 
   /** Invoked when users type in the search bar to filter [Event]s according to the typed query. */
-  fun searchEvents(query: String) {
+  fun searchEvents(query: String, currentUserId: String) {
     _searchQuery.value = query
-    viewModelScope.launch {
-      val currentUserId = _uiState.value.currentUserId
-      if (currentUserId.isNotBlank()) {
-        refreshEvents(currentUserId)
-      }
-    }
+    viewModelScope.launch { refreshEvents(currentUserId) }
   }
 
   /**

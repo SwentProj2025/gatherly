@@ -272,7 +272,7 @@ fun EventsScreen(
                       value = searchQuery,
                       onValueChange = { newText ->
                         searchQuery = newText
-                        eventsViewModel.searchEvents(newText)
+                        eventsViewModel.searchEvents(newText, currentUserIdFromVM)
                       },
                       leadingIcon = {
                         Icon(
