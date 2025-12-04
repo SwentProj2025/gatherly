@@ -311,31 +311,6 @@ fun ProfileScreen(
                           }
                     }
 
-                Spacer(modifier = Modifier.height(fieldSpacingLarge))
-
-                // Focus Sessions
-                Text(
-                    text = stringResource(R.string.profile_focus_sessions_section_title),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                    modifier =
-                        Modifier.fillMaxWidth()
-                            .testTag(ProfileScreenTestTags.PROFILE_FOCUS_SESSIONS))
-                Spacer(modifier = Modifier.height(fieldSpacingSmall))
-                Text(
-                    text = stringResource(R.string.profile_empty_focus_sessions_message),
-                    style = MaterialTheme.typography.bodyMedium,
-                    textAlign = TextAlign.Center)
-
-                Spacer(modifier = Modifier.height(fieldSpacingLarge))
-
-                // Groups
-                GroupsSection(
-                    groups = groups,
-                    groupsToMembers = groupsToMembers,
-                    modifier = Modifier.height(fieldSpacingSmall))
-
                 // Badges
                 Spacer(modifier = Modifier.height(fieldSpacingLarge))
 
@@ -378,6 +353,14 @@ fun ProfileScreen(
                       BadgeIcon(friendsBadge, onClick = onBadgeClicked)
                       BadgeIcon(eventParticipatedBadge, onClick = onBadgeClicked)
                     }
+
+                // Groups
+                Spacer(modifier = Modifier.height(fieldSpacingLarge))
+
+                GroupsSection(
+                    groups = groups,
+                    groupsToMembers = groupsToMembers,
+                    modifier = Modifier.height(fieldSpacingSmall))
               }
         }
 
