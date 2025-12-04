@@ -11,9 +11,12 @@ import androidx.credentials.exceptions.NoCredentialException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.R
+import com.android.gatherly.model.notification.NotificationsRepository
+import com.android.gatherly.model.notification.NotificationsRepositoryProvider
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryProvider
+import com.android.gatherly.utils.getProfileWithSyncedFriendNotifications
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.Companion.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
@@ -30,7 +33,7 @@ import kotlinx.coroutines.tasks.await
 data class ProfileState(
     val isLoading: Boolean = false,
     val profile: Profile? = null,
-    val focusPoints: Int = 0,
+    val focusPoints: Double = 0.0,
     val errorMessage: String? = null,
     val signedOut: Boolean = false,
     val navigateToInit: Boolean = false,
@@ -51,6 +54,8 @@ data class ProfileState(
  */
 class ProfileViewModel(
     private val repository: ProfileRepository = ProfileRepositoryProvider.repository,
+    private val notificationsRepository: NotificationsRepository =
+        NotificationsRepositoryProvider.repository,
     private val authProvider: () -> FirebaseAuth = { Firebase.auth }
 ) : ViewModel() {
 
@@ -79,12 +84,16 @@ class ProfileViewModel(
       _uiState.value = _uiState.value.copy(isAnon = authProvider().currentUser?.isAnonymous ?: true)
 
       try {
-        val profile = repository.getProfileByUid(authProvider().currentUser?.uid!!)
+        val profile =
+            getProfileWithSyncedFriendNotifications(
+                repository, notificationsRepository, authProvider().currentUser?.uid!!)
         if (profile == null) {
           _uiState.value =
               _uiState.value.copy(isLoading = false, errorMessage = "Profile not found")
         } else {
-          _uiState.value = _uiState.value.copy(isLoading = false, profile = profile)
+          _uiState.value =
+              _uiState.value.copy(
+                  isLoading = false, profile = profile, focusPoints = profile.focusPoints)
         }
       } catch (e: Exception) {
         _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = e.message)

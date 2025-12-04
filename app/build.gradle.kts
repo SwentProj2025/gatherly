@@ -30,8 +30,9 @@ android {
         versionCode = 1
         versionName = "1.0"
 
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        testInstrumentationRunner = "com.android.gatherly.utils.CustomTestRunner"
         testInstrumentationRunnerArguments["timeout_msec"] = "120000"
+        testInstrumentationRunnerArguments["kotlinx.coroutines.test.default_timeout"] = "120000"
 
         vectorDrawables {
             useSupportLibrary = true
