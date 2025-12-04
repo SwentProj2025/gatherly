@@ -23,7 +23,8 @@ import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.android.gatherly.utils.GenericViewModelFactory
 import com.android.gatherly.utils.cancelEvent
-import com.android.gatherly.utils.registerGroup
+import com.android.gatherly.utils.
+registerGroup
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.firestore
 import com.google.firebase.firestore.ktx.firestore
