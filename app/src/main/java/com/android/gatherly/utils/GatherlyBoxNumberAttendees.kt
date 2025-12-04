@@ -16,9 +16,9 @@ import androidx.compose.ui.unit.dp
 
 /** Helper function : Display the number of attendees a event got */
 @Composable
-fun BoxNumberAttendees(numberAttendees: Int) {
+fun BoxNumberAttendees(numberAttendees: Int, modifier: Modifier = Modifier) {
 
-  Row(verticalAlignment = Alignment.CenterVertically) {
+  Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier) {
     Icon(
         imageVector = Icons.Filled.Person,
         contentDescription = "Attendees",

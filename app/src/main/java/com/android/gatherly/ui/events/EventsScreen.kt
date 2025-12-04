@@ -98,6 +98,9 @@ object EventsScreenTestTags {
   const val FILTER_ONGOING_BUTTON = "FilterOngoingButton"
   const val FILTER_PAST_BUTTON = "FilterPastButton"
 
+  const val ATTENDEES_ALERT_DIALOG = "alertDialog"
+  const val ATTENDEES_ALERT_DIALOG_CANCEL = "alertDialogCancelButton"
+
   /**
    * Returns a unique test tag for the card or container representing a given [Event] item.
    *
@@ -105,6 +108,8 @@ object EventsScreenTestTags {
    * @return A string uniquely identifying the Event item in the UI.
    */
   fun getTestTagForEventItem(event: Event): String = "eventItem${event.id}"
+
+  fun getTestTagForEventNumberAttendees(event: Event): String = "eventNbrAttendees${event.id}"
 }
 
 /**
@@ -546,7 +551,9 @@ fun BrowserEventsItem(event: Event, onClick: () -> Unit) {
                 modifier = Modifier.testTag(EventsScreenTestTags.EVENT_DATE))
           }
 
-          BoxNumberAttendees(event.participants.size)
+          BoxNumberAttendees(
+              event.participants.size,
+              Modifier.testTag(EventsScreenTestTags.getTestTagForEventNumberAttendees(event)))
         }
       }
 }
@@ -600,7 +607,9 @@ fun UpcomingEventsItem(event: Event, onClick: () -> Unit) {
                 modifier = Modifier.testTag(EventsScreenTestTags.EVENT_DATE))
           }
 
-          BoxNumberAttendees(event.participants.size)
+          BoxNumberAttendees(
+              event.participants.size,
+              Modifier.testTag(EventsScreenTestTags.getTestTagForEventNumberAttendees(event)))
         }
       }
 }
@@ -653,7 +662,9 @@ fun MyOwnEventsItem(event: Event, onClick: () -> Unit) {
                 modifier = Modifier.testTag(EventsScreenTestTags.EVENT_DATE))
           }
 
-          BoxNumberAttendees(event.participants.size)
+          BoxNumberAttendees(
+              event.participants.size,
+              Modifier.testTag(EventsScreenTestTags.getTestTagForEventNumberAttendees(event)))
         }
       }
 }
@@ -777,8 +788,16 @@ fun AlertDialogListAttendees(
         title = { Text("Participants") },
         text = { Column { listNameAttendees.forEach { name -> Text("• $name") } } },
         confirmButton = {
-          Button(onClick = { showAttendeesDialog.value = false }) { Text("Closes") }
-        })
+          Button(
+              onClick = { showAttendeesDialog.value = false },
+              modifier = Modifier.testTag(EventsScreenTestTags.ATTENDEES_ALERT_DIALOG_CANCEL)) {
+                Text("Closes")
+              }
+        },
+        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+        titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.testTag(EventsScreenTestTags.ATTENDEES_ALERT_DIALOG))
   }
 }
 
