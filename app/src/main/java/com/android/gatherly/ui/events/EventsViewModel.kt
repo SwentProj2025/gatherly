@@ -8,6 +8,7 @@ import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsRepository
 import com.android.gatherly.model.event.EventsRepositoryFirestore
+import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.android.gatherly.utils.GenericViewModelFactory
@@ -189,6 +190,18 @@ class EventsViewModel(
       EventFilter.UPCOMING -> listEvents.filter { it.status == EventStatus.UPCOMING }
       EventFilter.ONGOING -> listEvents.filter { it.status == EventStatus.ONGOING }
       EventFilter.PAST -> listEvents.filter { it.status == EventStatus.PAST }
+    }
+  }
+
+  /** Function to trigger all the name from the list of participants in order to display them */
+  suspend fun getNamesParticipants(listIds: List<String>, currentUserId: String): List<String> {
+    return listIds.map { id ->
+      (if (id != currentUserId) {
+        val profile: Profile? = profileRepository.getProfileByUid(id)
+        profile?.name ?: "Anonymous user"
+      } else {
+        "YOU"
+      })
     }
   }
 }

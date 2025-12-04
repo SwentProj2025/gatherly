@@ -2,10 +2,12 @@ package com.android.gatherly.utils
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults.buttonColors
@@ -34,7 +36,9 @@ fun GatherlyAlertDialog(
     confirmEnabled: Boolean = true,
     neutralText: String? = null,
     onNeutral: (() -> Unit)? = null,
-    neutralEnabled: Boolean = true
+    neutralEnabled: Boolean = true,
+    onOpenAttendeesList: (() -> Unit)? = null,
+    numberAttendees: Int? = null,
 ) {
   AlertDialog(
       containerColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -43,11 +47,32 @@ fun GatherlyAlertDialog(
       modifier = Modifier.testTag(AlertDialogTestTags.ALERT),
       title = {
         Column {
-          Text(
-              text = titleText,
-              textAlign = TextAlign.Center,
-              style = MaterialTheme.typography.titleLarge,
-              modifier = Modifier.fillMaxWidth().testTag(AlertDialogTestTags.TITLE))
+          Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+            Text(
+                text = titleText,
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.weight(1f).testTag(AlertDialogTestTags.TITLE))
+
+            // Button to view attendees
+            if (numberAttendees != null) {
+              Spacer(modifier = Modifier.height(12.dp))
+
+              Button(
+                  colors =
+                      buttonColors(
+                          containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                          contentColor = MaterialTheme.colorScheme.onSecondaryContainer),
+                  contentPadding = PaddingValues(horizontal = 4.dp, vertical = 2.dp),
+                  onClick = { onOpenAttendeesList?.invoke() },
+                  modifier =
+                      Modifier.testTag(AlertDialogTestTags.ATTENDEES_BTN)
+                          .height(32.dp)
+                          .widthIn(min = 32.dp)) {
+                    BoxNumberAttendees(numberAttendees)
+                  }
+            }
+          }
 
           GatherlyDialogTitleContent(
               creatorText = creatorText,
@@ -181,4 +206,6 @@ object AlertDialogTestTags {
   const val CREATOR_TEXT = "creatorText"
 
   const val DATE_TEXT = "dateText"
+
+  const val ATTENDEES_BTN = "attendeesButton"
 }
