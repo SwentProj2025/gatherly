@@ -384,4 +384,19 @@ class GroupsRepositoryFirestoreTest : FirestoreGroupsGatherlyTest() {
     assertTrue(id1.isNotEmpty())
     assertTrue(id2.isNotEmpty())
   }
+
+  @Test
+  fun testGetGroupByName() = runTest {
+    repository.addGroup(group1)
+
+    val retrieved = repository.getGroupByName(group1.name)
+    val expected =
+        group1.copy(creatorId = user1Id, memberIds = listOf(user1Id), adminIds = listOf(user1Id))
+    assertEquals(expected.gid, retrieved.gid)
+    assertEquals(expected.creatorId, retrieved.creatorId)
+    assertEquals(expected.name, retrieved.name)
+    assertEquals(expected.description, retrieved.description)
+    assertEquals(expected.memberIds, retrieved.memberIds)
+    assertEquals(expected.adminIds, retrieved.adminIds)
+  }
 }

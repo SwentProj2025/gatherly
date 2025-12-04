@@ -36,6 +36,11 @@ class FakeGroupsRepositoryLocal(private val currentUserId: String = "testUser") 
     return groups.values.filter { group -> currentUserId in group.memberIds }
   }
 
+  override suspend fun getGroupByName(groupName: String): Group {
+    return groups.values.firstOrNull { it.name.equals(groupName, ignoreCase = true) }
+        ?: throw NoSuchElementException("Group with name='$groupName' not found")
+  }
+
   override suspend fun getGroup(groupId: String): Group {
     return groups[groupId] ?: throw NoSuchElementException("Group with id=$groupId not found")
   }

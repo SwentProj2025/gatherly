@@ -153,6 +153,22 @@ class ProfileLocalRepository : ProfileRepository {
     incrementBadge(currentUserId, BadgeType.FRIENDS_ADDED)
   }
 
+  override suspend fun addPendingSentFriendUid(currentUserId: String, targetUid: String) {
+    val index = profiles.indexOfFirst { it.uid == currentUserId }
+    if (index == -1) return
+
+    val p = profiles[index]
+    profiles[index] = p.copy(pendingSentFriendsUids = p.pendingSentFriendsUids + targetUid)
+  }
+
+  override suspend fun removePendingSentFriendUid(currentUserId: String, targetUid: String) {
+    val index = profiles.indexOfFirst { it.uid == currentUserId }
+    if (index == -1) return
+
+    val p = profiles[index]
+    profiles[index] = p.copy(pendingSentFriendsUids = p.pendingSentFriendsUids - targetUid)
+  }
+
   // ---- STATUS GESTION PART ----
 
   override suspend fun updateStatus(uid: String, status: ProfileStatus) {
