@@ -15,6 +15,7 @@ import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.FormatListBulleted
 import androidx.compose.material.icons.outlined.Group
 import androidx.compose.material.icons.outlined.GroupAdd
+import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Logout
 import androidx.compose.material.icons.outlined.MoreVert
@@ -81,6 +82,8 @@ sealed class Tab(val name: String, val icon: ImageVector, val destination: Scree
   object AddGroup : Tab("Add Group", Icons.Outlined.GroupAdd, Screen.AddGroupScreen)
 
   object Badge : Tab("Badges", Icons.Outlined.Badge, Screen.BadgeScreen)
+
+  object FocusPoints : Tab("Focus History", Icons.Outlined.History, Screen.FocusScreen)
 }
 
 private val bottomtabs =
