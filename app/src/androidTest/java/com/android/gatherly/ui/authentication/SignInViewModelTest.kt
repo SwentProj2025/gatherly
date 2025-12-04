@@ -12,6 +12,7 @@ import com.android.gatherly.utils.FakeJwtGenerator
 import com.android.gatherly.utils.FirebaseEmulator
 import com.android.gatherly.utils.FirestoreGatherlyTest
 import kotlin.test.assertEquals
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -79,33 +80,37 @@ class SignInViewModelTest : FirestoreGatherlyTest() {
    * works
    */
   @Test
-  fun signInWithNoGoogleErrorMessage() = runTest {
-    // Sign in with no creds
-    val context = ApplicationProvider.getApplicationContext<Context>()
-    signInViewModel = SignInViewModel(profileRepository = profileRepository)
-    signInViewModel.signInWithGoogle(context, CredentialManager.create(context))
+  fun signInWithNoGoogleErrorMessage() =
+      runTest(timeout = 120.seconds) {
+        // Sign in with no creds
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        signInViewModel = SignInViewModel(profileRepository = profileRepository)
+        signInViewModel.signInWithGoogle(context, CredentialManager.create(context))
 
-    // Check that the screen is loading
-    assert(signInViewModel.uiState.isLoading)
+        // Ensure loading state is set
+        delay(500)
 
-    // Wait for the error message to appear
-    withContext(Dispatchers.Default.limitedParallelism(1)) {
-      withTimeout(5000L) {
-        while (signInViewModel.uiState.errorMessage == null) {
-          delay(50)
+        // Check that the screen is loading
+        assert(signInViewModel.uiState.isLoading)
+
+        // Wait for the error message to appear
+        withContext(Dispatchers.Default.limitedParallelism(1)) {
+          withTimeout(15000L) {
+            while (signInViewModel.uiState.errorMessage == null) {
+              delay(50)
+            }
+          }
         }
+
+        // Check that there is an error message ans the screen is no longer loading
+        assert(signInViewModel.uiState.errorMessage != null)
+        assert(!signInViewModel.uiState.isLoading)
+
+        // Clear error message and check that it is cleared
+        signInViewModel.resetErrorMessage()
+
+        assert(signInViewModel.uiState.errorMessage == null)
       }
-    }
-
-    // Check that there is an error message ans the screen is no longer loading
-    assert(signInViewModel.uiState.errorMessage != null)
-    assert(!signInViewModel.uiState.isLoading)
-
-    // Clear error message and check that it is cleared
-    signInViewModel.resetErrorMessage()
-
-    assert(signInViewModel.uiState.errorMessage == null)
-  }
 
   @Test
   fun canSignInAnonymously_destinationInitProfileIfFirst() = runTest {

@@ -332,6 +332,11 @@ fun TimerStarted(uiState: TimerState, timerViewModel: TimerViewModel, corner: Dp
           }
     }
 
+    // Points text
+    Text(
+        text = "You have gained ${uiState.pointsGained} points!",
+        style = MaterialTheme.typography.headlineMedium)
+
     // Control buttons
     Row(
         horizontalArrangement = Arrangement.SpaceEvenly,

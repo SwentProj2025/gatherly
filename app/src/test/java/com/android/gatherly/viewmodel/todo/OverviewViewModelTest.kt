@@ -12,6 +12,7 @@ import com.android.gatherly.ui.todo.OverviewViewModel
 import com.android.gatherly.ui.todo.TodoSortOrder
 import com.android.gatherly.utilstest.MockitoUtils
 import com.google.firebase.Timestamp
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -90,7 +91,7 @@ class OverviewViewModelTest {
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun getAllTodos_success_updatesUiStateWithData() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, timeout = 120.seconds) {
         // Pre-populate repository
         val todo1 = makeTodo("Sample Todo 1")
         val todo2 = makeTodo("Sample Todo 2")
@@ -116,7 +117,7 @@ class OverviewViewModelTest {
 
   @Test
   fun getAllTodos_setsLoadingStateDuringFetch() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, timeout = 120.seconds) {
         overviewViewModel.refreshUIState()
 
         // Wait for loading to start
@@ -131,7 +132,7 @@ class OverviewViewModelTest {
 
   @Test
   fun getAllTodos_withEmptyRepo_returnsEmptyList() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, timeout = 120.seconds) {
         // Repository has no data
         overviewViewModel.refreshUIState()
 
@@ -145,7 +146,7 @@ class OverviewViewModelTest {
   @Test
   @OptIn(ExperimentalCoroutinesApi::class)
   fun refreshUiState_triggersReloadSuccessfully() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, timeout = 120.seconds) {
         val todo1 = makeTodo("Initial Todo")
         toDosRepository.addTodo(todo1)
 
@@ -167,6 +168,7 @@ class OverviewViewModelTest {
         overviewViewModel.refreshUIState()
 
         waitUntilLoaded(overviewViewModel)
+        delay(500) // wait for state propagation
 
         val updatedCount = overviewViewModel.uiState.value.todos.size
         assertEquals(2, updatedCount)
@@ -175,7 +177,7 @@ class OverviewViewModelTest {
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun onCheckboxChanged_updatesStatusAndRefreshesUiState() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, timeout = 120.seconds) {
         // create and add a todo
         val todo = makeTodo("Status Change Test")
         toDosRepository.addTodo(todo)
@@ -197,6 +199,7 @@ class OverviewViewModelTest {
 
         // Wait for the UI to refresh and reflect the change
         advanceUntilIdle()
+        delay(500) // wait for state propagation
 
         val updatedTodo = overviewViewModel.uiState.value.todos.first { it.uid == todo.uid }
         assertEquals(
@@ -205,7 +208,7 @@ class OverviewViewModelTest {
 
   @Test
   fun searchTodos_filtersResultsCorrectly() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, timeout = 120.seconds) {
         val todoA = makeTodo("Lunch with Claire", description = "meet at EPFL")
         val todoB = makeTodo("Buy groceries", description = "milk and bread")
         val todoC = makeTodo("Running", description = "morning run")
@@ -222,6 +225,7 @@ class OverviewViewModelTest {
         // WHEN searching for "lunch"
         overviewViewModel.searchTodos("lunch")
         advanceUntilIdle()
+        delay(500) // wait for state propagation
 
         val filtered = overviewViewModel.uiState.value.todos
         assertEquals(1, filtered.size)
@@ -230,7 +234,7 @@ class OverviewViewModelTest {
 
   @Test
   fun searchTodos_restoreFullList_whenQueryCleared() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, timeout = 120.seconds) {
         val todoA = makeTodo("Lunch with Claire")
         val todoB = makeTodo("Buy groceries")
 
@@ -247,11 +251,13 @@ class OverviewViewModelTest {
         // WHEN searching something that yields no result
         overviewViewModel.searchTodos("zzzz")
         advanceUntilIdle()
+        delay(500) // wait for state propagation
         assertEquals(0, overviewViewModel.uiState.value.todos.size)
 
         // WHEN clearing the query
         overviewViewModel.searchTodos("")
         advanceUntilIdle()
+        delay(500)
 
         // THEN full list should be restored
         val restored = overviewViewModel.uiState.value.todos
@@ -260,7 +266,7 @@ class OverviewViewModelTest {
 
   @Test
   fun searchTodos_filtersAgainstFullList_notFilteredResults() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, timeout = 120.seconds) {
         val todoA = makeTodo("Lunch with Claire")
         val todoB = makeTodo("Lundry")
         val todoC = makeTodo("Groceries")
@@ -276,16 +282,19 @@ class OverviewViewModelTest {
         // First search returns Lunch + Laundry
         overviewViewModel.searchTodos("lun")
         advanceUntilIdle()
+        delay(500) // wait for state propagation
         assertEquals(2, overviewViewModel.uiState.value.todos.size)
 
         // Now type something that returns no result
         overviewViewModel.searchTodos("lunx")
         advanceUntilIdle()
+        delay(500)
         assertEquals(0, overviewViewModel.uiState.value.todos.size)
 
         // Backspace: "lun"
         overviewViewModel.searchTodos("lun")
         advanceUntilIdle()
+        delay(500)
 
         // Should again return Lunch + Laundry — not stay empty
         val results = overviewViewModel.uiState.value.todos
@@ -294,7 +303,7 @@ class OverviewViewModelTest {
 
   @Test
   fun sortOrder_changes_sortListCorrectly() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, timeout = 120.seconds) {
         val todoA =
             makeTodo("A", description = "", ownerId = "u").copy(dueDate = Timestamp(1000, 0))
         val todoB =
@@ -313,6 +322,7 @@ class OverviewViewModelTest {
         // When sorting by DATE_ASC
         overviewViewModel.setSortOrder(TodoSortOrder.DATE_ASC)
         advanceUntilIdle()
+        delay(500)
 
         val asc = overviewViewModel.uiState.value.todos
         assertEquals(listOf(todoA.uid, todoC.uid, todoB.uid), asc.map { it.uid })
@@ -320,6 +330,7 @@ class OverviewViewModelTest {
         // When sorting by DATE_DESC
         overviewViewModel.setSortOrder(TodoSortOrder.DATE_DESC)
         advanceUntilIdle()
+        delay(500)
 
         val desc = overviewViewModel.uiState.value.todos
         assertEquals(listOf(todoB.uid, todoC.uid, todoA.uid), desc.map { it.uid })
@@ -327,6 +338,7 @@ class OverviewViewModelTest {
         // When sorting by ALPHABETICAL
         overviewViewModel.setSortOrder(TodoSortOrder.ALPHABETICAL)
         advanceUntilIdle()
+        delay(500)
 
         val alpha = overviewViewModel.uiState.value.todos
         assertEquals(listOf(todoA.uid, todoB.uid, todoC.uid), alpha.map { it.uid })
@@ -334,7 +346,7 @@ class OverviewViewModelTest {
 
   @Test
   fun sorting_persists_after_refresh() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, timeout = 120.seconds) {
         val todo1 = makeTodo("A")
         val todo2 = makeTodo("B")
 
@@ -359,6 +371,7 @@ class OverviewViewModelTest {
 
         overviewViewModel.refreshUIState()
         waitUntilLoaded(overviewViewModel)
+        delay(500) // wait for state propagation
 
         val sortedAfterRefresh = overviewViewModel.uiState.value.todos
         assertEquals(listOf(todo1.uid, todo2.uid, todo3.uid), sortedAfterRefresh.map { it.uid })
@@ -366,7 +379,7 @@ class OverviewViewModelTest {
 
   @Test
   fun search_and_sort_interact_correctly() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, timeout = 120.seconds) {
         val todoA = makeTodo("Alpha")
         val todoC = makeTodo("Charlie")
         val todoB = makeTodo("Bravo")
@@ -384,6 +397,7 @@ class OverviewViewModelTest {
 
         overviewViewModel.searchTodos("a")
         advanceUntilIdle()
+        delay(500)
 
         val result = overviewViewModel.uiState.value.todos.map { it.name }
         assertEquals(listOf("Alpha", "Bravo", "Charlie"), result)

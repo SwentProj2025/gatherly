@@ -33,7 +33,7 @@ import kotlinx.coroutines.tasks.await
 data class ProfileState(
     val isLoading: Boolean = false,
     val profile: Profile? = null,
-    val focusPoints: Int = 0,
+    val focusPoints: Double = 0.0,
     val errorMessage: String? = null,
     val signedOut: Boolean = false,
     val navigateToInit: Boolean = false,
@@ -91,7 +91,9 @@ class ProfileViewModel(
           _uiState.value =
               _uiState.value.copy(isLoading = false, errorMessage = "Profile not found")
         } else {
-          _uiState.value = _uiState.value.copy(isLoading = false, profile = profile)
+          _uiState.value =
+              _uiState.value.copy(
+                  isLoading = false, profile = profile, focusPoints = profile.focusPoints)
         }
       } catch (e: Exception) {
         _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = e.message)

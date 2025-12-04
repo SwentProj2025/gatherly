@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <plurals name="focus_history_timer">
+        <item quantity="one">Focused for %d minute</item>
+        <item quantity="other">Focused for %d minutes</item>
+    </plurals>
+</resources>
