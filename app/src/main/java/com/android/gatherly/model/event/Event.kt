@@ -1,5 +1,6 @@
 package com.android.gatherly.model.event
 
+import com.android.gatherly.model.group.Group
 import com.android.gatherly.model.map.DisplayedMapElement
 import com.android.gatherly.model.map.Location
 import com.google.firebase.Timestamp
@@ -18,14 +19,23 @@ data class Event(
     val endTime: Timestamp,
     val creatorId: String,
     val participants: List<String>, // contains userIds
-    val status: EventStatus
+    val status: EventStatus,
+    val state: EventState = EventState.PUBLIC,
+    val group: Group? = null,
 ) : DisplayedMapElement
 
 /** Represents the state of an [Event] item. */
 enum class EventStatus {
-  UPCOMING,
-  ONGOING,
-  PAST
+    UPCOMING,
+    ONGOING,
+    PAST
+}
+
+/** Represents the kind of an [Event] item. */
+enum class EventState {
+    PUBLIC,
+    PRIVATE_FRIENDS,
+    PRIVATE_GROUP
 }
 
 /**
@@ -35,5 +45,5 @@ enum class EventStatus {
  */
 fun EventStatus.displayString(): String =
     name.replace("_", " ").lowercase().replaceFirstChar {
-      if (it.isLowerCase()) it.titlecase() else it.toString()
+        if (it.isLowerCase()) it.titlecase() else it.toString()
     }
