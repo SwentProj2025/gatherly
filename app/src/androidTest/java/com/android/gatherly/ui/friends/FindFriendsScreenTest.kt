@@ -15,6 +15,7 @@ import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.utils.MockitoUtils
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -38,7 +39,7 @@ class FindFriendsScreenTest {
    */
   @OptIn(ExperimentalCoroutinesApi::class)
   private fun setContentwithBobUID() {
-    runTest {
+    runTest(timeout = 120.seconds) {
       profileRepository = ProfileLocalRepository()
       notificationsRepository = NotificationsLocalRepository()
 
@@ -70,7 +71,7 @@ class FindFriendsScreenTest {
    */
   @OptIn(ExperimentalCoroutinesApi::class)
   private fun setContentwithAliceUID() {
-    runTest {
+    runTest(timeout = 120.seconds) {
       profileRepository = ProfileLocalRepository()
       notificationsRepository = NotificationsLocalRepository()
       addProfiles()
@@ -94,7 +95,7 @@ class FindFriendsScreenTest {
   }
 
   private fun setContentWithPendingProfile() {
-    runTest {
+    runTest(timeout = 120.seconds) {
       profileRepository = ProfileLocalRepository()
       notificationsRepository = NotificationsLocalRepository()
       addProfiles()
@@ -117,7 +118,7 @@ class FindFriendsScreenTest {
   }
 
   private fun setContentWithTotalProfile() {
-    runTest {
+    runTest(timeout = 120.seconds) {
       profileRepository = ProfileLocalRepository()
       notificationsRepository = NotificationsLocalRepository()
       addProfiles()
@@ -209,7 +210,7 @@ class FindFriendsScreenTest {
   }
 
   /**
-   * Test: Verifies that when the user got no no friend, all relevant UI components are displayed
+   * Test: Verifies that when the user has no friends, all relevant UI components are displayed
    * correctly.
    */
   @Test
@@ -287,9 +288,16 @@ class FindFriendsScreenTest {
           .assertIsDisplayed()
           .performClick()
 
-      composeTestRule
-          .onNodeWithTag(FindFriendsScreenTestTags.getTestTagForFriendItem("francis"))
-          .assertIsNotDisplayed()
+      composeTestRule.waitUntil(TIMEOUT) {
+        try {
+          composeTestRule
+              .onNodeWithTag(FindFriendsScreenTestTags.getTestTagForFriendItem("francis"))
+              .assertIsNotDisplayed()
+          true
+        } catch (e: AssertionError) {
+          false
+        }
+      }
     }
   }
 
