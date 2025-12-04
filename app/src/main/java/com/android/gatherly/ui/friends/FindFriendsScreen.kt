@@ -73,7 +73,7 @@ object FindFriendsScreenTestTags {
 
   const val HEART_ANIMATION = "heartBreakAnimation"
 
-  const val FOLLOWING_TEXT_ANIMATION = "followingTextAnimation"
+  const val REQUESTING_TEXT_ANIMATION = "requestingTextAnimation"
 
   /**
    * Returns a unique test tag for the card or container representing a given [Profile.username]
@@ -108,10 +108,11 @@ object FindFriendsScreenTestTags {
    * Returns a unique test tag for the card or container representing a given [Profile.username]
    * item.
    *
-   * @param username The [Button] item for following button whose test tag will be generated.
+   * @param username The [Button] item for requesting button whose test tag will be generated.
    * @return A string uniquely identifying the Friend username item in the UI.
    */
-  fun getTestTagForFriendFollowButton(username: String): String = "friendFollowingButton${username}"
+  fun getTestTagForFriendRequestButton(username: String): String =
+      "friendRequestingButton${username}"
 }
 
 // Private values with the json animation files
@@ -130,21 +131,22 @@ fun FindFriendsScreen(
   // Retrieve the necessary values for the implementation from the ViewModel
 
   val uiState by friendsViewModel.uiState.collectAsState()
-  val notFriendsList = uiState.listNoFriends
+  val notFriendsList =
+      uiState.listNoFriends.filter { username -> !uiState.pendingSentUsernames.contains(username) }
   val currentUserIdFromVM = uiState.currentUserId
 
   // Holds the current text entered by the user username in the search bar
   var searchQuery by remember { mutableStateOf("") }
 
   // Holds the boolean that determines when to trigger the animation
-  // after the current user follows a profile
-  var showFollowMessage by remember { mutableStateOf(false) }
+  // after the current user requests being friend with a profile
+  var showRequestMessage by remember { mutableStateOf(false) }
 
-  // Holds the text displayed during the follow animation
-  val messageText = stringResource(R.string.friends_follow_message)
+  // Holds the text displayed during the request animation
+  val messageText = stringResource(R.string.friends_request_message)
 
   // Value used to determine when the profile loading animation should appear
-  val isLoading = uiState.isLoading && !showFollowMessage
+  val isLoading = uiState.isLoading && !showRequestMessage
 
   // Update the list depending on whether the current user types something in the search bar
   val filteredNotFriends =
@@ -162,10 +164,10 @@ fun FindFriendsScreen(
   }
 
   // Triggers the temporary message box when needed
-  LaunchedEffect(showFollowMessage) {
-    if (showFollowMessage) {
+  LaunchedEffect(showRequestMessage) {
+    if (showRequestMessage) {
       delay(ANIMATION_LOADING_DELAY)
-      showFollowMessage = false
+      showRequestMessage = false
     }
   }
 
@@ -190,16 +192,17 @@ fun FindFriendsScreen(
                 filteredNotFriends = filteredNotFriends,
                 searchQuery = searchQuery,
                 onSearchQueryChange = { searchQuery = it },
-                onFollowFriend = { friend ->
-                  friendsViewModel.followFriend(
-                      currentUserId = currentUserIdFromVM, friend = friend)
-                  showFollowMessage = true
+                onRequestFriend = { username ->
+                  val targetUid = uiState.profiles[username]?.uid ?: return@FriendsListContent
+                  friendsViewModel.sendFriendRequest(
+                      friendUserId = targetUid, currentUserId = currentUserIdFromVM)
+                  showRequestMessage = true
                 },
                 profiles = uiState.profiles)
           }
 
-          // --- FOLLOW A FRIEND ANIMATION ---
-          if (showFollowMessage) {
+          // --- REQUEST A FRIEND ANIMATION ---
+          if (showRequestMessage) {
             FloatingMessage(text = messageText, modifier = Modifier.fillMaxSize().padding(padding))
           }
         }
@@ -210,13 +213,13 @@ fun FindFriendsScreen(
  * Helper function : Composable helper that displays a single user profile item in the friends list.
  *
  * @param friend Username of the friend to display.
- * @param follow Callback triggered when the "Follow" button is clicked.
+ * @param request Callback triggered when the "Request" button is clicked.
  * @param modifier Optional [Modifier] for layout customization.
  */
 @Composable
 private fun FriendItem(
     friend: String,
-    follow: () -> Unit,
+    request: () -> Unit,
     modifier: Modifier = Modifier,
     profilePicUrl: String? = null
 ) {
@@ -273,13 +276,14 @@ private fun FriendItem(
           Spacer(
               modifier = Modifier.width(dimensionResource(R.dimen.spacing_between_fields_regular)))
 
-          // -- Follow button --
+          // -- Request button --
           Button(
-              onClick = follow,
+              onClick = request,
               modifier =
                   Modifier.wrapContentWidth()
-                      .testTag(FindFriendsScreenTestTags.getTestTagForFriendFollowButton(friend))) {
-                Text(stringResource(R.string.friends_follow_button_title))
+                      .testTag(
+                          FindFriendsScreenTestTags.getTestTagForFriendRequestButton(friend))) {
+                Text(stringResource(R.string.friends_request_button_title))
               }
         }
       }
@@ -289,7 +293,7 @@ private fun FriendItem(
 
 /**
  * Helper function: Composable helper that displays a floating message animation when the user
- * follows a profile.
+ * requests to be friend with a profile.
  *
  * The animation consists of a Lottie heart animation followed by a message box.
  *
@@ -340,7 +344,7 @@ private fun FloatingMessage(text: String, modifier: Modifier = Modifier) {
                           fontWeight = FontWeight.Bold,
                           modifier =
                               Modifier.padding(dimensionResource(R.dimen.padding_regular))
-                                  .testTag(FindFriendsScreenTestTags.FOLLOWING_TEXT_ANIMATION))
+                                  .testTag(FindFriendsScreenTestTags.REQUESTING_TEXT_ANIMATION))
                     }
               }
         }
@@ -378,7 +382,7 @@ private fun LoadingAnimationContent(padding: PaddingValues) {
  * @param filteredNotFriends : List of the profile username that can be friend with the current user
  * @param searchQuery : value written in the search bar
  * @param onSearchQueryChange : function will remember the value written in the search bar
- * @param onFollowFriend : function to save the chosen profile as new friend to the current user
+ * @param onRequestFriend : function to save the chosen profile as new friend to the current user
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -387,7 +391,7 @@ private fun FriendsListContent(
     filteredNotFriends: List<String>,
     searchQuery: String,
     onSearchQueryChange: (String) -> Unit,
-    onFollowFriend: (String) -> Unit,
+    onRequestFriend: (String) -> Unit,
     profiles: Map<String, Profile>
 ) {
   LazyColumn(
@@ -416,7 +420,7 @@ private fun FriendsListContent(
           items(items = filteredNotFriends, key = { it }) { friend ->
             FriendItem(
                 friend = friend,
-                follow = { onFollowFriend(friend) },
+                request = { onRequestFriend(friend) },
 
                 // -- Animation slide up when an item disappear
                 modifier =
