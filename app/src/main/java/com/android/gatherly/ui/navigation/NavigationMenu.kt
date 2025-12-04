@@ -19,6 +19,7 @@ import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Logout
 import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Place
 import androidx.compose.material.icons.outlined.Schedule
@@ -64,6 +65,9 @@ sealed class Tab(val name: String, val icon: ImageVector, val destination: Scree
   object Map : Tab("Map", Icons.Outlined.Place, Screen.Map)
 
   object HomePage : Tab("Home", Icons.Outlined.Home, Screen.HomePage)
+
+  object Notifications :
+      Tab("Notifications", Icons.Outlined.Notifications, Screen.NotificationsScreen)
 
   object Profile : Tab("Your profile", Icons.Outlined.AccountCircle, Screen.ProfileScreen)
 
@@ -345,6 +349,10 @@ fun TopDropdownMenu(onTabSelected: (Tab) -> Unit) {
               onClick = { onTabSelected(Tab.Profile) },
               modifier = Modifier.testTag(NavigationTestTags.PROFILE_TAB))
 
+          // Notifications section
+          NotificationsDropdownItem(onTabSelected = onTabSelected)
+
+          // Add Group section
           AddGroupDropdownItem(onTabSelected = onTabSelected)
 
           // Settings section
@@ -398,6 +406,10 @@ fun TopDropdownMenuForSettings(onTabSelected: (Tab) -> Unit, onSignedOut: () -> 
               onClick = { onTabSelected(Tab.Profile) },
               modifier = Modifier.testTag(NavigationTestTags.PROFILE_TAB))
 
+          // Notifications section
+          NotificationsDropdownItem(onTabSelected = onTabSelected)
+
+          // Add Group section
           AddGroupDropdownItem(onTabSelected = onTabSelected)
 
           // Logout section
@@ -437,6 +449,10 @@ fun TopDropdownMenuForProfile(onTabSelected: (Tab) -> Unit, onSignedOut: () -> U
         expanded = expanded,
         onDismissRequest = { expanded = false },
         containerColor = MaterialTheme.colorScheme.surfaceVariant) {
+          // Notifications section
+          NotificationsDropdownItem(onTabSelected = onTabSelected)
+
+          // Add Group section
           AddGroupDropdownItem(onTabSelected = onTabSelected)
 
           // Settings section
@@ -512,4 +528,24 @@ fun AddGroupDropdownItem(onTabSelected: (Tab) -> Unit) {
       },
       onClick = { onTabSelected(Tab.AddGroup) },
       modifier = Modifier.testTag(NavigationTestTags.ADDGROUP_TAB))
+}
+
+/**
+ * A Notifications section in the dropdown menu.
+ *
+ * @param onTabSelected A callback function that is invoked when a tab is selected. It takes a [Tab]
+ *   as a parameter.
+ */
+@Composable
+fun NotificationsDropdownItem(onTabSelected: (Tab) -> Unit) {
+  DropdownMenuItem(
+      text = { Text(Tab.Notifications.name, color = MaterialTheme.colorScheme.onSurfaceVariant) },
+      leadingIcon = {
+        Icon(
+            imageVector = Tab.Notifications.icon,
+            contentDescription = Tab.Notifications.name,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant)
+      },
+      onClick = { onTabSelected(Tab.Notifications) },
+      modifier = Modifier.testTag(NavigationTestTags.NOTIFICATIONS_TAB))
 }

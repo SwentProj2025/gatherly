@@ -35,6 +35,7 @@ import com.android.gatherly.ui.homePage.HomePageScreen
 import com.android.gatherly.ui.map.MapScreen
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.Screen
+import com.android.gatherly.ui.notifications.NotificationsScreen
 import com.android.gatherly.ui.points.FocusPointsScreen
 import com.android.gatherly.ui.profile.ProfileScreen
 import com.android.gatherly.ui.settings.SettingsScreen
@@ -313,6 +314,19 @@ fun GatherlyApp(
         AddGroupScreen(
             goBack = { navigationActions.goBack() },
             onCreate = { navigationActions.navigateTo(Screen.HomePage) })
+      }
+    }
+
+    // NOTIFICATIONS COMPOSABLE  ------------------------------
+    navigation(
+        startDestination = Screen.NotificationsScreen.route,
+        route = Screen.NotificationsScreen.name,
+    ) {
+      composable(Screen.NotificationsScreen.route) {
+        NotificationsScreen(
+            // TODO: modify Visit Profile button callback to visit the sender's profile
+            onVisitProfile = { navigationActions.navigateTo(Screen.ProfileScreen) },
+            goBack = { navigationActions.goBack() })
       }
     }
   }

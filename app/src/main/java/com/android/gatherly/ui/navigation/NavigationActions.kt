@@ -12,6 +12,8 @@ sealed class Screen(
 
   object HomePage : Screen(route = "home_page", name = "Home Page", isTopLevelDestination = true)
 
+  object NotificationsScreen : Screen(route = "notifications", name = "Notifications")
+
   object OverviewToDo : Screen(route = "overview", name = "Overview")
 
   object Map : Screen(route = "map", name = "Map")
