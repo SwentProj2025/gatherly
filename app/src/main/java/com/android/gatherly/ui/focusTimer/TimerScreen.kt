@@ -200,78 +200,84 @@ fun Leaderboard(uiState: TimerState, timerViewModel: TimerViewModel) {
   LazyColumn(
       modifier = Modifier.fillMaxWidth().testTag(FocusTimerScreenTestTags.LEADERBOARD_LIST),
       horizontalAlignment = Alignment.CenterHorizontally) {
-        for (i in uiState.leaderboard.indices) {
-          val friend = uiState.leaderboard[i]
-
-          item {
-            Card(
-                colors =
-                    CardDefaults.cardColors(
-                        containerColor =
-                            if (timerViewModel.isCurrentUser(friend.uid))
-                                MaterialTheme.colorScheme.surfaceVariant
-                            else MaterialTheme.colorScheme.background),
-                modifier =
-                    Modifier.fillMaxWidth()
-                        .padding(
-                            vertical =
-                                dimensionResource(R.dimen.friends_item_card_padding_vertical))) {
-                  Row(
-                      verticalAlignment = Alignment.CenterVertically,
-                      horizontalArrangement = Arrangement.SpaceEvenly,
-                      modifier =
-                          Modifier.fillMaxWidth()
-                              .padding(
-                                  horizontal = dimensionResource(R.dimen.friends_item_card_padding),
-                                  vertical =
-                                      dimensionResource(
-                                          R.dimen.friends_item_card_padding_vertical))) {
-                        Text(
-                            text = (i + 1).toString(),
-                            color =
-                                when (i + 1) {
-                                  1 -> theme_leaderboard_gold
-                                  2 -> theme_leaderboard_silver
-                                  3 -> theme_leaderboard_bronze
-                                  else -> MaterialTheme.colorScheme.onBackground
-                                },
-                            style = MaterialTheme.typography.headlineLarge,
-                            fontWeight = FontWeight.Bold)
-
-                        Image(
-                            painter = profilePicturePainter(friend.profilePicture),
-                            contentDescription = "Profile picture",
-                            contentScale = ContentScale.Crop,
-                            modifier =
-                                Modifier.padding(
-                                        horizontal =
-                                            dimensionResource(R.dimen.friends_item_card_padding))
-                                    .size(
+        var ranking = 0
+        for ((_, friends) in uiState.leaderboard) {
+          for (friend in friends) {
+            val rank = ranking + 1
+            item {
+              Card(
+                  colors =
+                      CardDefaults.cardColors(
+                          containerColor =
+                              if (timerViewModel.isCurrentUser(friend.uid))
+                                  MaterialTheme.colorScheme.surfaceVariant
+                              else MaterialTheme.colorScheme.background),
+                  modifier =
+                      Modifier.fillMaxWidth()
+                          .padding(
+                              vertical =
+                                  dimensionResource(R.dimen.friends_item_card_padding_vertical))) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        modifier =
+                            Modifier.fillMaxWidth()
+                                .padding(
+                                    horizontal =
+                                        dimensionResource(R.dimen.friends_item_card_padding),
+                                    vertical =
                                         dimensionResource(
-                                            R.dimen.find_friends_item_profile_picture_size))
-                                    .clip(CircleShape))
+                                            R.dimen.friends_item_card_padding_vertical))) {
+                          Text(
+                              text = (rank).toString(),
+                              color =
+                                  when (rank) {
+                                    1 -> theme_leaderboard_gold
+                                    2 -> theme_leaderboard_silver
+                                    3 -> theme_leaderboard_bronze
+                                    else -> MaterialTheme.colorScheme.onBackground
+                                  },
+                              style = MaterialTheme.typography.headlineLarge,
+                              fontWeight = FontWeight.Bold)
 
-                        Column(
-                            modifier = Modifier.fillMaxHeight().weight(1f),
-                            horizontalAlignment = Alignment.Start,
-                            verticalArrangement = Arrangement.SpaceEvenly) {
-                              Text(
-                                  text = friend.name,
-                                  style = MaterialTheme.typography.bodyLarge,
-                                  fontWeight = FontWeight.Bold)
+                          Image(
+                              painter = profilePicturePainter(friend.profilePicture),
+                              contentDescription = "Profile picture",
+                              contentScale = ContentScale.Crop,
+                              modifier =
+                                  Modifier.padding(
+                                          horizontal =
+                                              dimensionResource(R.dimen.friends_item_card_padding))
+                                      .size(
+                                          dimensionResource(
+                                              R.dimen.find_friends_item_profile_picture_size))
+                                      .clip(CircleShape))
 
-                              Text(
-                                  text = friend.username,
-                                  style = MaterialTheme.typography.bodyMedium)
-                            }
+                          Column(
+                              modifier = Modifier.fillMaxHeight().weight(1f),
+                              horizontalAlignment = Alignment.Start,
+                              verticalArrangement = Arrangement.SpaceEvenly) {
+                                Text(
+                                    text = friend.name,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.Bold)
 
-                        Text(
-                            text = stringResource(R.string.leaderboard_points, friend.weeklyPoints),
-                            style = MaterialTheme.typography.headlineLarge,
-                            fontWeight = FontWeight.Bold)
-                      }
-                }
+                                Text(
+                                    text = friend.username,
+                                    style = MaterialTheme.typography.bodyMedium)
+                              }
+
+                          Text(
+                              text =
+                                  stringResource(R.string.leaderboard_points, friend.weeklyPoints),
+                              style = MaterialTheme.typography.headlineLarge,
+                              fontWeight = FontWeight.Bold)
+                        }
+                  }
+            }
           }
+
+          ranking++
         }
       }
 }
@@ -299,7 +305,7 @@ fun TimerStarted(uiState: TimerState, timerViewModel: TimerViewModel, corner: Dp
                 buildAnnotatedString {
                   append(stringResource(R.string.timer_linked_todo))
                   withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                    append(uiState.linkedTodo?.name)
+                    append(uiState.linkedTodo.name)
                   }
                 },
             color = MaterialTheme.colorScheme.onBackground,

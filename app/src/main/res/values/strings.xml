@@ -189,7 +189,7 @@
         \t- Diamond : 200 points\n
         \t- Legend : 300 points\n</string>
     <string name="focus_points_leaderboard">Friends leaderboard</string>
-    <string name="focus_points_leaderboard_text">\t- If you share a leaderboard with your friends, every Monday at 00:00, points are awarded to the top three contestants. They respectively receive 100, 75 and 50 points.</string>
+    <string name="focus_points_leaderboard_text">\t- If you share a leaderboard with at least 3 of your friends, every Monday at 00:00, points are awarded to the top three contestants. They respectively receive 100, 75 and 50 points.</string>
     <string name="focus_points_no_history">You have no focus points</string>
     <string name="focus_points_gained">+ %1$.2f points</string>
     <string name="focus_date_format">dd/MM/yyyy \'at\' HH:mm</string>
