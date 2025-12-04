@@ -2,7 +2,6 @@ package com.android.gatherly.utils
 
 import android.util.Log
 import com.android.gatherly.model.event.Event
-import com.android.gatherly.model.event.EventState
 import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsRepository
 import com.android.gatherly.model.event.EventsRepositoryFirestore
@@ -68,8 +67,7 @@ open class FirestoreEventsGatherlyTest {
           endTime = Timestamp(finish),
           creatorId = "", // Will be set dynamically in tests
           participants = emptyList(),
-          status = EventStatus.UPCOMING,
-          state = EventState.PUBLIC)
+          status = EventStatus.UPCOMING)
 
   /** Sample event variation - conference event */
   protected val event2 =

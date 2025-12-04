@@ -15,7 +15,6 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import com.android.gatherly.model.event.Event
-import com.android.gatherly.model.event.EventState
 import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsLocalRepository
 import com.android.gatherly.model.event.EventsRepository
@@ -99,8 +98,7 @@ class EventsOverviewScreenTest {
         endTime = Timestamp(finish),
         creatorId = currentUserId,
         participants = listOf("Gabriel", "Sofija"),
-        status = EventStatus.UPCOMING,
-        state = EventState.PUBLIC)
+        status = EventStatus.UPCOMING)
   }
 
   // Upcoming EVENT
@@ -117,8 +115,7 @@ class EventsOverviewScreenTest {
           endTime = Timestamp(finish),
           creatorId = "aliceId",
           participants = listOf(),
-          status = EventStatus.UPCOMING,
-          state = EventState.PUBLIC)
+          status = EventStatus.UPCOMING)
 
   private val upcomingEventParticipate =
       Event(
@@ -132,8 +129,7 @@ class EventsOverviewScreenTest {
           endTime = Timestamp(finish),
           creatorId = "aliceId",
           participants = listOf("bobId"),
-          status = EventStatus.UPCOMING,
-          state = EventState.PUBLIC)
+          status = EventStatus.UPCOMING)
 
   private val upcomingEventCreated =
       Event(
@@ -147,8 +143,7 @@ class EventsOverviewScreenTest {
           endTime = Timestamp(finish),
           creatorId = "bobId",
           participants = listOf(),
-          status = EventStatus.UPCOMING,
-          state = EventState.PUBLIC)
+          status = EventStatus.UPCOMING)
 
   // ONGOING EVENT
   private val oneHourAgo = Timestamp(Date(System.currentTimeMillis() - 3600_000))
@@ -165,8 +160,7 @@ class EventsOverviewScreenTest {
           endTime = oneHourLater,
           creatorId = "aliceId",
           participants = listOf(),
-          status = EventStatus.ONGOING,
-          state = EventState.PUBLIC)
+          status = EventStatus.ONGOING)
   private val ongoingEventParticipating =
       Event(
           id = "ongoing2",
@@ -179,8 +173,7 @@ class EventsOverviewScreenTest {
           endTime = oneHourLater,
           creatorId = "aliceId",
           participants = listOf("bobId"),
-          status = EventStatus.ONGOING,
-          state = EventState.PUBLIC)
+          status = EventStatus.ONGOING)
   private val ongoingEventCreated =
       Event(
           id = "ongoing3",
@@ -193,8 +186,7 @@ class EventsOverviewScreenTest {
           endTime = oneHourLater,
           creatorId = "bobId",
           participants = listOf(),
-          status = EventStatus.ONGOING,
-          state = EventState.PUBLIC)
+          status = EventStatus.ONGOING)
 
   // PAST EVENT
   private val yesterdayTimestamp = Timestamp(Date.from(Instant.now().minus(1, ChronoUnit.DAYS)))
@@ -210,8 +202,7 @@ class EventsOverviewScreenTest {
           endTime = Timestamp(finish),
           creatorId = "aliceId",
           participants = listOf(),
-          status = EventStatus.PAST,
-          state = EventState.PUBLIC)
+          status = EventStatus.PAST)
 
   private val pastEventParticipating =
       Event(
@@ -225,8 +216,7 @@ class EventsOverviewScreenTest {
           endTime = Timestamp(finish),
           creatorId = "aliceId",
           participants = listOf("bobId"),
-          status = EventStatus.PAST,
-          state = EventState.PUBLIC)
+          status = EventStatus.PAST)
   private val pastEventCreated =
       Event(
           id = "past3",
@@ -239,8 +229,7 @@ class EventsOverviewScreenTest {
           endTime = Timestamp(finish),
           creatorId = "bobId",
           participants = listOf(),
-          status = EventStatus.PAST,
-          state = EventState.PUBLIC)
+          status = EventStatus.PAST)
 
   /**
    * Test: Verifies that when there is no event registered, all relevant UI components are displayed

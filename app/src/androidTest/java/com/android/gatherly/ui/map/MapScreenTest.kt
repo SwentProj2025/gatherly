@@ -11,7 +11,6 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.test.rule.GrantPermissionRule
 import com.android.gatherly.model.event.Event
-import com.android.gatherly.model.event.EventState
 import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsLocalRepository
 import com.android.gatherly.model.event.EventsRepository
@@ -96,8 +95,7 @@ class MapScreenTest {
           endTime = twoHoursLater,
           creatorId = "org-1",
           participants = listOf("u1", "u2", "org-1"),
-          status = EventStatus.UPCOMING,
-          state = EventState.PUBLIC)
+          status = EventStatus.UPCOMING)
 
   private val participatingEvent =
       Event(
@@ -111,8 +109,7 @@ class MapScreenTest {
           endTime = twoHoursLater,
           creatorId = "org-1",
           participants = listOf("u1", "u2", TEST_USER_ID),
-          status = EventStatus.UPCOMING,
-          state = EventState.PUBLIC)
+          status = EventStatus.UPCOMING)
 
   private val creatingEvent =
       Event(
@@ -126,8 +123,7 @@ class MapScreenTest {
           endTime = twoHoursLater,
           creatorId = TEST_USER_ID,
           participants = listOf(TEST_USER_ID),
-          status = EventStatus.UPCOMING,
-          state = EventState.PUBLIC)
+          status = EventStatus.UPCOMING)
 
   @Before
   fun setUp() = runBlocking {

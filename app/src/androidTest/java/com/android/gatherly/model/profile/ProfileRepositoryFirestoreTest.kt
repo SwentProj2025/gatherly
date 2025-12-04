@@ -5,7 +5,6 @@ import android.net.Uri
 import android.provider.MediaStore
 import androidx.test.platform.app.InstrumentationRegistry
 import com.android.gatherly.model.event.Event
-import com.android.gatherly.model.event.EventState
 import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsRepositoryFirestore
 import com.android.gatherly.model.todo.ToDoStatus
@@ -889,8 +888,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
                         ?: throw NoSuchElementException("no date ")),
             creatorId = userAUid,
             participants = listOf(userAUid, userBUid, userCUid),
-            status = EventStatus.UPCOMING,
-            state = EventState.PUBLIC)
+            status = EventStatus.UPCOMING)
 
     eventRepo.addEvent(event)
 
@@ -977,8 +975,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
                         ?: throw NoSuchElementException("no date ")),
             creatorId = userAUid,
             participants = listOf(userAUid, userBUid, userCUid),
-            status = EventStatus.UPCOMING,
-            state = EventState.PUBLIC)
+            status = EventStatus.UPCOMING)
 
     eventRepo.addEvent(event)
 
