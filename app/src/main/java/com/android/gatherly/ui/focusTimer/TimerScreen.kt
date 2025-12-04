@@ -173,7 +173,7 @@ fun TimerScreenContent(timerViewModel: TimerViewModel) {
               shape = RoundedCornerShape(dimensionResource(R.dimen.rounded_corner_shape_large)),
               modifier =
                   Modifier.height(dimensionResource(R.dimen.events_filter_button_height))
-                      .testTag(FocusTimerScreenTestTags.LEADERBOARD_LIST)) {
+                      .testTag(FocusTimerScreenTestTags.LEADERBOARD_SELECT)) {
                 Text(text = stringResource(R.string.leaderboard_select))
               }
         }
