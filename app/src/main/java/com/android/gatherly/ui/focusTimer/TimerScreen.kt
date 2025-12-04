@@ -230,13 +230,7 @@ fun Leaderboard(uiState: TimerState, timerViewModel: TimerViewModel) {
                                             R.dimen.friends_item_card_padding_vertical))) {
                           Text(
                               text = (rank).toString(),
-                              color =
-                                  when (rank) {
-                                    1 -> theme_leaderboard_gold
-                                    2 -> theme_leaderboard_silver
-                                    3 -> theme_leaderboard_bronze
-                                    else -> MaterialTheme.colorScheme.onBackground
-                                  },
+                              color = rankColor(rank),
                               style = MaterialTheme.typography.headlineLarge,
                               fontWeight = FontWeight.Bold)
 
@@ -280,6 +274,16 @@ fun Leaderboard(uiState: TimerState, timerViewModel: TimerViewModel) {
           ranking++
         }
       }
+}
+
+@Composable
+fun rankColor(rank: Int): Color {
+  return when (rank) {
+    1 -> theme_leaderboard_gold
+    2 -> theme_leaderboard_silver
+    3 -> theme_leaderboard_bronze
+    else -> MaterialTheme.colorScheme.onBackground
+  }
 }
 
 @Composable
