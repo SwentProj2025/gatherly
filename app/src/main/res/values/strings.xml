@@ -166,14 +166,17 @@
 
     <!-- Friends Screen -->
     <string name="friends_empty_list_msg">You have no friends added yet.</string>
+    <string name="friends_list_title">Friends</string>
+    <string name="friends_pending_list_title">Pending friend requests</string>
     <string name="find_friends_button_label">Find New Friends</string>
-    <string name="friends_search_bar_label">Search friends …</string>
-    <string name="friends_unfollow_button_title">Unfollow</string>
-    <string name="friends_follow_button_title">Follow</string>
-    <string name="find_friends_search_bar_label">Search new friend by name</string>
+    <string name="friends_search_bar_label">Search friends…</string>
+    <string name="friends_unfriend_button_title">Unfriend</string>
+    <string name="friends_request_button_title">Request</string>
+    <string name="friends_cancel_request_button_title">Cancel Request</string>
+    <string name="find_friends_search_bar_label">Search new friend by username…</string>
     <string name="find_friends_empty_list_message">There are no users left.</string>
-    <string name="friends_unfollow_message">You just lose a friend</string>
-    <string name="friends_follow_message">You just got a new friend</string>
+    <string name="friends_unfriend_message">You just lost a friend</string>
+    <string name="friends_request_message">Waiting for approval…</string>
 
     <!-- Add Group Screen -->
     <string name="add_group_button_label">Add New Group</string>
