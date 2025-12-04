@@ -1,21 +1,26 @@
 package com.android.gatherly.ui.focusTimer
 
 import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ButtonDefaults.buttonColors
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -30,13 +35,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -57,6 +67,10 @@ import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu
 import com.android.gatherly.ui.theme.GatherlyTheme
+import com.android.gatherly.ui.theme.theme_leaderboard_bronze
+import com.android.gatherly.ui.theme.theme_leaderboard_gold
+import com.android.gatherly.ui.theme.theme_leaderboard_silver
+import com.android.gatherly.utils.profilePicturePainter
 
 object FocusTimerScreenTestTags {
   const val TIMERTEXT = "TIMER"
@@ -72,6 +86,9 @@ object FocusTimerScreenTestTags {
   const val LINKED_TODO = "LINKED_TODO"
   const val TIMER_TIME = "TIMER_TIME"
   const val TIMER_CIRCLE = "TIMER_CIRCLE"
+  const val TIMER_SELECT = "TIMER_SELECT"
+  const val LEADERBOARD_SELECT = "LEADERBOARD_SELECT"
+  const val LEADERBOARD_LIST = "LEADERBOARD_LIST"
 }
 
 @Composable
@@ -99,12 +116,14 @@ fun TimerScreen(
       })
 }
 
+// Organises the display of different views within the screen
 @Composable
 fun TimerScreenContent(timerViewModel: TimerViewModel) {
 
   // Collect the uiState, and the context for Toasts
   val uiState by timerViewModel.uiState.collectAsState()
   val context = LocalContext.current
+  val selectedTimer = remember { mutableStateOf(true) }
 
   // Launched effect to display a toast upon error
   LaunchedEffect(uiState.errorMsg) {
@@ -114,12 +133,315 @@ fun TimerScreenContent(timerViewModel: TimerViewModel) {
     }
   }
 
-  // Configuration is needed to get the screen width
-  val configuration = LocalConfiguration.current
   val corner = 12.dp
 
-  // If the timer didn't start, display the first view (editing timer time)
-  if (!uiState.isStarted) {
+  // Column to contain averything
+  Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+    // Top bar to select either timer or leaderboard view
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceEvenly) {
+          // Timer selected
+          Button(
+              onClick = { selectedTimer.value = true },
+              colors =
+                  buttonColors(
+                      containerColor =
+                          if (selectedTimer.value) MaterialTheme.colorScheme.primary
+                          else MaterialTheme.colorScheme.surfaceVariant,
+                      contentColor =
+                          if (selectedTimer.value) MaterialTheme.colorScheme.onPrimary
+                          else MaterialTheme.colorScheme.background),
+              shape = RoundedCornerShape(dimensionResource(R.dimen.rounded_corner_shape_large)),
+              modifier =
+                  Modifier.height(dimensionResource(R.dimen.events_filter_button_height))
+                      .testTag(FocusTimerScreenTestTags.TIMER_SELECT)) {
+                Text(text = stringResource(R.string.timer_select))
+              }
+
+          // Leaderboard selected
+          Button(
+              onClick = {
+                selectedTimer.value = false
+                timerViewModel.loadUI()
+              },
+              colors =
+                  buttonColors(
+                      containerColor =
+                          if (!selectedTimer.value) MaterialTheme.colorScheme.primary
+                          else MaterialTheme.colorScheme.surfaceVariant,
+                      contentColor =
+                          if (!selectedTimer.value) MaterialTheme.colorScheme.onPrimary
+                          else MaterialTheme.colorScheme.background),
+              shape = RoundedCornerShape(dimensionResource(R.dimen.rounded_corner_shape_large)),
+              modifier =
+                  Modifier.height(dimensionResource(R.dimen.events_filter_button_height))
+                      .testTag(FocusTimerScreenTestTags.LEADERBOARD_SELECT)) {
+                Text(text = stringResource(R.string.leaderboard_select))
+              }
+        }
+
+    // If the timer is selected, show that
+    if (selectedTimer.value) {
+
+      // If the timer didn't start, display the first view (editing timer time)
+      if (!uiState.isStarted) {
+        TimerNotStarted(uiState = uiState, timerViewModel = timerViewModel, corner = corner)
+      }
+
+      // Second view, if timer is running or paused
+      if (uiState.isStarted) {
+        TimerStarted(uiState = uiState, timerViewModel = timerViewModel, corner = corner)
+      }
+
+      // If the leaderboard is selected, show that
+    } else {
+      Leaderboard(uiState = uiState, timerViewModel = timerViewModel)
+    }
+  }
+}
+
+/**
+ * A composable to show the friends leaderboard
+ *
+ * @param uiState The state exposed to the UI by the VM
+ * @param timerViewModel The viewModel instance
+ */
+@Composable
+fun Leaderboard(uiState: TimerState, timerViewModel: TimerViewModel) {
+  // Lazy column to scroll through leaderboard
+  LazyColumn(
+      modifier = Modifier.fillMaxWidth().testTag(FocusTimerScreenTestTags.LEADERBOARD_LIST),
+      horizontalAlignment = Alignment.CenterHorizontally) {
+        var ranking = 0
+        // the leaderboard is a sorted map from points to a list of profiles. all the profiles in
+        // the list have the same rank
+        for ((_, friends) in uiState.leaderboard) {
+          for (friend in friends) {
+            // computes the ranking of this group
+            val rank = ranking + 1
+            item {
+              Card(
+                  colors =
+                      CardDefaults.cardColors(
+                          containerColor =
+                              if (timerViewModel.isCurrentUser(friend.uid))
+                                  MaterialTheme.colorScheme.surfaceVariant
+                              else MaterialTheme.colorScheme.background),
+                  modifier =
+                      Modifier.fillMaxWidth()
+                          .padding(
+                              vertical =
+                                  dimensionResource(R.dimen.friends_item_card_padding_vertical))) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        modifier =
+                            Modifier.fillMaxWidth()
+                                .padding(
+                                    horizontal =
+                                        dimensionResource(R.dimen.friends_item_card_padding),
+                                    vertical =
+                                        dimensionResource(
+                                            R.dimen.friends_item_card_padding_vertical))) {
+
+                          // Show the rank with particular colors for top 3
+                          Text(
+                              text = (rank).toString(),
+                              color = rankColor(rank),
+                              style = MaterialTheme.typography.headlineLarge,
+                              fontWeight = FontWeight.Bold)
+
+                          // Profile pic
+                          Image(
+                              painter = profilePicturePainter(friend.profilePicture),
+                              contentDescription = "Profile picture",
+                              contentScale = ContentScale.Crop,
+                              modifier =
+                                  Modifier.padding(
+                                          horizontal =
+                                              dimensionResource(R.dimen.friends_item_card_padding))
+                                      .size(
+                                          dimensionResource(
+                                              R.dimen.find_friends_item_profile_picture_size))
+                                      .clip(CircleShape))
+
+                          // Name and username
+                          Column(
+                              modifier = Modifier.fillMaxHeight().weight(1f),
+                              horizontalAlignment = Alignment.Start,
+                              verticalArrangement = Arrangement.SpaceEvenly) {
+                                Text(
+                                    text = friend.name,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    fontWeight = FontWeight.Bold)
+
+                                Text(
+                                    text = friend.username,
+                                    style = MaterialTheme.typography.bodyMedium)
+                              }
+
+                          // Number of points
+                          Text(
+                              text =
+                                  stringResource(R.string.leaderboard_points, friend.weeklyPoints),
+                              style = MaterialTheme.typography.headlineLarge,
+                              fontWeight = FontWeight.Bold)
+                        }
+                  }
+            }
+          }
+
+          ranking++
+        }
+      }
+}
+
+/**
+ * Composable to choose a color given a rank (Gold, Silver, Bronze or normal)
+ *
+ * @param rank the rank to assign the color for
+ */
+@Composable
+fun rankColor(rank: Int): Color {
+  return when (rank) {
+    1 -> theme_leaderboard_gold
+    2 -> theme_leaderboard_silver
+    3 -> theme_leaderboard_bronze
+    else -> MaterialTheme.colorScheme.onBackground
+  }
+}
+
+/**
+ * The composable to show the view when the timer is started
+ *
+ * @param uiState The state exposed to the UI by the VM
+ * @param timerViewModel The viewModel instance
+ * @param corner The value to use for rounded corners components
+ */
+@Composable
+fun TimerStarted(uiState: TimerState, timerViewModel: TimerViewModel, corner: Dp) {
+
+  // Configuration is needed to get the screen width
+  val configuration = LocalConfiguration.current
+
+  Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+    // Define the weights of the components
+    val todoWeight = 0.5f
+    val timerWeight = 2f
+    val textWeight = 0.5f
+    val buttonsWeight = 1f
+    Box(modifier = Modifier.weight(todoWeight), contentAlignment = Alignment.BottomCenter) {
+      val todoRatio = 2.0 / 3.0
+
+      // If a todo is linked, display it
+      if (uiState.linkedTodo != null) {
+        Text(
+            text =
+                // Build a string with only the title of the todo to in bold
+                buildAnnotatedString {
+                  append(stringResource(R.string.timer_linked_todo))
+                  withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+                    append(uiState.linkedTodo.name)
+                  }
+                },
+            color = MaterialTheme.colorScheme.onBackground,
+            textAlign = TextAlign.Center,
+            modifier =
+                Modifier.width((configuration.screenWidthDp * todoRatio).dp)
+                    .testTag(FocusTimerScreenTestTags.LINKED_TODO))
+      }
+    }
+
+    // Timer circle and test
+    Box(modifier = Modifier.weight(timerWeight), contentAlignment = Alignment.Center) {
+      val progressRatio = 6.0 / 7.0
+      val progressWidth = 15.dp
+      val progressGap = 5.dp
+
+      Box(
+          modifier =
+              Modifier.height((configuration.screenWidthDp * progressRatio).dp)
+                  .width((configuration.screenWidthDp * progressRatio).dp)) {
+            // Circular time left
+            CircularProgressIndicator(
+                progress = { (uiState.remainingTime / uiState.plannedDuration).toFloat() },
+                strokeWidth = progressWidth,
+                color = MaterialTheme.colorScheme.secondary,
+                trackColor = MaterialTheme.colorScheme.surfaceVariant,
+                gapSize = progressGap,
+                modifier =
+                    Modifier.width((configuration.screenWidthDp * progressRatio).dp)
+                        .testTag(FocusTimerScreenTestTags.TIMER_CIRCLE))
+
+            // Time left
+            Text(
+                text = uiState.hours + ":" + uiState.minutes + ":" + uiState.seconds,
+                color = MaterialTheme.colorScheme.onBackground,
+                style = MaterialTheme.typography.displayLarge,
+                fontWeight = FontWeight.Bold,
+                modifier =
+                    Modifier.align(Alignment.Center).testTag(FocusTimerScreenTestTags.TIMER_TIME))
+          }
+    }
+
+    // Points text
+    Box(modifier = Modifier.weight(textWeight).fillMaxSize(), contentAlignment = Alignment.Center) {
+      Text(
+          text = "You have gained ${uiState.pointsGained} points!",
+          style = MaterialTheme.typography.headlineMedium,
+          modifier = Modifier.align(Alignment.BottomCenter))
+    }
+
+    // Control buttons
+    Row(
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        modifier = Modifier.fillMaxWidth().weight(buttonsWeight)) {
+          if (!uiState.isPaused) {
+
+            // Pause button
+            TimerButton(
+                { timerViewModel.pauseTimer() },
+                MaterialTheme.colorScheme.secondary,
+                MaterialTheme.colorScheme.onSecondary,
+                stringResource(R.string.timer_pause),
+                corner,
+                FocusTimerScreenTestTags.PAUSE_BUTTON)
+          } else {
+
+            // Resume button
+            TimerButton(
+                { timerViewModel.startTimer() },
+                MaterialTheme.colorScheme.secondary,
+                MaterialTheme.colorScheme.onSecondary,
+                stringResource(R.string.timer_resume),
+                corner,
+                FocusTimerScreenTestTags.RESUME_BUTTON)
+          }
+
+          // Stop timer button
+          TimerButton(
+              { timerViewModel.endTimer() },
+              MaterialTheme.colorScheme.surfaceVariant,
+              MaterialTheme.colorScheme.onSurfaceVariant,
+              stringResource(R.string.timer_stop),
+              corner,
+              FocusTimerScreenTestTags.STOP_BUTTON)
+        }
+  }
+}
+
+/**
+ * The composable to show the view when the timer is not started yet
+ *
+ * @param uiState The state exposed to the UI by the VM
+ * @param timerViewModel The viewModel instance
+ * @param corner The value to use for rounded corners components
+ */
+@Composable
+fun TimerNotStarted(uiState: TimerState, timerViewModel: TimerViewModel, corner: Dp) {
+  Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
 
     // Define weights of different components in the screen
     val timeWeight = 3f
@@ -127,218 +449,112 @@ fun TimerScreenContent(timerViewModel: TimerViewModel) {
     val todosWeight = 2f
 
     // Column of all 3 components
-    Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-      // The three time textFields and texts (hours, minutes, seconds)
-      Row(
-          horizontalArrangement = Arrangement.SpaceEvenly,
-          modifier = Modifier.fillMaxWidth().weight(timeWeight),
-          verticalAlignment = Alignment.Bottom) {
-            // The hours time textField and text
-            TimerTime(
-                uiState.hours,
-                { timerViewModel.setHours(it) },
-                stringResource(R.string.timer_hours),
-                corner,
-                FocusTimerScreenTestTags.HOURS_TEXT)
 
-            // The minutes time textField and text
-            TimerTime(
-                uiState.minutes,
-                { timerViewModel.setMinutes(it) },
-                stringResource(R.string.timer_minutes),
-                corner,
-                FocusTimerScreenTestTags.MINUTES_TEXT)
+    // The three time textFields and texts (hours, minutes, seconds)
+    Row(
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        modifier = Modifier.fillMaxWidth().weight(timeWeight),
+        verticalAlignment = Alignment.Bottom) {
+          // The hours time textField and text
+          TimerTime(
+              uiState.hours,
+              { timerViewModel.setHours(it) },
+              stringResource(R.string.timer_hours),
+              corner,
+              FocusTimerScreenTestTags.HOURS_TEXT)
 
-            // The seconds time textField and text
-            TimerTime(
-                uiState.seconds,
-                { timerViewModel.setSeconds(it) },
-                stringResource(R.string.timer_seconds),
-                corner,
-                FocusTimerScreenTestTags.SECONDS_TEXT)
-          }
+          // The minutes time textField and text
+          TimerTime(
+              uiState.minutes,
+              { timerViewModel.setMinutes(it) },
+              stringResource(R.string.timer_minutes),
+              corner,
+              FocusTimerScreenTestTags.MINUTES_TEXT)
 
-      // The start and reset timer buttons
-      Row(
-          horizontalArrangement = Arrangement.SpaceEvenly,
-          modifier = Modifier.fillMaxWidth().weight(buttonsWeight)) {
+          // The seconds time textField and text
+          TimerTime(
+              uiState.seconds,
+              { timerViewModel.setSeconds(it) },
+              stringResource(R.string.timer_seconds),
+              corner,
+              FocusTimerScreenTestTags.SECONDS_TEXT)
+        }
 
-            // Start button
-            TimerButton(
-                { timerViewModel.startTimer() },
-                MaterialTheme.colorScheme.secondary,
-                MaterialTheme.colorScheme.onSecondary,
-                stringResource(R.string.timer_start),
-                corner,
-                FocusTimerScreenTestTags.START_BUTTON)
+    // The start and reset timer buttons
+    Row(
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        modifier = Modifier.fillMaxWidth().weight(buttonsWeight)) {
 
-            // Reset button
-            TimerButton(
-                { timerViewModel.resetTimer() },
-                MaterialTheme.colorScheme.surfaceVariant,
-                MaterialTheme.colorScheme.onSurfaceVariant,
-                stringResource(R.string.timer_reset),
-                corner,
-                FocusTimerScreenTestTags.RESET_BUTTON)
-          }
+          // Start button
+          TimerButton(
+              { timerViewModel.startTimer() },
+              MaterialTheme.colorScheme.secondary,
+              MaterialTheme.colorScheme.onSecondary,
+              stringResource(R.string.timer_start),
+              corner,
+              FocusTimerScreenTestTags.START_BUTTON)
 
-      // Todos to link, in a lazy column to enable scrolling
-      LazyColumn(modifier = Modifier.fillMaxSize().weight(todosWeight)) {
-        val padding = 6.dp
-        val todoHeight = 60.dp
-        val horizontalThickness = 0.5.dp
+          // Reset button
+          TimerButton(
+              { timerViewModel.resetTimer() },
+              MaterialTheme.colorScheme.surfaceVariant,
+              MaterialTheme.colorScheme.onSurfaceVariant,
+              stringResource(R.string.timer_reset),
+              corner,
+              FocusTimerScreenTestTags.RESET_BUTTON)
+        }
 
-        // Title text for linking todos
+    // Todos to link, in a lazy column to enable scrolling
+    LazyColumn(modifier = Modifier.fillMaxSize().weight(todosWeight)) {
+      val padding = 6.dp
+      val todoHeight = 60.dp
+      val horizontalThickness = 0.5.dp
+
+      // Title text for linking todos
+      item {
+        Text(
+            text = stringResource(R.string.timer_todos_linking),
+            color = MaterialTheme.colorScheme.onBackground,
+            fontWeight = FontWeight.Bold,
+            style = MaterialTheme.typography.titleLarge,
+            modifier = Modifier.padding(padding))
+      }
+
+      // Todos lazily displayed
+      for (todo in uiState.allTodos) {
         item {
-          Text(
-              text = stringResource(R.string.timer_todos_linking),
-              color = MaterialTheme.colorScheme.onBackground,
-              fontWeight = FontWeight.Bold,
-              style = MaterialTheme.typography.titleLarge,
-              modifier = Modifier.padding(padding))
-        }
+          // Divider for aesthetics
+          HorizontalDivider(
+              thickness = horizontalThickness, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
-        // Todos lazily displayed
-        for (todo in uiState.allTodos) {
-          item {
-            // Divider for aesthetics
-            HorizontalDivider(
-                thickness = horizontalThickness, color = MaterialTheme.colorScheme.onSurfaceVariant)
-
-            // The card for each todo
-            Card(
-                colors =
-                    if (todo == uiState.linkedTodo) {
-                      // Highlight the linked todo with different colors
-                      CardDefaults.cardColors(
-                          containerColor = MaterialTheme.colorScheme.secondary,
-                          contentColor = MaterialTheme.colorScheme.onSecondary)
-                    } else {
-                      // Normal colors for unlinked todos
-                      CardDefaults.cardColors(
-                          containerColor = MaterialTheme.colorScheme.background,
-                          contentColor = MaterialTheme.colorScheme.onBackground)
-                    },
-                shape = RectangleShape,
-                modifier =
-                    Modifier.fillMaxWidth()
-                        .height(todoHeight)
-                        .clickable(onClick = { timerViewModel.linkToDo(todo) })
-                        .testTag(FocusTimerScreenTestTags.TODO_TO_CHOOSE)) {
-                  Box(modifier = Modifier.fillMaxSize().padding(horizontal = padding)) {
-                    Text(
-                        text = todo.name,
-                        modifier = Modifier.padding(padding).align(Alignment.CenterStart))
-                  }
-                }
-          }
-        }
-      }
-    }
-  }
-
-  // Second view, if timer is running or paused
-  if (uiState.isStarted) {
-    // Define the weights of the components
-    val todoWeight = 0.5f
-    val timerWeight = 2f
-    val buttonsWeight = 1f
-
-    Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-      Box(modifier = Modifier.weight(todoWeight), contentAlignment = Alignment.BottomCenter) {
-        val todoRatio = 2.0 / 3.0
-
-        // If a todo is linked, display it
-        if (uiState.linkedTodo != null) {
-          Text(
-              text =
-                  // Build a string with only the title of the todo to in bold
-                  buildAnnotatedString {
-                    append(stringResource(R.string.timer_linked_todo))
-                    withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
-                      append(uiState.linkedTodo?.name ?: "")
-                    }
+          // The card for each todo
+          Card(
+              colors =
+                  if (todo == uiState.linkedTodo) {
+                    // Highlight the linked todo with different colors
+                    CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.secondary,
+                        contentColor = MaterialTheme.colorScheme.onSecondary)
+                  } else {
+                    // Normal colors for unlinked todos
+                    CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.background,
+                        contentColor = MaterialTheme.colorScheme.onBackground)
                   },
-              color = MaterialTheme.colorScheme.onBackground,
-              textAlign = TextAlign.Center,
+              shape = RectangleShape,
               modifier =
-                  Modifier.width((configuration.screenWidthDp * todoRatio).dp)
-                      .testTag(FocusTimerScreenTestTags.LINKED_TODO))
+                  Modifier.fillMaxWidth()
+                      .height(todoHeight)
+                      .clickable(onClick = { timerViewModel.linkToDo(todo) })
+                      .testTag(FocusTimerScreenTestTags.TODO_TO_CHOOSE)) {
+                Box(modifier = Modifier.fillMaxSize().padding(horizontal = padding)) {
+                  Text(
+                      text = todo.name,
+                      modifier = Modifier.padding(padding).align(Alignment.CenterStart))
+                }
+              }
         }
       }
-
-      // Timer circle and test
-      Box(modifier = Modifier.weight(timerWeight), contentAlignment = Alignment.Center) {
-        val progressRatio = 6.0 / 7.0
-        val progressWidth = 15.dp
-        val progressGap = 5.dp
-
-        Box(
-            modifier =
-                Modifier.height((configuration.screenWidthDp * progressRatio).dp)
-                    .width((configuration.screenWidthDp * progressRatio).dp)) {
-              // Circular time left
-              CircularProgressIndicator(
-                  progress = { (uiState.remainingTime / uiState.plannedDuration).toFloat() },
-                  strokeWidth = progressWidth,
-                  color = MaterialTheme.colorScheme.secondary,
-                  trackColor = MaterialTheme.colorScheme.surfaceVariant,
-                  gapSize = progressGap,
-                  modifier =
-                      Modifier.width((configuration.screenWidthDp * progressRatio).dp)
-                          .testTag(FocusTimerScreenTestTags.TIMER_CIRCLE))
-
-              // Time left
-              Text(
-                  text = uiState.hours + ":" + uiState.minutes + ":" + uiState.seconds,
-                  color = MaterialTheme.colorScheme.onBackground,
-                  style = MaterialTheme.typography.displayLarge,
-                  fontWeight = FontWeight.Bold,
-                  modifier =
-                      Modifier.align(Alignment.Center).testTag(FocusTimerScreenTestTags.TIMER_TIME))
-            }
-      }
-
-      // Points text
-      Text(
-          text = "You have gained ${uiState.pointsGained} points!",
-          style = MaterialTheme.typography.headlineMedium)
-
-      // Control buttons
-      Row(
-          horizontalArrangement = Arrangement.SpaceEvenly,
-          modifier = Modifier.fillMaxWidth().weight(buttonsWeight)) {
-            if (!uiState.isPaused) {
-
-              // Pause button
-              TimerButton(
-                  { timerViewModel.pauseTimer() },
-                  MaterialTheme.colorScheme.secondary,
-                  MaterialTheme.colorScheme.onSecondary,
-                  stringResource(R.string.timer_pause),
-                  corner,
-                  FocusTimerScreenTestTags.PAUSE_BUTTON)
-            } else {
-
-              // Resume button
-              TimerButton(
-                  { timerViewModel.startTimer() },
-                  MaterialTheme.colorScheme.secondary,
-                  MaterialTheme.colorScheme.onSecondary,
-                  stringResource(R.string.timer_resume),
-                  corner,
-                  FocusTimerScreenTestTags.RESUME_BUTTON)
-            }
-
-            // Stop timer button
-            TimerButton(
-                { timerViewModel.endTimer() },
-                MaterialTheme.colorScheme.surfaceVariant,
-                MaterialTheme.colorScheme.onSurfaceVariant,
-                stringResource(R.string.timer_stop),
-                corner,
-                FocusTimerScreenTestTags.STOP_BUTTON)
-          }
     }
   }
 }
