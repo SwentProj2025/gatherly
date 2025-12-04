@@ -34,6 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.android.gatherly.R
+import com.android.gatherly.model.badge.BadgeType
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
@@ -54,7 +55,8 @@ object BadgeScreenTestTags {
 }
 
 /**
- * The Badge screen displays a list of highest ranked badges per type that the user obtained
+ * The Badge screen displays a list all badges per type that the user obtained and if higher rank
+ * are still obtainable, shows one blank badge to show the user that more can be done
  *
  * @param goBack called when the back arrow of the top bar is clicked to go back to Profile Screen
  * @param viewModel The ViewModel managing the state and logic for the Badge screen
@@ -89,6 +91,8 @@ fun BadgeScreen(
           LazyColumn(
               contentPadding = PaddingValues(vertical = 8.dp),
               modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(padding)) {
+
+                // ---------------------- ToDos ----------------------
                 item {
                   Text(
                       text = stringResource(R.string.todos_badge_title),
@@ -96,11 +100,22 @@ fun BadgeScreen(
                       fontWeight = FontWeight.Bold,
                       textAlign = TextAlign.Left)
                   Spacer(modifier = Modifier.height(4.dp))
-
                   Spacer(modifier = Modifier.height(10.dp))
                 }
 
+                items(uiState.badgesByType[BadgeType.TODOS_CREATED].orEmpty()) { badgeUi ->
+                  BadgeItem(badgeUi)
+                }
+
+                item { Spacer(modifier = Modifier.height(16.dp)) }
+
+                items(uiState.badgesByType[BadgeType.TODOS_COMPLETED].orEmpty()) { badgeUi ->
+                  BadgeItem(badgeUi)
+                }
+
+                // ---------------------- Events ----------------------
                 item {
+                  Spacer(modifier = Modifier.height(16.dp))
                   Text(
                       text = stringResource(R.string.events_badge_title),
                       style = MaterialTheme.typography.titleMedium,
@@ -109,7 +124,19 @@ fun BadgeScreen(
                   Spacer(modifier = Modifier.height(4.dp))
                 }
 
+                items(uiState.badgesByType[BadgeType.EVENTS_CREATED].orEmpty()) { badgeUi ->
+                  BadgeItem(badgeUi)
+                }
+
+                item { Spacer(modifier = Modifier.height(16.dp)) }
+
+                items(uiState.badgesByType[BadgeType.EVENTS_PARTICIPATED].orEmpty()) { badgeUi ->
+                  BadgeItem(badgeUi)
+                }
+
+                // ---------------------- Friends ----------------------
                 item {
+                  Spacer(modifier = Modifier.height(16.dp))
                   Text(
                       text = stringResource(R.string.friends_badge_title),
                       style = MaterialTheme.typography.titleMedium,
@@ -118,7 +145,13 @@ fun BadgeScreen(
                   Spacer(modifier = Modifier.height(4.dp))
                 }
 
+                items(uiState.badgesByType[BadgeType.FRIENDS_ADDED].orEmpty()) { badgeUi ->
+                  BadgeItem(badgeUi)
+                }
+
+                // ---------------------- Focus Sessions ----------------------
                 item {
+                  Spacer(modifier = Modifier.height(16.dp))
                   Text(
                       text = stringResource(R.string.focus_session_badge_title),
                       style = MaterialTheme.typography.titleMedium,
@@ -127,7 +160,10 @@ fun BadgeScreen(
                   Spacer(modifier = Modifier.height(4.dp))
                 }
 
-                items(uiState.topBadges.values.toList()) { badgeUi -> BadgeItem(badgeUi) }
+                items(uiState.badgesByType[BadgeType.FOCUS_SESSIONS_COMPLETED].orEmpty()) { badgeUi
+                  ->
+                  BadgeItem(badgeUi)
+                }
               }
         }
       })
