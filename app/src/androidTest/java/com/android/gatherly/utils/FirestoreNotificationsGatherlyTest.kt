@@ -6,6 +6,7 @@ import com.android.gatherly.model.notification.NotificationsRepository
 import com.android.gatherly.model.notification.NotificationsRepositoryFirestore
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.GoogleAuthProvider
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -123,38 +124,39 @@ open class FirestoreNotificationsGatherlyTest {
    * @throws IllegalStateException if the Firebase emulator is not running
    */
   @Before
-  open fun setUp() = runTest {
-    if (!FirebaseEmulator.isRunning) {
-      error("Firebase emulator must be running! Use: firebase emulators:start")
-    }
+  open fun setUp() =
+      runTest(timeout = 120.seconds) {
+        if (!FirebaseEmulator.isRunning) {
+          error("Firebase emulator must be running! Use: firebase emulators:start")
+        }
 
-    // Clear any existing users and data
-    FirebaseEmulator.auth.signOut()
-    FirebaseEmulator.clearAuthEmulator()
-    FirebaseEmulator.clearFirestoreEmulator()
+        // Clear any existing users and data
+        FirebaseEmulator.auth.signOut()
+        FirebaseEmulator.clearAuthEmulator()
+        FirebaseEmulator.clearFirestoreEmulator()
 
-    // Seed users in emulator
-    FirebaseEmulator.createGoogleUser(user1Token)
-    FirebaseEmulator.createGoogleUser(user2Token)
-    FirebaseEmulator.createGoogleUser(user3Token)
-    FirebaseEmulator.createGoogleUser(user4Token)
+        // Seed users in emulator
+        FirebaseEmulator.createGoogleUser(user1Token)
+        FirebaseEmulator.createGoogleUser(user2Token)
+        FirebaseEmulator.createGoogleUser(user3Token)
+        FirebaseEmulator.createGoogleUser(user4Token)
 
-    // Sign in as user1 by default
-    signInWithToken(user1Token)
-    user1Id = FirebaseEmulator.auth.currentUser!!.uid
+        // Sign in as user1 by default
+        signInWithToken(user1Token)
+        user1Id = FirebaseEmulator.auth.currentUser!!.uid
 
-    // Store user IDs 2, 3, 4 by signing in temporarily and then restore user1
-    signInWithToken(user2Token)
-    user2Id = FirebaseEmulator.auth.currentUser!!.uid
-    signInWithToken(user3Token)
-    user3Id = FirebaseEmulator.auth.currentUser!!.uid
-    signInWithToken(user4Token)
-    user4Id = FirebaseEmulator.auth.currentUser!!.uid
-    // Switch back to user1
-    signInWithToken(user1Token)
+        // Store user IDs 2, 3, 4 by signing in temporarily and then restore user1
+        signInWithToken(user2Token)
+        user2Id = FirebaseEmulator.auth.currentUser!!.uid
+        signInWithToken(user3Token)
+        user3Id = FirebaseEmulator.auth.currentUser!!.uid
+        signInWithToken(user4Token)
+        user4Id = FirebaseEmulator.auth.currentUser!!.uid
+        // Switch back to user1
+        signInWithToken(user1Token)
 
-    repository = NotificationsRepositoryFirestore(FirebaseEmulator.firestore)
-  }
+        repository = NotificationsRepositoryFirestore(FirebaseEmulator.firestore)
+      }
 
   /**
    * Cleans up the test environment after each test.
@@ -166,10 +168,11 @@ open class FirestoreNotificationsGatherlyTest {
    * Logs are included for debugging purposes to track user cleanup.
    */
   @After
-  open fun tearDown() = runTest {
-    FirebaseEmulator.clearAuthEmulator()
-    FirebaseEmulator.clearFirestoreEmulator()
-  }
+  open fun tearDown() =
+      runTest(timeout = 120.seconds) {
+        FirebaseEmulator.clearAuthEmulator()
+        FirebaseEmulator.clearFirestoreEmulator()
+      }
 
   /**
    * Sign in with the given fake JWT token.

@@ -24,6 +24,7 @@ import com.android.gatherly.utils.FirebaseEmulator
 import com.android.gatherly.utils.FirestoreGatherlyTest
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
@@ -38,7 +39,7 @@ class NavigationTest : FirestoreGatherlyTest() {
           Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
 
   private fun setUpWithGoogle() {
-    runTest {
+    runTest(timeout = 120.seconds) {
       FirebaseEmulator.auth.signOut()
 
       // Create google user
