@@ -47,6 +47,8 @@ import androidx.compose.ui.unit.dp
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
+import com.android.gatherly.model.group.Group
+import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.ui.badge.BadgeUI
 import com.android.gatherly.ui.navigation.BottomNavigationMenu
 import com.android.gatherly.ui.navigation.HandleSignedOutState
@@ -329,24 +331,10 @@ fun ProfileScreen(
                 Spacer(modifier = Modifier.height(fieldSpacingLarge))
 
                 // Groups
-                Text(
-                    text = stringResource(R.string.profile_groups_section_title),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                    modifier =
-                        Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PROFILE_GROUPS))
-                Spacer(modifier = Modifier.height(fieldSpacingSmall))
-                if (groups.isEmpty()) {
-                  Text(
-                      text = stringResource(R.string.profile_empty_groups_message),
-                      style = MaterialTheme.typography.bodyMedium,
-                      textAlign = TextAlign.Center,
-                      modifier = Modifier.testTag(ProfileScreenTestTags.NO_GROUPS_TEXT))
-                } else {
-                  GroupsOverview(
-                      groupsToMembers = groupsToMembers, modifier = Modifier.fillMaxWidth())
-                }
+                GroupsSection(
+                    groups = groups,
+                    groupsToMembers = groupsToMembers,
+                    modifier = Modifier.height(fieldSpacingSmall))
 
                 // Badges
                 Spacer(modifier = Modifier.height(fieldSpacingLarge))
@@ -425,4 +413,35 @@ fun BadgeIcon(badgeUi: BadgeUI, onClick: () -> Unit = {}) {
 @Composable
 fun ProfileScreenPreview() {
   GatherlyTheme(darkTheme = false) { ProfileScreen() }
+}
+
+/**
+ * Composable function to display the Groups section in the Profile screen.
+ *
+ * @param groups List of groups the user is a member of.
+ * @param groupsToMembers Map of groups to their respective members.
+ * @param modifier Modifier for styling.
+ */
+@Composable
+fun GroupsSection(
+    groups: List<Group>,
+    groupsToMembers: Map<Group, List<Profile>>,
+    modifier: Modifier = Modifier
+) {
+  Text(
+      text = stringResource(R.string.profile_groups_section_title),
+      style = MaterialTheme.typography.titleMedium,
+      fontWeight = FontWeight.Bold,
+      textAlign = TextAlign.Center,
+      modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PROFILE_GROUPS))
+  Spacer(modifier = modifier)
+  if (groups.isEmpty()) {
+    Text(
+        text = stringResource(R.string.profile_empty_groups_message),
+        style = MaterialTheme.typography.bodyMedium,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.testTag(ProfileScreenTestTags.NO_GROUPS_TEXT))
+  } else {
+    GroupsOverview(groupsToMembers = groupsToMembers, modifier = Modifier.fillMaxWidth())
+  }
 }
