@@ -989,15 +989,14 @@ class EventsOverviewScreenTest {
           .assertIsDisplayed()
     }
 
-    composeTestRule.onNodeWithTag(EventsScreenTestTags.SEARCH_BAR)
-        .performTextInput("Alpha")
+    composeTestRule.onNodeWithTag(EventsScreenTestTags.SEARCH_BAR).performTextInput("Alpha")
 
-      composeTestRule.waitUntil(timeoutMillis = 10000L) {
-          composeTestRule
-              .onAllNodesWithTag(EventsScreenTestTags.getTestTagForEventItem(eventB))
-              .fetchSemanticsNodes()
-              .isEmpty()
-      }
+    composeTestRule.waitUntil(timeoutMillis = 10000L) {
+      composeTestRule
+          .onAllNodesWithTag(EventsScreenTestTags.getTestTagForEventItem(eventB))
+          .fetchSemanticsNodes()
+          .isEmpty()
+    }
     composeTestRule
         .onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(eventA))
         .assertIsDisplayed()
@@ -1005,12 +1004,15 @@ class EventsOverviewScreenTest {
         .onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(eventAlphaBeta))
         .assertIsDisplayed()
 
-      composeTestRule.onNodeWithTag(EventsScreenTestTags
-          .getTestTagForEventItem(eventB)).assertIsNotDisplayed()
-      composeTestRule.onNodeWithTag(EventsScreenTestTags
-          .getTestTagForEventItem(eventC)).assertIsNotDisplayed()
-      composeTestRule.onNodeWithTag(EventsScreenTestTags
-          .getTestTagForEventItem(eventZebra)).assertIsNotDisplayed()
+    composeTestRule
+        .onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(eventB))
+        .assertIsNotDisplayed()
+    composeTestRule
+        .onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(eventC))
+        .assertIsNotDisplayed()
+    composeTestRule
+        .onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(eventZebra))
+        .assertIsNotDisplayed()
   }
 
   /** Test: Empty search shows all events */

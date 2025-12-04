@@ -109,4 +109,6 @@
     <dimen name="events_filter_button_height">35.dp</dimen>
     <dimen name="events_horizontal_padding">18dp</dimen>
 
+    <!-- Focus History Screen -->
+    <dimen name="focus_item_height">100.dp</dimen>
 </resources>

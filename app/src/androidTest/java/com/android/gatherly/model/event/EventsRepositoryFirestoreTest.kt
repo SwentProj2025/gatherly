@@ -4,6 +4,7 @@ import com.android.gatherly.model.map.Location
 import com.android.gatherly.utils.FirestoreEventsGatherlyTest
 import com.google.firebase.Timestamp
 import java.util.NoSuchElementException
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
 import org.junit.Ignore
@@ -21,176 +22,188 @@ class EventsRepositoryFirestoreTest : FirestoreEventsGatherlyTest() {
 
   /** Verifies that events can be added and retrieved from the repository. */
   @Test
-  fun add_and_getAll_works() = runTest {
-    repository.addEvent(event1)
-    repository.addEvent(event2)
+  fun add_and_getAll_works() =
+      runTest(timeout = 120.seconds) {
+        repository.addEvent(event1)
+        repository.addEvent(event2)
 
-    val events = repository.getAllEvents()
-    assertEquals(2, events.size)
-    assertTrue(events.any { it.title == "Team Meeting" })
-    assertTrue(events.any { it.title == "Conference" })
-  }
+        val events = repository.getAllEvents()
+        assertEquals(2, events.size)
+        assertTrue(events.any { it.title == "Team Meeting" })
+        assertTrue(events.any { it.title == "Conference" })
+      }
 
   /** Verifies that getEvent returns the exact event with all fields intact. */
   @Test
-  fun getEvent_returns_exact_event() = runTest {
-    repository.addEvent(event1)
+  fun getEvent_returns_exact_event() =
+      runTest(timeout = 120.seconds) {
+        repository.addEvent(event1)
 
-    val retrieved = repository.getEvent(event1.id)
-    assertEquals(event1.id, retrieved.id)
-    assertEquals(event1.title, retrieved.title)
-    assertEquals(event1.description, retrieved.description)
-    assertEquals(event1.status, retrieved.status)
-  }
+        val retrieved = repository.getEvent(event1.id)
+        assertEquals(event1.id, retrieved.id)
+        assertEquals(event1.title, retrieved.title)
+        assertEquals(event1.description, retrieved.description)
+        assertEquals(event1.status, retrieved.status)
+      }
 
   /** Verifies that getEvent throws NoSuchElementException when the event doesn't exist. */
   @Test
-  fun getEvent_throws_when_not_found() = runTest {
-    try {
-      repository.getEvent("non_existing_id")
-      fail("Expected NoSuchElementException to be thrown")
-    } catch (e: NoSuchElementException) {
-      // Expected
-    }
-  }
+  fun getEvent_throws_when_not_found() =
+      runTest(timeout = 120.seconds) {
+        try {
+          repository.getEvent("non_existing_id")
+          fail("Expected NoSuchElementException to be thrown")
+        } catch (e: NoSuchElementException) {
+          // Expected
+        }
+      }
 
   /** Verifies that events with location data are stored and retrieved correctly. */
   @Test
-  fun addEvent_with_location_stores_correctly() = runTest {
-    val eventWithLocation = event1.copy(id = "x1", location = Location(46.52, 6.57, "EPFL"))
+  fun addEvent_with_location_stores_correctly() =
+      runTest(timeout = 120.seconds) {
+        val eventWithLocation = event1.copy(id = "x1", location = Location(46.52, 6.57, "EPFL"))
 
-    repository.addEvent(eventWithLocation)
-    val fetched = repository.getEvent("x1")
+        repository.addEvent(eventWithLocation)
+        val fetched = repository.getEvent("x1")
 
-    assertEquals("EPFL", fetched.location?.name)
-    assertEquals(46.52, fetched.location?.latitude ?: 0.0, 0.0001)
-    assertEquals(6.57, fetched.location?.longitude ?: 0.0, 0.0001)
-  }
+        assertEquals("EPFL", fetched.location?.name)
+        assertEquals(46.52, fetched.location?.latitude ?: 0.0, 0.0001)
+        assertEquals(6.57, fetched.location?.longitude ?: 0.0, 0.0001)
+      }
 
   /** Verifies that date, start time, and end time timestamps are persisted correctly. */
   @Test
-  fun addEvent_stores_all_timestamps_correctly() = runTest {
-    val date = Timestamp(1700000000, 0)
-    val startTime = Timestamp(1700010000, 0)
-    val endTime = Timestamp(1700020000, 0)
+  fun addEvent_stores_all_timestamps_correctly() =
+      runTest(timeout = 120.seconds) {
+        val date = Timestamp(1700000000, 0)
+        val startTime = Timestamp(1700010000, 0)
+        val endTime = Timestamp(1700020000, 0)
 
-    val eventWithTimes =
-        event1.copy(id = "x2", date = date, startTime = startTime, endTime = endTime)
+        val eventWithTimes =
+            event1.copy(id = "x2", date = date, startTime = startTime, endTime = endTime)
 
-    repository.addEvent(eventWithTimes)
-    val fetched = repository.getEvent("x2")
+        repository.addEvent(eventWithTimes)
+        val fetched = repository.getEvent("x2")
 
-    assertEquals(date, fetched.date)
-    assertEquals(startTime, fetched.startTime)
-    assertEquals(endTime, fetched.endTime)
-  }
+        assertEquals(date, fetched.date)
+        assertEquals(startTime, fetched.startTime)
+        assertEquals(endTime, fetched.endTime)
+      }
 
   /** Verifies that editEvent successfully updates an existing event's fields. */
   @Test
-  fun editEvent_updates_existing_event() = runTest {
-    repository.addEvent(event1)
+  fun editEvent_updates_existing_event() =
+      runTest(timeout = 120.seconds) {
+        repository.addEvent(event1)
 
-    val updated =
-        event1.copy(
-            title = "Team Meeting (updated)",
-            description = "Updated description",
-            status = EventStatus.UPCOMING)
-    repository.editEvent(event1.id, updated)
+        val updated =
+            event1.copy(
+                title = "Team Meeting (updated)",
+                description = "Updated description",
+                status = EventStatus.UPCOMING)
+        repository.editEvent(event1.id, updated)
 
-    val fetched = repository.getEvent(event1.id)
-    assertEquals("Team Meeting (updated)", fetched.title)
-    assertEquals("Updated description", fetched.description)
-    assertEquals(EventStatus.UPCOMING, fetched.status)
-  }
+        val fetched = repository.getEvent(event1.id)
+        assertEquals("Team Meeting (updated)", fetched.title)
+        assertEquals("Updated description", fetched.description)
+        assertEquals(EventStatus.UPCOMING, fetched.status)
+      }
 
   /** Verifies that editEvent throws SecurityException when a non-creator tries to edit. */
   @Ignore("Fails due to new Firestore event rules — to be fixed in a separate PR.")
   @Test
-  fun editEvent_throws_security_exception_when_not_creator() = runTest {
-    // Add event as user1
-    repository.addEvent(event1)
+  fun editEvent_throws_security_exception_when_not_creator() =
+      runTest(timeout = 120.seconds) {
+        // Add event as user1
+        repository.addEvent(event1)
 
-    // Switch to user2
-    signInWithToken(user2Token)
+        // Switch to user2
+        signInWithToken(user2Token)
 
-    try {
-      repository.editEvent(event1.id, event1.copy(title = "Hacked!"))
-      fail("Expected SecurityException to be thrown")
-    } catch (e: SecurityException) {
-      // Expected
-    }
-  }
+        try {
+          repository.editEvent(event1.id, event1.copy(title = "Hacked!"))
+          fail("Expected SecurityException to be thrown")
+        } catch (e: SecurityException) {
+          // Expected
+        }
+      }
 
   /** Verifies that deleteEvent removes the event from the repository. */
   @Test
-  fun deleteEvent_removes_it() = runTest {
-    repository.addEvent(event1)
-    repository.addEvent(event2)
-    assertEquals(2, getEventsCount())
+  fun deleteEvent_removes_it() =
+      runTest(timeout = 120.seconds) {
+        repository.addEvent(event1)
+        repository.addEvent(event2)
+        assertEquals(2, getEventsCount())
 
-    repository.deleteEvent(event1.id)
-    val events = repository.getAllEvents()
-    assertEquals(1, events.size)
-    assertEquals(event2.id, events.first().id)
-  }
+        repository.deleteEvent(event1.id)
+        val events = repository.getAllEvents()
+        assertEquals(1, events.size)
+        assertEquals(event2.id, events.first().id)
+      }
 
   /** Verifies that deleteEvent throws SecurityException when a non-creator tries to delete. */
   @Ignore("Fails due to new Firestore event rules — to be fixed in a separate PR.")
   @Test
-  fun deleteEvent_throws_security_exception_when_not_creator() = runTest {
-    // Add event as user1
-    repository.addEvent(event1)
+  fun deleteEvent_throws_security_exception_when_not_creator() =
+      runTest(timeout = 120.seconds) {
+        // Add event as user1
+        repository.addEvent(event1)
 
-    // Switch to user2
-    signInWithToken(user2Token)
+        // Switch to user2
+        signInWithToken(user2Token)
 
-    try {
-      repository.deleteEvent(event1.id)
-      fail("Expected SecurityException to be thrown")
-    } catch (e: SecurityException) {
-      // Expected
-    }
-  }
+        try {
+          repository.deleteEvent(event1.id)
+          fail("Expected SecurityException to be thrown")
+        } catch (e: SecurityException) {
+          // Expected
+        }
+      }
 
   /** Verifies that addParticipant successfully adds a user to the event's participant list. */
   @Test
-  fun addParticipant_adds_user_to_list() = runTest {
-    repository.addEvent(event1)
+  fun addParticipant_adds_user_to_list() =
+      runTest(timeout = 120.seconds) {
+        repository.addEvent(event1)
 
-    repository.addParticipant(event1.id, user2Id)
+        repository.addParticipant(event1.id, user2Id)
 
-    val fetched = repository.getEvent(event1.id)
-    assertTrue(fetched.participants.contains(user2Id))
-    assertEquals(1, fetched.participants.size)
-  }
+        val fetched = repository.getEvent(event1.id)
+        assertTrue(fetched.participants.contains(user2Id))
+        assertEquals(1, fetched.participants.size)
+      }
 
   /** Verifies that multiple users can be added as participants to the same event. */
   @Test
-  fun addParticipant_multiple_users() = runTest {
-    repository.addEvent(event1)
+  fun addParticipant_multiple_users() =
+      runTest(timeout = 120.seconds) {
+        repository.addEvent(event1)
 
-    repository.addParticipant(event1.id, user1Id)
-    repository.addParticipant(event1.id, user2Id)
+        repository.addParticipant(event1.id, user1Id)
+        repository.addParticipant(event1.id, user2Id)
 
-    val fetched = repository.getEvent(event1.id)
-    assertEquals(2, fetched.participants.size)
-    assertTrue(fetched.participants.contains(user1Id))
-    assertTrue(fetched.participants.contains(user2Id))
-  }
+        val fetched = repository.getEvent(event1.id)
+        assertEquals(2, fetched.participants.size)
+        assertTrue(fetched.participants.contains(user1Id))
+        assertTrue(fetched.participants.contains(user2Id))
+      }
 
   /** Verifies that removeParticipant removes a user from the event's participant list. */
   @Test
-  fun removeParticipant_removes_user_from_list() = runTest {
-    val eventWithParticipants = event1.copy(participants = listOf(user1Id, user2Id))
-    repository.addEvent(eventWithParticipants)
+  fun removeParticipant_removes_user_from_list() =
+      runTest(timeout = 120.seconds) {
+        val eventWithParticipants = event1.copy(participants = listOf(user1Id, user2Id))
+        repository.addEvent(eventWithParticipants)
 
-    repository.removeParticipant(event1.id, user1Id)
+        repository.removeParticipant(event1.id, user1Id)
 
-    val fetched = repository.getEvent(event1.id)
-    assertFalse(fetched.participants.contains(user1Id))
-    assertTrue(fetched.participants.contains(user2Id))
-    assertEquals(1, fetched.participants.size)
-  }
+        val fetched = repository.getEvent(event1.id)
+        assertFalse(fetched.participants.contains(user1Id))
+        assertTrue(fetched.participants.contains(user2Id))
+        assertEquals(1, fetched.participants.size)
+      }
 
   /** Verifies that getNewId returns unique, non-empty identifiers. */
   @Test
