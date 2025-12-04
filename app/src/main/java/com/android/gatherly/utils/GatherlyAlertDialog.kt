@@ -16,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -136,23 +137,13 @@ fun GatherlyAlertDialog(
                               } else {
                                 MaterialTheme.colorScheme.primaryContainer
                               },
-                          contentColor =
-                              if (isImportantWarning) {
-                                MaterialTheme.colorScheme.error
-                              } else {
-                                MaterialTheme.colorScheme.onPrimaryContainer
-                              }),
+                          contentColor = contentColor(isImportantWarning)),
                   enabled = confirmEnabled,
                   onClick = onConfirm,
                   modifier = Modifier.weight(1f).testTag(AlertDialogTestTags.CONFIRM_BTN)) {
                     Text(
                         text = confirmText,
-                        color =
-                            if (isImportantWarning) {
-                              MaterialTheme.colorScheme.error
-                            } else {
-                              MaterialTheme.colorScheme.onPrimaryContainer
-                            },
+                        color = contentColor(isImportantWarning),
                         textAlign = TextAlign.Center,
                         maxLines = 1)
                   }
@@ -160,6 +151,15 @@ fun GatherlyAlertDialog(
       },
       onDismissRequest = onDismiss,
   )
+}
+
+@Composable
+private fun contentColor(isImportantWarning: Boolean): Color {
+  if (isImportantWarning) {
+    return MaterialTheme.colorScheme.error
+  } else {
+    return MaterialTheme.colorScheme.onPrimaryContainer
+  }
 }
 
 /**
