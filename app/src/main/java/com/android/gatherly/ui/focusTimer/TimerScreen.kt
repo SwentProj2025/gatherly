@@ -240,7 +240,7 @@ fun TimerScreenContent(timerViewModel: TimerViewModel) {
   // Second view, if timer is running or paused
   if (uiState.isStarted) {
     // Define the weights of the components
-    val todoWeight = 1f
+    val todoWeight = 0.5f
     val timerWeight = 2f
     val buttonsWeight = 1f
 
@@ -298,6 +298,11 @@ fun TimerScreenContent(timerViewModel: TimerViewModel) {
                       Modifier.align(Alignment.Center).testTag(FocusTimerScreenTestTags.TIMER_TIME))
             }
       }
+
+      // Points text
+      Text(
+          text = "You have gained ${uiState.pointsGained} points!",
+          style = MaterialTheme.typography.headlineMedium)
 
       // Control buttons
       Row(

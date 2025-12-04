@@ -5,6 +5,8 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import com.android.gatherly.model.group.GroupsLocalRepository
+import com.android.gatherly.model.notification.NotificationsLocalRepository
+import com.android.gatherly.model.notification.NotificationsRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.utils.MockitoUtils
@@ -24,6 +26,7 @@ class AddGroupScreenTest {
   private lateinit var currentUserId: String
   private lateinit var mockitoUtils: MockitoUtils
   private lateinit var profileRepository: ProfileLocalRepository
+  private lateinit var notificationsRepository: NotificationsRepository
   private lateinit var groupsRepository: GroupsLocalRepository
   private lateinit var addGroupViewModel: AddGroupViewModel
 
@@ -36,6 +39,7 @@ class AddGroupScreenTest {
     runTest {
       profileRepository = ProfileLocalRepository()
       groupsRepository = GroupsLocalRepository()
+      notificationsRepository = NotificationsLocalRepository()
 
       profileRepository.addProfile(francisProfile)
       advanceUntilIdle()
@@ -56,6 +60,7 @@ class AddGroupScreenTest {
           AddGroupViewModel(
               groupsRepository = groupsRepository,
               profileRepository = profileRepository,
+              notificationsRepository = notificationsRepository,
               authProvider = { mockitoUtils.mockAuth })
 
       composeTestRule.setContent { AddGroupScreen(addGroupViewModel) }

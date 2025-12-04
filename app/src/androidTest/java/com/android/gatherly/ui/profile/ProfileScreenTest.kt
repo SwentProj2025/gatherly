@@ -3,9 +3,12 @@ package com.android.gatherly.ui.profile
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import com.android.gatherly.model.notification.NotificationsLocalRepository
+import com.android.gatherly.model.notification.NotificationsRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
+import com.android.gatherly.ui.badge.BadgeScreenTestTags
 import com.android.gatherly.utils.MockitoUtils
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
@@ -24,12 +27,14 @@ class ProfileScreenTest {
           friendUids = emptyList())
 
   private lateinit var profileRepository: ProfileRepository
+  private lateinit var notificationsRepository: NotificationsRepository
   private lateinit var profileViewModel: ProfileViewModel
 
   private lateinit var mockitoUtils: MockitoUtils
 
   private fun setContent(isAnon: Boolean = false) {
     profileRepository = ProfileLocalRepository()
+    notificationsRepository = NotificationsLocalRepository()
     fill_repository()
 
     // Mock Firebase Auth
@@ -37,7 +42,10 @@ class ProfileScreenTest {
     mockitoUtils.chooseCurrentUser("", isAnon)
 
     profileViewModel =
-        ProfileViewModel(repository = profileRepository, authProvider = { mockitoUtils.mockAuth })
+        ProfileViewModel(
+            repository = profileRepository,
+            notificationsRepository = notificationsRepository,
+            authProvider = { mockitoUtils.mockAuth })
     composeTestRule.setContent { ProfileScreen(profileViewModel = profileViewModel) }
   }
 
@@ -79,9 +87,9 @@ class ProfileScreenTest {
         .assertExists()
         .assertTextEquals("0")
     composeTestRule
-        .onNodeWithTag(ProfileScreenTestTags.PROFILE_FOCUS_POINTS_COUNT)
+        .onNodeWithTag(ProfileScreenTestTags.PROFILE_FOCUS_POINTS_COUNT, useUnmergedTree = true)
         .assertExists()
-        .assertTextEquals("0")
+        .assertTextEquals("0.0")
   }
 
   @Test
@@ -89,6 +97,28 @@ class ProfileScreenTest {
     setContent()
     composeTestRule.onNodeWithTag(ProfileScreenTestTags.PROFILE_FOCUS_SESSIONS).assertExists()
     composeTestRule.onNodeWithTag(ProfileScreenTestTags.PROFILE_GROUPS).assertExists()
+  }
+
+  @Test
+  fun badgeInfo_AreDisplayedCorrectly() {
+    setContent()
+
+    val expectedTitles =
+        listOf(
+            "Blank Todo Created Badge",
+            "Blank Todo Completed Badge",
+            "Blank Event Created Badge",
+            "Blank Event Participated Badge",
+            "Blank Friend Badge",
+            "Blank Focus Session Badge")
+
+    expectedTitles.forEach { title ->
+      composeTestRule
+          .onNodeWithTag(BadgeScreenTestTags.badgeTest(title), useUnmergedTree = true)
+          .assertExists()
+    }
+
+    composeTestRule.onNodeWithTag(ProfileScreenTestTags.PROFILE_BADGES).assertExists()
   }
 
   /** Check that the anonymous user sees the "upgrade with google" button */

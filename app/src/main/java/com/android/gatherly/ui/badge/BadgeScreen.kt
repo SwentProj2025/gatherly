@@ -53,7 +53,6 @@ object BadgeScreenTestTags {
  * The Badge screen displays a list of highest ranked badges per type that the user obtained
  *
  * @param goBack called when the back arrow of the top bar is clicked to go back to Profile Screen
- * @param navigationActions Handles navigation between different tabs/screens.
  * @param viewModel The ViewModel managing the state and logic for the Badge screen
  */
 @Composable

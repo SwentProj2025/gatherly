@@ -331,6 +331,8 @@ class ProfileRepositoryFirestore(
    *
    * @param doc The snapshot to convert.
    * @return The [Profile], or null if required fields are missing.
+   *
+   * TODO: refactor unchecked cast and use indexed accessor.
    */
   private fun snapshotToProfile(doc: DocumentSnapshot): Profile? {
     val uid = doc.getString("uid") ?: return null
@@ -341,6 +343,7 @@ class ProfileRepositoryFirestore(
     val eventOwnerIds = doc.get("ownedEventIds") as? List<String> ?: emptyList()
     val groupIds = doc.get("groups") as? List<String> ?: emptyList()
     val friendUids = doc.get("friendUids") as? List<String> ?: emptyList()
+    val pendingSentFriendsUids = doc.get("pendingSentFriendsUids") as? List<String> ?: emptyList()
     val school = doc.getString("school") ?: ""
     val schoolYear = doc.getString("schoolYear") ?: ""
     val birthday = doc.getTimestamp("birthday")
@@ -350,6 +353,7 @@ class ProfileRepositoryFirestore(
     val badgeIds = doc.get("badgeIds") as? List<String> ?: emptyList()
     val badgeCount = doc.get("badgeCount") as? Map<String, Long> ?: emptyMap()
     val focusPoints: Double = doc.getDouble("focusPoints") ?: 0.0
+    val weeklyPoints: Double = doc.getDouble("weeklyPoints") ?: 0.0
 
     return Profile(
         uid = uid,
@@ -360,6 +364,7 @@ class ProfileRepositoryFirestore(
         ownedEventIds = eventOwnerIds,
         groupIds = groupIds,
         friendUids = friendUids,
+        pendingSentFriendsUids = pendingSentFriendsUids,
         school = school,
         schoolYear = schoolYear,
         birthday = birthday,
@@ -368,7 +373,8 @@ class ProfileRepositoryFirestore(
         userStatusSource = userStatusSource,
         badgeIds = badgeIds,
         badgeCount = badgeCount,
-        focusPoints = focusPoints)
+        focusPoints = focusPoints,
+        weeklyPoints = weeklyPoints)
   }
 
   /**
@@ -387,6 +393,7 @@ class ProfileRepositoryFirestore(
         "ownedEventIds" to profile.ownedEventIds,
         "groupIds" to profile.groupIds,
         "friendUids" to profile.friendUids,
+        "pendingSentFriendsUids" to profile.pendingSentFriendsUids,
         "school" to profile.school,
         "schoolYear" to profile.schoolYear,
         "birthday" to profile.birthday,
@@ -395,7 +402,8 @@ class ProfileRepositoryFirestore(
         "userStatusSource" to profile.userStatusSource.value,
         "badgeIds" to profile.badgeIds,
         "badgeCount" to profile.badgeCount,
-        "focusPoints" to profile.focusPoints)
+        "focusPoints" to profile.focusPoints,
+        "weeklyPoints" to profile.weeklyPoints)
   }
 
   // -- FRIENDS GESTION PART --
@@ -436,6 +444,20 @@ class ProfileRepositoryFirestore(
     val docRef = profilesCollection.document(currentUserId)
     val friendId = getProfileByUsername(friend)?.uid
     docRef.update("friendUids", FieldValue.arrayRemove(friendId)).await()
+  }
+
+  override suspend fun addPendingSentFriendUid(currentUserId: String, targetUid: String) {
+    profilesCollection
+        .document(currentUserId)
+        .update("pendingSentFriendsUids", FieldValue.arrayUnion(targetUid))
+        .await()
+  }
+
+  override suspend fun removePendingSentFriendUid(currentUserId: String, targetUid: String) {
+    profilesCollection
+        .document(currentUserId)
+        .update("pendingSentFriendsUids", FieldValue.arrayRemove(targetUid))
+        .await()
   }
 
   // -- STATUS GESTION PART --
@@ -504,9 +526,13 @@ class ProfileRepositoryFirestore(
     addBadge(uid, badge.id)
   }
 
-  override suspend fun updateFocusPoints(uid: String, points: Double) {
+  override suspend fun updateFocusPoints(uid: String, points: Double, addToLeaderboard: Boolean) {
     var profile = getProfileByUid(uid) ?: throw IllegalArgumentException("Profile doesn't exist")
-    profile = profile.copy(focusPoints = profile.focusPoints + points)
+    val leaderboard = if (addToLeaderboard) points else 0.0
+    profile =
+        profile.copy(
+            focusPoints = profile.focusPoints + points,
+            weeklyPoints = profile.weeklyPoints + leaderboard)
     updateProfile(profile)
   }
 
