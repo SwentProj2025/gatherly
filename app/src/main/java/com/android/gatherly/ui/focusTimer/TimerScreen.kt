@@ -86,8 +86,8 @@ object FocusTimerScreenTestTags {
   const val LINKED_TODO = "LINKED_TODO"
   const val TIMER_TIME = "TIMER_TIME"
   const val TIMER_CIRCLE = "TIMER_CIRCLE"
-  const val TIMER_SELECT = "TIMER_CIRCLE"
-  const val LEADERBOARD_SELECT = "TIMER_CIRCLE"
+  const val TIMER_SELECT = "TIMER_SELECT"
+  const val LEADERBOARD_SELECT = "LEADERBOARD_SELECT"
   const val LEADERBOARD_LIST = "LEADERBOARD_LIST"
 }
 
