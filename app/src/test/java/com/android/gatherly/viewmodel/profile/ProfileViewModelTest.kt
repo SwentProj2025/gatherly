@@ -134,7 +134,11 @@ class ProfileViewModelIntegrationTest {
   fun signOut_callsSetStatusCorrectly() = runTest {
     val statusManagerMock = mock<UserStatusManager>()
     val viewModel =
-        ProfileViewModel(profileRepository, { mockitoUtils.mockAuth }, statusManagerMock)
+        ProfileViewModel(
+            profileRepository,
+            notificationsRepository = NotificationsLocalRepository(),
+            authProvider = { mockitoUtils.mockAuth },
+            userStatusManager = statusManagerMock)
 
     viewModel.signOut(mock())
     advanceUntilIdle()
