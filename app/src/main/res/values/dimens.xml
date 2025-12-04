@@ -62,6 +62,8 @@
     <dimen name="homepage_section_spacing">20.dp</dimen>
     <dimen name="homepage_events_section_height">200.dp</dimen>
     <dimen name="homepage_minimap_width">280.dp</dimen>
+    <dimen name="homepage_add_friends_icon_size">30.dp</dimen>
+    <dimen name="homepage_task_section_height">200.dp</dimen>
 
     <!-- SignIn Screen -->
     <dimen name="sign_in_top_spacing">80.dp</dimen>
@@ -112,4 +114,6 @@
     <dimen name="events_filter_bar_vertical_size">10.dp</dimen>
     <dimen name="events_filter_button_height">35.dp</dimen>
 
+    <!-- Focus History Screen -->
+    <dimen name="focus_item_height">100.dp</dimen>
 </resources>

@@ -12,6 +12,7 @@ import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsRepository
 import com.android.gatherly.model.event.EventsRepositoryFirestore
 import com.android.gatherly.model.map.Location
+import com.android.gatherly.model.map.LocationRepository
 import com.android.gatherly.model.map.NominatimLocationRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
@@ -34,8 +35,6 @@ data class EditEventsUIState(
     val name: String = "",
     // the event description
     val description: String = "",
-    // the event creators name
-    val creatorName: String = "",
     // the event location
     val location: String = "",
     // the event date
@@ -56,8 +55,6 @@ data class EditEventsUIState(
     val nameError: Boolean = false,
     // if there is an error in the description
     val descriptionError: Boolean = false,
-    // if there is an error in the creators name
-    val creatorNameError: Boolean = false,
     // if there is an error in the date
     val dateError: Boolean = false,
     // if there is an error in the start time
@@ -92,7 +89,7 @@ private var client: OkHttpClient =
 class EditEventsViewModel(
     private val profileRepository: ProfileRepository,
     private val eventsRepository: EventsRepository,
-    private val nominatimClient: NominatimLocationRepository = NominatimLocationRepository(client)
+    private val nominatimClient: LocationRepository = NominatimLocationRepository(client)
 ) : ViewModel() {
 
   // State with a private set
@@ -106,6 +103,7 @@ class EditEventsViewModel(
   // Event id and Creator id needed for saving the edited event
   private lateinit var eventId: String
   private lateinit var creatorId: String
+  private lateinit var creatorName: String
 
   // The list of participants ID is needed in case
   // if the event is canceled we have to unregister everybody
@@ -129,7 +127,6 @@ class EditEventsViewModel(
           uiState.copy(
               name = event.title,
               description = event.description,
-              creatorName = event.creatorName,
               location = event.location?.name ?: "",
               date = dateFormat.format(event.date.toDate()),
               startTime = timeFormat.format(event.startTime.toDate()),
@@ -137,6 +134,7 @@ class EditEventsViewModel(
               participants = event.participants.map { profileRepository.getProfileByUid(it)!! })
       eventId = event.id
       creatorId = event.creatorId
+      creatorName = event.creatorName
       participants = event.participants
     }
   }
@@ -166,17 +164,6 @@ class EditEventsViewModel(
     uiState =
         uiState.copy(
             description = updatedDescription, descriptionError = updatedDescription.isBlank())
-  }
-
-  /**
-   * Updates the event creator name
-   *
-   * @param updatedCreatorName the string with which to update
-   */
-  fun updateCreatorName(updatedCreatorName: String) {
-    uiState =
-        uiState.copy(
-            creatorName = updatedCreatorName, creatorNameError = updatedCreatorName.isBlank())
   }
 
   /**
@@ -355,7 +342,6 @@ class EditEventsViewModel(
   private fun checkAllEntries() {
     updateName(uiState.name)
     updateDescription(uiState.description)
-    updateCreatorName(uiState.creatorName)
     updateDate(uiState.date)
     updateStartTime(uiState.startTime)
     updateEndTime(uiState.endTime)
@@ -368,7 +354,6 @@ class EditEventsViewModel(
     checkAllEntries()
     if (!uiState.nameError &&
         !uiState.descriptionError &&
-        !uiState.creatorNameError &&
         !uiState.dateError &&
         !uiState.startTimeError &&
         !uiState.endTimeError) {
@@ -419,7 +404,7 @@ class EditEventsViewModel(
               id = eventId,
               title = uiState.name,
               description = uiState.description,
-              creatorName = uiState.creatorName,
+              creatorName = creatorName,
               location = chosenLocation,
               date = timestampDate,
               startTime = timestampStartTime,
@@ -461,9 +446,12 @@ class EditEventsViewModel(
     fun provideFactory(
         profileRepository: ProfileRepository =
             ProfileRepositoryFirestore(Firebase.firestore, Firebase.storage),
-        eventsRepository: EventsRepository = EventsRepositoryFirestore(Firebase.firestore)
+        eventsRepository: EventsRepository = EventsRepositoryFirestore(Firebase.firestore),
+        nominatimClient: LocationRepository = NominatimLocationRepository(client)
     ): ViewModelProvider.Factory {
-      return GenericViewModelFactory { EditEventsViewModel(profileRepository, eventsRepository) }
+      return GenericViewModelFactory {
+        EditEventsViewModel(profileRepository, eventsRepository, nominatimClient)
+      }
     }
   }
 }

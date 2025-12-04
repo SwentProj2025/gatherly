@@ -87,21 +87,21 @@
     <string name="profile_friends_label">Friends</string>
     <string name="profile_focus_points_label">Focus points</string>
     <string name="profile_focus_sessions_section_title">Your Focus sessions</string>
+    <string name="profile_badges_section_title">Your Badges</string>
     <string name="profile_groups_section_title">Your Groups</string>
     <string name="profile_empty_focus_sessions_message">Focus session data not available yet.</string>
     <string name="profile_empty_groups_message">You currently have no groups.</string>
     <string name="profile_anon_message">You are currently signed in anonymously, create an account to have a profile.</string>
 
+
     <!-- Events -->
-    <string name="events_title_field_label">Title</string>
+    <string name="events_title_field_label">Title (*)</string>
     <string name="events_title_field_placeholder">Task Title</string>
-    <string name="events_description_field_label">Description</string>
+    <string name="events_description_field_label">Description (*)</string>
     <string name="events_description_placeholder">Describe the task</string>
-    <string name="events_creator_field_label">Creator</string>
-    <string name="events_creator_placeholder">Assign a creator</string>
-    <string name="events_start_time_field_label">Start Time</string>
-    <string name="events_end_time_field_label">End Time</string>
-    <string name="events_date_field_label">Due Date</string>
+    <string name="events_start_time_field_label">Start Time (*)</string>
+    <string name="events_end_time_field_label">End Time (*)</string>
+    <string name="events_date_field_label">Due Date (*)</string>
     <string name="events_location_field_label">Location</string>
     <string name="events_location_field_placeholder">Enter an Address or Location</string>
     <string name="events_participant_field_label">Participant</string>
@@ -126,6 +126,9 @@
     <string name="homepage_profile_image_description">Friend Profile Picture</string>
     <string name="homepage_upcoming_events_title">Upcoming events</string>
     <string name="homepage_upcoming_tasks_title">My upcoming tasks</string>
+    <string name="homepage_empty_task_list_message">You don\'t have any todos, click here to add some !</string>
+    <string name="homepage_no_friends_message">Add friends</string>
+    <string name="homepage_add_friend_icon_description">Add friends icon</string>
 
     <string name="goback_button_title">Go back</string>
     <string name="unregister_button_title">Unregister</string>
@@ -171,4 +174,25 @@
     <string name="group_name_bar_placeholder">Name the Group</string>
     <string name="group_members_text_singular">member</string>
     <string name="group_members_text_plural">members</string>
+
+    <!-- Focus points -->
+    <string name="focus_points_acquisition">History of focus points acquisition</string>
+    <string name="focus_points_how_to_obtain">How to obtain focus points</string>
+    <string name="focus_points_focus_sessions">Focus sessions</string>
+    <string name="focus_points_focus_sessions_text">\t- For every minute you focus for 1 minute, you get one point multiplied by a bonus value\n\t- The bonus constant is 1 at first and increases of 5%% every 5 minutes\n</string>
+    <string name="focus_points_badges">Badges</string>
+    <string name="focus_points_badges_text">\t- For every badge you obtain, you receive focus points along with it. Points are given according to the rank of the badge obtained.\n
+        \t- Starting : 10 points\n\t- Bronze : 30 points\n
+        \t- Silver : 50 points\n
+        \t- Gold : 100 points\n
+        \t- Diamond : 200 points\n
+        \t- Legend : 300 points\n</string>
+    <string name="focus_points_leaderboard">Friends leaderboard</string>
+    <string name="focus_points_leaderboard_text">\t- If you share a leaderboard with your friends, every Monday at 00:00, points are awarded to the top three contestants. They respectively receive 100, 75 and 50 points.</string>
+    <string name="focus_points_no_history">You have no focus points</string>
+    <string name="focus_points_gained">+ %1$.2f points</string>
+    <string name="focus_date_format">dd/MM/yyyy \'at\' HH:mm</string>
+    <string name="focus_points_date">Obtained on: %1$s</string>
+    <string name="focus_history_badge">Obtained the %1$s badge</string>
+    <string name="focus_history_leaderboard">Reached %1$s on your friends leaderboard</string>
 </resources>

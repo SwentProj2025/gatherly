@@ -47,6 +47,7 @@ import com.android.gatherly.ui.theme.GatherlyTheme
 import com.android.gatherly.utils.DatePickerInputField
 import com.android.gatherly.utils.GatherlyAlertDialog
 import com.android.gatherly.utils.GatherlyDatePicker
+import com.android.gatherly.utils.TimeInputField
 import kotlinx.coroutines.delay
 
 // Portions of the code in this file are copy-pasted from the Bootcamp solution provided by the
@@ -194,6 +195,7 @@ fun AddToDoScreen(
                     maxLines = integerResource(R.integer.todo_description_max_lines))
               }
 
+              // Assignee Input
               item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -244,27 +246,28 @@ fun AddToDoScreen(
                   TimeInputField(
                       initialTime = todoUIState.dueTime,
                       onTimeChanged = { addTodoViewModel.onTimeChanged(it) },
-                      dueTimeError = todoUIState.dueTimeError,
+                      dueTimeError = (todoUIState.dueTimeError != null),
+                      label = stringResource(R.string.todos_time_field_label),
                       textFieldColors = toDoTextFieldColors,
                       testTagInput = AddToDoScreenTestTags.INPUT_TODO_TIME,
                       testTagErrorMessage = AddToDoScreenTestTags.ERROR_MESSAGE,
                   )
                 }
+              }
 
-                item { Spacer(modifier = Modifier.height(fieldSpacing)) }
+              item { Spacer(modifier = Modifier.height(fieldSpacing)) }
 
-                // Save Button
-                item {
-                  Button(
-                      onClick = { addTodoViewModel.checkTodoTime() },
-                      modifier = Modifier.fillMaxWidth().testTag(AddToDoScreenTestTags.TODO_SAVE),
-                      colors =
-                          ButtonDefaults.buttonColors(
-                              containerColor = MaterialTheme.colorScheme.secondary),
-                      enabled = todoUIState.isValid) {
-                        SavingText(todoUIState = todoUIState)
-                      }
-                }
+              // Save Button
+              item {
+                Button(
+                    onClick = { addTodoViewModel.checkTodoTime() },
+                    modifier = Modifier.fillMaxWidth().testTag(AddToDoScreenTestTags.TODO_SAVE),
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.secondary),
+                    enabled = todoUIState.isValid) {
+                      SavingText(todoUIState = todoUIState)
+                    }
               }
             }
         if (todoUIState.pastTime) {

@@ -14,9 +14,16 @@ import com.android.gatherly.R
 import com.android.gatherly.model.group.Group
 import com.android.gatherly.model.group.GroupsRepository
 import com.android.gatherly.model.group.GroupsRepositoryProvider
+import com.android.gatherly.model.badge.Badge
+import com.android.gatherly.model.badge.BadgeType
+import com.android.gatherly.model.notification.NotificationsRepository
+import com.android.gatherly.model.notification.NotificationsRepositoryProvider
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryProvider
+import com.android.gatherly.ui.badge.BadgeUI
+import com.android.gatherly.ui.badge.UIState
+import com.android.gatherly.utils.getProfileWithSyncedFriendNotifications
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.Companion.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
@@ -35,10 +42,12 @@ data class ProfileState(
     val profile: Profile? = null,
     val focusPoints: Int = 0,
     val groupsToMembers: Map<Group, List<Profile>> = emptyMap(),
+    val focusPoints: Double = 0.0,
     val errorMessage: String? = null,
     val signedOut: Boolean = false,
     val navigateToInit: Boolean = false,
-    val isAnon: Boolean = true
+    val isAnon: Boolean = true,
+    val topBadges: Map<BadgeType, BadgeUI> = UIState().topBadges
 )
 
 /**
@@ -58,6 +67,9 @@ data class ProfileState(
 class ProfileViewModel(
     private val profileRepository: ProfileRepository = ProfileRepositoryProvider.repository,
     private val groupsRepository: GroupsRepository = GroupsRepositoryProvider.repository,
+    private val repository: ProfileRepository = ProfileRepositoryProvider.repository,
+    private val notificationsRepository: NotificationsRepository =
+        NotificationsRepositoryProvider.repository,
     private val authProvider: () -> FirebaseAuth = { Firebase.auth }
 ) : ViewModel() {
 
@@ -86,12 +98,18 @@ class ProfileViewModel(
       _uiState.value = _uiState.value.copy(isAnon = authProvider().currentUser?.isAnonymous ?: true)
 
       try {
-        val profile = profileRepository.getProfileByUid(authProvider().currentUser?.uid!!)
+        val profile =
+            getProfileWithSyncedFriendNotifications(
+                repository, notificationsRepository, authProvider().currentUser?.uid!!)
         if (profile == null) {
           _uiState.value =
               _uiState.value.copy(isLoading = false, errorMessage = "Profile not found")
         } else {
-          _uiState.value = _uiState.value.copy(isLoading = false, profile = profile)
+          _uiState.value =
+              _uiState.value.copy(
+                  isLoading = false,
+                  profile = profile,
+                  topBadges = buildUiStateFromProfile(profile))
         }
       } catch (e: Exception) {
         _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = e.message)
@@ -189,6 +207,28 @@ class ProfileViewModel(
       _uiState.value = _uiState.value.copy(signedOut = true)
       Firebase.auth.signOut()
       credentialManager.clearCredentialState(ClearCredentialStateRequest())
+    }
+  }
+
+  /**
+   * Builds the top badges map for the profile screen:
+   * - starts from the default blank badges (from UIState)
+   * - replaces each entry with the highest ranked badge of that type, if the user has one
+   */
+  private fun buildUiStateFromProfile(profile: Profile): Map<BadgeType, BadgeUI> {
+    val userBadges: List<Badge> =
+        profile.badgeIds.mapNotNull { badgeId -> Badge.entries.firstOrNull { it.id == badgeId } }
+
+    fun highestBadgeOfType(type: BadgeType): Badge? =
+        userBadges.filter { it.type == type }.maxByOrNull { it.rank.ordinal }
+
+    fun Badge.toBadgeUI(): BadgeUI =
+        BadgeUI(title = this.title, description = this.description, icon = this.iconRes)
+
+    val defaultTopBadges = UIState().topBadges
+
+    return defaultTopBadges.mapValues { (badgeType, defaultUi) ->
+      highestBadgeOfType(badgeType)?.toBadgeUI() ?: defaultUi
     }
   }
 }

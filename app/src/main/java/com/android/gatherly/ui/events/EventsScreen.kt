@@ -58,6 +58,8 @@ import com.android.gatherly.ui.theme.GatherlyTheme
 import com.android.gatherly.ui.theme.theme_status_ongoing
 import com.android.gatherly.ui.theme.theme_status_past
 import com.android.gatherly.ui.theme.theme_status_upcoming
+import com.android.gatherly.utils.DateParser.dateToString
+import com.android.gatherly.utils.DateParser.timeToString
 import com.android.gatherly.utils.GatherlyAlertDialog
 import com.android.gatherly.utils.MapCoordinator
 import java.util.Locale
@@ -419,7 +421,12 @@ fun EventsScreen(
                 coordinator.requestCenterOnEvent(event.id)
                 navigationActions?.navigateTo(Screen.Map)
                 isPopupOnBrowser.value = false
-              })
+              },
+              creatorText = event.creatorName,
+              dateText = dateToString(event.date),
+              startTimeText = timeToString(event.startTime),
+              endTimeText = timeToString(event.endTime),
+          )
           selectedBrowserEvent.value = if (isPopupOnBrowser.value) event else null
         }
 
@@ -430,6 +437,10 @@ fun EventsScreen(
               dismissText = stringResource(R.string.goback_button_title),
               confirmText = stringResource(R.string.unregister_button_title),
               onDismiss = { isPopupOnUpcoming.value = false },
+              creatorText = event.creatorName,
+              dateText = dateToString(event.date),
+              startTimeText = timeToString(event.startTime),
+              endTimeText = timeToString(event.endTime),
               onConfirm = {
                 eventsViewModel.onUnregister(
                     eventId = event.id, currentUserId = currentUserIdFromVM)
@@ -453,6 +464,10 @@ fun EventsScreen(
               dismissText = stringResource(R.string.goback_button_title),
               confirmText = stringResource(R.string.edit_button_title),
               onDismiss = { isPopupOnYourE.value = false },
+              creatorText = null,
+              dateText = dateToString(event.date),
+              startTimeText = timeToString(event.startTime),
+              endTimeText = timeToString(event.endTime),
               onConfirm = {
                 actions.navigateToEditEvent(event)
                 coroutineScope.launch { eventsViewModel.refreshEvents(currentUserIdFromVM) }

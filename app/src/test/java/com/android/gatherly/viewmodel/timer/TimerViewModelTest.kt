@@ -3,6 +3,13 @@ package com.android.gatherly.viewmodel.timer
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.gatherly.model.focusSession.FocusSessionsLocalRepository
 import com.android.gatherly.model.focusSession.FocusSessionsRepository
+import com.android.gatherly.model.notification.NotificationsLocalRepository
+import com.android.gatherly.model.notification.NotificationsRepository
+import com.android.gatherly.model.points.PointsLocalRepository
+import com.android.gatherly.model.points.PointsRepository
+import com.android.gatherly.model.profile.Profile
+import com.android.gatherly.model.profile.ProfileLocalRepository
+import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileStatus
 import com.android.gatherly.model.profile.UserStatusManager
 import com.android.gatherly.model.todo.ToDo
@@ -10,6 +17,7 @@ import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.ui.focusTimer.TimerViewModel
+import com.android.gatherly.utilstest.MockitoUtils
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -46,11 +54,14 @@ class TimerViewModelTest {
   private lateinit var toDosRepository: ToDosRepository
   private lateinit var viewModel: TimerViewModel
   private lateinit var statusManagerMock: UserStatusManager
+  private lateinit var mockitoUtils: MockitoUtils
+  private lateinit var profileRepository: ProfileRepository
+  private lateinit var pointsRepository: PointsRepository
+  private lateinit var notificationsRepository: NotificationsRepository
   private lateinit var focusSessionsRepository: FocusSessionsRepository
 
   private fun makeTodo(
       name: String,
-      assignee: String = "user",
       description: String = "lorem ipsum",
       ownerId: String = "user123"
   ): ToDo {
@@ -75,19 +86,48 @@ class TimerViewModelTest {
     Dispatchers.setMain(testDispatcher)
 
     toDosRepository = ToDosLocalRepository()
+    profileRepository = ProfileLocalRepository()
+    pointsRepository = PointsLocalRepository()
+    notificationsRepository = NotificationsLocalRepository()
+
+    populateProfile()
 
     statusManagerMock = mock()
+    mockitoUtils = MockitoUtils()
+    mockitoUtils.chooseCurrentUser("fakeUid")
     focusSessionsRepository = FocusSessionsLocalRepository()
     viewModel =
         TimerViewModel(
             todoRepository = toDosRepository,
+            pointsRepository = pointsRepository,
+            profileRepository = profileRepository,
+            notificationsRepository = notificationsRepository,
             userStatusManager = statusManagerMock,
-            focusSessionsRepository = focusSessionsRepository)
+            focusSessionsRepository = focusSessionsRepository,
+            authProvider = { mockitoUtils.mockAuth })
   }
 
   @After
   fun tearDown() {
     Dispatchers.resetMain()
+  }
+
+  val currentProfile =
+      Profile(
+          uid = "fakeUid",
+          weeklyPoints = 75.0,
+          friendUids = listOf("friend1", "friend2", "friend3", "friend4"))
+  val friend1 = Profile(uid = "friend1", weeklyPoints = 200.0, friendUids = listOf("fakeUid"))
+  val friend2 = Profile(uid = "friend2", weeklyPoints = 30.0, friendUids = listOf("fakeUid"))
+  val friend3 = Profile(uid = "friend3", weeklyPoints = 80.0, friendUids = listOf("fakeUid"))
+  val friend4 = Profile(uid = "friend4", weeklyPoints = 309.0, friendUids = listOf("fakeUid"))
+
+  fun populateProfile() = runTest {
+    profileRepository.addProfile(currentProfile)
+    profileRepository.addProfile(friend1)
+    profileRepository.addProfile(friend2)
+    profileRepository.addProfile(friend3)
+    profileRepository.addProfile(friend4)
   }
 
   /** Check that the timer counts down correctly from 5 seconds to 0. */
@@ -189,11 +229,10 @@ class TimerViewModelTest {
   }
 
   /**
-   * Check that getAllTodos() successfully retrieves data from the repository and updates the UI
-   * state.
+   * Check that loadUI() successfully retrieves data from the repository and updates the UI state.
    */
   @Test
-  fun getAllTodos_success_updatesUiStateWithData() = runTest {
+  fun loadUI_success_updatesUiStateWithData() = runTest {
     // Pre-populate repository
     val todo1 = makeTodo("Sample Todo 1")
     val todo2 = makeTodo("Sample Todo 2")
@@ -203,7 +242,7 @@ class TimerViewModelTest {
     advanceUntilIdle()
 
     // Trigger reload
-    viewModel.getAllTodos()
+    viewModel.loadUI()
 
     advanceUntilIdle()
 
@@ -214,6 +253,10 @@ class TimerViewModelTest {
     val names = state.allTodos.map { it.name }
     assertTrue("Sample Todo 1" in names)
     assertTrue("Sample Todo 2" in names)
+
+    // check that the leaderboard is correct
+    assertEquals(5, state.leaderboard.size)
+    assertEquals(listOf(friend4, friend1, friend3, currentProfile, friend2), state.leaderboard)
   }
 
   /** Check that the timer cannot be started with invalid hours digit input. */

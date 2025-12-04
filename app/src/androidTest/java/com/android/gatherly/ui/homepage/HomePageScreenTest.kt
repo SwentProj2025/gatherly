@@ -2,12 +2,17 @@ package com.android.gatherly.ui.homepage
 
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollToNode
 import com.android.gatherly.model.event.EventsLocalRepository
+import com.android.gatherly.model.notification.NotificationsLocalRepository
+import com.android.gatherly.model.notification.NotificationsRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
+import com.android.gatherly.model.profile.ProfileStatus
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosLocalRepository
@@ -15,6 +20,8 @@ import com.android.gatherly.ui.homePage.HomePageScreen
 import com.android.gatherly.ui.homePage.HomePageScreenTestTags
 import com.android.gatherly.ui.homePage.HomePageViewModel
 import com.android.gatherly.ui.homePage.getFriendAvatarTestTag
+import com.android.gatherly.ui.homePage.getFriendStatusTestTag
+import com.android.gatherly.ui.homePage.getTaskItemTestTag
 import com.android.gatherly.utils.MockitoUtils
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.runBlocking
@@ -40,7 +47,8 @@ class HomePageScreenTest {
           focusSessionIds = emptyList(),
           participatingEventIds = emptyList(),
           groupIds = emptyList(),
-          friendUids = emptyList())
+          friendUids = emptyList(),
+          status = ProfileStatus.ONLINE)
   val friend2 =
       Profile(
           uid = "homePageTests_friend2",
@@ -48,7 +56,19 @@ class HomePageScreenTest {
           focusSessionIds = emptyList(),
           participatingEventIds = emptyList(),
           groupIds = emptyList(),
-          friendUids = emptyList())
+          friendUids = emptyList(),
+          status = ProfileStatus.FOCUSED)
+
+  val todo1 =
+      ToDo(
+          uid = "todo_1",
+          name = "Plan party",
+          description = "Buy decorations and invite friends",
+          dueDate = Timestamp.now(),
+          dueTime = null,
+          location = null,
+          status = ToDoStatus.ONGOING,
+          ownerId = "user1")
 
   private var currentProfile: Profile =
       Profile(
@@ -65,6 +85,7 @@ class HomePageScreenTest {
   private lateinit var todosLocalRepo: ToDosLocalRepository
   private lateinit var eventsLocalRepo: EventsLocalRepository
   private lateinit var profileLocalRepo: ProfileLocalRepository
+  private lateinit var notificationsRepository: NotificationsRepository
   private lateinit var mockitoUtils: MockitoUtils
 
   @Before
@@ -73,6 +94,7 @@ class HomePageScreenTest {
       todosLocalRepo = ToDosLocalRepository()
       eventsLocalRepo = EventsLocalRepository()
       profileLocalRepo = ProfileLocalRepository()
+      notificationsRepository = NotificationsLocalRepository()
 
       populateRepositories()
     }
@@ -88,22 +110,14 @@ class HomePageScreenTest {
             toDosRepository = todosLocalRepo,
             eventsRepository = eventsLocalRepo,
             profileRepository = profileLocalRepo,
+            notificationsRepository = notificationsRepository,
             authProvider = { mockitoUtils.mockAuth })
     composeRule.setContent { HomePageScreen(homePageViewModel = fakeViewModel) }
   }
 
   /** Populates local repositories with fake data for testing. */
   private fun populateRepositories() = runBlocking {
-    todosLocalRepo.addTodo(
-        ToDo(
-            uid = "3",
-            name = "Plan party",
-            description = "Buy decorations and invite friends",
-            dueDate = Timestamp.now(),
-            dueTime = null,
-            location = null,
-            status = ToDoStatus.ONGOING,
-            ownerId = "user1"))
+    todosLocalRepo.addTodo(todo1)
     profileLocalRepo.addProfile(friend1)
     profileLocalRepo.addProfile(friend2)
     profileLocalRepo.addProfile(currentProfile)
@@ -135,9 +149,7 @@ class HomePageScreenTest {
   fun taskItemsAreDisplayed() {
     setContentWithGoogle()
     fakeViewModel.uiState.value.todos.forEach { todo ->
-      composeRule
-          .onNodeWithTag("${HomePageScreenTestTags.TASK_ITEM_PREFIX}${todo.uid}")
-          .assertIsDisplayed()
+      composeRule.onNodeWithTag(getTaskItemTestTag(todo.uid)).assertIsDisplayed()
     }
   }
 
@@ -146,9 +158,7 @@ class HomePageScreenTest {
   fun taskItemsTextMatchesUiState() {
     setContentWithGoogle()
     fakeViewModel.uiState.value.todos.forEach { todo ->
-      composeRule
-          .onNodeWithTag("${HomePageScreenTestTags.TASK_ITEM_PREFIX}${todo.uid}")
-          .assertIsDisplayed()
+      composeRule.onNodeWithTag(getTaskItemTestTag(todo.uid)).assertIsDisplayed()
     }
   }
 
@@ -157,10 +167,7 @@ class HomePageScreenTest {
   fun taskItem_isClickable() {
     setContentWithGoogle()
     fakeViewModel.uiState.value.todos.forEach { todo ->
-      composeRule
-          .onNodeWithTag("${HomePageScreenTestTags.TASK_ITEM_PREFIX}${todo.uid}")
-          .assertIsDisplayed()
-          .performClick()
+      composeRule.onNodeWithTag(getTaskItemTestTag(todo.uid)).assertIsDisplayed().performClick()
     }
   }
 
@@ -193,6 +200,7 @@ class HomePageScreenTest {
             toDosRepository = todosLocalRepo,
             eventsRepository = eventsLocalRepo,
             profileRepository = profileLocalRepo,
+            notificationsRepository = notificationsRepository,
             authProvider = { mockitoUtils.mockAuth })
     composeRule.setContent { HomePageScreen(homePageViewModel = fakeViewModel) }
 
@@ -209,5 +217,122 @@ class HomePageScreenTest {
           .onNodeWithTag(useUnmergedTree = true, testTag = getFriendAvatarTestTag(uid))
           .assertIsDisplayed()
     }
+  }
+
+  /** Ensures that each friend has a visible status indicator. */
+  @Test
+  fun friendStatusIndicators_areDisplayed() {
+    setContentWithGoogle()
+    composeRule.waitForIdle()
+    composeRule
+        .onNodeWithTag(testTag = getFriendStatusTestTag(friend1.uid), useUnmergedTree = true)
+        .assertIsDisplayed()
+
+    composeRule
+        .onNodeWithTag(getFriendStatusTestTag(friend2.uid), useUnmergedTree = true)
+        .assertIsDisplayed()
+  }
+
+  /** Verifies that the empty task list text button is displayed when there are no todos */
+  @Test
+  fun emptyTaskList_displaysTextButton() {
+    runBlocking { todosLocalRepo.deleteTodo(todo1.uid) }
+    setContentWithGoogle()
+
+    composeRule
+        .onNodeWithTag(
+            testTag = HomePageScreenTestTags.EMPTY_TASK_LIST_TEXT_BUTTON, useUnmergedTree = true)
+        .assertIsDisplayed()
+  }
+
+  /** Verifies that the empty friends message (icon + text) is displayed when user has no friends */
+  @Test
+  fun emptyFriends_displaysAddFriendsMessage() {
+    runBlocking { profileLocalRepo.updateProfile(currentProfile.copy(friendUids = emptyList())) }
+    setContentWithGoogle()
+
+    composeRule
+        .onNodeWithTag(testTag = HomePageScreenTestTags.ADD_FRIENDS_ICON, useUnmergedTree = true)
+        .assertIsDisplayed()
+    composeRule
+        .onNodeWithTag(HomePageScreenTestTags.ADD_FRIENDS_TEXT, useUnmergedTree = true)
+        .assertIsDisplayed()
+  }
+
+  /** Verifies that the scrollable friendList displays friends correctly */
+  @Test
+  fun friendsList_scrollable_displaysAllFriends() {
+    // Create a current profile with 5 friends
+    val manyFriends =
+        (1..5).map { i ->
+          Profile(
+              uid = "scroll_friend$i",
+              name = "Friend $i",
+              focusSessionIds = emptyList(),
+              participatingEventIds = emptyList(),
+              groupIds = emptyList(),
+              friendUids = emptyList(),
+              status = ProfileStatus.ONLINE)
+        }
+
+    runBlocking {
+      profileLocalRepo.updateProfile(currentProfile.copy(friendUids = manyFriends.map { it.uid }))
+      manyFriends.forEach { profileLocalRepo.addProfile(it) }
+    }
+
+    setContentWithGoogle()
+    composeRule.waitForIdle()
+    // Check first friend is visible
+    composeRule
+        .onNodeWithTag(getFriendAvatarTestTag("scroll_friend1"), useUnmergedTree = true)
+        .assertIsDisplayed()
+
+    // Scroll LazyColumn to the last friend
+    composeRule
+        .onNodeWithTag(HomePageScreenTestTags.FRIENDS_LAZY_COLUMN, useUnmergedTree = true)
+        .performScrollToNode(hasTestTag(getFriendAvatarTestTag("scroll_friend5")))
+
+    // Assert last friend is displayed
+    composeRule
+        .onNodeWithTag(getFriendAvatarTestTag("scroll_friend5"), useUnmergedTree = true)
+        .assertIsDisplayed()
+  }
+
+  /** Verifies that the scrollable task list displays all todos correctly */
+  @Test
+  fun taskList_scrollable_displaysAllTodos() {
+    // Create multiple todos to ensure scrolling is required
+    val manyTodos =
+        (2..6).map { i ->
+          ToDo(
+              uid = "scroll_todo$i",
+              name = "Task $i",
+              description = "Description $i",
+              dueDate = Timestamp.now(),
+              dueTime = null,
+              location = null,
+              status = ToDoStatus.ONGOING,
+              ownerId = currentProfile.uid)
+        }
+
+    runBlocking { manyTodos.forEach { todosLocalRepo.addTodo(it) } }
+
+    setContentWithGoogle()
+    composeRule.waitForIdle()
+
+    // Check first task is visible
+    composeRule
+        .onNodeWithTag(getTaskItemTestTag(todo1.uid), useUnmergedTree = true)
+        .assertIsDisplayed()
+
+    // Scroll LazyColumn to the last task
+    composeRule
+        .onNodeWithTag(HomePageScreenTestTags.TASKS_LAZY_COLUMN, useUnmergedTree = true)
+        .performScrollToNode(hasTestTag(getTaskItemTestTag("scroll_todo6")))
+
+    // Assert last task is displayed
+    composeRule
+        .onNodeWithTag(getTaskItemTestTag("scroll_todo6"), useUnmergedTree = true)
+        .assertIsDisplayed()
   }
 }

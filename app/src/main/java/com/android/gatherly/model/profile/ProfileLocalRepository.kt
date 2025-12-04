@@ -153,6 +153,22 @@ class ProfileLocalRepository : ProfileRepository {
     incrementBadge(currentUserId, BadgeType.FRIENDS_ADDED)
   }
 
+  override suspend fun addPendingSentFriendUid(currentUserId: String, targetUid: String) {
+    val index = profiles.indexOfFirst { it.uid == currentUserId }
+    if (index == -1) return
+
+    val p = profiles[index]
+    profiles[index] = p.copy(pendingSentFriendsUids = p.pendingSentFriendsUids + targetUid)
+  }
+
+  override suspend fun removePendingSentFriendUid(currentUserId: String, targetUid: String) {
+    val index = profiles.indexOfFirst { it.uid == currentUserId }
+    if (index == -1) return
+
+    val p = profiles[index]
+    profiles[index] = p.copy(pendingSentFriendsUids = p.pendingSentFriendsUids - targetUid)
+  }
+
   // ---- STATUS GESTION PART ----
 
   override suspend fun updateStatus(uid: String, status: ProfileStatus) {
@@ -238,9 +254,13 @@ class ProfileLocalRepository : ProfileRepository {
     awardBadge(uid, type, currentValue + 1)
   }
 
-  override suspend fun updateFocusPoints(uid: String, points: Double) {
+  override suspend fun updateFocusPoints(uid: String, points: Double, addToLeaderboard: Boolean) {
     var profile = getProfileByUid(uid) ?: throw IllegalArgumentException("Profile doesn't exist")
-    profile = profile.copy(focusPoints = profile.focusPoints + points)
+    val leaderboard = if (addToLeaderboard) points else 0.0
+    profile =
+        profile.copy(
+            focusPoints = profile.focusPoints + points,
+            weeklyPoints = profile.weeklyPoints + leaderboard)
     updateProfile(profile)
   }
 

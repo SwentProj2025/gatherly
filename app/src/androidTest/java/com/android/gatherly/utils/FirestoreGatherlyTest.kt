@@ -6,6 +6,7 @@ import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.model.todo.ToDosRepositoryFirestore
 import com.google.firebase.Timestamp
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
@@ -48,7 +49,7 @@ open class FirestoreGatherlyTest {
 
   @After
   open fun tearDown() {
-    runTest { clearUserTodos() }
+    runTest(timeout = 120.seconds) { clearUserTodos() }
     FirebaseEmulator.clearAuthEmulator()
     FirebaseEmulator.clearFirestoreEmulator()
   }

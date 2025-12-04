@@ -22,6 +22,7 @@ import com.android.gatherly.model.profile.ProfileStatus
 import com.android.gatherly.model.profile.UserStatusManager
 import com.android.gatherly.ui.authentication.InitProfileScreen
 import com.android.gatherly.ui.authentication.SignInScreen
+import com.android.gatherly.ui.badge.BadgeScreen
 import com.android.gatherly.ui.events.AddEventScreen
 import com.android.gatherly.ui.events.EditEventsScreen
 import com.android.gatherly.ui.events.EventsScreen
@@ -34,6 +35,7 @@ import com.android.gatherly.ui.homePage.HomePageScreen
 import com.android.gatherly.ui.map.MapScreen
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.Screen
+import com.android.gatherly.ui.points.FocusPointsScreen
 import com.android.gatherly.ui.profile.ProfileScreen
 import com.android.gatherly.ui.settings.SettingsScreen
 import com.android.gatherly.ui.theme.GatherlyTheme
@@ -104,8 +106,10 @@ fun GatherlyApp(
         HomePageScreen(
             navigationActions = navigationActions,
             onClickFocusButton = { navigationActions.navigateTo(Screen.FocusTimerScreen) },
-            onClickTodo = { navigationActions.navigateTo(Screen.OverviewToDo) },
-            onClickFriendsSection = { navigationActions.navigateTo(Screen.FriendsScreen) })
+            onClickTodoTitle = { navigationActions.navigateTo(Screen.OverviewToDo) },
+            onClickFriendsSection = { navigationActions.navigateTo(Screen.FriendsScreen) },
+            onClickTodo = { navigationActions.navigateTo(Screen.EditToDo(it.uid)) },
+            onClickEventsTitle = { navigationActions.navigateTo(Screen.EventsScreen) })
       }
     }
 
@@ -236,7 +240,28 @@ fun GatherlyApp(
         ProfileScreen(
             navigationActions = navigationActions,
             credentialManager = credentialManager,
+            onBadgeClicked = { navigationActions.navigateTo(Screen.BadgeScreen) },
             onSignedOut = { navigationActions.navigateTo(Screen.SignIn) })
+      }
+    }
+
+    // BADGE COMPOSABLE  ------------------------------
+    navigation(
+        startDestination = Screen.BadgeScreen.route,
+        route = Screen.BadgeScreen.name,
+    ) {
+      composable(Screen.BadgeScreen.route) {
+        BadgeScreen(goBack = { navigationActions.navigateTo(Screen.ProfileScreen) })
+      }
+    }
+
+    // FOCUS HISTORY COMPOSABLE  ------------------------------
+    navigation(
+        startDestination = Screen.FocusScreen.route,
+        route = Screen.FocusScreen.name,
+    ) {
+      composable(Screen.FocusScreen.route) {
+        FocusPointsScreen(goBack = { navigationActions.navigateTo(Screen.ProfileScreen) })
       }
     }
 
