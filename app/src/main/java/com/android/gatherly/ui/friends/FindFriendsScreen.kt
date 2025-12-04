@@ -71,7 +71,7 @@ object FindFriendsScreenTestTags {
 
   const val LOADING_ANIMATION = "loadingAnimation"
 
-  const val HEART_ANIMATION = "heartBreakAnimation"
+  const val HEART_ANIMATION = "heartAnimation"
 
   const val REQUESTING_TEXT_ANIMATION = "requestingTextAnimation"
 
