@@ -189,21 +189,9 @@ fun FriendsScreen(
   val isLoading = uiState.isLoading && !showUnfriendMessage
 
   // Update the list depending on whether the current user types something in the search bar
-  val filteredFriends =
-      if (searchQuery.isBlank()) {
-        friendsList
-      } else {
-        friendsList.filter { friend -> friend.contains(searchQuery, ignoreCase = true) }
-      }
+  val filteredFriends = filterUsers(searchQuery, friendsList)
 
-  val filteredPendingRequests =
-      if (searchQuery.isBlank()) {
-        pendingSentUsernames
-      } else {
-        pendingSentUsernames.filter { username ->
-          username.contains(searchQuery, ignoreCase = true)
-        }
-      }
+  val filteredPendingRequests = filterUsers(searchQuery, pendingSentUsernames)
 
   // Refresh friends profile when there is an update in the current user profile
   LaunchedEffect(currentUserIdFromVM) {
@@ -239,23 +227,29 @@ fun FriendsScreen(
             // --- SHOWING FRIENDS PROFILES ITEMS ---
             FriendsListContent(
                 padding = padding,
-                filteredFriends = filteredFriends,
-                pendingFriendRequests = filteredPendingRequests,
-                searchQuery = searchQuery,
-                onSearchQueryChange = { searchQuery = it },
-                onUnfriend = { username ->
-                  val friendUid = uiState.profiles[username]?.uid ?: return@FriendsListContent
-                  friendsViewModel.removeFriend(
-                      friendUserId = friendUid, currentUserId = currentUserIdFromVM)
-                  showUnfriendMessage = true
-                },
-                onCancel = { username ->
-                  val recipientUid = uiState.profiles[username]?.uid ?: return@FriendsListContent
-                  friendsViewModel.cancelPendingFriendRequest(
-                      recipientId = recipientUid, currentUserId = currentUserIdFromVM)
-                },
-                onFindFriends = onFindFriends,
-                profiles = uiState.profiles)
+                data =
+                    FriendsListData(
+                        filteredFriends = filteredFriends,
+                        filteredPendingRequests = filteredPendingRequests,
+                        searchQuery = searchQuery,
+                        profiles = uiState.profiles),
+                actions =
+                    FriendsListActions(
+                        onSearchQueryChange = { searchQuery = it },
+                        onUnfriend = { username ->
+                          val friendUid =
+                              uiState.profiles[username]?.uid ?: return@FriendsListActions
+                          friendsViewModel.removeFriend(
+                              friendUserId = friendUid, currentUserId = currentUserIdFromVM)
+                          showUnfriendMessage = true
+                        },
+                        onCancel = { username ->
+                          val recipientUid =
+                              uiState.profiles[username]?.uid ?: return@FriendsListActions
+                          friendsViewModel.cancelPendingFriendRequest(
+                              recipientId = recipientUid, currentUserId = currentUserIdFromVM)
+                        },
+                        onFindFriends = onFindFriends))
           }
           // --- UNFRIEND A FRIEND ANIMATION ---
           if (showUnfriendMessage) {
@@ -263,6 +257,15 @@ fun FriendsScreen(
           }
         }
       })
+}
+
+/** Helper function to filter username list using search query. */
+private fun filterUsers(searchQuery: String, usernameList: List<String>): List<String> {
+  return if (searchQuery.isBlank()) {
+    usernameList
+  } else {
+    usernameList.filter { username -> username.contains(searchQuery, ignoreCase = true) }
+  }
 }
 
 /**
@@ -500,33 +503,37 @@ private fun LoadingAnimationContent(padding: PaddingValues) {
   }
 }
 
+/** Bundles all UI data needed to render the friends list section. */
+data class FriendsListData(
+    val filteredFriends: List<String>,
+    val filteredPendingRequests: List<String>,
+    val searchQuery: String,
+    val profiles: Map<String, Profile>
+)
+
+/** Bundles all callbacks used by FriendsListContent. */
+data class FriendsListActions(
+    val onSearchQueryChange: (String) -> Unit,
+    val onUnfriend: (String) -> Unit,
+    val onCancel: (String) -> Unit,
+    val onFindFriends: () -> Unit
+)
+
 /**
  * Helper function: Composable helper that display the different items when there exist user
  * profiles to display, the search bar. If there is currently no user available this display a
  * specific message instead.
  *
  * @param padding : PaddingValues from the LazyColumn
- * @param filteredFriends : List of the friends username
- * @param pendingFriendRequests : List of username the user sent a friend request to
- * @param searchQuery : value written in the search bar
- * @param onSearchQueryChange : function will remember the value written in the search bar
- * @param onUnfriend : function to unfriend a friend from current user pov
- * @param onCancel : function to cancel a pending friend request
- * @param onFindFriends : function to navigate to find friends screen
- * @param profiles cached map of usernames to Profile for quick UI access
+ * @param data : all UI data needed to render the friends list section
+ * @param actions : all callbacks used by FriendsListContent
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun FriendsListContent(
     padding: PaddingValues,
-    filteredFriends: List<String>,
-    pendingFriendRequests: List<String>,
-    searchQuery: String,
-    onSearchQueryChange: (String) -> Unit,
-    onUnfriend: (String) -> Unit,
-    onCancel: (String) -> Unit,
-    onFindFriends: () -> Unit,
-    profiles: Map<String, Profile>
+    data: FriendsListData,
+    actions: FriendsListActions,
 ) {
   LazyColumn(
       contentPadding = PaddingValues(vertical = dimensionResource(R.dimen.padding_small)),
@@ -534,9 +541,9 @@ private fun FriendsListContent(
           Modifier.fillMaxWidth()
               .padding(horizontal = dimensionResource(R.dimen.padding_screen))
               .padding(padding)) {
-        item { SearchBarContent(searchQuery, onSearchQueryChange) }
+        item { SearchBarContent(data.searchQuery, actions.onSearchQueryChange) }
 
-        if (filteredFriends.isNotEmpty()) {
+        if (data.filteredFriends.isNotEmpty()) {
           item {
             Text(
                 text = "Friends",
@@ -547,10 +554,10 @@ private fun FriendsListContent(
                         .testTag(FriendsScreenTestTags.FRIENDS_SECTION_TITLE))
           }
 
-          items(items = filteredFriends, key = { it }) { friend ->
+          items(items = data.filteredFriends, key = { it }) { friend ->
             FriendItem(
                 friend = friend,
-                unfriend = { onUnfriend(friend) },
+                unfriend = { actions.onUnfriend(friend) },
 
                 // -- Animation slide up when an item disappear
                 modifier =
@@ -559,11 +566,11 @@ private fun FriendsListContent(
                         fadeOutSpec = null,
                         placementSpec =
                             tween(durationMillis = ANIMATION_TIME, easing = LinearOutSlowInEasing)),
-                profilePicUrl = profiles[friend]?.profilePicture)
+                profilePicUrl = data.profiles[friend]?.profilePicture)
           }
         }
 
-        if (pendingFriendRequests.isNotEmpty()) {
+        if (data.filteredPendingRequests.isNotEmpty()) {
           item {
             Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_medium)))
             Text(
@@ -575,10 +582,10 @@ private fun FriendsListContent(
                         .testTag(FriendsScreenTestTags.PENDING_SECTION_TITLE))
           }
 
-          items(items = pendingFriendRequests, key = { it }) { pendingUsername ->
+          items(items = data.filteredPendingRequests, key = { it }) { pendingUsername ->
             PendingRequestItem(
                 friendUsername = pendingUsername,
-                onCancel = { onCancel(pendingUsername) },
+                onCancel = { actions.onCancel(pendingUsername) },
 
                 // -- Animation slide up when an item disappear
                 modifier =
@@ -587,11 +594,11 @@ private fun FriendsListContent(
                         fadeOutSpec = null,
                         placementSpec =
                             tween(durationMillis = ANIMATION_TIME, easing = LinearOutSlowInEasing)),
-                profilePicUrl = profiles[pendingUsername]?.profilePicture)
+                profilePicUrl = data.profiles[pendingUsername]?.profilePicture)
           }
         }
 
-        if (filteredFriends.isEmpty() && pendingFriendRequests.isEmpty()) {
+        if (data.filteredFriends.isEmpty() && data.filteredPendingRequests.isEmpty()) {
           item {
             Text(
                 text = stringResource(R.string.friends_empty_list_msg),
@@ -600,7 +607,7 @@ private fun FriendsListContent(
                         .testTag(FriendsScreenTestTags.EMPTY_LIST_MSG))
           }
         }
-        item { FindFriendButton(onFindFriends) }
+        item { FindFriendButton(actions.onFindFriends) }
       }
 }
 
