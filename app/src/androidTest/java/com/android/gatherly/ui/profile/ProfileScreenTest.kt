@@ -60,7 +60,6 @@ class ProfileScreenTest {
       fill_groups_repository()
     }
     notificationsRepository = NotificationsLocalRepository()
-    fill_repository()
 
     // Mock Firebase Auth
     mockitoUtils = MockitoUtils()
@@ -70,7 +69,6 @@ class ProfileScreenTest {
         ProfileViewModel(
             profileRepository = profileRepository,
             groupsRepository = groupsRepository,
-            repository = profileRepository,
             notificationsRepository = notificationsRepository,
             authProvider = { mockitoUtils.mockAuth })
     composeTestRule.setContent { ProfileScreen(profileViewModel = profileViewModel) }
@@ -162,6 +160,9 @@ class ProfileScreenTest {
         .onNodeWithTag(ProfileScreenTestTags.GROUPS_OVERVIEW_CONTAINER)
         .assertDoesNotExist()
     composeTestRule.onNodeWithTag(ProfileScreenTestTags.NO_GROUPS_TEXT).assertExists()
+  }
+
+  @Test
   fun badgeInfo_AreDisplayedCorrectly() {
     setContent()
 

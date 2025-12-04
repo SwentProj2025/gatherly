@@ -347,10 +347,6 @@ fun ProfileScreen(
                   GroupsOverview(
                       groupsToMembers = groupsToMembers, modifier = Modifier.fillMaxWidth())
                 }
-                Text(
-                    text = stringResource(R.string.profile_empty_groups_message),
-                    style = MaterialTheme.typography.bodyMedium,
-                    textAlign = TextAlign.Center)
 
                 // Badges
                 Spacer(modifier = Modifier.height(fieldSpacingLarge))

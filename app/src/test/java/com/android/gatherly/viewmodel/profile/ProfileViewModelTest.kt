@@ -77,7 +77,6 @@ class ProfileViewModelIntegrationTest {
         ProfileViewModel(
             profileRepository = profileRepository,
             groupsRepository = groupsRepository,
-            repository = profileRepository,
             notificationsRepository = notificationsRepository,
             authProvider = { mockitoUtils.mockAuth })
     profileViewModel.loadUserProfile()
@@ -102,7 +101,6 @@ class ProfileViewModelIntegrationTest {
         ProfileViewModel(
             profileRepository = profileRepository,
             groupsRepository = groupsRepository,
-            repository = profileRepository,
             notificationsRepository = notificationsRepository,
             authProvider = { mockitoUtils.mockAuth })
     profileViewModel.loadUserProfile()
@@ -123,7 +121,6 @@ class ProfileViewModelIntegrationTest {
         ProfileViewModel(
             profileRepository = profileRepository,
             groupsRepository = groupsRepository,
-            repository = profileRepository,
             notificationsRepository = notificationsRepository,
             authProvider = { mockitoUtils.mockAuth })
     profileViewModel.loadUserProfile()
