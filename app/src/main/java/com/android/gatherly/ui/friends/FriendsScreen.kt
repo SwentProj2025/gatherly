@@ -414,7 +414,7 @@ private fun PendingRequestItem(
                       .testTag(
                           FriendsScreenTestTags.getTestTagForPendingFriendCancelRequestButton(
                               friendUsername))) {
-                Text("Cancel Request")
+                Text(stringResource(R.string.friends_cancel_request_button_title))
               }
         }
       }
@@ -546,7 +546,7 @@ private fun FriendsListContent(
         if (data.filteredFriends.isNotEmpty()) {
           item {
             Text(
-                text = "Friends",
+                text = stringResource(R.string.friends_list_title),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 modifier =
@@ -574,7 +574,7 @@ private fun FriendsListContent(
           item {
             Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_medium)))
             Text(
-                text = "Pending friend requests",
+                text = stringResource(R.string.friends_pending_list_title),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 modifier =
