@@ -116,6 +116,13 @@
     <string name="events_delete_warning_text">This action cannot be reversed. Are you sure?</string>
     <string name="see_on_map_button_title">See on map</string>
     <string name="events_loading">Loading events …</string>
+    <string name="events_group_field_label">Group</string>
+    <string name="events_group_placeholder">Add a group</string>
+    <string name="events_public_state_label">Public event</string>
+    <string name="events_private_state_label">Private event</string>
+    <string name="events_private_friends_label">Friends only</string>
+    <string name="events_private_group_label">Group to invite</string>
+
 
     <!-- General -->
     <string name="delete">Yes, Delete</string>
