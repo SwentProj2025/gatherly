@@ -172,4 +172,25 @@
     <string name="add_group_button_label">Add New Group</string>
     <string name="group_name_bar_label">Group Name</string>
     <string name="group_name_bar_placeholder">Name the Group</string>
+
+    <!-- Focus points -->
+    <string name="focus_points_acquisition">History of focus points acquisition</string>
+    <string name="focus_points_how_to_obtain">How to obtain focus points</string>
+    <string name="focus_points_focus_sessions">Focus sessions</string>
+    <string name="focus_points_focus_sessions_text">\t- For every minute you focus for 1 minute, you get one point multiplied by a bonus value\n\t- The bonus constant is 1 at first and increases of 5%% every 5 minutes\n</string>
+    <string name="focus_points_badges">Badges</string>
+    <string name="focus_points_badges_text">\t- For every badge you obtain, you receive focus points along with it. Points are given according to the rank of the badge obtained.\n
+        \t- Starting : 10 points\n\t- Bronze : 30 points\n
+        \t- Silver : 50 points\n
+        \t- Gold : 100 points\n
+        \t- Diamond : 200 points\n
+        \t- Legend : 300 points\n</string>
+    <string name="focus_points_leaderboard">Friends leaderboard</string>
+    <string name="focus_points_leaderboard_text">\t- If you share a leaderboard with your friends, every Monday at 00:00, points are awarded to the top three contestants. They respectively receive 100, 75 and 50 points.</string>
+    <string name="focus_points_no_history">You have no focus points</string>
+    <string name="focus_points_gained">+ %1$.2f points</string>
+    <string name="focus_date_format">dd/MM/yyyy \'at\' HH:mm</string>
+    <string name="focus_points_date">Obtained on: %1$s</string>
+    <string name="focus_history_badge">Obtained the %1$s badge</string>
+    <string name="focus_history_leaderboard">Reached %1$s on your friends leaderboard</string>
 </resources>

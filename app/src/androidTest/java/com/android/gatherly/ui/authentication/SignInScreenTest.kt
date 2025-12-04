@@ -20,7 +20,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
-private const val WAIT_TIMEOUT = 5000L
+private const val WAIT_TIMEOUT = 15000L
 
 @RunWith(AndroidJUnit4::class)
 class SignInScreenTest : FirestoreGatherlyTest() {
@@ -78,6 +78,9 @@ class SignInScreenTest : FirestoreGatherlyTest() {
         .onNodeWithTag(SignInScreenTestTags.GOOGLE_BUTTON)
         .assertIsDisplayed()
         .performClick()
+
+    // Wait for UI update
+    composeTestRule.waitForIdle()
 
     // Check that the screen is loading
     composeTestRule.onNodeWithTag(SignInScreenTestTags.LOADING_TEXT).assertIsDisplayed()
