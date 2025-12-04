@@ -93,6 +93,52 @@ class FindFriendsScreenTest {
     }
   }
 
+  private fun setContentWithPendingProfile() {
+    runTest {
+      profileRepository = ProfileLocalRepository()
+      notificationsRepository = NotificationsLocalRepository()
+      addProfiles()
+      profileRepository.addProfile(profileWithOnlyPendings)
+
+      currentUserId = profileWithOnlyPendings.uid
+
+      // Mock Firebase Auth
+      mockitoUtils = MockitoUtils()
+      mockitoUtils.chooseCurrentUser(currentUserId)
+
+      friendsViewModel =
+          FriendsViewModel(
+              repository = profileRepository,
+              notificationsRepository = notificationsRepository,
+              authProvider = { mockitoUtils.mockAuth })
+
+      composeTestRule.setContent { FindFriendsScreen(friendsViewModel) }
+    }
+  }
+
+  private fun setContentWithTotalProfile() {
+    runTest {
+      profileRepository = ProfileLocalRepository()
+      notificationsRepository = NotificationsLocalRepository()
+      addProfiles()
+      profileRepository.addProfile(profileWithPendingAndFriends)
+
+      currentUserId = profileWithPendingAndFriends.uid
+
+      // Mock Firebase Auth
+      mockitoUtils = MockitoUtils()
+      mockitoUtils.chooseCurrentUser(currentUserId)
+
+      friendsViewModel =
+          FriendsViewModel(
+              repository = profileRepository,
+              notificationsRepository = notificationsRepository,
+              authProvider = { mockitoUtils.mockAuth })
+
+      composeTestRule.setContent { FindFriendsScreen(friendsViewModel) }
+    }
+  }
+
   /*----------------------------------------Profiles--------------------------------------------*/
   val bobProfile: Profile =
       Profile(
@@ -133,6 +179,22 @@ class FindFriendsScreenTest {
           groupIds = emptyList(),
           friendUids = emptyList())
 
+  val profileWithOnlyPendings =
+      Profile(
+          uid = "userPending",
+          name = "UserPend",
+          username = "usernamePending",
+          friendUids = emptyList(),
+          pendingSentFriendsUids = listOf("1", "2", "3"))
+
+  val profileWithPendingAndFriends =
+      Profile(
+          uid = "userTotal",
+          name = "userTot",
+          username = "usernameTotal",
+          friendUids = listOf("1", "3"),
+          pendingSentFriendsUids = listOf("2"))
+
   /** Helper function : fills the profile repository with created profiles */
   @OptIn(ExperimentalCoroutinesApi::class)
   fun addProfiles() {
@@ -147,7 +209,7 @@ class FindFriendsScreenTest {
   }
 
   /**
-   * Test: Verifies that when the user got no friend, all relevant UI components are displayed
+   * Test: Verifies that when the user got no no friend, all relevant UI components are displayed
    * correctly.
    */
   @Test
@@ -186,7 +248,7 @@ class FindFriendsScreenTest {
             useUnmergedTree = true)
         .assertExists()
     composeTestRule
-        .onNodeWithTag(FindFriendsScreenTestTags.getTestTagForFriendFollowButton("francis"))
+        .onNodeWithTag(FindFriendsScreenTestTags.getTestTagForFriendRequestButton("francis"))
         .assertIsDisplayed()
 
     composeTestRule
@@ -196,7 +258,7 @@ class FindFriendsScreenTest {
         .onNodeWithTag(FindFriendsScreenTestTags.getTestTagForFriendUsername("charlie"))
         .assertIsDisplayed()
     composeTestRule
-        .onNodeWithTag(FindFriendsScreenTestTags.getTestTagForFriendFollowButton("charlie"))
+        .onNodeWithTag(FindFriendsScreenTestTags.getTestTagForFriendRequestButton("charlie"))
         .assertIsDisplayed()
 
     composeTestRule
@@ -206,22 +268,22 @@ class FindFriendsScreenTest {
         .onNodeWithTag(FindFriendsScreenTestTags.getTestTagForFriendUsername("denis"))
         .assertIsDisplayed()
     composeTestRule
-        .onNodeWithTag(FindFriendsScreenTestTags.getTestTagForFriendFollowButton("denis"))
+        .onNodeWithTag(FindFriendsScreenTestTags.getTestTagForFriendRequestButton("denis"))
         .assertIsDisplayed()
     composeTestRule
-        .onNodeWithTag(FindFriendsScreenTestTags.getTestTagForFriendFollowButton("denis"))
+        .onNodeWithTag(FindFriendsScreenTestTags.getTestTagForFriendRequestButton("denis"))
         .assertIsDisplayed()
   }
 
-  /** Test: Verifies that the user can click to the friend item to follow this user */
+  /** Test: Verifies that the user can click to the friend item to friend request this user */
   @Test
-  fun testClickToFollow() {
+  fun testClickToRequest() {
     runTest {
       setContentwithBobUID()
       composeTestRule.waitForIdle()
 
       composeTestRule
-          .onNodeWithTag(FindFriendsScreenTestTags.getTestTagForFriendFollowButton("francis"))
+          .onNodeWithTag(FindFriendsScreenTestTags.getTestTagForFriendRequestButton("francis"))
           .assertIsDisplayed()
           .performClick()
 
@@ -305,8 +367,8 @@ class FindFriendsScreenTest {
 
       val friendToFollow = "francis"
       val unfollowButtonTag =
-          FindFriendsScreenTestTags.getTestTagForFriendFollowButton(friendToFollow)
-      val followMessage = FindFriendsScreenTestTags.FOLLOWING_TEXT_ANIMATION
+          FindFriendsScreenTestTags.getTestTagForFriendRequestButton(friendToFollow)
+      val followMessage = FindFriendsScreenTestTags.REQUESTING_TEXT_ANIMATION
       val heartAnimation = FindFriendsScreenTestTags.HEART_ANIMATION
 
       composeTestRule.onNodeWithTag(unfollowButtonTag).performClick()
@@ -323,5 +385,29 @@ class FindFriendsScreenTest {
           .assertIsNotDisplayed()
       composeTestRule.mainClock.autoAdvance = true
     }
+  }
+
+  @Test
+  fun testPendingUsersAreRemovedFromFindList() {
+    setContentWithTotalProfile() // userTotal: friends=[1,3], pending=[2]
+
+    composeTestRule.waitForIdle()
+
+    // pending user "charlie" (uid=2) must NOT appear
+    composeTestRule
+        .onNodeWithTag(FindFriendsScreenTestTags.getTestTagForFriendItem("charlie"))
+        .assertDoesNotExist()
+
+    // friends should not appear either in FindFriends
+    composeTestRule
+        .onNodeWithTag(FindFriendsScreenTestTags.getTestTagForFriendItem("francis"))
+        .assertDoesNotExist()
+
+    composeTestRule
+        .onNodeWithTag(FindFriendsScreenTestTags.getTestTagForFriendItem("denis"))
+        .assertDoesNotExist()
+
+    // should show empty list since all are either friends or pending
+    composeTestRule.onNodeWithTag(FindFriendsScreenTestTags.EMPTY_LIST_MSG).assertIsDisplayed()
   }
 }
