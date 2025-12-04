@@ -52,6 +52,11 @@ object BadgeScreenTestTags {
   fun badgeTest(title: String): String {
     return "badge_$title"
   }
+
+  const val TODO_TITLE = "todo_title"
+  const val EVENT_TITLE = "event_title"
+  const val FRIEND_TITLE = "friend_title"
+  const val FOCUS_TITLE = "focus_title"
 }
 
 /**
@@ -95,6 +100,7 @@ fun BadgeScreen(
                 // ---------------------- ToDos ----------------------
                 item {
                   Text(
+                      modifier = Modifier.testTag(BadgeScreenTestTags.TODO_TITLE),
                       text = stringResource(R.string.todos_badge_title),
                       style = MaterialTheme.typography.titleMedium,
                       fontWeight = FontWeight.Bold,
@@ -117,6 +123,7 @@ fun BadgeScreen(
                 item {
                   Spacer(modifier = Modifier.height(16.dp))
                   Text(
+                      modifier = Modifier.testTag(BadgeScreenTestTags.EVENT_TITLE),
                       text = stringResource(R.string.events_badge_title),
                       style = MaterialTheme.typography.titleMedium,
                       fontWeight = FontWeight.Bold,
@@ -138,6 +145,7 @@ fun BadgeScreen(
                 item {
                   Spacer(modifier = Modifier.height(16.dp))
                   Text(
+                      modifier = Modifier.testTag(BadgeScreenTestTags.FRIEND_TITLE),
                       text = stringResource(R.string.friends_badge_title),
                       style = MaterialTheme.typography.titleMedium,
                       fontWeight = FontWeight.Bold,
@@ -153,6 +161,7 @@ fun BadgeScreen(
                 item {
                   Spacer(modifier = Modifier.height(16.dp))
                   Text(
+                      modifier = Modifier.testTag(BadgeScreenTestTags.FOCUS_TITLE),
                       text = stringResource(R.string.focus_session_badge_title),
                       style = MaterialTheme.typography.titleMedium,
                       fontWeight = FontWeight.Bold,
