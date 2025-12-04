@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -658,6 +659,14 @@ fun StatusPickerDialog(
                   status = ProfileStatus.ONLINE,
                   currentStatus = currentStatus,
                   onClick = { onStatusSelected(ProfileStatus.ONLINE) })
+              HorizontalDivider(
+                  modifier =
+                      Modifier.padding(
+                          vertical = dimensionResource(id = R.dimen.padding_small),
+                          horizontal = dimensionResource(id = R.dimen.padding_regular)),
+                  thickness =
+                      dimensionResource(id = R.dimen.settings_status_dialog_divider_thickness),
+                  color = MaterialTheme.colorScheme.outline)
               Spacer(Modifier.height(dimensionResource(id = R.dimen.spacing_between_fields)))
 
               StatusGroupTitle(
@@ -692,11 +701,11 @@ private fun StatusGroupTitle(text: String, testTag: String) {
   Text(
       text = text,
       style = MaterialTheme.typography.labelMedium,
-      color = MaterialTheme.colorScheme.onSurfaceVariant,
+      color = MaterialTheme.colorScheme.onBackground,
       modifier =
           Modifier.padding(
                   horizontal = dimensionResource(id = R.dimen.padding_regular),
-                  vertical = dimensionResource(id = R.dimen.padding_small))
+              )
               .testTag(testTag))
 }
 
@@ -744,24 +753,29 @@ fun StatusOptionRow(
           Text(
               text = label,
               style = MaterialTheme.typography.bodyLarge,
-              color = MaterialTheme.colorScheme.onSurface)
+              color = MaterialTheme.colorScheme.onBackground)
         }
 
-        val selectorModifier =
-            if (currentStatus == status) {
-              Modifier.background(MaterialTheme.colorScheme.primary, CircleShape)
-            } else {
-              Modifier.border(
-                  dimensionResource(id = R.dimen.border_width_regular),
-                  MaterialTheme.colorScheme.onSurface,
-                  CircleShape)
-            }
+        val outerSize = dimensionResource(id = R.dimen.settings_status_dialog_selector_size)
+        val borderWidth = dimensionResource(id = R.dimen.border_width_regular)
+        val innerSize = outerSize * 0.5f
 
-        Box(
-            modifier =
-                Modifier.size(dimensionResource(id = R.dimen.settings_status_dialog_selector_size))
-                    .clip(CircleShape)
-                    .then(selectorModifier))
+        Box(modifier = Modifier.size(outerSize), contentAlignment = Alignment.Center) {
+          // Outer circle always has a border
+          Box(
+              modifier =
+                  Modifier.size(outerSize)
+                      .border(borderWidth, MaterialTheme.colorScheme.onBackground, CircleShape))
+
+          // Inner filled circle only when selected
+          if (currentStatus == status) {
+            Box(
+                modifier =
+                    Modifier.size(innerSize)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.onBackground))
+          }
+        }
       }
 }
 

@@ -70,6 +70,7 @@
     <!-- Settings Screen -->
     <dimen name="settings_status_dialog_selector_size">20.dp</dimen>
     <dimen name="settings_status_dialog_status_size">14.dp</dimen>
+    <dimen name="settings_status_dialog_divider_thickness">1.dp</dimen>
 
     <!-- SignIn Screen -->
     <dimen name="sign_in_top_spacing">80.dp</dimen>
