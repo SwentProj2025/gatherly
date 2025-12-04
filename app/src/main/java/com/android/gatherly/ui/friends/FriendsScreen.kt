@@ -70,8 +70,9 @@ object FriendsScreenTestTags {
   const val EMPTY_LIST_MSG = "messageEmptyList"
   const val LOADING_ANIMATION = "loadingAnimation"
   const val HEART_BREAK_ANIMATION = "heartBreakAnimation"
-
   const val UNFRIENDING_TEXT_ANIMATION = "unfriendingTextAnimation"
+  const val FRIENDS_SECTION_TITLE = "friendsSectionTitle"
+  const val PENDING_SECTION_TITLE = "pendingSectionTitle"
 
   /**
    * Returns a unique test tag for the card or container representing a given [Profile.username]
@@ -83,6 +84,17 @@ object FriendsScreenTestTags {
   fun getTestTagForFriendItem(friend: String): String = "friendItem${friend}"
 
   /**
+   * Returns a unique test tag for the card or container representing a given [Profile.username]
+   * item.
+   *
+   * @param pendingFriend The [Profile.username] item of a chosen pending friend whose test tag will
+   *   be generated.
+   * @return A string uniquely identifying the pending friend username item in the UI.
+   */
+  fun getTestTagForPendingFriendItem(pendingFriend: String): String =
+      "pendingFriendItem${pendingFriend}"
+
+  /**
    * Returns a unique test tag for the card container representing a given [Profile.username] item.
    *
    * @param friend The [Profile.username] TExt item of a chosen friend whose test tag will be
@@ -90,6 +102,17 @@ object FriendsScreenTestTags {
    * @return A string uniquely identifying the Friend username Text item in the UI.
    */
   fun getTestTagForFriendUsername(friend: String): String = "friendUsername${friend}"
+
+  /**
+   * Returns a unique test tag for the text in the card container representing a given
+   * [Profile.username] item.
+   *
+   * @param pendingFriend The [Profile.username] Text item of a chosen pending friend whose test tag
+   *   will be generated.
+   * @return A string uniquely identifying the pending friend username Text item in the UI.
+   */
+  fun getTestTagForPendingFriendUsername(pendingFriend: String): String =
+      "pendingFriendUsername${pendingFriend}"
 
   /**
    * Returns a unique test tag for the card or container representing a given
@@ -102,6 +125,17 @@ object FriendsScreenTestTags {
   fun getTestTagForFriendProfilePicture(friend: String): String = "friendProfilePicture${friend}"
 
   /**
+   * Returns a unique test tag for the card or container representing a given
+   * [Profile.profilePicture] item.
+   *
+   * @param pendingFriend The [Profile.profilePicture] item of a chosen pending friend
+   *   [Profile.username] whose test tag will be generated.
+   * @return A string uniquely identifying the pending friend username item in the UI.
+   */
+  fun getTestTagForPendingFriendProfilePicture(pendingFriend: String): String =
+      "pendingFriendProfilePicture${pendingFriend}"
+
+  /**
    * Returns a unique test tag for the card or container representing a given [Profile.username]
    * item.
    *
@@ -109,6 +143,16 @@ object FriendsScreenTestTags {
    * @return A string uniquely identifying the Friend username item in the UI.
    */
   fun getTestTagForFriendUnfriendButton(friend: String): String = "friendUnfriendingButton${friend}"
+
+  /**
+   * Returns a unique test tag for the [Button] used to cancel a friend request. item.
+   *
+   * @param friend The [Button] item for canceling a friend request whose test tag will be
+   *   generated.
+   * @return A string uniquely identifying the pending friend username item in the UI.
+   */
+  fun getTestTagForPendingFriendCancelRequestButton(friend: String): String =
+      "pendingFriendCancelRequestButton${friend}"
 }
 
 // Private values with the json animation files
@@ -318,7 +362,8 @@ private fun PendingRequestItem(
       modifier =
           modifier
               .fillMaxWidth()
-              .padding(vertical = dimensionResource(R.dimen.friends_item_card_padding_vertical))) {
+              .padding(vertical = dimensionResource(R.dimen.friends_item_card_padding_vertical))
+              .testTag(FriendsScreenTestTags.getTestTagForPendingFriendItem(friendUsername))) {
         Row(
             modifier =
                 Modifier.fillMaxWidth()
@@ -333,7 +378,10 @@ private fun PendingRequestItem(
               contentScale = ContentScale.Crop,
               modifier =
                   Modifier.size(dimensionResource(R.dimen.friends_item_profile_picture_size))
-                      .clip(CircleShape))
+                      .clip(CircleShape)
+                      .testTag(
+                          FriendsScreenTestTags.getTestTagForPendingFriendProfilePicture(
+                              friendUsername)))
 
           // -- SPACER
           Spacer(
@@ -346,16 +394,25 @@ private fun PendingRequestItem(
                 text = friendUsername,
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Medium)
+                fontWeight = FontWeight.Medium,
+                modifier =
+                    Modifier.testTag(
+                        FriendsScreenTestTags.getTestTagForPendingFriendUsername(friendUsername)))
           }
           // -- SPACER
           Spacer(
               modifier = Modifier.width(dimensionResource(R.dimen.spacing_between_fields_regular)))
 
-          // -- Unfriend button --
-          Button(onClick = onCancel, modifier = Modifier.wrapContentWidth()) {
-            Text("Cancel Request")
-          }
+          // -- Cancel request button --
+          Button(
+              onClick = onCancel,
+              modifier =
+                  Modifier.wrapContentWidth()
+                      .testTag(
+                          FriendsScreenTestTags.getTestTagForPendingFriendCancelRequestButton(
+                              friendUsername))) {
+                Text("Cancel Request")
+              }
         }
       }
 }
@@ -477,23 +534,17 @@ private fun FriendsListContent(
           Modifier.fillMaxWidth()
               .padding(horizontal = dimensionResource(R.dimen.padding_screen))
               .padding(padding)) {
-        if (filteredFriends.isEmpty()) {
-          item {
-            Text(
-                text = stringResource(R.string.friends_empty_list_msg),
-                modifier =
-                    Modifier.padding(dimensionResource(R.dimen.padding_screen))
-                        .testTag(FriendsScreenTestTags.EMPTY_LIST_MSG))
-          }
-        } else {
-          item { SearchBarContent(searchQuery, onSearchQueryChange) }
+        item { SearchBarContent(searchQuery, onSearchQueryChange) }
 
+        if (filteredFriends.isNotEmpty()) {
           item {
             Text(
                 text = "Friends",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(vertical = dimensionResource(R.dimen.padding_small)))
+                modifier =
+                    Modifier.padding(vertical = dimensionResource(R.dimen.padding_small))
+                        .testTag(FriendsScreenTestTags.FRIENDS_SECTION_TITLE))
           }
 
           items(items = filteredFriends, key = { it }) { friend ->
@@ -508,14 +559,18 @@ private fun FriendsListContent(
                             tween(durationMillis = ANIMATION_TIME, easing = LinearOutSlowInEasing)),
                 profilePicUrl = profiles[friend]?.profilePicture)
           }
+        }
 
+        if (pendingFriendRequests.isNotEmpty()) {
           item {
             Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_medium)))
             Text(
                 text = "Pending friend requests",
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(vertical = dimensionResource(R.dimen.padding_small)))
+                modifier =
+                    Modifier.padding(vertical = dimensionResource(R.dimen.padding_small))
+                        .testTag(FriendsScreenTestTags.PENDING_SECTION_TITLE))
           }
 
           items(items = pendingFriendRequests, key = { it }) { pendingUsername ->
@@ -532,6 +587,15 @@ private fun FriendsListContent(
           }
         }
 
+        if (filteredFriends.isEmpty() && pendingFriendRequests.isEmpty()) {
+          item {
+            Text(
+                text = stringResource(R.string.friends_empty_list_msg),
+                modifier =
+                    Modifier.padding(dimensionResource(R.dimen.padding_screen))
+                        .testTag(FriendsScreenTestTags.EMPTY_LIST_MSG))
+          }
+        }
         item { FindFriendButton(onFindFriends) }
       }
 }
