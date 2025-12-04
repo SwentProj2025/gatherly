@@ -8,6 +8,7 @@ import com.android.gatherly.model.notification.NotificationsRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
+import com.android.gatherly.ui.badge.BadgeScreenTestTags
 import com.android.gatherly.utils.MockitoUtils
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
@@ -96,6 +97,28 @@ class ProfileScreenTest {
     setContent()
     composeTestRule.onNodeWithTag(ProfileScreenTestTags.PROFILE_FOCUS_SESSIONS).assertExists()
     composeTestRule.onNodeWithTag(ProfileScreenTestTags.PROFILE_GROUPS).assertExists()
+  }
+
+  @Test
+  fun badgeInfo_AreDisplayedCorrectly() {
+    setContent()
+
+    val expectedTitles =
+        listOf(
+            "Blank Todo Created Badge",
+            "Blank Todo Completed Badge",
+            "Blank Event Created Badge",
+            "Blank Event Participated Badge",
+            "Blank Friend Badge",
+            "Blank Focus Session Badge")
+
+    expectedTitles.forEach { title ->
+      composeTestRule
+          .onNodeWithTag(BadgeScreenTestTags.badgeTest(title), useUnmergedTree = true)
+          .assertExists()
+    }
+
+    composeTestRule.onNodeWithTag(ProfileScreenTestTags.PROFILE_BADGES).assertExists()
   }
 
   /** Check that the anonymous user sees the "upgrade with google" button */
