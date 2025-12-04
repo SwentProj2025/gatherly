@@ -22,7 +22,6 @@ import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryProvider
 import com.android.gatherly.ui.badge.BadgeUI
-import com.android.gatherly.ui.badge.UIState
 import com.android.gatherly.utils.getProfileWithSyncedFriendNotifications
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
@@ -46,7 +45,38 @@ data class ProfileState(
     val signedOut: Boolean = false,
     val navigateToInit: Boolean = false,
     val isAnon: Boolean = true,
-    val topBadges: Map<BadgeType, BadgeUI> = UIState().topBadges
+    val topBadges: Map<BadgeType, BadgeUI> =
+        mapOf(
+            BadgeType.TODOS_CREATED to
+                BadgeUI(
+                    "Blank Todo Created Badge",
+                    "Create your first Todo to get a Badge!",
+                    R.drawable.blank_todo_created),
+            BadgeType.TODOS_COMPLETED to
+                BadgeUI(
+                    "Blank Todo Completed Badge",
+                    "Complete your first Todo to get a Badge!",
+                    R.drawable.blank_todo_completed),
+            BadgeType.EVENTS_CREATED to
+                BadgeUI(
+                    "Blank Event Created Badge",
+                    "Create your first Event to get a Badge!",
+                    R.drawable.blank_event_created),
+            BadgeType.EVENTS_PARTICIPATED to
+                BadgeUI(
+                    "Blank Event Participated Badge",
+                    "Participate to your first Todo to get a Badge!",
+                    R.drawable.blank_event_participated),
+            BadgeType.FRIENDS_ADDED to
+                BadgeUI(
+                    "Blank Friend Badge",
+                    "Add your first Friend to get a Badge!",
+                    R.drawable.blank_friends),
+            BadgeType.FOCUS_SESSIONS_COMPLETED to
+                BadgeUI(
+                    "Blank Focus Session Badge",
+                    "Complete your first Focus Session to get a Badge!",
+                    R.drawable.blank_focus_session))
 )
 
 /**
@@ -210,7 +240,7 @@ class ProfileViewModel(
 
   /**
    * Builds the top badges map for the profile screen:
-   * - starts from the default blank badges (from UIState)
+   * - starts from the default blank badges
    * - replaces each entry with the highest ranked badge of that type, if the user has one
    */
   private fun buildUiStateFromProfile(profile: Profile): Map<BadgeType, BadgeUI> {
@@ -223,7 +253,7 @@ class ProfileViewModel(
     fun Badge.toBadgeUI(): BadgeUI =
         BadgeUI(title = this.title, description = this.description, icon = this.iconRes)
 
-    val defaultTopBadges = UIState().topBadges
+    val defaultTopBadges = ProfileState().topBadges
 
     return defaultTopBadges.mapValues { (badgeType, defaultUi) ->
       highestBadgeOfType(badgeType)?.toBadgeUI() ?: defaultUi

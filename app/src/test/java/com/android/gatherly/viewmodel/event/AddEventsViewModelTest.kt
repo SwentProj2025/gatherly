@@ -5,6 +5,8 @@ import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsLocalRepository
 import com.android.gatherly.model.event.EventsRepository
+import com.android.gatherly.model.group.GroupsLocalRepository
+import com.android.gatherly.model.group.GroupsRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
@@ -32,6 +34,7 @@ class AddEventsViewModelTest {
   private lateinit var addEventViewModel: AddEventViewModel
   private lateinit var eventsRepository: EventsRepository
   private lateinit var profileRepository: ProfileRepository
+  private lateinit var groupsRepository: GroupsRepository
   private lateinit var mockitoUtils: MockitoUtils
 
   // initialize this so that tests control all coroutines and can wait on them
@@ -44,6 +47,7 @@ class AddEventsViewModelTest {
     // initialize repos and viewModel
     profileRepository = ProfileLocalRepository()
     eventsRepository = EventsLocalRepository()
+    groupsRepository = GroupsLocalRepository()
 
     // fill the profile and events repositories with profiles and event
     fill_repositories()
@@ -56,7 +60,8 @@ class AddEventsViewModelTest {
         AddEventViewModel(
             profileRepository = profileRepository,
             eventsRepository = eventsRepository,
-            authProvider = { mockitoUtils.mockAuth })
+            authProvider = { mockitoUtils.mockAuth },
+            groupsRepository = groupsRepository)
   }
 
   @After

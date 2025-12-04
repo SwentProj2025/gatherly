@@ -44,6 +44,13 @@ interface GroupsRepository {
   suspend fun getGroup(groupId: String): Group
 
   /**
+   * Return the [Group] with the given group name.
+   *
+   * @param groupName the name of the group
+   */
+  suspend fun getGroupByName(groupName: String): Group
+
+  /**
    * Adds a new [Group] to the repository.
    *
    * The current user is automatically set as the creator and added to both the member and admin
