@@ -74,13 +74,19 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     repository.initProfileIfMissing(uid, "pic1.png")
 
     val updated =
-        Profile(uid = uid, name = "Alice", school = "EPFL", profilePicture = "updated.png")
+        Profile(
+            uid = uid,
+            name = "Alice",
+            school = "EPFL",
+            profilePicture = "updated.png",
+            userStatusSource = UserStatusSource.MANUAL)
     repository.updateProfile(updated)
 
     val fetched = repository.getProfileByUid(uid)
     assertEquals("Alice", fetched!!.name)
     assertEquals("EPFL", fetched.school)
     assertEquals("updated.png", fetched.profilePicture)
+    assertEquals(UserStatusSource.MANUAL, fetched.userStatusSource)
   }
 
   @Test(expected = NoSuchElementException::class)
@@ -596,7 +602,7 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
   }
 
   @Test
-  fun initProfileIfMissing_setsDefaultStatusOffline() = runTest {
+  fun initProfileIfMissing_correctlySetsStatus() = runTest {
     val uid = FirebaseEmulator.auth.currentUser!!.uid
 
     repository.initProfileIfMissing(uid, defaultPhotoUrl = "default.png")
@@ -605,6 +611,8 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     assertNotNull(profile)
     // New profiles should default to OFFLINE
     assertEquals(ProfileStatus.OFFLINE, profile!!.status)
+    // and status source to automatic
+    assertEquals(UserStatusSource.AUTOMATIC, profile.userStatusSource)
   }
 
   @Test
@@ -613,10 +621,11 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     repository.initProfileIfMissing(uid, defaultPhotoUrl = "default.png")
 
     // Set status to ONLINE
-    repository.updateStatus(uid, ProfileStatus.ONLINE)
+    repository.updateStatus(uid, ProfileStatus.ONLINE, source = UserStatusSource.MANUAL)
 
     val profile = repository.getProfileByUid(uid)
     assertEquals(ProfileStatus.ONLINE, profile!!.status)
+    assertEquals(UserStatusSource.MANUAL, profile.userStatusSource)
 
     // Set status back to OFFLINE
     repository.updateStatus(uid, ProfileStatus.OFFLINE)
@@ -638,6 +647,8 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
 
     val profile = repository.getProfileByUid(uid)
     assertEquals(ProfileStatus.ONLINE, profile!!.status)
+    // verifies if correct userStatusSource value is fetched with getProfileByUid
+    assertEquals(UserStatusSource.AUTOMATIC, profile.userStatusSource)
 
     // Unknown string should default to OFFLINE
     FirebaseEmulator.firestore

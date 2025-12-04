@@ -346,6 +346,7 @@ class ProfileRepositoryFirestore(
     val birthday = doc.getTimestamp("birthday")
     val profilePicture = doc.getString("profilePicture") ?: return null
     val status = ProfileStatus.fromString(doc.getString("status"))
+    val userStatusSource = UserStatusSource.fromString(doc.getString("userStatusSource"))
     val badgeIds = doc.get("badgeIds") as? List<String> ?: emptyList()
     val badgeCount = doc.get("badgeCount") as? Map<String, Long> ?: emptyMap()
     val focusPoints: Double = doc.getDouble("focusPoints") ?: 0.0
@@ -364,6 +365,7 @@ class ProfileRepositoryFirestore(
         birthday = birthday,
         profilePicture = profilePicture,
         status = status,
+        userStatusSource = userStatusSource,
         badgeIds = badgeIds,
         badgeCount = badgeCount,
         focusPoints = focusPoints)
@@ -390,6 +392,7 @@ class ProfileRepositoryFirestore(
         "birthday" to profile.birthday,
         "profilePicture" to profile.profilePicture,
         "status" to profile.status.value,
+        "userStatusSource" to profile.userStatusSource.value,
         "badgeIds" to profile.badgeIds,
         "badgeCount" to profile.badgeCount,
         "focusPoints" to profile.focusPoints)
@@ -436,8 +439,11 @@ class ProfileRepositoryFirestore(
   }
 
   // -- STATUS GESTION PART --
-  override suspend fun updateStatus(uid: String, status: ProfileStatus) {
-    profilesCollection.document(uid).update("status", status.value).await()
+  override suspend fun updateStatus(uid: String, status: ProfileStatus, source: UserStatusSource) {
+    profilesCollection
+        .document(uid)
+        .update(mapOf("status" to status.value, "userStatusSource" to source.value))
+        .await()
   }
 
   override suspend fun createEvent(eventId: String, currentUserId: String) {

@@ -14,6 +14,8 @@ import com.android.gatherly.R
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryProvider
+import com.android.gatherly.model.profile.ProfileStatus
+import com.android.gatherly.model.profile.UserStatusManager
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.Companion.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
@@ -51,7 +53,8 @@ data class ProfileState(
  */
 class ProfileViewModel(
     private val repository: ProfileRepository = ProfileRepositoryProvider.repository,
-    private val authProvider: () -> FirebaseAuth = { Firebase.auth }
+    private val authProvider: () -> FirebaseAuth = { Firebase.auth },
+    private val userStatusManager: UserStatusManager = UserStatusManager(authProvider(), repository)
 ) : ViewModel() {
 
   private val _uiState = MutableStateFlow(ProfileState())
@@ -148,8 +151,9 @@ class ProfileViewModel(
   /** Initiates sign-out */
   fun signOut(credentialManager: CredentialManager): Unit {
     viewModelScope.launch {
+      userStatusManager.setStatus(ProfileStatus.OFFLINE)
       _uiState.value = _uiState.value.copy(signedOut = true)
-      Firebase.auth.signOut()
+      authProvider().signOut()
       credentialManager.clearCredentialState(ClearCredentialStateRequest())
     }
   }

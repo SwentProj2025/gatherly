@@ -436,6 +436,7 @@ class TimerViewModel(
   /** Cleans up resources when the ViewModel is cleared. */
   override fun onCleared() {
     cancelTicking()
+    viewModelScope.launch { userStatusManager.setStatus(ProfileStatus.ONLINE) }
     super.onCleared()
   }
 }

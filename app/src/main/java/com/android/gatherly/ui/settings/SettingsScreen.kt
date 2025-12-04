@@ -29,9 +29,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
 import androidx.credentials.CredentialManager
@@ -316,10 +314,6 @@ fun SettingsScreen(
                           onValueChange = { settingsViewModel.editSchoolYear(it) },
                           testTag = SettingsScreenTestTags.SCHOOL_YEAR_FIELD)
 
-                      // Button(modifier = Modifier.fillMaxWidth(), onClick = {showStatusDialog =
-                      // true}) {
-                      //  Text("Change your status")
-                      // }
                       StatusPickerDialog(
                           visible = showStatusDialog,
                           currentStatus = uiState.currentUserStatus,
@@ -649,9 +643,11 @@ fun StatusPickerDialog(
         Column(
             modifier =
                 Modifier.fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
+                    .clip(
+                        RoundedCornerShape(
+                            dimensionResource(id = R.dimen.rounded_corner_shape_medium_large)))
                     .background(MaterialTheme.colorScheme.surfaceVariant)
-                    .padding(vertical = 8.dp)) {
+                    .padding(vertical = dimensionResource(id = R.dimen.padding_small))) {
               StatusOptionRow(
                   label = stringResource(id = R.string.settings_status_dialog_option_online),
                   status = ProfileStatus.ONLINE,
@@ -703,7 +699,8 @@ fun StatusOptionRow(
           Modifier.fillMaxWidth()
               .clickable { onClick() }
               .padding(
-                  horizontal = dimensionResource(id = R.dimen.padding_regular), vertical = 12.dp)
+                  horizontal = dimensionResource(id = R.dimen.padding_regular),
+                  vertical = dimensionResource(id = R.dimen.padding_small_regular))
               .testTag(
                   when (status) {
                     ProfileStatus.ONLINE -> SettingsScreenTestTags.OPTION_ONLINE
@@ -713,7 +710,9 @@ fun StatusOptionRow(
       verticalAlignment = Alignment.CenterVertically,
       horizontalArrangement = Arrangement.SpaceBetween) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-          StatusIndicator(status = status, size = 14.dp)
+          StatusIndicator(
+              status = status,
+              size = dimensionResource(id = R.dimen.settings_status_dialog_status_size))
 
           Spacer(
               Modifier.width(
@@ -729,7 +728,10 @@ fun StatusOptionRow(
             if (currentStatus == status) {
               Modifier.background(MaterialTheme.colorScheme.primary, CircleShape)
             } else {
-              Modifier.border(2.dp, MaterialTheme.colorScheme.onSurface, CircleShape)
+              Modifier.border(
+                  dimensionResource(id = R.dimen.border_width_regular),
+                  MaterialTheme.colorScheme.onSurface,
+                  CircleShape)
             }
 
         Box(
@@ -762,10 +764,4 @@ fun ProfilePictureWithStatus(
         modifier = Modifier.align(Alignment.BottomEnd).testTag(SettingsScreenTestTags.USER_STATUS),
         size = size * 0.25f)
   }
-}
-
-@Preview
-@Composable
-fun StatusPickerPreview() {
-  StatusPickerDialog(true, ProfileStatus.ONLINE, {}, {})
 }

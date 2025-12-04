@@ -1,10 +1,12 @@
 package com.android.gatherly.viewmodel.settings
 
 import android.net.Uri
+import androidx.credentials.CredentialManager
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileStatus
 import com.android.gatherly.model.profile.UserStatusManager
+import com.android.gatherly.model.profile.UserStatusSource
 import com.android.gatherly.ui.settings.SettingsViewModel
 import com.android.gatherly.utilstest.MockitoUtils
 import kotlinx.coroutines.Dispatchers
@@ -37,6 +39,7 @@ class SettingsViewModelTest {
   private lateinit var viewModel: SettingsViewModel
   private lateinit var mockitoUtils: MockitoUtils
   private lateinit var statusManagerMock: UserStatusManager
+  private lateinit var credentialManager: CredentialManager
 
   @Before
   fun setup() {
@@ -44,7 +47,7 @@ class SettingsViewModelTest {
     repo = ProfileLocalRepository()
     statusManagerMock = mock()
     fill_repository()
-
+    credentialManager = mock()
     // Mock Firebase Auth
     mockitoUtils = MockitoUtils()
     mockitoUtils.chooseCurrentUser("currentUser")
@@ -400,8 +403,30 @@ class SettingsViewModelTest {
     viewModel.updateUserStatus(status)
     advanceUntilIdle()
 
+    // UI state updated
     assertEquals(status, viewModel.uiState.value.currentUserStatus)
 
-    Mockito.verify(statusManagerMock).setStatus(status)
+    // Correct manager call
+    Mockito.verify(statusManagerMock)
+        .setStatus(status = status, source = UserStatusSource.MANUAL, resetToAuto = true)
+  }
+
+  @Test
+  fun updateUserStatus_OfflineDoesNotResetToAuto() = runTest {
+    val status = ProfileStatus.OFFLINE
+
+    viewModel.updateUserStatus(status)
+    advanceUntilIdle()
+    assertEquals(status, viewModel.uiState.value.currentUserStatus)
+
+    Mockito.verify(statusManagerMock)
+        .setStatus(status = status, source = UserStatusSource.MANUAL, resetToAuto = false)
+  }
+
+  @Test
+  fun signOutCallsSetStatus() = runTest {
+    viewModel.signOut(credentialManager)
+    advanceUntilIdle()
+    Mockito.verify(statusManagerMock).setStatus(status = ProfileStatus.OFFLINE)
   }
 }

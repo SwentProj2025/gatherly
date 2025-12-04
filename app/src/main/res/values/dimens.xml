@@ -2,6 +2,7 @@
     <!-- Padding -->
     <dimen name="padding_extra_small">4dp</dimen>
     <dimen name="padding_small">8dp</dimen>
+    <dimen name="padding_small_regular">12dp</dimen>
     <dimen name="padding_screen">16dp</dimen>
     <dimen name="padding_regular">16dp</dimen>
     <dimen name="padding_medium">24dp</dimen>
@@ -36,7 +37,9 @@
     <!-- Shapes -->
     <dimen name="rounded_corner_shape_small">4dp</dimen>
     <dimen name="rounded_corner_shape_medium">12dp</dimen>
+    <dimen name="rounded_corner_shape_medium_large">16dp</dimen>
     <dimen name="rounded_corner_shape_large">20dp</dimen>
+    <dimen name="border_width_regular">2dp</dimen>
 
     <!-- ToDos -->
     <dimen name="todos_overview_vertical_padding">8dp</dimen>
@@ -66,6 +69,7 @@
 
     <!-- Settings Screen -->
     <dimen name="settings_status_dialog_selector_size">20.dp</dimen>
+    <dimen name="settings_status_dialog_status_size">14.dp</dimen>
 
     <!-- SignIn Screen -->
     <dimen name="sign_in_top_spacing">80.dp</dimen>
