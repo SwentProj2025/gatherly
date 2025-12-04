@@ -8,13 +8,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.event.Event
-import com.android.gatherly.model.event.EventState
 import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsRepository
 import com.android.gatherly.model.event.EventsRepositoryFirestore
-import com.android.gatherly.model.group.Group
-import com.android.gatherly.model.group.GroupsRepository
-import com.android.gatherly.model.group.GroupsRepositoryFirestore
 import com.android.gatherly.model.map.Location
 import com.android.gatherly.model.map.LocationRepository
 import com.android.gatherly.model.map.NominatimLocationRepository
@@ -23,7 +19,6 @@ import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.android.gatherly.utils.GenericViewModelFactory
 import com.android.gatherly.utils.cancelEvent
-import com.android.gatherly.utils.registerGroup
 import com.google.firebase.Timestamp
 import com.google.firebase.firestore.firestore
 import com.google.firebase.firestore.ktx.firestore
@@ -73,21 +68,7 @@ data class EditEventsUIState(
     // when the event is edited or deleted, return to event overview
     val backToOverview: Boolean = false,
     // when the event is being
-    val isLoading: Boolean = false,
-    // the state of the event
-    val state: EventState = EventState.PUBLIC,
-    // the friend participant search string
-    val friend: String = "",
-    // list of suggested friends given the search string
-    val suggestedFriendsProfile: List<Profile> = emptyList(),
-    // the event group search string
-    val group: String = "",
-    // when it's a private group event
-    val isGroupEvent: Group? = null,
-    // list of suggested groups given the search string
-    val suggestedGroups: List<Group> = emptyList(),
-    // the id of the current user
-    val currentUserId: String = ""
+    val isLoading: Boolean = false
 )
 
 // create a HTTP Client for Nominatim
@@ -107,7 +88,6 @@ private var client: OkHttpClient =
 @SuppressLint("SimpleDateFormat")
 class EditEventsViewModel(
     private val profileRepository: ProfileRepository,
-    private val groupsRepository: GroupsRepository,
     private val eventsRepository: EventsRepository,
     private val nominatimClient: LocationRepository = NominatimLocationRepository(client)
 ) : ViewModel() {
@@ -124,7 +104,6 @@ class EditEventsViewModel(
   private lateinit var eventId: String
   private lateinit var creatorId: String
   private lateinit var creatorName: String
-  private lateinit var currentProfile: Profile
 
   // The list of participants ID is needed in case
   // if the event is canceled we have to unregister everybody
@@ -152,15 +131,11 @@ class EditEventsViewModel(
               date = dateFormat.format(event.date.toDate()),
               startTime = timeFormat.format(event.startTime.toDate()),
               endTime = timeFormat.format(event.endTime.toDate()),
-              participants = event.participants.map { profileRepository.getProfileByUid(it)!! },
-              state = event.state,
-              currentUserId = event.creatorId,
-              isGroupEvent = event.group)
+              participants = event.participants.map { profileRepository.getProfileByUid(it)!! })
       eventId = event.id
       creatorId = event.creatorId
       creatorName = event.creatorName
       participants = event.participants
-      currentProfile = profileRepository.getProfileByUid(creatorId)!!
     }
   }
 
@@ -289,22 +264,6 @@ class EditEventsViewModel(
     uiState = uiState.copy(participant = updatedParticipant)
   }
 
-  /**
-   * Updates the event group string
-   *
-   * @param updatedGroup the string with which to update
-   */
-  fun updateGroup(updatedGroup: String) {
-    uiState = uiState.copy(group = updatedGroup)
-  }
-
-  /** Update the event to make it public */
-  fun updatePrivateEventToPublicEvent() {
-    if (uiState.state != EventState.PUBLIC) {
-      uiState = uiState.copy(state = EventState.PUBLIC)
-    }
-  }
-
   /*----------------------------------Participants----------------------------------------------*/
   /**
    * Deletes a participant
@@ -346,24 +305,6 @@ class EditEventsViewModel(
             participants = uiState.participants + participant, suggestedProfiles = emptyList())
   }
 
-  /**
-   * The user choose the group to invite to this event
-   *
-   * @param groupName the group the user wants to invite for the event
-   */
-  fun inviteGroup(groupName: String) {
-    viewModelScope.launch {
-      val group = groupsRepository.getGroupByName(groupName)
-      val membersProfile = registerGroup(profileRepository, group)
-      uiState = uiState.copy(isGroupEvent = group, participants = membersProfile)
-    }
-  }
-
-  /** The user changes his mind, he does not want to invite his chosen group anymore */
-  fun removeGroup() {
-    uiState = uiState.copy(isGroupEvent = null, participants = emptyList())
-  }
-
   /*----------------------------------Location--------------------------------------------------*/
 
   fun selectLocation(location: Location) {
@@ -382,52 +323,6 @@ class EditEventsViewModel(
       val profilesList = profileRepository.searchProfilesByNamePrefix(string)
       println("profiles list" + profilesList.size)
       uiState = uiState.copy(suggestedProfiles = profilesList)
-    }
-  }
-
-  /**
-   * Given a string, search profiles that have it as a substring in their name
-   *
-   * @param string the substring with which to search
-   */
-  fun searchFriendsProfileByString(string: String) {
-    viewModelScope.launch {
-      val friendsIds = currentProfile.friendUids
-      val list = friendsIds.mapNotNull { friendId -> profileRepository.getProfileByUid(friendId) }
-      val profilesList = searchGivenListByNamePrefix(string, list)
-      uiState = uiState.copy(suggestedFriendsProfile = profilesList)
-    }
-  }
-
-  /**
-   * Given a string, search groups belonging to the current user that have it as a substring in
-   * their name
-   *
-   * @param string the substring with which to search
-   */
-  fun searchGroupsNameByString(string: String) {
-    viewModelScope.launch {
-      val trimmedString = string.trim()
-      val groupsIds = currentProfile.groupIds
-
-      val allGroups =
-          groupsIds.mapNotNull { groupId ->
-            try {
-              groupsRepository.getGroup(groupId)
-            } catch (e: NoSuchElementException) {
-              null
-            }
-          }
-
-      if (trimmedString.isBlank()) {
-        uiState = uiState.copy(suggestedGroups = allGroups)
-        return@launch
-      }
-
-      val suggestedGroups =
-          allGroups.filter { group -> group.name.startsWith(trimmedString, ignoreCase = true) }
-
-      uiState = uiState.copy(suggestedGroups = suggestedGroups)
     }
   }
 
@@ -516,9 +411,7 @@ class EditEventsViewModel(
               endTime = timestampEndTime,
               creatorId = creatorId,
               participants = uiState.participants.map { it.uid },
-              status = EventStatus.UPCOMING,
-              state = uiState.state,
-              group = uiState.isGroupEvent)
+              status = EventStatus.UPCOMING)
 
       // Save in event repository
       viewModelScope.launch {
@@ -554,31 +447,11 @@ class EditEventsViewModel(
         profileRepository: ProfileRepository =
             ProfileRepositoryFirestore(Firebase.firestore, Firebase.storage),
         eventsRepository: EventsRepository = EventsRepositoryFirestore(Firebase.firestore),
-        nominatimClient: LocationRepository = NominatimLocationRepository(client),
-        groupsRepository: GroupsRepository = GroupsRepositoryFirestore(Firebase.firestore)
+        nominatimClient: LocationRepository = NominatimLocationRepository(client)
     ): ViewModelProvider.Factory {
       return GenericViewModelFactory {
-        EditEventsViewModel(
-            profileRepository = profileRepository,
-            eventsRepository = eventsRepository,
-            nominatimClient = nominatimClient,
-            groupsRepository = groupsRepository)
+        EditEventsViewModel(profileRepository, eventsRepository, nominatimClient)
       }
     }
-  }
-
-  /**
-   * Helper function : to search a prefix string in the name of profiles given by the list
-   *
-   * @param prefix substring to search
-   * @param list list of profile where we want to find the substring in their name
-   */
-  private fun searchGivenListByNamePrefix(prefix: String, list: List<Profile>): List<Profile> {
-    val trimmedPrefix = prefix.trim()
-    if (trimmedPrefix.isEmpty()) {
-      return emptyList()
-    }
-
-    return list.filter { profile -> profile.name.startsWith(trimmedPrefix, ignoreCase = true) }
   }
 }
