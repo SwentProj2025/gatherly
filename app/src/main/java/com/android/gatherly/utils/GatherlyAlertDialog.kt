@@ -155,10 +155,10 @@ fun GatherlyAlertDialog(
 
 @Composable
 private fun contentColor(isImportantWarning: Boolean): Color {
-  if (isImportantWarning) {
-    return MaterialTheme.colorScheme.error
+  return if (isImportantWarning) {
+    MaterialTheme.colorScheme.error
   } else {
-    return MaterialTheme.colorScheme.onPrimaryContainer
+    MaterialTheme.colorScheme.onPrimaryContainer
   }
 }
 
