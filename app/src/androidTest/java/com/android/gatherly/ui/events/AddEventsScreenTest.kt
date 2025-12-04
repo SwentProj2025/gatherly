@@ -18,6 +18,7 @@ import com.android.gatherly.model.event.EventState
 import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsLocalRepository
 import com.android.gatherly.model.event.EventsRepository
+import com.android.gatherly.model.group.Group
 import com.android.gatherly.model.group.GroupsLocalRepository
 import com.android.gatherly.model.group.GroupsRepository
 import com.android.gatherly.model.map.FakeNominatimLocationRepository
@@ -39,6 +40,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -50,6 +52,7 @@ class AddEventsScreenTest {
   @get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
   // declare viewModel and repositories
+  val TIMEOUT = 15000L
   private lateinit var addEventsViewModel: AddEventViewModel
   private lateinit var eventsRepository: EventsRepository
   private lateinit var profileRepository: ProfileRepository
@@ -237,6 +240,18 @@ class AddEventsScreenTest {
         .assertIsDisplayed()
         .performClick()
 
+    // Wait for private buttons to actually exist in the compose tree
+    composeTestRule.waitUntil(TIMEOUT) {
+      try {
+        composeTestRule
+            .onNodeWithTag(AddEventScreenTestTags.BUTTON_PRIVATE_FRIENDS_EVENT)
+            .assertExists()
+        true
+      } catch (e: AssertionError) {
+        false
+      }
+    }
+
     composeTestRule
         .onNodeWithTag(AddEventScreenTestTags.BUTTON_PRIVATE_FRIENDS_EVENT)
         .assertIsDisplayed()
@@ -246,6 +261,18 @@ class AddEventsScreenTest {
         .assertIsDisplayed()
 
     composeTestRule.onNodeWithTag(AddEventScreenTestTags.SWITCH_PUBLIC_PRIVATE_EVENT).performClick()
+
+    // Wait for private buttons to disappear from the compose tree
+    composeTestRule.waitUntil(TIMEOUT) {
+      try {
+        composeTestRule
+            .onNodeWithTag(AddEventScreenTestTags.BUTTON_PRIVATE_FRIENDS_EVENT)
+            .assertDoesNotExist()
+        true
+      } catch (e: AssertionError) {
+        false
+      }
+    }
 
     composeTestRule
         .onNodeWithTag(AddEventScreenTestTags.BUTTON_PRIVATE_FRIENDS_EVENT)
@@ -264,6 +291,18 @@ class AddEventsScreenTest {
         .assertIsDisplayed()
         .performClick()
 
+    // Wait for private buttons to actually exist in the compose tree
+    composeTestRule.waitUntil(TIMEOUT) {
+      try {
+        composeTestRule
+            .onNodeWithTag(AddEventScreenTestTags.BUTTON_PRIVATE_FRIENDS_EVENT)
+            .assertExists()
+        true
+      } catch (e: AssertionError) {
+        false
+      }
+    }
+
     composeTestRule
         .onNodeWithTag(AddEventScreenTestTags.BUTTON_PRIVATE_FRIENDS_EVENT)
         .assertIsDisplayed()
@@ -277,14 +316,24 @@ class AddEventsScreenTest {
         .assertIsDisplayed()
         .performClick()
 
+    // Wait for the input participant disappear from the compose tree
+    composeTestRule.waitUntil(TIMEOUT) {
+      try {
+        composeTestRule.onNodeWithTag(AddEventScreenTestTags.INPUT_PARTICIPANT).assertDoesNotExist()
+        true
+      } catch (e: AssertionError) {
+        false
+      }
+    }
+
     composeTestRule.onNodeWithTag(AddEventScreenTestTags.INPUT_PARTICIPANT).assertIsNotDisplayed()
 
     composeTestRule.onNodeWithTag(AddEventScreenTestTags.INPUT_GROUP).assertIsDisplayed()
   }
 
   /** Test: Verifies that group suggestion working correctly */
-  /* TODO : NEED TO FIX THE GROUP IMPLEMENTATION
   @Test
+  @Ignore("Need to fix first the issue with groupsRepository addGroup")
   fun testGroupSuggestionsAppear() = runTest {
     groupsRepository.addGroup(
         Group(
@@ -303,19 +352,23 @@ class AddEventsScreenTest {
     composeTestRule.waitUntil(timeoutMillis = 5000L) {
       composeTestRule.onNodeWithTag(AddEventScreenTestTags.GROUP_MENU).isDisplayed()
     }
-      composeTestRule.onNodeWithTag(AddEventScreenTestTags
-          .getTestTagGroupSuggestionItem("G1")).assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(AddEventScreenTestTags.getTestTagGroupSuggestionItem("G1"))
+        .assertIsDisplayed()
 
-      composeTestRule.onNodeWithTag(AddEventScreenTestTags
-          .getTestTagGroupSuggestionAdd("G1")).assertIsDisplayed().performClick()
+    composeTestRule
+        .onNodeWithTag(AddEventScreenTestTags.getTestTagGroupSuggestionAdd("G1"))
+        .assertIsDisplayed()
+        .performClick()
 
-      composeTestRule.onNodeWithTag(AddEventScreenTestTags
-          .getTestTagGroupSuggestionAdd("G1")).assertIsNotDisplayed()
+    composeTestRule
+        .onNodeWithTag(AddEventScreenTestTags.getTestTagGroupSuggestionAdd("G1"))
+        .assertIsNotDisplayed()
 
-      composeTestRule.onNodeWithTag(AddEventScreenTestTags
-          .getTestTagProfileRemoveItem("G1")).assertIsDisplayed()
-    }
-   */
+    composeTestRule
+        .onNodeWithTag(AddEventScreenTestTags.getTestTagProfileRemoveItem("G1"))
+        .assertIsDisplayed()
+  }
 
   /** Test: Verify that the suggestion works for private friends event */
   @Test

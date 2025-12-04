@@ -221,7 +221,7 @@ fun AddEventScreen(
               // Switch button to choose between private and public
               item {
                 Row {
-                  SwitchPublicPrivate(
+                  EventStateSwitch(
                       checked = isPublicEvent,
                       onCheckedChange = { isPublic ->
                         if (isPublic) {
@@ -289,7 +289,7 @@ fun AddEventScreen(
 
                 item {
                   // Buttons to choose the type of the event
-                  ButtonsPrivateEvent(
+                  PrivateEventButtons(
                       isFriendsOnly = isPrivateFriendsEvent,
                       onFriendsOnlySelected = { addEventViewModel.updateEventToPrivateFriends() },
                       onGroupSelected = { addEventViewModel.updateEventToPrivateGroup() })
@@ -533,7 +533,7 @@ private fun ParticipantsSuggestionsDropdown(
       containerColor = MaterialTheme.colorScheme.surfaceVariant,
       modifier =
           Modifier.testTag(AddEventScreenTestTags.PARTICIPANT_MENU).fillMaxWidth().height(200.dp)) {
-        DropDownParticipants(ui, listToShow, addEventViewModel)
+        ParticipantsDropdown(ui, listToShow, addEventViewModel)
       }
 }
 
@@ -558,7 +558,6 @@ private fun AddedParticipantsIconAdd(
         val newState = !showAddedParticipantsDropDown.value
         showAddedParticipantsDropDown.value = newState
         onIconClicked(newState)
-        // Cacher le dropdown des suggestions quand on montre les participants ajoutés
         showProfilesDropdown.value = false
       },
       modifier = Modifier.testTag(AddEventScreenTestTags.BUTTON_SEE_ADDED_PARTICIPANT)) {
@@ -606,7 +605,7 @@ private fun GroupFieldItem(
         containerColor = MaterialTheme.colorScheme.surfaceVariant,
         modifier =
             Modifier.testTag(AddEventScreenTestTags.GROUP_MENU).fillMaxWidth().height(200.dp)) {
-          DropDownGroup(ui, ui.suggestedGroups, addEventViewModel)
+          GroupDropDown(ui, ui.suggestedGroups, addEventViewModel)
         }
   }
 }
@@ -620,7 +619,7 @@ private fun GroupFieldItem(
  * @param addEventViewModel viewModel used for AddEvent implementation
  */
 @Composable
-private fun DropDownParticipants(
+private fun ParticipantsDropdown(
     ui: AddEventUiState,
     listSuggestedProfiles: List<Profile>,
     addEventViewModel: AddEventViewModel
@@ -683,7 +682,7 @@ private fun DropDownParticipants(
  * @param addEventViewModel viewModel used for AddEvent implementation
  */
 @Composable
-private fun DropDownGroup(
+private fun GroupDropDown(
     ui: AddEventUiState,
     listSuggestedGroups: List<Group>,
     addEventViewModel: AddEventViewModel
@@ -760,7 +759,7 @@ private fun DropDownGroup(
  * @param onCheckedChange function to apply depending on the chosen event
  */
 @Composable
-private fun SwitchPublicPrivate(checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+private fun EventStateSwitch(checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
   Switch(
       checked = checked,
       onCheckedChange = onCheckedChange,
@@ -794,7 +793,7 @@ private fun SwitchPublicPrivate(checked: Boolean, onCheckedChange: (Boolean) -> 
  * @param onGroupSelected function to apply when the user choose private group event
  */
 @Composable
-private fun ButtonsPrivateEvent(
+private fun PrivateEventButtons(
     isFriendsOnly: Boolean,
     onFriendsOnlySelected: () -> Unit,
     onGroupSelected: () -> Unit
@@ -887,7 +886,7 @@ private fun AddedParticipantsDisplay(
                                             profile.uid))) {
                               Icon(
                                   Icons.Filled.Remove,
-                                  contentDescription = "Supprimer ${profile.name}",
+                                  contentDescription = "Delete ${profile.name}",
                                   tint = MaterialTheme.colorScheme.error)
                             }
                       }
