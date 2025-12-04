@@ -1256,5 +1256,4 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
     assertNotNull(profileA)
     assertFalse(profileA!!.pendingSentFriendsUids.contains(targetUid))
   }
-
 }
