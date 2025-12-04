@@ -1,5 +1,6 @@
 package com.android.gatherly.ui.badge
 
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import com.android.gatherly.model.profile.ProfileLocalRepository
@@ -28,6 +29,7 @@ class BadgeScreenTest {
   /** Test to check that all badgeItems are displayed */
   @Test
   fun badgesTestTagsAreDisplayed() {
+
     composeTestRule.setContent {
       val viewModel =
           BadgeViewModel(repository = profileRepository, authProvider = { mockitoUtils.mockAuth })
@@ -35,19 +37,20 @@ class BadgeScreenTest {
       BadgeScreen(viewModel = viewModel, goBack = {})
     }
 
-    val expectedTitles =
-        listOf(
-            "Blank Todo Created Badge",
-            "Blank Todo Completed Badge",
-            "Blank Event Created Badge",
-            "Blank Event Participated Badge",
-            "Blank Friend Badge",
-            "Blank Focus Session Badge")
+    composeTestRule
+        .onNodeWithTag(BadgeScreenTestTags.TODO_TITLE, useUnmergedTree = true)
+        .assertIsDisplayed()
 
-    expectedTitles.forEach { title ->
-      composeTestRule
-          .onNodeWithTag(BadgeScreenTestTags.badgeTest(title), useUnmergedTree = true)
-          .assertExists()
-    }
+    composeTestRule
+        .onNodeWithTag(BadgeScreenTestTags.EVENT_TITLE, useUnmergedTree = true)
+        .assertIsDisplayed()
+
+    composeTestRule
+        .onNodeWithTag(BadgeScreenTestTags.FOCUS_TITLE, useUnmergedTree = true)
+        .assertIsDisplayed()
+
+    composeTestRule
+        .onNodeWithTag(BadgeScreenTestTags.FRIEND_TITLE, useUnmergedTree = true)
+        .assertIsDisplayed()
   }
 }
