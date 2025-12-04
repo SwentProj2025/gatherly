@@ -1,5 +1,6 @@
 package com.android.gatherly.utils
 
+import com.android.gatherly.model.notification.Notification
 import com.android.gatherly.model.notification.NotificationType
 import com.android.gatherly.model.notification.NotificationsRepository
 import com.android.gatherly.model.profile.Profile
@@ -24,49 +25,84 @@ suspend fun getProfileWithSyncedFriendNotifications(
   for (notification in notifications) {
     when (notification.type) {
       NotificationType.FRIEND_ACCEPTED -> {
-        val senderId = notification.senderId
-        if (senderId != null) {
-          val senderProfile = profileRepository.getProfileByUid(senderId)
-          if (senderProfile != null) {
-            profileRepository.addFriend(senderProfile.username, userId)
-            profileRepository.removePendingSentFriendUid(userId, senderId)
-          }
-        }
-        notificationsRepository.deleteNotification(notification.id)
+        handleFriendAccepted(profileRepository, notificationsRepository, notification, userId)
       }
       NotificationType.FRIEND_REJECTED -> {
-        val senderId = notification.senderId
-        if (senderId != null) {
-          profileRepository.removePendingSentFriendUid(userId, senderId)
-        }
-        notificationsRepository.deleteNotification(notificationId = notification.id)
+        handleFriendRejected(profileRepository, notificationsRepository, notification, userId)
       }
       NotificationType.REMOVE_FRIEND -> {
-        val senderId = notification.senderId
-        if (senderId != null) {
-          val senderProfile = profileRepository.getProfileByUid(senderId)
-          if (senderProfile != null) {
-            profileRepository.deleteFriend(senderProfile.username, userId)
-          }
-        }
-        notificationsRepository.deleteNotification(notification.id)
+        handleRemoveFriend(profileRepository, notificationsRepository, notification, userId)
       }
       NotificationType.FRIEND_REQUEST_CANCELLED -> {
-        val senderId = notification.senderId
-        if (senderId != null) {
-          val originalNotifications =
-              notifications.filter {
-                it.type == NotificationType.FRIEND_REQUEST && it.senderId == senderId
-              }
-          for (notification in originalNotifications) {
-            notificationsRepository.deleteNotification(notification.id)
-          }
-        }
-        notificationsRepository.deleteNotification(notification.id)
+        handleFriendRequestCancelled(notificationsRepository, notification, notifications)
       }
       else -> {}
     }
   }
 
   return profileRepository.getProfileByUid(userId)
+}
+
+private suspend fun handleFriendAccepted(
+    profileRepository: ProfileRepository,
+    notificationsRepository: NotificationsRepository,
+    notification: Notification,
+    userId: String
+) {
+  val senderId = notification.senderId
+  if (senderId != null) {
+    val senderProfile = profileRepository.getProfileByUid(senderId)
+    if (senderProfile != null) {
+      profileRepository.addFriend(senderProfile.username, userId)
+      profileRepository.removePendingSentFriendUid(userId, senderId)
+    }
+  }
+  notificationsRepository.deleteNotification(notification.id)
+}
+
+private suspend fun handleFriendRejected(
+    profileRepository: ProfileRepository,
+    notificationsRepository: NotificationsRepository,
+    notification: Notification,
+    userId: String
+) {
+  val senderId = notification.senderId
+  if (senderId != null) {
+    profileRepository.removePendingSentFriendUid(userId, senderId)
+  }
+  notificationsRepository.deleteNotification(notificationId = notification.id)
+}
+
+private suspend fun handleRemoveFriend(
+    profileRepository: ProfileRepository,
+    notificationsRepository: NotificationsRepository,
+    notification: Notification,
+    userId: String
+) {
+  val senderId = notification.senderId
+  if (senderId != null) {
+    val senderProfile = profileRepository.getProfileByUid(senderId)
+    if (senderProfile != null) {
+      profileRepository.deleteFriend(senderProfile.username, userId)
+    }
+  }
+  notificationsRepository.deleteNotification(notification.id)
+}
+
+private suspend fun handleFriendRequestCancelled(
+    notificationsRepository: NotificationsRepository,
+    notification: Notification,
+    notifications: List<Notification>,
+) {
+  val senderId = notification.senderId
+  if (senderId != null) {
+    val originalNotifications =
+        notifications.filter {
+          it.type == NotificationType.FRIEND_REQUEST && it.senderId == senderId
+        }
+    for (notification in originalNotifications) {
+      notificationsRepository.deleteNotification(notification.id)
+    }
+  }
+  notificationsRepository.deleteNotification(notification.id)
 }
