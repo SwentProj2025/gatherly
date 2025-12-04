@@ -331,6 +331,8 @@ class ProfileRepositoryFirestore(
    *
    * @param doc The snapshot to convert.
    * @return The [Profile], or null if required fields are missing.
+   *
+   * TODO: refactor unchecked cast and use indexed accessor.
    */
   private fun snapshotToProfile(doc: DocumentSnapshot): Profile? {
     val uid = doc.getString("uid") ?: return null
@@ -341,6 +343,7 @@ class ProfileRepositoryFirestore(
     val eventOwnerIds = doc.get("ownedEventIds") as? List<String> ?: emptyList()
     val groupIds = doc.get("groups") as? List<String> ?: emptyList()
     val friendUids = doc.get("friendUids") as? List<String> ?: emptyList()
+    val pendingSentFriendsUids = doc.get("pendingSentFriendsUids") as? List<String> ?: emptyList()
     val school = doc.getString("school") ?: ""
     val schoolYear = doc.getString("schoolYear") ?: ""
     val birthday = doc.getTimestamp("birthday")
@@ -360,6 +363,7 @@ class ProfileRepositoryFirestore(
         ownedEventIds = eventOwnerIds,
         groupIds = groupIds,
         friendUids = friendUids,
+        pendingSentFriendsUids = pendingSentFriendsUids,
         school = school,
         schoolYear = schoolYear,
         birthday = birthday,
@@ -387,6 +391,7 @@ class ProfileRepositoryFirestore(
         "ownedEventIds" to profile.ownedEventIds,
         "groupIds" to profile.groupIds,
         "friendUids" to profile.friendUids,
+        "pendingSentFriendsUids" to profile.pendingSentFriendsUids,
         "school" to profile.school,
         "schoolYear" to profile.schoolYear,
         "birthday" to profile.birthday,
@@ -436,6 +441,20 @@ class ProfileRepositoryFirestore(
     val docRef = profilesCollection.document(currentUserId)
     val friendId = getProfileByUsername(friend)?.uid
     docRef.update("friendUids", FieldValue.arrayRemove(friendId)).await()
+  }
+
+  override suspend fun addPendingSentFriendUid(currentUserId: String, targetUid: String) {
+    profilesCollection
+        .document(currentUserId)
+        .update("pendingSentFriendsUids", FieldValue.arrayUnion(targetUid))
+        .await()
+  }
+
+  override suspend fun removePendingSentFriendUid(currentUserId: String, targetUid: String) {
+    profilesCollection
+        .document(currentUserId)
+        .update("pendingSentFriendsUids", FieldValue.arrayRemove(targetUid))
+        .await()
   }
 
   // -- STATUS GESTION PART --
