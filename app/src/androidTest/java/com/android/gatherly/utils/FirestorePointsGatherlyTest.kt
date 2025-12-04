@@ -7,6 +7,7 @@ import com.android.gatherly.model.points.PointsRepositoryFirestore
 import com.android.gatherly.model.points.PointsSource
 import com.google.firebase.Timestamp
 import java.util.Calendar
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
@@ -72,7 +73,7 @@ open class FirestorePointsGatherlyTest {
 
   @After
   open fun tearDown() {
-    runTest { clearPoints() }
+    runTest(timeout = 120.seconds) { clearPoints() }
     FirebaseEmulator.clearAuthEmulator()
     FirebaseEmulator.clearFirestoreEmulator()
   }

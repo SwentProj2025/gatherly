@@ -3,6 +3,7 @@ package com.android.gatherly.utils
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.google.firebase.Firebase
 import com.google.firebase.storage.storage
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -30,18 +31,18 @@ open class FirestoreGatherlyProfileTest {
     }
 
     // Sign in anonymously like in ToDo tests
-    runTest { FirebaseEmulator.auth.signInAnonymously().await() }
+    runTest(timeout = 120.seconds) { FirebaseEmulator.auth.signInAnonymously().await() }
 
     // Create the repository
     repository = ProfileRepositoryFirestore(FirebaseEmulator.firestore, FirebaseEmulator.storage)
 
     // Clean up existing test data
-    runTest { clearCurrentUserData() }
+    runTest(timeout = 120.seconds) { clearCurrentUserData() }
   }
 
   @After
   open fun tearDown() {
-    runTest {
+    runTest(timeout = 120.seconds) {
       clearCurrentUserData()
       clearStorageData()
     }

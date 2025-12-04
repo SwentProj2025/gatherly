@@ -278,17 +278,24 @@ fun ProfileScreen(
                             stringResource(R.string.profile_friends_label),
                             style = MaterialTheme.typography.bodySmall)
                       }
-                      Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = uiState.focusPoints.toString(),
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            modifier =
-                                Modifier.testTag(ProfileScreenTestTags.PROFILE_FOCUS_POINTS_COUNT))
-                        Text(
-                            stringResource(R.string.profile_focus_points_label),
-                            style = MaterialTheme.typography.bodySmall)
-                      }
+                      Column(
+                          horizontalAlignment = Alignment.CenterHorizontally,
+                          modifier =
+                              Modifier.clickable(
+                                  onClick = {
+                                    navigationActions?.navigateTo(Screen.FocusScreen)
+                                  })) {
+                            Text(
+                                text = uiState.focusPoints.toString(),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                modifier =
+                                    Modifier.testTag(
+                                        ProfileScreenTestTags.PROFILE_FOCUS_POINTS_COUNT))
+                            Text(
+                                stringResource(R.string.profile_focus_points_label),
+                                style = MaterialTheme.typography.bodySmall)
+                          }
                     }
 
                 Spacer(modifier = Modifier.height(fieldSpacingLarge))

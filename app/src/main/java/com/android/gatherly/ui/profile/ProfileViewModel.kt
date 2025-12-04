@@ -37,7 +37,7 @@ import kotlinx.coroutines.tasks.await
 data class ProfileState(
     val isLoading: Boolean = false,
     val profile: Profile? = null,
-    val focusPoints: Int = 0,
+    val focusPoints: Double = 0.0,
     val errorMessage: String? = null,
     val signedOut: Boolean = false,
     val navigateToInit: Boolean = false,
