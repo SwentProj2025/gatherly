@@ -3,6 +3,7 @@ package com.android.gatherly.ui.focusTimer
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextContains
+import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -238,6 +239,19 @@ class TimerScreenTest {
     composeTestRule
         .onNodeWithTag(FocusTimerScreenTestTags.LINKED_TODO)
         .assertTextContains(todo1.name, substring = true)
+  }
+
+  @Test
+  fun canSeeLeaderboard() {
+    composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.TIMER_SELECT).assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(FocusTimerScreenTestTags.LEADERBOARD_SELECT)
+        .assertIsDisplayed()
+        .performClick()
+    composeTestRule.waitUntil(15000L) {
+      composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.LEADERBOARD_LIST).isDisplayed()
+    }
+    composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.LEADERBOARD_LIST).assertIsDisplayed()
   }
 
   // Helper function to check all test tags on the editing timer time screen

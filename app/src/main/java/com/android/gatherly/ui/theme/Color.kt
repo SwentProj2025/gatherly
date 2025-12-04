@@ -70,3 +70,7 @@ val seed = Color(0xFF008BBB)
 val theme_status_upcoming = Color(0xFF4CAF50)
 val theme_status_ongoing = Color(0xFFFFC107)
 val theme_status_past = Color(0xFF9E9E9E)
+
+val theme_leaderboard_bronze = Color(0xFFB08D57)
+val theme_leaderboard_silver = Color(0xFFc0c0c0)
+val theme_leaderboard_gold = Color(0xFFF2C94C)
