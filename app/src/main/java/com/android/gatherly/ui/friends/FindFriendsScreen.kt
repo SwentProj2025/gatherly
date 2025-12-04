@@ -248,7 +248,7 @@ private fun FriendItem(
         ) {
           Image(
               painter = profilePicturePainter(profilePicUrl),
-              contentDescription = "Profile picture of ${friend}",
+              contentDescription = "Profile picture of $friend",
               contentScale = ContentScale.Crop,
               modifier =
                   Modifier.size(dimensionResource(R.dimen.find_friends_item_profile_picture_size))
@@ -424,8 +424,10 @@ private fun FriendsListContent(
 
                 // -- Animation slide up when an item disappear
                 modifier =
-                    Modifier.animateItemPlacement(
-                        animationSpec =
+                    Modifier.animateItem(
+                        fadeInSpec = null,
+                        fadeOutSpec = null,
+                        placementSpec =
                             tween(durationMillis = ANIMATION_TIME, easing = LinearOutSlowInEasing)),
                 profilePicUrl = profiles[friend]?.profilePicture)
           }

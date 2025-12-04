@@ -240,7 +240,7 @@ fun FriendsScreen(
             FriendsListContent(
                 padding = padding,
                 filteredFriends = filteredFriends,
-                pendingFriendRequests = pendingSentUsernames,
+                pendingFriendRequests = filteredPendingRequests,
                 searchQuery = searchQuery,
                 onSearchQueryChange = { searchQuery = it },
                 onUnfriend = { username ->
@@ -554,8 +554,10 @@ private fun FriendsListContent(
 
                 // -- Animation slide up when an item disappear
                 modifier =
-                    Modifier.animateItemPlacement(
-                        animationSpec =
+                    Modifier.animateItem(
+                        fadeInSpec = null,
+                        fadeOutSpec = null,
+                        placementSpec =
                             tween(durationMillis = ANIMATION_TIME, easing = LinearOutSlowInEasing)),
                 profilePicUrl = profiles[friend]?.profilePicture)
           }
@@ -580,8 +582,10 @@ private fun FriendsListContent(
 
                 // -- Animation slide up when an item disappear
                 modifier =
-                    Modifier.animateItemPlacement(
-                        animationSpec =
+                    Modifier.animateItem(
+                        fadeInSpec = null,
+                        fadeOutSpec = null,
+                        placementSpec =
                             tween(durationMillis = ANIMATION_TIME, easing = LinearOutSlowInEasing)),
                 profilePicUrl = profiles[pendingUsername]?.profilePicture)
           }
