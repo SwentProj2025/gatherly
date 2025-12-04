@@ -79,6 +79,8 @@
     <string name="settings_status_dialog_option_offline">Offline</string>
     <string name="settings_status_dialog_title">Change your status</string>
     <string name="settings_status_dialog_option_cancel">Cancel</string>
+    <string name="settings_status_dialog_explain_auto">Automatic (changes based on your activity)</string>
+    <string name="settings_status_dialog_explain_manual">Manual (stays fixed until you change it)</string>
 
 
     <!-- Profile Page -->

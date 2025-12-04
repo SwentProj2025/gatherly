@@ -409,5 +409,12 @@ class SettingsScreenTest {
     composeRule
         .onNodeWithTag(useUnmergedTree = true, testTag = SettingsScreenTestTags.CANCEL_BUTTON)
         .assertIsDisplayed()
+    composeRule
+        .onNodeWithTag(
+            useUnmergedTree = true, testTag = SettingsScreenTestTags.STATUS_AUTOMATIC_TITLE)
+        .assertIsDisplayed()
+    composeRule
+        .onNodeWithTag(useUnmergedTree = true, testTag = SettingsScreenTestTags.STATUS_MANUAL_TITLE)
+        .assertIsDisplayed()
   }
 }

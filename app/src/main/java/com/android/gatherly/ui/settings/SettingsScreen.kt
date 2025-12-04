@@ -69,6 +69,8 @@ object SettingsScreenTestTags {
   const val OPTION_OFFLINE = "status_option_offline"
   const val OPTION_FOCUSED = "status_option_focused"
   const val CANCEL_BUTTON = "status_cancel"
+  const val STATUS_AUTOMATIC_TITLE = "status_title_automatic"
+  const val STATUS_MANUAL_TITLE = "status_title_manual"
 }
 
 /**
@@ -648,12 +650,19 @@ fun StatusPickerDialog(
                             dimensionResource(id = R.dimen.rounded_corner_shape_medium_large)))
                     .background(MaterialTheme.colorScheme.surfaceVariant)
                     .padding(vertical = dimensionResource(id = R.dimen.padding_small))) {
+              StatusGroupTitle(
+                  stringResource(id = R.string.settings_status_dialog_explain_auto),
+                  testTag = SettingsScreenTestTags.STATUS_AUTOMATIC_TITLE)
               StatusOptionRow(
                   label = stringResource(id = R.string.settings_status_dialog_option_online),
                   status = ProfileStatus.ONLINE,
                   currentStatus = currentStatus,
                   onClick = { onStatusSelected(ProfileStatus.ONLINE) })
+              Spacer(Modifier.height(dimensionResource(id = R.dimen.spacing_between_fields)))
 
+              StatusGroupTitle(
+                  stringResource(id = R.string.settings_status_dialog_explain_manual),
+                  testTag = SettingsScreenTestTags.STATUS_MANUAL_TITLE)
               StatusOptionRow(
                   label = stringResource(id = R.string.settings_status_dialog_option_offline),
                   status = ProfileStatus.OFFLINE,
@@ -675,6 +684,20 @@ fun StatusPickerDialog(
               Text(stringResource(id = R.string.settings_status_dialog_option_cancel))
             }
       })
+}
+
+/** Text explaining the different modes of the status */
+@Composable
+private fun StatusGroupTitle(text: String, testTag: String) {
+  Text(
+      text = text,
+      style = MaterialTheme.typography.labelMedium,
+      color = MaterialTheme.colorScheme.onSurfaceVariant,
+      modifier =
+          Modifier.padding(
+                  horizontal = dimensionResource(id = R.dimen.padding_regular),
+                  vertical = dimensionResource(id = R.dimen.padding_small))
+              .testTag(testTag))
 }
 
 /**
