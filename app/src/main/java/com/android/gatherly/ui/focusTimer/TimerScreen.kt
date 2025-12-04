@@ -240,13 +240,13 @@ fun Leaderboard(uiState: TimerState, timerViewModel: TimerViewModel) {
                             contentDescription = "Profile picture",
                             contentScale = ContentScale.Crop,
                             modifier =
-                                Modifier.size(
+                                Modifier.padding(
+                                        horizontal =
+                                            dimensionResource(R.dimen.friends_item_card_padding))
+                                    .size(
                                         dimensionResource(
                                             R.dimen.find_friends_item_profile_picture_size))
-                                    .clip(CircleShape)
-                                    .padding(
-                                        horizontal =
-                                            dimensionResource(R.dimen.friends_item_card_padding)))
+                                    .clip(CircleShape))
 
                         Column(
                             modifier = Modifier.fillMaxHeight().weight(1f),
@@ -263,9 +263,7 @@ fun Leaderboard(uiState: TimerState, timerViewModel: TimerViewModel) {
                             }
 
                         Text(
-                            text =
-                                stringResource(
-                                    R.string.leaderboard_points, friend.weeklyPoints.toString()),
+                            text = stringResource(R.string.leaderboard_points, friend.weeklyPoints),
                             style = MaterialTheme.typography.headlineLarge,
                             fontWeight = FontWeight.Bold)
                       }
@@ -283,8 +281,9 @@ fun TimerStarted(uiState: TimerState, timerViewModel: TimerViewModel, corner: Dp
 
   Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
     // Define the weights of the components
-    val todoWeight = 1f
+    val todoWeight = 0.5f
     val timerWeight = 2f
+    val textWeight = 0.5f
     val buttonsWeight = 1f
     Box(modifier = Modifier.weight(todoWeight), contentAlignment = Alignment.BottomCenter) {
       val todoRatio = 2.0 / 3.0
@@ -341,9 +340,12 @@ fun TimerStarted(uiState: TimerState, timerViewModel: TimerViewModel, corner: Dp
     }
 
     // Points text
-    Text(
-        text = "You have gained ${uiState.pointsGained} points!",
-        style = MaterialTheme.typography.headlineMedium)
+    Box(modifier = Modifier.weight(textWeight).fillMaxSize(), contentAlignment = Alignment.Center) {
+      Text(
+          text = "You have gained ${uiState.pointsGained} points!",
+          style = MaterialTheme.typography.headlineMedium,
+          modifier = Modifier.align(Alignment.BottomCenter))
+    }
 
     // Control buttons
     Row(
