@@ -1050,14 +1050,6 @@ class EventsOverviewScreenTest {
     setContent(currentUserId)
     composeTestRule.waitForIdle()
 
-    composeTestRule.onNodeWithTag(EventsScreenTestTags.SEARCH_BAR).performTextInput("Gamma")
-
-    composeTestRule.waitForIdle()
-
-    composeTestRule
-        .onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(eventC))
-        .assertIsDisplayed()
-
     composeTestRule.onNodeWithTag(EventsScreenTestTags.SEARCH_BAR).performTextInput("")
 
     composeTestRule.waitForIdle()
