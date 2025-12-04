@@ -26,16 +26,16 @@ data class Event(
 
 /** Represents the state of an [Event] item. */
 enum class EventStatus {
-    UPCOMING,
-    ONGOING,
-    PAST
+  UPCOMING,
+  ONGOING,
+  PAST
 }
 
 /** Represents the kind of an [Event] item. */
 enum class EventState {
-    PUBLIC,
-    PRIVATE_FRIENDS,
-    PRIVATE_GROUP
+  PUBLIC,
+  PRIVATE_FRIENDS,
+  PRIVATE_GROUP
 }
 
 /**
@@ -45,5 +45,5 @@ enum class EventState {
  */
 fun EventStatus.displayString(): String =
     name.replace("_", " ").lowercase().replaceFirstChar {
-        if (it.isLowerCase()) it.titlecase() else it.toString()
+      if (it.isLowerCase()) it.titlecase() else it.toString()
     }
