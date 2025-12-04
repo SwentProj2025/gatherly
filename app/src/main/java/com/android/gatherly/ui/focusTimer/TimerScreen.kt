@@ -116,6 +116,7 @@ fun TimerScreen(
       })
 }
 
+// Organises the display of different views within the screen
 @Composable
 fun TimerScreenContent(timerViewModel: TimerViewModel) {
 
@@ -133,7 +134,10 @@ fun TimerScreenContent(timerViewModel: TimerViewModel) {
   }
 
   val corner = 12.dp
+
+  // Column to contain averything
   Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+    // Top bar to select either timer or leaderboard view
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
@@ -178,6 +182,7 @@ fun TimerScreenContent(timerViewModel: TimerViewModel) {
               }
         }
 
+    // If the timer is selected, show that
     if (selectedTimer.value) {
 
       // If the timer didn't start, display the first view (editing timer time)
@@ -189,20 +194,32 @@ fun TimerScreenContent(timerViewModel: TimerViewModel) {
       if (uiState.isStarted) {
         TimerStarted(uiState = uiState, timerViewModel = timerViewModel, corner = corner)
       }
+
+      // If the leaderboard is selected, show that
     } else {
       Leaderboard(uiState = uiState, timerViewModel = timerViewModel)
     }
   }
 }
 
+/**
+ * A composable to show the friends leaderboard
+ *
+ * @param uiState The state exposed to the UI by the VM
+ * @param timerViewModel The viewModel instance
+ */
 @Composable
 fun Leaderboard(uiState: TimerState, timerViewModel: TimerViewModel) {
+  // Lazy column to scroll through leaderboard
   LazyColumn(
       modifier = Modifier.fillMaxWidth().testTag(FocusTimerScreenTestTags.LEADERBOARD_LIST),
       horizontalAlignment = Alignment.CenterHorizontally) {
         var ranking = 0
+        // the leaderboard is a sorted map from points to a list of profiles. all the profiles in
+        // the list have the same rank
         for ((_, friends) in uiState.leaderboard) {
           for (friend in friends) {
+            // computes the ranking of this group
             val rank = ranking + 1
             item {
               Card(
@@ -228,12 +245,15 @@ fun Leaderboard(uiState: TimerState, timerViewModel: TimerViewModel) {
                                     vertical =
                                         dimensionResource(
                                             R.dimen.friends_item_card_padding_vertical))) {
+
+                          // Show the rank with particular colors for top 3
                           Text(
                               text = (rank).toString(),
                               color = rankColor(rank),
                               style = MaterialTheme.typography.headlineLarge,
                               fontWeight = FontWeight.Bold)
 
+                          // Profile pic
                           Image(
                               painter = profilePicturePainter(friend.profilePicture),
                               contentDescription = "Profile picture",
@@ -247,6 +267,7 @@ fun Leaderboard(uiState: TimerState, timerViewModel: TimerViewModel) {
                                               R.dimen.find_friends_item_profile_picture_size))
                                       .clip(CircleShape))
 
+                          // Name and username
                           Column(
                               modifier = Modifier.fillMaxHeight().weight(1f),
                               horizontalAlignment = Alignment.Start,
@@ -261,6 +282,7 @@ fun Leaderboard(uiState: TimerState, timerViewModel: TimerViewModel) {
                                     style = MaterialTheme.typography.bodyMedium)
                               }
 
+                          // Number of points
                           Text(
                               text =
                                   stringResource(R.string.leaderboard_points, friend.weeklyPoints),
@@ -276,6 +298,11 @@ fun Leaderboard(uiState: TimerState, timerViewModel: TimerViewModel) {
       }
 }
 
+/**
+ * Composable to choose a color given a rank (Gold, Silver, Bronze or normal)
+ *
+ * @param rank the rank to assign the color for
+ */
 @Composable
 fun rankColor(rank: Int): Color {
   return when (rank) {
@@ -286,6 +313,13 @@ fun rankColor(rank: Int): Color {
   }
 }
 
+/**
+ * The composable to show the view when the timer is started
+ *
+ * @param uiState The state exposed to the UI by the VM
+ * @param timerViewModel The viewModel instance
+ * @param corner The value to use for rounded corners components
+ */
 @Composable
 fun TimerStarted(uiState: TimerState, timerViewModel: TimerViewModel, corner: Dp) {
 
@@ -398,6 +432,13 @@ fun TimerStarted(uiState: TimerState, timerViewModel: TimerViewModel, corner: Dp
   }
 }
 
+/**
+ * The composable to show the view when the timer is not started yet
+ *
+ * @param uiState The state exposed to the UI by the VM
+ * @param timerViewModel The viewModel instance
+ * @param corner The value to use for rounded corners components
+ */
 @Composable
 fun TimerNotStarted(uiState: TimerState, timerViewModel: TimerViewModel, corner: Dp) {
   Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
