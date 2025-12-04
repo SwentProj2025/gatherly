@@ -108,6 +108,11 @@ class FakeGroupsRepositoryLocal(private val currentUserId: String = "testUser") 
     groups[groupId] = group.copy(adminIds = updatedAdmins)
   }
 
+  override suspend fun getGroupByName(groupName: String): Group {
+    return groups.values.firstOrNull { it.name.equals(groupName, ignoreCase = true) }
+        ?: throw NoSuchElementException("Group with name='$groupName' not found")
+  }
+
   /** Utility method for tests: add multiple groups at once */
   fun addGroups(groupList: List<Group>) {
     groupList.forEach { groups[it.gid] = it }
