@@ -23,7 +23,7 @@ exports.weeklyReset = onSchedule(
 
           const friends = userData.friends || []; // array of userIDs
 
-          if (friends.length === 0) continue;
+          if (friends.length < 3) continue;
 
           // ---- Fetch friends weeklyPoints IN BATCHES ----
           const friendChunks = [];
@@ -56,9 +56,25 @@ exports.weeklyReset = onSchedule(
           friendDataList.sort((a, b) => b.weeklyPoints - a.weeklyPoints);
 
           // ---- Find user rank ----
-          const rank = friendDataList.findIndex((u) => u.userId === userId);
+          let currentRank = 0;
+          let lastPoints = null;
+          let ranks = [];
+
+          for (let i = 0; i < friendDataList.length; i++) {
+            const user = friendDataList[i];
+
+            if (lastPoints !== null && user.weeklyPoints < lastPoints) {
+              // points decreased -> next rank
+              currentRank += 1;
+            }
+
+            ranks.push(currentRank);
+            lastPoints = user.weeklyPoints;
+          }
 
           // ---- If rank = 0 / 1 / 2 -> Give reward ----
+          const index = friendDataList.findIndex((u) => u.userId === userId);
+          const rank = ranks[index]
 
           const userRef = db.collection("profiles").doc(userId);
           if (rank == 0) {
@@ -78,7 +94,7 @@ exports.weeklyReset = onSchedule(
             });
 
             await batch.commit();
-            console.log("Achievement added and user points updated!");
+            logger.info("Achievement added and user points updated!");
           } else if (rank == 1) {
             const achievementRef = db.collection("points").doc();
             const batch = db.batch();
@@ -96,7 +112,7 @@ exports.weeklyReset = onSchedule(
             });
 
             await batch.commit();
-            console.log("Achievement added and user points updated!");
+            logger.info("Achievement added and user points updated!");
           } else if (rank == 2) {
             const achievementRef = db.collection("points").doc();
             const batch = db.batch();
@@ -114,7 +130,7 @@ exports.weeklyReset = onSchedule(
             });
 
             await batch.commit();
-            console.log("Achievement added and user points updated!");
+            logger.info("Achievement added and user points updated!");
           }
         }
 
