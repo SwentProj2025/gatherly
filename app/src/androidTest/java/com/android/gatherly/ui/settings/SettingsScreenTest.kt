@@ -71,9 +71,7 @@ class SettingsScreenTest {
 
     // Wait until *any* one known component is really visible
     composeRule.waitUntil(10_000L) {
-      composeRule
-          .onNodeWithTag(useUnmergedTree = true, testTag = SettingsScreenTestTags.PROFILE_PICTURE)
-          .isDisplayed()
+      composeRule.onNodeWithTag(SettingsScreenTestTags.PROFILE_PICTURE).isDisplayed()
     }
 
     // Then verify all key UI elements exist (they may appear staggered)
@@ -86,11 +84,10 @@ class SettingsScreenTest {
             SettingsScreenTestTags.BIRTHDAY_FIELD,
             SettingsScreenTestTags.SCHOOL_FIELD,
             SettingsScreenTestTags.SCHOOL_YEAR_FIELD,
-            SettingsScreenTestTags.SAVE_BUTTON,
-            SettingsScreenTestTags.USER_STATUS)
+            SettingsScreenTestTags.SAVE_BUTTON)
 
     for (tag in tagsToCheck) {
-      composeRule.onNodeWithTag(testTag = tag, useUnmergedTree = true).assertExists()
+      composeRule.onNodeWithTag(tag).assertExists()
     }
   }
 
@@ -323,7 +320,7 @@ class SettingsScreenTest {
     setContentWithGoogle()
     /** Verifies the profile picture Image composable is visible at startup. */
     composeRule
-        .onNodeWithTag(useUnmergedTree = true, testTag = SettingsScreenTestTags.PROFILE_PICTURE)
+        .onNodeWithTag(SettingsScreenTestTags.PROFILE_PICTURE)
         .assertExists()
         .assertIsDisplayed()
   }
@@ -366,8 +363,7 @@ class SettingsScreenTest {
     composeRule.waitForIdle()
 
     composeRule
-        .onNodeWithTag(
-            useUnmergedTree = true, testTag = SettingsScreenTestTags.PROFILE_PICTURE_URL_NOT_EMPTY)
+        .onNodeWithTag(SettingsScreenTestTags.PROFILE_PICTURE_URL_NOT_EMPTY)
         .assertExists()
         .assertIsDisplayed()
   }
@@ -384,37 +380,5 @@ class SettingsScreenTest {
     composeRule.setContent { SettingsScreen(settingsViewModel) }
 
     composeRule.onNodeWithTag(SettingsScreenTestTags.GOOGLE_BUTTON).assertIsDisplayed()
-  }
-
-  @Test
-  fun clickingProfilePicture_opensStatusDialog_andDisplaysComponents() {
-    setContentWithGoogle()
-
-    composeRule
-        .onNodeWithTag(useUnmergedTree = true, testTag = SettingsScreenTestTags.PROFILE_PICTURE)
-        .performClick()
-
-    composeRule
-        .onNodeWithTag(useUnmergedTree = true, testTag = SettingsScreenTestTags.STATUS_DIALOG)
-        .assertIsDisplayed()
-    composeRule
-        .onNodeWithTag(useUnmergedTree = true, testTag = SettingsScreenTestTags.OPTION_ONLINE)
-        .assertIsDisplayed()
-    composeRule
-        .onNodeWithTag(useUnmergedTree = true, testTag = SettingsScreenTestTags.OPTION_OFFLINE)
-        .assertIsDisplayed()
-    composeRule
-        .onNodeWithTag(useUnmergedTree = true, testTag = SettingsScreenTestTags.OPTION_FOCUSED)
-        .assertIsDisplayed()
-    composeRule
-        .onNodeWithTag(useUnmergedTree = true, testTag = SettingsScreenTestTags.CANCEL_BUTTON)
-        .assertIsDisplayed()
-    composeRule
-        .onNodeWithTag(
-            useUnmergedTree = true, testTag = SettingsScreenTestTags.STATUS_AUTOMATIC_TITLE)
-        .assertIsDisplayed()
-    composeRule
-        .onNodeWithTag(useUnmergedTree = true, testTag = SettingsScreenTestTags.STATUS_MANUAL_TITLE)
-        .assertIsDisplayed()
   }
 }

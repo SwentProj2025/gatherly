@@ -21,8 +21,6 @@ import com.android.gatherly.model.notification.NotificationsRepositoryProvider
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryProvider
-import com.android.gatherly.model.profile.ProfileStatus
-import com.android.gatherly.model.profile.UserStatusManager
 import com.android.gatherly.ui.badge.BadgeUI
 import com.android.gatherly.utils.getProfileWithSyncedFriendNotifications
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
@@ -100,8 +98,7 @@ class ProfileViewModel(
     private val groupsRepository: GroupsRepository = GroupsRepositoryProvider.repository,
     private val notificationsRepository: NotificationsRepository =
         NotificationsRepositoryProvider.repository,
-    private val authProvider: () -> FirebaseAuth = { Firebase.auth },
-    private val userStatusManager: UserStatusManager = UserStatusManager(authProvider(), repository)
+    private val authProvider: () -> FirebaseAuth = { Firebase.auth }
 ) : ViewModel() {
 
   private val _uiState = MutableStateFlow(ProfileState())
@@ -235,9 +232,8 @@ class ProfileViewModel(
   /** Initiates sign-out */
   fun signOut(credentialManager: CredentialManager): Unit {
     viewModelScope.launch {
-      userStatusManager.setStatus(ProfileStatus.OFFLINE)
       _uiState.value = _uiState.value.copy(signedOut = true)
-      authProvider().signOut()
+      Firebase.auth.signOut()
       credentialManager.clearCredentialState(ClearCredentialStateRequest())
     }
   }

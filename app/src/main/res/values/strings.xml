@@ -77,14 +77,6 @@
     <string name="settings_alert_dialog_option_camera">Take Photo</string>
     <string name="settings_alert_dialog_option_gallery">Choose from Gallery</string>
     <string name="settings_alert_dialog_option_cancel">Cancel</string>
-    <string name="settings_status_dialog_option_focused">Focused</string>
-    <string name="settings_status_dialog_option_online">Online</string>
-    <string name="settings_status_dialog_option_offline">Offline</string>
-    <string name="settings_status_dialog_title">Change your status</string>
-    <string name="settings_status_dialog_option_cancel">Cancel</string>
-    <string name="settings_status_dialog_explain_auto">Automatic (changes based on your activity)</string>
-    <string name="settings_status_dialog_explain_manual">Manual (stays fixed until you change it)</string>
-
 
     <!-- Profile Page -->
     <string name="profile_screen_title">Profile</string>

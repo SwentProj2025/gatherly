@@ -176,17 +176,12 @@ interface ProfileRepository {
   suspend fun removePendingSentFriendUid(currentUserId: String, targetUid: String)
 
   /**
-   * Updates the online/offline status of a user and the source of the update
+   * Updates the online/offline status of a user.
    *
    * @param uid The user ID whose status to update.
    * @param status The new [ProfileStatus] to set.
-   * @param source Indicates if the status update is automatic or manual. Defaults to AUTOMATIC.
    */
-  suspend fun updateStatus(
-      uid: String,
-      status: ProfileStatus,
-      source: UserStatusSource = UserStatusSource.AUTOMATIC
-  )
+  suspend fun updateStatus(uid: String, status: ProfileStatus)
 
   /**
    * The user creates a new event

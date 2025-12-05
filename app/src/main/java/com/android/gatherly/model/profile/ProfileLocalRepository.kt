@@ -171,11 +171,11 @@ class ProfileLocalRepository : ProfileRepository {
 
   // ---- STATUS GESTION PART ----
 
-  override suspend fun updateStatus(uid: String, status: ProfileStatus, source: UserStatusSource) {
+  override suspend fun updateStatus(uid: String, status: ProfileStatus) {
     val index = profiles.indexOfFirst { it.uid == uid }
     if (index != -1) {
       val existing = profiles[index]
-      profiles[index] = existing.copy(status = status, userStatusSource = source)
+      profiles[index] = existing.copy(status = status)
     }
   }
 

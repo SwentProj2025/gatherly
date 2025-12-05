@@ -18,28 +18,12 @@ class UserStatusManager(
   /**
    * Updates the current user's status in the repository.
    *
-   * Automatic updates (like focus timer or lifecycle events) do not override manual updates (from
-   * settings).
+   * Does nothing if no user is currently signed in.
    *
    * @param status The [ProfileStatus] to set for the user.
-   * @param source Whether the change is manual or automatic. Defaults to AUTOMATIC.
-   * @param resetToAuto Optional flag to force the source to AUTOMATIC even if the update is manual.
-   *   Useful for "reset to auto" scenarios, (e.g when the user selects ONLINE manually)
    */
-  suspend fun setStatus(
-      status: ProfileStatus,
-      source: UserStatusSource = UserStatusSource.AUTOMATIC,
-      resetToAuto: Boolean = false
-  ) {
+  suspend fun setStatus(status: ProfileStatus) {
     val uid = auth.currentUser?.uid ?: return
-    val profile = repo.getProfileByUid(uid) ?: return
-    // Prevent automatic updates from overriding manual status
-    val autoOverridesManual =
-        (profile.userStatusSource == UserStatusSource.MANUAL &&
-            source == UserStatusSource.AUTOMATIC)
-    if (autoOverridesManual && !resetToAuto) return
-
-    val newSource = if (resetToAuto) UserStatusSource.AUTOMATIC else source
-    repo.updateStatus(uid, status, newSource)
+    repo.updateStatus(uid, status)
   }
 }

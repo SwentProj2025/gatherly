@@ -188,9 +188,6 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.checkProfileScreenIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.LOGOUT_TAB).performClick()
-    composeTestRule.waitUntil(10_000L) {
-      composeTestRule.onNodeWithTag(SignInScreenTestTags.WELCOME_TITLE).isDisplayed()
-    }
     composeTestRule.checkSignInScreenIsDisplayed()
   }
 
