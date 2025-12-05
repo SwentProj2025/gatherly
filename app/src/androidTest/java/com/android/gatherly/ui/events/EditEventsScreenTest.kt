@@ -12,9 +12,12 @@ import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.gatherly.model.event.Event
+import com.android.gatherly.model.event.EventState
 import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsLocalRepository
 import com.android.gatherly.model.event.EventsRepository
+import com.android.gatherly.model.group.GroupsLocalRepository
+import com.android.gatherly.model.group.GroupsRepository
 import com.android.gatherly.model.map.FakeNominatimLocationRepository
 import com.android.gatherly.model.map.Location
 import com.android.gatherly.model.profile.Profile
@@ -43,6 +46,7 @@ class EditEventsScreenTest {
   private lateinit var eventsRepository: EventsRepository
   private lateinit var profileRepository: ProfileRepository
   private lateinit var fakeNominatimClient: FakeNominatimLocationRepository
+  private lateinit var groupsRepository: GroupsRepository
 
   @Before
   fun setUp() {
@@ -50,11 +54,17 @@ class EditEventsScreenTest {
     profileRepository = ProfileLocalRepository()
     eventsRepository = EventsLocalRepository()
     fakeNominatimClient = FakeNominatimLocationRepository()
+    groupsRepository = GroupsLocalRepository()
     editEventsViewModel =
-        EditEventsViewModel(profileRepository, eventsRepository, fakeNominatimClient)
+        EditEventsViewModel(
+            profileRepository = profileRepository,
+            eventsRepository = eventsRepository,
+            nominatimClient = fakeNominatimClient,
+            groupsRepository = groupsRepository)
+  }
 
-    // fill the profile and events repositories with profiles and event
-    fill_repositories()
+  fun setUpEvent(event: Event) {
+    fill_repositories(event)
 
     composeTestRule.setContent { EditEventsScreen(event.id, editEventsViewModel) }
   }
@@ -96,6 +106,15 @@ class EditEventsScreenTest {
           groupIds = emptyList(),
           friendUids = emptyList())
 
+  val friendProfile: Profile =
+      Profile(
+          uid = "f1",
+          name = "friend",
+          focusSessionIds = emptyList(),
+          participatingEventIds = emptyList(),
+          groupIds = emptyList(),
+          friendUids = listOf("0"))
+
   val ownerProfile: Profile =
       Profile(
           uid = "0",
@@ -103,7 +122,7 @@ class EditEventsScreenTest {
           focusSessionIds = emptyList(),
           participatingEventIds = emptyList(),
           groupIds = emptyList(),
-          friendUids = emptyList())
+          friendUids = listOf(friendProfile.uid))
 
   /*----------------------------------------Event-----------------------------------------------*/
   private val oneHourLater = Timestamp(Date(System.currentTimeMillis() + 3600_000))
@@ -120,11 +139,16 @@ class EditEventsScreenTest {
           endTime = twoHoursLater,
           creatorId = ownerProfile.uid,
           participants = listOf(ownerProfile.uid, participantProfile.uid),
-          status = EventStatus.UPCOMING)
+          status = EventStatus.UPCOMING,
+          state = EventState.PUBLIC)
+
+  val privateFriendsEvent: Event = event.copy(state = EventState.PRIVATE_FRIENDS)
+  val privateGroupEvent = event.copy(state = EventState.PRIVATE_GROUP)
 
   /** Check that all components are displayed */
   @Test
   fun displayAllComponents() {
+    setUpEvent(event)
     composeTestRule.onNodeWithTag(EditEventsScreenTestTags.INPUT_NAME).assertIsDisplayed()
     composeTestRule.onNodeWithTag(EditEventsScreenTestTags.INPUT_DESCRIPTION).assertIsDisplayed()
     composeTestRule.onNodeWithTag(EditEventsScreenTestTags.INPUT_PARTICIPANT).assertIsDisplayed()
@@ -142,6 +166,7 @@ class EditEventsScreenTest {
   /** Check that menus are displayed */
   @Test
   fun displayMenus() {
+    setUpEvent(event)
     fakeNominatimClient.setSearchResults(
         "Paris",
         listOf(
@@ -166,7 +191,8 @@ class EditEventsScreenTest {
    * Check that when scrolling to the delete button, then pressing it shows the delete alert dialog
    */
   @Test
-  fun deleteTodoShowsAlertDialog() {
+  fun deleteEventShowsAlertDialog() {
+    setUpEvent(event)
     composeTestRule
         .onNodeWithTag(EditEventsScreenTestTags.LIST)
         .performScrollToNode(hasTestTag(EditEventsScreenTestTags.BTN_DELETE))
@@ -177,15 +203,32 @@ class EditEventsScreenTest {
     composeTestRule.onNodeWithTag(AlertDialogTestTags.ALERT).assertIsDisplayed()
   }
 
+  /** Test: Verifies that we can turn an private event to a public one */
+  @Test
+  fun testCheckOnPublicFromPrivate() {
+    setUpEvent(privateGroupEvent)
+    composeTestRule
+        .onNodeWithTag(EditEventsScreenTestTags.SWITCH_PUBLIC_PRIVATE_EVENT)
+        .assertIsDisplayed()
+        .performClick()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.ALERT).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.CONFIRM_BTN).performClick()
+    composeTestRule
+        .onNodeWithTag(EditEventsScreenTestTags.SWITCH_PUBLIC_PRIVATE_EVENT)
+        .assertIsNotDisplayed()
+  }
+
   // This function fills the profile repository with the created profiles, and the event repository
   // with the created event
-  fun fill_repositories() {
+  fun fill_repositories(event: Event) {
     runTest {
       profileRepository.addProfile(profile1)
       profileRepository.addProfile(profile2)
       profileRepository.addProfile(profile3)
       profileRepository.addProfile(participantProfile)
+      profileRepository.addProfile(friendProfile)
       profileRepository.addProfile(ownerProfile)
+      profileRepository.addFriend(friendProfile.username, ownerProfile.uid)
       eventsRepository.addEvent(event)
       profileRepository.createEvent(event.id, ownerProfile.uid)
       profileRepository.participateEvent(event.id, participantProfile.uid)
