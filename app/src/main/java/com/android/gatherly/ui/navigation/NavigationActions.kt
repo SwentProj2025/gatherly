@@ -14,6 +14,8 @@ sealed class Screen(
 
   object NotificationsScreen : Screen(route = "notifications", name = "Notifications")
 
+  object FriendRequestsScreen : Screen(route = "friend_requests", name = "Friend Requests")
+
   object OverviewToDo : Screen(route = "overview", name = "Overview")
 
   object Map : Screen(route = "map", name = "Map")

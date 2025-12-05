@@ -13,6 +13,7 @@ object NavigationTestTags {
   const val EVENTS_TAB = "EventsTab"
   const val HOMEPAGE_TAB = "HomePageTab"
   const val NOTIFICATIONS_TAB = "NotificationsTab"
+  const val FRIEND_REQUESTS_TAB = "FriendRequestsScreenTab"
   const val PROFILE_TAB = "ProfileTab"
   const val TIMER_TAB = "TimerTab"
   const val FRIENDS_TAB = "FriendsTab"
@@ -40,6 +41,7 @@ object NavigationTestTags {
         is Tab.Events -> EVENTS_TAB
         is Tab.HomePage -> HOMEPAGE_TAB
         is Tab.Notifications -> NOTIFICATIONS_TAB
+        is Tab.FriendRequests -> FRIEND_REQUESTS_TAB
         is Tab.Profile -> PROFILE_TAB
         is Tab.Timer -> TIMER_TAB
         is Tab.Settings -> SETTINGS_TAB

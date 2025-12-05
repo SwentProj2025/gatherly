@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.ArrowBack
@@ -68,6 +69,9 @@ sealed class Tab(val name: String, val icon: ImageVector, val destination: Scree
 
   object Notifications :
       Tab("Notifications", Icons.Outlined.Notifications, Screen.NotificationsScreen)
+
+  object FriendRequests :
+      Tab("Friend Requests", Icons.Default.ChevronRight, Screen.FriendRequestsScreen)
 
   object Profile : Tab("Your profile", Icons.Outlined.AccountCircle, Screen.ProfileScreen)
 
