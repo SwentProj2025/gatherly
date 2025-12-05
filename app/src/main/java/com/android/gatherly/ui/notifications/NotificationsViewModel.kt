@@ -7,6 +7,7 @@ import com.android.gatherly.model.notification.Notification
 import com.android.gatherly.model.notification.NotificationType
 import com.android.gatherly.model.notification.NotificationsRepository
 import com.android.gatherly.model.notification.NotificationsRepositoryFirestore
+import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.google.firebase.Timestamp
@@ -22,6 +23,7 @@ import kotlinx.coroutines.launch
 /** UI state for the Notifications screen. */
 data class NotificationUiState(
     val notifications: List<Notification> = emptyList(),
+    val idToProfile: Map<String, Profile> = emptyMap(),
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val hasUnreadFriendRequests: Boolean = false
@@ -58,9 +60,17 @@ class NotificationViewModel(
         val notifications = notificationsRepository.getUserNotifications(currentUserId)
         val hasUnreadFriendRequests =
             notifications.any { it.type == NotificationType.FRIEND_REQUEST && !it.wasRead }
+
+        val idToProfile = mutableMapOf<String, Profile>()
+        for (notification in notifications) {
+          val senderId = notification.senderId as String
+          idToProfile[senderId] = profileRepository.getProfileByUid(senderId) as Profile
+        }
+
         _uiState.value =
             _uiState.value.copy(
                 notifications = notifications,
+                idToProfile = idToProfile,
                 isLoading = false,
                 hasUnreadFriendRequests = hasUnreadFriendRequests)
       } catch (e: Exception) {
