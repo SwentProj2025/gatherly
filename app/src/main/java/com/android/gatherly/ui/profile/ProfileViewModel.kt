@@ -13,6 +13,9 @@ import androidx.lifecycle.viewModelScope
 import com.android.gatherly.R
 import com.android.gatherly.model.badge.Badge
 import com.android.gatherly.model.badge.BadgeType
+import com.android.gatherly.model.group.Group
+import com.android.gatherly.model.group.GroupsRepository
+import com.android.gatherly.model.group.GroupsRepositoryProvider
 import com.android.gatherly.model.notification.NotificationsRepository
 import com.android.gatherly.model.notification.NotificationsRepositoryProvider
 import com.android.gatherly.model.profile.Profile
@@ -36,6 +39,7 @@ import kotlinx.coroutines.tasks.await
 data class ProfileState(
     val isLoading: Boolean = false,
     val profile: Profile? = null,
+    val groupsToMembers: Map<Group, List<Profile>> = emptyMap(),
     val focusPoints: Double = 0.0,
     val errorMessage: String? = null,
     val signedOut: Boolean = false,
@@ -85,10 +89,13 @@ data class ProfileState(
  *
  * The UI observes [uiState] to react to updates in [Profile] data, loading, or errors.
  *
- * @param repository The [ProfileRepository] used to interact with Firestore.
+ * @param profileRepository The [ProfileRepository] used to interact with Firestore.
+ * @param groupsRepository The [GroupsRepository] used to fetch user groups.
+ * @param authProvider A lambda that provides the current [FirebaseAuth] instance.
  */
 class ProfileViewModel(
-    private val repository: ProfileRepository = ProfileRepositoryProvider.repository,
+    private val profileRepository: ProfileRepository = ProfileRepositoryProvider.repository,
+    private val groupsRepository: GroupsRepository = GroupsRepositoryProvider.repository,
     private val notificationsRepository: NotificationsRepository =
         NotificationsRepositoryProvider.repository,
     private val authProvider: () -> FirebaseAuth = { Firebase.auth }
@@ -121,7 +128,7 @@ class ProfileViewModel(
       try {
         val profile =
             getProfileWithSyncedFriendNotifications(
-                repository, notificationsRepository, authProvider().currentUser?.uid!!)
+                profileRepository, notificationsRepository, authProvider().currentUser?.uid!!)
         if (profile == null) {
           _uiState.value =
               _uiState.value.copy(isLoading = false, errorMessage = "Profile not found")
@@ -134,6 +141,37 @@ class ProfileViewModel(
         }
       } catch (e: Exception) {
         _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = e.message)
+      }
+    }
+  }
+
+  /** Loads the groups the user is a member of along with their members' profiles. */
+  fun loadUserGroups() {
+    viewModelScope.launch {
+      _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+      try {
+        // Fetch all user groups
+        val groups = groupsRepository.getUserGroups()
+        val updatedMap = mutableMapOf<Group, List<Profile>>()
+        groups.forEach { group ->
+          // Fetch member profiles for each group
+          val groupsMembersProfile = mutableListOf<Profile>()
+          group.memberIds.forEach { memberId ->
+            // Fetch profile for each member
+            val memberProfile = profileRepository.getProfileByUid(memberId)
+            if (memberProfile != null) {
+              groupsMembersProfile.add(memberProfile)
+            }
+          }
+          updatedMap.put(group, groupsMembersProfile)
+        }
+        _uiState.value = _uiState.value.copy(groupsToMembers = updatedMap, isLoading = false)
+      } catch (_: Exception) {
+        _uiState.value =
+            _uiState.value.copy(
+                groupsToMembers = emptyMap(),
+                isLoading = false,
+                errorMessage = "Failed to load groups")
       }
     }
   }
@@ -168,7 +206,7 @@ class ProfileViewModel(
             val uid = Firebase.auth.currentUser?.uid ?: return@launch
 
             // Initialize profile in profileRepository
-            repository.initProfileIfMissing(uid, "")
+            profileRepository.initProfileIfMissing(uid, "")
 
             // Navigate to init profile
             _uiState.value = _uiState.value.copy(navigateToInit = true)

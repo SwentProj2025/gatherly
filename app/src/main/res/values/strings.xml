@@ -181,10 +181,12 @@
     <string name="friends_unfriend_message">You just lost a friend</string>
     <string name="friends_request_message">Waiting for approval…</string>
 
-    <!-- Add Group Screen -->
+    <!-- Groups -->
     <string name="add_group_button_label">Add New Group</string>
     <string name="group_name_bar_label">Group Name</string>
     <string name="group_name_bar_placeholder">Name the Group</string>
+    <string name="group_members_text_singular">member</string>
+    <string name="group_members_text_plural">members</string>
 
     <!-- Badge Screen -->
     <string name="todos_badge_title">ToDos Badges</string>

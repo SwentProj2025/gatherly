@@ -1,5 +1,7 @@
 package com.android.gatherly.viewmodel.profile
 
+import com.android.gatherly.model.group.GroupsLocalRepository
+import com.android.gatherly.model.group.GroupsRepository
 import com.android.gatherly.model.notification.NotificationsLocalRepository
 import com.android.gatherly.model.notification.NotificationsRepository
 import com.android.gatherly.model.profile.Profile
@@ -35,6 +37,7 @@ class ProfileViewModelIntegrationTest {
 
   private lateinit var profileViewModel: ProfileViewModel
   private lateinit var profileRepository: ProfileRepository
+  private lateinit var groupsRepository: GroupsRepository
   private lateinit var notificationsRepository: NotificationsRepository
   private lateinit var mockitoUtils: MockitoUtils
 
@@ -51,6 +54,7 @@ class ProfileViewModelIntegrationTest {
 
     // initialize repos and profileViewModel
     profileRepository = ProfileLocalRepository()
+    groupsRepository = GroupsLocalRepository()
     notificationsRepository = NotificationsLocalRepository()
   }
 
@@ -71,7 +75,8 @@ class ProfileViewModelIntegrationTest {
 
     profileViewModel =
         ProfileViewModel(
-            repository = profileRepository,
+            profileRepository = profileRepository,
+            groupsRepository = groupsRepository,
             notificationsRepository = notificationsRepository,
             authProvider = { mockitoUtils.mockAuth })
     profileViewModel.loadUserProfile()
@@ -94,7 +99,8 @@ class ProfileViewModelIntegrationTest {
 
     profileViewModel =
         ProfileViewModel(
-            repository = profileRepository,
+            profileRepository = profileRepository,
+            groupsRepository = groupsRepository,
             notificationsRepository = notificationsRepository,
             authProvider = { mockitoUtils.mockAuth })
     profileViewModel.loadUserProfile()
@@ -113,7 +119,8 @@ class ProfileViewModelIntegrationTest {
 
     profileViewModel =
         ProfileViewModel(
-            repository = profileRepository,
+            profileRepository = profileRepository,
+            groupsRepository = groupsRepository,
             notificationsRepository = notificationsRepository,
             authProvider = { mockitoUtils.mockAuth })
     profileViewModel.loadUserProfile()
