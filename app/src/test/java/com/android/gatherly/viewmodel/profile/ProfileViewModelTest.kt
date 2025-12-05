@@ -144,6 +144,7 @@ class ProfileViewModelIntegrationTest {
         ProfileViewModel(
             profileRepository,
             notificationsRepository = NotificationsLocalRepository(),
+            groupsRepository = GroupsLocalRepository(),
             authProvider = { mockitoUtils.mockAuth },
             userStatusManager = statusManagerMock)
 
