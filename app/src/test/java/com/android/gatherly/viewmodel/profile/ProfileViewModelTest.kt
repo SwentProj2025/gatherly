@@ -7,6 +7,8 @@ import com.android.gatherly.model.notification.NotificationsRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
+import com.android.gatherly.model.profile.ProfileStatus
+import com.android.gatherly.model.profile.UserStatusManager
 import com.android.gatherly.ui.profile.ProfileViewModel
 import com.android.gatherly.utilstest.MockitoUtils
 import kotlinx.coroutines.Dispatchers
@@ -20,6 +22,8 @@ import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
+import org.mockito.Mockito
+import org.mockito.kotlin.mock
 import org.mockito.kotlin.not
 
 /**
@@ -131,5 +135,20 @@ class ProfileViewModelIntegrationTest {
     val state = profileViewModel.uiState.value
     assertNull(state.profile)
     assertEquals("User not authenticated", state.errorMessage)
+  }
+
+  @Test
+  fun signOut_callsSetStatusCorrectly() = runTest {
+    val statusManagerMock = mock<UserStatusManager>()
+    val viewModel =
+        ProfileViewModel(
+            profileRepository,
+            notificationsRepository = NotificationsLocalRepository(),
+            authProvider = { mockitoUtils.mockAuth },
+            userStatusManager = statusManagerMock)
+
+    viewModel.signOut(mock())
+    advanceUntilIdle()
+    Mockito.verify(statusManagerMock).setStatus(status = ProfileStatus.OFFLINE)
   }
 }
