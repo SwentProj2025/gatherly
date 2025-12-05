@@ -101,7 +101,8 @@ class ProfileViewModel(
     private val notificationsRepository: NotificationsRepository =
         NotificationsRepositoryProvider.repository,
     private val authProvider: () -> FirebaseAuth = { Firebase.auth },
-    private val userStatusManager: UserStatusManager = UserStatusManager(authProvider(), repository)
+    private val userStatusManager: UserStatusManager =
+        UserStatusManager(authProvider(), profileRepository)
 ) : ViewModel() {
 
   private val _uiState = MutableStateFlow(ProfileState())
