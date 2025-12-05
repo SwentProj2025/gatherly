@@ -24,6 +24,7 @@
 
     <!-- Component Sizes -->
     <dimen name="input_height">100dp</dimen>
+    <dimen name="profile_pic_size_small">30dp</dimen>
     <dimen name="profile_pic_size_medium">40dp</dimen>
     <dimen name="profile_pic_size_regular">50dp</dimen>
     <dimen name="profile_pic_size">120dp</dimen>
@@ -107,6 +108,17 @@
     <dimen name="events_popup_horizontalArrangement_size">12.dp</dimen>
     <dimen name="events_filter_bar_vertical_size">10.dp</dimen>
     <dimen name="events_filter_button_height">35.dp</dimen>
+
+    <!-- Notifications Screen -->
+    <dimen name="notification_item_padding_vertical">12.dp</dimen>
+    <dimen name="notification_avatar_spacing">4.dp</dimen>
+    <dimen name="notification_row_horizontal_padding">16.dp</dimen>
+    <dimen name="notification_avatar_border_width">1.dp</dimen>
+    <dimen name="friend_request_item_card_border_width">1.dp</dimen>
+    <dimen name="friend_request_item_card_rounded_corner_shape">8.dp</dimen>
+    <dimen name="friend_request_item_card_padding_vertical">4.dp</dimen>
+    <dimen name="friend_request_item_card_padding">12.dp</dimen>
+    <dimen name="friend_request_item_profile_picture_size">56.dp</dimen>
 
     <!-- Focus History Screen -->
     <dimen name="focus_item_height">100.dp</dimen>
