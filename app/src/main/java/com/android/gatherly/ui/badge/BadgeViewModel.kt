@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.R
 import com.android.gatherly.model.badge.Badge
+import com.android.gatherly.model.badge.BadgeRank
 import com.android.gatherly.model.badge.BadgeType
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
@@ -15,44 +16,9 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-/**
- * UI state for the Badge ViewModel
- *
- * @param topBadges Map containing the BadgeUI of the highest rank badge for each BadgeType
- */
+/** UI state for the Badge ViewModel */
 data class UIState(
-    val topBadges: Map<BadgeType, BadgeUI> =
-        mapOf<BadgeType, BadgeUI>(
-            BadgeType.TODOS_CREATED to
-                BadgeUI(
-                    "Blank Todo Created Badge",
-                    "Create your first Todo to get a Badge!",
-                    R.drawable.blank_todo_created),
-            BadgeType.TODOS_COMPLETED to
-                BadgeUI(
-                    "Blank Todo Completed Badge",
-                    "Complete your first Todo to get a Badge!",
-                    R.drawable.blank_todo_completed),
-            BadgeType.EVENTS_CREATED to
-                BadgeUI(
-                    "Blank Event Created Badge",
-                    "Create your first Event to get a Badge!",
-                    R.drawable.blank_event_created),
-            BadgeType.EVENTS_PARTICIPATED to
-                BadgeUI(
-                    "Blank Event Participated Badge",
-                    "Participate to your first Todo to get a Badge!",
-                    R.drawable.blank_event_participated),
-            BadgeType.FRIENDS_ADDED to
-                BadgeUI(
-                    "Blank Friend Badge",
-                    "Add your first Friend to get a Badge!",
-                    R.drawable.blank_friends),
-            BadgeType.FOCUS_SESSIONS_COMPLETED to
-                BadgeUI(
-                    "Blank Focus Session Badge",
-                    "Complete your first Focus Session to get a Badge!",
-                    R.drawable.blank_focus_session)),
+    val badgesByType: Map<BadgeType, List<BadgeUI>> = emptyMap(),
     val isLoading: Boolean = false,
 )
 
@@ -95,8 +61,9 @@ class BadgeViewModel(
   }
 
   /**
-   * Links each badge Id from the user's badgeIds list to the actual Badge and filters the highest
-   * ranked badge to send to the UI
+   * Links each badge Id from the user's badgeIds list to the actual Badge and creates a BadgeUI to
+   * send to the UI. This function gets all badges obtained by the user to be displayed in the badge
+   * screen and also creates blank badgeUIs when more badges are still unobtained by the user.
    *
    * @param profile the user's profile
    */
@@ -105,17 +72,57 @@ class BadgeViewModel(
     val userBadges: List<Badge> =
         profile.badgeIds.mapNotNull { badgeId -> Badge.entries.firstOrNull { it.id == badgeId } }
 
-    fun highestBadgeOfType(type: BadgeType): Badge? =
-        userBadges.filter { it.type == type }.maxByOrNull { it.rank.ordinal }
+    val highestRankByType: Map<BadgeType, BadgeRank?> =
+        BadgeType.entries.associateWith { type ->
+          userBadges.filter { it.type == type }.maxByOrNull { it.rank.ordinal }?.rank
+        }
 
-    fun Badge.toBadgeUI(): BadgeUI = BadgeUI(this.title, this.description, this.iconRes)
+    val badgesByType: Map<BadgeType, List<BadgeUI>> =
+        BadgeType.entries.associateWith { type ->
+          val highestRank = highestRankByType[type]
+          val blankIcon = type.blankIconRes()
 
-    val default = UIState()
+          val allBadgesOfType =
+              Badge.entries.filter { it.type == type }.sortedBy { it.rank.ordinal }
 
-    return default.copy(
-        topBadges =
-            default.topBadges.mapValues { (badgeType, defaultUi) ->
-              highestBadgeOfType(badgeType)?.toBadgeUI() ?: defaultUi
-            })
+          val obtainedBadges: List<Badge> =
+              if (highestRank == null) {
+                emptyList()
+              } else {
+                allBadgesOfType.filter { it.rank.ordinal <= highestRank.ordinal }
+              }
+
+          val nextLockedBadge: Badge? =
+              if (highestRank == null) {
+                allBadgesOfType.firstOrNull()
+              } else {
+                allBadgesOfType.firstOrNull { it.rank.ordinal > highestRank.ordinal }
+              }
+
+          val obtainedUi: List<BadgeUI> =
+              obtainedBadges.map { badge ->
+                BadgeUI(title = badge.title, description = badge.description, icon = badge.iconRes)
+              }
+
+          val lockedUi: BadgeUI? =
+              nextLockedBadge?.let { BadgeUI(title = "???", description = "???", icon = blankIcon) }
+
+          if (lockedUi != null) obtainedUi + lockedUi else obtainedUi
+        }
+
+    return UIState(
+        badgesByType = badgesByType,
+        isLoading = false,
+    )
   }
+
+  private fun BadgeType.blankIconRes(): Int =
+      when (this) {
+        BadgeType.TODOS_CREATED -> R.drawable.blank_todo_created
+        BadgeType.TODOS_COMPLETED -> R.drawable.blank_todo_completed
+        BadgeType.EVENTS_CREATED -> R.drawable.blank_event_created
+        BadgeType.EVENTS_PARTICIPATED -> R.drawable.blank_event_participated
+        BadgeType.FRIENDS_ADDED -> R.drawable.blank_friends
+        BadgeType.FOCUS_SESSIONS_COMPLETED -> R.drawable.blank_focus_session
+      }
 }

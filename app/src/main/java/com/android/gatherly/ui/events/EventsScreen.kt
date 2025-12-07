@@ -22,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults.buttonColors
 import androidx.compose.material3.Card
@@ -71,6 +72,7 @@ import com.android.gatherly.ui.theme.theme_status_ongoing
 import com.android.gatherly.ui.theme.theme_status_past
 import com.android.gatherly.ui.theme.theme_status_upcoming
 import com.android.gatherly.ui.todo.SortMenu
+import com.android.gatherly.utils.BoxNumberAttendees
 import com.android.gatherly.utils.DateParser.dateToString
 import com.android.gatherly.utils.DateParser.timeToString
 import com.android.gatherly.utils.GatherlyAlertDialog
@@ -114,6 +116,9 @@ object EventsScreenTestTags {
   const val SORT_DATE_BUTTON = "SortDateButton"
   const val SORT_PROX_BUTTON = "SortProxButton"
 
+  const val ATTENDEES_ALERT_DIALOG = "alertDialog"
+  const val ATTENDEES_ALERT_DIALOG_CANCEL = "alertDialogCancelButton"
+
   /**
    * Returns a unique test tag for the card or container representing a given [Event] item.
    *
@@ -121,6 +126,8 @@ object EventsScreenTestTags {
    * @return A string uniquely identifying the Event item in the UI.
    */
   fun getTestTagForEventItem(event: Event): String = "eventItem${event.id}"
+
+  fun getTestTagForEventNumberAttendees(event: Event): String = "eventNbrAttendees${event.id}"
 }
 
 /**
@@ -234,6 +241,7 @@ fun EventsScreen(
       eventIdAlreadyProcessed.value = true
     }
   }
+  val showAttendeesDialog = remember { mutableStateOf(false) }
 
   LaunchedEffect(Unit, currentUserIdFromVM) {
     if (currentUserIdFromVM.isNotBlank()) {
@@ -485,7 +493,9 @@ fun EventsScreen(
               dateText = dateToString(event.date),
               startTimeText = timeToString(event.startTime),
               endTimeText = timeToString(event.endTime),
-          )
+              onOpenAttendeesList = { showAttendeesDialog.value = true },
+              numberAttendees = event.participants.size)
+          AlertDialogListAttendees(showAttendeesDialog, event, eventsViewModel, uiState)
           selectedBrowserEvent.value = if (isPopupOnBrowser.value) event else null
         }
 
@@ -512,7 +522,11 @@ fun EventsScreen(
                 coordinator.requestCenterOnEvent(event.id)
                 navigationActions?.navigateTo(Screen.Map)
                 isPopupOnUpcoming.value = false
-              })
+              },
+              onOpenAttendeesList = { showAttendeesDialog.value = true },
+              numberAttendees = event.participants.size)
+
+          AlertDialogListAttendees(showAttendeesDialog, event, eventsViewModel, uiState)
           selectedUpcomingEvent.value = if (isPopupOnUpcoming.value) event else null
         }
 
@@ -538,7 +552,11 @@ fun EventsScreen(
                 coordinator.requestCenterOnEvent(event.id)
                 navigationActions?.navigateTo(Screen.Map)
                 isPopupOnYourE.value = false
-              })
+              },
+              onOpenAttendeesList = { showAttendeesDialog.value = true },
+              numberAttendees = event.participants.size)
+
+          AlertDialogListAttendees(showAttendeesDialog, event, eventsViewModel, uiState)
           selectedYourEvent.value = if (isPopupOnYourE.value) event else null
         }
       })
@@ -590,6 +608,10 @@ fun BrowserEventsItem(event: Event, onClick: () -> Unit) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.testTag(EventsScreenTestTags.EVENT_DATE))
           }
+
+          BoxNumberAttendees(
+              event.participants.size,
+              Modifier.testTag(EventsScreenTestTags.getTestTagForEventNumberAttendees(event)))
         }
       }
 }
@@ -642,6 +664,10 @@ fun UpcomingEventsItem(event: Event, onClick: () -> Unit) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.testTag(EventsScreenTestTags.EVENT_DATE))
           }
+
+          BoxNumberAttendees(
+              event.participants.size,
+              Modifier.testTag(EventsScreenTestTags.getTestTagForEventNumberAttendees(event)))
         }
       }
 }
@@ -693,6 +719,10 @@ fun MyOwnEventsItem(event: Event, onClick: () -> Unit) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.testTag(EventsScreenTestTags.EVENT_DATE))
           }
+
+          BoxNumberAttendees(
+              event.participants.size,
+              Modifier.testTag(EventsScreenTestTags.getTestTagForEventNumberAttendees(event)))
         }
       }
 }
@@ -792,6 +822,39 @@ private fun getFilteredEvents(
     EventFilter.UPCOMING -> listEvents.filter { it.status == EventStatus.UPCOMING }
     EventFilter.ONGOING -> listEvents.filter { it.status == EventStatus.ONGOING }
     EventFilter.PAST -> listEvents.filter { it.status == EventStatus.PAST }
+  }
+}
+
+@Composable
+fun AlertDialogListAttendees(
+    showAttendeesDialog: MutableState<Boolean>,
+    event: Event,
+    eventsViewModel: EventsViewModel,
+    uiState: UIState
+) {
+  if (showAttendeesDialog.value) {
+
+    LaunchedEffect(event.participants) {
+      eventsViewModel.loadParticipantsNames(event.participants, uiState.currentUserId)
+    }
+
+    val listNameAttendees by eventsViewModel.participantsNames.collectAsState()
+
+    AlertDialog(
+        onDismissRequest = { showAttendeesDialog.value = false },
+        title = { Text("Participants") },
+        text = { Column { listNameAttendees.forEach { name -> Text("• $name") } } },
+        confirmButton = {
+          Button(
+              onClick = { showAttendeesDialog.value = false },
+              modifier = Modifier.testTag(EventsScreenTestTags.ATTENDEES_ALERT_DIALOG_CANCEL)) {
+                Text(stringResource(R.string.events_alert_dialog_button_label))
+              }
+        },
+        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+        titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.testTag(EventsScreenTestTags.ATTENDEES_ALERT_DIALOG))
   }
 }
 

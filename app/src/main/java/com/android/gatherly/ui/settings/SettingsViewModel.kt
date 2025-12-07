@@ -15,6 +15,9 @@ import com.android.gatherly.R
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryProvider
+import com.android.gatherly.model.profile.ProfileStatus
+import com.android.gatherly.model.profile.UserStatusManager
+import com.android.gatherly.model.profile.UserStatusSource
 import com.android.gatherly.model.profile.Username
 import com.android.gatherly.utils.DateParser
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
@@ -61,6 +64,7 @@ data class SettingsUiState(
     val navigateToInit: Boolean = false,
     val isAnon: Boolean = true,
     val isSaving: Boolean = false,
+    val currentUserStatus: ProfileStatus = ProfileStatus.OFFLINE,
 ) {
   val isValid: Boolean
     get() =
@@ -78,7 +82,9 @@ data class SettingsUiState(
  */
 class SettingsViewModel(
     private val repository: ProfileRepository = ProfileRepositoryProvider.repository,
-    private val authProvider: () -> FirebaseAuth = { Firebase.auth }
+    private val authProvider: () -> FirebaseAuth = { Firebase.auth },
+    private val userStatusManager: UserStatusManager =
+        UserStatusManager(authProvider(), repository),
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(SettingsUiState())
   val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
@@ -88,8 +94,9 @@ class SettingsViewModel(
   /** Initiates sign-out */
   fun signOut(credentialManager: CredentialManager): Unit {
     viewModelScope.launch {
+      userStatusManager.setStatus(ProfileStatus.OFFLINE)
       _uiState.value = _uiState.value.copy(signedOut = true)
-      Firebase.auth.signOut()
+      authProvider().signOut()
       credentialManager.clearCredentialState(ClearCredentialStateRequest())
     }
   }
@@ -139,7 +146,8 @@ class SettingsViewModel(
                       else ""
                     },
                 isLoadingProfile = false,
-                isAnon = authProvider().currentUser?.isAnonymous ?: true)
+                isAnon = authProvider().currentUser?.isAnonymous ?: true,
+                currentUserStatus = profile.status)
       } catch (e: Exception) {
         Log.e("SettingsViewModel", "Error loading Profile by uid: $profileUID", e)
         setErrorMsg("Failed to load Profile: ${e.message}")
@@ -351,5 +359,22 @@ class SettingsViewModel(
     } else {
       repository.updateUsername(id, originalProfile?.username, state.username)
     }
+  }
+
+  /**
+   * Updates the user's status both locally and in the backend.
+   * - Immediately updates the UI state with the new status.
+   * - Asynchronously notifies the UserStatusManager to persist the change.
+   * - Clicking on ONLINE reset status behaviour to auto
+   *
+   * @param status The new ProfileStatus selected by the user.
+   */
+  fun updateUserStatus(status: ProfileStatus) {
+    viewModelScope.launch {
+      val resetToAuto = status == ProfileStatus.ONLINE // reset to auto
+      userStatusManager.setStatus(
+          status = status, source = UserStatusSource.MANUAL, resetToAuto = resetToAuto)
+    }
+    _uiState.value = _uiState.value.copy(currentUserStatus = status)
   }
 }

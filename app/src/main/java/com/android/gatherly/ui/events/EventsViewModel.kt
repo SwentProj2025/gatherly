@@ -283,4 +283,23 @@ class EventsViewModel(
         createdEventList = createdEventList,
         globalEventList = globalEventList)
   }
+
+  /** Function to trigger all the name from the list of participants in order to display them */
+  private val _participantsNames = MutableStateFlow<List<String>>(emptyList())
+  val participantsNames: StateFlow<List<String>> = _participantsNames
+
+  fun loadParticipantsNames(listIds: List<String>, currentUserId: String) {
+    viewModelScope.launch {
+      val names =
+          listIds.map { id ->
+            if (id != currentUserId) {
+              val profile = profileRepository.getProfileByUid(id)
+              profile?.name ?: "Anonymous user"
+            } else {
+              "YOU"
+            }
+          }
+      _participantsNames.value = names
+    }
+  }
 }

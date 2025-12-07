@@ -28,6 +28,7 @@ import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
+import java.util.SortedMap
 import java.util.Timer
 import kotlin.concurrent.fixedRateTimer
 import kotlin.math.floor
@@ -65,7 +66,7 @@ data class TimerState(
     val errorMsg: String? = null,
     val linkedTodo: ToDo? = null,
     val allTodos: List<ToDo> = emptyList(),
-    val leaderboard: List<Profile> = emptyList(),
+    val leaderboard: SortedMap<Double, List<Profile>> = sortedMapOf(),
     val pointsGained: Double = 0.0
 )
 
@@ -117,7 +118,8 @@ class TimerViewModel(
         val allFriends =
             profile.friendUids.map { friend -> profileRepository.getProfileByUid(friend)!! } +
                 profile
-        val leaderboard = allFriends.sortedByDescending { it.weeklyPoints }
+        val leaderboard =
+            allFriends.groupBy { it.weeklyPoints }.toSortedMap(compareByDescending { it })
         _uiState.value = _uiState.value.copy(leaderboard = leaderboard)
       } catch (_: Exception) {
         setError("Failed to load ui state")
@@ -464,6 +466,11 @@ class TimerViewModel(
   /** Cleans up resources when the ViewModel is cleared. */
   override fun onCleared() {
     cancelTicking()
+    viewModelScope.launch { userStatusManager.setStatus(ProfileStatus.ONLINE) }
     super.onCleared()
+  }
+
+  fun isCurrentUser(uid: String): Boolean {
+    return uid == authProvider().currentUser?.uid!!
   }
 }

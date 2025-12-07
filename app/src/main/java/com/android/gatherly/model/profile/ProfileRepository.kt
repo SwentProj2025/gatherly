@@ -158,12 +158,35 @@ interface ProfileRepository {
   suspend fun addFriend(friend: String, currentUserId: String)
 
   /**
-   * Updates the online/offline status of a user.
+   * Adds a UID to the list of pending friend requests sent by the current user. Called when a user
+   * initiates a friend request to user with said uid.
+   *
+   * @param currentUserId UID of the user who is sending the request.
+   * @param targetUid UID of the user to whom the request is being sent.
+   */
+  suspend fun addPendingSentFriendUid(currentUserId: String, targetUid: String)
+
+  /**
+   * Removes a UID from the list of pending friend requests sent by the current user. Called when
+   * current user got an answer to his request by the recipient or cancelled his request.
+   *
+   * @param currentUserId UID of the user who originally sent the request.
+   * @param targetUid UID being removed from the pending list.
+   */
+  suspend fun removePendingSentFriendUid(currentUserId: String, targetUid: String)
+
+  /**
+   * Updates the online/offline status of a user and the source of the update
    *
    * @param uid The user ID whose status to update.
    * @param status The new [ProfileStatus] to set.
+   * @param source Indicates if the status update is automatic or manual. Defaults to AUTOMATIC.
    */
-  suspend fun updateStatus(uid: String, status: ProfileStatus)
+  suspend fun updateStatus(
+      uid: String,
+      status: ProfileStatus,
+      source: UserStatusSource = UserStatusSource.AUTOMATIC
+  )
 
   /**
    * The user creates a new event
