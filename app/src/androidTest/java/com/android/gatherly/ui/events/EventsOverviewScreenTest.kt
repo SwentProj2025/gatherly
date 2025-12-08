@@ -98,8 +98,7 @@ class EventsOverviewScreenTest {
         endTime = Timestamp(finish),
         creatorId = currentUserId,
         participants = listOf("Gabriel", "Sofija"),
-        status = EventStatus.UPCOMING,
-    )
+        status = EventStatus.UPCOMING)
   }
 
   // Upcoming EVENT
@@ -892,6 +891,77 @@ class EventsOverviewScreenTest {
         .onNodeWithTag(AlertDialogTestTags.ALERT) //
         .assertIsNotDisplayed()
   }
+
+  @Test
+  fun testNumbersAttendeesVisualOnOverviewScreen() = runTest {
+    val currentUserId = "bobId"
+    val participant1 = Profile(uid = "p1", name = "participant1", profilePicture = "")
+    val participant2 = Profile(uid = "p2", name = "participant2", profilePicture = "")
+    val participant3 = Profile(uid = "p3", name = "participant3", profilePicture = "")
+
+    profileRepository.addProfile(Profile(uid = "bobId", name = "Test User", profilePicture = ""))
+    profileRepository.addProfile(participant1)
+    profileRepository.addProfile(participant2)
+    profileRepository.addProfile(participant3)
+
+    val event2p = upcomingEvent.copy(participants = listOf("p1", "p2"))
+    val event3p = upcomingEventCreated.copy(participants = listOf("p1", "p2", "p3"))
+
+    val listUpcoming: List<Event> = listOf(event2p, event3p, upcomingEventParticipate)
+
+    listUpcoming.forEach { event -> eventsRepository.addEvent(event) }
+
+    setContent(currentUserId)
+
+    composeTestRule.waitForIdle()
+
+    // Initially, all events should be displayed
+    listUpcoming.forEach { event ->
+      composeTestRule.scrollToEvent(event)
+      composeTestRule
+          .onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(event))
+          .assertIsDisplayed()
+    }
+
+    // We can see the number of attendees in overview point of view
+    listUpcoming.forEach { event ->
+      composeTestRule.scrollToEvent(event)
+      composeTestRule
+          .onNodeWithTag(
+              EventsScreenTestTags.getTestTagForEventNumberAttendees(event), useUnmergedTree = true)
+          .assertIsDisplayed()
+    }
+
+    composeTestRule
+        .onNodeWithTag(EventsScreenTestTags.ATTENDEES_ALERT_DIALOG)
+        .assertIsNotDisplayed()
+
+    // Open Alert Dialog
+    composeTestRule.scrollToEvent(event2p)
+    composeTestRule
+        .onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(event2p))
+        .assertIsDisplayed()
+        .performClick()
+
+    // Open alert dialog attendees
+    composeTestRule
+        .onNodeWithTag(AlertDialogTestTags.ATTENDEES_BTN)
+        .assertIsDisplayed()
+        .performClick()
+
+    composeTestRule.onNodeWithTag(EventsScreenTestTags.ATTENDEES_ALERT_DIALOG).assertIsDisplayed()
+
+    // Go back
+    composeTestRule
+        .onNodeWithTag(EventsScreenTestTags.ATTENDEES_ALERT_DIALOG_CANCEL)
+        .assertIsDisplayed()
+        .performClick()
+
+    composeTestRule
+        .onNodeWithTag(EventsScreenTestTags.ATTENDEES_ALERT_DIALOG)
+        .assertIsNotDisplayed()
+  }
+
   /** Helper function to scroll to a specific event item in a list */
   private fun ComposeTestRule.scrollToEvent(event: Event) {
     onNodeWithTag(EventsScreenTestTags.ALL_LISTS)

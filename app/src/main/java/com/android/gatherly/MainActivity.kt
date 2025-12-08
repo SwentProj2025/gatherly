@@ -35,6 +35,7 @@ import com.android.gatherly.ui.homePage.HomePageScreen
 import com.android.gatherly.ui.map.MapScreen
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.Screen
+import com.android.gatherly.ui.points.FocusPointsScreen
 import com.android.gatherly.ui.profile.ProfileScreen
 import com.android.gatherly.ui.profile.UserProfileScreen
 import com.android.gatherly.ui.settings.SettingsScreen
@@ -252,6 +253,16 @@ fun GatherlyApp(
     ) {
       composable(Screen.BadgeScreen.route) {
         BadgeScreen(goBack = { navigationActions.navigateTo(Screen.ProfileScreen) })
+      }
+    }
+
+    // FOCUS HISTORY COMPOSABLE  ------------------------------
+    navigation(
+        startDestination = Screen.FocusScreen.route,
+        route = Screen.FocusScreen.name,
+    ) {
+      composable(Screen.FocusScreen.route) {
+        FocusPointsScreen(goBack = { navigationActions.navigateTo(Screen.ProfileScreen) })
       }
     }
 

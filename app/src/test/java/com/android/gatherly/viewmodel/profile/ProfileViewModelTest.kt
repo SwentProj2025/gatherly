@@ -1,8 +1,14 @@
 package com.android.gatherly.viewmodel.profile
 
+import com.android.gatherly.model.group.GroupsLocalRepository
+import com.android.gatherly.model.group.GroupsRepository
+import com.android.gatherly.model.notification.NotificationsLocalRepository
+import com.android.gatherly.model.notification.NotificationsRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
+import com.android.gatherly.model.profile.ProfileStatus
+import com.android.gatherly.model.profile.UserStatusManager
 import com.android.gatherly.ui.profile.ProfileViewModel
 import com.android.gatherly.utilstest.MockitoUtils
 import kotlinx.coroutines.Dispatchers
@@ -16,6 +22,9 @@ import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
+import org.mockito.Mockito
+import org.mockito.kotlin.mock
+import org.mockito.kotlin.not
 
 /**
  * Integration tests for [com.android.gatherly.ui.profile.ProfileViewModel] using the Firebase
@@ -32,6 +41,8 @@ class ProfileViewModelIntegrationTest {
 
   private lateinit var profileViewModel: ProfileViewModel
   private lateinit var profileRepository: ProfileRepository
+  private lateinit var groupsRepository: GroupsRepository
+  private lateinit var notificationsRepository: NotificationsRepository
   private lateinit var mockitoUtils: MockitoUtils
 
   // initialize this so that tests control all coroutines and can wait on them
@@ -47,6 +58,8 @@ class ProfileViewModelIntegrationTest {
 
     // initialize repos and profileViewModel
     profileRepository = ProfileLocalRepository()
+    groupsRepository = GroupsLocalRepository()
+    notificationsRepository = NotificationsLocalRepository()
   }
 
   @After
@@ -65,7 +78,11 @@ class ProfileViewModelIntegrationTest {
     mockitoUtils.chooseCurrentUser(uid)
 
     profileViewModel =
-        ProfileViewModel(repository = profileRepository, authProvider = { mockitoUtils.mockAuth })
+        ProfileViewModel(
+            profileRepository = profileRepository,
+            groupsRepository = groupsRepository,
+            notificationsRepository = notificationsRepository,
+            authProvider = { mockitoUtils.mockAuth })
     profileViewModel.loadUserProfile()
 
     // Wait until loading completes and profile is available
@@ -85,7 +102,11 @@ class ProfileViewModelIntegrationTest {
     mockitoUtils.chooseCurrentUser(uid)
 
     profileViewModel =
-        ProfileViewModel(repository = profileRepository, authProvider = { mockitoUtils.mockAuth })
+        ProfileViewModel(
+            profileRepository = profileRepository,
+            groupsRepository = groupsRepository,
+            notificationsRepository = notificationsRepository,
+            authProvider = { mockitoUtils.mockAuth })
     profileViewModel.loadUserProfile()
 
     // Wait until loading completes and an error appears
@@ -101,7 +122,11 @@ class ProfileViewModelIntegrationTest {
     mockitoUtils.unauthenticatedCurrentUser()
 
     profileViewModel =
-        ProfileViewModel(repository = profileRepository, authProvider = { mockitoUtils.mockAuth })
+        ProfileViewModel(
+            profileRepository = profileRepository,
+            groupsRepository = groupsRepository,
+            notificationsRepository = notificationsRepository,
+            authProvider = { mockitoUtils.mockAuth })
     profileViewModel.loadUserProfile()
 
     // Wait until loading completes and an error appears
@@ -110,5 +135,21 @@ class ProfileViewModelIntegrationTest {
     val state = profileViewModel.uiState.value
     assertNull(state.profile)
     assertEquals("User not authenticated", state.errorMessage)
+  }
+
+  @Test
+  fun signOut_callsSetStatusCorrectly() = runTest {
+    val statusManagerMock = mock<UserStatusManager>()
+    val viewModel =
+        ProfileViewModel(
+            profileRepository,
+            notificationsRepository = NotificationsLocalRepository(),
+            groupsRepository = GroupsLocalRepository(),
+            authProvider = { mockitoUtils.mockAuth },
+            userStatusManager = statusManagerMock)
+
+    viewModel.signOut(mock())
+    advanceUntilIdle()
+    Mockito.verify(statusManagerMock).setStatus(status = ProfileStatus.OFFLINE)
   }
 }

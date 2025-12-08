@@ -1,10 +1,14 @@
 package com.android.gatherly.viewmodel.friends
 
 import com.android.gatherly.model.badge.BadgeType
+import com.android.gatherly.model.notification.NotificationType
+import com.android.gatherly.model.notification.NotificationsLocalRepository
+import com.android.gatherly.model.notification.NotificationsRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileStatus
+import com.android.gatherly.model.profile.UserStatusSource
 import com.android.gatherly.ui.friends.FriendsViewModel
 import com.android.gatherly.utilstest.MockitoUtils
 import kotlinx.coroutines.Dispatchers
@@ -34,6 +38,7 @@ private const val DELAY = 200L
 class FriendsViewModelTest {
 
   private lateinit var profileRepository: ProfileLocalRepository
+  private lateinit var notificationsRepository: NotificationsRepository
   private lateinit var viewModel: FriendsViewModel
   private lateinit var mockitoUtils: MockitoUtils
 
@@ -46,6 +51,7 @@ class FriendsViewModelTest {
     Dispatchers.setMain(testDispatcher)
     // initialize repos and viewModel
     profileRepository = ProfileLocalRepository()
+    notificationsRepository = NotificationsLocalRepository()
 
     fill_repositories()
 
@@ -54,7 +60,10 @@ class FriendsViewModelTest {
     mockitoUtils.chooseCurrentUser("A")
 
     viewModel =
-        FriendsViewModel(repository = profileRepository, authProvider = { mockitoUtils.mockAuth })
+        FriendsViewModel(
+            repository = profileRepository,
+            notificationsRepository = notificationsRepository,
+            authProvider = { mockitoUtils.mockAuth })
   }
 
   @After
@@ -186,7 +195,18 @@ class FriendsViewModelTest {
 
           override suspend fun addFriend(friend: String, currentUserId: String) {}
 
-          override suspend fun updateStatus(uid: String, status: ProfileStatus) {}
+          override suspend fun addPendingSentFriendUid(currentUserId: String, targetUid: String) {}
+
+          override suspend fun removePendingSentFriendUid(
+              currentUserId: String,
+              targetUid: String
+          ) {}
+
+          override suspend fun updateStatus(
+              uid: String,
+              status: ProfileStatus,
+              source: UserStatusSource
+          ) {}
 
           override suspend fun createEvent(eventId: String, currentUserId: String) {}
 
@@ -212,10 +232,17 @@ class FriendsViewModelTest {
 
           override suspend fun deleteUserProfile(uid: String) {}
 
-          override suspend fun updateFocusPoints(uid: String, points: Double) {}
+          override suspend fun updateFocusPoints(
+              uid: String,
+              points: Double,
+              addToLeaderboard: Boolean
+          ) {}
         }
     val errorViewModel =
-        FriendsViewModel(repository = throwingRepository, authProvider = { mockitoUtils.mockAuth })
+        FriendsViewModel(
+            repository = throwingRepository,
+            notificationsRepository = notificationsRepository,
+            authProvider = { mockitoUtils.mockAuth })
     errorViewModel.refreshFriends("A")
 
     advanceUntilIdle()
@@ -227,5 +254,126 @@ class FriendsViewModelTest {
 
     assertTrue(state.friends.isEmpty())
     assertTrue(state.listNoFriends.isEmpty())
+  }
+
+  @Test
+  fun testSendFriendRequest_addsPendingAndNotification() = runTest {
+    // userA sending request to userC
+    viewModel.sendFriendRequest("C", "A")
+    advanceUntilIdle()
+
+    val state = viewModel.uiState.value
+
+    // userC username = "charlie"
+    assertTrue(state.pendingSentUsernames.contains("charlie"))
+
+    val userA = profileRepository.getProfileByUid("A")!!
+    assertTrue(userA.pendingSentFriendsUids.contains("C"))
+
+    val notifications = notificationsRepository.getUserNotifications("C")
+    assertEquals(1, notifications.size)
+    assertEquals(NotificationType.FRIEND_REQUEST, notifications.first().type)
+    assertEquals("A", notifications.first().senderId)
+  }
+
+  @Test
+  fun testSendFriendRequest_doesNotDuplicatePending() = runTest {
+    // first request
+    viewModel.sendFriendRequest("C", "A")
+    advanceUntilIdle()
+
+    // second should be ignored
+    viewModel.sendFriendRequest("C", "A")
+    advanceUntilIdle()
+
+    val userA = profileRepository.getProfileByUid("A")!!
+    assertEquals(1, userA.pendingSentFriendsUids.size)
+
+    val notifications = notificationsRepository.getUserNotifications("C")
+    assertEquals(1, notifications.size)
+  }
+
+  @Test
+  fun testSendFriendRequest_failsIfProfileMissing() = runTest {
+    viewModel.sendFriendRequest("UNKNOWN", "A")
+    advanceUntilIdle()
+
+    val state = viewModel.uiState.value
+    assertEquals("Friend profile not found", state.errorMsg)
+  }
+
+  @Test
+  fun testRemoveFriend_removesAndSendsNotification() = runTest {
+    // ensure B is friend of A
+    assertTrue(viewModel.uiState.value.friends.contains("bob"))
+
+    viewModel.removeFriend("B", "A")
+    advanceUntilIdle()
+
+    val state = viewModel.uiState.value
+    assertFalse(state.friends.contains("bob"))
+
+    val notifications = notificationsRepository.getUserNotifications("B")
+    assertEquals(1, notifications.size)
+    assertEquals(NotificationType.REMOVE_FRIEND, notifications.first().type)
+  }
+
+  @Test
+  fun testRemoveFriend_errorsIfNotFriend() = runTest {
+    // C is not friend of A
+    viewModel.removeFriend("C", "A")
+    advanceUntilIdle()
+
+    val state = viewModel.uiState.value
+    assertEquals("Cannot remove non-friend", state.errorMsg)
+  }
+
+  @Test
+  fun testCancelPendingFriendRequest_cancelsCorrectly() = runTest {
+    // A sends request to C
+    viewModel.sendFriendRequest("C", "A")
+    advanceUntilIdle()
+
+    // Now cancel
+    viewModel.cancelPendingFriendRequest("C", "A")
+    advanceUntilIdle()
+
+    val userA = profileRepository.getProfileByUid("A")!!
+    // pending array should NOT contain C anymore
+    assertFalse(userA.pendingSentFriendsUids.contains("C"))
+
+    val notifications = notificationsRepository.getUserNotifications("C")
+
+    // C should have both: original request + cancellation
+    assertEquals(2, notifications.size)
+    assertTrue(
+        notifications.any {
+          it.type == NotificationType.FRIEND_REQUEST && it.senderId == "A" && it.recipientId == "C"
+        })
+    assertTrue(
+        notifications.any {
+          it.type == NotificationType.FRIEND_REQUEST_CANCELLED &&
+              it.senderId == "A" &&
+              it.recipientId == "C"
+        })
+  }
+
+  @Test
+  fun testRefreshFriends_populatesStateCorrectly() = runTest {
+    viewModel.refreshFriends("A")
+    advanceUntilIdle()
+
+    val state = viewModel.uiState.value
+
+    assertEquals("A", state.currentUserId)
+    assertTrue(state.friends.contains("bob")) // B is friend
+    assertTrue(state.listNoFriends.contains("charlie")) // C is not friend
+
+    // Profiles map: should have B and C, but not A
+    assertNotNull(state.profiles["bob"])
+    assertNotNull(state.profiles["charlie"])
+    assertFalse(state.profiles.containsKey("alice"))
+
+    assertFalse(state.isLoading)
   }
 }

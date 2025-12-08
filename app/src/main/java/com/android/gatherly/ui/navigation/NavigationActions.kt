@@ -63,6 +63,8 @@ sealed class Screen(
 
   object BadgeScreen : Screen(route = "badge_screen", name = "Badges")
 
+  object FocusScreen : Screen(route = "focus_history_screen", name = "Focus History")
+
   object UserProfileScreen : Screen(route = "user_profile", name = "User Profile")
 
   data class UserProfile(val uid: String) :

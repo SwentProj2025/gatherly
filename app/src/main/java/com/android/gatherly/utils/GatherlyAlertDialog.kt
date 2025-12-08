@@ -2,10 +2,12 @@ package com.android.gatherly.utils
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults.buttonColors
@@ -14,9 +16,12 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.android.gatherly.R
 
 @Composable
 fun GatherlyAlertDialog(
@@ -34,7 +39,9 @@ fun GatherlyAlertDialog(
     confirmEnabled: Boolean = true,
     neutralText: String? = null,
     onNeutral: (() -> Unit)? = null,
-    neutralEnabled: Boolean = true
+    neutralEnabled: Boolean = true,
+    onOpenAttendeesList: (() -> Unit)? = null,
+    numberAttendees: Int? = null,
 ) {
   AlertDialog(
       containerColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -43,11 +50,37 @@ fun GatherlyAlertDialog(
       modifier = Modifier.testTag(AlertDialogTestTags.ALERT),
       title = {
         Column {
-          Text(
-              text = titleText,
-              textAlign = TextAlign.Center,
-              style = MaterialTheme.typography.titleLarge,
-              modifier = Modifier.fillMaxWidth().testTag(AlertDialogTestTags.TITLE))
+          Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+            Text(
+                text = titleText,
+                textAlign = TextAlign.Center,
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.weight(1f).testTag(AlertDialogTestTags.TITLE))
+
+            // Button to view attendees
+            if (numberAttendees != null) {
+              Spacer(
+                  modifier =
+                      Modifier.height(dimensionResource(R.dimen.spacing_between_fields_height)))
+
+              Button(
+                  colors =
+                      buttonColors(
+                          containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                          contentColor = MaterialTheme.colorScheme.onSecondaryContainer),
+                  contentPadding =
+                      PaddingValues(
+                          horizontal = dimensionResource(R.dimen.padding_extra_small),
+                          vertical = dimensionResource(R.dimen.padding_extra_small_vertical)),
+                  onClick = { onOpenAttendeesList?.invoke() },
+                  modifier =
+                      Modifier.testTag(AlertDialogTestTags.ATTENDEES_BTN)
+                          .height(dimensionResource(R.dimen.padding_large))
+                          .widthIn(min = dimensionResource(R.dimen.padding_large))) {
+                    BoxNumberAttendees(numberAttendees)
+                  }
+            }
+          }
 
           GatherlyDialogTitleContent(
               creatorText = creatorText,
@@ -64,7 +97,9 @@ fun GatherlyAlertDialog(
               modifier = Modifier.testTag(AlertDialogTestTags.BODY))
 
           neutralText?.let { text ->
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(
+                modifier =
+                    Modifier.height(dimensionResource(id = R.dimen.spacing_between_fields_regular)))
             Button(
                 colors =
                     buttonColors(
@@ -111,23 +146,13 @@ fun GatherlyAlertDialog(
                               } else {
                                 MaterialTheme.colorScheme.primaryContainer
                               },
-                          contentColor =
-                              if (isImportantWarning) {
-                                MaterialTheme.colorScheme.error
-                              } else {
-                                MaterialTheme.colorScheme.onPrimaryContainer
-                              }),
+                          contentColor = contentColor(isImportantWarning)),
                   enabled = confirmEnabled,
                   onClick = onConfirm,
                   modifier = Modifier.weight(1f).testTag(AlertDialogTestTags.CONFIRM_BTN)) {
                     Text(
                         text = confirmText,
-                        color =
-                            if (isImportantWarning) {
-                              MaterialTheme.colorScheme.error
-                            } else {
-                              MaterialTheme.colorScheme.onPrimaryContainer
-                            },
+                        color = contentColor(isImportantWarning),
                         textAlign = TextAlign.Center,
                         maxLines = 1)
                   }
@@ -135,6 +160,15 @@ fun GatherlyAlertDialog(
       },
       onDismissRequest = onDismiss,
   )
+}
+
+@Composable
+private fun contentColor(isImportantWarning: Boolean): Color {
+  return if (isImportantWarning) {
+    MaterialTheme.colorScheme.error
+  } else {
+    MaterialTheme.colorScheme.onPrimaryContainer
+  }
 }
 
 /**
@@ -181,4 +215,6 @@ object AlertDialogTestTags {
   const val CREATOR_TEXT = "creatorText"
 
   const val DATE_TEXT = "dateText"
+
+  const val ATTENDEES_BTN = "attendeesButton"
 }

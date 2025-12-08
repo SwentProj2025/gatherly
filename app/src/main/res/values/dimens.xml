@@ -1,7 +1,9 @@
 <resources>
     <!-- Padding -->
+    <dimen name="padding_extra_small_vertical">2dp</dimen>
     <dimen name="padding_extra_small">4dp</dimen>
     <dimen name="padding_small">8dp</dimen>
+    <dimen name="padding_small_regular">12dp</dimen>
     <dimen name="padding_screen">16dp</dimen>
     <dimen name="padding_regular">16dp</dimen>
     <dimen name="padding_medium">24dp</dimen>
@@ -21,9 +23,11 @@
     <dimen name="spacing_between_fields_regular">16dp</dimen>
     <dimen name="spacing_between_fields_medium">24dp</dimen>
     <dimen name="spacing_between_fields_large">32dp</dimen>
+    <dimen name="spacing_between_fields_height">12dp</dimen>
 
     <!-- Component Sizes -->
     <dimen name="input_height">100dp</dimen>
+    <dimen name="profile_pic_size_small">30dp</dimen>
     <dimen name="profile_pic_size_medium">40dp</dimen>
     <dimen name="profile_pic_size_regular">50dp</dimen>
     <dimen name="profile_pic_size">120dp</dimen>
@@ -36,7 +40,9 @@
     <!-- Shapes -->
     <dimen name="rounded_corner_shape_small">4dp</dimen>
     <dimen name="rounded_corner_shape_medium">12dp</dimen>
+    <dimen name="rounded_corner_shape_medium_large">16dp</dimen>
     <dimen name="rounded_corner_shape_large">20dp</dimen>
+    <dimen name="border_width_regular">2dp</dimen>
 
     <!-- ToDos -->
     <dimen name="todos_overview_vertical_padding">8dp</dimen>
@@ -63,6 +69,11 @@
     <dimen name="homepage_minimap_width">280.dp</dimen>
     <dimen name="homepage_add_friends_icon_size">30.dp</dimen>
     <dimen name="homepage_task_section_height">200.dp</dimen>
+
+    <!-- Settings Screen -->
+    <dimen name="settings_status_dialog_selector_size">20.dp</dimen>
+    <dimen name="settings_status_dialog_status_size">14.dp</dimen>
+    <dimen name="settings_status_dialog_divider_thickness">1.dp</dimen>
 
     <!-- SignIn Screen -->
     <dimen name="sign_in_top_spacing">80.dp</dimen>
@@ -97,15 +108,22 @@
     <dimen name="find_friends_item_card_padding">12.dp</dimen>
     <dimen name="find_friends_item_profile_picture_size">56.dp</dimen>
 
-    <!-- Add Group Screen -->
+    <!-- Groups -->
     <dimen name="add_group_button_height">80.dp</dimen>
     <dimen name="add_group_button_vertical">12.dp</dimen>
     <dimen name="add_group_horizontal_divider_thickness">2.dp</dimen>
     <dimen name="add_group_friend_section_height">450.dp</dimen>
+    <dimen name="group_overview_horizontal_divider_thickness">1.dp</dimen>
+    <dimen name="group_overview_avatar_spacing">4.dp</dimen>
+    <dimen name="group_overview_row_horizontal_padding">16.dp</dimen>
+    <dimen name="group_overview_avatar_border_width">1.dp</dimen>
+
     <!-- Events Screen -->
     <dimen name="events_indicator_status_size">14.dp</dimen>
     <dimen name="events_popup_horizontalArrangement_size">12.dp</dimen>
     <dimen name="events_filter_bar_vertical_size">10.dp</dimen>
     <dimen name="events_filter_button_height">35.dp</dimen>
 
+    <!-- Focus History Screen -->
+    <dimen name="focus_item_height">100.dp</dimen>
 </resources>

@@ -130,6 +130,16 @@ class GroupsRepositoryFirestore(private val db: FirebaseFirestore) : GroupsRepos
     collection.document(groupId).update("adminIds", FieldValue.arrayRemove(userId)).await()
   }
 
+  override suspend fun getGroupByName(groupName: String): Group {
+    val snap = collection.whereEqualTo("name", groupName).get().await()
+
+    val doc = snap.documents.firstOrNull()
+
+    return snapshotToGroup(
+        doc ?: throw NoSuchElementException("Group with name=$groupName not found"))
+        ?: throw NoSuchElementException("Group with name=$groupName found but invalid data")
+  }
+
   /**
    * Converts a Firestore [DocumentSnapshot] into a [Group] object.
    *

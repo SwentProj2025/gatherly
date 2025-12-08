@@ -3,6 +3,7 @@ package com.android.gatherly.ui.focusTimer
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertTextContains
+import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -12,6 +13,8 @@ import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.gatherly.model.focusSession.FocusSessionsLocalRepository
 import com.android.gatherly.model.focusSession.FocusSessionsRepository
+import com.android.gatherly.model.notification.NotificationsLocalRepository
+import com.android.gatherly.model.notification.NotificationsRepository
 import com.android.gatherly.model.points.PointsLocalRepository
 import com.android.gatherly.model.points.PointsRepository
 import com.android.gatherly.model.profile.Profile
@@ -56,6 +59,7 @@ class TimerScreenTest {
   private lateinit var mockitoUtils: MockitoUtils
   private lateinit var profileRepository: ProfileRepository
   private lateinit var pointsRepository: PointsRepository
+  private lateinit var notificationsRepository: NotificationsRepository
   private lateinit var userStatusManager: UserStatusManager
   private val fakeUid = "test-user"
 
@@ -66,6 +70,7 @@ class TimerScreenTest {
     // Add a todo in the repository to test linking
     profileRepository = ProfileLocalRepository()
     pointsRepository = PointsLocalRepository()
+    notificationsRepository = NotificationsLocalRepository()
     fill_repository()
 
     mockitoUtils = MockitoUtils()
@@ -77,6 +82,7 @@ class TimerScreenTest {
             todoRepository = toDosRepository,
             pointsRepository = pointsRepository,
             profileRepository = profileRepository,
+            notificationsRepository = notificationsRepository,
             userStatusManager = userStatusManager,
             focusSessionsRepository = focusSessionsRepository,
             authProvider = { mockitoUtils.mockAuth })
@@ -233,6 +239,19 @@ class TimerScreenTest {
     composeTestRule
         .onNodeWithTag(FocusTimerScreenTestTags.LINKED_TODO)
         .assertTextContains(todo1.name, substring = true)
+  }
+
+  @Test
+  fun canSeeLeaderboard() {
+    composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.TIMER_SELECT).assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(FocusTimerScreenTestTags.LEADERBOARD_SELECT)
+        .assertIsDisplayed()
+        .performClick()
+    composeTestRule.waitUntil(15000L) {
+      composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.LEADERBOARD_LIST).isDisplayed()
+    }
+    composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.LEADERBOARD_LIST).assertIsDisplayed()
   }
 
   // Helper function to check all test tags on the editing timer time screen

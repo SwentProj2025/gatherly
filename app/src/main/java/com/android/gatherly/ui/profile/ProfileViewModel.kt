@@ -11,9 +11,20 @@ import androidx.credentials.exceptions.NoCredentialException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.R
+import com.android.gatherly.model.badge.Badge
+import com.android.gatherly.model.badge.BadgeType
+import com.android.gatherly.model.group.Group
+import com.android.gatherly.model.group.GroupsRepository
+import com.android.gatherly.model.group.GroupsRepositoryProvider
+import com.android.gatherly.model.notification.NotificationsRepository
+import com.android.gatherly.model.notification.NotificationsRepositoryProvider
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryProvider
+import com.android.gatherly.model.profile.ProfileStatus
+import com.android.gatherly.model.profile.UserStatusManager
+import com.android.gatherly.ui.badge.BadgeUI
+import com.android.gatherly.utils.getProfileWithSyncedFriendNotifications
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.Companion.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
@@ -30,11 +41,44 @@ import kotlinx.coroutines.tasks.await
 data class ProfileState(
     val isLoading: Boolean = false,
     val profile: Profile? = null,
-    val focusPoints: Int = 0,
+    val groupsToMembers: Map<Group, List<Profile>> = emptyMap(),
+    val focusPoints: Double = 0.0,
     val errorMessage: String? = null,
     val signedOut: Boolean = false,
     val navigateToInit: Boolean = false,
-    val isAnon: Boolean = true
+    val isAnon: Boolean = true,
+    val topBadges: Map<BadgeType, BadgeUI> =
+        mapOf(
+            BadgeType.TODOS_CREATED to
+                BadgeUI(
+                    "Blank Todo Created Badge",
+                    "Create your first Todo to get a Badge!",
+                    R.drawable.blank_todo_created),
+            BadgeType.TODOS_COMPLETED to
+                BadgeUI(
+                    "Blank Todo Completed Badge",
+                    "Complete your first Todo to get a Badge!",
+                    R.drawable.blank_todo_completed),
+            BadgeType.EVENTS_CREATED to
+                BadgeUI(
+                    "Blank Event Created Badge",
+                    "Create your first Event to get a Badge!",
+                    R.drawable.blank_event_created),
+            BadgeType.EVENTS_PARTICIPATED to
+                BadgeUI(
+                    "Blank Event Participated Badge",
+                    "Participate to your first Todo to get a Badge!",
+                    R.drawable.blank_event_participated),
+            BadgeType.FRIENDS_ADDED to
+                BadgeUI(
+                    "Blank Friend Badge",
+                    "Add your first Friend to get a Badge!",
+                    R.drawable.blank_friends),
+            BadgeType.FOCUS_SESSIONS_COMPLETED to
+                BadgeUI(
+                    "Blank Focus Session Badge",
+                    "Complete your first Focus Session to get a Badge!",
+                    R.drawable.blank_focus_session))
 )
 
 /**
@@ -47,11 +91,18 @@ data class ProfileState(
  *
  * The UI observes [uiState] to react to updates in [Profile] data, loading, or errors.
  *
- * @param repository The [ProfileRepository] used to interact with Firestore.
+ * @param profileRepository The [ProfileRepository] used to interact with Firestore.
+ * @param groupsRepository The [GroupsRepository] used to fetch user groups.
+ * @param authProvider A lambda that provides the current [FirebaseAuth] instance.
  */
 class ProfileViewModel(
-    private val repository: ProfileRepository = ProfileRepositoryProvider.repository,
-    private val authProvider: () -> FirebaseAuth = { Firebase.auth }
+    private val profileRepository: ProfileRepository = ProfileRepositoryProvider.repository,
+    private val groupsRepository: GroupsRepository = GroupsRepositoryProvider.repository,
+    private val notificationsRepository: NotificationsRepository =
+        NotificationsRepositoryProvider.repository,
+    private val authProvider: () -> FirebaseAuth = { Firebase.auth },
+    private val userStatusManager: UserStatusManager =
+        UserStatusManager(authProvider(), profileRepository)
 ) : ViewModel() {
 
   private val _uiState = MutableStateFlow(ProfileState())
@@ -79,15 +130,52 @@ class ProfileViewModel(
       _uiState.value = _uiState.value.copy(isAnon = authProvider().currentUser?.isAnonymous ?: true)
 
       try {
-        val profile = repository.getProfileByUid(authProvider().currentUser?.uid!!)
+        val profile =
+            getProfileWithSyncedFriendNotifications(
+                profileRepository, notificationsRepository, authProvider().currentUser?.uid!!)
         if (profile == null) {
           _uiState.value =
               _uiState.value.copy(isLoading = false, errorMessage = "Profile not found")
         } else {
-          _uiState.value = _uiState.value.copy(isLoading = false, profile = profile)
+          _uiState.value =
+              _uiState.value.copy(
+                  isLoading = false,
+                  profile = profile,
+                  topBadges = buildUiStateFromProfile(profile))
         }
       } catch (e: Exception) {
         _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = e.message)
+      }
+    }
+  }
+
+  /** Loads the groups the user is a member of along with their members' profiles. */
+  fun loadUserGroups() {
+    viewModelScope.launch {
+      _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+      try {
+        // Fetch all user groups
+        val groups = groupsRepository.getUserGroups()
+        val updatedMap = mutableMapOf<Group, List<Profile>>()
+        groups.forEach { group ->
+          // Fetch member profiles for each group
+          val groupsMembersProfile = mutableListOf<Profile>()
+          group.memberIds.forEach { memberId ->
+            // Fetch profile for each member
+            val memberProfile = profileRepository.getProfileByUid(memberId)
+            if (memberProfile != null) {
+              groupsMembersProfile.add(memberProfile)
+            }
+          }
+          updatedMap.put(group, groupsMembersProfile)
+        }
+        _uiState.value = _uiState.value.copy(groupsToMembers = updatedMap, isLoading = false)
+      } catch (_: Exception) {
+        _uiState.value =
+            _uiState.value.copy(
+                groupsToMembers = emptyMap(),
+                isLoading = false,
+                errorMessage = "Failed to load groups")
       }
     }
   }
@@ -122,7 +210,7 @@ class ProfileViewModel(
             val uid = Firebase.auth.currentUser?.uid ?: return@launch
 
             // Initialize profile in profileRepository
-            repository.initProfileIfMissing(uid, "")
+            profileRepository.initProfileIfMissing(uid, "")
 
             // Navigate to init profile
             _uiState.value = _uiState.value.copy(navigateToInit = true)
@@ -148,9 +236,32 @@ class ProfileViewModel(
   /** Initiates sign-out */
   fun signOut(credentialManager: CredentialManager): Unit {
     viewModelScope.launch {
+      userStatusManager.setStatus(ProfileStatus.OFFLINE)
       _uiState.value = _uiState.value.copy(signedOut = true)
-      Firebase.auth.signOut()
+      authProvider().signOut()
       credentialManager.clearCredentialState(ClearCredentialStateRequest())
+    }
+  }
+
+  /**
+   * Builds the top badges map for the profile screen:
+   * - starts from the default blank badges
+   * - replaces each entry with the highest ranked badge of that type, if the user has one
+   */
+  private fun buildUiStateFromProfile(profile: Profile): Map<BadgeType, BadgeUI> {
+    val userBadges: List<Badge> =
+        profile.badgeIds.mapNotNull { badgeId -> Badge.entries.firstOrNull { it.id == badgeId } }
+
+    fun highestBadgeOfType(type: BadgeType): Badge? =
+        userBadges.filter { it.type == type }.maxByOrNull { it.rank.ordinal }
+
+    fun Badge.toBadgeUI(): BadgeUI =
+        BadgeUI(title = this.title, description = this.description, icon = this.iconRes)
+
+    val defaultTopBadges = ProfileState().topBadges
+
+    return defaultTopBadges.mapValues { (badgeType, defaultUi) ->
+      highestBadgeOfType(badgeType)?.toBadgeUI() ?: defaultUi
     }
   }
 }

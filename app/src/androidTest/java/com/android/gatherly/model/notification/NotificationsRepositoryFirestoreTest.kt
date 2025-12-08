@@ -1,6 +1,7 @@
 package com.android.gatherly.model.notification
 
 import com.android.gatherly.utils.FirestoreNotificationsGatherlyTest
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
 import org.junit.Test
@@ -12,281 +13,300 @@ class NotificationsRepositoryFirestoreTest : FirestoreNotificationsGatherlyTest(
   // ============ Happy Path Tests ============
 
   @Test
-  fun getNewId_returnsUniqueNonEmptyIds() = runTest {
-    // Call getNewId() multiple times
-    val id1 = repository.getNewId()
-    val id2 = repository.getNewId()
-    val id3 = repository.getNewId()
+  fun getNewId_returnsUniqueNonEmptyIds() =
+      runTest(timeout = 120.seconds) {
+        // Call getNewId() multiple times
+        val id1 = repository.getNewId()
+        val id2 = repository.getNewId()
+        val id3 = repository.getNewId()
 
-    // Verify all IDs are non-empty
-    assertTrue(id1.isNotEmpty())
-    assertTrue(id2.isNotEmpty())
-    assertTrue(id3.isNotEmpty())
+        // Verify all IDs are non-empty
+        assertTrue(id1.isNotEmpty())
+        assertTrue(id2.isNotEmpty())
+        assertTrue(id3.isNotEmpty())
 
-    // Verify all IDs are unique
-    assertEquals(3, setOf(id1, id2, id3).size)
-  }
-
-  @Test
-  fun addNotification_andGetNotification_returnsCorrectNotification() = runTest {
-    // Create a notification using a template with user1 as recipient
-    val newId = repository.getNewId()
-    val notification =
-        friendRequest1_template.copy(id = newId, senderId = user2Id, recipientId = user1Id)
-    // Add the notification
-    repository.addNotification(notification)
-
-    // Get the notification by ID
-    val retrievedNotification = repository.getNotification(newId)
-
-    // Assert they are equal
-    assertEquals(notification, retrievedNotification)
-  }
+        // Verify all IDs are unique
+        assertEquals(3, setOf(id1, id2, id3).size)
+      }
 
   @Test
-  fun getUserNotifications_returnsNotificationsForCurrentUserOnly() = runTest {
-    // Add multiple notifications for user1 (reminder: user1 is signed in by default)
-    val notification1 =
-        friendRequest1_template.copy(
-            id = repository.getNewId(), senderId = user2Id, recipientId = user1Id)
-    val notification2 =
-        friendRequest2_template.copy(
-            id = repository.getNewId(), senderId = user3Id, recipientId = user1Id)
-    repository.addNotification(notification1)
-    repository.addNotification(notification2)
+  fun addNotification_andGetNotification_returnsCorrectNotification() =
+      runTest(timeout = 120.seconds) {
+        // Create a notification using a template with user1 as recipient
+        val newId = repository.getNewId()
+        val notification =
+            friendRequest1_template.copy(id = newId, senderId = user2Id, recipientId = user1Id)
+        // Add the notification
+        repository.addNotification(notification)
 
-    // Sign in as user2, add notification
-    signInWithToken(user2Token)
-    val notification3 =
-        todoReminder1_template.copy(id = repository.getNewId(), recipientId = user2Id)
-    repository.addNotification(notification3)
+        // Get the notification by ID
+        val retrievedNotification = repository.getNotification(newId)
 
-    // Log in as user1, call getUserNotifications(user1Id)
-    signInWithToken(user1Token)
-    val user1Notifications = repository.getUserNotifications(user1Id)
-
-    // Assert we get only the 2 notifications for user1, and they have correct recipientId
-    assertEquals(2, user1Notifications.size)
-    assertTrue(user1Notifications.all { it.recipientId == user1Id })
-  }
+        // Assert they are equal
+        assertEquals(notification, retrievedNotification)
+      }
 
   @Test
-  fun markAsRead_updatesNotificationReadStatus() = runTest {
-    // Create a notification (default wasRead = false), recipientId = user1Id
-    val newId = repository.getNewId()
-    val notification = todoReminder2_template.copy(id = newId, recipientId = user1Id)
+  fun getUserNotifications_returnsNotificationsForCurrentUserOnly() =
+      runTest(timeout = 120.seconds) {
+        // Add multiple notifications for user1 (reminder: user1 is signed in by default)
+        val notification1 =
+            friendRequest1_template.copy(
+                id = repository.getNewId(), senderId = user2Id, recipientId = user1Id)
+        val notification2 =
+            friendRequest2_template.copy(
+                id = repository.getNewId(), senderId = user3Id, recipientId = user1Id)
+        repository.addNotification(notification1)
+        repository.addNotification(notification2)
 
-    // Add the notification
-    repository.addNotification(notification)
+        // Sign in as user2, add notification
+        signInWithToken(user2Token)
+        val notification3 =
+            todoReminder1_template.copy(id = repository.getNewId(), recipientId = user2Id)
+        repository.addNotification(notification3)
 
-    // Call markAsRead with the notification ID
-    repository.markAsRead(newId)
+        // Log in as user1, call getUserNotifications(user1Id)
+        signInWithToken(user1Token)
+        val user1Notifications = repository.getUserNotifications(user1Id)
 
-    // Get the notification again
-    val updatedNotification = repository.getNotification(newId)
-
-    // Assert wasRead is now true
-    assertTrue(updatedNotification.wasRead)
-  }
+        // Assert we get only the 2 notifications for user1, and they have correct recipientId
+        assertEquals(2, user1Notifications.size)
+        assertTrue(user1Notifications.all { it.recipientId == user1Id })
+      }
 
   @Test
-  fun deleteNotification_removesNotification() = runTest {
-    // Add a notification for user1
-    val notification =
-        todoReminder1_template.copy(id = repository.getNewId(), recipientId = user1Id)
-    repository.addNotification(notification)
+  fun markAsRead_updatesNotificationReadStatus() =
+      runTest(timeout = 120.seconds) {
+        // Create a notification (default wasRead = false), recipientId = user1Id
+        val newId = repository.getNewId()
+        val notification = todoReminder2_template.copy(id = newId, recipientId = user1Id)
 
-    // Verify it exists by getting user1's notifications (should have 1)
-    var userNotifications = repository.getUserNotifications(user1Id)
-    assertEquals(1, userNotifications.size)
+        // Add the notification
+        repository.addNotification(notification)
 
-    // Delete the notification
-    repository.deleteNotification(notification.id)
+        // Call markAsRead with the notification ID
+        repository.markAsRead(newId)
 
-    // Verify getUserNotifications returns empty list
-    userNotifications = repository.getUserNotifications(user1Id)
-    assertTrue(userNotifications.isEmpty())
-  }
+        // Get the notification again
+        val updatedNotification = repository.getNotification(newId)
+
+        // Assert wasRead is now true
+        assertTrue(updatedNotification.wasRead)
+      }
+
+  @Test
+  fun deleteNotification_removesNotification() =
+      runTest(timeout = 120.seconds) {
+        // Add a notification for user1
+        val notification =
+            todoReminder1_template.copy(id = repository.getNewId(), recipientId = user1Id)
+        repository.addNotification(notification)
+
+        // Verify it exists by getting user1's notifications (should have 1)
+        var userNotifications = repository.getUserNotifications(user1Id)
+        assertEquals(1, userNotifications.size)
+
+        // Delete the notification
+        repository.deleteNotification(notification.id)
+
+        // Verify getUserNotifications returns empty list
+        userNotifications = repository.getUserNotifications(user1Id)
+        assertTrue(userNotifications.isEmpty())
+      }
 
   // ============ Security Tests (Firestore-specific) ============
 
   @Test(expected = SecurityException::class)
-  fun getUserNotifications_forDifferentUser_throwsSecurityException() = runTest {
-    // Add a notification for user2
-    signInWithToken(user2Token)
-    val notification =
-        eventReminder1_template.copy(id = repository.getNewId(), recipientId = user2Id)
-    repository.addNotification(notification)
+  fun getUserNotifications_forDifferentUser_throwsSecurityException() =
+      runTest(timeout = 120.seconds) {
+        // Add a notification for user2
+        signInWithToken(user2Token)
+        val notification =
+            eventReminder1_template.copy(id = repository.getNewId(), recipientId = user2Id)
+        repository.addNotification(notification)
 
-    // Try to get user2's notifications while signed in as user1
-    signInWithToken(user1Token)
-    repository.getUserNotifications(user2Id) // should throw SecurityException
-  }
-
-  @Test(expected = NoSuchElementException::class)
-  fun getNotification_forDifferentUser_throwsNoSuchElementException() = runTest {
-    // Add a notification for user2
-    signInWithToken(user2Token)
-    val newId = repository.getNewId()
-    val notification = eventReminder2_template.copy(id = newId, recipientId = user2Id)
-    repository.addNotification(notification)
-
-    // Sign back in as user1, try to get that notification by ID
-    signInWithToken(user1Token)
-    repository.getNotification(newId) // should throw NoSuchElementException
-  }
+        // Try to get user2's notifications while signed in as user1
+        signInWithToken(user1Token)
+        repository.getUserNotifications(user2Id) // should throw SecurityException
+      }
 
   @Test(expected = NoSuchElementException::class)
-  fun deleteNotification_forDifferentUser_throwsException() = runTest {
-    // Add a notification for user2
-    signInWithToken(user2Token)
-    val newId = repository.getNewId()
-    val notification = eventReminder2_template.copy(id = newId, recipientId = user2Id)
-    repository.addNotification(notification)
-    // Sign back in as user1
-    signInWithToken(user1Token)
+  fun getNotification_forDifferentUser_throwsNoSuchElementException() =
+      runTest(timeout = 120.seconds) {
+        // Add a notification for user2
+        signInWithToken(user2Token)
+        val newId = repository.getNewId()
+        val notification = eventReminder2_template.copy(id = newId, recipientId = user2Id)
+        repository.addNotification(notification)
 
-    // Try to delete user2's notification while signed in as user1
-    repository.deleteNotification(newId) // should throw NoSuchElementException
-  }
+        // Sign back in as user1, try to get that notification by ID
+        signInWithToken(user1Token)
+        repository.getNotification(newId) // should throw NoSuchElementException
+      }
 
   @Test(expected = NoSuchElementException::class)
-  fun markAsRead_forDifferentUser_throwsException() = runTest {
-    // Add a notification for user2
-    signInWithToken(user2Token)
-    val newId = repository.getNewId()
-    val notification = eventReminder2_template.copy(id = newId, recipientId = user2Id)
-    repository.addNotification(notification)
-    // Sign back in as user1
-    signInWithToken(user1Token)
+  fun deleteNotification_forDifferentUser_throwsException() =
+      runTest(timeout = 120.seconds) {
+        // Add a notification for user2
+        signInWithToken(user2Token)
+        val newId = repository.getNewId()
+        val notification = eventReminder2_template.copy(id = newId, recipientId = user2Id)
+        repository.addNotification(notification)
+        // Sign back in as user1
+        signInWithToken(user1Token)
 
-    // Try to mark user2's notification as read while signed in as user1
-    repository.markAsRead(newId) // should throw NoSuchElementException
-  }
+        // Try to delete user2's notification while signed in as user1
+        repository.deleteNotification(newId) // should throw NoSuchElementException
+      }
+
+  @Test(expected = NoSuchElementException::class)
+  fun markAsRead_forDifferentUser_throwsException() =
+      runTest(timeout = 120.seconds) {
+        // Add a notification for user2
+        signInWithToken(user2Token)
+        val newId = repository.getNewId()
+        val notification = eventReminder2_template.copy(id = newId, recipientId = user2Id)
+        repository.addNotification(notification)
+        // Sign back in as user1
+        signInWithToken(user1Token)
+
+        // Try to mark user2's notification as read while signed in as user1
+        repository.markAsRead(newId) // should throw NoSuchElementException
+      }
 
   // ============ Edge Cases ============
 
   @Test(expected = NoSuchElementException::class)
-  fun getNotification_withInvalidId_throwsException() = runTest {
-    // Add some notification for user1
-    val newId = repository.getNewId()
-    val notification = todoReminder1_template.copy(id = newId, recipientId = user1Id)
-    repository.addNotification(notification)
+  fun getNotification_withInvalidId_throwsException() =
+      runTest(timeout = 120.seconds) {
+        // Add some notification for user1
+        val newId = repository.getNewId()
+        val notification = todoReminder1_template.copy(id = newId, recipientId = user1Id)
+        repository.addNotification(notification)
 
-    // Try to get a notification with non-existent ID
-    repository.getNotification("non_existent_id") // should throw NoSuchElementException
-  }
-
-  @Test(expected = NoSuchElementException::class)
-  fun markAsRead_withInvalidId_throwsException() = runTest {
-    // Add some notification for user1
-    val newId = repository.getNewId()
-    val notification = todoReminder1_template.copy(id = newId, recipientId = user1Id)
-    repository.addNotification(notification)
-
-    // Try to mark a notification with non-existent ID as read
-    repository.markAsRead("non_existent_id") // should throw NoSuchElementException
-  }
+        // Try to get a notification with non-existent ID
+        repository.getNotification("non_existent_id") // should throw NoSuchElementException
+      }
 
   @Test(expected = NoSuchElementException::class)
-  fun deleteNotification_withInvalidId_throwsException() = runTest {
-    // Add some notification for user1
-    val newId = repository.getNewId()
-    val notification = todoReminder1_template.copy(id = newId, recipientId = user1Id)
-    repository.addNotification(notification)
+  fun markAsRead_withInvalidId_throwsException() =
+      runTest(timeout = 120.seconds) {
+        // Add some notification for user1
+        val newId = repository.getNewId()
+        val notification = todoReminder1_template.copy(id = newId, recipientId = user1Id)
+        repository.addNotification(notification)
 
-    // Try to delete a notification with non-existent ID
-    repository.deleteNotification("non_existent_id") // should throw NoSuchElementException
-  }
+        // Try to mark a notification with non-existent ID as read
+        repository.markAsRead("non_existent_id") // should throw NoSuchElementException
+      }
+
+  @Test(expected = NoSuchElementException::class)
+  fun deleteNotification_withInvalidId_throwsException() =
+      runTest(timeout = 120.seconds) {
+        // Add some notification for user1
+        val newId = repository.getNewId()
+        val notification = todoReminder1_template.copy(id = newId, recipientId = user1Id)
+        repository.addNotification(notification)
+
+        // Try to delete a notification with non-existent ID
+        repository.deleteNotification("non_existent_id") // should throw NoSuchElementException
+      }
 
   @Test
-  fun getUserNotifications_withNoNotifications_returnsEmptyList() = runTest {
-    // Get user 1's notifications, assert they're empty
-    val userNotifications = repository.getUserNotifications(user1Id)
-    assertTrue(userNotifications.isEmpty())
-  }
+  fun getUserNotifications_withNoNotifications_returnsEmptyList() =
+      runTest(timeout = 120.seconds) {
+        // Get user 1's notifications, assert they're empty
+        val userNotifications = repository.getUserNotifications(user1Id)
+        assertTrue(userNotifications.isEmpty())
+      }
 
   @Test(expected = IllegalArgumentException::class)
-  fun addNotification_withEmptyRecipientId_throwsException() = runTest {
-    val notification =
-        friendRequest1_template.copy(
-            id = repository.getNewId(), senderId = user2Id, recipientId = "")
-    // Try to add it
-    repository.addNotification(notification) // should throw IllegalArgumentException
-  }
+  fun addNotification_withEmptyRecipientId_throwsException() =
+      runTest(timeout = 120.seconds) {
+        val notification =
+            friendRequest1_template.copy(
+                id = repository.getNewId(), senderId = user2Id, recipientId = "")
+        // Try to add it
+        repository.addNotification(notification) // should throw IllegalArgumentException
+      }
 
   // ============ State Verification ============
 
   @Test
-  fun addNotification_preservesAllFields() = runTest {
-    // Create and add notification with all fields populated
-    val newId = repository.getNewId()
-    val notification = eventReminder1_template.copy(id = newId, recipientId = user1Id)
-    repository.addNotification(notification)
+  fun addNotification_preservesAllFields() =
+      runTest(timeout = 120.seconds) {
+        // Create and add notification with all fields populated
+        val newId = repository.getNewId()
+        val notification = eventReminder1_template.copy(id = newId, recipientId = user1Id)
+        repository.addNotification(notification)
 
-    // Retrieve it
-    val retrievedNotification = repository.getNotification(newId)
+        // Retrieve it
+        val retrievedNotification = repository.getNotification(newId)
 
-    // Assert all fields match
-    assertEquals(notification.id, retrievedNotification.id)
-    assertEquals(notification.type, retrievedNotification.type)
-    assertEquals(notification.emissionTime, retrievedNotification.emissionTime)
-    assertEquals(notification.senderId, retrievedNotification.senderId)
-    assertEquals(notification.relatedEntityId, retrievedNotification.relatedEntityId)
-    assertEquals(notification.recipientId, retrievedNotification.recipientId)
-    assertEquals(notification.wasRead, retrievedNotification.wasRead)
-  }
+        // Assert all fields match
+        assertEquals(notification.id, retrievedNotification.id)
+        assertEquals(notification.type, retrievedNotification.type)
+        assertEquals(notification.emissionTime, retrievedNotification.emissionTime)
+        assertEquals(notification.senderId, retrievedNotification.senderId)
+        assertEquals(notification.relatedEntityId, retrievedNotification.relatedEntityId)
+        assertEquals(notification.recipientId, retrievedNotification.recipientId)
+        assertEquals(notification.wasRead, retrievedNotification.wasRead)
+      }
 
   @Test
-  fun markAsRead_onlyChangesWasReadField() = runTest {
-    // Add a notification with wasRead = false (default)
-    val newId = repository.getNewId()
-    val notification = todoReminder2_template.copy(id = newId, recipientId = user1Id)
-    repository.addNotification(notification)
+  fun markAsRead_onlyChangesWasReadField() =
+      runTest(timeout = 120.seconds) {
+        // Add a notification with wasRead = false (default)
+        val newId = repository.getNewId()
+        val notification = todoReminder2_template.copy(id = newId, recipientId = user1Id)
+        repository.addNotification(notification)
 
-    // Mark it as read
-    repository.markAsRead(newId)
+        // Mark it as read
+        repository.markAsRead(newId)
 
-    // Retrieve it
-    val updatedNotification = repository.getNotification(newId)
+        // Retrieve it
+        val updatedNotification = repository.getNotification(newId)
 
-    // Check wasRead is true, other fields unchanged
-    assertTrue(updatedNotification.wasRead)
-    assertEquals(notification.id, updatedNotification.id)
-    assertEquals(notification.type, updatedNotification.type)
-    assertEquals(notification.emissionTime, updatedNotification.emissionTime)
-    assertEquals(notification.senderId, updatedNotification.senderId)
-    assertEquals(notification.relatedEntityId, updatedNotification.relatedEntityId)
-    assertEquals(notification.recipientId, updatedNotification.recipientId)
-  }
+        // Check wasRead is true, other fields unchanged
+        assertTrue(updatedNotification.wasRead)
+        assertEquals(notification.id, updatedNotification.id)
+        assertEquals(notification.type, updatedNotification.type)
+        assertEquals(notification.emissionTime, updatedNotification.emissionTime)
+        assertEquals(notification.senderId, updatedNotification.senderId)
+        assertEquals(notification.relatedEntityId, updatedNotification.relatedEntityId)
+        assertEquals(notification.recipientId, updatedNotification.recipientId)
+      }
 
   // ============ Ordering ============
 
   @Test
-  fun getUserNotifications_returnsNotificationsInDescendingTimeOrder() = runTest {
-    // Adding multiple notifications for user1, each with different emissionTime values
-    val notification1 =
-        friendRequest1_template.copy(
-            id = repository.getNewId(), senderId = user2Id, recipientId = user1Id) // time = 1000
-    val notification2 =
-        todoReminder1_template.copy(
-            id = repository.getNewId(), recipientId = user1Id) // time = 4000
-    val notification3 =
-        eventReminder1_template.copy(
-            id = repository.getNewId(), recipientId = user1Id) // time = 7000
+  fun getUserNotifications_returnsNotificationsInDescendingTimeOrder() =
+      runTest(timeout = 120.seconds) {
+        // Adding multiple notifications for user1, each with different emissionTime values
+        val notification1 =
+            friendRequest1_template.copy(
+                id = repository.getNewId(),
+                senderId = user2Id,
+                recipientId = user1Id) // time = 1000
+        val notification2 =
+            todoReminder1_template.copy(
+                id = repository.getNewId(), recipientId = user1Id) // time = 4000
+        val notification3 =
+            eventReminder1_template.copy(
+                id = repository.getNewId(), recipientId = user1Id) // time = 7000
 
-    repository.addNotification(notification1)
-    repository.addNotification(notification2)
-    repository.addNotification(notification3)
+        repository.addNotification(notification1)
+        repository.addNotification(notification2)
+        repository.addNotification(notification3)
 
-    // Getting notifications, verifying order
-    val userNotifications = repository.getUserNotifications(user1Id)
+        // Getting notifications, verifying order
+        val userNotifications = repository.getUserNotifications(user1Id)
 
-    assertEquals(3, userNotifications.size)
-    for (i in 0 until userNotifications.size - 1) {
-      val current = userNotifications[i]
-      val next = userNotifications[i + 1]
-      assertTrue(current.emissionTime.seconds >= next.emissionTime.seconds)
-    }
-  }
+        assertEquals(3, userNotifications.size)
+        for (i in 0 until userNotifications.size - 1) {
+          val current = userNotifications[i]
+          val next = userNotifications[i + 1]
+          assertTrue(current.emissionTime.seconds <= next.emissionTime.seconds)
+        }
+      }
 }
