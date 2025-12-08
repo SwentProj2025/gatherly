@@ -63,7 +63,6 @@ class GroupsOverviewViewModelTest {
     assertTrue(uiState.groups.containsAll(testUserGroups))
     assertFalse(uiState.isLoading)
     assertNull(uiState.errorMsg)
-    assertFalse(uiState.signedOut)
   }
 
   @Test
@@ -144,8 +143,7 @@ class GroupsOverviewViewModelTest {
     val mockAuth = mock(FirebaseAuth::class.java)
 
     fakeRepository.addGroups(testUserGroups)
-    val viewModel =
-        GroupsOverviewViewModel(groupsRepository = fakeRepository, authProvider = { mockAuth })
+    val viewModel = GroupsOverviewViewModel(groupsRepository = fakeRepository)
     val mockCredentialManager = mock(CredentialManager::class.java)
     advanceUntilIdle()
 

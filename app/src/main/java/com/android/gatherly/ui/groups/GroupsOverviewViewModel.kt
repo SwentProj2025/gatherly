@@ -1,15 +1,11 @@
 package com.android.gatherly.ui.groups
 
-import androidx.credentials.ClearCredentialStateRequest
-import androidx.credentials.CredentialManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.group.Group
 import com.android.gatherly.model.group.GroupsRepository
 import com.android.gatherly.model.group.GroupsRepositoryFirestore
 import com.google.firebase.Firebase
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -30,8 +26,7 @@ import kotlinx.coroutines.launch
 data class GroupsOverviewUIState(
     val groups: List<Group> = emptyList(),
     val errorMsg: String? = null,
-    val isLoading: Boolean = false,
-    val signedOut: Boolean = false
+    val isLoading: Boolean = false
 )
 
 /**
@@ -44,8 +39,7 @@ data class GroupsOverviewUIState(
  * @property authProvider Provider for Firebase authentication instance, injectable for testing.
  */
 class GroupsOverviewViewModel(
-    private val groupsRepository: GroupsRepository = GroupsRepositoryFirestore(Firebase.firestore),
-    private val authProvider: () -> FirebaseAuth = { Firebase.auth }
+    private val groupsRepository: GroupsRepository = GroupsRepositoryFirestore(Firebase.firestore)
 ) : ViewModel() {
 
   private val _uiState = MutableStateFlow(GroupsOverviewUIState())
@@ -71,15 +65,6 @@ class GroupsOverviewViewModel(
         _uiState.value =
             _uiState.value.copy(groups = emptyList(), errorMsg = e.message, isLoading = false)
       }
-    }
-  }
-
-  /** Initiates sign-out */
-  fun onSignedOut(credentialManager: CredentialManager): Unit {
-    viewModelScope.launch {
-      _uiState.value = _uiState.value.copy(signedOut = true)
-      authProvider().signOut()
-      credentialManager.clearCredentialState(ClearCredentialStateRequest())
     }
   }
 }
