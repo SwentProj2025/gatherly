@@ -57,6 +57,9 @@
     <string name="timer_pause">Pause</string>
     <string name="timer_resume">Resume</string>
     <string name="timer_stop">Stop</string>
+    <string name="timer_select">Timer</string>
+    <string name="leaderboard_select">Leaderboard</string>
+    <string name="leaderboard_points">%1$.2f pts</string>
 
     <!-- Settings Page -->
     <string name="settings_edit_photo">Edit Photo</string>
@@ -74,6 +77,14 @@
     <string name="settings_alert_dialog_option_camera">Take Photo</string>
     <string name="settings_alert_dialog_option_gallery">Choose from Gallery</string>
     <string name="settings_alert_dialog_option_cancel">Cancel</string>
+    <string name="settings_status_dialog_option_focused">Focused</string>
+    <string name="settings_status_dialog_option_online">Online</string>
+    <string name="settings_status_dialog_option_offline">Offline</string>
+    <string name="settings_status_dialog_title">Change your status</string>
+    <string name="settings_status_dialog_option_cancel">Cancel</string>
+    <string name="settings_status_dialog_explain_auto">Automatic (changes based on your activity)</string>
+    <string name="settings_status_dialog_explain_manual">Manual (stays fixed until you change it)</string>
+
 
     <!-- Profile Page -->
     <string name="profile_screen_title">Profile</string>
@@ -116,7 +127,7 @@
     <string name="events_private_state_label">Private event</string>
     <string name="events_private_friends_label">Friends only</string>
     <string name="events_private_group_label">Group to invite</string>
-
+    <string name="events_alert_dialog_button_label">Close</string>
 
     <!-- General -->
     <string name="delete">Yes, Delete</string>
@@ -166,19 +177,30 @@
 
     <!-- Friends Screen -->
     <string name="friends_empty_list_msg">You have no friends added yet.</string>
+    <string name="friends_list_title">Friends</string>
+    <string name="friends_pending_list_title">Pending friend requests</string>
     <string name="find_friends_button_label">Find New Friends</string>
-    <string name="friends_search_bar_label">Search friends …</string>
-    <string name="friends_unfollow_button_title">Unfollow</string>
-    <string name="friends_follow_button_title">Follow</string>
-    <string name="find_friends_search_bar_label">Search new friend by name</string>
+    <string name="friends_search_bar_label">Search friends…</string>
+    <string name="friends_unfriend_button_title">Unfriend</string>
+    <string name="friends_request_button_title">Request</string>
+    <string name="friends_cancel_request_button_title">Cancel Request</string>
+    <string name="find_friends_search_bar_label">Search new friend by username…</string>
     <string name="find_friends_empty_list_message">There are no users left.</string>
-    <string name="friends_unfollow_message">You just lose a friend</string>
-    <string name="friends_follow_message">You just got a new friend</string>
+    <string name="friends_unfriend_message">You just lost a friend</string>
+    <string name="friends_request_message">Waiting for approval…</string>
 
-    <!-- Add Group Screen -->
+    <!-- Groups -->
     <string name="add_group_button_label">Add New Group</string>
     <string name="group_name_bar_label">Group Name</string>
     <string name="group_name_bar_placeholder">Name the Group</string>
+    <string name="group_members_text_singular">member</string>
+    <string name="group_members_text_plural">members</string>
+
+    <!-- Badge Screen -->
+    <string name="todos_badge_title">ToDos Badges</string>
+    <string name="events_badge_title">Events Badges</string>
+    <string name="friends_badge_title">Friends Badges</string>
+    <string name="focus_session_badge_title">Focus Sessions Badges</string>
 
     <!-- Focus points -->
     <string name="focus_points_acquisition">History of focus points acquisition</string>
@@ -193,7 +215,7 @@
         \t- Diamond : 200 points\n
         \t- Legend : 300 points\n</string>
     <string name="focus_points_leaderboard">Friends leaderboard</string>
-    <string name="focus_points_leaderboard_text">\t- If you share a leaderboard with your friends, every Monday at 00:00, points are awarded to the top three contestants. They respectively receive 100, 75 and 50 points.</string>
+    <string name="focus_points_leaderboard_text">\t- If you share a leaderboard with at least 3 of your friends, every Monday at 00:00, points are awarded to the top three contestants. They respectively receive 100, 75 and 50 points.</string>
     <string name="focus_points_no_history">You have no focus points</string>
     <string name="focus_points_gained">+ %1$.2f points</string>
     <string name="focus_date_format">dd/MM/yyyy \'at\' HH:mm</string>

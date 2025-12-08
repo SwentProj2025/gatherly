@@ -8,6 +8,7 @@ import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileStatus
+import com.android.gatherly.model.profile.UserStatusSource
 import com.android.gatherly.ui.friends.FriendsViewModel
 import com.android.gatherly.utilstest.MockitoUtils
 import kotlinx.coroutines.Dispatchers
@@ -201,7 +202,11 @@ class FriendsViewModelTest {
               targetUid: String
           ) {}
 
-          override suspend fun updateStatus(uid: String, status: ProfileStatus) {}
+          override suspend fun updateStatus(
+              uid: String,
+              status: ProfileStatus,
+              source: UserStatusSource
+          ) {}
 
           override suspend fun createEvent(eventId: String, currentUserId: String) {}
 
