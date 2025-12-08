@@ -71,7 +71,6 @@ import com.android.gatherly.ui.theme.GatherlyTheme
 import com.android.gatherly.ui.theme.theme_status_ongoing
 import com.android.gatherly.ui.theme.theme_status_past
 import com.android.gatherly.ui.theme.theme_status_upcoming
-import com.android.gatherly.ui.todo.SortMenu
 import com.android.gatherly.utils.BoxNumberAttendees
 import com.android.gatherly.utils.DateParser.dateToString
 import com.android.gatherly.utils.DateParser.timeToString
@@ -912,7 +911,7 @@ private fun SortMenu(currentOrder: EventSortOrder, onSortSelected: (EventSortOrd
         }
   }
 }
-// var searchQuery by remember { mutableStateOf("") }
+
 @Composable
 private fun SearchBar(
     uiState: EventsUIState,
