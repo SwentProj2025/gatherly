@@ -100,8 +100,7 @@ class EventsViewModel(
   val editEventRequest: StateFlow<Event?> = _editEventRequest.asStateFlow()
 
   private val _searchQuery = MutableStateFlow("")
-  /** StateFLow exposing the string research by the user */
-  val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+  private var allEventsCache: List<Event> = emptyList()
 
   /**
    * Initializes the ViewModel by loading all events for the current user. Events are automatically
@@ -120,18 +119,31 @@ class EventsViewModel(
     _uiState.value = _uiState.value.copy(isLoading = true)
     val events = eventsRepository.getAllEvents()
 
-    val processedEvents = processEvents(events, currentUserId)
+    allEventsCache = events
+    updateUIStateWithProcessedEvents(currentUserId)
+
+    _uiState.value =
+        _uiState.value.copy(
+            isLoading = false,
+            currentUserId = currentUserId,
+            isAnon = authProvider().currentUser?.isAnonymous ?: true)
+  }
+
+  /**
+   * Applies the current search filter and sort order to the cached events, and updates the UI State
+   * with the categorized lists.
+   *
+   * @param currentUserId the ID of the current user
+   */
+  private fun updateUIStateWithProcessedEvents(currentUserId: String) {
+    val processedEvents = processEvents(allEventsCache, currentUserId)
 
     _uiState.value =
         _uiState.value.copy(
             fullEventList = processedEvents.fullEventList,
             participatedEventList = processedEvents.participatedEventList,
             createdEventList = processedEvents.createdEventList,
-            globalEventList = processedEvents.globalEventList,
-            currentUserId = currentUserId,
-            isAnon = authProvider().currentUser?.isAnonymous ?: true)
-
-    _uiState.value = _uiState.value.copy(isLoading = false)
+            globalEventList = processedEvents.globalEventList)
   }
 
   /**
@@ -219,7 +231,7 @@ class EventsViewModel(
   /** Invoked when users type in the search bar to filter [Event]s according to the typed query. */
   fun searchEvents(query: String, currentUserId: String) {
     _searchQuery.value = query
-    viewModelScope.launch { refreshEvents(currentUserId) }
+    updateUIStateWithProcessedEvents(currentUserId)
   }
 
   /**
@@ -233,7 +245,7 @@ class EventsViewModel(
     viewModelScope.launch {
       val currentUserId = _uiState.value.currentUserId
       if (currentUserId.isNotBlank()) {
-        refreshEvents(currentUserId)
+        updateUIStateWithProcessedEvents(currentUserId)
       }
     }
   }

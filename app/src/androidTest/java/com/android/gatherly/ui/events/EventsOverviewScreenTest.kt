@@ -14,6 +14,7 @@ import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.event.EventStatus
@@ -1057,6 +1058,7 @@ class EventsOverviewScreenTest {
           .assertIsDisplayed()
     }
 
+    composeTestRule.onNodeWithTag(EventsScreenTestTags.SEARCH_BAR).performTextClearance()
     composeTestRule.onNodeWithTag(EventsScreenTestTags.SEARCH_BAR).performTextInput("Alpha")
 
     composeTestRule.waitUntil(timeoutMillis = 10_000L) {
@@ -1119,6 +1121,7 @@ class EventsOverviewScreenTest {
     setContent(currentUserId)
     composeTestRule.waitForIdle()
 
+    composeTestRule.onNodeWithTag(EventsScreenTestTags.SEARCH_BAR).performTextClearance()
     composeTestRule.onNodeWithTag(EventsScreenTestTags.SEARCH_BAR).performTextInput("")
 
     composeTestRule.waitForIdle()

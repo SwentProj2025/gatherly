@@ -71,7 +71,6 @@ import com.android.gatherly.ui.theme.GatherlyTheme
 import com.android.gatherly.ui.theme.theme_status_ongoing
 import com.android.gatherly.ui.theme.theme_status_past
 import com.android.gatherly.ui.theme.theme_status_upcoming
-import com.android.gatherly.ui.todo.OverviewScreenTestTags
 import com.android.gatherly.ui.todo.SortMenu
 import com.android.gatherly.utils.BoxNumberAttendees
 import com.android.gatherly.utils.DateParser.dateToString
@@ -940,8 +939,8 @@ private fun SearchBar(
             modifier =
                 Modifier.weight(1f)
                     .padding(
-                        horizontal = dimensionResource(R.dimen.todos_overview_horizontal_padding))
-                    .testTag(OverviewScreenTestTags.SEARCH_BAR),
+                        horizontal = dimensionResource(R.dimen.events_overview_horizontal_padding))
+                    .testTag(EventsScreenTestTags.SEARCH_BAR),
             label = { Text(stringResource(R.string.events_search_bar_label)) },
             singleLine = true,
             colors =
