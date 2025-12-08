@@ -130,6 +130,9 @@
     <string name="events_private_friends_label">Friends only</string>
     <string name="events_private_group_label">Group to invite</string>
     <string name="events_alert_dialog_button_label">Close</string>
+    <string name="events_date_sort_button_text">Date sorting</string>
+    <string name="events_alphabetic_sort_button_text">Alphabetical sorting</string>
+    <string name="events_proximity_sort_button_text">Proximity sorting</string>
 
     <!-- General -->
     <string name="delete">Yes, Delete</string>

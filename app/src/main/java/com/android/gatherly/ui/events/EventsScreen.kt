@@ -71,6 +71,7 @@ import com.android.gatherly.ui.theme.GatherlyTheme
 import com.android.gatherly.ui.theme.theme_status_ongoing
 import com.android.gatherly.ui.theme.theme_status_past
 import com.android.gatherly.ui.theme.theme_status_upcoming
+import com.android.gatherly.ui.todo.OverviewScreenTestTags
 import com.android.gatherly.ui.todo.SortMenu
 import com.android.gatherly.utils.BoxNumberAttendees
 import com.android.gatherly.utils.DateParser.dateToString
@@ -204,7 +205,7 @@ fun EventsScreen(
   val isPopupOnYourE = remember { mutableStateOf(false) }
 
   // Handle the string typed by the user in the search event bar
-  var searchQuery by remember { mutableStateOf("") }
+  val searchQuery = remember { mutableStateOf("") }
 
   // Handle deep linking to a specific event if eventId is provided
   val eventIdAlreadyProcessed = remember(eventId) { mutableStateOf(false) }
@@ -249,8 +250,6 @@ fun EventsScreen(
     }
   }
 
-  // HandleSignedOutState(uiState.signedOut, actions.onSignedOut) // TODO: DELETE
-
   Scaffold(
       topBar = {
         TopNavigationMenu(
@@ -274,41 +273,7 @@ fun EventsScreen(
                     .testTag(EventsScreenTestTags.ALL_LISTS)) {
 
               // ---- SEARCH EVENT BAR ----
-              item {
-                Row {
-                  OutlinedTextField(
-                      value = searchQuery,
-                      onValueChange = { newText ->
-                        searchQuery = newText
-                        eventsViewModel.searchEvents(newText, currentUserIdFromVM)
-                      },
-                      leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Default.Search,
-                            contentDescription = "Search icon",
-                            tint = MaterialTheme.colorScheme.onBackground)
-                      },
-                      modifier =
-                          Modifier.testTag(EventsScreenTestTags.SEARCH_BAR)
-                              .padding(
-                                  horizontal =
-                                      dimensionResource(R.dimen.events_horizontal_padding)),
-                      label = { Text(stringResource(R.string.events_search_bar_label)) },
-                      singleLine = true,
-                      colors =
-                          OutlinedTextFieldDefaults.colors(
-                              focusedContainerColor = MaterialTheme.colorScheme.background,
-                              unfocusedContainerColor = MaterialTheme.colorScheme.background,
-                              unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-                              focusedTextColor = MaterialTheme.colorScheme.onBackground,
-                          ),
-                      shape = RoundedCornerShape(24.dp))
-
-                  SortMenu(
-                      currentOrder = uiState.sortOrder,
-                      onSortSelected = { eventsViewModel.setSortOrder(it) })
-                }
-              }
+              item { SearchBar(uiState, eventsViewModel, searchQuery) }
 
               // -- FILTER BAR --
               item { FilterBar(selectedFilter) }
@@ -830,7 +795,7 @@ fun AlertDialogListAttendees(
     showAttendeesDialog: MutableState<Boolean>,
     event: Event,
     eventsViewModel: EventsViewModel,
-    uiState: UIState
+    uiState: EventsUIState
 ) {
   if (showAttendeesDialog.value) {
 
@@ -870,81 +835,126 @@ fun AlertDialogListAttendees(
  * @param onSortSelected Callback invoked when the user selects a new [EventSortOrder].
  */
 @Composable
-fun SortMenu(currentOrder: EventSortOrder, onSortSelected: (EventSortOrder) -> Unit) {
+private fun SortMenu(currentOrder: EventSortOrder, onSortSelected: (EventSortOrder) -> Unit) {
   var expanded by remember { mutableStateOf(false) }
 
-  Box(
-      modifier = Modifier.fillMaxWidth().padding(end = 16.dp),
-      contentAlignment = Alignment.CenterEnd) {
-        IconButton(
-            modifier = Modifier.fillMaxHeight().testTag(EventsScreenTestTags.SORT_MENU_BUTTON),
-            onClick = { expanded = true },
-        ) {
-          Icon(
-              imageVector = Icons.Filled.FilterList,
-              contentDescription = "Sorting button",
-              tint = MaterialTheme.colorScheme.onSurfaceVariant)
+  Box(modifier = Modifier.fillMaxHeight(), contentAlignment = Alignment.Center) {
+    IconButton(
+        modifier = Modifier.fillMaxHeight().testTag(EventsScreenTestTags.SORT_MENU_BUTTON),
+        onClick = { expanded = true },
+    ) {
+      Icon(
+          modifier = Modifier.size(dimensionResource(R.dimen.events_sort_icon_size)),
+          imageVector = Icons.Filled.FilterList,
+          contentDescription = "Sorting button",
+          tint = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
+    DropdownMenu(
+        expanded = expanded,
+        onDismissRequest = { expanded = false },
+        containerColor = MaterialTheme.colorScheme.surfaceVariant) {
+          DropdownMenuItem(
+              text = {
+                Text(
+                    text = stringResource(R.string.events_date_sort_button_text),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+              },
+              onClick = {
+                onSortSelected(EventSortOrder.DATE_ASC)
+                expanded = false
+              },
+              trailingIcon = {
+                if (currentOrder == EventSortOrder.DATE_ASC) {
+                  Icon(
+                      Icons.Default.Check,
+                      contentDescription =
+                          stringResource(R.string.events_sort_menu_check_icon_label))
+                }
+              },
+              modifier = Modifier.testTag(EventsScreenTestTags.SORT_DATE_BUTTON))
+          DropdownMenuItem(
+              text = {
+                Text(
+                    text = stringResource(R.string.events_alphabetic_sort_button_text),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+              },
+              onClick = {
+                onSortSelected(EventSortOrder.ALPHABETICAL)
+                expanded = false
+              },
+              trailingIcon = {
+                if (currentOrder == EventSortOrder.ALPHABETICAL) {
+                  Icon(
+                      Icons.Default.Check,
+                      contentDescription =
+                          stringResource(R.string.events_sort_menu_check_icon_label))
+                }
+              },
+              modifier = Modifier.testTag(EventsScreenTestTags.SORT_ALPHABETIC_BUTTON))
+          DropdownMenuItem(
+              text = {
+                Text(
+                    text = stringResource(R.string.events_proximity_sort_button_text),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+              },
+              onClick = {
+                onSortSelected(EventSortOrder.PROXIMITY)
+                expanded = false
+              },
+              trailingIcon = {
+                if (currentOrder == EventSortOrder.PROXIMITY) {
+                  Icon(
+                      Icons.Default.Check,
+                      contentDescription =
+                          stringResource(R.string.events_sort_menu_check_icon_label))
+                }
+              },
+              modifier = Modifier.testTag(EventsScreenTestTags.SORT_PROX_BUTTON))
         }
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-            containerColor = MaterialTheme.colorScheme.surfaceVariant) {
-              DropdownMenuItem(
-                  text = {
-                    Text(text = "Date sorting", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                  },
-                  onClick = {
-                    onSortSelected(EventSortOrder.DATE_ASC)
-                    expanded = false
-                  },
-                  trailingIcon = {
-                    if (currentOrder == EventSortOrder.DATE_ASC) {
-                      Icon(
-                          Icons.Default.Check,
-                          contentDescription =
-                              stringResource(R.string.events_sort_menu_check_icon_label))
-                    }
-                  },
-                  modifier = Modifier.testTag(EventsScreenTestTags.SORT_DATE_BUTTON))
-              DropdownMenuItem(
-                  text = {
-                    Text(
-                        text = "Alphabetical sorting",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
-                  },
-                  onClick = {
-                    onSortSelected(EventSortOrder.ALPHABETICAL)
-                    expanded = false
-                  },
-                  trailingIcon = {
-                    if (currentOrder == EventSortOrder.ALPHABETICAL) {
-                      Icon(
-                          Icons.Default.Check,
-                          contentDescription =
-                              stringResource(R.string.events_sort_menu_check_icon_label))
-                    }
-                  },
-                  modifier = Modifier.testTag(EventsScreenTestTags.SORT_ALPHABETIC_BUTTON))
-              DropdownMenuItem(
-                  text = {
-                    Text(
-                        text = "Proximity sorting",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
-                  },
-                  onClick = {
-                    onSortSelected(EventSortOrder.PROXIMITY)
-                    expanded = false
-                  },
-                  trailingIcon = {
-                    if (currentOrder == EventSortOrder.PROXIMITY) {
-                      Icon(
-                          Icons.Default.Check,
-                          contentDescription =
-                              stringResource(R.string.events_sort_menu_check_icon_label))
-                    }
-                  },
-                  modifier = Modifier.testTag(EventsScreenTestTags.SORT_PROX_BUTTON))
-            }
+  }
+}
+// var searchQuery by remember { mutableStateOf("") }
+@Composable
+private fun SearchBar(
+    uiState: EventsUIState,
+    eventsViewModel: EventsViewModel,
+    searchQuery: MutableState<String>
+) {
+  Row(
+      modifier =
+          Modifier.fillMaxWidth()
+              .height(dimensionResource(R.dimen.todo_overview_top_row_height))
+              .padding(bottom = dimensionResource(R.dimen.todos_overview_vertical_padding))) {
+        OutlinedTextField(
+            value = searchQuery.value,
+            onValueChange = { newText ->
+              searchQuery.value = newText
+              eventsViewModel.searchEvents(query = newText, currentUserId = uiState.currentUserId)
+            },
+            leadingIcon = {
+              Icon(
+                  imageVector = Icons.Default.Search,
+                  contentDescription = "Search icon",
+                  tint = MaterialTheme.colorScheme.onBackground)
+            },
+            modifier =
+                Modifier.weight(1f)
+                    .padding(
+                        horizontal = dimensionResource(R.dimen.todos_overview_horizontal_padding))
+                    .testTag(OverviewScreenTestTags.SEARCH_BAR),
+            label = { Text(stringResource(R.string.events_search_bar_label)) },
+            singleLine = true,
+            colors =
+                OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = MaterialTheme.colorScheme.background,
+                    unfocusedContainerColor = MaterialTheme.colorScheme.background,
+                    unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
+                    focusedTextColor = MaterialTheme.colorScheme.onBackground,
+                ),
+            shape = RoundedCornerShape(24.dp))
+
+        SortMenu(
+            currentOrder = uiState.sortOrder, onSortSelected = { eventsViewModel.setSortOrder(it) })
       }
 }
 

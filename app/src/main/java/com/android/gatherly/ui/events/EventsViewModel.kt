@@ -32,7 +32,7 @@ import kotlinx.coroutines.launch
  * @param createdEventList list of events the current user has created
  * @param globalEventList list of events neither created by nor participated in by current user
  */
-data class UIState(
+data class EventsUIState(
     val fullEventList: List<Event> = emptyList(),
     val participatedEventList: List<Event> = emptyList(),
     val createdEventList: List<Event> = emptyList(),
@@ -86,13 +86,13 @@ class EventsViewModel(
     private val eventsRepository: EventsRepository,
     private val authProvider: () -> FirebaseAuth = { Firebase.auth }
 ) : ViewModel() {
-  private val _uiState: MutableStateFlow<UIState> = MutableStateFlow(UIState())
+  private val _uiState: MutableStateFlow<EventsUIState> = MutableStateFlow(EventsUIState())
 
   /**
    * StateFlow exposing the current UI state, including all event lists categorized by user
    * relationship.
    */
-  val uiState: StateFlow<UIState> = _uiState.asStateFlow()
+  val uiState: StateFlow<EventsUIState> = _uiState.asStateFlow()
 
   private val _editEventRequest = MutableStateFlow<Event?>(null)
 

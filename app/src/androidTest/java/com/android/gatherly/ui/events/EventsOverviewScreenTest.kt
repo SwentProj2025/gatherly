@@ -963,7 +963,6 @@ class EventsOverviewScreenTest {
         .assertIsNotDisplayed()
   }
 
-
   /** Helper function to scroll to a specific event item in a list */
   private fun ComposeTestRule.scrollToEvent(event: Event) {
     onNodeWithTag(EventsScreenTestTags.ALL_LISTS)
