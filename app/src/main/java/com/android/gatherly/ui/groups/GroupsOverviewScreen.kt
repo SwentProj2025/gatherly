@@ -1,6 +1,7 @@
 package com.android.gatherly.ui.groups
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -19,6 +20,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults.buttonColors
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -47,6 +49,11 @@ import com.android.gatherly.ui.navigation.Screen
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu
 import com.android.gatherly.utils.profilePicturePainter
+
+object GroupsOverviewScreenTestTags {
+  const val LIST = "list"
+  const val NO_GROUPS = "list"
+}
 
 @Composable
 fun GroupsOverviewScreen(
@@ -97,6 +104,16 @@ fun OverviewContent(
   if (uiState.value.isLoading) {
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
       Text(
+          text = stringResource(R.string.groups_overview_loading),
+          modifier = Modifier.fillMaxWidth().padding(dimensionResource(R.dimen.padding_small)),
+          textAlign = TextAlign.Center,
+          style = MaterialTheme.typography.titleMedium,
+          fontWeight = FontWeight.Bold,
+          color = MaterialTheme.colorScheme.onBackground)
+    }
+  } else if (uiState.value.groups.isEmpty()) {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+      Text(
           text = stringResource(R.string.groups_overview_no_groups),
           modifier = Modifier.fillMaxWidth().padding(dimensionResource(R.dimen.padding_small)),
           textAlign = TextAlign.Center,
@@ -105,84 +122,98 @@ fun OverviewContent(
           color = MaterialTheme.colorScheme.onBackground)
     }
   } else {
-    Column(modifier = Modifier.padding(padding)) {
+    Column(
+        modifier = Modifier.padding(padding).fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.SpaceEvenly) {
 
-      // Groups
-      LazyColumn(modifier = Modifier.fillMaxSize()) {
-        for ((index, group) in uiState.value.groups.withIndex()) {
-          item {
-            Card(
-                modifier =
-                    Modifier.fillMaxWidth()
-                        .height(dimensionResource(R.dimen.add_group_button_height)),
-                colors =
-                    CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.background,
-                        contentColor = MaterialTheme.colorScheme.onBackground)) {
-                  Row(
-                      modifier =
-                          Modifier.fillMaxSize().padding(dimensionResource(R.dimen.padding_medium)),
-                      verticalAlignment = Alignment.CenterVertically) {
+          // Groups
+          LazyColumn(modifier = Modifier.fillMaxWidth().weight(1f)) {
+            for ((index, group) in uiState.value.groups.withIndex()) {
+              item {
+                Card(
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .height(dimensionResource(R.dimen.add_group_button_height)),
+                    colors =
+                        CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.background,
+                            contentColor = MaterialTheme.colorScheme.onBackground)) {
+                      Row(
+                          modifier =
+                              Modifier.fillMaxSize()
+                                  .padding(dimensionResource(R.dimen.padding_small)),
+                          verticalAlignment = Alignment.CenterVertically) {
 
-                        // Profile pictures of the first 3 users
-                        val picsList = uiState.value.profilePics[index]
-                        for (i in 0 until picsList.size) {
-                          // Profile pic
-                          Image(
-                              painter = profilePicturePainter(picsList[i]),
-                              contentDescription = "Profile picture",
-                              contentScale = ContentScale.Crop,
-                              modifier =
-                                  Modifier.padding(
-                                          horizontal =
-                                              dimensionResource(R.dimen.friends_item_card_padding))
-                                      .size(
-                                          dimensionResource(
-                                              R.dimen.find_friends_item_profile_picture_size))
-                                      .clip(CircleShape))
-                        }
-
-                        // name of the group
-                        Text(
-                            text = group.name,
-                            fontWeight = FontWeight.Bold,
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier =
-                                Modifier.padding(dimensionResource(R.dimen.padding_medium))
-                                    .weight(1f))
-
-                        // Icon to go to group
-                        IconButton(
-                            onClick = {
-                              navigationActions?.navigateTo(Screen.GroupInfo(group.gid))
-                            }) {
-                              Icon(
-                                  imageVector = Icons.Outlined.ChevronRight,
-                                  contentDescription = "Go to group info",
-                                  Modifier.size(dimensionResource(R.dimen.padding_regular)))
+                            // Profile pictures of the first 3 users
+                            val picsList = uiState.value.profilePics[index]
+                            for (i in 0 until picsList.size) {
+                              // Profile pic
+                              Image(
+                                  painter = profilePicturePainter(picsList[i]),
+                                  contentDescription = "Profile picture",
+                                  contentScale = ContentScale.Crop,
+                                  modifier =
+                                      Modifier.padding(
+                                              horizontal =
+                                                  dimensionResource(
+                                                      id = R.dimen.group_overview_avatar_spacing))
+                                          .size(
+                                              dimensionResource(
+                                                  R.dimen.find_friends_item_profile_picture_size))
+                                          .clip(CircleShape))
                             }
-                      }
-                }
-          }
-        }
-      }
 
-      // Create a group button
-      Button(
-          onClick = { navigationActions?.navigateTo(Screen.AddEventScreen) },
-          modifier =
-              Modifier.fillMaxWidth()
-                  .height(dimensionResource(R.dimen.add_group_button_height))
-                  .padding(vertical = dimensionResource(R.dimen.add_group_button_vertical))
-                  .testTag(AddGroupScreenTestTags.BUTTON_CREATE_GROUP),
-          shape = RoundedCornerShape(dimensionResource(R.dimen.friends_item_rounded_corner_shape)),
-          colors = buttonColors(containerColor = MaterialTheme.colorScheme.inversePrimary)) {
-            Text(
-                text = stringResource(R.string.add_group_button_label),
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onPrimary)
+                            // name of the group
+                            Text(
+                                text = group.name,
+                                fontWeight = FontWeight.Bold,
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onBackground,
+                                modifier =
+                                    Modifier.padding(
+                                            horizontal = dimensionResource(R.dimen.padding_regular))
+                                        .weight(1f))
+
+                            // Icon to go to group
+                            IconButton(
+                                onClick = {
+                                  navigationActions?.navigateTo(Screen.GroupInfo(group.gid))
+                                }) {
+                                  Icon(
+                                      imageVector = Icons.Outlined.ChevronRight,
+                                      contentDescription = "Go to group info",
+                                      Modifier.size(dimensionResource(R.dimen.padding_regular)))
+                                }
+                          }
+                    }
+              }
+
+              item {
+                HorizontalDivider(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = MaterialTheme.colorScheme.surfaceVariant)
+              }
+            }
           }
-    }
+
+          // Create a group button
+          Button(
+              onClick = { navigationActions?.navigateTo(Screen.AddEventScreen) },
+              modifier =
+                  Modifier.padding(all = dimensionResource(R.dimen.add_group_button_vertical))
+                      .fillMaxWidth()
+                      .height(dimensionResource(R.dimen.homepage_focus_button_height))
+                      .testTag(AddGroupScreenTestTags.BUTTON_CREATE_GROUP),
+              shape =
+                  RoundedCornerShape(dimensionResource(R.dimen.friends_item_rounded_corner_shape)),
+              colors = buttonColors(containerColor = MaterialTheme.colorScheme.inversePrimary)) {
+                Text(
+                    text = stringResource(R.string.add_group_button_label),
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onPrimary)
+              }
+        }
   }
 }
