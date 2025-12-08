@@ -217,7 +217,7 @@ fun OverviewContent(
         }
         // Create a group button
         Button(
-            onClick = { navigationActions?.navigateTo(Screen.AddEventScreen) },
+            onClick = { navigationActions?.navigateTo(Screen.AddGroupScreen) },
             modifier =
                 Modifier.padding(all = dimensionResource(R.dimen.add_group_button_vertical))
                     .fillMaxWidth()
