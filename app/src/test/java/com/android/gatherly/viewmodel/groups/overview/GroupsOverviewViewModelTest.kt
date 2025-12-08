@@ -2,10 +2,16 @@ package com.android.gatherly.viewmodel.groups.overview
 
 import com.android.gatherly.model.group.Group
 import com.android.gatherly.model.group.GroupsRepository
+import com.android.gatherly.model.profile.ProfileLocalRepository
+import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.ui.groups.GroupsOverviewViewModel
 import com.android.gatherly.viewmodel.FakeGroupsRepositoryLocal
 import com.android.gatherly.viewmodel.groups.overview.GroupsOverviewViewModelTestData.TEST_USER_ID
 import com.android.gatherly.viewmodel.groups.overview.GroupsOverviewViewModelTestData.allGroups
+import com.android.gatherly.viewmodel.groups.overview.GroupsOverviewViewModelTestData.friendUser
+import com.android.gatherly.viewmodel.groups.overview.GroupsOverviewViewModelTestData.otherUser
+import com.android.gatherly.viewmodel.groups.overview.GroupsOverviewViewModelTestData.testProfilePics
+import com.android.gatherly.viewmodel.groups.overview.GroupsOverviewViewModelTestData.testUser
 import com.android.gatherly.viewmodel.groups.overview.GroupsOverviewViewModelTestData.testUserGroups
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -30,12 +36,22 @@ import org.junit.Test
 class GroupsOverviewViewModelTest {
 
   private lateinit var fakeRepository: FakeGroupsRepositoryLocal
+  private lateinit var profileRepository: ProfileRepository
   private val testDispatcher = UnconfinedTestDispatcher()
 
   @Before
   fun setUp() {
     Dispatchers.setMain(testDispatcher)
     fakeRepository = FakeGroupsRepositoryLocal(currentUserId = TEST_USER_ID)
+    profileRepository = ProfileLocalRepository()
+
+    // add profiles to profile repo
+    runTest {
+      profileRepository.addProfile(testUser)
+      profileRepository.addProfile(otherUser)
+      profileRepository.addProfile(friendUser)
+      advanceUntilIdle()
+    }
   }
 
   @After
@@ -49,7 +65,9 @@ class GroupsOverviewViewModelTest {
     fakeRepository.addGroups(allGroups)
 
     // Create ViewModel (init block runs getUserGroups)
-    val viewModel = GroupsOverviewViewModel(groupsRepository = fakeRepository)
+    val viewModel =
+        GroupsOverviewViewModel(
+            groupsRepository = fakeRepository, profileRepository = profileRepository)
     advanceUntilIdle()
 
     // UI state contains only user's groups
@@ -58,6 +76,7 @@ class GroupsOverviewViewModelTest {
     assertTrue(uiState.groups.containsAll(testUserGroups))
     assertFalse(uiState.isLoading)
     assertNull(uiState.errorMsg)
+    assertEquals(testProfilePics, uiState.profilePics)
   }
 
   @Test
@@ -65,7 +84,9 @@ class GroupsOverviewViewModelTest {
     // Repository is empty
 
     // Create ViewModel
-    val viewModel = GroupsOverviewViewModel(groupsRepository = fakeRepository)
+    val viewModel =
+        GroupsOverviewViewModel(
+            groupsRepository = fakeRepository, profileRepository = profileRepository)
     advanceUntilIdle()
 
     // Assert that UI state has empty groups list
@@ -79,7 +100,9 @@ class GroupsOverviewViewModelTest {
   fun refreshUIState_ReloadsGroups() = runTest {
     // Start with initial groups
     fakeRepository.addGroups(testUserGroups.take(1))
-    val viewModel = GroupsOverviewViewModel(groupsRepository = fakeRepository)
+    val viewModel =
+        GroupsOverviewViewModel(
+            groupsRepository = fakeRepository, profileRepository = profileRepository)
     advanceUntilIdle()
     assertEquals(1, viewModel.uiState.value.groups.size)
 
@@ -107,7 +130,9 @@ class GroupsOverviewViewModelTest {
         }
 
     // Create ViewModel
-    val viewModel = GroupsOverviewViewModel(groupsRepository = throwingRepository)
+    val viewModel =
+        GroupsOverviewViewModel(
+            groupsRepository = throwingRepository, profileRepository = profileRepository)
     advanceUntilIdle()
 
     // UI state reflects error
@@ -123,7 +148,9 @@ class GroupsOverviewViewModelTest {
     fakeRepository.addGroups(testUserGroups)
 
     // Create ViewModel but don't advance coroutines yet
-    val viewModel = GroupsOverviewViewModel(groupsRepository = fakeRepository)
+    val viewModel =
+        GroupsOverviewViewModel(
+            groupsRepository = fakeRepository, profileRepository = profileRepository)
 
     // Assertion: loading state is set before coroutines complete
     // Note: This might be tricky to catch depending on execution speed
@@ -147,7 +174,9 @@ class GroupsOverviewViewModelTest {
             return fakeRepository.getUserGroups()
           }
         }
-    val viewModel = GroupsOverviewViewModel(groupsRepository = throwingRepository)
+    val viewModel =
+        GroupsOverviewViewModel(
+            groupsRepository = throwingRepository, profileRepository = profileRepository)
     advanceUntilIdle()
     assertNotNull(viewModel.uiState.value.errorMsg)
 
