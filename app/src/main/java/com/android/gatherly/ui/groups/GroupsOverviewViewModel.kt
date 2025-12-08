@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.group.Group
 import com.android.gatherly.model.group.GroupsRepository
 import com.android.gatherly.model.group.GroupsRepositoryFirestore
+import com.android.gatherly.model.profile.ProfileRepository
+import com.android.gatherly.model.profile.ProfileRepositoryProvider
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,6 +27,7 @@ import kotlinx.coroutines.launch
  */
 data class GroupsOverviewUIState(
     val groups: List<Group> = emptyList(),
+    val profilePics: List<List<String>> = emptyList<List<String>>(),
     val errorMsg: String? = null,
     val isLoading: Boolean = false
 )
@@ -36,10 +39,10 @@ data class GroupsOverviewUIState(
  * [GroupsRepository].
  *
  * @property groupsRepository The repository used to fetch and manage Group items.
- * @property authProvider Provider for Firebase authentication instance, injectable for testing.
  */
 class GroupsOverviewViewModel(
-    private val groupsRepository: GroupsRepository = GroupsRepositoryFirestore(Firebase.firestore)
+    private val groupsRepository: GroupsRepository = GroupsRepositoryFirestore(Firebase.firestore),
+    private val profileRepository: ProfileRepository = ProfileRepositoryProvider.repository
 ) : ViewModel() {
 
   private val _uiState = MutableStateFlow(GroupsOverviewUIState())
@@ -60,11 +63,27 @@ class GroupsOverviewViewModel(
       _uiState.value = _uiState.value.copy(isLoading = true, errorMsg = null)
       try {
         val groups = groupsRepository.getUserGroups()
+
+        for (group in groups) {
+          val groupList = mutableListOf<String>()
+          for (i in 0 until minOf(3, group.memberIds.size)) {
+            val profile = profileRepository.getProfileByUid(group.memberIds[i])!!
+            groupList.add(profile.profilePicture)
+          }
+          _uiState.value =
+              _uiState.value.copy(
+                  profilePics = _uiState.value.profilePics + listOf(groupList.toList()))
+        }
         _uiState.value = _uiState.value.copy(groups = groups, isLoading = false)
       } catch (e: Exception) {
         _uiState.value =
             _uiState.value.copy(groups = emptyList(), errorMsg = e.message, isLoading = false)
       }
     }
+  }
+
+  /** Resets the error message to null once it was displayed */
+  fun resetErrorMessage() {
+    _uiState.value = _uiState.value.copy(errorMsg = null)
   }
 }
