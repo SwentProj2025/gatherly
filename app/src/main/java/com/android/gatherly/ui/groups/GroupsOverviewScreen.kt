@@ -2,6 +2,7 @@ package com.android.gatherly.ui.groups
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -11,8 +12,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ChevronRight
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults.buttonColors
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -101,63 +105,84 @@ fun OverviewContent(
           color = MaterialTheme.colorScheme.onBackground)
     }
   } else {
-    LazyColumn(modifier = Modifier.padding(padding)) {
-      for ((index, group) in uiState.value.groups.withIndex()) {
-        item {
-          Card(
-              modifier =
-                  Modifier.fillMaxWidth()
-                      .height(dimensionResource(R.dimen.add_group_button_height)),
-              colors =
-                  CardDefaults.cardColors(
-                      containerColor = MaterialTheme.colorScheme.background,
-                      contentColor = MaterialTheme.colorScheme.onBackground)) {
-                Row(
-                    modifier =
-                        Modifier.fillMaxSize().padding(dimensionResource(R.dimen.padding_medium)),
-                    verticalAlignment = Alignment.CenterVertically) {
+    Column(modifier = Modifier.padding(padding)) {
 
-                      // Profile pictures of the first 3 users
-                      val picsList = uiState.value.profilePics[index]
-                      for (i in 0 until picsList.size) {
-                        // Profile pic
-                        Image(
-                            painter = profilePicturePainter(picsList[i]),
-                            contentDescription = "Profile picture",
-                            contentScale = ContentScale.Crop,
+      // Groups
+      LazyColumn(modifier = Modifier.fillMaxSize()) {
+        for ((index, group) in uiState.value.groups.withIndex()) {
+          item {
+            Card(
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .height(dimensionResource(R.dimen.add_group_button_height)),
+                colors =
+                    CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.background,
+                        contentColor = MaterialTheme.colorScheme.onBackground)) {
+                  Row(
+                      modifier =
+                          Modifier.fillMaxSize().padding(dimensionResource(R.dimen.padding_medium)),
+                      verticalAlignment = Alignment.CenterVertically) {
+
+                        // Profile pictures of the first 3 users
+                        val picsList = uiState.value.profilePics[index]
+                        for (i in 0 until picsList.size) {
+                          // Profile pic
+                          Image(
+                              painter = profilePicturePainter(picsList[i]),
+                              contentDescription = "Profile picture",
+                              contentScale = ContentScale.Crop,
+                              modifier =
+                                  Modifier.padding(
+                                          horizontal =
+                                              dimensionResource(R.dimen.friends_item_card_padding))
+                                      .size(
+                                          dimensionResource(
+                                              R.dimen.find_friends_item_profile_picture_size))
+                                      .clip(CircleShape))
+                        }
+
+                        // name of the group
+                        Text(
+                            text = group.name,
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.bodyLarge,
                             modifier =
-                                Modifier.padding(
-                                        horizontal =
-                                            dimensionResource(R.dimen.friends_item_card_padding))
-                                    .size(
-                                        dimensionResource(
-                                            R.dimen.find_friends_item_profile_picture_size))
-                                    .clip(CircleShape))
+                                Modifier.padding(dimensionResource(R.dimen.padding_medium))
+                                    .weight(1f))
+
+                        // Icon to go to group
+                        IconButton(
+                            onClick = {
+                              navigationActions?.navigateTo(Screen.GroupInfo(group.gid))
+                            }) {
+                              Icon(
+                                  imageVector = Icons.Outlined.ChevronRight,
+                                  contentDescription = "Go to group info",
+                                  Modifier.size(dimensionResource(R.dimen.padding_regular)))
+                            }
                       }
-
-                      // name of the group
-                      Text(
-                          text = group.name,
-                          fontWeight = FontWeight.Bold,
-                          style = MaterialTheme.typography.bodyLarge,
-                          modifier =
-                              Modifier.padding(dimensionResource(R.dimen.padding_medium))
-                                  .weight(1f))
-
-                      // Icon to go to group
-                      IconButton(
-                          onClick = {
-                            navigationActions?.navigateTo(Screen.GroupInfo(group.gid))
-                          }) {
-                            Icon(
-                                imageVector = Icons.Outlined.ChevronRight,
-                                contentDescription = "Go to group info",
-                                Modifier.size(dimensionResource(R.dimen.padding_regular)))
-                          }
-                    }
-              }
+                }
+          }
         }
       }
+
+      // Create a group button
+      Button(
+          onClick = { navigationActions?.navigateTo(Screen.AddEventScreen) },
+          modifier =
+              Modifier.fillMaxWidth()
+                  .height(dimensionResource(R.dimen.add_group_button_height))
+                  .padding(vertical = dimensionResource(R.dimen.add_group_button_vertical))
+                  .testTag(AddGroupScreenTestTags.BUTTON_CREATE_GROUP),
+          shape = RoundedCornerShape(dimensionResource(R.dimen.friends_item_rounded_corner_shape)),
+          colors = buttonColors(containerColor = MaterialTheme.colorScheme.inversePrimary)) {
+            Text(
+                text = stringResource(R.string.add_group_button_label),
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium,
+                color = MaterialTheme.colorScheme.onPrimary)
+          }
     }
   }
 }
