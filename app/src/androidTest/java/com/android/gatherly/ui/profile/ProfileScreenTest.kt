@@ -139,18 +139,18 @@ class ProfileScreenTest {
 
     // Group 1
     composeTestRule
-        .onNodeWithTag("${ProfileScreenTestTags.GROUP_ROW_NAME}_0")
+        .onNodeWithTag("${ProfileScreenTestTags.GROUP_ROW_NAME}_0", useUnmergedTree = true)
         .assertTextContains("Group One")
     composeTestRule
-        .onNodeWithTag("${ProfileScreenTestTags.GROUP_ROW_MEMBER_COUNT}_0")
+        .onNodeWithTag("${ProfileScreenTestTags.GROUP_ROW_MEMBER_COUNT}_0", useUnmergedTree = true)
         .assertTextContains("3 members")
 
     // Group 2
     composeTestRule
-        .onNodeWithTag("${ProfileScreenTestTags.GROUP_ROW_NAME}_1")
+        .onNodeWithTag("${ProfileScreenTestTags.GROUP_ROW_NAME}_1", useUnmergedTree = true)
         .assertTextContains("Group Two")
     composeTestRule
-        .onNodeWithTag("${ProfileScreenTestTags.GROUP_ROW_MEMBER_COUNT}_1")
+        .onNodeWithTag("${ProfileScreenTestTags.GROUP_ROW_MEMBER_COUNT}_1", useUnmergedTree = true)
         .assertTextContains("1 member")
   }
 
