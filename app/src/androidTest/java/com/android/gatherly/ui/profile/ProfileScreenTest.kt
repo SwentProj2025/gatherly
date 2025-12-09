@@ -133,7 +133,9 @@ class ProfileScreenTest {
   fun groupsOverview_Displayed_WhenUserHasGroups() = runTest {
     setContent()
 
-    composeTestRule.onNodeWithTag(ProfileScreenTestTags.GROUPS_OVERVIEW_CONTAINER).assertExists()
+    composeTestRule
+        .onNodeWithTag(ProfileScreenTestTags.GROUPS_OVERVIEW_CONTAINER, useUnmergedTree = true)
+        .assertExists()
 
     // Group 1
     composeTestRule

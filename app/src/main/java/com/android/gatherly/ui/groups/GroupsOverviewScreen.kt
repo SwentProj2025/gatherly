@@ -161,25 +161,7 @@ fun OverviewContent(
 
                                 // Profile pictures of the first 3 users
                                 val picsList = uiState.value.profilePics[index]
-                                for (i in 0 until picsList.size) {
-                                  // Profile pic
-                                  Image(
-                                      painter = profilePicturePainter(picsList[i]),
-                                      contentDescription = "Profile picture",
-                                      contentScale = ContentScale.Crop,
-                                      modifier =
-                                          Modifier.padding(
-                                                  horizontal =
-                                                      dimensionResource(
-                                                          id =
-                                                              R.dimen
-                                                                  .group_overview_avatar_spacing))
-                                              .size(
-                                                  dimensionResource(
-                                                      R.dimen
-                                                          .find_friends_item_profile_picture_size))
-                                              .clip(CircleShape))
-                                }
+                                GroupPictures(picsList = picsList)
 
                                 // name of the group
                                 Text(
@@ -225,7 +207,7 @@ fun OverviewContent(
                     .testTag(GroupsOverviewScreenTestTags.CREATE_BUTTON),
             shape =
                 RoundedCornerShape(dimensionResource(R.dimen.friends_item_rounded_corner_shape)),
-            colors = buttonColors(containerColor = MaterialTheme.colorScheme.inversePrimary)) {
+            colors = buttonColors(containerColor = MaterialTheme.colorScheme.secondary)) {
               Text(
                   text = stringResource(R.string.add_group_button_label),
                   style = MaterialTheme.typography.bodyLarge,
@@ -233,4 +215,20 @@ fun OverviewContent(
                   color = MaterialTheme.colorScheme.onPrimary)
             }
       }
+}
+
+@Composable
+fun GroupPictures(picsList: List<String>) {
+  for (i in 0 until picsList.size) {
+    // Profile pic
+    Image(
+        painter = profilePicturePainter(picsList[i]),
+        contentDescription = "Profile picture",
+        contentScale = ContentScale.Crop,
+        modifier =
+            Modifier.padding(
+                    horizontal = dimensionResource(id = R.dimen.group_overview_avatar_spacing))
+                .size(dimensionResource(R.dimen.find_friends_item_profile_picture_size))
+                .clip(CircleShape))
+  }
 }

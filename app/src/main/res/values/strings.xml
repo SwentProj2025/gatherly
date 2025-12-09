@@ -225,5 +225,5 @@
 
     <!-- Groups -->
     <string name="groups_overview_no_groups">You have no groups</string>
-    <string name="groups_overview_loading">Loading groups...</string>
+    <string name="groups_overview_loading">Loading groups…</string>
 </resources>
