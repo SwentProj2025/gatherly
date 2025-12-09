@@ -17,6 +17,7 @@ import androidx.compose.material.icons.outlined.Group
 import androidx.compose.material.icons.outlined.GroupAdd
 import androidx.compose.material.icons.outlined.History
 import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Logout
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Person
@@ -80,6 +81,10 @@ sealed class Tab(val name: String, val icon: ImageVector, val destination: Scree
   object EditTodo : Tab("Edit To-Do", Icons.Outlined.Edit, Screen.Task)
 
   object AddGroup : Tab("Add Group", Icons.Outlined.GroupAdd, Screen.AddGroupScreen)
+
+  object GroupInfo : Tab("Group Information", Icons.Outlined.Info, Screen.GroupsInfoScreen)
+
+  object EditGroup : Tab("Edit Group", Icons.Outlined.Edit, Screen.EditGroupScreen)
 
   object Badge : Tab("Badges", Icons.Outlined.Badge, Screen.BadgeScreen)
 
