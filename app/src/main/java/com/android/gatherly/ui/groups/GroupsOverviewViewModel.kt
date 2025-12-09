@@ -64,15 +64,20 @@ class GroupsOverviewViewModel(
       try {
         val groups = groupsRepository.getUserGroups()
 
+        val maxProfilePicsToDisplay = 3
+
         for (group in groups) {
-          val groupList = mutableListOf<String>()
-          for (i in 0 until minOf(3, group.memberIds.size)) {
+
+          // The list of profile picture urls of this group (at most 3 to display)
+          val groupProfilePics = mutableListOf<String>()
+
+          for (i in 0 until minOf(maxProfilePicsToDisplay, group.memberIds.size)) {
             val profile = profileRepository.getProfileByUid(group.memberIds[i])!!
-            groupList.add(profile.profilePicture)
+            groupProfilePics.add(profile.profilePicture)
           }
           _uiState.value =
               _uiState.value.copy(
-                  profilePics = _uiState.value.profilePics + listOf(groupList.toList()))
+                  profilePics = _uiState.value.profilePics + listOf(groupProfilePics.toList()))
         }
         _uiState.value = _uiState.value.copy(groups = groups, isLoading = false)
       } catch (e: Exception) {
