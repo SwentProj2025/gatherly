@@ -2,6 +2,7 @@ package com.android.gatherly.model.todo
 
 import com.android.gatherly.model.map.DisplayedMapElement
 import com.android.gatherly.model.map.Location
+import com.android.gatherly.model.todoCategory.ToDoCategory
 import com.google.firebase.Timestamp
 import java.util.Locale
 
@@ -14,13 +15,23 @@ data class ToDo(
     val dueTime: Timestamp?,
     override val location: Location?,
     val status: ToDoStatus,
-    val ownerId: String
+    val ownerId: String,
+    val priorityLevel: ToDoPriority? = null,
+    val tag: ToDoCategory? = null,
 ) : DisplayedMapElement
 
 /** Represents the state of a [ToDo] item. */
 enum class ToDoStatus {
   ONGOING,
   ENDED
+}
+
+/** Represents the priority level of a [ToDo] item */
+enum class ToDoPriority {
+  LOW,
+  MEDIUM,
+  HIGH,
+  URGENT
 }
 
 /**
