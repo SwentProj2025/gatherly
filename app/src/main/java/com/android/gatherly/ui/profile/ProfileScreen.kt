@@ -262,12 +262,9 @@ fun ProfileScreen(
                 Spacer(modifier = Modifier.height(fieldSpacingSmall))
 
                 // Bio (shows default if blank)
-                val bioText =
-                    if (profile?.bio.isNullOrBlank()) {
-                      stringResource(R.string.user_default_bio)
-                    } else {
-                      profile!!.bio
-                    }
+                val bioText: String =
+                    profile?.bio?.ifBlank { stringResource(id = R.string.user_default_bio) }
+                        ?: stringResource(id = R.string.user_default_bio)
                 Text(
                     text = bioText,
                     style = MaterialTheme.typography.titleSmall,

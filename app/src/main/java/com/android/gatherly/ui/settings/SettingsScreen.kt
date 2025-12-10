@@ -238,9 +238,10 @@ fun SettingsScreen(
                         Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()),
                     horizontalAlignment = Alignment.CenterHorizontally) {
                       val profilePicTestTag =
-                          if (uiState.profilePictureUrl.isNotEmpty())
-                              SettingsScreenTestTags.PROFILE_PICTURE_URL_NOT_EMPTY
-                          else SettingsScreenTestTags.PROFILE_PICTURE
+                          uiState.profilePictureUrl
+                              .takeIf { it.isNotEmpty() }
+                              ?.let { SettingsScreenTestTags.PROFILE_PICTURE_URL_NOT_EMPTY }
+                              ?: SettingsScreenTestTags.PROFILE_PICTURE
                       // Profile Picture
                       ProfilePictureWithStatus(
                           profilePictureUrl = uiState.profilePictureUrl,

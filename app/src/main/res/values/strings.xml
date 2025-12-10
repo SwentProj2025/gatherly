@@ -194,7 +194,6 @@
 
     <!-- User Profile Screen -->
     <string name="user_profile_no_user">User not found</string>
-    <string name="user_profile_picture_description">Profile Picture</string>
     <string name="user_profile_friends">Friends</string>
     <string name="user_profile_focus_points">Focus points</string>
 
