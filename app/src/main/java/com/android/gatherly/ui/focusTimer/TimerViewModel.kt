@@ -425,7 +425,7 @@ class TimerViewModel(
   }
 
   /**
-   * Sets an er338ror message in the UI state.
+   * Sets an error message in the UI state.
    *
    * @param msg The error message to be displayed
    */
