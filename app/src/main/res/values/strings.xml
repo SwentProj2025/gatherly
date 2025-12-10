@@ -77,6 +77,7 @@
     <string name="settings_alert_dialog_option_camera">Take Photo</string>
     <string name="settings_alert_dialog_option_gallery">Choose from Gallery</string>
     <string name="settings_alert_dialog_option_cancel">Cancel</string>
+    <string name="settings_label_bio">Bio :</string>
     <string name="settings_status_dialog_option_focused">Focused</string>
     <string name="settings_status_dialog_option_online">Online</string>
     <string name="settings_status_dialog_option_offline">Offline</string>
@@ -136,6 +137,8 @@
     <string name="log_out">Yes, Sign out</string>
     <string name="anon_log_out">You are logging out</string>
     <string name="anon_log_out_text">Because you are signed in anonymously, signing out will cause you to lose all your current data. Are you sure?</string>
+    <string name="user_default_bio">Hey there! I am using Gatherly.</string>
+
 
     <!-- HomePage -->
     <string name="homepage_arrow_icon_description">Navigate</string>
@@ -189,6 +192,11 @@
     <string name="friends_unfriend_message">You just lost a friend</string>
     <string name="friends_request_message">Waiting for approval…</string>
 
+    <!-- User Profile Screen -->
+    <string name="user_profile_no_user">User not found</string>
+    <string name="user_profile_friends">Friends</string>
+    <string name="user_profile_focus_points">Focus points</string>
+
     <!-- Groups -->
     <string name="add_group_button_label">Add New Group</string>
     <string name="group_name_bar_label">Group Name</string>
@@ -222,4 +230,8 @@
     <string name="focus_points_date">Obtained on: %1$s</string>
     <string name="focus_history_badge">Obtained the %1$s badge</string>
     <string name="focus_history_leaderboard">Reached %1$s on your friends leaderboard</string>
+
+    <!-- Groups -->
+    <string name="groups_overview_no_groups">You have no groups</string>
+    <string name="groups_overview_loading">Loading groups…</string>
 </resources>

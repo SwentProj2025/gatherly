@@ -77,7 +77,12 @@ class SettingsViewModelTest {
   fun loadProfile_LoadsExistingProfileIntoUiState() = runTest {
     val profile =
         Profile(
-            uid = "u1", name = "Alice", username = "alice_ok", school = "Harvard", schoolYear = "3")
+            uid = "u1",
+            name = "Alice",
+            username = "alice_ok",
+            school = "Harvard",
+            schoolYear = "3",
+            bio = "settingsTestBio")
     repo.addProfile(profile)
 
     viewModel.loadProfile("u1")
@@ -88,6 +93,7 @@ class SettingsViewModelTest {
     assertEquals("alice_ok", state.username)
     assertEquals("Harvard", state.school)
     assertEquals("3", state.schoolYear)
+    assertEquals(profile.bio, state.bio)
     assertNull(state.errorMsg)
   }
 
@@ -179,7 +185,8 @@ class SettingsViewModelTest {
 
   @Test
   fun updateProfile_WithValidData_UpdatesRepositoryAndClearsError() = runTest {
-    val profile = Profile(uid = "u1", name = "Alice", username = "old_name")
+    val profile =
+        Profile(uid = "u1", name = "Alice", username = "old_name", bio = "settingsTestBio")
     repo.addProfile(profile)
 
     viewModel.loadProfile("u1")
@@ -187,6 +194,7 @@ class SettingsViewModelTest {
 
     viewModel.editName("Bob")
     viewModel.editUsername("new_user")
+    viewModel.editBio("new_bio")
     advanceUntilIdle()
 
     viewModel.updateProfile("u1", isFirstTime = true)
@@ -195,6 +203,7 @@ class SettingsViewModelTest {
     val updated = repo.getProfileByUid("u1")
     assertEquals("Bob", updated?.name)
     assertEquals("new_user", updated?.username)
+    assertEquals("new_bio", updated?.bio)
     assertNull(viewModel.uiState.value.errorMsg)
   }
 
