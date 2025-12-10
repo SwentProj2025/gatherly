@@ -7,6 +7,8 @@ import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.model.todo.ToDosRepository
+import com.android.gatherly.model.todoCategory.ToDoCategoryLocalRepository
+import com.android.gatherly.model.todoCategory.ToDoCategoryRepository
 import com.android.gatherly.ui.todo.EditTodoViewModel
 import com.android.gatherly.utilstest.MockitoUtils
 import com.google.firebase.Timestamp
@@ -39,6 +41,7 @@ class EditTodoViewModelTest {
   private lateinit var editTodoViewModel: EditTodoViewModel
   private lateinit var toDosRepository: ToDosRepository
   private lateinit var profileRepository: ProfileRepository
+  private lateinit var toDoCategoryRepository: ToDoCategoryRepository
   private lateinit var baseTodo: ToDo
   private lateinit var mockitoUtils: MockitoUtils
 
@@ -52,6 +55,7 @@ class EditTodoViewModelTest {
 
     toDosRepository = ToDosLocalRepository()
     profileRepository = ProfileLocalRepository()
+    toDoCategoryRepository = ToDoCategoryLocalRepository()
     fillRepository()
 
     // Mock Firebase Auth
@@ -59,7 +63,10 @@ class EditTodoViewModelTest {
     mockitoUtils.chooseCurrentUser("owner")
 
     editTodoViewModel =
-        EditTodoViewModel(todoRepository = toDosRepository, profileRepository = profileRepository)
+        EditTodoViewModel(
+            todoRepository = toDosRepository,
+            profileRepository = profileRepository,
+            todoCategoryRepository = toDoCategoryRepository)
   }
 
   @After
@@ -208,7 +215,11 @@ class EditTodoViewModelTest {
           override suspend fun toggleStatus(todoID: String) = Unit
         }
 
-    val viewModel = EditTodoViewModel(failingRepo, profileRepository = profileRepository)
+    val viewModel =
+        EditTodoViewModel(
+            failingRepo,
+            profileRepository = profileRepository,
+            todoCategoryRepository = toDoCategoryRepository)
     viewModel.deleteToDo("anything")
 
     advanceUntilIdle()

@@ -8,6 +8,8 @@ import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.model.todo.ToDosRepository
+import com.android.gatherly.model.todoCategory.ToDoCategoryLocalRepository
+import com.android.gatherly.model.todoCategory.ToDoCategoryRepository
 import com.android.gatherly.ui.todo.AddTodoViewModel
 import com.android.gatherly.utilstest.MockitoUtils
 import kotlinx.coroutines.Dispatchers
@@ -42,6 +44,8 @@ class AddTodoViewModelTest {
   private lateinit var addToDoViewModel: AddTodoViewModel
   private lateinit var toDosRepository: ToDosRepository
   private lateinit var profileRepository: ProfileRepository
+
+  private lateinit var toDoCategoryRepository: ToDoCategoryRepository
   private lateinit var mockitoUtils: MockitoUtils
 
   // initialize this so that tests control all coroutines and can wait on them
@@ -62,6 +66,7 @@ class AddTodoViewModelTest {
 
     toDosRepository = ToDosLocalRepository()
     profileRepository = ProfileLocalRepository()
+    toDoCategoryRepository = ToDoCategoryLocalRepository()
 
     // Add owner profile to repo
     runTest { profileRepository.addProfile(ownerProfile) }
@@ -74,7 +79,8 @@ class AddTodoViewModelTest {
         AddTodoViewModel(
             todoRepository = toDosRepository,
             profileRepository = profileRepository,
-            authProvider = { mockitoUtils.mockAuth })
+            authProvider = { mockitoUtils.mockAuth },
+            todoCategoryRepository = toDoCategoryRepository)
   }
 
   @After
