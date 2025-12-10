@@ -4,6 +4,7 @@ import com.android.gatherly.model.badge.BadgeType
 import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.event.EventsRepository
 import com.android.gatherly.model.group.Group
+import com.android.gatherly.model.points.PointsRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 
@@ -73,6 +74,7 @@ suspend fun userUnregister(
 suspend fun createEvent(
     eventsRepository: EventsRepository,
     profileRepository: ProfileRepository,
+    pointsRepository: PointsRepository,
     event: Event,
     creatorId: String,
     participants: List<String>
@@ -81,9 +83,11 @@ suspend fun createEvent(
   profileRepository.createEvent(event.id, creatorId)
   profileRepository.allParticipateEvent(event.id, participants)
 
-  profileRepository.incrementBadge(creatorId, BadgeType.EVENTS_CREATED)
+  incrementBadgeCheckPoints(
+      profileRepository, pointsRepository, creatorId, BadgeType.EVENTS_CREATED)
   if (participants.contains(creatorId)) {
-    profileRepository.incrementBadge(creatorId, BadgeType.EVENTS_PARTICIPATED)
+    incrementBadgeCheckPoints(
+        profileRepository, pointsRepository, creatorId, BadgeType.EVENTS_PARTICIPATED)
   }
 }
 

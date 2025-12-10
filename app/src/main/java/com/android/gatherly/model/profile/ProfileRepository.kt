@@ -251,8 +251,9 @@ interface ProfileRepository {
    *
    * @param uid the user's profile id
    * @param type the type of action that needs it's count incremented
+   * @return The badge Id to increment if there is one
    */
-  suspend fun incrementBadge(uid: String, type: BadgeType)
+  suspend fun incrementBadge(uid: String, type: BadgeType): String?
 
   /**
    * Adds the given number of points to the user's total number of points.

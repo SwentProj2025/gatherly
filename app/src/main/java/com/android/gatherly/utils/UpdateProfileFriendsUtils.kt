@@ -3,6 +3,7 @@ package com.android.gatherly.utils
 import com.android.gatherly.model.notification.Notification
 import com.android.gatherly.model.notification.NotificationType
 import com.android.gatherly.model.notification.NotificationsRepository
+import com.android.gatherly.model.points.PointsRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 
@@ -18,6 +19,7 @@ import com.android.gatherly.model.profile.ProfileRepository
 suspend fun getProfileWithSyncedFriendNotifications(
     profileRepository: ProfileRepository,
     notificationsRepository: NotificationsRepository,
+    pointsRepository: PointsRepository,
     userId: String
 ): Profile? {
   val notifications = notificationsRepository.getUserNotifications(userId)
@@ -25,7 +27,8 @@ suspend fun getProfileWithSyncedFriendNotifications(
   for (notification in notifications) {
     when (notification.type) {
       NotificationType.FRIEND_ACCEPTED -> {
-        handleFriendAccepted(profileRepository, notificationsRepository, notification, userId)
+        handleFriendAccepted(
+            profileRepository, notificationsRepository, pointsRepository, notification, userId)
       }
       NotificationType.FRIEND_REJECTED -> {
         handleFriendRejected(profileRepository, notificationsRepository, notification, userId)
@@ -46,6 +49,7 @@ suspend fun getProfileWithSyncedFriendNotifications(
 private suspend fun handleFriendAccepted(
     profileRepository: ProfileRepository,
     notificationsRepository: NotificationsRepository,
+    pointsRepository: PointsRepository,
     notification: Notification,
     userId: String
 ) {
@@ -53,7 +57,7 @@ private suspend fun handleFriendAccepted(
   if (senderId != null) {
     val senderProfile = profileRepository.getProfileByUid(senderId)
     if (senderProfile != null) {
-      profileRepository.addFriend(senderProfile.username, userId)
+      addFriendWithPointsCheck(profileRepository, pointsRepository, senderProfile.username, userId)
       profileRepository.removePendingSentFriendUid(userId, senderId)
     }
   }

@@ -150,7 +150,6 @@ class ProfileLocalRepository : ProfileRepository {
       val updatedProfile = currentProfile.copy(friendUids = updatedFriends)
       updateProfile(updatedProfile)
     }
-    incrementBadge(currentUserId, BadgeType.FRIENDS_ADDED)
   }
 
   override suspend fun addPendingSentFriendUid(currentUserId: String, targetUid: String) {
@@ -204,7 +203,6 @@ class ProfileLocalRepository : ProfileRepository {
       val updatedProfile = currentProfile.copy(participatingEventIds = updateEventIds)
       updateProfile(updatedProfile)
     }
-    incrementBadge(currentUserId, BadgeType.EVENTS_PARTICIPATED)
   }
 
   override suspend fun allParticipateEvent(eventId: String, participants: List<String>) {
@@ -237,7 +235,7 @@ class ProfileLocalRepository : ProfileRepository {
   }
 
   // ---- COUNTERS + BADGES (LOCAL) ----
-  override suspend fun incrementBadge(uid: String, type: BadgeType) {
+  override suspend fun incrementBadge(uid: String, type: BadgeType): String? {
     val profile =
         getProfileByUid(uid) ?: throw NoSuchElementException("Profile not found for uid=$uid")
 
@@ -251,7 +249,9 @@ class ProfileLocalRepository : ProfileRepository {
           this[key] = currentValue + 1
         }
     updateProfile(profile.copy(badgeCount = updated))
-    awardBadge(uid, type, currentValue + 1)
+    val addBadge = awardBadge(uid, type, currentValue + 1)
+
+    return addBadge
   }
 
   override suspend fun updateFocusPoints(uid: String, points: Double, addToLeaderboard: Boolean) {
@@ -266,12 +266,13 @@ class ProfileLocalRepository : ProfileRepository {
 
   // ---------- helpers ----------
 
-  private suspend fun awardBadge(uid: String, type: BadgeType, count: Long) {
+  private suspend fun awardBadge(uid: String, type: BadgeType, count: Long): String? {
     val rank = countToRank(count)
-    if (rank == BadgeRank.BLANK) return
+    if (rank == BadgeRank.BLANK) return null
 
-    val badge = Badge.entries.firstOrNull { it.type == type && it.rank == rank } ?: return
-    addBadge(uid, badge.id)
+    val badge = Badge.entries.firstOrNull { it.type == type && it.rank == rank } ?: return null
+
+    return badge.id
   }
 
   private fun countToRank(count: Long): BadgeRank =

@@ -23,6 +23,8 @@ import com.android.gatherly.model.group.GroupsLocalRepository
 import com.android.gatherly.model.group.GroupsRepository
 import com.android.gatherly.model.map.FakeNominatimLocationRepository
 import com.android.gatherly.model.map.Location
+import com.android.gatherly.model.points.PointsLocalRepository
+import com.android.gatherly.model.points.PointsRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
@@ -56,6 +58,7 @@ class AddEventsScreenTest {
   private lateinit var addEventsViewModel: AddEventViewModel
   private lateinit var eventsRepository: EventsRepository
   private lateinit var profileRepository: ProfileRepository
+  private lateinit var pointsRepository: PointsRepository
   private lateinit var groupsRepository: GroupsRepository
   private lateinit var mockitoUtils: MockitoUtils
 
@@ -66,6 +69,7 @@ class AddEventsScreenTest {
     profileRepository = ProfileLocalRepository()
     eventsRepository = EventsLocalRepository()
     groupsRepository = GroupsLocalRepository()
+    pointsRepository = PointsLocalRepository()
     fakeNominatimClient = FakeNominatimLocationRepository()
 
     fill_repositories()
@@ -77,6 +81,7 @@ class AddEventsScreenTest {
         AddEventViewModel(
             profileRepository = profileRepository,
             eventsRepository = eventsRepository,
+            pointsRepository = pointsRepository,
             nominatimClient = fakeNominatimClient,
             authProvider = { mockitoUtils.mockAuth },
             groupsRepository = groupsRepository)
