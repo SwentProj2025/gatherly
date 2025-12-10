@@ -191,8 +191,9 @@
 
     <!-- Groups -->
     <string name="add_group_button_label">Add New Group</string>
-    <string name="group_name_bar_label">Group Name</string>
+    <string name="group_name_bar_label">Group Name*</string>
     <string name="group_name_bar_placeholder">Name the Group</string>
+    <string name="group_description_bar_placeholder">Describe the Group</string>
     <string name="group_members_text_singular">member</string>
     <string name="group_members_text_plural">members</string>
 
