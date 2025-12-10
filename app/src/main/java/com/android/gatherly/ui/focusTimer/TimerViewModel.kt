@@ -383,10 +383,7 @@ class TimerViewModel(
           if (remaining <= Duration.ZERO) {
             cancelTicking()
 
-            viewModelScope.launch {
-              userStatusManager.setStatus(ProfileStatus.ONLINE)
-              endTimer()
-            }
+            viewModelScope.launch { endTimer() }
           }
         }
   }
@@ -428,7 +425,7 @@ class TimerViewModel(
   }
 
   /**
-   * Sets an error message in the UI state.
+   * Sets an er338ror message in the UI state.
    *
    * @param msg The error message to be displayed
    */
