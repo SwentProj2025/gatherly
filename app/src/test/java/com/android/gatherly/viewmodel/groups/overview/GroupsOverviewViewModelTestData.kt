@@ -59,9 +59,18 @@ object GroupsOverviewViewModelTestData {
   val allGroups = listOf(userGroup1, userGroup2, userGroup3, otherUserGroup)
 
   val testProfilePic = "testProfilePic"
+  val otherProfilePic = "otherProfilePic"
   val friendProfilePic = "friendProfilePic"
 
   val testUser = Profile(uid = TEST_USER_ID, profilePicture = testProfilePic)
 
+  val otherUser = Profile(uid = OTHER_USER_ID, profilePicture = otherProfilePic)
+
   val friendUser = Profile(uid = FRIEND_USER_ID, profilePicture = friendProfilePic)
+
+  val testProfilePics =
+      listOf(
+          listOf(testProfilePic, friendProfilePic),
+          listOf(testProfilePic, otherProfilePic, friendProfilePic),
+          listOf(testProfilePic))
 }

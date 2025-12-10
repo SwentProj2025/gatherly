@@ -82,6 +82,8 @@ sealed class Tab(val name: String, val icon: ImageVector, val destination: Scree
 
   object AddGroup : Tab("Add Group", Icons.Outlined.GroupAdd, Screen.AddGroupScreen)
 
+  object GroupsOverview : Tab("Groups Overview", Icons.Outlined.Group, Screen.OverviewGroupsScreen)
+
   object GroupInfo : Tab("Group Information", Icons.Outlined.Info, Screen.GroupsInfoScreen)
 
   object EditGroup : Tab("Edit Group", Icons.Outlined.Edit, Screen.EditGroupScreen)

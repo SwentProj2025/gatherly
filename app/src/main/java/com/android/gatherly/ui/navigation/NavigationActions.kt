@@ -61,6 +61,8 @@ sealed class Screen(
 
   object AddGroupScreen : Screen(route = "add_group_screen", name = "Add a New Group")
 
+  object OverviewGroupsScreen : Screen(route = "overview_groups_screen", name = "Groups overview")
+
   object GroupsInfoScreen : Screen(route = "groups_info_screen", name = "Group information")
 
   data class GroupInfo(val groupUid: String) :
