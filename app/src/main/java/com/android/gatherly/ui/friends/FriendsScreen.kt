@@ -10,6 +10,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -167,6 +168,7 @@ fun FriendsScreen(
     friendsViewModel: FriendsViewModel = viewModel(factory = FriendsViewModel.provideFactory()),
     goBack: () -> Unit = {},
     onFindFriends: () -> Unit = {},
+    onClickFriend: (Profile) -> Unit = {}
 ) {
 
   // Retrieve the necessary values for the implementation from the ViewModel
@@ -249,7 +251,8 @@ fun FriendsScreen(
                           friendsViewModel.cancelPendingFriendRequest(
                               recipientId = recipientUid, currentUserId = currentUserIdFromVM)
                         },
-                        onFindFriends = onFindFriends))
+                        onFindFriends = onFindFriends),
+                onClickFriend = onClickFriend)
           }
           // --- UNFRIEND A FRIEND ANIMATION ---
           if (showUnfriendMessage) {
@@ -280,7 +283,8 @@ private fun FriendItem(
     friend: String,
     unfriend: () -> Unit,
     modifier: Modifier = Modifier,
-    profilePicUrl: String? = null
+    profilePicUrl: String? = null,
+    onClickFriend: () -> Unit
 ) {
   Card(
       border =
@@ -304,7 +308,7 @@ private fun FriendItem(
             verticalAlignment = Alignment.CenterVertically,
         ) {
 
-          // -- Placeholder Profile Picture --
+          // -- Profile Picture --
           Image(
               painter = profilePicturePainter(profilePicUrl),
               contentDescription = "Profile picture of $friend",
@@ -327,7 +331,8 @@ private fun FriendItem(
                 color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Medium,
                 modifier =
-                    Modifier.testTag(FriendsScreenTestTags.getTestTagForFriendUsername(friend)))
+                    Modifier.testTag(FriendsScreenTestTags.getTestTagForFriendUsername(friend))
+                        .clickable { onClickFriend() })
           }
           // -- SPACER
           Spacer(
@@ -534,6 +539,7 @@ private fun FriendsListContent(
     padding: PaddingValues,
     data: FriendsListData,
     actions: FriendsListActions,
+    onClickFriend: (Profile) -> Unit,
 ) {
   LazyColumn(
       contentPadding = PaddingValues(vertical = dimensionResource(R.dimen.padding_small)),
@@ -555,6 +561,7 @@ private fun FriendsListContent(
           }
 
           items(items = data.filteredFriends, key = { it }) { friend ->
+            val friendProfile = data.profiles[friend] ?: return@items
             FriendItem(
                 friend = friend,
                 unfriend = { actions.onUnfriend(friend) },
@@ -566,7 +573,9 @@ private fun FriendsListContent(
                         fadeOutSpec = null,
                         placementSpec =
                             tween(durationMillis = ANIMATION_TIME, easing = LinearOutSlowInEasing)),
-                profilePicUrl = data.profiles[friend]?.profilePicture)
+                profilePicUrl = friendProfile.profilePicture,
+                onClickFriend = { onClickFriend(friendProfile) },
+            )
           }
         }
 

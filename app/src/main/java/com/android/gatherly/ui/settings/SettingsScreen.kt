@@ -22,7 +22,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
@@ -38,8 +37,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
 import com.android.gatherly.model.profile.ProfileStatus
 import com.android.gatherly.ui.navigation.*
+import com.android.gatherly.ui.profile.ProfilePictureWithStatus
 import com.android.gatherly.utils.GatherlyAlertDialog
-import com.android.gatherly.utils.profilePicturePainter
 import java.io.File
 
 // Technical constants
@@ -72,6 +71,7 @@ object SettingsScreenTestTags {
   const val CANCEL_BUTTON = "status_cancel"
   const val STATUS_AUTOMATIC_TITLE = "status_title_automatic"
   const val STATUS_MANUAL_TITLE = "status_title_manual"
+  const val BIO_FIELD = "settings_bio_field"
 }
 
 /**
@@ -237,12 +237,18 @@ fun SettingsScreen(
                     modifier =
                         Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()),
                     horizontalAlignment = Alignment.CenterHorizontally) {
-
+                      val profilePicTestTag =
+                          uiState.profilePictureUrl
+                              .takeIf { it.isNotEmpty() }
+                              ?.let { SettingsScreenTestTags.PROFILE_PICTURE_URL_NOT_EMPTY }
+                              ?: SettingsScreenTestTags.PROFILE_PICTURE
                       // Profile Picture
                       ProfilePictureWithStatus(
                           profilePictureUrl = uiState.profilePictureUrl,
                           uiState.currentUserStatus,
-                          onClick = { showStatusDialog = true })
+                          modifier = Modifier.clickable { showStatusDialog = true },
+                          statusTestTag = SettingsScreenTestTags.USER_STATUS,
+                          profilePictureTestTag = profilePicTestTag)
 
                       Spacer(modifier = Modifier.height(fieldSpacingRegular))
 
@@ -325,6 +331,13 @@ fun SettingsScreen(
                             showStatusDialog = false
                           },
                           onDismiss = { showStatusDialog = false })
+                      Spacer(modifier = Modifier.height(fieldSpacingRegular))
+
+                      SettingsField(
+                          label = stringResource(R.string.settings_label_bio),
+                          value = uiState.bio,
+                          onValueChange = { settingsViewModel.editBio(it) },
+                          testTag = SettingsScreenTestTags.BIO_FIELD)
                     }
 
                 Spacer(modifier = Modifier.height(fieldSpacingMedium))
@@ -436,34 +449,6 @@ fun SettingsField(
                   .testTag("${testTag}_error"))
     }
   }
-}
-
-/**
- * Displays a circular profile picture.
- * - If [pictureUrl] is non-empty, loads the image from the URL using Coil.
- * - If [pictureUrl] is empty, shows a default placeholder image.
- * - Adds a test tag for UI testing:
- *     - [SettingsScreenTestTags.PROFILE_PICTURE_URL_NOT_EMPTY] if URL is provided
- *     - [SettingsScreenTestTags.PROFILE_PICTURE] otherwise
- *
- * @param pictureUrl The URL of the profile picture. Can be empty to show a placeholder.
- */
-@Composable
-fun ProfilePictureImage(pictureUrl: String) {
-  Image(
-      painter = profilePicturePainter(pictureUrl),
-      contentDescription = stringResource(R.string.settings_profile_picture_description),
-      modifier =
-          Modifier.fillMaxSize()
-              .border(
-                  width = dimensionResource(id = R.dimen.profile_pic_border),
-                  color = MaterialTheme.colorScheme.outline,
-                  shape = CircleShape)
-              .clip(CircleShape)
-              .testTag(
-                  if (pictureUrl.isNotEmpty()) SettingsScreenTestTags.PROFILE_PICTURE_URL_NOT_EMPTY
-                  else SettingsScreenTestTags.PROFILE_PICTURE),
-      contentScale = ContentScale.Crop)
 }
 
 /**
@@ -777,28 +762,4 @@ fun StatusOptionRow(
           }
         }
       }
-}
-
-/**
- * Shows the user's profile picture with a small status indicator.
- *
- * @param profilePictureUrl URL of the image to display.
- * @param status The user's current status.
- * @param onClick Triggered when the picture is tapped.
- */
-@Composable
-fun ProfilePictureWithStatus(
-    profilePictureUrl: String,
-    status: ProfileStatus,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit = {}
-) {
-  val size = dimensionResource(id = R.dimen.profile_pic_size)
-  Box(modifier = modifier.size(size).clickable { onClick() }) {
-    ProfilePictureImage(profilePictureUrl)
-    StatusIndicator(
-        status = status,
-        modifier = Modifier.align(Alignment.BottomEnd).testTag(SettingsScreenTestTags.USER_STATUS),
-        size = size * 0.25f)
-  }
 }
