@@ -251,9 +251,9 @@ class EventsViewModel(
   }
 
   /**
-   * Applies the current sorting rule to the given list of [TODO]s and return it.
+   * Applies the current sorting rule to the given list of [Event]s and return it.
    *
-   * @param list The list of [TODO]s to sort.
+   * @param list The list of [Event]s to sort.
    * @return A new list sorted according to the active sort order.
    */
   private fun applySortOrder(list: List<Event>): List<Event> {

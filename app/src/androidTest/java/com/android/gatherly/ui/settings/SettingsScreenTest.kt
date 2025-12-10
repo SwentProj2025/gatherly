@@ -87,6 +87,7 @@ class SettingsScreenTest {
             SettingsScreenTestTags.SCHOOL_FIELD,
             SettingsScreenTestTags.SCHOOL_YEAR_FIELD,
             SettingsScreenTestTags.SAVE_BUTTON,
+            SettingsScreenTestTags.BIO_FIELD,
             SettingsScreenTestTags.USER_STATUS)
 
     for (tag in tagsToCheck) {
@@ -144,6 +145,7 @@ class SettingsScreenTest {
     composeRule.onNodeWithTag(SettingsScreenTestTags.NAME_FIELD).performTextInput("Bob")
     composeRule.onNodeWithTag(SettingsScreenTestTags.SCHOOL_FIELD).performTextInput("EPFL")
     composeRule.onNodeWithTag(SettingsScreenTestTags.SCHOOL_YEAR_FIELD).performTextInput("IN BA5")
+    composeRule.onNodeWithTag(SettingsScreenTestTags.BIO_FIELD).performTextInput("My super new Bio")
 
     composeRule.waitForIdle()
     // THEN: Save button should remain enabled

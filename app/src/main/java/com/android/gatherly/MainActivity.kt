@@ -31,12 +31,14 @@ import com.android.gatherly.ui.focusTimer.TimerScreen
 import com.android.gatherly.ui.friends.FindFriendsScreen
 import com.android.gatherly.ui.friends.FriendsScreen
 import com.android.gatherly.ui.groups.AddGroupScreen
+import com.android.gatherly.ui.groups.GroupsOverviewScreen
 import com.android.gatherly.ui.homePage.HomePageScreen
 import com.android.gatherly.ui.map.MapScreen
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.Screen
 import com.android.gatherly.ui.points.FocusPointsScreen
 import com.android.gatherly.ui.profile.ProfileScreen
+import com.android.gatherly.ui.profile.UserProfileScreen
 import com.android.gatherly.ui.settings.SettingsScreen
 import com.android.gatherly.ui.theme.GatherlyTheme
 import com.android.gatherly.ui.todo.AddToDoScreen
@@ -286,11 +288,31 @@ fun GatherlyApp(
       composable(Screen.FriendsScreen.route) {
         FriendsScreen(
             onFindFriends = { navigationActions.navigateTo(Screen.FindFriendsScreen) },
-            goBack = { navigationActions.goBack() })
+            goBack = { navigationActions.goBack() },
+            onClickFriend = { profile ->
+              navigationActions.navigateTo(Screen.UserProfile(profile.uid))
+            })
       }
 
       composable(Screen.FindFriendsScreen.route) {
-        FindFriendsScreen(goBack = { navigationActions.goBack() })
+        FindFriendsScreen(
+            goBack = { navigationActions.goBack() },
+            onClickFriend = { profile ->
+              navigationActions.navigateTo(Screen.UserProfile(profile.uid))
+            })
+      }
+
+      composable(Screen.UserProfile.route) { entry ->
+        val uid = entry.arguments?.getString("uid")
+
+        if (uid != null) {
+          UserProfileScreen(uid = uid, navigationActions = navigationActions)
+        } else {
+          run {
+            Log.e("UserProfileScreen", "User uid is null")
+            Toast.makeText(context, "User UID is null", Toast.LENGTH_SHORT).show()
+          }
+        }
       }
     }
 
@@ -304,7 +326,7 @@ fun GatherlyApp(
       }
     }
 
-    // ADDGROUP COMPOSABLE  ------------------------------
+    // ADD GROUP COMPOSABLE  ------------------------------
     navigation(
         startDestination = Screen.AddGroupScreen.route,
         route = Screen.AddGroupScreen.name,
@@ -313,6 +335,16 @@ fun GatherlyApp(
         AddGroupScreen(
             goBack = { navigationActions.goBack() },
             onCreate = { navigationActions.navigateTo(Screen.HomePage) })
+      }
+    }
+
+    // GROUP OVERVIEW COMPOSABLE  ------------------------------
+    navigation(
+        startDestination = Screen.OverviewGroupsScreen.route,
+        route = Screen.OverviewGroupsScreen.name,
+    ) {
+      composable(Screen.OverviewGroupsScreen.route) {
+        GroupsOverviewScreen(navigationActions = navigationActions)
       }
     }
   }
