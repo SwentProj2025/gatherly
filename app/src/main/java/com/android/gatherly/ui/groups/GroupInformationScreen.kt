@@ -41,9 +41,20 @@ import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
 import com.android.gatherly.utils.profilePicturePainter
 
+object GroupInformationScreenTestTags {
+  const val MEMBERS_LIST = "membersList"
+  const val EDIT_BUTTON = "editButton"
+  const val GROUP_NAME = "groupName"
+  const val GROUP_DESCRIPTION = "groupDescription"
+
+  fun getTestTagForMemberItem(uid: String): String = "member_${uid}"
+
+  fun getTestTagForAdminItem(uid: String): String = "admin_${uid}"
+}
+
 @Composable
 fun GroupInformationScreen(
-    navigationActions: NavigationActions,
+    navigationActions: NavigationActions? = null,
     groupInformationViewModel: GroupInformationViewModel = viewModel(),
     groupId: String
 ) {
@@ -57,7 +68,7 @@ fun GroupInformationScreen(
         TopNavigationMenu_Goback(
             selectedTab = Tab.GroupInfo,
             modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
-            goBack = { navigationActions.goBack() })
+            goBack = { navigationActions?.goBack() })
       },
       content = { padding ->
         Column(
@@ -74,13 +85,15 @@ fun GroupInformationScreen(
                 Text(
                     text = uiState.value.group.name,
                     style = MaterialTheme.typography.displayLarge,
-                    fontWeight = FontWeight.Bold)
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.testTag(GroupInformationScreenTestTags.GROUP_NAME))
 
                 uiState.value.group.description?.let {
                   Text(
                       text = it,
                       style = MaterialTheme.typography.headlineMedium,
-                      fontWeight = FontWeight.Bold)
+                      fontWeight = FontWeight.Bold,
+                      modifier = Modifier.testTag(GroupInformationScreenTestTags.GROUP_DESCRIPTION))
                 }
 
                 Text(
@@ -100,13 +113,14 @@ fun GroupInformationScreen(
                 if (uiState.value.isAdmin) {
                   Button(
                       onClick = {
-                        navigationActions.navigateTo(Screen.EditGroup(uiState.value.group.gid))
+                        navigationActions?.navigateTo(Screen.EditGroup(uiState.value.group.gid))
                       },
                       modifier =
                           Modifier.padding(
                                   all = dimensionResource(R.dimen.add_group_button_vertical))
                               .fillMaxWidth()
-                              .height(dimensionResource(R.dimen.homepage_focus_button_height)),
+                              .height(dimensionResource(R.dimen.homepage_focus_button_height))
+                              .testTag(GroupInformationScreenTestTags.EDIT_BUTTON),
                       shape =
                           RoundedCornerShape(
                               dimensionResource(R.dimen.friends_item_rounded_corner_shape)),
@@ -125,47 +139,56 @@ fun GroupInformationScreen(
 
 @Composable
 fun MembersList(membersProfiles: List<Profile>, adminIds: List<String>, modifier: Modifier) {
-  LazyColumn(modifier = modifier.fillMaxWidth()) {
-    for (profile in membersProfiles) {
-      item {
-        Row(
-            modifier = Modifier.height(dimensionResource(R.dimen.add_group_button_height)),
-            verticalAlignment = Alignment.CenterVertically) {
-              // Profile picture
-              Image(
-                  painter = profilePicturePainter(profile.profilePicture),
-                  contentDescription = "Profile picture",
-                  contentScale = ContentScale.Crop,
-                  modifier =
-                      Modifier.padding(
-                              horizontal =
-                                  dimensionResource(id = R.dimen.group_overview_avatar_spacing))
-                          .size(dimensionResource(R.dimen.find_friends_item_profile_picture_size))
-                          .clip(CircleShape))
+  LazyColumn(
+      modifier = modifier.fillMaxWidth().testTag(GroupInformationScreenTestTags.MEMBERS_LIST)) {
+        for (profile in membersProfiles) {
+          item {
+            Row(
+                modifier =
+                    Modifier.height(dimensionResource(R.dimen.add_group_button_height))
+                        .testTag(
+                            GroupInformationScreenTestTags.getTestTagForMemberItem(profile.uid)),
+                verticalAlignment = Alignment.CenterVertically) {
+                  // Profile picture
+                  Image(
+                      painter = profilePicturePainter(profile.profilePicture),
+                      contentDescription = "Profile picture",
+                      contentScale = ContentScale.Crop,
+                      modifier =
+                          Modifier.padding(
+                                  horizontal =
+                                      dimensionResource(id = R.dimen.group_overview_avatar_spacing))
+                              .size(
+                                  dimensionResource(R.dimen.find_friends_item_profile_picture_size))
+                              .clip(CircleShape))
 
-              // Member name
-              Text(
-                  text = profile.name,
-                  fontWeight = FontWeight.Bold,
-                  style = MaterialTheme.typography.headlineSmall,
-                  color = MaterialTheme.colorScheme.onBackground,
-                  modifier =
-                      Modifier.padding(horizontal = dimensionResource(R.dimen.padding_regular))
-                          .weight(1f))
+                  // Member name
+                  Text(
+                      text = profile.name,
+                      fontWeight = FontWeight.Bold,
+                      style = MaterialTheme.typography.headlineSmall,
+                      color = MaterialTheme.colorScheme.onBackground,
+                      modifier =
+                          Modifier.padding(horizontal = dimensionResource(R.dimen.padding_regular))
+                              .weight(1f))
 
-              if (adminIds.contains(profile.uid)) {
-                // Admin mention
-                Text(
-                    text = stringResource(R.string.groups_info_admin),
-                    fontStyle = FontStyle.Italic,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.surfaceVariant,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier =
-                        Modifier.padding(horizontal = dimensionResource(R.dimen.padding_regular)))
-              }
-            }
+                  if (adminIds.contains(profile.uid)) {
+                    // Admin mention
+                    Text(
+                        text = stringResource(R.string.groups_info_admin),
+                        fontStyle = FontStyle.Italic,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier =
+                            Modifier.padding(
+                                    horizontal = dimensionResource(R.dimen.padding_regular))
+                                .testTag(
+                                    GroupInformationScreenTestTags.getTestTagForAdminItem(
+                                        profile.uid)))
+                  }
+                }
+          }
+        }
       }
-    }
-  }
 }
