@@ -421,16 +421,8 @@ class AddEventViewModel(
   fun searchGroupsNameByString(string: String) {
     viewModelScope.launch {
       val trimmedString = string.trim()
-      val groupsIds = currentProfile.groupIds
 
-      val allGroups =
-          groupsIds.mapNotNull { groupId ->
-            try {
-              groupsRepository.getGroup(groupId)
-            } catch (e: NoSuchElementException) {
-              null
-            }
-          }
+        val allGroups = groupsRepository.getUserGroups()
 
       if (trimmedString.isBlank()) {
         uiState = uiState.copy(suggestedGroups = allGroups)
