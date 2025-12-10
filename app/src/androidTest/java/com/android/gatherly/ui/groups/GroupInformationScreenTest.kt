@@ -27,7 +27,6 @@ class GroupInformationScreenTest {
   private lateinit var groupInformationViewModel: GroupInformationViewModel
 
   val testUserId = "testUser"
-  val otherUserId = "otherUser"
   val friendUserId = "friendUser"
 
   val userGroup1 =

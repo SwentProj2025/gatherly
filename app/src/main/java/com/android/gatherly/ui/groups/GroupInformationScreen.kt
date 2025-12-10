@@ -21,6 +21,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -59,7 +60,7 @@ fun GroupInformationScreen(
     groupId: String
 ) {
 
-  val uiState = groupInformationViewModel.uiState.collectAsState()
+  val uiState by groupInformationViewModel.uiState.collectAsState()
 
   LaunchedEffect(Unit) { groupInformationViewModel.loadUIState(groupId) }
 
@@ -74,7 +75,7 @@ fun GroupInformationScreen(
         Column(
             modifier = Modifier.padding(padding).fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally) {
-              if (uiState.value.isLoading) {
+              if (uiState.isLoading) {
                 Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
                   Text(
                       text = stringResource(R.string.groups_info_loading),
@@ -83,12 +84,12 @@ fun GroupInformationScreen(
                 }
               } else {
                 Text(
-                    text = uiState.value.group.name,
+                    text = uiState.group.name,
                     style = MaterialTheme.typography.displayLarge,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.testTag(GroupInformationScreenTestTags.GROUP_NAME))
 
-                uiState.value.group.description?.let {
+                uiState.group.description?.let {
                   Text(
                       text = it,
                       style = MaterialTheme.typography.headlineMedium,
@@ -106,14 +107,14 @@ fun GroupInformationScreen(
                         Modifier.padding(vertical = dimensionResource(R.dimen.padding_regular)))
 
                 MembersList(
-                    membersProfiles = uiState.value.memberProfiles,
-                    adminIds = uiState.value.group.adminIds,
+                    membersProfiles = uiState.memberProfiles,
+                    adminIds = uiState.group.adminIds,
                     modifier = Modifier.weight(1f))
 
-                if (uiState.value.isAdmin) {
+                if (uiState.isAdmin) {
                   Button(
                       onClick = {
-                        navigationActions?.navigateTo(Screen.EditGroup(uiState.value.group.gid))
+                        navigationActions?.navigateTo(Screen.EditGroup(uiState.group.gid))
                       },
                       modifier =
                           Modifier.padding(
@@ -152,7 +153,7 @@ fun MembersList(membersProfiles: List<Profile>, adminIds: List<String>, modifier
                   // Profile picture
                   Image(
                       painter = profilePicturePainter(profile.profilePicture),
-                      contentDescription = "Profile picture",
+                      contentDescription = stringResource(R.string.groups_profile_pic_tag),
                       contentScale = ContentScale.Crop,
                       modifier =
                           Modifier.padding(
