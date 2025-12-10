@@ -370,10 +370,10 @@ class TimerViewModel(
 
           if (remaining <= Duration.ZERO) {
             elapsedTime = state.plannedDuration
+            endTimer()
             _uiState.value = _uiState.value.copy(isStarted = false, isPaused = false)
             updateClock(Duration.ZERO)
             viewModelScope.launch { userStatusManager.setStatus(ProfileStatus.ONLINE) }
-            endTimer()
           }
         }
   }
