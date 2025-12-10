@@ -49,6 +49,7 @@ import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
 import com.android.gatherly.ui.theme.GatherlyTheme
 import com.android.gatherly.utils.DatePickerInputField
 import com.android.gatherly.utils.GatherlyAlertDialog
+import com.android.gatherly.utils.GatherlyAlertDialogActions
 import com.android.gatherly.utils.GatherlyDatePicker
 import com.android.gatherly.utils.TimeInputField
 import kotlinx.coroutines.delay
@@ -427,11 +428,13 @@ fun EditEventsScreen(
               bodyText = stringResource(R.string.events_delete_warning_text),
               dismissText = stringResource(R.string.cancel),
               confirmText = stringResource(R.string.delete),
-              onDismiss = { shouldShowDialog.value = false },
-              onConfirm = {
-                editEventsViewModel.deleteEvent()
-                shouldShowDialog.value = false
-              },
+              actions =
+                  GatherlyAlertDialogActions(
+                      onDismiss = { shouldShowDialog.value = false },
+                      onConfirm = {
+                        editEventsViewModel.deleteEvent()
+                        shouldShowDialog.value = false
+                      }),
               isImportantWarning = true)
         }
         GatherlyDatePicker(
