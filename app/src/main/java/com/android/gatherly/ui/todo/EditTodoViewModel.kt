@@ -1,5 +1,7 @@
 package com.android.gatherly.ui.todo
 
+import android.util.Log
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.map.Location
@@ -7,9 +9,13 @@ import com.android.gatherly.model.map.NominatimLocationRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryProvider
 import com.android.gatherly.model.todo.ToDo
+import com.android.gatherly.model.todo.ToDoPriority
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.model.todo.ToDosRepositoryProvider
+import com.android.gatherly.model.todoCategory.ToDoCategory
+import com.android.gatherly.model.todoCategory.ToDoCategoryRepository
+import com.android.gatherly.model.todoCategory.ToDoCategoryRepositoryProvider
 import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -41,7 +47,9 @@ data class EditTodoUIState(
     val saveSuccess: Boolean = false,
     val deleteSuccess: Boolean = false,
     val suggestions: List<Location> = emptyList(),
-    val pastTime: Boolean = false
+    val pastTime: Boolean = false,
+    val priorityLevel: ToDoPriority = ToDoPriority.NONE,
+    val tag: ToDoCategory? = null
 ) {
   val isValid: Boolean
     get() = titleError == null && dueDateError == null && dueTimeError == null && !isSaving
@@ -75,11 +83,16 @@ private var client: OkHttpClient =
 class EditTodoViewModel(
     private val todoRepository: ToDosRepository = ToDosRepositoryProvider.repository,
     private val nominatimClient: NominatimLocationRepository = NominatimLocationRepository(client),
-    private val profileRepository: ProfileRepository = ProfileRepositoryProvider.repository
+    private val profileRepository: ProfileRepository = ProfileRepositoryProvider.repository,
+    private val todoCategoryRepository: ToDoCategoryRepository =
+        ToDoCategoryRepositoryProvider.repository
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(EditTodoUIState())
   /** Public immutable access to the Edit ToDo UI state. */
   val uiState: StateFlow<EditTodoUIState> = _uiState.asStateFlow()
+
+  private val _categories = MutableStateFlow<List<ToDoCategory>>(emptyList())
+  val categories: StateFlow<List<ToDoCategory>> = _categories.asStateFlow()
 
   // Selected Location
   private var chosenLocation: Location? = null
@@ -112,6 +125,21 @@ class EditTodoViewModel(
     _uiState.value = _uiState.value.copy(pastTime = false)
   }
 
+  init {
+    viewModelScope.launch { loadAllCategories() }
+  }
+
+  private suspend fun loadAllCategories() {
+    try {
+      todoCategoryRepository.initializeDefaultCategories()
+
+      val list = todoCategoryRepository.getAllCategories()
+      _categories.value = list
+    } catch (e: Exception) {
+      Log.e("EditTodoVM", "Failed to load categories: ${e.message}")
+    }
+  }
+
   /**
    * Loads a ToDo by its ID and updates the UI state.
    *
@@ -138,7 +166,8 @@ class EditTodoViewModel(
                       return@let dateFormat.format(it.toDate())
                     } ?: "",
                 location = todo.location?.name ?: "",
-            )
+                priorityLevel = todo.priorityLevel,
+                tag = todo.tag)
       } catch (e: Exception) {
         setErrorMsg("Failed to load ToDo: ${e.message}")
       }
@@ -219,7 +248,9 @@ class EditTodoViewModel(
                   location = chosenLocation,
                   status = state.status,
                   uid = id,
-                  ownerId = ownerId))
+                  ownerId = ownerId,
+                  priorityLevel = state.priorityLevel,
+                  tag = state.tag))
     }
     clearErrorMsg()
     return true
@@ -359,6 +390,48 @@ class EditTodoViewModel(
   fun selectLocation(location: Location) {
     _uiState.value = _uiState.value.copy(location = location.name, suggestions = emptyList())
     chosenLocation = location
+  }
+
+  /*----------------------------------Priority Level--------------------------------------------*/
+
+  /**
+   * Updates the priority level of the item
+   *
+   * @param priorityLevel the selected priority level
+   */
+  fun selectPriorityLevel(priorityLevel: ToDoPriority) {
+    _uiState.value = _uiState.value.copy(priorityLevel = priorityLevel)
+  }
+
+  /*------------------------------------Category------------------------------------------------*/
+
+  /**
+   * Updates the tag of the item
+   *
+   * @param category the selected category
+   */
+  fun selectTodoTag(category: ToDoCategory?) {
+    _uiState.value = _uiState.value.copy(tag = category)
+  }
+
+  fun addCategory(name: String, color: Color) {
+
+    viewModelScope.launch {
+      try {
+        val newCategory = ToDoCategory(name = name, color = color, isDefault = false)
+        todoCategoryRepository.addToDoCategory(newCategory)
+        _categories.value = todoCategoryRepository.getAllCategories()
+      } catch (e: Exception) {}
+    }
+  }
+
+  fun deleteCategory(category: ToDoCategory) {
+    viewModelScope.launch {
+      try {
+        todoCategoryRepository.deleteToDoCategory(category.id)
+        _categories.value = todoCategoryRepository.getAllCategories()
+      } catch (e: Exception) {}
+    }
   }
 
   /*----------------------------------Helpers--------------------------------------------------*/

@@ -38,15 +38,22 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.integerResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
+import com.android.gatherly.model.todoCategory.ToDoCategory
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
 import com.android.gatherly.ui.theme.GatherlyTheme
+import com.android.gatherly.utils.AlertDialogCreateTag
+import com.android.gatherly.utils.AlertDialogWarningDeleteTag
+import com.android.gatherly.utils.CategoriesDropDown
 import com.android.gatherly.utils.DatePickerInputField
 import com.android.gatherly.utils.GatherlyAlertDialog
 import com.android.gatherly.utils.GatherlyDatePicker
+import com.android.gatherly.utils.PriorityDropDown
 import com.android.gatherly.utils.TimeInputField
 import kotlinx.coroutines.delay
 
@@ -111,8 +118,13 @@ fun EditToDoScreen(
   val fieldSpacing = dimensionResource(id = R.dimen.spacing_between_fields)
   val buttonSpacing = dimensionResource(id = R.dimen.spacing_between_buttons)
 
-  // Date state for the alert dialog visibilty
+  // Date state for the alert dialog visibility
   var showDatePicker by remember { mutableStateOf(false) }
+
+  // Create a new category alert dialog visibility
+  val showCreateTagDialog = remember { mutableStateOf(false) }
+  val showWarningDeleteTagDialog = remember { mutableStateOf<ToDoCategory?>(null) }
+  val categoriesList by editTodoViewModel.categories.collectAsStateWithLifecycle()
 
   // Search location when input changes
   LaunchedEffect(todoUIState.location) {
@@ -149,6 +161,26 @@ fun EditToDoScreen(
             modifier = Modifier.fillMaxSize().padding(paddingVal).padding(screenPadding),
             verticalArrangement = Arrangement.spacedBy(fieldSpacing)) {
 
+              // Buttons row
+              item {
+                Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+
+                  // Category drop down
+                  CategoriesDropDown(
+                      { category -> editTodoViewModel.selectTodoTag(category) },
+                      showCreateTagDialog,
+                      todoUIState.tag,
+                      showWarningDeleteTagDialog,
+                      categoriesList)
+                  // Priority level drop down
+                  PriorityDropDown(
+                      onSelectPriorityLevel = { level ->
+                        editTodoViewModel.selectPriorityLevel(level)
+                      },
+                      currentPriorityLevel = todoUIState.priorityLevel)
+                }
+              }
+
               // Title Input
               item {
                 OutlinedTextField(
@@ -182,6 +214,7 @@ fun EditToDoScreen(
                     maxLines = integerResource(R.integer.todo_description_max_lines))
               }
 
+              // More options bar
               item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -331,6 +364,14 @@ fun EditToDoScreen(
             onDateSelected = { selectedDate -> editTodoViewModel.onDateChanged(selectedDate) },
             onDismiss = { showDatePicker = false })
       })
+
+  AlertDialogCreateTag(
+      showCreateTagDialog,
+      onCreateTag = { name, color -> editTodoViewModel.addCategory(name, color) })
+
+  AlertDialogWarningDeleteTag(
+      showWarningDeleteTagDialog,
+      onConfirmDelete = { category -> editTodoViewModel.deleteCategory(category) })
 }
 
 // Helper function to preview the timer screen

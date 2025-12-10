@@ -1,5 +1,7 @@
 package com.android.gatherly.model.todo
 
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import com.android.gatherly.model.map.Location
 import com.android.gatherly.model.todoCategory.ToDoCategory
 import com.google.firebase.auth.ktx.auth
@@ -184,9 +186,33 @@ class ToDosRepositoryFirestore(private val db: FirebaseFirestore) : ToDosReposit
     val ownerId = doc.getString("ownerId") ?: return null
     val statusStr = doc.getString("status") ?: ToDoStatus.ONGOING.name
     val status = ToDoStatus.valueOf(statusStr)
-    val priorityStr = doc.getString("priority") ?: ToDoPriority.LOW.name
+    val priorityStr = doc.getString("priority") ?: return null
     val priority = ToDoPriority.valueOf(priorityStr)
-    val tag = doc.get("tag") as ToDoCategory
+    val categoryMap = doc.get("tag") as? Map<*, *>
+    val tag =
+        categoryMap?.let { catMap ->
+          val categoryId = catMap["id"] as? String
+          val categoryName = catMap["name"] as? String
+          val categoryColorLong = catMap["color"] as? Long
+          val categoryColor = categoryColorLong?.let { Color(it) }
+          val categoryIsDefault = catMap["isDefault"] as? Boolean
+          val categoryIsDeleted = catMap["isDeleted"] as? Boolean
+          if (categoryId != null &&
+              categoryName != null &&
+              categoryColor != null &&
+              categoryIsDeleted != null &&
+              categoryIsDefault != null) {
+            ToDoCategory(
+                id = categoryId,
+                name = categoryName,
+                color = categoryColor,
+                isDefault = categoryIsDefault,
+                isDeleted = categoryIsDeleted,
+                ownerId = ownerId)
+          } else {
+            null
+          }
+        }
 
     return ToDo(uid, name, description, dueDate, dueTime, location, status, ownerId, priority, tag)
   }
@@ -213,6 +239,15 @@ class ToDosRepositoryFirestore(private val db: FirebaseFirestore) : ToDosReposit
         "status" to todo.status.name,
         "ownerId" to todo.ownerId,
         "priority" to todo.priorityLevel,
-        "tag" to todo.tag)
+        "tag" to
+            todo.tag?.let { category ->
+              mapOf(
+                  "id" to category.id,
+                  "name" to category.name,
+                  "color" to category.color.toArgb(),
+                  "isDefault" to category.isDefault,
+                  "isDeleted" to category.isDeleted,
+                  "ownerId" to category.ownerId)
+            })
   }
 }

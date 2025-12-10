@@ -16,7 +16,7 @@ data class ToDo(
     override val location: Location?,
     val status: ToDoStatus,
     val ownerId: String,
-    val priorityLevel: ToDoPriority? = null,
+    val priorityLevel: ToDoPriority = ToDoPriority.NONE,
     val tag: ToDoCategory? = null,
 ) : DisplayedMapElement
 
@@ -27,11 +27,11 @@ enum class ToDoStatus {
 }
 
 /** Represents the priority level of a [ToDo] item */
-enum class ToDoPriority {
-  LOW,
-  MEDIUM,
-  HIGH,
-  URGENT
+enum class ToDoPriority(val displayName: String?) {
+  NONE(null),
+  LOW("Low Priority"),
+  MEDIUM("Medium Priority"),
+  HIGH("High Priority")
 }
 
 /**

@@ -1,5 +1,6 @@
 package com.android.gatherly.ui.todo
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.profile.ProfileRepository
@@ -8,6 +9,9 @@ import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.model.todo.ToDosRepositoryProvider
+import com.android.gatherly.model.todoCategory.ToDoCategory
+import com.android.gatherly.model.todoCategory.ToDoCategoryRepository
+import com.android.gatherly.model.todoCategory.ToDoCategoryRepositoryProvider
 import com.android.gatherly.utils.editTodo
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -27,7 +31,8 @@ data class OverviewUIState(
     val todos: List<ToDo> = emptyList(),
     val sortOrder: TodoSortOrder = TodoSortOrder.ALPHABETICAL,
     val errorMsg: String? = null,
-    val isLoading: Boolean = false
+    val isLoading: Boolean = false,
+    val selectedCategory: ToDoCategory? = null
 )
 
 /**
@@ -39,7 +44,8 @@ data class OverviewUIState(
 enum class TodoSortOrder {
   DATE_ASC,
   DATE_DESC,
-  ALPHABETICAL
+  ALPHABETICAL,
+  PRIORITY_LEVEL
 }
 
 /**
@@ -52,21 +58,31 @@ enum class TodoSortOrder {
  */
 class OverviewViewModel(
     private val todoRepository: ToDosRepository = ToDosRepositoryProvider.repository,
-    private val profileRepository: ProfileRepository = ProfileRepositoryProvider.repository
+    private val profileRepository: ProfileRepository = ProfileRepositoryProvider.repository,
+    private val todoCategoryRepository: ToDoCategoryRepository =
+        ToDoCategoryRepositoryProvider.repository
 ) : ViewModel() {
 
   private val _uiState = MutableStateFlow(OverviewUIState())
   val uiState: StateFlow<OverviewUIState> = _uiState.asStateFlow()
 
+  private val _categories = MutableStateFlow<List<ToDoCategory>>(emptyList())
+  val categories: StateFlow<List<ToDoCategory>> = _categories.asStateFlow()
+
   private var allTodosCache: List<ToDo> = emptyList()
+
+  private var currentSearchQuery: String = ""
 
   init {
     getAllTodos()
+    viewModelScope.launch { loadAllCategories() }
   }
 
   /** Refreshes the UI state by fetching all [TODO] items from the repository. */
   fun refreshUIState() {
+    _uiState.value = _uiState.value.copy(selectedCategory = null)
     getAllTodos()
+    viewModelScope.launch { loadAllCategories() }
   }
 
   /** Fetches all [TODO]s from the repository and updates the UI state. */
@@ -76,14 +92,23 @@ class OverviewViewModel(
       try {
         val todos = todoRepository.getAllTodos()
         allTodosCache = todos
-        val orderedTodos = applySortOrder(todos)
-        _uiState.value =
-            OverviewUIState(
-                todos = orderedTodos, isLoading = false, sortOrder = _uiState.value.sortOrder)
+        _uiState.value = _uiState.value.copy(isLoading = false)
+        refreshVisibleTodos()
       } catch (e: Exception) {
         _uiState.value =
             _uiState.value.copy(todos = emptyList(), errorMsg = e.message, isLoading = false)
       }
+    }
+  }
+
+  private suspend fun loadAllCategories() {
+    try {
+      todoCategoryRepository.initializeDefaultCategories()
+
+      val list = todoCategoryRepository.getAllCategories()
+      _categories.value = list
+    } catch (e: Exception) {
+      Log.e("OverviewTodoVM", "Failed to load categories: ${e.message}")
     }
   }
 
@@ -98,20 +123,13 @@ class OverviewViewModel(
 
   /** Invoked when users type in the search bar to filter [TODO]s according to the typed query. */
   fun searchTodos(query: String) {
-    val normalized = query.trim().lowercase()
-    if (normalized.isEmpty()) {
-      // When query is empty in the search bar, we display the full sorted list:
-      val sorted = applySortOrder(allTodosCache)
-      _uiState.value = _uiState.value.copy(todos = sorted)
-      return
-    }
-    val filtered =
-        allTodosCache.filter {
-          it.name.lowercase().contains(normalized) ||
-              it.description.lowercase().contains(normalized)
-        }
-    val sortedFiltered = applySortOrder(filtered)
-    _uiState.value = _uiState.value.copy(todos = sortedFiltered)
+    currentSearchQuery = query.trim()
+    refreshVisibleTodos()
+  }
+
+  fun setCategoryFilter(category: ToDoCategory?) {
+    _uiState.value = _uiState.value.copy(selectedCategory = category)
+    refreshVisibleTodos()
   }
 
   /**
@@ -122,8 +140,7 @@ class OverviewViewModel(
    */
   fun setSortOrder(order: TodoSortOrder) {
     _uiState.value = _uiState.value.copy(sortOrder = order)
-    val sorted = applySortOrder(_uiState.value.todos)
-    _uiState.value = _uiState.value.copy(todos = sorted)
+    refreshVisibleTodos()
   }
 
   /**
@@ -137,6 +154,29 @@ class OverviewViewModel(
       TodoSortOrder.ALPHABETICAL -> list.sortedBy { it.name.lowercase() }
       TodoSortOrder.DATE_ASC -> list.sortedBy { it.dueDate?.toDate() }
       TodoSortOrder.DATE_DESC -> list.sortedByDescending { it.dueDate?.toDate() }
+      TodoSortOrder.PRIORITY_LEVEL -> list.sortedByDescending { it.priorityLevel.ordinal }
     }
+  }
+
+  private fun refreshVisibleTodos() {
+    val category = _uiState.value.selectedCategory
+    val query = currentSearchQuery.trim().lowercase()
+
+    var result = allTodosCache
+
+    if (category != null) {
+      result = result.filter { it.tag?.id == category.id }
+    }
+
+    if (query.isNotEmpty()) {
+      result =
+          result.filter {
+            it.name.lowercase().contains(query) || it.description.lowercase().contains(query)
+          }
+    }
+
+    result = applySortOrder(result)
+
+    _uiState.value = _uiState.value.copy(todos = result)
   }
 }

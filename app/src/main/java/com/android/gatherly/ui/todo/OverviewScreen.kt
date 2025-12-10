@@ -3,21 +3,30 @@ package com.android.gatherly.ui.todo
 import android.icu.text.SimpleDateFormat
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults.buttonColors
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
@@ -34,6 +43,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -48,15 +58,20 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.integerResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
 import com.android.gatherly.model.todo.ToDo
+import com.android.gatherly.model.todo.ToDoPriority
 import com.android.gatherly.model.todo.ToDoStatus
+import com.android.gatherly.model.todoCategory.ToDoCategory
 import com.android.gatherly.ui.navigation.BottomNavigationMenu
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu
+import com.android.gatherly.utils.priorityLevelColor
 import java.util.Locale
 
 // Portions of the code in this file are copy-pasted from the Bootcamp solution provided by the
@@ -97,6 +112,16 @@ object OverviewScreenTestTags {
    * @return A string uniquely identifying the ToDo item in the UI.
    */
   fun getTestTagForTodoItem(todo: ToDo): String = "todoItem${todo.uid}"
+
+  /**
+   * Returns a unique test tag for the button representing a given [ToDoCategory] item.
+   *
+   * @param category The [ToDoCategory] item whose test tag will be generated.
+   * @return A string uniquely identifying the ToDo item in the UI.
+   */
+  fun getTestTagForTagButton(category: ToDoCategory): String = "tagItem${category.id}"
+
+  const val ALL_TAG_BUTTON = "allTagButton"
 }
 
 /**
@@ -120,6 +145,9 @@ fun OverviewScreen(
   val uiState by overviewViewModel.uiState.collectAsState()
   val todos = uiState.todos
   val focusManager: FocusManager = LocalFocusManager.current
+
+  val selectedTagFilter = remember { mutableStateOf<ToDoCategory?>(null) }
+  val categoriesList by overviewViewModel.categories.collectAsStateWithLifecycle()
 
   // Fetch todos when the screen is recomposed
   LaunchedEffect(Unit) { overviewViewModel.refreshUIState() }
@@ -174,6 +202,8 @@ fun OverviewScreen(
                               .padding(
                                   bottom =
                                       dimensionResource(R.dimen.todos_overview_vertical_padding))) {
+
+                        // -- Search Bar --
                         OutlinedTextField(
                             value = searchQuery,
                             onValueChange = { newText ->
@@ -201,6 +231,9 @@ fun OverviewScreen(
                             onSortSelected = { overviewViewModel.setSortOrder(it) })
                       }
 
+                  // -- Tag filter bar --
+                  FilterTagBar(selectedTagFilter, categoriesList, overviewViewModel)
+
                   if (todos.isNotEmpty()) {
                     LazyColumn(
                         contentPadding =
@@ -214,7 +247,6 @@ fun OverviewScreen(
                                     horizontal =
                                         dimensionResource(
                                             id = R.dimen.todos_overview_horizontal_padding))
-                                .padding(pd)
                                 .testTag(OverviewScreenTestTags.TODO_LIST)) {
 
                           // ONGOING SECTION
@@ -373,6 +405,25 @@ fun SortMenu(currentOrder: TodoSortOrder, onSortSelected: (TodoSortOrder) -> Uni
                           stringResource(R.string.todos_sort_menu_check_icon_label))
                 }
               })
+
+          DropdownMenuItem(
+              text = {
+                Text(
+                    text = stringResource(R.string.todos_priority_sort_button_text),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+              },
+              onClick = {
+                onSortSelected(TodoSortOrder.PRIORITY_LEVEL)
+                expanded = false
+              },
+              trailingIcon = {
+                if (currentOrder == TodoSortOrder.PRIORITY_LEVEL) {
+                  Icon(
+                      Icons.Default.Check,
+                      contentDescription =
+                          stringResource(R.string.todos_sort_menu_check_icon_label))
+                }
+              })
         }
   }
 }
@@ -422,21 +473,114 @@ fun ToDoItem(
               modifier =
                   Modifier.weight(
                       integerResource(id = R.integer.todo_item_column_weight).toFloat())) {
-                Text(
-                    text = todo.name,
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    fontWeight = FontWeight.Medium)
-                Text(
-                    text =
-                        todo.dueDate?.let {
-                          SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-                              .format(todo.dueDate.toDate())
-                        } ?: "",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                Row {
+                  Text(
+                      text = todo.name,
+                      style = MaterialTheme.typography.bodyLarge,
+                      color = MaterialTheme.colorScheme.onSurfaceVariant,
+                      fontWeight = FontWeight.Medium)
+
+                  Spacer(modifier = Modifier.width(10.dp))
+
+                  if (todo.tag != null) {
+                    Icon(
+                        imageVector = Icons.Filled.Folder,
+                        modifier = Modifier.size(25.dp).fillMaxSize(),
+                        contentDescription = "Category icon",
+                        tint = todo.tag.color,
+                    )
+                  }
+                }
+
+                if (todo.dueDate != null) {
+                  Text(
+                      text =
+                          todo.dueDate.let {
+                            SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                                .format(todo.dueDate.toDate())
+                          } ?: "",
+                      style = MaterialTheme.typography.bodySmall,
+                      color = MaterialTheme.colorScheme.onSurfaceVariant,
+                  )
+                }
               }
+
+          if (todo.priorityLevel != ToDoPriority.NONE) {
+            Icon(
+                imageVector = Icons.Filled.Error,
+                modifier = Modifier.size(30.dp).fillMaxSize(),
+                contentDescription = "Priority level icon",
+                tint = priorityLevelColor(todo.priorityLevel))
+          }
         }
+      }
+}
+
+/** Displays a filter bar with buttons to filter events by their status. */
+@Composable
+private fun FilterTagBar(
+    selectedTagFilter: MutableState<ToDoCategory?>,
+    categoriesList: List<ToDoCategory>,
+    overviewViewModel: OverviewViewModel
+) {
+  LazyRow(
+      modifier =
+          Modifier.fillMaxWidth()
+              .padding(vertical = dimensionResource(R.dimen.events_filter_bar_vertical_size)),
+      horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        item {
+          FilterTagButton(
+              "All",
+              null,
+              selectedTagFilter,
+              overviewViewModel,
+              Modifier.testTag(OverviewScreenTestTags.ALL_TAG_BUTTON))
+        }
+
+        items(categoriesList.size) { index ->
+          val category = categoriesList[index]
+          FilterTagButton(
+              category.name,
+              category,
+              selectedTagFilter,
+              overviewViewModel,
+              Modifier.testTag(OverviewScreenTestTags.getTestTagForTagButton(category)))
+        }
+      }
+}
+
+/**
+ * A button used in the filter bar to select an event filter.
+ *
+ * @param label The text label for the button.
+ * @param category The [ToDoCategory] associated with this button.
+ * @param selectedTagFilter The currently selected [ToDoCategory].
+ */
+@Composable
+private fun FilterTagButton(
+    label: String,
+    category: ToDoCategory?,
+    selectedTagFilter: MutableState<ToDoCategory?>,
+    overviewViewModel: OverviewViewModel,
+    modifier: Modifier
+) {
+  val isSelected = selectedTagFilter.value == category
+
+  Button(
+      onClick = {
+        selectedTagFilter.value = category
+        overviewViewModel.setCategoryFilter(category)
+      },
+      colors =
+          buttonColors(
+              containerColor =
+                  if (isSelected) category?.color ?: MaterialTheme.colorScheme.primary
+                  else MaterialTheme.colorScheme.surfaceVariant,
+              contentColor =
+                  if (isSelected) MaterialTheme.colorScheme.onPrimary
+                  else MaterialTheme.colorScheme.background),
+      shape = RoundedCornerShape(dimensionResource(R.dimen.rounded_corner_shape_large)),
+      modifier = modifier.height(dimensionResource(R.dimen.events_filter_button_height))) {
+        Text(text = label)
       }
 }
