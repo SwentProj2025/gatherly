@@ -28,10 +28,10 @@ enum class ToDoStatus {
 
 /** Represents the priority level of a [ToDo] item */
 enum class ToDoPriority(val displayName: String?) {
-    NONE(null),
-    LOW("Low Priority"),
-    MEDIUM("Medium Priority"),
-    HIGH("High Priority")
+  NONE(null),
+  LOW("Low Priority"),
+  MEDIUM("Medium Priority"),
+  HIGH("High Priority")
 }
 
 /**
