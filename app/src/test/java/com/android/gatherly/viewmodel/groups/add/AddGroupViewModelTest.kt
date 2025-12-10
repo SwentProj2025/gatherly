@@ -1,5 +1,6 @@
 package com.android.gatherly.viewmodel.groups.add
 
+import com.android.gatherly.model.notification.NotificationType
 import com.android.gatherly.model.notification.NotificationsLocalRepository
 import com.android.gatherly.model.notification.NotificationsRepository
 import com.android.gatherly.model.profile.ProfileLocalRepository
@@ -563,5 +564,39 @@ class AddGroupViewModelTest {
         assertFalse(state.friendsList.contains(FRIEND_BOB))
         assertFalse(state.isFriendsLoading)
         assertNull(state.friendsError) // No error because the operation succeeds partially
+      }
+
+  /**
+   * Verifies that upon group creation, members that were added get a notification, and members that
+   * weren't don't
+   */
+  @Test
+  fun saveGroupSendsNotificationToMembers() =
+      runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // Add Alice
+        viewModel.onFriendToggled(FRIEND_ALICE.uid)
+        advanceUntilIdle()
+
+        // Input a name
+        viewModel.onNameChanged("Alice & Me :)")
+        advanceUntilIdle()
+
+        // Save the group
+        viewModel.saveGroup()
+        advanceUntilIdle()
+
+        // Check that notifications are sent
+        val aliceNotifs = notificationsRepository.getUserNotifications(FRIEND_ALICE.uid)
+        val bobNotifs = notificationsRepository.getUserNotifications(FRIEND_BOB.uid)
+
+        // Check that Alice has a notification of the correct type, and Bob has no notifications
+
+        assertEquals(1, aliceNotifs.size)
+        assertEquals(NotificationType.GROUP_ADDED, aliceNotifs[0].type)
+
+        assertEquals(0, bobNotifs.size)
       }
 }
