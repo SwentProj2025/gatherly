@@ -31,7 +31,14 @@ import com.android.gatherly.ui.theme.Typography
 import com.android.gatherly.ui.theme.theme_todo_priority_level_high
 import com.android.gatherly.ui.theme.theme_todo_priority_level_low
 import com.android.gatherly.ui.theme.theme_todo_priority_level_medium
-import com.android.gatherly.ui.todo.AddToDoScreenTestTags
+
+object PriorityDropDownTestTags {
+  const val PRIORITY_LEVEL_DROP_DOWN = "priorityLevelDropDown"
+  const val PRIORITY_NONE_ITEM = "priorityLevelNoneItem"
+  const val PRIORITY_LOW_ITEM = "priorityLevelLowItem"
+  const val PRIORITY_MEDIUM_ITEM = "priorityLevelMediumItem"
+  const val PRIORITY_HIGH_ITEM = "priorityLevelHighItem"
+}
 
 @Composable
 fun PriorityDropDown(
@@ -45,7 +52,7 @@ fun PriorityDropDown(
     Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxHeight()) {
       IconButton(
           modifier =
-              Modifier.fillMaxHeight().testTag(AddToDoScreenTestTags.DROP_DOWN_PRIORITY_LEVEL),
+              Modifier.fillMaxHeight().testTag(PriorityDropDownTestTags.PRIORITY_LEVEL_DROP_DOWN),
           onClick = { expanded = true },
       ) {
         Icon(
@@ -65,10 +72,11 @@ fun PriorityDropDown(
                   expanded = false
                 },
                 trailingIcon = {
-                  if (currentPriorityLevel == null) {
+                  if (currentPriorityLevel == ToDoPriority.NONE) {
                     Icon(Icons.Default.Check, contentDescription = "Selected")
                   }
-                })
+                },
+                modifier = Modifier.testTag(PriorityDropDownTestTags.PRIORITY_NONE_ITEM))
 
             Divider(
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
@@ -85,7 +93,8 @@ fun PriorityDropDown(
                   if (currentPriorityLevel == ToDoPriority.LOW) {
                     Icon(Icons.Default.Check, contentDescription = "Selected")
                   }
-                })
+                },
+                modifier = Modifier.testTag(PriorityDropDownTestTags.PRIORITY_LOW_ITEM))
             DropdownMenuItem(
                 text = {
                   Text(text = "Medium", color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -98,7 +107,8 @@ fun PriorityDropDown(
                   if (currentPriorityLevel == ToDoPriority.MEDIUM) {
                     Icon(Icons.Default.Check, contentDescription = "Selected")
                   }
-                })
+                },
+                modifier = Modifier.testTag(PriorityDropDownTestTags.PRIORITY_MEDIUM_ITEM))
             DropdownMenuItem(
                 text = { Text(text = "High", color = MaterialTheme.colorScheme.onSurfaceVariant) },
                 onClick = {
@@ -109,12 +119,13 @@ fun PriorityDropDown(
                   if (currentPriorityLevel == ToDoPriority.HIGH) {
                     Icon(Icons.Default.Check, contentDescription = "Selected")
                   }
-                })
+                },
+                modifier = Modifier.testTag(PriorityDropDownTestTags.PRIORITY_HIGH_ITEM))
           }
     }
 
     if (currentPriorityLevel != ToDoPriority.NONE) {
-      currentPriorityLevel?.displayName?.let {
+      currentPriorityLevel.displayName?.let {
         Text(
             text = it,
             color = MaterialTheme.colorScheme.onSurfaceVariant,

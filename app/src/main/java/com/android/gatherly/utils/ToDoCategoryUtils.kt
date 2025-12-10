@@ -46,7 +46,23 @@ import androidx.compose.ui.unit.dp
 import com.android.gatherly.R
 import com.android.gatherly.model.todoCategory.ToDoCategory
 import com.android.gatherly.ui.theme.Typography
-import com.android.gatherly.ui.todo.AddToDoScreenTestTags
+
+object CategoriesDropDownTestTags {
+
+  const val CATEGORY_DROP_DOWN = "categoryDropDown"
+  const val CATEGORY_NONE_ITEM = "categoryNoneItem"
+
+  const val CATEGORY_EDIT_MODE_BUTTON = "categoryEditModeButton"
+  const val CATEGORY_CREATE_A_NEW_BUTTON = "categoryCreateANewButton"
+
+  /**
+   * Returns a unique test tag for the button representing a given [ToDoCategory] item.
+   *
+   * @param categoryName The String of [ToDoCategory] item whose test tag will be generated.
+   * @return A string uniquely identifying the ToDoCategory item in the UI.
+   */
+  fun getTestTagForCategoryItem(categoryName: String): String = "CategoryItem${categoryName}"
+}
 
 @Composable
 fun CategoriesDropDown(
@@ -64,17 +80,16 @@ fun CategoriesDropDown(
     Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxHeight()) {
       IconButton(
           modifier =
-              Modifier.fillMaxHeight().testTag(AddToDoScreenTestTags.DROP_DOWN_PRIORITY_LEVEL),
-          onClick = { expanded = true },
-      ) {
-        Row {
-          Icon(
-              imageVector = Icons.Filled.Folder,
-              modifier = Modifier.size(30.dp).fillMaxSize(),
-              contentDescription = "Category icon",
-              tint = currentTag?.color ?: MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-      }
+              Modifier.fillMaxHeight().testTag(CategoriesDropDownTestTags.CATEGORY_DROP_DOWN),
+          onClick = { expanded = true }) {
+            Row {
+              Icon(
+                  imageVector = Icons.Filled.Folder,
+                  modifier = Modifier.size(30.dp).fillMaxSize(),
+                  contentDescription = "Category icon",
+                  tint = currentTag?.color ?: MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+          }
       DropdownMenu(
           expanded = expanded,
           onDismissRequest = { expanded = false },
@@ -85,14 +100,17 @@ fun CategoriesDropDown(
                 verticalAlignment = Alignment.CenterVertically) {
                   Text("Categories", style = MaterialTheme.typography.titleMedium)
 
-                  IconButton(onClick = { isModeEditOn = !isModeEditOn }) {
-                    Icon(
-                        Icons.Filled.ModeEdit,
-                        contentDescription = "Display show edit",
-                        tint =
-                            if (isModeEditOn) MaterialTheme.colorScheme.primary
-                            else LocalContentColor.current)
-                  }
+                  IconButton(
+                      modifier =
+                          Modifier.testTag(CategoriesDropDownTestTags.CATEGORY_EDIT_MODE_BUTTON),
+                      onClick = { isModeEditOn = !isModeEditOn }) {
+                        Icon(
+                            Icons.Filled.ModeEdit,
+                            contentDescription = "Display show edit",
+                            tint =
+                                if (isModeEditOn) MaterialTheme.colorScheme.primary
+                                else LocalContentColor.current)
+                      }
                 }
 
             Divider(
@@ -112,7 +130,9 @@ fun CategoriesDropDown(
                           Icon(Icons.Filled.CreateNewFolder, contentDescription = "Add category")
                         }
                   },
-                  onClick = { showCreateTagDialog.value = true })
+                  onClick = { showCreateTagDialog.value = true },
+                  modifier =
+                      Modifier.testTag(CategoriesDropDownTestTags.CATEGORY_CREATE_A_NEW_BUTTON))
               Divider(
                   color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
                   thickness = 1.dp,
@@ -133,7 +153,8 @@ fun CategoriesDropDown(
                   onClick = {
                     onSelectTag(null)
                     expanded = false
-                  })
+                  },
+                  modifier = Modifier.testTag(CategoriesDropDownTestTags.CATEGORY_NONE_ITEM))
 
               Divider(
                   color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
@@ -162,7 +183,10 @@ fun CategoriesDropDown(
                       onSelectTag(category)
                       expanded = false
                     }
-                  })
+                  },
+                  modifier =
+                      Modifier.testTag(
+                          CategoriesDropDownTestTags.getTestTagForCategoryItem(category.name)))
             }
           }
     }
@@ -180,8 +204,9 @@ object AlertDialogCreateTagTestTags {
 
   const val ALERT_CREATE_TAG = "alertDialogCreateNewTag"
   const val ALERT_CREATE_TAG_BUTTON = "buttonAlertDialogCreateNewTag"
+  const val ALERT_CREATE_TAG_NAME_INPUT = "inputNameAlertDialogTag"
 
-  const val ALERT_CREATE_TAG_CANCEL_BUTTON = "cancelButtonAlertDialogCreateNewTag"
+  const val ALERT_CREATE_TAG_COLOR_RANDOM = "randomColorButtonAlertDialogCreateNewTag"
 }
 
 @Composable
@@ -205,7 +230,9 @@ fun AlertDialogCreateTag(
                 onValueChange = { categoryName = it },
                 label = { Text("Name") },
                 isError = categoryName.isBlank(),
-                singleLine = true)
+                singleLine = true,
+                modifier =
+                    Modifier.testTag(AlertDialogCreateTagTestTags.ALERT_CREATE_TAG_NAME_INPUT))
 
             RandomColorBox(
                 color = chosenColor, onColorChange = { newColor -> chosenColor = newColor })
@@ -224,12 +251,7 @@ fun AlertDialogCreateTag(
               }
         },
         dismissButton = {
-          Button(
-              onClick = { showCreateTagDialog.value = false },
-              modifier =
-                  Modifier.testTag(AlertDialogCreateTagTestTags.ALERT_CREATE_TAG_CANCEL_BUTTON)) {
-                Text("Cancel")
-              }
+          Button(onClick = { showCreateTagDialog.value = false }) { Text("Cancel") }
         },
         containerColor = MaterialTheme.colorScheme.surfaceVariant,
         titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -270,7 +292,11 @@ fun RandomColorBox(color: Color, onColorChange: (Color) -> Unit) {
 
         Spacer(Modifier.height(16.dp))
 
-        Button(onClick = { onColorChange(randomColor()) }) { Text("New random color") }
+        Button(
+            modifier = Modifier.testTag(AlertDialogCreateTagTestTags.ALERT_CREATE_TAG_COLOR_RANDOM),
+            onClick = { onColorChange(randomColor()) }) {
+              Text("New random color")
+            }
       }
 }
 

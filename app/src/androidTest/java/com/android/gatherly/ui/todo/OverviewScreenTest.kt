@@ -19,8 +19,15 @@ import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.todo.ToDo
+import com.android.gatherly.model.todo.ToDoPriority
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosLocalRepository
+import com.android.gatherly.model.todoCategory.TAG_COURSES
+import com.android.gatherly.model.todoCategory.TAG_HOMEWORK
+import com.android.gatherly.model.todoCategory.TAG_PERSONAL
+import com.android.gatherly.model.todoCategory.TAG_PROJECT
+import com.android.gatherly.model.todoCategory.ToDoCategoryLocalRepository
+import com.android.gatherly.model.todoCategory.ToDoCategoryRepository
 import com.android.gatherly.utils.GatherlyTest
 import com.google.firebase.Timestamp
 import java.util.Calendar
@@ -38,17 +45,22 @@ class OverviewScreenTest : GatherlyTest() {
 
   private lateinit var overviewViewModel: OverviewViewModel
   private lateinit var profileRepository: ProfileRepository
+  private lateinit var toDoCategoryRepository: ToDoCategoryRepository
 
   @Before
   fun setUp() {
     repository = ToDosLocalRepository()
     profileRepository = ProfileLocalRepository()
+    toDoCategoryRepository = ToDoCategoryLocalRepository()
   }
 
   fun setContent(withInitialTodos: List<ToDo> = emptyList()) = runTest {
     withInitialTodos.forEach { repository.addTodo(it) }
     overviewViewModel =
-        OverviewViewModel(todoRepository = repository, profileRepository = profileRepository)
+        OverviewViewModel(
+            todoRepository = repository,
+            profileRepository = profileRepository,
+            todoCategoryRepository = toDoCategoryRepository)
     composeTestRule.setContent { OverviewScreen(overviewViewModel = overviewViewModel) }
     profileRepository.addProfile(Profile(uid = "user", name = "Test User", profilePicture = ""))
     advanceUntilIdle()
@@ -390,5 +402,65 @@ class OverviewScreenTest : GatherlyTest() {
         .fetchSemanticsNode()
         .boundsInRoot
         .top
+  }
+
+  @Test
+  fun correctTodoCategoryFeaturesDisplay() = runTest {
+    val a = todo1.copy(name = "A", tag = TAG_HOMEWORK)
+    val b = todo2.copy(name = "B", tag = TAG_COURSES)
+    val c = todo1.copy(name = "C", tag = TAG_PERSONAL)
+    val d = todo2.copy(name = "D", tag = TAG_PROJECT)
+
+    setContent(listOf(a, b, c, d))
+
+    composeTestRule.onNode(hasText("Homework")).performClick()
+    advanceUntilIdle()
+
+    composeTestRule
+        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(a))
+        .assertIsDisplayed()
+
+    composeTestRule.onNode(hasText("Courses")).performClick()
+    advanceUntilIdle()
+    composeTestRule
+        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(b))
+        .assertIsDisplayed()
+
+    composeTestRule.onNode(hasText("Personal")).performClick()
+    advanceUntilIdle()
+
+    composeTestRule
+        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(c))
+        .assertIsDisplayed()
+    composeTestRule.onNode(hasText("Project")).performClick()
+    advanceUntilIdle()
+
+    composeTestRule
+        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(d))
+        .assertIsDisplayed()
+  }
+
+  @Test
+  fun correctPriorityLevelSortingDisplay() = runTest {
+    val a = todo1.copy(name = "A", priorityLevel = ToDoPriority.NONE)
+    val b = todo2.copy(name = "B", priorityLevel = ToDoPriority.LOW)
+    val c = todo3.copy(name = "C", priorityLevel = ToDoPriority.MEDIUM, status = ToDoStatus.ONGOING)
+    val d = todo1.copy(uid = "X", name = "D", priorityLevel = ToDoPriority.HIGH)
+
+    setContent(listOf(a, b, c, d))
+
+    composeTestRule.onNodeWithTag(OverviewScreenTestTags.SORT_MENU_BUTTON).performClick()
+    composeTestRule.onNode(hasText("Priority level")).performClick()
+    advanceUntilIdle()
+
+    val posA = positionOf(a)
+    val posB = positionOf(b)
+
+    val posC = positionOf(c)
+    val posD = positionOf(d)
+
+    assertTrue(posC > posD)
+    assertTrue(posB > posC)
+    assertTrue(posA > posB)
   }
 }
