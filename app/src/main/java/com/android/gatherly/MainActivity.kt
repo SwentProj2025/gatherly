@@ -31,6 +31,7 @@ import com.android.gatherly.ui.focusTimer.TimerScreen
 import com.android.gatherly.ui.friends.FindFriendsScreen
 import com.android.gatherly.ui.friends.FriendsScreen
 import com.android.gatherly.ui.groups.AddGroupScreen
+import com.android.gatherly.ui.groups.GroupsOverviewScreen
 import com.android.gatherly.ui.homePage.HomePageScreen
 import com.android.gatherly.ui.map.MapScreen
 import com.android.gatherly.ui.navigation.NavigationActions
@@ -325,7 +326,7 @@ fun GatherlyApp(
       }
     }
 
-    // ADDGROUP COMPOSABLE  ------------------------------
+    // ADD GROUP COMPOSABLE  ------------------------------
     navigation(
         startDestination = Screen.AddGroupScreen.route,
         route = Screen.AddGroupScreen.name,
@@ -334,6 +335,16 @@ fun GatherlyApp(
         AddGroupScreen(
             goBack = { navigationActions.goBack() },
             onCreate = { navigationActions.navigateTo(Screen.HomePage) })
+      }
+    }
+
+    // GROUP OVERVIEW COMPOSABLE  ------------------------------
+    navigation(
+        startDestination = Screen.OverviewGroupsScreen.route,
+        route = Screen.OverviewGroupsScreen.name,
+    ) {
+      composable(Screen.OverviewGroupsScreen.route) {
+        GroupsOverviewScreen(navigationActions = navigationActions)
       }
     }
   }

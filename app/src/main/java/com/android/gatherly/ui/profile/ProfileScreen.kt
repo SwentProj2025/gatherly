@@ -380,7 +380,8 @@ fun ProfileScreen(
                 GroupsSection(
                     groups = groups,
                     groupsToMembers = groupsToMembers,
-                    modifier = Modifier.height(fieldSpacingSmall))
+                    modifier = Modifier.height(fieldSpacingSmall),
+                    navigationActions = navigationActions)
               }
         }
 
@@ -429,7 +430,8 @@ fun ProfileScreenPreview() {
 fun GroupsSection(
     groups: List<Group>,
     groupsToMembers: Map<Group, List<Profile>>,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    navigationActions: NavigationActions?
 ) {
   Text(
       text = stringResource(R.string.profile_groups_section_title),
@@ -445,6 +447,11 @@ fun GroupsSection(
         textAlign = TextAlign.Center,
         modifier = Modifier.testTag(ProfileScreenTestTags.NO_GROUPS_TEXT))
   } else {
-    GroupsOverview(groupsToMembers = groupsToMembers, modifier = Modifier.fillMaxWidth())
+    GroupsOverview(
+        groupsToMembers = groupsToMembers,
+        modifier =
+            Modifier.fillMaxWidth()
+                .clickable(
+                    onClick = { navigationActions?.navigateTo(Screen.OverviewGroupsScreen) }))
   }
 }
