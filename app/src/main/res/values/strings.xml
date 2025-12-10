@@ -222,4 +222,8 @@
     <string name="focus_points_date">Obtained on: %1$s</string>
     <string name="focus_history_badge">Obtained the %1$s badge</string>
     <string name="focus_history_leaderboard">Reached %1$s on your friends leaderboard</string>
+
+    <!-- Groups -->
+    <string name="groups_overview_no_groups">You have no groups</string>
+    <string name="groups_overview_loading">Loading groups…</string>
 </resources>

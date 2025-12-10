@@ -61,6 +61,26 @@ sealed class Screen(
 
   object AddGroupScreen : Screen(route = "add_group_screen", name = "Add a New Group")
 
+  object OverviewGroupsScreen : Screen(route = "overview_groups_screen", name = "Groups overview")
+
+  object GroupsInfoScreen : Screen(route = "groups_info_screen", name = "Group information")
+
+  data class GroupInfo(val groupUid: String) :
+      Screen(route = "group_info/${groupUid}", name = "Group Information") {
+    companion object {
+      const val route = "group_info/{uid}"
+    }
+  }
+
+  object EditGroupScreen : Screen(route = "edit_group", name = "Edit group")
+
+  data class EditGroup(val groupUid: String) :
+      Screen(route = "edit_group/${groupUid}", name = "Edit Group") {
+    companion object {
+      const val route = "edit_group/{uid}"
+    }
+  }
+
   object BadgeScreen : Screen(route = "badge_screen", name = "Badges")
 
   object FocusScreen : Screen(route = "focus_history_screen", name = "Focus History")
