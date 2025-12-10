@@ -27,8 +27,7 @@ class GatherlyAlertDialogTest {
           bodyText = "Test Body",
           dismissText = "Cancel",
           confirmText = "OK",
-          onDismiss = {},
-          onConfirm = {})
+          actions = GatherlyAlertDialogActions(onDismiss = {}, onConfirm = {}))
     }
 
     composeTestRule.onNodeWithTag(AlertDialogTestTags.ALERT).assertExists()
@@ -54,8 +53,7 @@ class GatherlyAlertDialogTest {
           dateText = "25/12/2025",
           startTimeText = "14:00",
           endTimeText = "16:00",
-          onDismiss = {},
-          onConfirm = {})
+          actions = GatherlyAlertDialogActions(onDismiss = {}, onConfirm = {}))
     }
 
     composeTestRule
@@ -84,8 +82,7 @@ class GatherlyAlertDialogTest {
           dateText = "25/12/2025",
           startTimeText = "14:00",
           endTimeText = "16:00",
-          onDismiss = {},
-          onConfirm = {})
+          actions = GatherlyAlertDialogActions(onDismiss = {}, onConfirm = {}))
     }
 
     composeTestRule.onNodeWithTag(AlertDialogTestTags.CREATOR_TEXT).assertDoesNotExist()
@@ -108,8 +105,7 @@ class GatherlyAlertDialogTest {
           dateText = "25/12/2025",
           startTimeText = "14:00",
           endTimeText = "16:00",
-          onDismiss = {},
-          onConfirm = {})
+          actions = GatherlyAlertDialogActions(onDismiss = {}, onConfirm = {}))
     }
 
     composeTestRule.onNodeWithTag(AlertDialogTestTags.CREATOR_TEXT).assertDoesNotExist()
@@ -128,8 +124,7 @@ class GatherlyAlertDialogTest {
           bodyText = "Are you sure you want to delete?",
           dismissText = "Cancel",
           confirmText = "Delete",
-          onDismiss = {},
-          onConfirm = {})
+          actions = GatherlyAlertDialogActions(onDismiss = {}, onConfirm = {}))
     }
 
     composeTestRule.onNodeWithTag(AlertDialogTestTags.CREATOR_TEXT).assertDoesNotExist()
@@ -150,9 +145,9 @@ class GatherlyAlertDialogTest {
           dismissText = "Back",
           confirmText = "Join",
           neutralText = "See on map",
-          onNeutral = { neutralClicked = true },
-          onDismiss = {},
-          onConfirm = {})
+          actions =
+              GatherlyAlertDialogActions(
+                  onDismiss = {}, onConfirm = {}, onNeutral = { neutralClicked = true }))
     }
 
     composeTestRule
@@ -175,8 +170,7 @@ class GatherlyAlertDialogTest {
           dismissText = "Back",
           confirmText = "Join",
           neutralText = null,
-          onDismiss = {},
-          onConfirm = {})
+          actions = GatherlyAlertDialogActions(onDismiss = {}, onConfirm = {}))
     }
 
     composeTestRule.onNodeWithTag(AlertDialogTestTags.NEUTRAL_BTN).assertDoesNotExist()
@@ -195,10 +189,8 @@ class GatherlyAlertDialogTest {
           dismissText = "Back",
           confirmText = "Join",
           neutralText = "See on map",
-          onNeutral = {},
           neutralEnabled = false,
-          onDismiss = {},
-          onConfirm = {})
+          actions = GatherlyAlertDialogActions(onDismiss = {}, onConfirm = {}, onNeutral = {}))
     }
 
     composeTestRule
@@ -220,9 +212,11 @@ class GatherlyAlertDialogTest {
           dismissText = "Back",
           confirmText = "Join",
           numberAttendees = 5,
-          onOpenAttendeesList = { attendeesClicked = true },
-          onDismiss = {},
-          onConfirm = {})
+          actions =
+              GatherlyAlertDialogActions(
+                  onDismiss = {},
+                  onConfirm = {},
+                  onOpenAttendeesList = { attendeesClicked = true }))
     }
 
     composeTestRule.onNodeWithTag(AlertDialogTestTags.ATTENDEES_BTN).assertExists()
@@ -240,8 +234,7 @@ class GatherlyAlertDialogTest {
           dismissText = "Back",
           confirmText = "Join",
           numberAttendees = null,
-          onDismiss = {},
-          onConfirm = {})
+          actions = GatherlyAlertDialogActions(onDismiss = {}, onConfirm = {}))
     }
 
     composeTestRule.onNodeWithTag(AlertDialogTestTags.ATTENDEES_BTN).assertDoesNotExist()
@@ -257,8 +250,8 @@ class GatherlyAlertDialogTest {
           bodyText = "Test Body",
           dismissText = "Cancel",
           confirmText = "OK",
-          onDismiss = { dismissClicked = true },
-          onConfirm = {})
+          actions =
+              GatherlyAlertDialogActions(onDismiss = { dismissClicked = true }, onConfirm = {}))
     }
 
     composeTestRule.onNodeWithTag(AlertDialogTestTags.DISMISS_BTN).performClick()
@@ -276,8 +269,8 @@ class GatherlyAlertDialogTest {
           bodyText = "Test Body",
           dismissText = "Cancel",
           confirmText = "OK",
-          onDismiss = {},
-          onConfirm = { confirmClicked = true })
+          actions =
+              GatherlyAlertDialogActions(onDismiss = {}, onConfirm = { confirmClicked = true }))
     }
 
     composeTestRule.onNodeWithTag(AlertDialogTestTags.CONFIRM_BTN).performClick()
@@ -296,9 +289,9 @@ class GatherlyAlertDialogTest {
           dismissText = "Cancel",
           confirmText = "OK",
           neutralText = "Neutral",
-          onNeutral = { neutralClicked = true },
-          onDismiss = {},
-          onConfirm = {})
+          actions =
+              GatherlyAlertDialogActions(
+                  onDismiss = {}, onConfirm = {}, onNeutral = { neutralClicked = true }))
     }
 
     composeTestRule.onNodeWithTag(AlertDialogTestTags.NEUTRAL_BTN).performClick()
@@ -317,9 +310,11 @@ class GatherlyAlertDialogTest {
           dismissText = "Cancel",
           confirmText = "OK",
           numberAttendees = 3,
-          onOpenAttendeesList = { attendeesClicked = true },
-          onDismiss = {},
-          onConfirm = {})
+          actions =
+              GatherlyAlertDialogActions(
+                  onDismiss = {},
+                  onConfirm = {},
+                  onOpenAttendeesList = { attendeesClicked = true }))
     }
 
     composeTestRule.onNodeWithTag(AlertDialogTestTags.ATTENDEES_BTN).performClick()
@@ -341,8 +336,8 @@ class GatherlyAlertDialogTest {
           dismissText = "Cancel",
           confirmText = "OK",
           confirmEnabled = false,
-          onDismiss = {},
-          onConfirm = { confirmClicked = true })
+          actions =
+              GatherlyAlertDialogActions(onDismiss = {}, onConfirm = { confirmClicked = true }))
     }
 
     composeTestRule
@@ -368,8 +363,7 @@ class GatherlyAlertDialogTest {
           dismissText = "Cancel",
           confirmText = "Delete",
           isImportantWarning = true,
-          onDismiss = {},
-          onConfirm = {})
+          actions = GatherlyAlertDialogActions(onDismiss = {}, onConfirm = {}))
     }
 
     composeTestRule
@@ -391,8 +385,7 @@ class GatherlyAlertDialogTest {
           bodyText = "Body",
           dismissText = "Short",
           confirmText = "Very Long Button Text",
-          onDismiss = {},
-          onConfirm = {})
+          actions = GatherlyAlertDialogActions(onDismiss = {}, onConfirm = {}))
     }
 
     composeTestRule.onNodeWithTag(AlertDialogTestTags.DISMISS_BTN).assertExists()
