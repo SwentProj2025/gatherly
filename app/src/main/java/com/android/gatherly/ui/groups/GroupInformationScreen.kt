@@ -85,9 +85,8 @@ fun GroupInformationScreen(
 
                 Text(
                     text = stringResource(R.string.groups_info_members),
-                    style = MaterialTheme.typography.headlineLarge,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Left)
+                    style = MaterialTheme.typography.headlineMedium,
+                    modifier = Modifier.align(Alignment.Start))
 
                 HorizontalDivider(
                     modifier =
@@ -95,7 +94,8 @@ fun GroupInformationScreen(
 
                 MembersList(
                     membersProfiles = uiState.value.memberProfiles,
-                    adminIds = uiState.value.group.adminIds)
+                    adminIds = uiState.value.group.adminIds,
+                    modifier = Modifier.weight(1f))
 
                 if (uiState.value.isAdmin) {
                   Button(
@@ -124,8 +124,8 @@ fun GroupInformationScreen(
 }
 
 @Composable
-fun MembersList(membersProfiles: List<Profile>, adminIds: List<String>) {
-  LazyColumn(modifier = Modifier.fillMaxSize()) {
+fun MembersList(membersProfiles: List<Profile>, adminIds: List<String>, modifier: Modifier) {
+  LazyColumn(modifier = modifier.fillMaxWidth()) {
     for (profile in membersProfiles) {
       item {
         Row(
@@ -147,7 +147,7 @@ fun MembersList(membersProfiles: List<Profile>, adminIds: List<String>) {
               Text(
                   text = profile.name,
                   fontWeight = FontWeight.Bold,
-                  style = MaterialTheme.typography.bodyLarge,
+                  style = MaterialTheme.typography.headlineSmall,
                   color = MaterialTheme.colorScheme.onBackground,
                   modifier =
                       Modifier.padding(horizontal = dimensionResource(R.dimen.padding_regular))
@@ -158,8 +158,9 @@ fun MembersList(membersProfiles: List<Profile>, adminIds: List<String>) {
                 Text(
                     text = stringResource(R.string.groups_info_admin),
                     fontStyle = FontStyle.Italic,
-                    style = MaterialTheme.typography.bodyMedium,
+                    style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.surfaceVariant,
+                    fontWeight = FontWeight.SemiBold,
                     modifier =
                         Modifier.padding(horizontal = dimensionResource(R.dimen.padding_regular)))
               }
