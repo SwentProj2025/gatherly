@@ -15,12 +15,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FilterList
+import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -60,6 +66,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
 import com.android.gatherly.model.event.Event
+import com.android.gatherly.model.event.EventState
 import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.ui.navigation.BottomNavigationMenu
 import com.android.gatherly.ui.navigation.NavigationActions
@@ -68,6 +75,7 @@ import com.android.gatherly.ui.navigation.Screen
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu
 import com.android.gatherly.ui.theme.GatherlyTheme
+import com.android.gatherly.ui.theme.Typography
 import com.android.gatherly.ui.theme.theme_status_ongoing
 import com.android.gatherly.ui.theme.theme_status_past
 import com.android.gatherly.ui.theme.theme_status_upcoming
@@ -571,6 +579,14 @@ fun BrowserEventsItem(event: Event, onClick: () -> Unit) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.testTag(EventsScreenTestTags.EVENT_DATE))
           }
+          IconEventState(event.state)
+
+          Box(
+              modifier =
+                  Modifier.padding(horizontal = 12.dp)
+                      .width(1.dp)
+                      .height(24.dp)
+                      .background(MaterialTheme.colorScheme.outlineVariant))
 
           BoxNumberAttendees(
               event.participants.size,
@@ -628,6 +644,15 @@ fun UpcomingEventsItem(event: Event, onClick: () -> Unit) {
                 modifier = Modifier.testTag(EventsScreenTestTags.EVENT_DATE))
           }
 
+          IconEventState(event.state)
+
+          Box(
+              modifier =
+                  Modifier.padding(horizontal = 12.dp)
+                      .width(1.dp)
+                      .height(24.dp)
+                      .background(MaterialTheme.colorScheme.outlineVariant))
+
           BoxNumberAttendees(
               event.participants.size,
               Modifier.testTag(EventsScreenTestTags.getTestTagForEventNumberAttendees(event)))
@@ -683,6 +708,15 @@ fun MyOwnEventsItem(event: Event, onClick: () -> Unit) {
                 modifier = Modifier.testTag(EventsScreenTestTags.EVENT_DATE))
           }
 
+          IconEventState(event.state)
+
+          Box(
+              modifier =
+                  Modifier.padding(horizontal = 12.dp)
+                      .width(1.dp)
+                      .height(24.dp)
+                      .background(MaterialTheme.colorScheme.outlineVariant))
+
           BoxNumberAttendees(
               event.participants.size,
               Modifier.testTag(EventsScreenTestTags.getTestTagForEventNumberAttendees(event)))
@@ -719,27 +753,42 @@ private fun BoxStatusColor(status: EventStatus) {
 /** Displays a filter bar with buttons to filter events by their status. */
 @Composable
 private fun FilterBar(selectedFilter: MutableState<EventFilter>) {
-  Row(
+  LazyRow(
       modifier =
           Modifier.fillMaxWidth()
               .padding(vertical = dimensionResource(R.dimen.events_filter_bar_vertical_size)),
       horizontalArrangement = Arrangement.SpaceEvenly) {
-        FilterButton("All", EventFilter.ALL, selectedFilter, Modifier)
-        FilterButton(
-            "Upcoming",
-            EventFilter.UPCOMING,
-            selectedFilter,
-            Modifier.testTag(EventsScreenTestTags.FILTER_UPCOMING_BUTTON))
-        FilterButton(
-            "Ongoing",
-            EventFilter.ONGOING,
-            selectedFilter,
-            Modifier.testTag(EventsScreenTestTags.FILTER_ONGOING_BUTTON))
-        FilterButton(
-            "Past",
-            EventFilter.PAST,
-            selectedFilter,
-            Modifier.testTag(EventsScreenTestTags.FILTER_PAST_BUTTON))
+        item {
+          FilterButton(
+              stringResource(R.string.events_status_filter_all_label),
+              EventFilter.ALL,
+              selectedFilter,
+              Modifier)
+        }
+
+        item {
+          FilterButton(
+              stringResource(R.string.events_status_filter_upcoming_label),
+              EventFilter.UPCOMING,
+              selectedFilter,
+              Modifier.testTag(EventsScreenTestTags.FILTER_UPCOMING_BUTTON))
+        }
+
+        item {
+          FilterButton(
+              stringResource(R.string.events_status_filter_ongoing_label),
+              EventFilter.ONGOING,
+              selectedFilter,
+              Modifier.testTag(EventsScreenTestTags.FILTER_ONGOING_BUTTON))
+        }
+
+        item {
+          FilterButton(
+              stringResource(R.string.events_status_filter_past_label),
+              EventFilter.PAST,
+              selectedFilter,
+              Modifier.testTag(EventsScreenTestTags.FILTER_PAST_BUTTON))
+        }
       }
 }
 
@@ -775,21 +824,8 @@ fun FilterButton(
       }
 }
 
-/** Helper function : return the list of events filtered according to the selected filter status */
-private fun getFilteredEvents(
-    selectedFilter: MutableState<EventFilter>,
-    listEvents: List<Event>
-): List<Event> {
-  return when (selectedFilter.value) {
-    EventFilter.ALL -> listEvents
-    EventFilter.UPCOMING -> listEvents.filter { it.status == EventStatus.UPCOMING }
-    EventFilter.ONGOING -> listEvents.filter { it.status == EventStatus.ONGOING }
-    EventFilter.PAST -> listEvents.filter { it.status == EventStatus.PAST }
-  }
-}
-
 @Composable
-fun AlertDialogListAttendees(
+private fun AlertDialogListAttendees(
     showAttendeesDialog: MutableState<Boolean>,
     event: Event,
     eventsViewModel: EventsViewModel,
@@ -805,7 +841,20 @@ fun AlertDialogListAttendees(
 
     AlertDialog(
         onDismissRequest = { showAttendeesDialog.value = false },
-        title = { Text("Participants") },
+        title = {
+          Column {
+            Text(stringResource(R.string.events_alert_dialog_see_attendees_title))
+
+            if (event.groups.isNotEmpty()) {
+              val groupNames = event.groups.joinToString { group -> group.name }
+
+              Text(
+                  stringResource(R.string.events_alert_dialog_see_attendees_groups_subtitle) +
+                      groupNames,
+                  style = Typography.bodySmall)
+            }
+          }
+        },
         text = { Column { listNameAttendees.forEach { name -> Text("• $name") } } },
         confirmButton = {
           Button(
@@ -954,6 +1003,24 @@ private fun SearchBar(
         SortMenu(
             currentOrder = uiState.sortOrder, onSortSelected = { eventsViewModel.setSortOrder(it) })
       }
+}
+
+@Composable
+fun IconEventState(eventState: EventState) {
+  when (eventState) {
+    EventState.PUBLIC ->
+        Icon(imageVector = Icons.Filled.LockOpen, contentDescription = "Public event icon")
+    EventState.PRIVATE_FRIENDS ->
+        Row {
+          Icon(imageVector = Icons.Filled.Lock, contentDescription = "Private event icon")
+          Icon(imageVector = Icons.Filled.Favorite, contentDescription = "Friends Only event icon")
+        }
+    EventState.PRIVATE_GROUP ->
+        Row {
+          Icon(imageVector = Icons.Filled.Lock, contentDescription = "Private event icon")
+          Icon(imageVector = Icons.Filled.Groups, contentDescription = "Groups event icon")
+        }
+  }
 }
 
 @Preview(showBackground = true)
