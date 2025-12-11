@@ -80,7 +80,6 @@ import com.android.gatherly.utils.profilePicturePainter
 import java.util.Locale
 
 object FocusTimerScreenTestTags {
-  const val TIMERTEXT = "TIMER"
   const val HOURS_TEXT = "HOURS_TEXT"
   const val MINUTES_TEXT = "MINUTES_TEXT"
   const val SECONDS_TEXT = "SECONDS_TEXT"
@@ -739,8 +738,7 @@ fun TimerScreenPreview() {
  */
 @Composable
 fun FocusSessionsHistory(uiState: TimerState) {
-  val usersFocusSessions =
-      uiState.usersFocusSessions.toSortedSet(compareByDescending { it.startedAt })
+  val usersFocusSessions = uiState.usersFocusSessions
   if (usersFocusSessions.isEmpty()) {
     Text(
         modifier =
@@ -759,7 +757,7 @@ fun FocusSessionsHistory(uiState: TimerState) {
                         dimensionResource(id = R.dimen.focus_session_history_horizontal_padding))
                 .testTag(FocusTimerScreenTestTags.HISTORY_LIST)) {
           items(usersFocusSessions.size) { index ->
-            val focusSession = usersFocusSessions.elementAt(index)
+            val focusSession = usersFocusSessions[index]
             if (focusSession.endedAt != null) {
               FocusSessionItem(focusSession = focusSession, allTodos = uiState.allTodos)
             }
