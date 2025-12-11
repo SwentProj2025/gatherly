@@ -42,7 +42,7 @@ suspend fun incrementBadgeCheckPoints(
 
     badge?.let {
       when (it.rank) {
-        BadgeRank.BLANK -> {}
+        BadgeRank.BLANK -> Unit
         BadgeRank.STARTING ->
             addToPoints(it, pointsRepository, profileRepository, uid, startingPoints)
         BadgeRank.BRONZE -> addToPoints(it, pointsRepository, profileRepository, uid, bronzePoints)

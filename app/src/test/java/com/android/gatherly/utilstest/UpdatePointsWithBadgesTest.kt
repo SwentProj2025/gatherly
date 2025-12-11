@@ -58,6 +58,10 @@ class UpdatePointsWithBadgesTest {
 
     val aliceUpdatedProfile = profileRepository.getProfileByUid(aliceUid)!!
     assertEquals(listOf(Badge.STARTING_TODOS_CREATED_BADGE.id), aliceUpdatedProfile.badgeIds)
+
+    val points = pointsRepository.getAllPoints()
+    assertEquals(1, points.size)
+    assertEquals(10.0, points[0].obtained)
   }
 
   @Test
@@ -76,6 +80,10 @@ class UpdatePointsWithBadgesTest {
 
     val aliceUpdatedProfile = profileRepository.getProfileByUid(aliceUid)!!
     assertEquals(listOf(Badge.BRONZE_TODOS_COMPLETED_BADGE.id), aliceUpdatedProfile.badgeIds)
+
+    val points = pointsRepository.getAllPoints()
+    assertEquals(1, points.size)
+    assertEquals(30.0, points[0].obtained)
   }
 
   @Test
@@ -94,6 +102,9 @@ class UpdatePointsWithBadgesTest {
 
     val aliceUpdatedProfile = profileRepository.getProfileByUid(aliceUid)!!
     assertEquals(listOf(Badge.SILVER_EVENTS_CREATED_BADGE.id), aliceUpdatedProfile.badgeIds)
+    val points = pointsRepository.getAllPoints()
+    assertEquals(1, points.size)
+    assertEquals(50.0, points[0].obtained)
   }
 
   @Test
@@ -112,6 +123,10 @@ class UpdatePointsWithBadgesTest {
 
     val aliceUpdatedProfile = profileRepository.getProfileByUid(aliceUid)!!
     assertEquals(listOf(Badge.GOLD_EVENTS_PARTICIPATED_BADGE.id), aliceUpdatedProfile.badgeIds)
+
+    val points = pointsRepository.getAllPoints()
+    assertEquals(1, points.size)
+    assertEquals(100.0, points[0].obtained)
   }
 
   @Test
@@ -130,6 +145,9 @@ class UpdatePointsWithBadgesTest {
 
     val aliceUpdatedProfile = profileRepository.getProfileByUid(aliceUid)!!
     assertEquals(listOf(Badge.DIAMOND_FRIENDS_BADGE.id), aliceUpdatedProfile.badgeIds)
+    val points = pointsRepository.getAllPoints()
+    assertEquals(1, points.size)
+    assertEquals(200.0, points[0].obtained)
   }
 
   @Test
@@ -148,5 +166,9 @@ class UpdatePointsWithBadgesTest {
 
     val aliceUpdatedProfile = profileRepository.getProfileByUid(aliceUid)!!
     assertEquals(listOf(Badge.LEGEND_FOCUS_SESSION_BADGE.id), aliceUpdatedProfile.badgeIds)
+
+    val points = pointsRepository.getAllPoints()
+    assertEquals(1, points.size)
+    assertEquals(300.0, points[0].obtained)
   }
 }
