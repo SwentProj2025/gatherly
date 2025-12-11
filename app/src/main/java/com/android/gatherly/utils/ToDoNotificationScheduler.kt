@@ -17,7 +17,7 @@ import java.time.ZoneId
  * - It looks at all the user's todos and, for those whose deadline is today, it creates a
  *   [NotificationType.TODO_REMINDER] if one does not already exist.
  */
-class NotificationScheduler(
+class ToDoNotificationScheduler(
     private val todoRepository: ToDosRepository,
     private val notificationsRepository: NotificationsRepository
 ) {

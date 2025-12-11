@@ -6,7 +6,7 @@ import com.android.gatherly.model.notification.NotificationsLocalRepository
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosLocalRepository
-import com.android.gatherly.utils.NotificationScheduler
+import com.android.gatherly.utils.ToDoNotificationScheduler
 import com.google.firebase.Timestamp
 import java.time.ZoneId
 import java.util.*
@@ -25,7 +25,7 @@ class NotificationSchedulerTest {
     // Arrange
     val todoRepo = ToDosLocalRepository()
     val notifRepo = NotificationsLocalRepository()
-    val scheduler = NotificationScheduler(todoRepo, notifRepo)
+    val scheduler = ToDoNotificationScheduler(todoRepo, notifRepo)
 
     todoRepo.addTodo(
         ToDo(
@@ -57,7 +57,7 @@ class NotificationSchedulerTest {
     // Arrange
     val todoRepo = ToDosLocalRepository()
     val notifRepo = NotificationsLocalRepository()
-    val scheduler = NotificationScheduler(todoRepo, notifRepo)
+    val scheduler = ToDoNotificationScheduler(todoRepo, notifRepo)
 
     todoRepo.addTodo(
         ToDo(
@@ -94,7 +94,7 @@ class NotificationSchedulerTest {
   fun doesNotNotifyForTodosOwnedByAnotherUser() = runTest {
     val todoRepo = ToDosLocalRepository(limitToUser = "user1")
     val notifRepo = NotificationsLocalRepository()
-    val scheduler = NotificationScheduler(todoRepo, notifRepo)
+    val scheduler = ToDoNotificationScheduler(todoRepo, notifRepo)
 
     todoRepo.addTodo(
         ToDo(
@@ -116,7 +116,7 @@ class NotificationSchedulerTest {
   fun doesNotNotifyWhenDeadlineIsNotToday() = runTest {
     val todoRepo = ToDosLocalRepository()
     val notifRepo = NotificationsLocalRepository()
-    val scheduler = NotificationScheduler(todoRepo, notifRepo)
+    val scheduler = ToDoNotificationScheduler(todoRepo, notifRepo)
 
     val tomorrow = Date(today.time + 24 * 60 * 60 * 1000)
 
@@ -140,7 +140,7 @@ class NotificationSchedulerTest {
   fun ignoresTodosWithNullDeadline() = runTest {
     val todoRepo = ToDosLocalRepository()
     val notifRepo = NotificationsLocalRepository()
-    val scheduler = NotificationScheduler(todoRepo, notifRepo)
+    val scheduler = ToDoNotificationScheduler(todoRepo, notifRepo)
 
     todoRepo.addTodo(
         ToDo(
@@ -162,7 +162,7 @@ class NotificationSchedulerTest {
   fun generatesMultipleNotificationsForMultipleTodos() = runTest {
     val todoRepo = ToDosLocalRepository()
     val notifRepo = NotificationsLocalRepository()
-    val scheduler = NotificationScheduler(todoRepo, notifRepo)
+    val scheduler = ToDoNotificationScheduler(todoRepo, notifRepo)
 
     todoRepo.addTodo(ToDo("t1", "A", "d", Timestamp(today), null, null, ToDoStatus.ONGOING, userId))
     todoRepo.addTodo(ToDo("t2", "B", "d", Timestamp(today), null, null, ToDoStatus.ONGOING, userId))
@@ -176,7 +176,7 @@ class NotificationSchedulerTest {
   fun onlyCreatesMissingNotifications_whenSomeAlreadyExist() = runTest {
     val todoRepo = ToDosLocalRepository()
     val notifRepo = NotificationsLocalRepository()
-    val scheduler = NotificationScheduler(todoRepo, notifRepo)
+    val scheduler = ToDoNotificationScheduler(todoRepo, notifRepo)
 
     todoRepo.addTodo(ToDo("t1", "A", "d", Timestamp(today), null, null, ToDoStatus.ONGOING, userId))
     todoRepo.addTodo(ToDo("t2", "B", "d", Timestamp(today), null, null, ToDoStatus.ONGOING, userId))
@@ -203,7 +203,7 @@ class NotificationSchedulerTest {
   @Test
   fun timestamp_toLocalDate_convertsCorrectly() {
     val timestamp = Timestamp(today)
-    val scheduler = NotificationScheduler(ToDosLocalRepository(), NotificationsLocalRepository())
+    val scheduler = ToDoNotificationScheduler(ToDosLocalRepository(), NotificationsLocalRepository())
 
     val converted = scheduler.run { timestamp.toLocalDate() }
     val expected = today.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
