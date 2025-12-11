@@ -270,6 +270,8 @@ class AddTodoViewModelTest {
 
           override suspend fun getAllEndedTodos() = emptyList<ToDo>()
 
+          override suspend fun updateTodosTagToNull(categoryId: String, ownerId: String) {}
+
           override fun getNewUid() = "fake-id"
 
           override suspend fun toggleStatus(todoID: String) {}
