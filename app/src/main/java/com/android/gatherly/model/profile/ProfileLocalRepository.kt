@@ -203,6 +203,7 @@ class ProfileLocalRepository : ProfileRepository {
       val updatedProfile = currentProfile.copy(participatingEventIds = updateEventIds)
       updateProfile(updatedProfile)
     }
+    incrementBadge(currentUserId, BadgeType.EVENTS_PARTICIPATED)
   }
 
   override suspend fun allParticipateEvent(eventId: String, participants: List<String>) {
@@ -249,7 +250,7 @@ class ProfileLocalRepository : ProfileRepository {
           this[key] = currentValue + 1
         }
     updateProfile(profile.copy(badgeCount = updated))
-    val addBadge = awardBadge(uid, type, currentValue + 1)
+    val addBadge = awardBadge(type, currentValue + 1)
 
     return addBadge
   }
@@ -266,7 +267,7 @@ class ProfileLocalRepository : ProfileRepository {
 
   // ---------- helpers ----------
 
-  private suspend fun awardBadge(uid: String, type: BadgeType, count: Long): String? {
+  private fun awardBadge(type: BadgeType, count: Long): String? {
     val rank = countToRank(count)
     if (rank == BadgeRank.BLANK) return null
 

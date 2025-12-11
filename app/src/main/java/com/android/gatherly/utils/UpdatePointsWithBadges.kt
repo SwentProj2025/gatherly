@@ -1,6 +1,7 @@
 package com.android.gatherly.utils
 
 import com.android.gatherly.model.badge.Badge
+import com.android.gatherly.model.badge.BadgeRank
 import com.android.gatherly.model.badge.BadgeType
 import com.android.gatherly.model.points.Points
 import com.android.gatherly.model.points.PointsRepository
@@ -36,227 +37,21 @@ suspend fun incrementBadgeCheckPoints(
     val diamondPoints = 200.0
     val legendPoints = 300.0
 
-    when (badgeToAdd) {
-      Badge.STARTING_TODOS_CREATED_BADGE.id ->
-          addToPoints(
-              Badge.STARTING_TODOS_CREATED_BADGE,
-              pointsRepository,
-              profileRepository,
-              uid,
-              startingPoints)
-      Badge.BRONZE_TODOS_CREATED_BADGE.id ->
-          addToPoints(
-              Badge.BRONZE_TODOS_CREATED_BADGE,
-              pointsRepository,
-              profileRepository,
-              uid,
-              bronzePoints)
-      Badge.SILVER_TODOS_CREATED_BADGE.id ->
-          addToPoints(
-              Badge.SILVER_TODOS_CREATED_BADGE,
-              pointsRepository,
-              profileRepository,
-              uid,
-              silverPoints)
-      Badge.GOLD_TODOS_CREATED_BADGE.id ->
-          addToPoints(
-              Badge.GOLD_TODOS_CREATED_BADGE, pointsRepository, profileRepository, uid, goldPoints)
-      Badge.DIAMOND_TODOS_CREATED_BADGE.id ->
-          addToPoints(
-              Badge.DIAMOND_TODOS_CREATED_BADGE,
-              pointsRepository,
-              profileRepository,
-              uid,
-              diamondPoints)
-      Badge.LEGEND_TODOS_CREATED_BADGE.id ->
-          addToPoints(
-              Badge.LEGEND_TODOS_CREATED_BADGE,
-              pointsRepository,
-              profileRepository,
-              uid,
-              legendPoints)
-      Badge.STARTING_TODOS_COMPLETED_BADGE.id ->
-          addToPoints(
-              Badge.STARTING_TODOS_COMPLETED_BADGE,
-              pointsRepository,
-              profileRepository,
-              uid,
-              startingPoints)
-      Badge.BRONZE_TODOS_COMPLETED_BADGE.id ->
-          addToPoints(
-              Badge.BRONZE_TODOS_COMPLETED_BADGE,
-              pointsRepository,
-              profileRepository,
-              uid,
-              bronzePoints)
-      Badge.SILVER_TODOS_COMPLETED_BADGE.id ->
-          addToPoints(
-              Badge.SILVER_TODOS_COMPLETED_BADGE,
-              pointsRepository,
-              profileRepository,
-              uid,
-              silverPoints)
-      Badge.GOLD_TODOS_COMPLETED_BADGE.id ->
-          addToPoints(
-              Badge.GOLD_TODOS_COMPLETED_BADGE,
-              pointsRepository,
-              profileRepository,
-              uid,
-              goldPoints)
-      Badge.DIAMOND_TODOS_COMPLETED_BADGE.id ->
-          addToPoints(
-              Badge.DIAMOND_TODOS_COMPLETED_BADGE,
-              pointsRepository,
-              profileRepository,
-              uid,
-              diamondPoints)
-      Badge.LEGEND_TODOS_COMPLETED_BADGE.id ->
-          addToPoints(
-              Badge.LEGEND_TODOS_COMPLETED_BADGE,
-              pointsRepository,
-              profileRepository,
-              uid,
-              legendPoints)
-      Badge.STARTING_EVENTS_CREATED_BADGE.id ->
-          addToPoints(
-              Badge.STARTING_EVENTS_CREATED_BADGE,
-              pointsRepository,
-              profileRepository,
-              uid,
-              startingPoints)
-      Badge.BRONZE_EVENTS_CREATED_BADGE.id ->
-          addToPoints(
-              Badge.BRONZE_EVENTS_CREATED_BADGE,
-              pointsRepository,
-              profileRepository,
-              uid,
-              bronzePoints)
-      Badge.SILVER_EVENTS_CREATED_BADGE.id ->
-          addToPoints(
-              Badge.SILVER_EVENTS_CREATED_BADGE,
-              pointsRepository,
-              profileRepository,
-              uid,
-              silverPoints)
-      Badge.GOLD_EVENTS_CREATED_BADGE.id ->
-          addToPoints(
-              Badge.GOLD_EVENTS_CREATED_BADGE, pointsRepository, profileRepository, uid, goldPoints)
-      Badge.DIAMOND_EVENTS_CREATED_BADGE.id ->
-          addToPoints(
-              Badge.DIAMOND_EVENTS_CREATED_BADGE,
-              pointsRepository,
-              profileRepository,
-              uid,
-              diamondPoints)
-      Badge.LEGEND_EVENTS_CREATED_BADGE.id ->
-          addToPoints(
-              Badge.LEGEND_EVENTS_CREATED_BADGE,
-              pointsRepository,
-              profileRepository,
-              uid,
-              legendPoints)
-      Badge.STARTING_EVENTS_PARTICIPATED_BADGE.id ->
-          addToPoints(
-              Badge.STARTING_EVENTS_PARTICIPATED_BADGE,
-              pointsRepository,
-              profileRepository,
-              uid,
-              startingPoints)
-      Badge.BRONZE_EVENTS_PARTICIPATED_BADGE.id ->
-          addToPoints(
-              Badge.BRONZE_EVENTS_PARTICIPATED_BADGE,
-              pointsRepository,
-              profileRepository,
-              uid,
-              bronzePoints)
-      Badge.SILVER_EVENTS_PARTICIPATED_BADGE.id ->
-          addToPoints(
-              Badge.SILVER_EVENTS_PARTICIPATED_BADGE,
-              pointsRepository,
-              profileRepository,
-              uid,
-              silverPoints)
-      Badge.GOLD_EVENTS_PARTICIPATED_BADGE.id ->
-          addToPoints(
-              Badge.GOLD_EVENTS_PARTICIPATED_BADGE,
-              pointsRepository,
-              profileRepository,
-              uid,
-              goldPoints)
-      Badge.DIAMOND_EVENTS_PARTICIPATED_BADGE.id ->
-          addToPoints(
-              Badge.DIAMOND_EVENTS_PARTICIPATED_BADGE,
-              pointsRepository,
-              profileRepository,
-              uid,
-              diamondPoints)
-      Badge.LEGEND_EVENTS_PARTICIPATED_BADGE.id ->
-          addToPoints(
-              Badge.LEGEND_EVENTS_PARTICIPATED_BADGE,
-              pointsRepository,
-              profileRepository,
-              uid,
-              legendPoints)
-      Badge.STARTING_FRIENDS_BADGE.id ->
-          addToPoints(
-              Badge.STARTING_FRIENDS_BADGE,
-              pointsRepository,
-              profileRepository,
-              uid,
-              startingPoints)
-      Badge.BRONZE_FRIENDS_BADGE.id ->
-          addToPoints(
-              Badge.BRONZE_FRIENDS_BADGE, pointsRepository, profileRepository, uid, bronzePoints)
-      Badge.SILVER_FRIENDS_BADGE.id ->
-          addToPoints(
-              Badge.SILVER_FRIENDS_BADGE, pointsRepository, profileRepository, uid, silverPoints)
-      Badge.GOLD_FRIENDS_BADGE.id ->
-          addToPoints(
-              Badge.GOLD_FRIENDS_BADGE, pointsRepository, profileRepository, uid, goldPoints)
-      Badge.DIAMOND_FRIENDS_BADGE.id ->
-          addToPoints(
-              Badge.DIAMOND_FRIENDS_BADGE, pointsRepository, profileRepository, uid, diamondPoints)
-      Badge.LEGEND_FRIENDS_BADGE.id ->
-          addToPoints(
-              Badge.LEGEND_FRIENDS_BADGE, pointsRepository, profileRepository, uid, legendPoints)
-      Badge.STARTING_FOCUS_SESSION_BADGE.id ->
-          addToPoints(
-              Badge.STARTING_FOCUS_SESSION_BADGE,
-              pointsRepository,
-              profileRepository,
-              uid,
-              startingPoints)
-      Badge.BRONZE_FOCUS_SESSION_BADGE.id ->
-          addToPoints(
-              Badge.BRONZE_FOCUS_SESSION_BADGE,
-              pointsRepository,
-              profileRepository,
-              uid,
-              bronzePoints)
-      Badge.SILVER_FOCUS_SESSION_BADGE.id ->
-          addToPoints(
-              Badge.SILVER_FOCUS_SESSION_BADGE,
-              pointsRepository,
-              profileRepository,
-              uid,
-              silverPoints)
-      Badge.GOLD_FOCUS_SESSION_BADGE.id ->
-          addToPoints(
-              Badge.GOLD_FOCUS_SESSION_BADGE, pointsRepository, profileRepository, uid, goldPoints)
-      Badge.DIAMOND_FOCUS_SESSION_BADGE.id ->
-          addToPoints(
-              Badge.DIAMOND_FOCUS_SESSION_BADGE,
-              pointsRepository,
-              profileRepository,
-              uid,
-              diamondPoints)
-      Badge.LEGEND_FOCUS_SESSION_BADGE.id ->
-          addToPoints(
-              Badge.LEGEND_FOCUS_SESSION_BADGE,
-              pointsRepository,
-              profileRepository,
-              uid,
-              legendPoints)
+    val badgeById = Badge.entries.associateBy { it.id }
+    val badge = badgeById[badgeToAdd]
+
+    badge?.let {
+      when (it.rank) {
+        BadgeRank.BLANK -> {}
+        BadgeRank.STARTING ->
+            addToPoints(it, pointsRepository, profileRepository, uid, startingPoints)
+        BadgeRank.BRONZE -> addToPoints(it, pointsRepository, profileRepository, uid, bronzePoints)
+        BadgeRank.SILVER -> addToPoints(it, pointsRepository, profileRepository, uid, silverPoints)
+        BadgeRank.GOLD -> addToPoints(it, pointsRepository, profileRepository, uid, goldPoints)
+        BadgeRank.DIAMOND ->
+            addToPoints(it, pointsRepository, profileRepository, uid, diamondPoints)
+        BadgeRank.LEGEND -> addToPoints(it, pointsRepository, profileRepository, uid, legendPoints)
+      }
     }
   }
 }
@@ -294,16 +89,4 @@ suspend fun addFriendWithPointsCheck(
 
   incrementBadgeCheckPoints(
       profileRepository, pointsRepository, currentUserId, BadgeType.FRIENDS_ADDED)
-}
-
-suspend fun participateEventWithPointsCheck(
-    profileRepository: ProfileRepository,
-    pointsRepository: PointsRepository,
-    eventId: String,
-    currentUserId: String
-) {
-  profileRepository.participateEvent(eventId, currentUserId)
-
-  incrementBadgeCheckPoints(
-      profileRepository, pointsRepository, currentUserId, BadgeType.EVENTS_PARTICIPATED)
 }
