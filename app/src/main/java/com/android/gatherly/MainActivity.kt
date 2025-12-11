@@ -358,6 +358,8 @@ fun GatherlyApp(
     ) {
       composable(Screen.FriendRequestsScreen.route) {
         FriendRequestsScreen(goBack = { navigationActions.goBack() })
+      }
+    }
 
     // GROUP OVERVIEW COMPOSABLE  ------------------------------
     navigation(
