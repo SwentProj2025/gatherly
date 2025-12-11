@@ -1,6 +1,5 @@
 package com.android.gatherly.ui.focusTimer
 
-import android.annotation.SuppressLint
 import android.icu.text.SimpleDateFormat
 import android.widget.Toast
 import androidx.compose.foundation.Image
@@ -772,7 +771,6 @@ fun FocusSessionsHistory(uiState: TimerState) {
  * @param focusSession The [FocusSession] item to display.
  * @param allTodos The list of all [ToDo] items to find linked todos.
  */
-@SuppressLint("DefaultLocale")
 @Composable
 fun FocusSessionItem(
     focusSession: FocusSession,
@@ -798,7 +796,7 @@ fun FocusSessionItem(
         val hours = durationInSeconds / 3600
         val minutes = (durationInSeconds % 3600) / 60
         val seconds = durationInSeconds % 60
-        String.format("%02d:%02d:%02d", hours, minutes, seconds)
+        String.format(Locale.US, "%02d:%02d:%02d", hours, minutes, seconds)
       } else {
         missingDetail
       }
