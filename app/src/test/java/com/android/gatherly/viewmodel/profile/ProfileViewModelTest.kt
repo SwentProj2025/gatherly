@@ -1,10 +1,14 @@
 package com.android.gatherly.viewmodel.profile
 
+import com.android.gatherly.model.group.GroupsLocalRepository
+import com.android.gatherly.model.group.GroupsRepository
 import com.android.gatherly.model.notification.NotificationsLocalRepository
 import com.android.gatherly.model.notification.NotificationsRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
+import com.android.gatherly.model.profile.ProfileStatus
+import com.android.gatherly.model.profile.UserStatusManager
 import com.android.gatherly.ui.profile.ProfileViewModel
 import com.android.gatherly.utilstest.MockitoUtils
 import kotlinx.coroutines.Dispatchers
@@ -18,6 +22,8 @@ import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
+import org.mockito.Mockito
+import org.mockito.kotlin.mock
 import org.mockito.kotlin.not
 
 /**
@@ -35,6 +41,7 @@ class ProfileViewModelIntegrationTest {
 
   private lateinit var profileViewModel: ProfileViewModel
   private lateinit var profileRepository: ProfileRepository
+  private lateinit var groupsRepository: GroupsRepository
   private lateinit var notificationsRepository: NotificationsRepository
   private lateinit var mockitoUtils: MockitoUtils
 
@@ -51,6 +58,7 @@ class ProfileViewModelIntegrationTest {
 
     // initialize repos and profileViewModel
     profileRepository = ProfileLocalRepository()
+    groupsRepository = GroupsLocalRepository()
     notificationsRepository = NotificationsLocalRepository()
   }
 
@@ -71,7 +79,8 @@ class ProfileViewModelIntegrationTest {
 
     profileViewModel =
         ProfileViewModel(
-            repository = profileRepository,
+            profileRepository = profileRepository,
+            groupsRepository = groupsRepository,
             notificationsRepository = notificationsRepository,
             authProvider = { mockitoUtils.mockAuth })
     profileViewModel.loadUserProfile()
@@ -94,7 +103,8 @@ class ProfileViewModelIntegrationTest {
 
     profileViewModel =
         ProfileViewModel(
-            repository = profileRepository,
+            profileRepository = profileRepository,
+            groupsRepository = groupsRepository,
             notificationsRepository = notificationsRepository,
             authProvider = { mockitoUtils.mockAuth })
     profileViewModel.loadUserProfile()
@@ -113,7 +123,8 @@ class ProfileViewModelIntegrationTest {
 
     profileViewModel =
         ProfileViewModel(
-            repository = profileRepository,
+            profileRepository = profileRepository,
+            groupsRepository = groupsRepository,
             notificationsRepository = notificationsRepository,
             authProvider = { mockitoUtils.mockAuth })
     profileViewModel.loadUserProfile()
@@ -124,5 +135,21 @@ class ProfileViewModelIntegrationTest {
     val state = profileViewModel.uiState.value
     assertNull(state.profile)
     assertEquals("User not authenticated", state.errorMessage)
+  }
+
+  @Test
+  fun signOut_callsSetStatusCorrectly() = runTest {
+    val statusManagerMock = mock<UserStatusManager>()
+    val viewModel =
+        ProfileViewModel(
+            profileRepository,
+            notificationsRepository = NotificationsLocalRepository(),
+            groupsRepository = GroupsLocalRepository(),
+            authProvider = { mockitoUtils.mockAuth },
+            userStatusManager = statusManagerMock)
+
+    viewModel.signOut(mock())
+    advanceUntilIdle()
+    Mockito.verify(statusManagerMock).setStatus(status = ProfileStatus.OFFLINE)
   }
 }

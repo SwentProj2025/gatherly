@@ -3,6 +3,9 @@ package com.android.gatherly.ui.profile
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import com.android.gatherly.model.group.Group
+import com.android.gatherly.model.group.GroupsLocalRepository
+import com.android.gatherly.model.group.GroupsRepository
 import com.android.gatherly.model.notification.NotificationsLocalRepository
 import com.android.gatherly.model.notification.NotificationsRepository
 import com.android.gatherly.model.profile.Profile
@@ -24,18 +27,41 @@ class ProfileScreenTest {
           username = "defaultusername",
           school = "University",
           schoolYear = "Year",
-          friendUids = emptyList())
+          friendUids = emptyList(),
+          groupIds = listOf("g1", "g2"),
+          bio = "profileScreenTestBio",
+      )
+
+  private val group1 =
+      Group(
+          gid = "g1",
+          creatorId = "u1",
+          name = "Group One",
+          memberIds = listOf("a", "b", "c"),
+          adminIds = listOf())
+  private val group2 =
+      Group(
+          gid = "g2",
+          creatorId = "u1",
+          name = "Group Two",
+          memberIds = listOf("a"),
+          adminIds = listOf())
 
   private lateinit var profileRepository: ProfileRepository
+  private lateinit var groupsRepository: GroupsRepository
   private lateinit var notificationsRepository: NotificationsRepository
   private lateinit var profileViewModel: ProfileViewModel
 
   private lateinit var mockitoUtils: MockitoUtils
 
-  private fun setContent(isAnon: Boolean = false) {
+  private fun setContent(isAnon: Boolean = false, hasGroups: Boolean = true) {
     profileRepository = ProfileLocalRepository()
+    groupsRepository = GroupsLocalRepository()
+    fill_profile_repository()
+    if (hasGroups) {
+      fill_groups_repository()
+    }
     notificationsRepository = NotificationsLocalRepository()
-    fill_repository()
 
     // Mock Firebase Auth
     mockitoUtils = MockitoUtils()
@@ -43,13 +69,19 @@ class ProfileScreenTest {
 
     profileViewModel =
         ProfileViewModel(
-            repository = profileRepository,
+            profileRepository = profileRepository,
+            groupsRepository = groupsRepository,
             notificationsRepository = notificationsRepository,
             authProvider = { mockitoUtils.mockAuth })
     composeTestRule.setContent { ProfileScreen(profileViewModel = profileViewModel) }
   }
 
-  fun fill_repository() = runTest { profileRepository.addProfile(profile) }
+  fun fill_groups_repository() = runTest {
+    groupsRepository.addGroup(group1)
+    groupsRepository.addGroup(group2)
+  }
+
+  fun fill_profile_repository() = runTest { profileRepository.addProfile(profile) }
 
   @Test
   fun profilePicture_IsDisplayed() {
@@ -68,6 +100,12 @@ class ProfileScreenTest {
         .onNodeWithTag(ProfileScreenTestTags.PROFILE_USERNAME)
         .assertExists()
         .assertTextContains("@defaultusername")
+  }
+
+  @Test
+  fun userBio_IsDisplayed() {
+    setContent()
+    composeTestRule.onNodeWithTag(ProfileScreenTestTags.USER_BIO).assertIsDisplayed()
   }
 
   @Test
@@ -97,6 +135,41 @@ class ProfileScreenTest {
     setContent()
     composeTestRule.onNodeWithTag(ProfileScreenTestTags.PROFILE_FOCUS_SESSIONS).assertExists()
     composeTestRule.onNodeWithTag(ProfileScreenTestTags.PROFILE_GROUPS).assertExists()
+  }
+
+  @Test
+  fun groupsOverview_Displayed_WhenUserHasGroups() = runTest {
+    setContent()
+
+    composeTestRule
+        .onNodeWithTag(ProfileScreenTestTags.GROUPS_OVERVIEW_CONTAINER, useUnmergedTree = true)
+        .assertExists()
+
+    // Group 1
+    composeTestRule
+        .onNodeWithTag("${ProfileScreenTestTags.GROUP_ROW_NAME}_0", useUnmergedTree = true)
+        .assertTextContains("Group One")
+    composeTestRule
+        .onNodeWithTag("${ProfileScreenTestTags.GROUP_ROW_MEMBER_COUNT}_0", useUnmergedTree = true)
+        .assertTextContains("3 members")
+
+    // Group 2
+    composeTestRule
+        .onNodeWithTag("${ProfileScreenTestTags.GROUP_ROW_NAME}_1", useUnmergedTree = true)
+        .assertTextContains("Group Two")
+    composeTestRule
+        .onNodeWithTag("${ProfileScreenTestTags.GROUP_ROW_MEMBER_COUNT}_1", useUnmergedTree = true)
+        .assertTextContains("1 member")
+  }
+
+  @Test
+  fun groupsOverview_Displayed_WhenUserHasNoGroups() = runTest {
+    setContent(isAnon = false, hasGroups = false)
+
+    composeTestRule
+        .onNodeWithTag(ProfileScreenTestTags.GROUPS_OVERVIEW_CONTAINER)
+        .assertDoesNotExist()
+    composeTestRule.onNodeWithTag(ProfileScreenTestTags.NO_GROUPS_TEXT).assertExists()
   }
 
   @Test

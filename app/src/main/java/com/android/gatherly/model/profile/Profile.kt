@@ -21,8 +21,10 @@ data class Profile(
     val birthday: Timestamp? = null,
     val profilePicture: String = "",
     val status: ProfileStatus = ProfileStatus.OFFLINE,
+    val userStatusSource: UserStatusSource = UserStatusSource.AUTOMATIC,
     val badgeIds: List<String> = emptyList(),
     val badgeCount: Map<String, Long> = emptyMap(),
     val focusPoints: Double = 0.0,
-    val weeklyPoints: Double = 0.0
+    val weeklyPoints: Double = 0.0,
+    val bio: String = ""
 )

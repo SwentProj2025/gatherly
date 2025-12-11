@@ -6,18 +6,22 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
@@ -25,14 +29,16 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
+import com.android.gatherly.model.profile.ProfileStatus
 import com.android.gatherly.ui.navigation.*
+import com.android.gatherly.ui.profile.ProfilePictureWithStatus
 import com.android.gatherly.utils.GatherlyAlertDialog
-import com.android.gatherly.utils.profilePicturePainter
 import java.io.File
 
 // Technical constants
@@ -57,6 +63,15 @@ object SettingsScreenTestTags {
   const val PROFILE_PICTURE_URL_NOT_EMPTY = "settings_profile_picture_url_not_empty"
   const val GOOGLE_BUTTON = "google_button"
   const val LOADING = "loading"
+  const val USER_STATUS = "settings_user_status"
+  const val STATUS_DIALOG = "status_dialog"
+  const val OPTION_ONLINE = "status_option_online"
+  const val OPTION_OFFLINE = "status_option_offline"
+  const val OPTION_FOCUSED = "status_option_focused"
+  const val CANCEL_BUTTON = "status_cancel"
+  const val STATUS_AUTOMATIC_TITLE = "status_title_automatic"
+  const val STATUS_MANUAL_TITLE = "status_title_manual"
+  const val BIO_FIELD = "settings_bio_field"
 }
 
 /**
@@ -85,6 +100,7 @@ fun SettingsScreen(
   val shouldShowLogOutWarning = remember { mutableStateOf(false) }
 
   var showPhotoPickerDialog by remember { mutableStateOf(false) }
+  var showStatusDialog by remember { mutableStateOf(false) }
 
   val imageFile = remember { File(context.filesDir, PROFILE_PIC_FILENAME) }
 
@@ -221,9 +237,18 @@ fun SettingsScreen(
                     modifier =
                         Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()),
                     horizontalAlignment = Alignment.CenterHorizontally) {
-
+                      val profilePicTestTag =
+                          uiState.profilePictureUrl
+                              .takeIf { it.isNotEmpty() }
+                              ?.let { SettingsScreenTestTags.PROFILE_PICTURE_URL_NOT_EMPTY }
+                              ?: SettingsScreenTestTags.PROFILE_PICTURE
                       // Profile Picture
-                      ProfilePictureImage(uiState.profilePictureUrl)
+                      ProfilePictureWithStatus(
+                          profilePictureUrl = uiState.profilePictureUrl,
+                          uiState.currentUserStatus,
+                          modifier = Modifier.clickable { showStatusDialog = true },
+                          statusTestTag = SettingsScreenTestTags.USER_STATUS,
+                          profilePictureTestTag = profilePicTestTag)
 
                       Spacer(modifier = Modifier.height(fieldSpacingRegular))
 
@@ -297,6 +322,22 @@ fun SettingsScreen(
                           value = uiState.schoolYear,
                           onValueChange = { settingsViewModel.editSchoolYear(it) },
                           testTag = SettingsScreenTestTags.SCHOOL_YEAR_FIELD)
+
+                      StatusPickerDialog(
+                          visible = showStatusDialog,
+                          currentStatus = uiState.currentUserStatus,
+                          onStatusSelected = {
+                            settingsViewModel.updateUserStatus(it)
+                            showStatusDialog = false
+                          },
+                          onDismiss = { showStatusDialog = false })
+                      Spacer(modifier = Modifier.height(fieldSpacingRegular))
+
+                      SettingsField(
+                          label = stringResource(R.string.settings_label_bio),
+                          value = uiState.bio,
+                          onValueChange = { settingsViewModel.editBio(it) },
+                          testTag = SettingsScreenTestTags.BIO_FIELD)
                     }
 
                 Spacer(modifier = Modifier.height(fieldSpacingMedium))
@@ -408,30 +449,6 @@ fun SettingsField(
                   .testTag("${testTag}_error"))
     }
   }
-}
-
-/**
- * Displays a circular profile picture.
- * - If [pictureUrl] is non-empty, loads the image from the URL using Coil.
- * - If [pictureUrl] is empty, shows a default placeholder image.
- * - Adds a test tag for UI testing:
- *     - [SettingsScreenTestTags.PROFILE_PICTURE_URL_NOT_EMPTY] if URL is provided
- *     - [SettingsScreenTestTags.PROFILE_PICTURE] otherwise
- *
- * @param pictureUrl The URL of the profile picture. Can be empty to show a placeholder.
- */
-@Composable
-fun ProfilePictureImage(pictureUrl: String) {
-  Image(
-      painter = profilePicturePainter(pictureUrl),
-      contentDescription = stringResource(R.string.settings_profile_picture_description),
-      modifier =
-          Modifier.size(dimensionResource(id = R.dimen.profile_pic_size))
-              .clip(CircleShape)
-              .testTag(
-                  if (pictureUrl.isNotEmpty()) SettingsScreenTestTags.PROFILE_PICTURE_URL_NOT_EMPTY
-                  else SettingsScreenTestTags.PROFILE_PICTURE),
-      contentScale = ContentScale.Crop)
 }
 
 /**
@@ -562,4 +579,187 @@ private fun PhotoPicker(
         pickImageLauncher = pickImageLauncher,
         onDismiss = onDismiss)
   }
+}
+
+/**
+ * Small colored status dot used to represent a user's presence state. (Green = Online, Red =
+ * Offline, Blue = Focused)
+ *
+ * @param status The current [ProfileStatus] to display.
+ * @param modifier Optional modifier for positioning.
+ * @param size The diameter of the indicator.
+ */
+@Composable
+fun StatusIndicator(status: ProfileStatus, modifier: Modifier = Modifier, size: Dp) {
+  val color =
+      when (status) {
+        ProfileStatus.ONLINE -> Color.Green
+        ProfileStatus.FOCUSED -> Color.Blue
+        ProfileStatus.OFFLINE -> Color.Red
+      }
+
+  Box(modifier = modifier.size(size).clip(CircleShape).background(color))
+}
+
+/**
+ * Dialog allowing the user to choose a new status.
+ *
+ * @param visible Whether the dialog is shown.
+ * @param currentStatus The user's currently selected status.
+ * @param onStatusSelected Called when a status option is chosen.
+ * @param onDismiss Called when the dialog is closed.
+ */
+@Composable
+fun StatusPickerDialog(
+    visible: Boolean,
+    currentStatus: ProfileStatus,
+    onStatusSelected: (ProfileStatus) -> Unit,
+    onDismiss: () -> Unit
+) {
+  if (!visible) return
+
+  AlertDialog(
+      modifier = Modifier.testTag(SettingsScreenTestTags.STATUS_DIALOG),
+      onDismissRequest = onDismiss,
+      title = {
+        Text(
+            text = stringResource(id = R.string.settings_status_dialog_title),
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onBackground)
+      },
+      text = {
+        Column(
+            modifier =
+                Modifier.fillMaxWidth()
+                    .clip(
+                        RoundedCornerShape(
+                            dimensionResource(id = R.dimen.rounded_corner_shape_medium_large)))
+                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                    .padding(vertical = dimensionResource(id = R.dimen.padding_small))) {
+              StatusGroupTitle(
+                  stringResource(id = R.string.settings_status_dialog_explain_auto),
+                  testTag = SettingsScreenTestTags.STATUS_AUTOMATIC_TITLE)
+              StatusOptionRow(
+                  label = stringResource(id = R.string.settings_status_dialog_option_online),
+                  status = ProfileStatus.ONLINE,
+                  currentStatus = currentStatus,
+                  onClick = { onStatusSelected(ProfileStatus.ONLINE) })
+              HorizontalDivider(
+                  modifier =
+                      Modifier.padding(
+                          vertical = dimensionResource(id = R.dimen.padding_small),
+                          horizontal = dimensionResource(id = R.dimen.padding_regular)),
+                  thickness =
+                      dimensionResource(id = R.dimen.settings_status_dialog_divider_thickness),
+                  color = MaterialTheme.colorScheme.outline)
+              Spacer(Modifier.height(dimensionResource(id = R.dimen.spacing_between_fields)))
+
+              StatusGroupTitle(
+                  stringResource(id = R.string.settings_status_dialog_explain_manual),
+                  testTag = SettingsScreenTestTags.STATUS_MANUAL_TITLE)
+              StatusOptionRow(
+                  label = stringResource(id = R.string.settings_status_dialog_option_offline),
+                  status = ProfileStatus.OFFLINE,
+                  currentStatus = currentStatus,
+                  onClick = { onStatusSelected(ProfileStatus.OFFLINE) })
+
+              StatusOptionRow(
+                  label = stringResource(id = R.string.settings_status_dialog_option_focused),
+                  status = ProfileStatus.FOCUSED,
+                  currentStatus = currentStatus,
+                  onClick = { onStatusSelected(ProfileStatus.FOCUSED) })
+            }
+      },
+      confirmButton = {},
+      dismissButton = {
+        TextButton(
+            onClick = onDismiss,
+            modifier = Modifier.testTag(SettingsScreenTestTags.CANCEL_BUTTON)) {
+              Text(stringResource(id = R.string.settings_status_dialog_option_cancel))
+            }
+      })
+}
+
+/** Text explaining the different modes of the status */
+@Composable
+private fun StatusGroupTitle(text: String, testTag: String) {
+  Text(
+      text = text,
+      style = MaterialTheme.typography.labelMedium,
+      color = MaterialTheme.colorScheme.onBackground,
+      modifier =
+          Modifier.padding(
+                  horizontal = dimensionResource(id = R.dimen.padding_regular),
+              )
+              .testTag(testTag))
+}
+
+/**
+ * A single row representing one status option.
+ *
+ * Highlights the row if it matches the current status.
+ *
+ * @param label Display name for the status.
+ * @param status The represented status value.
+ * @param currentStatus The user's current status.
+ * @param onClick Invoked when the row is selected.
+ */
+@Composable
+fun StatusOptionRow(
+    label: String,
+    status: ProfileStatus,
+    currentStatus: ProfileStatus,
+    onClick: () -> Unit
+) {
+  Row(
+      modifier =
+          Modifier.fillMaxWidth()
+              .clickable { onClick() }
+              .padding(
+                  horizontal = dimensionResource(id = R.dimen.padding_regular),
+                  vertical = dimensionResource(id = R.dimen.padding_small_regular))
+              .testTag(
+                  when (status) {
+                    ProfileStatus.ONLINE -> SettingsScreenTestTags.OPTION_ONLINE
+                    ProfileStatus.OFFLINE -> SettingsScreenTestTags.OPTION_OFFLINE
+                    ProfileStatus.FOCUSED -> SettingsScreenTestTags.OPTION_FOCUSED
+                  }),
+      verticalAlignment = Alignment.CenterVertically,
+      horizontalArrangement = Arrangement.SpaceBetween) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+          StatusIndicator(
+              status = status,
+              size = dimensionResource(id = R.dimen.settings_status_dialog_status_size))
+
+          Spacer(
+              Modifier.width(
+                  dimensionResource(id = R.dimen.spacing_between_fields_smaller_regular)))
+
+          Text(
+              text = label,
+              style = MaterialTheme.typography.bodyLarge,
+              color = MaterialTheme.colorScheme.onBackground)
+        }
+
+        val outerSize = dimensionResource(id = R.dimen.settings_status_dialog_selector_size)
+        val borderWidth = dimensionResource(id = R.dimen.border_width_regular)
+        val innerSize = outerSize * 0.5f
+
+        Box(modifier = Modifier.size(outerSize), contentAlignment = Alignment.Center) {
+          // Outer circle always has a border
+          Box(
+              modifier =
+                  Modifier.size(outerSize)
+                      .border(borderWidth, MaterialTheme.colorScheme.onBackground, CircleShape))
+
+          // Inner filled circle only when selected
+          if (currentStatus == status) {
+            Box(
+                modifier =
+                    Modifier.size(innerSize)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.onBackground))
+          }
+        }
+      }
 }

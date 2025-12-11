@@ -1,7 +1,7 @@
 package com.android.gatherly.ui.profile
 
+import GroupsOverview
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -32,13 +31,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -46,6 +44,8 @@ import androidx.compose.ui.unit.dp
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
+import com.android.gatherly.model.group.Group
+import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.ui.badge.BadgeUI
 import com.android.gatherly.ui.navigation.BottomNavigationMenu
 import com.android.gatherly.ui.navigation.HandleSignedOutState
@@ -56,7 +56,6 @@ import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Profile
 import com.android.gatherly.ui.theme.GatherlyTheme
 import com.android.gatherly.utils.GatherlyAlertDialog
-import com.android.gatherly.utils.profilePicturePainter
 
 /** Contains test tags used for UI testing on the Profile screen. */
 object ProfileScreenTestTags {
@@ -68,8 +67,13 @@ object ProfileScreenTestTags {
   const val PROFILE_FOCUS_POINTS_COUNT = "profileFocusPointsCount"
   const val PROFILE_FOCUS_SESSIONS = "profileFocusSessions"
   const val PROFILE_GROUPS = "profileGroups"
+  const val GROUPS_OVERVIEW_CONTAINER = "groupsOverviewContainer"
+  const val GROUP_ROW = "groupRow"
+  const val GROUP_ROW_NAME = "groupRowName"
+  const val GROUP_ROW_MEMBER_COUNT = "groupRowMembers"
+  const val NO_GROUPS_TEXT = "noGroupsText"
   const val GOOGLE_BUTTON = "googleButton"
-
+  const val USER_BIO = "profileBio"
   const val PROFILE_BADGES = "profileBadges"
 
   /** Test tag for the Badge Items */
@@ -96,11 +100,16 @@ fun ProfileScreen(
 ) {
   val uiState by profileViewModel.uiState.collectAsState()
   val profile = uiState.profile
+  val groupsToMembers = uiState.groupsToMembers
+  val groups = groupsToMembers.keys.toList()
   val context = LocalContext.current
   val shouldShowLogOutWarning = remember { mutableStateOf(false) }
 
   // Fetch profile when the screen is recomposed
-  LaunchedEffect(Unit) { profileViewModel.loadUserProfile() }
+  LaunchedEffect(Unit) {
+    profileViewModel.loadUserProfile()
+    profileViewModel.loadUserGroups()
+  }
 
   // If the anonymous user decides to upgrade their account to a signed in one, navigate to the init
   // profile screen
@@ -117,8 +126,6 @@ fun ProfileScreen(
   val fieldSpacingRegular = dimensionResource(id = R.dimen.spacing_between_fields_regular)
   val fieldSpacingMedium = dimensionResource(id = R.dimen.spacing_between_fields_medium)
   val fieldSpacingLarge = dimensionResource(id = R.dimen.spacing_between_fields_large)
-  val profilePictureSize = dimensionResource(id = R.dimen.profile_pic_size)
-  val profilePictureBorder = dimensionResource(id = R.dimen.profile_pic_border)
 
   HandleSignedOutState(uiState.signedOut, onSignedOut)
   Scaffold(
@@ -212,18 +219,9 @@ fun ProfileScreen(
                       .padding(horizontal = paddingRegular, vertical = paddingMedium),
               horizontalAlignment = Alignment.CenterHorizontally) {
                 // Profile Picture
-                Image(
-                    painter = profilePicturePainter(profile?.profilePicture),
-                    contentDescription = stringResource(R.string.profile_picture_description),
-                    modifier =
-                        Modifier.size(profilePictureSize)
-                            .clip(CircleShape)
-                            .border(
-                                profilePictureBorder,
-                                MaterialTheme.colorScheme.outline,
-                                CircleShape)
-                            .testTag(ProfileScreenTestTags.PROFILE_PICTURE),
-                    contentScale = ContentScale.Crop)
+                ProfilePicture(
+                    pictureUrl = profile?.profilePicture,
+                    testTag = ProfileScreenTestTags.PROFILE_PICTURE)
 
                 Spacer(modifier = Modifier.height(fieldSpacingRegular))
 
@@ -261,6 +259,21 @@ fun ProfileScreen(
                     fontWeight = FontWeight.Light,
                     modifier = Modifier.testTag(ProfileScreenTestTags.PROFILE_SCHOOL))
 
+                Spacer(modifier = Modifier.height(fieldSpacingSmall))
+
+                // Bio (shows default if blank)
+                val bioText: String =
+                    profile?.bio?.ifBlank { stringResource(id = R.string.user_default_bio) }
+                        ?: stringResource(id = R.string.user_default_bio)
+                Text(
+                    text = bioText,
+                    style = MaterialTheme.typography.titleSmall,
+                    textAlign = TextAlign.Center,
+                    fontStyle = FontStyle.Italic,
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .padding(horizontal = fieldSpacingMedium)
+                            .testTag(ProfileScreenTestTags.USER_BIO))
                 Spacer(modifier = Modifier.height(fieldSpacingMedium))
 
                 // Friends and Focus points
@@ -297,39 +310,6 @@ fun ProfileScreen(
                                 style = MaterialTheme.typography.bodySmall)
                           }
                     }
-
-                Spacer(modifier = Modifier.height(fieldSpacingLarge))
-
-                // Focus Sessions
-                Text(
-                    text = stringResource(R.string.profile_focus_sessions_section_title),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                    modifier =
-                        Modifier.fillMaxWidth()
-                            .testTag(ProfileScreenTestTags.PROFILE_FOCUS_SESSIONS))
-                Spacer(modifier = Modifier.height(fieldSpacingSmall))
-                Text(
-                    text = stringResource(R.string.profile_empty_focus_sessions_message),
-                    style = MaterialTheme.typography.bodyMedium,
-                    textAlign = TextAlign.Center)
-
-                Spacer(modifier = Modifier.height(fieldSpacingLarge))
-
-                // Groups
-                Text(
-                    text = stringResource(R.string.profile_groups_section_title),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                    modifier =
-                        Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PROFILE_GROUPS))
-                Spacer(modifier = Modifier.height(fieldSpacingSmall))
-                Text(
-                    text = stringResource(R.string.profile_empty_groups_message),
-                    style = MaterialTheme.typography.bodyMedium,
-                    textAlign = TextAlign.Center)
 
                 // Badges
                 Spacer(modifier = Modifier.height(fieldSpacingLarge))
@@ -373,6 +353,32 @@ fun ProfileScreen(
                       BadgeIcon(friendsBadge, onClick = onBadgeClicked)
                       BadgeIcon(eventParticipatedBadge, onClick = onBadgeClicked)
                     }
+
+                Spacer(modifier = Modifier.height(fieldSpacingLarge))
+
+                // Focus Sessions
+                Text(
+                    text = stringResource(R.string.profile_focus_sessions_section_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .testTag(ProfileScreenTestTags.PROFILE_FOCUS_SESSIONS))
+                Spacer(modifier = Modifier.height(fieldSpacingSmall))
+                Text(
+                    text = stringResource(R.string.profile_empty_focus_sessions_message),
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center)
+
+                // Groups
+                Spacer(modifier = Modifier.height(fieldSpacingLarge))
+
+                GroupsSection(
+                    groups = groups,
+                    groupsToMembers = groupsToMembers,
+                    modifier = Modifier.height(fieldSpacingSmall),
+                    navigationActions = navigationActions)
               }
         }
 
@@ -408,4 +414,41 @@ fun BadgeIcon(badgeUi: BadgeUI, onClick: () -> Unit = {}) {
 @Composable
 fun ProfileScreenPreview() {
   GatherlyTheme(darkTheme = false) { ProfileScreen() }
+}
+
+/**
+ * Composable function to display the Groups section in the Profile screen.
+ *
+ * @param groups List of groups the user is a member of.
+ * @param groupsToMembers Map of groups to their respective members.
+ * @param modifier Modifier for styling.
+ */
+@Composable
+fun GroupsSection(
+    groups: List<Group>,
+    groupsToMembers: Map<Group, List<Profile>>,
+    modifier: Modifier = Modifier,
+    navigationActions: NavigationActions?
+) {
+  Text(
+      text = stringResource(R.string.profile_groups_section_title),
+      style = MaterialTheme.typography.titleMedium,
+      fontWeight = FontWeight.Bold,
+      textAlign = TextAlign.Center,
+      modifier = Modifier.fillMaxWidth().testTag(ProfileScreenTestTags.PROFILE_GROUPS))
+  Spacer(modifier = modifier)
+  if (groups.isEmpty()) {
+    Text(
+        text = stringResource(R.string.profile_empty_groups_message),
+        style = MaterialTheme.typography.bodyMedium,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.testTag(ProfileScreenTestTags.NO_GROUPS_TEXT))
+  } else {
+    GroupsOverview(
+        groupsToMembers = groupsToMembers,
+        modifier =
+            Modifier.fillMaxWidth()
+                .clickable(
+                    onClick = { navigationActions?.navigateTo(Screen.OverviewGroupsScreen) }))
+  }
 }
