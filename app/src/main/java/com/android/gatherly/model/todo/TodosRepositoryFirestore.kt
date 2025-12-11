@@ -188,7 +188,7 @@ class ToDosRepositoryFirestore(private val db: FirebaseFirestore) : ToDosReposit
     val status = ToDoStatus.valueOf(statusStr)
     val priorityStr = doc.getString("priority") ?: return null
     val priority = ToDoPriority.valueOf(priorityStr)
-    val categoryMap = doc.get("tag") as? Map<*, *>
+    val categoryMap = doc["tag"] as? Map<*, *>
     val tag =
         categoryMap?.let { catMap ->
           val categoryId = catMap["id"] as? String
