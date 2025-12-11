@@ -28,7 +28,9 @@ class ProfileScreenTest {
           school = "University",
           schoolYear = "Year",
           friendUids = emptyList(),
-          groupIds = listOf("g1", "g2"))
+          groupIds = listOf("g1", "g2"),
+          bio = "profileScreenTestBio",
+      )
 
   private val group1 =
       Group(
@@ -101,6 +103,12 @@ class ProfileScreenTest {
   }
 
   @Test
+  fun userBio_IsDisplayed() {
+    setContent()
+    composeTestRule.onNodeWithTag(ProfileScreenTestTags.USER_BIO).assertIsDisplayed()
+  }
+
+  @Test
   fun schoolInfo_IsDisplayedCorrectly() {
     setContent()
     composeTestRule
@@ -133,22 +141,24 @@ class ProfileScreenTest {
   fun groupsOverview_Displayed_WhenUserHasGroups() = runTest {
     setContent()
 
-    composeTestRule.onNodeWithTag(ProfileScreenTestTags.GROUPS_OVERVIEW_CONTAINER).assertExists()
+    composeTestRule
+        .onNodeWithTag(ProfileScreenTestTags.GROUPS_OVERVIEW_CONTAINER, useUnmergedTree = true)
+        .assertExists()
 
     // Group 1
     composeTestRule
-        .onNodeWithTag("${ProfileScreenTestTags.GROUP_ROW_NAME}_0")
+        .onNodeWithTag("${ProfileScreenTestTags.GROUP_ROW_NAME}_0", useUnmergedTree = true)
         .assertTextContains("Group One")
     composeTestRule
-        .onNodeWithTag("${ProfileScreenTestTags.GROUP_ROW_MEMBER_COUNT}_0")
+        .onNodeWithTag("${ProfileScreenTestTags.GROUP_ROW_MEMBER_COUNT}_0", useUnmergedTree = true)
         .assertTextContains("3 members")
 
     // Group 2
     composeTestRule
-        .onNodeWithTag("${ProfileScreenTestTags.GROUP_ROW_NAME}_1")
+        .onNodeWithTag("${ProfileScreenTestTags.GROUP_ROW_NAME}_1", useUnmergedTree = true)
         .assertTextContains("Group Two")
     composeTestRule
-        .onNodeWithTag("${ProfileScreenTestTags.GROUP_ROW_MEMBER_COUNT}_1")
+        .onNodeWithTag("${ProfileScreenTestTags.GROUP_ROW_MEMBER_COUNT}_1", useUnmergedTree = true)
         .assertTextContains("1 member")
   }
 

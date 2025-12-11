@@ -70,6 +70,10 @@ class InitProfileScreenTest {
         .onNodeWithTag(InitProfileScreenTestTags.SAVE_BUTTON)
         .assertExists()
         .assertIsDisplayed()
+    composeRule
+        .onNodeWithTag(InitProfileScreenTestTags.BIO_FIELD)
+        .assertExists()
+        .assertIsDisplayed()
   }
 
   /** Verifies that username is mandatory and shows an error when cleared. */
@@ -182,7 +186,7 @@ class InitProfileScreenTest {
     saveButton.assertExists()
   }
 
-  /** Ensures school, school year and birthday inputs don’t affect save button availability. */
+  /** Ensures school, school year, bio and birthday inputs don’t affect save button availability. */
   @Test
   fun initProfileScreen_optionalFields_doNotBlockSave() {
     composeRule.onNodeWithTag(InitProfileScreenTestTags.USERNAME).performTextInput("alice_ok")
@@ -193,6 +197,7 @@ class InitProfileScreenTest {
         .performTextInput("02/10/2000")
     composeRule.onNodeWithTag(InitProfileScreenTestTags.SCHOOL_FIELD).performTextInput("EPFL")
     composeRule.onNodeWithTag(InitProfileScreenTestTags.SCHOOL_YEAR_FIELD).performTextInput("BA5")
+    composeRule.onNodeWithTag(InitProfileScreenTestTags.BIO_FIELD).performTextInput("MySuperBio")
 
     composeRule.waitForIdle()
     composeRule.onNodeWithTag(InitProfileScreenTestTags.SAVE_BUTTON).assertIsEnabled()

@@ -1,15 +1,13 @@
 package com.android.gatherly.ui.groups
 
-import androidx.credentials.ClearCredentialStateRequest
-import androidx.credentials.CredentialManager
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.group.Group
 import com.android.gatherly.model.group.GroupsRepository
 import com.android.gatherly.model.group.GroupsRepositoryFirestore
+import com.android.gatherly.model.profile.ProfileRepository
+import com.android.gatherly.model.profile.ProfileRepositoryProvider
 import com.google.firebase.Firebase
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,9 +27,9 @@ import kotlinx.coroutines.launch
  */
 data class GroupsOverviewUIState(
     val groups: List<Group> = emptyList(),
+    val profilePics: List<List<String>> = emptyList<List<String>>(),
     val errorMsg: String? = null,
-    val isLoading: Boolean = false,
-    val signedOut: Boolean = false
+    val isLoading: Boolean = false
 )
 
 /**
@@ -41,11 +39,10 @@ data class GroupsOverviewUIState(
  * [GroupsRepository].
  *
  * @property groupsRepository The repository used to fetch and manage Group items.
- * @property authProvider Provider for Firebase authentication instance, injectable for testing.
  */
 class GroupsOverviewViewModel(
     private val groupsRepository: GroupsRepository = GroupsRepositoryFirestore(Firebase.firestore),
-    private val authProvider: () -> FirebaseAuth = { Firebase.auth }
+    private val profileRepository: ProfileRepository = ProfileRepositoryProvider.repository
 ) : ViewModel() {
 
   private val _uiState = MutableStateFlow(GroupsOverviewUIState())
@@ -66,6 +63,22 @@ class GroupsOverviewViewModel(
       _uiState.value = _uiState.value.copy(isLoading = true, errorMsg = null)
       try {
         val groups = groupsRepository.getUserGroups()
+
+        val maxProfilePicsToDisplay = 3
+
+        for (group in groups) {
+
+          // The list of profile picture urls of this group (at most 3 to display)
+          val groupProfilePics = mutableListOf<String>()
+
+          for (i in 0 until minOf(maxProfilePicsToDisplay, group.memberIds.size)) {
+            val profile = profileRepository.getProfileByUid(group.memberIds[i])!!
+            groupProfilePics.add(profile.profilePicture)
+          }
+          _uiState.value =
+              _uiState.value.copy(
+                  profilePics = _uiState.value.profilePics + listOf(groupProfilePics.toList()))
+        }
         _uiState.value = _uiState.value.copy(groups = groups, isLoading = false)
       } catch (e: Exception) {
         _uiState.value =
@@ -74,12 +87,8 @@ class GroupsOverviewViewModel(
     }
   }
 
-  /** Initiates sign-out */
-  fun onSignedOut(credentialManager: CredentialManager): Unit {
-    viewModelScope.launch {
-      _uiState.value = _uiState.value.copy(signedOut = true)
-      authProvider().signOut()
-      credentialManager.clearCredentialState(ClearCredentialStateRequest())
-    }
+  /** Resets the error message to null once it was displayed */
+  fun resetErrorMessage() {
+    _uiState.value = _uiState.value.copy(errorMsg = null)
   }
 }
