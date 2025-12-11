@@ -40,7 +40,6 @@ import com.android.gatherly.ui.navigation.*
 import com.android.gatherly.ui.profile.ProfilePictureWithStatus
 import com.android.gatherly.utils.GatherlyAlertDialog
 import com.android.gatherly.utils.GatherlyAlertDialogActions
-import com.android.gatherly.utils.profilePicturePainter
 import java.io.File
 
 // Technical constants

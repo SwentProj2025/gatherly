@@ -57,7 +57,6 @@ import com.android.gatherly.ui.navigation.TopNavigationMenu_Profile
 import com.android.gatherly.ui.theme.GatherlyTheme
 import com.android.gatherly.utils.GatherlyAlertDialog
 import com.android.gatherly.utils.GatherlyAlertDialogActions
-import com.android.gatherly.utils.profilePicturePainter
 
 /** Contains test tags used for UI testing on the Profile screen. */
 object ProfileScreenTestTags {
