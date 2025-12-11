@@ -200,16 +200,22 @@ class EditTodoScreenTest : GatherlyTest() {
     // The user is not in the obligation to choose a category to assign his task
     composeTestRule.waitUntil(UI_WAIT_TIMEOUT) {
       composeTestRule.onNodeWithTag(CategoriesDropDownTestTags.CATEGORY_NONE_ITEM).isDisplayed()
+      // The user have the possibility to create a new category
+      composeTestRule
+          .onNodeWithTag(CategoriesDropDownTestTags.CATEGORY_CREATE_A_NEW_BUTTON)
+          .isNotDisplayed()
     }
 
-    // The user have the possibility to create a new category
-    composeTestRule
-        .onNodeWithTag(CategoriesDropDownTestTags.CATEGORY_CREATE_A_NEW_BUTTON)
-        .assertIsNotDisplayed()
     composeTestRule
         .onNodeWithTag(CategoriesDropDownTestTags.CATEGORY_EDIT_MODE_BUTTON)
         .assertIsDisplayed()
         .performClick()
+
+    composeTestRule.waitUntil(UI_WAIT_TIMEOUT) {
+      composeTestRule
+          .onNodeWithTag(CategoriesDropDownTestTags.CATEGORY_CREATE_A_NEW_BUTTON)
+          .isDisplayed()
+    }
     composeTestRule
         .onNodeWithTag(CategoriesDropDownTestTags.CATEGORY_CREATE_A_NEW_BUTTON)
         .assertIsDisplayed()

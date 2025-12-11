@@ -45,6 +45,15 @@
     <dimen name="rounded_corner_shape_large">20dp</dimen>
     <dimen name="border_width_regular">2dp</dimen>
 
+    <!-- Thickness -->
+    <dimen name="thickness_small">1dp</dimen>
+
+    <!-- Icons -->
+    <dimen name="icons_size_medium">30.dp</dimen>
+
+    <!-- Box -->
+    <dimen name="box_size_large">150.dp</dimen>
+
     <!-- ToDos -->
     <dimen name="todos_overview_vertical_padding">8dp</dimen>
     <dimen name="todos_overview_horizontal_padding">16dp</dimen>

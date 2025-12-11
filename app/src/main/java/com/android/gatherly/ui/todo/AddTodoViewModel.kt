@@ -121,14 +121,11 @@ class AddTodoViewModel(
   private suspend fun initializeUserData(userId: String) {
     try {
       todoCategoryRepository.initializeDefaultCategories()
-      Log.d("AddTODOVM", "Default categories initialized for user: $userId")
 
       val list = todoCategoryRepository.getAllCategories()
       _categories.value = list
       _isInitialized.value = true
-      Log.d("AddTODOVM", "Loaded ${list.size} categories")
     } catch (e: Exception) {
-      Log.e("AddTODOVM", "Error initializing user data", e)
       viewModelScope.launch {
         delay(1000)
         initializeUserData(userId)

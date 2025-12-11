@@ -1,6 +1,5 @@
 package com.android.gatherly.ui.todo
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.profile.ProfileRepository
@@ -108,7 +107,7 @@ class OverviewViewModel(
       val list = todoCategoryRepository.getAllCategories()
       _categories.value = list
     } catch (e: Exception) {
-      Log.e("OverviewTodoVM", "Failed to load categories: ${e.message}")
+      _uiState.value = _uiState.value.copy(errorMsg = e.message)
     }
   }
 

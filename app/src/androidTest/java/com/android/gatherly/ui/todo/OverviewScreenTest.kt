@@ -406,58 +406,59 @@ class OverviewScreenTest : GatherlyTest() {
 
   @Test
   fun correctTodoCategoryFeaturesDisplay() = runTest {
-    val a = todo1.copy(name = "A", tag = TAG_HOMEWORK)
-    val b = todo2.copy(name = "B", tag = TAG_COURSES)
-    val c = todo1.copy(name = "C", tag = TAG_PERSONAL)
-    val d = todo2.copy(name = "D", tag = TAG_PROJECT)
+    val todoHomework = todo1.copy(name = "HOMEWORK", tag = TAG_HOMEWORK)
+    val todoCourses = todo2.copy(name = "COURSES", tag = TAG_COURSES)
+    val todoPersonal = todo1.copy(name = "PERSONAL", tag = TAG_PERSONAL)
+    val todoProject = todo2.copy(name = "PROJECT", tag = TAG_PROJECT)
 
-    setContent(listOf(a, b, c, d))
+    setContent(listOf(todoHomework, todoCourses, todoPersonal, todoProject))
 
     composeTestRule.onNode(hasText("Homework")).performClick()
     advanceUntilIdle()
 
     composeTestRule
-        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(a))
+        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todoHomework))
         .assertIsDisplayed()
 
     composeTestRule.onNode(hasText("Courses")).performClick()
     advanceUntilIdle()
     composeTestRule
-        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(b))
+        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todoCourses))
         .assertIsDisplayed()
 
     composeTestRule.onNode(hasText("Personal")).performClick()
     advanceUntilIdle()
 
     composeTestRule
-        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(c))
+        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todoPersonal))
         .assertIsDisplayed()
     composeTestRule.onNode(hasText("Project")).performClick()
     advanceUntilIdle()
 
     composeTestRule
-        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(d))
+        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todoProject))
         .assertIsDisplayed()
   }
 
   @Test
   fun correctPriorityLevelSortingDisplay() = runTest {
-    val a = todo1.copy(name = "A", priorityLevel = ToDoPriority.NONE)
-    val b = todo2.copy(name = "B", priorityLevel = ToDoPriority.LOW)
-    val c = todo3.copy(name = "C", priorityLevel = ToDoPriority.MEDIUM, status = ToDoStatus.ONGOING)
-    val d = todo1.copy(uid = "X", name = "D", priorityLevel = ToDoPriority.HIGH)
+    val todoNonePriority = todo1.copy(name = "A", priorityLevel = ToDoPriority.NONE)
+    val todoLowPriority = todo2.copy(name = "B", priorityLevel = ToDoPriority.LOW)
+    val todoMediumPriority =
+        todo3.copy(name = "C", priorityLevel = ToDoPriority.MEDIUM, status = ToDoStatus.ONGOING)
+    val todoHighPriority = todo1.copy(uid = "X", name = "D", priorityLevel = ToDoPriority.HIGH)
 
-    setContent(listOf(a, b, c, d))
+    setContent(listOf(todoNonePriority, todoLowPriority, todoMediumPriority, todoHighPriority))
 
     composeTestRule.onNodeWithTag(OverviewScreenTestTags.SORT_MENU_BUTTON).performClick()
     composeTestRule.onNode(hasText("Priority level")).performClick()
     advanceUntilIdle()
 
-    val posA = positionOf(a)
-    val posB = positionOf(b)
+    val posA = positionOf(todoNonePriority)
+    val posB = positionOf(todoLowPriority)
 
-    val posC = positionOf(c)
-    val posD = positionOf(d)
+    val posC = positionOf(todoMediumPriority)
+    val posD = positionOf(todoHighPriority)
 
     assertTrue(posC > posD)
     assertTrue(posB > posC)

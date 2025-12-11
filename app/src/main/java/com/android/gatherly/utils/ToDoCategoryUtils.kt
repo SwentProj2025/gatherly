@@ -41,8 +41,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import com.android.gatherly.R
 import com.android.gatherly.model.todoCategory.ToDoCategory
 import com.android.gatherly.ui.theme.Typography
@@ -85,7 +85,8 @@ fun CategoriesDropDown(
             Row {
               Icon(
                   imageVector = Icons.Filled.Folder,
-                  modifier = Modifier.size(30.dp).fillMaxSize(),
+                  modifier =
+                      Modifier.size(dimensionResource(R.dimen.icons_size_medium)).fillMaxSize(),
                   contentDescription = "Category icon",
                   tint = currentTag?.color ?: MaterialTheme.colorScheme.onSurfaceVariant)
             }
@@ -95,7 +96,11 @@ fun CategoriesDropDown(
           onDismissRequest = { expanded.value = false },
           containerColor = MaterialTheme.colorScheme.surfaceVariant) {
             Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .padding(
+                            horizontal = dimensionResource(R.dimen.padding_regular),
+                            vertical = dimensionResource(R.dimen.padding_small)),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically) {
                   Text(
@@ -116,8 +121,8 @@ fun CategoriesDropDown(
                 }
 
             HorizontalDivider(
-                modifier = Modifier.padding(vertical = 8.dp),
-                thickness = 1.dp,
+                modifier = Modifier.padding(vertical = dimensionResource(R.dimen.padding_small)),
+                thickness = dimensionResource(R.dimen.thickness_small),
                 color = MaterialTheme.colorScheme.onSurface)
 
             if (isModeEditOn) {
@@ -137,8 +142,8 @@ fun CategoriesDropDown(
                       Modifier.testTag(CategoriesDropDownTestTags.CATEGORY_CREATE_A_NEW_BUTTON))
 
               HorizontalDivider(
-                  modifier = Modifier.padding(vertical = 8.dp),
-                  thickness = 1.dp,
+                  modifier = Modifier.padding(vertical = dimensionResource(R.dimen.padding_small)),
+                  thickness = dimensionResource(R.dimen.thickness_small),
                   color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
             }
 
@@ -212,8 +217,8 @@ private fun NoneCategoryItem(
         modifier = Modifier.testTag(CategoriesDropDownTestTags.CATEGORY_NONE_ITEM))
 
     HorizontalDivider(
-        modifier = Modifier.padding(vertical = 8.dp),
-        thickness = 1.dp,
+        modifier = Modifier.padding(vertical = dimensionResource(R.dimen.padding_small)),
+        thickness = dimensionResource(R.dimen.thickness_small),
         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
   }
 }
@@ -345,11 +350,17 @@ fun AlertDialogWarningDeleteTag(
 fun RandomColorBox(color: Color, onColorChange: (Color) -> Unit) {
 
   Column(
-      modifier = Modifier.fillMaxWidth().padding(16.dp),
+      modifier = Modifier.fillMaxWidth().padding(dimensionResource(R.dimen.padding_regular)),
       horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(modifier = Modifier.size(150.dp).clip(RoundedCornerShape(16.dp)).background(color))
+        Box(
+            modifier =
+                Modifier.size(dimensionResource(R.dimen.box_size_large))
+                    .clip(
+                        RoundedCornerShape(
+                            dimensionResource(R.dimen.rounded_corner_shape_medium_large)))
+                    .background(color))
 
-        Spacer(Modifier.height(16.dp))
+        Spacer(Modifier.height(dimensionResource(R.dimen.padding_regular)))
 
         Button(
             modifier = Modifier.testTag(AlertDialogCreateTagTestTags.ALERT_CREATE_TAG_COLOR_RANDOM),

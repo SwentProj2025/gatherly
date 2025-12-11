@@ -25,8 +25,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import com.android.gatherly.R
 import com.android.gatherly.model.todo.ToDoPriority
 import com.android.gatherly.ui.theme.Typography
@@ -86,7 +86,7 @@ fun PriorityDropDown(
       ) {
         Icon(
             imageVector = Icons.Filled.Error,
-            modifier = Modifier.size(30.dp).fillMaxSize(),
+            modifier = Modifier.size(dimensionResource(R.dimen.icons_size_medium)).fillMaxSize(),
             contentDescription = "Priority level icon",
             tint = priorityLevelColor(currentPriorityLevel))
       }
@@ -150,8 +150,8 @@ private fun PriorityDropdownItem(item: PriorityItem, isSelected: Boolean, onSele
   if (item.addDividerBelow) {
 
     HorizontalDivider(
-        modifier = Modifier.padding(vertical = 8.dp),
-        thickness = 1.dp,
+        modifier = Modifier.padding(vertical = dimensionResource(R.dimen.padding_small)),
+        thickness = dimensionResource(R.dimen.thickness_small),
         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
   }
 }
