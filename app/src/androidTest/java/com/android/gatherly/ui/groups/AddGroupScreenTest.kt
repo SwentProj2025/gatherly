@@ -1,5 +1,6 @@
 package com.android.gatherly.ui.groups
 
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -191,6 +192,12 @@ class AddGroupScreenTest {
     composeTestRule
         .onNodeWithTag(AddGroupScreenTestTags.GROUP_NAME_FIELD)
         .performTextInput("Chess Club")
+
+    // Type group name
+    composeTestRule
+        .onNodeWithTag(AddGroupScreenTestTags.GROUP_DESCRIPTION_FIELD)
+        .assertIsDisplayed()
+        .performTextInput("Best chess players")
 
     composeTestRule.onNodeWithTag(AddGroupScreenTestTags.BUTTON_CREATE_GROUP).performClick()
 

@@ -1,9 +1,6 @@
 package com.android.gatherly.ui.groups
 
-import android.widget.Toast
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,8 +39,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
@@ -55,12 +52,14 @@ import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
+import com.android.gatherly.ui.todo.toDoTextFieldColors
 import com.android.gatherly.utils.profilePicturePainter
 
 /** Object containing test tags for the AddGroupScreen and its components. */
 object AddGroupScreenTestTags {
   const val BUTTON_CREATE_GROUP = "buttonCreateGroup"
   const val GROUP_NAME_FIELD = "groupNameField"
+  const val GROUP_DESCRIPTION_FIELD = "groupDescriptionField"
   const val SEARCH_FRIENDS_BAR = "searchFriendsBar"
   const val EMPTY_LIST_MSG = "emptyListMessage"
   const val NAME_ERROR_MESSAGE = "nameErrorMessage"
@@ -121,30 +120,16 @@ fun AddGroupScreen(
     onCreate: () -> Unit = {},
 ) {
 
-  val context = LocalContext.current
   val uiState by addGroupViewModel.uiState.collectAsState()
-  val friendsProfilesList = uiState.friendsList
-
-  val selectedFriends =
-      friendsProfilesList.filter { profile -> profile.uid in uiState.selectedFriendIds }
 
   var searchQuery by remember { mutableStateOf("") }
-
-  val nameError = uiState.nameError
-
-  val filteredFriends =
-      if (searchQuery.isBlank()) {
-        friendsProfilesList
-      } else {
-        friendsProfilesList.filter { profile ->
-          profile.username.contains(searchQuery, ignoreCase = true)
-        }
-      }
 
   val screenPadding = dimensionResource(R.dimen.padding_screen)
   val smallPadding = dimensionResource(R.dimen.padding_small)
   val groupNameLabel = stringResource(R.string.group_name_bar_label)
   val groupNamePlaceholder = stringResource(R.string.group_name_bar_placeholder)
+  val groupDescriptionLabel = stringResource(R.string.todos_description_field_label)
+  val groupDescriptionPlaceholder = stringResource(R.string.group_description_bar_placeholder)
   val buttonHeight = dimensionResource(R.dimen.add_group_button_height)
   val buttonVerticalPadding = dimensionResource(R.dimen.add_group_button_vertical)
   val buttonCornerRadius = dimensionResource(R.dimen.friends_item_rounded_corner_shape)
@@ -160,30 +145,22 @@ fun AddGroupScreen(
   val dividerThickness = dimensionResource(R.dimen.add_group_horizontal_divider_thickness)
   val friendSectionHeight = dimensionResource(R.dimen.add_group_friend_section_height)
 
-  val nameFieldColors =
+  val inputFieldColors =
       OutlinedTextFieldDefaults.colors(
-          focusedContainerColor = MaterialTheme.colorScheme.background,
-          unfocusedContainerColor = MaterialTheme.colorScheme.background,
+          focusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+          unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+          errorContainerColor = MaterialTheme.colorScheme.surfaceVariant,
           unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
           focusedTextColor = MaterialTheme.colorScheme.onBackground,
-          errorTextColor = MaterialTheme.colorScheme.onBackground)
-  val searchFieldColors =
-      OutlinedTextFieldDefaults.colors(
-          focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-          unfocusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-          focusedBorderColor = MaterialTheme.colorScheme.secondaryContainer,
-          unfocusedBorderColor = MaterialTheme.colorScheme.secondaryContainer,
-          unfocusedTextColor = MaterialTheme.colorScheme.onSecondaryContainer,
-          focusedTextColor = MaterialTheme.colorScheme.onSecondaryContainer,
-          errorTextColor = MaterialTheme.colorScheme.onSecondaryContainer,
-      )
-
-  LaunchedEffect(nameError) {
-    if (nameError != null) {
-      Toast.makeText(context, nameError, Toast.LENGTH_SHORT).show()
-      addGroupViewModel.clearErrorMsg()
-    }
-  }
+          errorTextColor = MaterialTheme.colorScheme.onBackground,
+          focusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+          unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+          focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+          unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.8f),
+          unfocusedBorderColor = Color.Transparent,
+          focusedBorderColor = Color.Transparent,
+          disabledBorderColor = Color.Transparent,
+          errorBorderColor = Color.Transparent)
 
   // Observe save success
   LaunchedEffect(uiState.saveSuccess) {
@@ -205,8 +182,9 @@ fun AddGroupScreen(
             contentPadding = PaddingValues(vertical = smallPadding),
             modifier =
                 Modifier.fillMaxWidth().padding(horizontal = screenPadding).padding(padding)) {
+
+              // Group Name Input Field
               item {
-                // Group Name Input Field
                 OutlinedTextField(
                     value = uiState.name,
                     onValueChange = { addGroupViewModel.onNameChanged(it) },
@@ -220,11 +198,25 @@ fun AddGroupScreen(
                             modifier = Modifier.testTag(AddGroupScreenTestTags.NAME_ERROR_MESSAGE))
                       }
                     },
-                    colors = nameFieldColors,
+                    colors = inputFieldColors,
                     modifier =
                         Modifier.fillMaxWidth().testTag(AddGroupScreenTestTags.GROUP_NAME_FIELD))
               }
-              if (filteredFriends.isEmpty()) {
+
+              // Group Description Input Field
+              item {
+                OutlinedTextField(
+                    value = uiState.description,
+                    onValueChange = { addGroupViewModel.onDescriptionChanged(it) },
+                    label = { Text(groupDescriptionLabel) },
+                    placeholder = { Text(groupDescriptionPlaceholder) },
+                    colors = toDoTextFieldColors,
+                    modifier =
+                        Modifier.fillMaxWidth()
+                            .testTag(AddGroupScreenTestTags.GROUP_DESCRIPTION_FIELD))
+              }
+
+              if (uiState.friendsList.isEmpty()) {
                 item {
                   // Message shown when there are no friends to display
                   Text(
@@ -238,22 +230,26 @@ fun AddGroupScreen(
                   // Search Bar for filtering friends
                   OutlinedTextField(
                       value = searchQuery,
-                      onValueChange = { searchQuery = it },
+                      onValueChange = {
+                        searchQuery = it
+                        addGroupViewModel.filterFriends(searchQuery)
+                      },
                       modifier =
                           Modifier.fillMaxWidth()
+                              .padding(vertical = screenPadding)
                               .testTag(AddGroupScreenTestTags.SEARCH_FRIENDS_BAR),
                       shape = RoundedCornerShape(searchCornerShape),
                       placeholder = { Text(text = searchBarLabel) },
-                      colors = searchFieldColors)
+                      colors = inputFieldColors)
                   Spacer(modifier = Modifier.height(smallSpacing))
                 }
 
                 // Selected Friends Row
                 item {
-                  if (selectedFriends.isNotEmpty()) {
+                  if (uiState.selectedFriends.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(smallSpacing))
                     LazyRow {
-                      items(selectedFriends) { friend ->
+                      items(uiState.selectedFriends) { friend ->
                         Image(
                             painter = profilePicturePainter(friend.profilePicture),
                             contentDescription = picDescription,
@@ -261,7 +257,9 @@ fun AddGroupScreen(
                                 Modifier.size(picSize)
                                     .clip(CircleShape)
                                     .border(
-                                        picBorder, MaterialTheme.colorScheme.outline, CircleShape)
+                                        picBorder,
+                                        MaterialTheme.colorScheme.onBackground,
+                                        CircleShape)
                                     .testTag(
                                         AddGroupScreenTestTags
                                             .getTestTagForSelectedFriendProfilePicture(
@@ -281,7 +279,7 @@ fun AddGroupScreen(
                 item {
                   Box(modifier = Modifier.fillMaxWidth().height(friendSectionHeight)) {
                     LazyColumn {
-                      items(filteredFriends) { friend ->
+                      items(uiState.friendsList) { friend ->
                         FriendItem(friend = friend, viewModel = addGroupViewModel)
                       }
                     }
@@ -300,13 +298,12 @@ fun AddGroupScreen(
                             .testTag(AddGroupScreenTestTags.BUTTON_CREATE_GROUP),
                     shape = RoundedCornerShape(buttonCornerRadius),
                     enabled = uiState.nameError == null,
-                    colors =
-                        buttonColors(containerColor = MaterialTheme.colorScheme.inversePrimary)) {
+                    colors = buttonColors(containerColor = MaterialTheme.colorScheme.secondary)) {
                       Text(
                           text = buttonLabel,
                           fontSize = buttonFontSize.value.sp,
                           fontWeight = FontWeight.Medium,
-                          color = MaterialTheme.colorScheme.onPrimary)
+                          color = MaterialTheme.colorScheme.onSecondary)
                     }
               }
             }
@@ -323,30 +320,22 @@ fun AddGroupScreen(
 @Composable
 private fun FriendItem(friend: Profile, viewModel: AddGroupViewModel) {
 
-  val checkboxColor = MaterialTheme.colorScheme.secondaryContainer
-
-  val borderWidth = dimensionResource(R.dimen.friends_item_card_border_width)
   val roundedCornerShape = dimensionResource(R.dimen.friends_item_card_rounded_corner_shape)
   val verticalPadding = dimensionResource(R.dimen.friends_item_card_padding_vertical)
   val cardPadding = dimensionResource(R.dimen.friends_item_card_padding)
   val picDescription = stringResource(R.string.profile_picture_description)
   val picSize = dimensionResource(R.dimen.profile_pic_size_regular)
-  val picBorder = dimensionResource(R.dimen.profile_pic_border)
   val smallSpacing = dimensionResource(R.dimen.spacing_between_fields_smaller_regular)
   val regularSpacing = dimensionResource(R.dimen.spacing_between_fields_regular)
-  val smallRoundedCornerShape = dimensionResource(R.dimen.rounded_corner_shape_small)
 
-  var checked by remember {
-    mutableStateOf(friend.uid in viewModel.uiState.value.selectedFriendIds)
-  }
+  val uiState = viewModel.uiState.collectAsState()
 
   Card(
-      border = BorderStroke(borderWidth, MaterialTheme.colorScheme.primary),
       shape = RoundedCornerShape(roundedCornerShape),
       colors =
           CardDefaults.cardColors(
-              containerColor = MaterialTheme.colorScheme.secondaryContainer,
-              contentColor = MaterialTheme.colorScheme.onSecondaryContainer),
+              containerColor = MaterialTheme.colorScheme.surfaceVariant,
+              contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
       modifier =
           Modifier.testTag(AddGroupScreenTestTags.getTestTagForFriendItem(friend.username))
               .fillMaxWidth()
@@ -362,7 +351,6 @@ private fun FriendItem(friend: Profile, viewModel: AddGroupViewModel) {
               modifier =
                   Modifier.size(picSize)
                       .clip(CircleShape)
-                      .border(picBorder, MaterialTheme.colorScheme.outline, CircleShape)
                       .testTag(
                           AddGroupScreenTestTags.getTestTagForFriendProfilePicture(
                               friend.username)),
@@ -375,7 +363,6 @@ private fun FriendItem(friend: Profile, viewModel: AddGroupViewModel) {
             Text(
                 text = friend.username,
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.primary,
                 fontWeight = FontWeight.Medium,
                 modifier =
                     Modifier.testTag(
@@ -386,16 +373,10 @@ private fun FriendItem(friend: Profile, viewModel: AddGroupViewModel) {
 
           // Selection Checkbox
           Checkbox(
-              checked = checked,
-              onCheckedChange = {
-                viewModel.onFriendToggled(friend.uid)
-                checked = friend.uid in viewModel.uiState.value.selectedFriendIds
-              },
+              checked = uiState.value.selectedFriends.contains(friend),
+              onCheckedChange = { viewModel.onFriendToggled(friend) },
               modifier =
                   Modifier.wrapContentWidth()
-                      .background(
-                          color = checkboxColor,
-                          shape = RoundedCornerShape(smallRoundedCornerShape))
                       .testTag(AddGroupScreenTestTags.getTestTagForFriendCheckbox(friend.username)))
         }
       }
