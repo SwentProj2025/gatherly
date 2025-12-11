@@ -426,19 +426,22 @@ class EditTodoViewModel(
     }
   }
 
-    fun deleteCategory(category: ToDoCategory) {
-        viewModelScope.launch {
-            try {
-                val ownerId = category.ownerId
-                todoRepository.updateTodosTagToNull(category.id, ownerId)
-                todoCategoryRepository.deleteToDoCategory(category.id)
-                _categories.value = todoCategoryRepository.getAllCategories()
+  fun deleteCategory(category: ToDoCategory) {
+    viewModelScope.launch {
+      try {
+        val ownerId = category.ownerId
 
-            } catch (e: Exception) {
-                setErrorMsg("Failed to delete the category of todo: ${category.name}")
-            }
+        todoRepository.updateTodosTagToNull(category.id, ownerId)
+        todoCategoryRepository.deleteToDoCategory(category.id)
+        _categories.value = todoCategoryRepository.getAllCategories()
+        if (_uiState.value.tag == category) {
+          _uiState.value = _uiState.value.copy(tag = null)
         }
+      } catch (e: Exception) {
+        setErrorMsg("Failed to delete the category of todo: ${category.name}")
+      }
     }
+  }
 
   /*----------------------------------Helpers--------------------------------------------------*/
 

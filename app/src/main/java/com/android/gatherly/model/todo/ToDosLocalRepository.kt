@@ -53,6 +53,16 @@ class ToDosLocalRepository : ToDosRepository {
   }
 
   override suspend fun updateTodosTagToNull(categoryId: String, ownerId: String) {
-    TODO("Not yet implemented")
+    val todosToUpdate =
+        todos.filter {
+          val tag = it.tag
+          tag != null && tag.id == categoryId
+        }
+    todosToUpdate.forEach { todo ->
+      val index = todos.indexOf(todo)
+      if (index != -1) {
+        todos[index] = todo.copy(tag = null)
+      }
+    }
   }
 }

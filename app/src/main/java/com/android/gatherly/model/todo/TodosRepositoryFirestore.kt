@@ -251,18 +251,20 @@ class ToDosRepositoryFirestore(private val db: FirebaseFirestore) : ToDosReposit
             })
   }
 
-    override suspend fun updateTodosTagToNull(categoryId: String, ownerId: String) {
-        val todosToUpdate =
-            db.collection("users").document(ownerId).collection("todos")
-                .whereEqualTo("tag.id", categoryId)
-                .get()
-                .await()
+  override suspend fun updateTodosTagToNull(categoryId: String, ownerId: String) {
+    val todosToUpdate =
+        db.collection("users")
+            .document(ownerId)
+            .collection("todos")
+            .whereEqualTo("tag.id", categoryId)
+            .get()
+            .await()
 
-        val batch = db.batch()
+    val batch = db.batch()
 
-        for (document in todosToUpdate.documents) {
-           batch.update(document.reference, "tag", null)
-        }
-        batch.commit().await()
+    for (document in todosToUpdate.documents) {
+      batch.update(document.reference, "tag", null)
     }
+    batch.commit().await()
+  }
 }
