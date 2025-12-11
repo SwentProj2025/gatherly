@@ -147,6 +147,7 @@ class ProfileViewModel(
               _uiState.value.copy(
                   isLoading = false,
                   profile = profile,
+                  focusPoints = profile.focusPoints,
                   topBadges = buildUiStateFromProfile(profile))
         }
       } catch (e: Exception) {
