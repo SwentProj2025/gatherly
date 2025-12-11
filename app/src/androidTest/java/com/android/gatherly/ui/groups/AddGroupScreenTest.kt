@@ -7,6 +7,8 @@ import androidx.compose.ui.test.performTextInput
 import com.android.gatherly.model.group.GroupsLocalRepository
 import com.android.gatherly.model.notification.NotificationsLocalRepository
 import com.android.gatherly.model.notification.NotificationsRepository
+import com.android.gatherly.model.points.PointsLocalRepository
+import com.android.gatherly.model.points.PointsRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.utils.MockitoUtils
@@ -28,6 +30,7 @@ class AddGroupScreenTest {
   private lateinit var profileRepository: ProfileLocalRepository
   private lateinit var notificationsRepository: NotificationsRepository
   private lateinit var groupsRepository: GroupsLocalRepository
+  private lateinit var pointsRepository: PointsRepository
   private lateinit var addGroupViewModel: AddGroupViewModel
 
   /**
@@ -40,6 +43,7 @@ class AddGroupScreenTest {
       profileRepository = ProfileLocalRepository()
       groupsRepository = GroupsLocalRepository()
       notificationsRepository = NotificationsLocalRepository()
+      pointsRepository = PointsLocalRepository()
 
       profileRepository.addProfile(francisProfile)
       advanceUntilIdle()
@@ -61,6 +65,7 @@ class AddGroupScreenTest {
               groupsRepository = groupsRepository,
               profileRepository = profileRepository,
               notificationsRepository = notificationsRepository,
+              pointsRepository = pointsRepository,
               authProvider = { mockitoUtils.mockAuth })
 
       composeTestRule.setContent { AddGroupScreen(addGroupViewModel) }

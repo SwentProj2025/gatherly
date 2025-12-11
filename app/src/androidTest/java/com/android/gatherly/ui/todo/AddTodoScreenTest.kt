@@ -10,6 +10,8 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
+import com.android.gatherly.model.points.PointsLocalRepository
+import com.android.gatherly.model.points.PointsRepository
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.todo.ToDosLocalRepository
@@ -34,12 +36,14 @@ class AddTodoScreenTest : GatherlyTest() {
 
   private lateinit var addTodoViewModel: AddTodoViewModel
   private lateinit var profileRepository: ProfileRepository
+  private lateinit var pointsRepository: PointsRepository
   private lateinit var mockitoUtils: MockitoUtils
 
   @Before
   fun setUp() {
     repository = ToDosLocalRepository()
     profileRepository = ProfileLocalRepository()
+    pointsRepository = PointsLocalRepository()
 
     // Mock Firebase Auth
     mockitoUtils = MockitoUtils()
@@ -49,6 +53,7 @@ class AddTodoScreenTest : GatherlyTest() {
         AddTodoViewModel(
             todoRepository = repository,
             profileRepository = profileRepository,
+            pointsRepository = pointsRepository,
             authProvider = { mockitoUtils.mockAuth })
     composeTestRule.setContent { AddToDoScreen(addTodoViewModel = addTodoViewModel) }
     composeTestRule

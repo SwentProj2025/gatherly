@@ -1,6 +1,8 @@
 package com.android.gatherly.viewmodel.todo
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.android.gatherly.model.points.PointsLocalRepository
+import com.android.gatherly.model.points.PointsRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
@@ -42,6 +44,7 @@ class AddTodoViewModelTest {
   private lateinit var addToDoViewModel: AddTodoViewModel
   private lateinit var toDosRepository: ToDosRepository
   private lateinit var profileRepository: ProfileRepository
+  private lateinit var pointsRepository: PointsRepository
   private lateinit var mockitoUtils: MockitoUtils
 
   // initialize this so that tests control all coroutines and can wait on them
@@ -62,6 +65,7 @@ class AddTodoViewModelTest {
 
     toDosRepository = ToDosLocalRepository()
     profileRepository = ProfileLocalRepository()
+    pointsRepository = PointsLocalRepository()
 
     // Add owner profile to repo
     runTest { profileRepository.addProfile(ownerProfile) }
@@ -74,6 +78,7 @@ class AddTodoViewModelTest {
         AddTodoViewModel(
             todoRepository = toDosRepository,
             profileRepository = profileRepository,
+            pointsRepository = pointsRepository,
             authProvider = { mockitoUtils.mockAuth })
   }
 
@@ -266,7 +271,9 @@ class AddTodoViewModelTest {
           override suspend fun toggleStatus(todoID: String) {}
         }
 
-    val viewModel = AddTodoViewModel(failingRepo, profileRepository, { mockitoUtils.mockAuth })
+    val viewModel =
+        AddTodoViewModel(
+            failingRepo, profileRepository, pointsRepository, { mockitoUtils.mockAuth })
 
     viewModel.onTitleChanged("Some task")
     viewModel.onDescriptionChanged("Should fail to save")

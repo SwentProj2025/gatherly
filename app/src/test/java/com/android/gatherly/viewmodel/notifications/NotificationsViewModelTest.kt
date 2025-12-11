@@ -3,6 +3,8 @@ package com.android.gatherly.viewmodel.notifications
 import com.android.gatherly.model.notification.Notification
 import com.android.gatherly.model.notification.NotificationType
 import com.android.gatherly.model.notification.NotificationsLocalRepository
+import com.android.gatherly.model.points.PointsLocalRepository
+import com.android.gatherly.model.points.PointsRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.ui.notifications.NotificationViewModel
@@ -37,6 +39,7 @@ class NotificationViewModelTest {
 
   private lateinit var notificationsRepo: NotificationsLocalRepository
   private lateinit var profileRepo: ProfileLocalRepository
+  private lateinit var pointsRepository: PointsRepository
   private lateinit var mockAuth: FirebaseAuth
   private lateinit var mockUser: FirebaseUser
 
@@ -50,6 +53,7 @@ class NotificationViewModelTest {
 
     notificationsRepo = NotificationsLocalRepository()
     profileRepo = ProfileLocalRepository()
+    pointsRepository = PointsLocalRepository()
 
     // --- Mock FirebaseAuth / FirebaseUser ---
     mockAuth = Mockito.mock(FirebaseAuth::class.java)
@@ -71,6 +75,7 @@ class NotificationViewModelTest {
         NotificationViewModel(
             notificationsRepository = notificationsRepo,
             profileRepository = profileRepo,
+            pointsRepository = pointsRepository,
             authProvider = { mockAuth })
   }
 

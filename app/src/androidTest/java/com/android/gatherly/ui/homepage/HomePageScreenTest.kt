@@ -10,6 +10,8 @@ import androidx.compose.ui.test.performScrollToNode
 import com.android.gatherly.model.event.EventsLocalRepository
 import com.android.gatherly.model.notification.NotificationsLocalRepository
 import com.android.gatherly.model.notification.NotificationsRepository
+import com.android.gatherly.model.points.PointsLocalRepository
+import com.android.gatherly.model.points.PointsRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileStatus
@@ -86,6 +88,7 @@ class HomePageScreenTest {
   private lateinit var eventsLocalRepo: EventsLocalRepository
   private lateinit var profileLocalRepo: ProfileLocalRepository
   private lateinit var notificationsRepository: NotificationsRepository
+  private lateinit var pointsRepository: PointsRepository
   private lateinit var mockitoUtils: MockitoUtils
 
   @Before
@@ -95,6 +98,7 @@ class HomePageScreenTest {
       eventsLocalRepo = EventsLocalRepository()
       profileLocalRepo = ProfileLocalRepository()
       notificationsRepository = NotificationsLocalRepository()
+      pointsRepository = PointsLocalRepository()
 
       populateRepositories()
     }
@@ -111,6 +115,7 @@ class HomePageScreenTest {
             eventsRepository = eventsLocalRepo,
             profileRepository = profileLocalRepo,
             notificationsRepository = notificationsRepository,
+            pointsRepository = pointsRepository,
             authProvider = { mockitoUtils.mockAuth })
     composeRule.setContent { HomePageScreen(homePageViewModel = fakeViewModel) }
   }
@@ -201,6 +206,7 @@ class HomePageScreenTest {
             eventsRepository = eventsLocalRepo,
             profileRepository = profileLocalRepo,
             notificationsRepository = notificationsRepository,
+            pointsRepository = pointsRepository,
             authProvider = { mockitoUtils.mockAuth })
     composeRule.setContent { HomePageScreen(homePageViewModel = fakeViewModel) }
 
