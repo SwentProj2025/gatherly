@@ -1,6 +1,5 @@
 package com.android.gatherly.ui.notifications
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
@@ -114,14 +113,12 @@ object NotificationsScreenTestTags {
  * Composable function representing the Notifications Screen.
  *
  * @param notificationsViewModel The ViewModel managing the notifications data and state.
- * @param goBack Callback function to navigate back to the previous screen.
  * @param navigationActions Optional [NavigationActions] for handling navigation events.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun NotificationsScreen(
     notificationsViewModel: NotificationViewModel = viewModel(),
-    goBack: () -> Unit = {},
     navigationActions: NavigationActions? = null
 ) {
 
@@ -140,7 +137,7 @@ fun NotificationsScreen(
         TopNavigationMenu_Goback(
             selectedTab = Tab.Notifications,
             modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
-            goBack = goBack)
+            goBack = { navigationActions?.goBack() })
       },
       content = { padding ->
         Box(modifier = Modifier.fillMaxSize()) {
@@ -217,17 +214,13 @@ private fun FriendRequestItem(
     profilePicUrl: String? = null
 ) {
   Card(
-      border =
-          BorderStroke(
-              dimensionResource(R.dimen.friend_request_item_card_border_width),
-              MaterialTheme.colorScheme.primary),
       shape =
           RoundedCornerShape(
               dimensionResource(R.dimen.friend_request_item_card_rounded_corner_shape)),
       colors =
           CardDefaults.cardColors(
-              containerColor = MaterialTheme.colorScheme.secondaryContainer,
-              contentColor = MaterialTheme.colorScheme.onSecondaryContainer),
+              containerColor = MaterialTheme.colorScheme.surfaceVariant,
+              contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
       modifier =
           modifier
               .testTag(NotificationsScreenTestTags.getTestTagForFriendRequestItem(senderUsername))
@@ -263,7 +256,7 @@ private fun FriendRequestItem(
             Text(
                 text = senderName,
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.primary,
+                color = MaterialTheme.colorScheme.onBackground,
                 fontWeight = FontWeight.Bold,
                 modifier =
                     Modifier.testTag(
@@ -272,7 +265,7 @@ private fun FriendRequestItem(
             Text(
                 text = stringResource(R.string.friend_requests_notification_text),
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.primary,
+                color = MaterialTheme.colorScheme.onBackground,
                 fontWeight = FontWeight.Light)
           }
 
@@ -326,7 +319,7 @@ private fun LazyListScope.NotificationsList(
             senderName = senderName,
             senderUsername = senderProfile.username,
             visitProfile = { onVisitProfile(senderId) },
-            profilePicUrl = idToProfile[senderId]?.profilePicture)
+            profilePicUrl = senderProfile.profilePicture)
       }
       else -> {
         // Do nothing for other notification types

@@ -2,13 +2,14 @@ package com.android.gatherly.ui.notifications
 
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import com.android.gatherly.model.notification.Notification
+import com.android.gatherly.model.notification.NotificationType
 import com.android.gatherly.model.notification.NotificationsLocalRepository
 import com.android.gatherly.model.notification.NotificationsRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.utils.MockitoUtils
-import kotlin.time.Duration.Companion.seconds
+import com.google.firebase.Timestamp
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -59,8 +60,8 @@ class NotificationsTestHelper(private val composeTestRule: ComposeContentTestRul
           id = "FrancisToBobRequestID",
           senderId = francisProfile.uid,
           recipientId = bobProfile.uid,
-          type = com.android.gatherly.model.notification.NotificationType.FRIEND_REQUEST,
-          emissionTime = com.google.firebase.Timestamp.now(),
+          type = NotificationType.FRIEND_REQUEST,
+          emissionTime = Timestamp.now(),
           relatedEntityId = null,
           wasRead = false)
   val friendRequestAliceToBob: Notification =
@@ -68,8 +69,8 @@ class NotificationsTestHelper(private val composeTestRule: ComposeContentTestRul
           id = "AliceToBobRequestID",
           senderId = aliceProfile.uid,
           recipientId = bobProfile.uid,
-          type = com.android.gatherly.model.notification.NotificationType.FRIEND_REQUEST,
-          emissionTime = com.google.firebase.Timestamp.now(),
+          type = NotificationType.FRIEND_REQUEST,
+          emissionTime = Timestamp.now(),
           relatedEntityId = null,
           wasRead = false)
   val friendRequestCharlieToBob: Notification =
@@ -77,8 +78,8 @@ class NotificationsTestHelper(private val composeTestRule: ComposeContentTestRul
           id = "CharlieToBobRequestID",
           senderId = charlieProfile.uid,
           recipientId = bobProfile.uid,
-          type = com.android.gatherly.model.notification.NotificationType.FRIEND_REQUEST,
-          emissionTime = com.google.firebase.Timestamp.now(),
+          type = NotificationType.FRIEND_REQUEST,
+          emissionTime = Timestamp.now(),
           relatedEntityId = null,
           wasRead = false)
 
@@ -91,11 +92,8 @@ class NotificationsTestHelper(private val composeTestRule: ComposeContentTestRul
   private fun addProfiles(repo: ProfileRepository) {
     runTest {
       repo.addProfile(bobProfile)
-      advanceUntilIdle()
       repo.addProfile(aliceProfile)
-      advanceUntilIdle()
       repo.addProfile(francisProfile)
-      advanceUntilIdle()
       repo.addProfile(charlieProfile)
       advanceUntilIdle()
     }
@@ -110,9 +108,7 @@ class NotificationsTestHelper(private val composeTestRule: ComposeContentTestRul
   private fun addNotifications(repo: NotificationsRepository) {
     runTest {
       repo.addNotification(friendRequestFrancisToBob)
-      advanceUntilIdle()
       repo.addNotification(friendRequestAliceToBob)
-      advanceUntilIdle()
       repo.addNotification(friendRequestCharlieToBob)
       advanceUntilIdle()
     }
@@ -129,7 +125,7 @@ class NotificationsTestHelper(private val composeTestRule: ComposeContentTestRul
   private fun setupUser(user: Profile, screen: ScreenType): TestEnvironment {
     lateinit var environment: TestEnvironment
 
-    runTest(timeout = 120.seconds) {
+    runTest {
       val profileRepository: ProfileRepository = ProfileLocalRepository()
       val notificationsRepository: NotificationsRepository = NotificationsLocalRepository()
 

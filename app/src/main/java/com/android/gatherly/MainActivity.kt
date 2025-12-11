@@ -345,8 +345,7 @@ fun GatherlyApp(
         route = Screen.NotificationsScreen.name,
     ) {
       composable(Screen.NotificationsScreen.route) {
-        NotificationsScreen(
-            goBack = { navigationActions.goBack() }, navigationActions = navigationActions)
+        NotificationsScreen(navigationActions = navigationActions)
       }
     }
 
