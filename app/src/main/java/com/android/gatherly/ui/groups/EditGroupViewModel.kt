@@ -2,6 +2,7 @@ package com.android.gatherly.ui.groups
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.group.Group
 import com.android.gatherly.model.group.GroupsRepository
@@ -43,6 +44,10 @@ data class EditGroupUiState(
     val availableFriendsToAdd: List<Profile> = emptyList(),
     val selectedNewFriendIds: List<String> = emptyList(),
     val membersToRemove: List<String> = emptyList(),
+    val currentUserId: String = "",
+    val creatorId: String = "",
+    val isOwner: Boolean = false,
+    val isAdmin: Boolean = false,
     val isLoading: Boolean = false,
     val loadError: String? = null,
     val isSaving: Boolean = false,
@@ -83,6 +88,43 @@ class EditGroupViewModel(
   }
 
   /**
+   * Factory to create AddGroupViewModel with dependencies.
+   *
+   * @param groupsRepository The GroupsRepository to use (default: Firestore implementation).
+   * @param profileRepository The ProfileRepository to use (default: Firestore implementation).
+   * @param notificationsRepository The NotificationsRepository to use (default: provided by
+   *   NotificationsRepositoryProvider).
+   * @param authProvider A function that provides the FirebaseAuth instance (default:
+   *   Firebase.auth).
+   * @return A ViewModelProvider.Factory that creates EditGroupViewModel instances.
+   */
+  companion object {
+    fun provideFactory(
+        groupsRepository: GroupsRepository = GroupsRepositoryFirestore(Firebase.firestore),
+        profileRepository: ProfileRepository =
+            ProfileRepositoryFirestore(Firebase.firestore, Firebase.storage),
+        notificationsRepository: NotificationsRepository =
+            NotificationsRepositoryProvider.repository,
+        authProvider: () -> FirebaseAuth = { Firebase.auth }
+    ): ViewModelProvider.Factory {
+      return object : ViewModelProvider.Factory {
+        @Suppress("UNCHECKED_CAST")
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+          if (modelClass.isAssignableFrom(EditGroupViewModel::class.java)) {
+            return EditGroupViewModel(
+                groupsRepository = groupsRepository,
+                profileRepository = profileRepository,
+                notificationsRepository = notificationsRepository,
+                authProvider = authProvider)
+                as T
+          }
+          throw IllegalArgumentException("Unknown ViewModel class $modelClass")
+        }
+      }
+    }
+  }
+
+  /**
    * Loads the group with the specified ID and initializes the UI state.
    *
    * Fetches the group data, loads current member profiles, loads the user's friends list, and
@@ -95,15 +137,19 @@ class EditGroupViewModel(
       _uiState.value = _uiState.value.copy(isLoading = true, loadError = null)
       try {
         val group = groupsRepository.getGroup(groupId)
+        val currentUserId = authProvider().currentUser?.uid
 
         _uiState.value =
             _uiState.value.copy(
                 groupId = group.gid,
                 name = group.name,
                 description = group.description ?: "",
-                adminIds = group.adminIds)
+                adminIds = group.adminIds,
+                creatorId = group.creatorId,
+                currentUserId = currentUserId.orEmpty(),
+                isOwner = currentUserId == group.creatorId,
+                isAdmin = currentUserId != null && group.adminIds.contains(currentUserId))
 
-        // Load member profiles and friends list in parallel
         loadMemberProfiles(group.memberIds)
         loadFriends(group.memberIds)
 
