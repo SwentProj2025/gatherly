@@ -343,4 +343,18 @@ class EditGroupViewModel(
       }
     }
   }
+
+  /** Deletes the current group from the repository. */
+  fun deleteGroup() {
+    val groupId = _uiState.value.groupId
+    if (groupId.isBlank()) return
+
+    viewModelScope.launch {
+      try {
+        groupsRepository.deleteGroup(groupId)
+      } catch (e: Exception) {
+        _uiState.value = _uiState.value.copy(saveError = e.message)
+      }
+    }
+  }
 }

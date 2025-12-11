@@ -368,7 +368,8 @@ fun GatherlyApp(
           EditGroupScreen(
               groupId = groupId,
               goBack = { navigationActions.goBack() },
-              onSaved = { navigationActions.navigateTo(Screen.GroupInfo(groupId)) })
+              onSaved = { navigationActions.navigateTo(Screen.GroupInfo(groupId)) },
+              onDelete = { navigationActions.navigateTo(Screen.OverviewGroupsScreen) })
         }
             ?: run {
               Log.e("EditGroupScreen", "Group UID is null")

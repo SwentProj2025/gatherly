@@ -451,7 +451,10 @@ fun EditGroupScreen(
                 item {
                   Spacer(modifier = Modifier.height(smallSpacing))
                   Button(
-                      onClick = { onDelete() },
+                      onClick = {
+                        editGroupViewModel.deleteGroup()
+                        onDelete()
+                      },
                       modifier =
                           Modifier.fillMaxWidth()
                               .height(buttonHeight)
