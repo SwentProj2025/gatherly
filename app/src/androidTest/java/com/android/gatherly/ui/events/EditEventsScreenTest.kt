@@ -16,6 +16,7 @@ import com.android.gatherly.model.event.EventState
 import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsLocalRepository
 import com.android.gatherly.model.event.EventsRepository
+import com.android.gatherly.model.group.Group
 import com.android.gatherly.model.group.GroupsLocalRepository
 import com.android.gatherly.model.group.GroupsRepository
 import com.android.gatherly.model.map.FakeNominatimLocationRepository
@@ -25,6 +26,7 @@ import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.ui.todo.AddToDoScreenTestTags
 import com.android.gatherly.utils.AlertDialogTestTags
+import com.android.gatherly.utils.EventsParticipantsSuggestionTestTag
 import com.google.firebase.Timestamp
 import java.util.Date
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -216,6 +218,103 @@ class EditEventsScreenTest {
     composeTestRule
         .onNodeWithTag(EditEventsScreenTestTags.SWITCH_PUBLIC_PRIVATE_EVENT)
         .assertIsNotDisplayed()
+  }
+
+  /** Test: Verifies that group suggestion working correctly */
+  @Test
+  fun testGroupSuggestionsAppear() = runTest {
+    groupsRepository.addGroup(
+        Group(
+            gid = "G1",
+            name = "MyGroup",
+            memberIds = listOf(ownerProfile.uid),
+            creatorId = ownerProfile.uid,
+            description = "",
+            adminIds = listOf(ownerProfile.uid)))
+    val group = groupsRepository.getGroupByName("MyGroup")
+    setUpEvent(privateGroupEvent)
+
+    composeTestRule
+        .onNodeWithTag(EventsParticipantsSuggestionTestTag.INPUT_GROUP)
+        .performTextInput("My")
+
+    composeTestRule.waitUntil(timeoutMillis = 10000L) {
+      composeTestRule.onNodeWithTag(EventsParticipantsSuggestionTestTag.GROUP_MENU).isDisplayed()
+
+      composeTestRule
+          .onNodeWithTag(
+              EventsParticipantsSuggestionTestTag.getTestTagGroupSuggestionItem(group.gid),
+              useUnmergedTree = true)
+          .isDisplayed()
+    }
+
+    composeTestRule
+        .onNodeWithTag(EventsParticipantsSuggestionTestTag.getTestTagGroupSuggestionAdd(group.gid))
+        .assertIsDisplayed()
+        .performClick()
+
+    composeTestRule
+        .onNodeWithTag(EventsParticipantsSuggestionTestTag.getTestTagGroupSuggestionAdd(group.gid))
+        .assertIsNotDisplayed()
+
+    composeTestRule
+        .onNodeWithTag(
+            EventsParticipantsSuggestionTestTag.getTestTagGroupSuggestionRemove(group.gid),
+            useUnmergedTree = true)
+        .assertIsDisplayed()
+
+    composeTestRule
+        .onNodeWithTag(EventsParticipantsSuggestionTestTag.BUTTON_SEE_ADDED_GROUP)
+        .assertIsDisplayed()
+        .performClick()
+  }
+
+  /** Test: Verify that the suggestion works for private friends event */
+  @Test
+  fun testFriendsSuggestionsAppear() {
+    val nameParticipant = friendProfile.name
+    val uidParticipant = friendProfile.uid
+
+    setUpEvent(privateFriendsEvent)
+
+    composeTestRule
+        .onNodeWithTag(EventsParticipantsSuggestionTestTag.INPUT_PARTICIPANT)
+        .performTextInput(nameParticipant)
+
+    composeTestRule.waitUntil(timeoutMillis = 10000L) {
+      composeTestRule
+          .onAllNodes(hasTestTag(EventsParticipantsSuggestionTestTag.PARTICIPANT_MENU))
+          .fetchSemanticsNodes()
+          .isNotEmpty()
+    }
+
+    composeTestRule
+        .onNodeWithTag(
+            EventsParticipantsSuggestionTestTag.getTestTagProfileSuggestionItem(uidParticipant),
+            useUnmergedTree = true)
+        .assertIsDisplayed()
+
+    composeTestRule
+        .onNodeWithTag(EventsParticipantsSuggestionTestTag.getTestTagProfileAddItem(uidParticipant))
+        .assertIsDisplayed()
+        .performClick()
+
+    composeTestRule
+        .onNodeWithTag(EventsParticipantsSuggestionTestTag.BUTTON_SEE_ADDED_PARTICIPANT)
+        .assertIsDisplayed()
+        .performClick()
+
+    composeTestRule
+        .onNodeWithTag(
+            EventsParticipantsSuggestionTestTag.getTestTagAddedProfileItem(uidParticipant),
+            useUnmergedTree = true)
+        .assertIsDisplayed()
+
+    composeTestRule
+        .onNodeWithTag(
+            EventsParticipantsSuggestionTestTag.getTestTagAddedProfileRemoveItem(uidParticipant),
+            useUnmergedTree = true)
+        .assertIsDisplayed()
   }
 
   // This function fills the profile repository with the created profiles, and the event repository

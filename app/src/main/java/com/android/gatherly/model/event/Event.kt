@@ -18,10 +18,10 @@ data class Event(
     val startTime: Timestamp,
     val endTime: Timestamp,
     val creatorId: String,
-    val participants: List<String>, // contains userIds
+    val participants: List<String> = emptyList(), // contains userIds
     val status: EventStatus,
     val state: EventState = EventState.PUBLIC,
-    val group: Group? = null,
+    val groups: List<Group> = emptyList(),
 ) : DisplayedMapElement
 
 /** Represents the state of an [Event] item. */

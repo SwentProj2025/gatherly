@@ -23,13 +23,10 @@ import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.android.gatherly.utils.GenericViewModelFactory
 import com.android.gatherly.utils.cancelEvent
-import com.android.gatherly.utils.registerGroup
 import com.google.firebase.Timestamp
-import com.google.firebase.firestore.firestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.ktx.storage
-import com.google.firebase.storage.storage
 import java.text.ParseException
 import java.text.SimpleDateFormat
 import kotlinx.coroutines.launch
@@ -83,7 +80,7 @@ data class EditEventsUIState(
     // the event group search string
     val group: String = "",
     // when it's a private group event
-    val isGroupEvent: Group? = null,
+    val groups: List<Group> = emptyList(),
     // list of suggested groups given the search string
     val suggestedGroups: List<Group> = emptyList(),
     // the id of the current user
@@ -155,7 +152,7 @@ class EditEventsViewModel(
               participants = event.participants.map { profileRepository.getProfileByUid(it)!! },
               state = event.state,
               currentUserId = event.creatorId,
-              isGroupEvent = event.group)
+              groups = event.groups)
       eventId = event.id
       creatorId = event.creatorId
       creatorName = event.creatorName
@@ -345,7 +342,6 @@ class EditEventsViewModel(
         uiState.copy(
             participants = uiState.participants + participant, suggestedProfiles = emptyList())
   }
-
   /**
    * The user choose the group to invite to this event
    *
@@ -353,15 +349,44 @@ class EditEventsViewModel(
    */
   fun inviteGroup(groupName: String) {
     viewModelScope.launch {
-      val group = groupsRepository.getGroupByName(groupName)
-      val membersProfile = registerGroup(profileRepository, group)
-      uiState = uiState.copy(isGroupEvent = group, participants = membersProfile)
+      val newGroup = groupsRepository.getGroupByName(groupName)
+
+      if (uiState.groups.any { it.gid == newGroup.gid }) {
+        uiState =
+            uiState.copy(
+                displayToast = true, toastString = "You already invite this group to this event")
+        return@launch
+      }
+
+      val updatedGroups = uiState.groups + newGroup
+
+      val allMemberUids = updatedGroups.flatMap { it.memberIds }.distinct()
+
+      val membersProfile =
+          allMemberUids.mapNotNull { uid -> profileRepository.getProfileByUid(uid) }
+
+      uiState = uiState.copy(groups = updatedGroups, participants = membersProfile)
     }
   }
 
-  /** The user changes his mind, he does not want to invite his chosen group anymore */
-  fun removeGroup() {
-    uiState = uiState.copy(isGroupEvent = null, participants = emptyList())
+  /**
+   * The user changes his mind, he wants to remove a chosen group
+   *
+   * @param groupId the id of the group the user wants to remove for the event
+   */
+  fun removeGroup(groupId: String) {
+    if (uiState.groups.isEmpty()) return
+
+    val updatedGroups = uiState.groups.filter { it.gid != groupId }
+
+    viewModelScope.launch {
+      val allMemberUids = updatedGroups.flatMap { it.memberIds }.distinct()
+
+      val membersProfile =
+          allMemberUids.mapNotNull { uid -> profileRepository.getProfileByUid(uid) }
+
+      uiState = uiState.copy(groups = updatedGroups, participants = membersProfile)
+    }
   }
 
   /*----------------------------------Location--------------------------------------------------*/
@@ -409,7 +434,7 @@ class EditEventsViewModel(
     viewModelScope.launch {
       val trimmedString = string.trim()
 
-        val allGroups = groupsRepository.getUserGroups()
+      val allGroups = groupsRepository.getUserGroups()
 
       if (trimmedString.isBlank()) {
         uiState = uiState.copy(suggestedGroups = allGroups)
@@ -510,7 +535,7 @@ class EditEventsViewModel(
               participants = uiState.participants.map { it.uid },
               status = EventStatus.UPCOMING,
               state = uiState.state,
-              group = uiState.isGroupEvent)
+              groups = uiState.groups)
 
       // Save in event repository
       viewModelScope.launch {

@@ -14,14 +14,21 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults.buttonColors
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -49,6 +56,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
 import com.android.gatherly.model.event.Event
+import com.android.gatherly.model.event.EventState
 import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.ui.navigation.BottomNavigationMenu
 import com.android.gatherly.ui.navigation.NavigationActions
@@ -57,6 +65,7 @@ import com.android.gatherly.ui.navigation.Screen
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu
 import com.android.gatherly.ui.theme.GatherlyTheme
+import com.android.gatherly.ui.theme.Typography
 import com.android.gatherly.ui.theme.theme_status_ongoing
 import com.android.gatherly.ui.theme.theme_status_past
 import com.android.gatherly.ui.theme.theme_status_upcoming
@@ -550,6 +559,14 @@ fun BrowserEventsItem(event: Event, onClick: () -> Unit) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.testTag(EventsScreenTestTags.EVENT_DATE))
           }
+          IconEventState(event.state)
+
+          Box(
+              modifier =
+                  Modifier.padding(horizontal = 12.dp)
+                      .width(1.dp)
+                      .height(24.dp)
+                      .background(MaterialTheme.colorScheme.outlineVariant))
 
           BoxNumberAttendees(
               event.participants.size,
@@ -607,6 +624,15 @@ fun UpcomingEventsItem(event: Event, onClick: () -> Unit) {
                 modifier = Modifier.testTag(EventsScreenTestTags.EVENT_DATE))
           }
 
+          IconEventState(event.state)
+
+          Box(
+              modifier =
+                  Modifier.padding(horizontal = 12.dp)
+                      .width(1.dp)
+                      .height(24.dp)
+                      .background(MaterialTheme.colorScheme.outlineVariant))
+
           BoxNumberAttendees(
               event.participants.size,
               Modifier.testTag(EventsScreenTestTags.getTestTagForEventNumberAttendees(event)))
@@ -661,6 +687,15 @@ fun MyOwnEventsItem(event: Event, onClick: () -> Unit) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.testTag(EventsScreenTestTags.EVENT_DATE))
           }
+
+          IconEventState(event.state)
+
+          Box(
+              modifier =
+                  Modifier.padding(horizontal = 12.dp)
+                      .width(1.dp)
+                      .height(24.dp)
+                      .background(MaterialTheme.colorScheme.outlineVariant))
 
           BoxNumberAttendees(
               event.participants.size,
@@ -768,7 +803,7 @@ private fun getFilteredEvents(
 }
 
 @Composable
-fun AlertDialogListAttendees(
+private fun AlertDialogListAttendees(
     showAttendeesDialog: MutableState<Boolean>,
     event: Event,
     eventsViewModel: EventsViewModel,
@@ -784,7 +819,17 @@ fun AlertDialogListAttendees(
 
     AlertDialog(
         onDismissRequest = { showAttendeesDialog.value = false },
-        title = { Text("Participants") },
+        title = {
+          Column {
+            Text("Participants")
+
+            if (event.groups.isNotEmpty()) {
+              val groupNames = event.groups.joinToString { group -> group.name }
+
+              Text("From groups: $groupNames", style = Typography.bodySmall)
+            }
+          }
+        },
         text = { Column { listNameAttendees.forEach { name -> Text("• $name") } } },
         confirmButton = {
           Button(
@@ -797,6 +842,24 @@ fun AlertDialogListAttendees(
         titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
         textContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier.testTag(EventsScreenTestTags.ATTENDEES_ALERT_DIALOG))
+  }
+}
+
+@Composable
+fun IconEventState(eventState: EventState) {
+  when (eventState) {
+    EventState.PUBLIC ->
+        Icon(imageVector = Icons.Filled.LockOpen, contentDescription = "Public event icon")
+    EventState.PRIVATE_FRIENDS ->
+        Row {
+          Icon(imageVector = Icons.Filled.Lock, contentDescription = "Private event icon")
+          Icon(imageVector = Icons.Filled.Favorite, contentDescription = "Friends Only event icon")
+        }
+    EventState.PRIVATE_GROUP ->
+        Row {
+          Icon(imageVector = Icons.Filled.Lock, contentDescription = "Private event icon")
+          Icon(imageVector = Icons.Filled.Groups, contentDescription = "Groups event icon")
+        }
   }
 }
 
