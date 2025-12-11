@@ -72,8 +72,10 @@ fun FusedLocationProviderClient.locationFlow(context: Context) =
     }
 
 
-
-fun distance(location1: Location, location2: Location): Double {
+fun distance(
+    location1: com.android.gatherly.model.map.Location,
+    location2: com.android.gatherly.model.map.Location
+): Double {
     val r = 6371.0
 
     val lat1Rad = Math.toRadians(location1.latitude)
