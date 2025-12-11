@@ -1,11 +1,14 @@
 package com.android.gatherly.ui.focusTimer
 
+import android.annotation.SuppressLint
+import android.icu.text.SimpleDateFormat
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -47,6 +50,7 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.integerResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -61,6 +65,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
+import com.android.gatherly.model.focusSession.FocusSession
+import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.ui.navigation.BottomNavigationMenu
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.NavigationTestTags
@@ -71,6 +77,7 @@ import com.android.gatherly.ui.theme.theme_leaderboard_bronze
 import com.android.gatherly.ui.theme.theme_leaderboard_gold
 import com.android.gatherly.ui.theme.theme_leaderboard_silver
 import com.android.gatherly.utils.profilePicturePainter
+import java.util.Locale
 
 object FocusTimerScreenTestTags {
   const val TIMERTEXT = "TIMER"
@@ -89,6 +96,43 @@ object FocusTimerScreenTestTags {
   const val TIMER_SELECT = "TIMER_SELECT"
   const val LEADERBOARD_SELECT = "LEADERBOARD_SELECT"
   const val LEADERBOARD_LIST = "LEADERBOARD_LIST"
+  const val HISTORY_SELECT = "HISTORY_SELECT"
+  const val HISTORY_LIST = "HISTORY_LIST"
+  const val EMPTY_HISTORY_LIST_MSG = "EMPTY_HISTORY_LIST_MSG"
+
+  /**
+   * Returns a unique test tag for the duration associated with a given [FocusSession] item.
+   *
+   * @param focusSessionId The id of the focus session whose test tag will be generated.
+   * @return A string uniquely identifying the duration text of the given [FocusSession].
+   */
+  fun getDurationTagForFocusSessionItem(focusSessionId: String): String = "duration$focusSessionId"
+
+  /**
+   * Returns a unique test tag for the timestamp associated with a given [FocusSession] item.
+   *
+   * @param focusSessionId The id of the focus session whose test tag will be generated.
+   * @return A string uniquely identifying the timestamp text of the given [FocusSession].
+   */
+  fun getTimestampTagForFocusSessionItem(focusSessionId: String): String =
+      "timestamp$focusSessionId"
+
+  /**
+   * Returns a unique test tag for the todo associated with a given [FocusSession] item.
+   *
+   * @param focusSessionId The id of the focus session whose test tag will be generated.
+   * @return A string uniquely identifying the linked todo of the given [FocusSession].
+   */
+  fun getTodoTagForFocusSessionItem(focusSessionId: String): String = "todo$focusSessionId"
+
+  /**
+   * Returns a unique test tag for the card or container representing a given [FocusSession] item.
+   *
+   * @param focusSessionId The id of the focus session whose test tag will be generated.
+   * @return A string uniquely identifying the FocusSession item in the UI.
+   */
+  fun getTestTagForFocusSessionItem(focusSessionId: String): String =
+      "focusSessionItem$focusSessionId"
 }
 
 @Composable
@@ -116,6 +160,13 @@ fun TimerScreen(
       })
 }
 
+/** Represents the different tabs in the timer screen */
+enum class TimerScreenTab {
+  TIMER,
+  LEADERBOARD,
+  HISTORY
+}
+
 // Organises the display of different views within the screen
 @Composable
 fun TimerScreenContent(timerViewModel: TimerViewModel) {
@@ -123,7 +174,7 @@ fun TimerScreenContent(timerViewModel: TimerViewModel) {
   // Collect the uiState, and the context for Toasts
   val uiState by timerViewModel.uiState.collectAsState()
   val context = LocalContext.current
-  val selectedTimer = remember { mutableStateOf(true) }
+  val selectedTab = remember { mutableStateOf(TimerScreenTab.TIMER) }
 
   // Launched effect to display a toast upon error
   LaunchedEffect(uiState.errorMsg) {
@@ -144,14 +195,19 @@ fun TimerScreenContent(timerViewModel: TimerViewModel) {
         horizontalArrangement = Arrangement.SpaceEvenly) {
           // Timer selected
           Button(
-              onClick = { selectedTimer.value = true },
+              onClick = {
+                selectedTab.value = TimerScreenTab.TIMER
+                timerViewModel.loadUI()
+              },
               colors =
                   buttonColors(
                       containerColor =
-                          if (selectedTimer.value) MaterialTheme.colorScheme.primary
+                          if (selectedTab.value == TimerScreenTab.TIMER)
+                              MaterialTheme.colorScheme.primary
                           else MaterialTheme.colorScheme.surfaceVariant,
                       contentColor =
-                          if (selectedTimer.value) MaterialTheme.colorScheme.onPrimary
+                          if (selectedTab.value == TimerScreenTab.TIMER)
+                              MaterialTheme.colorScheme.onPrimary
                           else MaterialTheme.colorScheme.background),
               shape = RoundedCornerShape(dimensionResource(R.dimen.rounded_corner_shape_large)),
               modifier =
@@ -160,19 +216,44 @@ fun TimerScreenContent(timerViewModel: TimerViewModel) {
                 Text(text = stringResource(R.string.timer_select))
               }
 
-          // Leaderboard selected
+          // History selected
           Button(
               onClick = {
-                selectedTimer.value = false
+                selectedTab.value = TimerScreenTab.HISTORY
                 timerViewModel.loadUI()
               },
               colors =
                   buttonColors(
                       containerColor =
-                          if (!selectedTimer.value) MaterialTheme.colorScheme.primary
+                          if (selectedTab.value == TimerScreenTab.HISTORY)
+                              MaterialTheme.colorScheme.primary
                           else MaterialTheme.colorScheme.surfaceVariant,
                       contentColor =
-                          if (!selectedTimer.value) MaterialTheme.colorScheme.onPrimary
+                          if (selectedTab.value == TimerScreenTab.HISTORY)
+                              MaterialTheme.colorScheme.onPrimary
+                          else MaterialTheme.colorScheme.background),
+              shape = RoundedCornerShape(dimensionResource(R.dimen.rounded_corner_shape_large)),
+              modifier =
+                  Modifier.height(dimensionResource(R.dimen.focus_session_history_button_height))
+                      .testTag(FocusTimerScreenTestTags.HISTORY_SELECT)) {
+                Text(text = stringResource(R.string.history_select))
+              }
+
+          // Leaderboard selected
+          Button(
+              onClick = {
+                selectedTab.value = TimerScreenTab.LEADERBOARD
+                timerViewModel.loadUI()
+              },
+              colors =
+                  buttonColors(
+                      containerColor =
+                          if (selectedTab.value == TimerScreenTab.LEADERBOARD)
+                              MaterialTheme.colorScheme.primary
+                          else MaterialTheme.colorScheme.surfaceVariant,
+                      contentColor =
+                          if (selectedTab.value == TimerScreenTab.LEADERBOARD)
+                              MaterialTheme.colorScheme.onPrimary
                           else MaterialTheme.colorScheme.background),
               shape = RoundedCornerShape(dimensionResource(R.dimen.rounded_corner_shape_large)),
               modifier =
@@ -183,7 +264,7 @@ fun TimerScreenContent(timerViewModel: TimerViewModel) {
         }
 
     // If the timer is selected, show that
-    if (selectedTimer.value) {
+    if (selectedTab.value == TimerScreenTab.TIMER) {
 
       // If the timer didn't start, display the first view (editing timer time)
       if (!uiState.isStarted) {
@@ -196,8 +277,12 @@ fun TimerScreenContent(timerViewModel: TimerViewModel) {
       }
 
       // If the leaderboard is selected, show that
-    } else {
+    } else if (selectedTab.value == TimerScreenTab.LEADERBOARD) {
       Leaderboard(uiState = uiState, timerViewModel = timerViewModel)
+    } else if (selectedTab.value == TimerScreenTab.HISTORY) {
+      FocusSessionsHistory(uiState = uiState)
+    } else {
+      // Default case, should not happen
     }
   }
 }
@@ -665,4 +750,146 @@ fun TimerTime(
 @Composable
 fun TimerScreenPreview() {
   GatherlyTheme { TimerScreen() }
+}
+
+/**
+ * A composable to show the user's focus sessions history
+ *
+ * @param uiState The state exposed to the UI by the VM
+ */
+@Composable
+fun FocusSessionsHistory(uiState: TimerState) {
+  val usersFocusSessions =
+      uiState.usersFocusSessions.toSortedSet(compareByDescending { it.startedAt })
+  if (usersFocusSessions.isEmpty()) {
+    Text(
+        modifier =
+            Modifier.padding(dimensionResource(R.dimen.padding_screen))
+                .testTag(FocusTimerScreenTestTags.EMPTY_HISTORY_LIST_MSG),
+        text = stringResource(R.string.no_focus_sessions_history_text))
+  } else {
+    LazyColumn(
+        contentPadding =
+            PaddingValues(
+                vertical = dimensionResource(id = R.dimen.focus_session_history_vertical_padding)),
+        modifier =
+            Modifier.fillMaxWidth()
+                .padding(
+                    horizontal =
+                        dimensionResource(id = R.dimen.focus_session_history_horizontal_padding))
+                .testTag(FocusTimerScreenTestTags.HISTORY_LIST)) {
+          items(usersFocusSessions.size) { index ->
+            val focusSession = usersFocusSessions.elementAt(index)
+            if (focusSession.endedAt != null) {
+              FocusSessionItem(focusSession = focusSession, allTodos = uiState.allTodos)
+            }
+          }
+        }
+  }
+}
+
+/**
+ * Displays a single focus session item inside a [Card] with basic details.
+ *
+ * @param focusSession The [FocusSession] item to display.
+ * @param allTodos The list of all [ToDo] items to find linked todos.
+ */
+@SuppressLint("DefaultLocale")
+@Composable
+fun FocusSessionItem(
+    focusSession: FocusSession,
+    allTodos: List<ToDo>,
+) {
+  val missingDetail = stringResource(R.string.focus_session_missing_detail)
+  val linkedTodo = focusSession.linkedTodoId?.let { todoId -> allTodos.find { it.uid == todoId } }
+
+  val startedAt = focusSession.startedAt
+  val startDate =
+      startedAt?.let {
+        SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(focusSession.startedAt.toDate())
+      } ?: missingDetail
+  val startTime =
+      startedAt?.let {
+        SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(focusSession.startedAt.toDate())
+      } ?: missingDetail
+
+  val startedAtText = "$startDate - $startTime"
+  val durationText =
+      if (focusSession.endedAt != null && startedAt != null) {
+        val durationInSeconds = (focusSession.endedAt.seconds - startedAt.seconds).coerceAtLeast(0)
+        val hours = durationInSeconds / 3600
+        val minutes = (durationInSeconds % 3600) / 60
+        val seconds = durationInSeconds % 60
+        String.format("%02d:%02d:%02d", hours, minutes, seconds)
+      } else {
+        missingDetail
+      }
+
+  Card(
+      colors =
+          CardDefaults.cardColors(
+              containerColor = MaterialTheme.colorScheme.surfaceVariant,
+              contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
+      modifier =
+          Modifier.testTag(
+                  FocusTimerScreenTestTags.getTestTagForFocusSessionItem(
+                      focusSession.focusSessionId))
+              .fillMaxWidth()
+              .padding(
+                  vertical = dimensionResource(id = R.dimen.focus_session_item_vertical_padding))) {
+        Row(
+            modifier =
+                Modifier.fillMaxWidth()
+                    .padding(dimensionResource(id = R.dimen.focus_session_item_row_padding)),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+          Column(
+              modifier =
+                  Modifier.weight(
+                      integerResource(id = R.integer.focus_session_item_column_weight).toFloat())) {
+                // Start timestamp text
+                Text(
+                    text = startedAtText,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Medium,
+                    modifier =
+                        Modifier.testTag(
+                            FocusTimerScreenTestTags.getTimestampTagForFocusSessionItem(
+                                focusSession.focusSessionId)))
+                if (linkedTodo != null) {
+                  // Linked todo text
+                  Text(
+                      text = linkedTodo.name,
+                      style = MaterialTheme.typography.bodyMedium,
+                      color = MaterialTheme.colorScheme.primary,
+                      modifier =
+                          Modifier.testTag(
+                              FocusTimerScreenTestTags.getTodoTagForFocusSessionItem(
+                                  focusSession.focusSessionId)))
+                } else {
+                  // No linked todo text
+                  Text(
+                      text = stringResource(R.string.focus_session_no_linked_todo),
+                      style = MaterialTheme.typography.bodyMedium,
+                      color = MaterialTheme.colorScheme.outline,
+                      modifier =
+                          Modifier.testTag(
+                              FocusTimerScreenTestTags.getTodoTagForFocusSessionItem(
+                                  focusSession.focusSessionId)))
+                }
+              }
+
+          // Duration text
+          Text(
+              text = durationText,
+              style = MaterialTheme.typography.bodyLarge,
+              color = MaterialTheme.colorScheme.onSurfaceVariant,
+              fontWeight = FontWeight.Medium,
+              modifier =
+                  Modifier.testTag(
+                      FocusTimerScreenTestTags.getDurationTagForFocusSessionItem(
+                          focusSession.focusSessionId)))
+        }
+      }
 }

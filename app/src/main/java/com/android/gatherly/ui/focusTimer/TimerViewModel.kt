@@ -66,6 +66,7 @@ data class TimerState(
     val errorMsg: String? = null,
     val linkedTodo: ToDo? = null,
     val allTodos: List<ToDo> = emptyList(),
+    val usersFocusSessions: List<FocusSession> = emptyList(),
     val leaderboard: SortedMap<Double, List<Profile>> = sortedMapOf(),
     val pointsGained: Double = 0.0
 )
@@ -111,6 +112,12 @@ class TimerViewModel(
       try {
         val todos = todoRepository.getAllTodos()
         _uiState.value = _uiState.value.copy(allTodos = todos)
+
+        val focusSessions =
+            focusSessionsRepository.getAllFocusSessions().filter {
+              it.creatorId == authProvider().currentUser?.uid
+            }
+        _uiState.value = _uiState.value.copy(usersFocusSessions = focusSessions)
 
         val profile =
             getProfileWithSyncedFriendNotifications(
