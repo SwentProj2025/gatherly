@@ -86,10 +86,10 @@ open class DailyTodoAlarmScheduler(
     // Move to next day:
     cal.add(Calendar.DAY_OF_YEAR, 1)
     // Reset to midnight:
-    cal.set(Calendar.HOUR_OF_DAY, 0)
-    cal.set(Calendar.MINUTE, 0)
-    cal.set(Calendar.SECOND, 0)
-    cal.set(Calendar.MILLISECOND, 0)
+    cal[Calendar.HOUR_OF_DAY] = 0
+    cal[Calendar.MINUTE] = 0
+    cal[Calendar.SECOND] = 0
+    cal[Calendar.MILLISECOND] = 0
     return cal.timeInMillis
   }
 }

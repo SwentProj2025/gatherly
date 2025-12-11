@@ -203,7 +203,8 @@ class ToDoNotificationSchedulerTest {
   @Test
   fun timestamp_toLocalDate_convertsCorrectly() {
     val timestamp = Timestamp(today)
-    val scheduler = ToDoNotificationScheduler(ToDosLocalRepository(), NotificationsLocalRepository())
+    val scheduler =
+        ToDoNotificationScheduler(ToDosLocalRepository(), NotificationsLocalRepository())
 
     val converted = scheduler.run { timestamp.toLocalDate() }
     val expected = today.toInstant().atZone(ZoneId.systemDefault()).toLocalDate()
