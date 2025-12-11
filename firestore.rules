@@ -41,6 +41,15 @@ service cloud.firestore {
                         && request.auth.uid == userId
                         && request.resource.data.ownerId == request.auth.uid;
         }
+    // --- TODOCATEGORY ---
+        // Each user's todos category are stored under /users/{userId}/todoCategories/{todoCategoriesId}
+        match /users/{userId}/todoCategories/{todoCategoriesId} {
+          allow read, write : if request.auth != null && request.auth.uid == userId;
+          
+          allow create: if request.auth != null
+                        && request.auth.uid == userId
+                        && request.resource.data.ownerId == request.auth.uid;
+        }
 
     // --- EVENTS ---
         match /events/{eventId} {
