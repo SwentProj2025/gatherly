@@ -8,6 +8,7 @@ import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsRepository
 import com.android.gatherly.model.event.EventsRepositoryFirestore
+import com.android.gatherly.model.map.Location
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.android.gatherly.utils.GenericViewModelFactory
@@ -314,4 +315,17 @@ class EventsViewModel(
       _participantsNames.value = names
     }
   }
+
+
+    private val _currentUserLocation = MutableStateFlow<Location?>(null)
+    val currentUserLocation: StateFlow<Location?> = _currentUserLocation.asStateFlow()
+
+    fun updateCurrentUserLocation(newLocation: Location) {
+        _currentUserLocation.value = newLocation
+        if (_uiState.value.sortOrder == EventSortOrder.PROXIMITY) {
+            viewModelScope.launch {
+                updateUIStateWithProcessedEvents(_uiState.value.currentUserId)
+            }
+        }
+    }
 }
