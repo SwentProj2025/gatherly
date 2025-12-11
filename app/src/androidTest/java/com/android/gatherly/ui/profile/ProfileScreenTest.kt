@@ -28,7 +28,9 @@ class ProfileScreenTest {
           school = "University",
           schoolYear = "Year",
           friendUids = emptyList(),
-          groupIds = listOf("g1", "g2"))
+          groupIds = listOf("g1", "g2"),
+          bio = "profileScreenTestBio",
+      )
 
   private val group1 =
       Group(
@@ -98,6 +100,12 @@ class ProfileScreenTest {
         .onNodeWithTag(ProfileScreenTestTags.PROFILE_USERNAME)
         .assertExists()
         .assertTextContains("@defaultusername")
+  }
+
+  @Test
+  fun userBio_IsDisplayed() {
+    setContent()
+    composeTestRule.onNodeWithTag(ProfileScreenTestTags.USER_BIO).assertIsDisplayed()
   }
 
   @Test
