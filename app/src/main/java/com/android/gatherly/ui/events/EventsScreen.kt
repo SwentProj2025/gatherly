@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -752,27 +753,42 @@ private fun BoxStatusColor(status: EventStatus) {
 /** Displays a filter bar with buttons to filter events by their status. */
 @Composable
 private fun FilterBar(selectedFilter: MutableState<EventFilter>) {
-  Row(
+  LazyRow(
       modifier =
           Modifier.fillMaxWidth()
               .padding(vertical = dimensionResource(R.dimen.events_filter_bar_vertical_size)),
       horizontalArrangement = Arrangement.SpaceEvenly) {
-        FilterButton("All", EventFilter.ALL, selectedFilter, Modifier)
-        FilterButton(
-            "Upcoming",
-            EventFilter.UPCOMING,
-            selectedFilter,
-            Modifier.testTag(EventsScreenTestTags.FILTER_UPCOMING_BUTTON))
-        FilterButton(
-            "Ongoing",
-            EventFilter.ONGOING,
-            selectedFilter,
-            Modifier.testTag(EventsScreenTestTags.FILTER_ONGOING_BUTTON))
-        FilterButton(
-            "Past",
-            EventFilter.PAST,
-            selectedFilter,
-            Modifier.testTag(EventsScreenTestTags.FILTER_PAST_BUTTON))
+        item {
+          FilterButton(
+              stringResource(R.string.events_status_filter_all_label),
+              EventFilter.ALL,
+              selectedFilter,
+              Modifier)
+        }
+
+        item {
+          FilterButton(
+              stringResource(R.string.events_status_filter_upcoming_label),
+              EventFilter.UPCOMING,
+              selectedFilter,
+              Modifier.testTag(EventsScreenTestTags.FILTER_UPCOMING_BUTTON))
+        }
+
+        item {
+          FilterButton(
+              stringResource(R.string.events_status_filter_ongoing_label),
+              EventFilter.ONGOING,
+              selectedFilter,
+              Modifier.testTag(EventsScreenTestTags.FILTER_ONGOING_BUTTON))
+        }
+
+        item {
+          FilterButton(
+              stringResource(R.string.events_status_filter_past_label),
+              EventFilter.PAST,
+              selectedFilter,
+              Modifier.testTag(EventsScreenTestTags.FILTER_PAST_BUTTON))
+        }
       }
 }
 
@@ -808,19 +824,6 @@ fun FilterButton(
       }
 }
 
-/** Helper function : return the list of events filtered according to the selected filter status */
-private fun getFilteredEvents(
-    selectedFilter: MutableState<EventFilter>,
-    listEvents: List<Event>
-): List<Event> {
-  return when (selectedFilter.value) {
-    EventFilter.ALL -> listEvents
-    EventFilter.UPCOMING -> listEvents.filter { it.status == EventStatus.UPCOMING }
-    EventFilter.ONGOING -> listEvents.filter { it.status == EventStatus.ONGOING }
-    EventFilter.PAST -> listEvents.filter { it.status == EventStatus.PAST }
-  }
-}
-
 @Composable
 private fun AlertDialogListAttendees(
     showAttendeesDialog: MutableState<Boolean>,
@@ -840,12 +843,15 @@ private fun AlertDialogListAttendees(
         onDismissRequest = { showAttendeesDialog.value = false },
         title = {
           Column {
-            Text("Participants")
+            Text(stringResource(R.string.events_alert_dialog_see_attendees_title))
 
             if (event.groups.isNotEmpty()) {
               val groupNames = event.groups.joinToString { group -> group.name }
 
-              Text("From groups: $groupNames", style = Typography.bodySmall)
+              Text(
+                  stringResource(R.string.events_alert_dialog_see_attendees_groups_subtitle) +
+                      groupNames,
+                  style = Typography.bodySmall)
             }
           }
         },

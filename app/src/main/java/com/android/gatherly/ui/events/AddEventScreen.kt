@@ -153,12 +153,18 @@ fun AddEventScreen(
   // Search participant when input changes
   LaunchedEffect(ui.participant, ui.state) {
     if (ui.participant.isNotBlank()) {
-      delay(1000)
       if (isPrivateFriendsEvent) {
         addEventViewModel.searchFriendsProfileByString(ui.participant)
       } else if (isPublicEvent) {
         addEventViewModel.searchProfileByString(ui.participant)
       }
+    }
+  }
+
+  // Search groups when input changes
+  LaunchedEffect(ui.group) {
+    if (ui.group.isNotBlank() && (isPrivateGroupEvent)) {
+      addEventViewModel.searchGroupsNameByString(ui.group)
     }
   }
 
@@ -182,14 +188,6 @@ fun AddEventScreen(
           inviteGroup = { groupName -> addEventViewModel.inviteGroup(groupName) },
           removeGroup = { groupId -> addEventViewModel.removeGroup(groupId) },
           updateGroup = { query -> addEventViewModel.updateGroup(query) })
-
-  // Search groups when input changes
-  LaunchedEffect(ui.group) {
-    if (ui.group.isNotBlank() && (isPrivateGroupEvent)) {
-      delay(1000)
-      addEventViewModel.searchGroupsNameByString(ui.group)
-    }
-  }
 
   Scaffold(
       topBar = {

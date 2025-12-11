@@ -354,7 +354,7 @@ class EditEventsViewModel(
       if (uiState.groups.any { it.gid == newGroup.gid }) {
         uiState =
             uiState.copy(
-                displayToast = true, toastString = "You already invite this group to this event")
+                displayToast = true, toastString = "You already invited this group to this event")
         return@launch
       }
 

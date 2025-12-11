@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DeleteForever
@@ -33,6 +34,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -184,7 +186,6 @@ fun EditEventsScreen(
   // Search participant when input changes
   LaunchedEffect(ui.participant, ui.state) {
     if (ui.participant.isNotBlank()) {
-      delay(1000)
       if (isPrivateFriendsEvent) {
         editEventsViewModel.searchFriendsProfileByString(ui.participant)
       } else if (isPublicEvent) {
@@ -196,7 +197,6 @@ fun EditEventsScreen(
   // Search groups when input changes
   LaunchedEffect(ui.group) {
     if (ui.group.isNotBlank() && (isPrivateGroupEvent)) {
-      delay(1000)
       editEventsViewModel.searchGroupsNameByString(ui.group)
     }
   }
@@ -218,7 +218,7 @@ fun EditEventsScreen(
               if (!isPublicEvent) {
                 item {
                   // Switch button to go to public event
-                  Row {
+                  Row(verticalAlignment = Alignment.CenterVertically) {
                     ElevatedButton(
                         onClick = { showWarningPublicEvent = true },
                         modifier =
@@ -229,8 +229,11 @@ fun EditEventsScreen(
                               contentDescription = "Public Event",
                               modifier = Modifier.size(19.dp))
                         }
+                    Spacer(modifier = Modifier.width(12.dp))
 
-                    Text(text = "Make the event public", style = MaterialTheme.typography.bodySmall)
+                    Text(
+                        text = stringResource(R.string.events_edit_private_to_public_label),
+                        style = MaterialTheme.typography.bodySmall)
                   }
                 }
               }
@@ -463,10 +466,10 @@ fun EditEventsScreen(
 
         if (showWarningPublicEvent) {
           GatherlyAlertDialog(
-              titleText = "Make the event public",
-              bodyText = "This action is unreversible, the event will be open to everyone",
+              titleText = stringResource(R.string.events_edit_private_to_public_label),
+              bodyText = stringResource(R.string.events_warning_to_public_event_body_text),
               dismissText = stringResource(R.string.cancel),
-              confirmText = "Make it public",
+              confirmText = stringResource(R.string.events_confirm_text_private_to_public_text),
               onDismiss = { showWarningPublicEvent = false },
               onConfirm = {
                 editEventsViewModel.updatePrivateEventToPublicEvent()
