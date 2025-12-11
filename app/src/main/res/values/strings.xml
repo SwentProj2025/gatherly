@@ -184,7 +184,6 @@
     <string name="loading_map">Loading…</string>
 
     <!-- Notifications Screen -->
-    <string name="notifications_label">Notifications</string>
     <string name="notifications_empty_list_message">There are no notifications at the moment.</string>
     <string name="friend_requests_label">Friend Requests</string>
     <string name="friend_requests_button_text_zero">0 pending requests</string>

@@ -184,7 +184,7 @@ fun NotificationsScreen(
                         notifications = notifications,
                         // TODO: Navigate to sender's profile screen when UserProfileScreen is
                         // merged
-                        onVisitProfile = { senderId ->
+                        onVisitProfile = { _ ->
                           navigationActions?.navigateTo(Tab.Profile.destination)
                         },
                         idToProfile = uiState.idToProfile)
@@ -359,11 +359,13 @@ fun FriendRequestsNavigation(
   val firstSenderUsername: String =
       if (friendRequests.isEmpty()) "" else idToProfile[friendRequests[0].senderId]?.username ?: ""
   val requestsText =
-      if (friendRequests.isEmpty()) zeroRequestsSupportingText
-      else if (nbFriendRequests == 1) firstSenderUsername
-      else if (nbFriendRequests == 2)
-          "$firstSenderUsername + ${nbFriendRequests - 1} $twoRequestsSupportingText"
-      else "$firstSenderUsername + ${nbFriendRequests - 1} $multipleRequestsSupportingText"
+      when {
+        friendRequests.isEmpty() -> zeroRequestsSupportingText
+        nbFriendRequests == 1 -> firstSenderUsername
+        nbFriendRequests == 2 ->
+            "$firstSenderUsername + ${nbFriendRequests - 1} $twoRequestsSupportingText"
+        else -> "$firstSenderUsername + ${nbFriendRequests - 1} $multipleRequestsSupportingText"
+      }
 
   // Width needed for 3 avatars + spacing between them
   val maxAvatarWidth =

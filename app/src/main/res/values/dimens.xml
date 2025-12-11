@@ -127,7 +127,6 @@
     <dimen name="events_overview_horizontal_padding">16dp</dimen>
 
     <!-- Notifications Screen -->
-    <dimen name="notification_item_padding_vertical">12.dp</dimen>
     <dimen name="notification_avatar_spacing">4.dp</dimen>
     <dimen name="notification_row_horizontal_padding">16.dp</dimen>
     <dimen name="notification_avatar_border_width">1.dp</dimen>
