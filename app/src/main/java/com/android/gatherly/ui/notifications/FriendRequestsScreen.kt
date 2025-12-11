@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -50,6 +51,7 @@ import com.android.gatherly.utils.profilePicturePainter
 
 object FriendRequestsScreenTestTags {
   const val EMPTY_LIST_MSG = "messageEmptyList"
+  const val LOADING_CIRCLE = "loadingCircle"
 
   /**
    * Returns a unique test tag for the card or container representing a given [Profile.username]
@@ -90,13 +92,20 @@ object FriendRequestsScreenTestTags {
       "friendProfilePicture${username}"
 
   /**
-   * Returns a unique test tag for the card or container representing a given [Profile.username]
-   * item.
+   * Returns a unique test tag for the card or container representing an accept button [Button].
    *
-   * @param username The [Button] item for following button whose test tag will be generated.
+   * @param username The [Button] item for the accept button whose test tag will be generated.
    * @return A string uniquely identifying the sender's username item in the UI.
    */
-  fun getTestTagForVisitProfileButton(username: String): String = "visitProfileButton${username}"
+  fun getTestTagForAcceptButton(username: String): String = "acceptButton${username}"
+
+  /**
+   * Returns a unique test tag for the card or container representing a reject button [Button].
+   *
+   * @param username The [Button] item for the reject button whose test tag will be generated.
+   * @return A string uniquely identifying the sender's username item in the UI.
+   */
+  fun getTestTagForRejectButton(username: String): String = "rejectButton${username}"
 }
 
 /**
@@ -143,17 +152,36 @@ fun FriendRequestsScreen(
                   CircularProgressIndicator()
                 }
           } else {
-            // --- SHOWING USERS' FRIEND REQUEST ITEMS ---
-            FriendRequestsList(
-                padding = padding,
-                friendRequests = friendRequests,
-                onAcceptFriendRequest = { notificationId ->
-                  notificationsViewModel.acceptFriendRequest(notificationId)
-                },
-                onRejectFriendRequest = { notificationId ->
-                  notificationsViewModel.rejectFriendRequest(notificationId)
-                },
-                idToProfile = uiState.idToProfile)
+            LazyColumn(
+                contentPadding = PaddingValues(vertical = dimensionResource(R.dimen.padding_small)),
+                modifier =
+                    Modifier.fillMaxWidth()
+                        .padding(horizontal = dimensionResource(R.dimen.padding_screen))
+                        .padding(padding)) {
+                  // --- NO FRIEND REQUESTS ---
+                  if (friendRequests.isEmpty()) {
+                    item {
+                      Text(
+                          text = stringResource(R.string.friend_requests_empty_list_message),
+                          modifier =
+                              Modifier.padding(dimensionResource(R.dimen.padding_screen))
+                                  .testTag(FriendRequestsScreenTestTags.EMPTY_LIST_MSG))
+                    }
+                  } else {
+                    // --- FRIEND REQUEST ITEMS ---
+                    // --- SHOWING USERS' FRIEND REQUEST ITEMS ---
+                    FriendRequestsList(
+                        padding = padding,
+                        friendRequests = friendRequests,
+                        onAcceptFriendRequest = { notificationId ->
+                          notificationsViewModel.acceptFriendRequest(notificationId)
+                        },
+                        onRejectFriendRequest = { notificationId ->
+                          notificationsViewModel.rejectFriendRequest(notificationId)
+                        },
+                        idToProfile = uiState.idToProfile)
+                  }
+                }
           }
         }
       })
@@ -253,12 +281,11 @@ private fun FriendRequestItem(
               colors =
                   buttonColors(
                       containerColor = MaterialTheme.colorScheme.secondary,
-                      contentColor = MaterialTheme.colorScheme.primary),
+                      contentColor = MaterialTheme.colorScheme.onSecondary),
               modifier =
                   Modifier.wrapContentWidth()
                       .testTag(
-                          FriendRequestsScreenTestTags.getTestTagForVisitProfileButton(
-                              senderUsername))) {
+                          FriendRequestsScreenTestTags.getTestTagForAcceptButton(senderUsername))) {
                 Text(stringResource(R.string.friend_requests_accept_button_text))
               }
 
@@ -270,13 +297,12 @@ private fun FriendRequestItem(
               onClick = rejectFriendRequest,
               colors =
                   buttonColors(
-                      containerColor = MaterialTheme.colorScheme.onSurface,
-                      contentColor = MaterialTheme.colorScheme.inverseSurface),
+                      containerColor = MaterialTheme.colorScheme.tertiary,
+                      contentColor = MaterialTheme.colorScheme.onTertiary),
               modifier =
                   Modifier.wrapContentWidth()
                       .testTag(
-                          FriendRequestsScreenTestTags.getTestTagForVisitProfileButton(
-                              senderUsername))) {
+                          FriendRequestsScreenTestTags.getTestTagForRejectButton(senderUsername))) {
                 Text(stringResource(R.string.friend_requests_reject_button_text))
               }
         }
@@ -293,53 +319,33 @@ private fun FriendRequestItem(
  * @param padding Padding values to apply to the list.
  */
 @OptIn(ExperimentalFoundationApi::class)
-@Composable
-private fun FriendRequestsList(
+private fun LazyListScope.FriendRequestsList(
     friendRequests: List<Notification>,
     onAcceptFriendRequest: (String) -> Unit,
     onRejectFriendRequest: (String) -> Unit,
     idToProfile: Map<String, Profile>,
     padding: PaddingValues
 ) {
-  LazyColumn(
-      contentPadding = PaddingValues(vertical = dimensionResource(R.dimen.padding_small)),
-      modifier =
-          Modifier.fillMaxWidth()
-              .padding(horizontal = dimensionResource(R.dimen.padding_screen))
-              .padding(padding)) {
-        // --- NO FRIEND REQUESTS ---
-        if (friendRequests.isEmpty()) {
-          item {
-            Text(
-                text = stringResource(R.string.friend_requests_empty_list_message),
-                modifier =
-                    Modifier.padding(dimensionResource(R.dimen.padding_screen))
-                        .testTag(FriendRequestsScreenTestTags.EMPTY_LIST_MSG))
-          }
-        } else {
-          // --- FRIEND REQUEST ITEMS ---
-          items(items = friendRequests) { friendRequest ->
-            when (friendRequest.type) {
-              NotificationType.FRIEND_REQUEST -> {
-                val senderId = friendRequest.senderId
-                val senderProfile = idToProfile[senderId]
-                if (senderProfile == null || senderId == null) {
-                  // Profile/ID not found, skip rendering this item
-                  return@items
-                }
-                val senderName = senderProfile.name
-                FriendRequestItem(
-                    senderName = senderName,
-                    senderUsername = senderProfile.username,
-                    acceptFriendRequest = { onAcceptFriendRequest(friendRequest.id) },
-                    rejectFriendRequest = { onRejectFriendRequest(friendRequest.id) },
-                    profilePicUrl = idToProfile[senderId]?.profilePicture)
-              }
-              else -> {
-                // Do nothing for other notification types
-              }
-            }
-          }
+  items(items = friendRequests) { friendRequest ->
+    when (friendRequest.type) {
+      NotificationType.FRIEND_REQUEST -> {
+        val senderId = friendRequest.senderId
+        val senderProfile = idToProfile[senderId]
+        if (senderProfile == null || senderId == null) {
+          // Profile/ID not found, skip rendering this item
+          return@items
         }
+        val senderName = senderProfile.name
+        FriendRequestItem(
+            senderName = senderName,
+            senderUsername = senderProfile.username,
+            acceptFriendRequest = { onAcceptFriendRequest(friendRequest.id) },
+            rejectFriendRequest = { onRejectFriendRequest(friendRequest.id) },
+            profilePicUrl = idToProfile[senderId]?.profilePicture)
       }
+      else -> {
+        // Do nothing for other notification types
+      }
+    }
+  }
 }

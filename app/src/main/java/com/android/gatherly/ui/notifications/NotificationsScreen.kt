@@ -57,8 +57,9 @@ const val MAX_MEMBERS_DISPLAYED = 3
 
 object NotificationsScreenTestTags {
   const val EMPTY_LIST_MSG = "messageEmptyList"
-  const val FRIEND_REQUEST_NAVIGATION = "friendRequestNavigation"
-  const val FRIEND_REQUEST_COUNT = "friendRequestCount"
+  const val FRIEND_REQUEST_SECTION = "friendRequestSection"
+  const val FRIEND_REQUEST_SECTION_TEXT = "friendRequestSectionText"
+  const val LOADING_CIRCLE = "loadingCircle"
 
   /**
    * Returns a unique test tag for the card or container representing a given [Profile.username]
@@ -86,8 +87,18 @@ object NotificationsScreenTestTags {
    * @param username The username of the friend whose profile picture test tag will be generated.
    * @return A string uniquely identifying the sender's profile picture item in the UI.
    */
-  fun getTestTagForSenderProfilePicture(username: String): String =
-      "friendProfilePicture${username}"
+  fun getTestTagForSenderProfilePictureInNotification(username: String): String =
+      "senderProfilePictureInNotification${username}"
+
+  /**
+   * Returns a unique test tag for the card or container representing a given
+   * [Profile.profilePicture] item.
+   *
+   * @param username The username of the friend whose profile picture test tag will be generated.
+   * @return A string uniquely identifying the sender's profile picture item in the UI.
+   */
+  fun getTestTagForSenderProfilePictureInFriendRequestSection(username: String): String =
+      "senderProfilePictureInFriendRequestSection${username}"
 
   /**
    * Returns a unique test tag for the card or container representing a given [Profile.username]
@@ -137,7 +148,10 @@ fun NotificationsScreen(
           // --- LOADING NOTIFICATIONS ANIMATION ---
           if (isLoading) {
             Box(
-                modifier = Modifier.fillMaxSize().padding(padding),
+                modifier =
+                    Modifier.fillMaxSize()
+                        .padding(padding)
+                        .testTag(NotificationsScreenTestTags.LOADING_CIRCLE),
                 contentAlignment = Alignment.Center) {
                   CircularProgressIndicator()
                 }
@@ -148,23 +162,36 @@ fun NotificationsScreen(
                     Modifier.fillMaxWidth()
                         .padding(horizontal = dimensionResource(R.dimen.padding_screen))
                         .padding(padding)) {
-                  item {
-                    FriendRequestsNavigation(
-                        idToProfile = uiState.idToProfile,
-                        sendersProfiles =
-                            friendRequests.mapNotNull { uiState.idToProfile[it.senderId] },
-                        friendRequests = friendRequests,
-                        onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) })
-                  }
 
-                  // --- SHOWING USERS' NOTIFICATION ITEMS ---
-                  NotificationsList(
-                      notifications = notifications,
-                      // TODO: Navigate to sender's profile screen when UserProfileScreen is merged
-                      onVisitProfile = { senderId ->
-                        navigationActions?.navigateTo(Tab.Profile.destination)
-                      },
-                      idToProfile = uiState.idToProfile)
+                  // --- NO NOTIFICATIONS ---
+                  if (notifications.isEmpty()) {
+                    item {
+                      Text(
+                          text = stringResource(R.string.notifications_empty_list_message),
+                          modifier =
+                              Modifier.padding(dimensionResource(R.dimen.padding_screen))
+                                  .testTag(NotificationsScreenTestTags.EMPTY_LIST_MSG))
+                    }
+                  } else {
+                    item {
+                      FriendRequestsNavigation(
+                          idToProfile = uiState.idToProfile,
+                          sendersProfiles =
+                              friendRequests.mapNotNull { uiState.idToProfile[it.senderId] },
+                          friendRequests = friendRequests,
+                          onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) })
+                    }
+
+                    // --- SHOWING USERS' NOTIFICATION ITEMS ---
+                    NotificationsList(
+                        notifications = notifications,
+                        // TODO: Navigate to sender's profile screen when UserProfileScreen is
+                        // merged
+                        onVisitProfile = { senderId ->
+                          navigationActions?.navigateTo(Tab.Profile.destination)
+                        },
+                        idToProfile = uiState.idToProfile)
+                  }
                 }
           }
         }
@@ -222,8 +249,8 @@ private fun FriendRequestItem(
                   Modifier.size(dimensionResource(R.dimen.friend_request_item_profile_picture_size))
                       .clip(CircleShape)
                       .testTag(
-                          NotificationsScreenTestTags.getTestTagForSenderProfilePicture(
-                              senderUsername)))
+                          NotificationsScreenTestTags
+                              .getTestTagForSenderProfilePictureInNotification(senderUsername)))
 
           // -- SPACER
           Spacer(
@@ -259,7 +286,7 @@ private fun FriendRequestItem(
               colors =
                   buttonColors(
                       containerColor = MaterialTheme.colorScheme.secondary,
-                      contentColor = MaterialTheme.colorScheme.primary),
+                      contentColor = MaterialTheme.colorScheme.onSecondary),
               modifier =
                   Modifier.wrapContentWidth()
                       .testTag(
@@ -284,36 +311,25 @@ private fun LazyListScope.NotificationsList(
     onVisitProfile: (String) -> Unit,
     idToProfile: Map<String, Profile>
 ) {
-  // --- NO NOTIFICATIONS ---
-  if (notifications.isEmpty()) {
-    item {
-      Text(
-          text = stringResource(R.string.notifications_empty_list_message),
-          modifier =
-              Modifier.padding(dimensionResource(R.dimen.padding_screen))
-                  .testTag(NotificationsScreenTestTags.EMPTY_LIST_MSG))
-    }
-  } else {
-    // --- NOTIFICATIONS ITEMS ---
-    items(items = notifications) { notification ->
-      when (notification.type) {
-        NotificationType.FRIEND_REQUEST -> {
-          val senderId = notification.senderId
-          val senderProfile = idToProfile[senderId]
-          if (senderProfile == null || senderId == null) {
-            // Profile/ID not found, skip rendering this item
-            return@items
-          }
-          val senderName = senderProfile.name
-          FriendRequestItem(
-              senderName = senderName,
-              senderUsername = senderProfile.username,
-              visitProfile = { onVisitProfile(senderId) },
-              profilePicUrl = idToProfile[senderId]?.profilePicture)
+  // --- NOTIFICATIONS ITEMS ---
+  items(items = notifications) { notification ->
+    when (notification.type) {
+      NotificationType.FRIEND_REQUEST -> {
+        val senderId = notification.senderId
+        val senderProfile = idToProfile[senderId]
+        if (senderProfile == null || senderId == null) {
+          // Profile/ID not found, skip rendering this item
+          return@items
         }
-        else -> {
-          // Do nothing for other notification types
-        }
+        val senderName = senderProfile.name
+        FriendRequestItem(
+            senderName = senderName,
+            senderUsername = senderProfile.username,
+            visitProfile = { onVisitProfile(senderId) },
+            profilePicUrl = idToProfile[senderId]?.profilePicture)
+      }
+      else -> {
+        // Do nothing for other notification types
       }
     }
   }
@@ -353,15 +369,15 @@ fun FriendRequestsNavigation(
       if (friendRequests.isEmpty()) zeroRequestsSupportingText
       else if (nbFriendRequests == 1) firstSenderUsername
       else if (nbFriendRequests == 2)
-          "$firstSenderUsername + $nbFriendRequests $twoRequestsSupportingText"
-      else "$firstSenderUsername + $nbFriendRequests $multipleRequestsSupportingText"
+          "$firstSenderUsername + ${nbFriendRequests - 1} $twoRequestsSupportingText"
+      else "$firstSenderUsername + ${nbFriendRequests - 1} $multipleRequestsSupportingText"
 
   // Width needed for 3 avatars + spacing between them
   val maxAvatarWidth =
       profilePictureSize * MAX_MEMBERS_DISPLAYED +
           avatarSpacing * (MAX_MEMBERS_DISPLAYED - 1) // two gaps between 3 images
 
-  Column(modifier = modifier.testTag(NotificationsScreenTestTags.FRIEND_REQUEST_NAVIGATION)) {
+  Column(modifier = modifier.testTag(NotificationsScreenTestTags.FRIEND_REQUEST_SECTION)) {
     Row(
         modifier =
             Modifier.fillMaxWidth()
@@ -377,7 +393,11 @@ fun FriendRequestsNavigation(
                       modifier =
                           Modifier.size(profilePictureSize)
                               .clip(CircleShape)
-                              .border(borderWidth, MaterialTheme.colorScheme.outline, CircleShape))
+                              .border(borderWidth, MaterialTheme.colorScheme.outline, CircleShape)
+                              .testTag(
+                                  NotificationsScreenTestTags
+                                      .getTestTagForSenderProfilePictureInFriendRequestSection(
+                                          sender.username)))
                   Spacer(modifier = Modifier.width(avatarSpacing))
                 }
               }
@@ -391,7 +411,8 @@ fun FriendRequestsNavigation(
                 fontWeight = FontWeight.SemiBold)
             Text(
                 text = requestsText,
-                modifier = Modifier.testTag(NotificationsScreenTestTags.FRIEND_REQUEST_COUNT),
+                modifier =
+                    Modifier.testTag(NotificationsScreenTestTags.FRIEND_REQUEST_SECTION_TEXT),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
           }
