@@ -83,6 +83,7 @@ import com.android.gatherly.utils.BoxNumberAttendees
 import com.android.gatherly.utils.DateParser.dateToString
 import com.android.gatherly.utils.DateParser.timeToString
 import com.android.gatherly.utils.GatherlyAlertDialog
+import com.android.gatherly.utils.GatherlyAlertDialogActions
 import com.android.gatherly.utils.MapCoordinator
 import java.util.Locale
 import kotlinx.coroutines.launch
@@ -443,28 +444,32 @@ fun EventsScreen(
               bodyText = event.description,
               dismissText = stringResource(R.string.goback_button_title),
               confirmText = stringResource(R.string.participate_button_title),
-              onDismiss = { isPopupOnBrowser.value = false },
-              onConfirm = {
-                if (!uiState.isAnon) {
-                  eventsViewModel.onParticipate(
-                      eventId = event.id, currentUserId = currentUserIdFromVM)
-                  coroutineScope.launch { eventsViewModel.refreshEvents(currentUserIdFromVM) }
-                  isPopupOnBrowser.value = false
-                }
-              },
+              actions =
+                  GatherlyAlertDialogActions(
+                      onDismiss = { isPopupOnBrowser.value = false },
+                      onConfirm = {
+                        if (!uiState.isAnon) {
+                          eventsViewModel.onParticipate(
+                              eventId = event.id, currentUserId = currentUserIdFromVM)
+                          coroutineScope.launch {
+                            eventsViewModel.refreshEvents(currentUserIdFromVM)
+                          }
+                          isPopupOnBrowser.value = false
+                        }
+                      },
+                      onNeutral = {
+                        coordinator.requestCenterOnEvent(event.id)
+                        navigationActions?.navigateTo(Screen.Map)
+                        isPopupOnBrowser.value = false
+                      },
+                      onOpenAttendeesList = { showAttendeesDialog.value = true }),
               confirmEnabled = !uiState.isAnon,
               neutralText = stringResource(R.string.see_on_map_button_title),
               neutralEnabled = event.location != null,
-              onNeutral = {
-                coordinator.requestCenterOnEvent(event.id)
-                navigationActions?.navigateTo(Screen.Map)
-                isPopupOnBrowser.value = false
-              },
               creatorText = event.creatorName,
               dateText = dateToString(event.date),
               startTimeText = timeToString(event.startTime),
               endTimeText = timeToString(event.endTime),
-              onOpenAttendeesList = { showAttendeesDialog.value = true },
               numberAttendees = event.participants.size)
           AlertDialogListAttendees(showAttendeesDialog, event, eventsViewModel, uiState)
           selectedBrowserEvent.value = if (isPopupOnBrowser.value) event else null
@@ -476,25 +481,28 @@ fun EventsScreen(
               bodyText = event.description,
               dismissText = stringResource(R.string.goback_button_title),
               confirmText = stringResource(R.string.unregister_button_title),
-              onDismiss = { isPopupOnUpcoming.value = false },
+              actions =
+                  GatherlyAlertDialogActions(
+                      onDismiss = { isPopupOnUpcoming.value = false },
+                      onConfirm = {
+                        eventsViewModel.onUnregister(
+                            eventId = event.id, currentUserId = currentUserIdFromVM)
+                        coroutineScope.launch { eventsViewModel.refreshEvents(currentUserIdFromVM) }
+                        isPopupOnUpcoming.value = false
+                      },
+                      onNeutral = {
+                        coordinator.requestCenterOnEvent(event.id)
+                        navigationActions?.navigateTo(Screen.Map)
+                        isPopupOnUpcoming.value = false
+                      },
+                      onOpenAttendeesList = { showAttendeesDialog.value = true },
+                  ),
               creatorText = event.creatorName,
               dateText = dateToString(event.date),
               startTimeText = timeToString(event.startTime),
               endTimeText = timeToString(event.endTime),
-              onConfirm = {
-                eventsViewModel.onUnregister(
-                    eventId = event.id, currentUserId = currentUserIdFromVM)
-                coroutineScope.launch { eventsViewModel.refreshEvents(currentUserIdFromVM) }
-                isPopupOnUpcoming.value = false
-              },
               neutralText = stringResource(R.string.see_on_map_button_title),
               neutralEnabled = event.location != null,
-              onNeutral = {
-                coordinator.requestCenterOnEvent(event.id)
-                navigationActions?.navigateTo(Screen.Map)
-                isPopupOnUpcoming.value = false
-              },
-              onOpenAttendeesList = { showAttendeesDialog.value = true },
               numberAttendees = event.participants.size)
 
           AlertDialogListAttendees(showAttendeesDialog, event, eventsViewModel, uiState)
@@ -507,24 +515,27 @@ fun EventsScreen(
               bodyText = event.description,
               dismissText = stringResource(R.string.goback_button_title),
               confirmText = stringResource(R.string.edit_button_title),
-              onDismiss = { isPopupOnYourE.value = false },
+              actions =
+                  GatherlyAlertDialogActions(
+                      onDismiss = { isPopupOnYourE.value = false },
+                      onConfirm = {
+                        actions.navigateToEditEvent(event)
+                        coroutineScope.launch { eventsViewModel.refreshEvents(currentUserIdFromVM) }
+                        isPopupOnYourE.value = false
+                      },
+                      onNeutral = {
+                        coordinator.requestCenterOnEvent(event.id)
+                        navigationActions?.navigateTo(Screen.Map)
+                        isPopupOnYourE.value = false
+                      },
+                      onOpenAttendeesList = { showAttendeesDialog.value = true },
+                  ),
               creatorText = null,
               dateText = dateToString(event.date),
               startTimeText = timeToString(event.startTime),
               endTimeText = timeToString(event.endTime),
-              onConfirm = {
-                actions.navigateToEditEvent(event)
-                coroutineScope.launch { eventsViewModel.refreshEvents(currentUserIdFromVM) }
-                isPopupOnYourE.value = false
-              },
               neutralText = stringResource(R.string.see_on_map_button_title),
               neutralEnabled = event.location != null,
-              onNeutral = {
-                coordinator.requestCenterOnEvent(event.id)
-                navigationActions?.navigateTo(Screen.Map)
-                isPopupOnYourE.value = false
-              },
-              onOpenAttendeesList = { showAttendeesDialog.value = true },
               numberAttendees = event.participants.size)
 
           AlertDialogListAttendees(showAttendeesDialog, event, eventsViewModel, uiState)
