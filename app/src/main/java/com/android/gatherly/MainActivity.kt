@@ -111,7 +111,8 @@ fun GatherlyApp(
             onClickTodoTitle = { navigationActions.navigateTo(Screen.OverviewToDo) },
             onClickFriendsSection = { navigationActions.navigateTo(Screen.FriendsScreen) },
             onClickTodo = { navigationActions.navigateTo(Screen.EditToDo(it.uid)) },
-            onClickEventsTitle = { navigationActions.navigateTo(Screen.EventsScreen) })
+            onClickEventsTitle = { navigationActions.navigateTo(Screen.EventsScreen) },
+            coordinator = mapCoordinator)
       }
     }
 
