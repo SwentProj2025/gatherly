@@ -36,6 +36,7 @@
     <dimen name="settings_save_button_height">48dp</dimen>
     <dimen name="todo_overview_top_row_height">75dp</dimen>
     <dimen name="todo_overview_sort_icon_size">30dp</dimen>
+    <dimen name="events_sort_icon_size">30dp</dimen>
 
     <!-- Shapes -->
     <dimen name="rounded_corner_shape_small">4dp</dimen>
@@ -123,6 +124,7 @@
     <dimen name="events_popup_horizontalArrangement_size">12.dp</dimen>
     <dimen name="events_filter_bar_vertical_size">10.dp</dimen>
     <dimen name="events_filter_button_height">35.dp</dimen>
+    <dimen name="events_overview_horizontal_padding">16dp</dimen>
 
     <!-- Focus History Screen -->
     <dimen name="focus_item_height">100.dp</dimen>

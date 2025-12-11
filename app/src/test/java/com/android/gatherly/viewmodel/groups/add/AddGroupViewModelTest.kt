@@ -10,11 +10,12 @@ import com.android.gatherly.viewmodel.groups.add.AddGroupViewModelTestData.ALL_F
 import com.android.gatherly.viewmodel.groups.add.AddGroupViewModelTestData.CURRENT_USER_PROFILE
 import com.android.gatherly.viewmodel.groups.add.AddGroupViewModelTestData.FRIEND_ALICE
 import com.android.gatherly.viewmodel.groups.add.AddGroupViewModelTestData.FRIEND_BOB
+import com.android.gatherly.viewmodel.groups.add.AddGroupViewModelTestData.FRIEND_CHARLIE
 import com.android.gatherly.viewmodel.groups.add.AddGroupViewModelTestData.TEST_USER_ID
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -49,7 +50,7 @@ class AddGroupViewModelTest {
   private lateinit var notificationsRepository: NotificationsRepository
   private lateinit var mockitoUtils: MockitoUtils
 
-  private val testDispatcher = StandardTestDispatcher()
+  private val testDispatcher = UnconfinedTestDispatcher()
 
   /**
    * Sets up test fixtures before each test.
@@ -108,7 +109,7 @@ class AddGroupViewModelTest {
         assertEquals("", state.description)
         assertNull(state.nameError)
         assertEquals(ALL_FRIENDS, state.friendsList)
-        assertTrue(state.selectedFriendIds.isEmpty())
+        assertTrue(state.selectedFriends.isEmpty())
         assertFalse(state.isFriendsLoading)
         assertNull(state.friendsError)
         assertFalse(state.isSaving)
@@ -257,11 +258,11 @@ class AddGroupViewModelTest {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
-        viewModel.onFriendToggled(FRIEND_ALICE.uid)
+        viewModel.onFriendToggled(FRIEND_ALICE)
 
         val state = viewModel.uiState.value
-        assertTrue(state.selectedFriendIds.contains(FRIEND_ALICE.uid))
-        assertEquals(1, state.selectedFriendIds.size)
+        assertTrue(state.selectedFriends.contains(FRIEND_ALICE))
+        assertEquals(1, state.selectedFriends.size)
       }
 
   /**
@@ -276,12 +277,12 @@ class AddGroupViewModelTest {
         advanceUntilIdle()
 
         // Select then deselect
-        viewModel.onFriendToggled(FRIEND_ALICE.uid)
-        viewModel.onFriendToggled(FRIEND_ALICE.uid)
+        viewModel.onFriendToggled(FRIEND_ALICE)
+        viewModel.onFriendToggled(FRIEND_ALICE)
 
         val state = viewModel.uiState.value
-        assertFalse(state.selectedFriendIds.contains(FRIEND_ALICE.uid))
-        assertTrue(state.selectedFriendIds.isEmpty())
+        assertFalse(state.selectedFriends.contains(FRIEND_ALICE))
+        assertTrue(state.selectedFriends.isEmpty())
       }
 
   /**
@@ -295,13 +296,13 @@ class AddGroupViewModelTest {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
-        viewModel.onFriendToggled(FRIEND_ALICE.uid)
-        viewModel.onFriendToggled(FRIEND_BOB.uid)
+        viewModel.onFriendToggled(FRIEND_ALICE)
+        viewModel.onFriendToggled(FRIEND_BOB)
 
         val state = viewModel.uiState.value
-        assertEquals(2, state.selectedFriendIds.size)
-        assertTrue(state.selectedFriendIds.contains(FRIEND_ALICE.uid))
-        assertTrue(state.selectedFriendIds.contains(FRIEND_BOB.uid))
+        assertEquals(2, state.selectedFriends.size)
+        assertTrue(state.selectedFriends.contains(FRIEND_ALICE))
+        assertTrue(state.selectedFriends.contains(FRIEND_BOB))
       }
 
   /**
@@ -318,8 +319,8 @@ class AddGroupViewModelTest {
 
         viewModel.onNameChanged("Study Group")
         viewModel.onDescriptionChanged("Weekly study sessions")
-        viewModel.onFriendToggled(FRIEND_ALICE.uid)
-        viewModel.onFriendToggled(FRIEND_BOB.uid)
+        viewModel.onFriendToggled(FRIEND_ALICE)
+        viewModel.onFriendToggled(FRIEND_BOB)
 
         viewModel.saveGroup()
         advanceUntilIdle()
@@ -563,5 +564,22 @@ class AddGroupViewModelTest {
         assertFalse(state.friendsList.contains(FRIEND_BOB))
         assertFalse(state.isFriendsLoading)
         assertNull(state.friendsError) // No error because the operation succeeds partially
+      }
+
+  /** Checks that searching and then clearing the search query has the intended behaviour */
+  @Test
+  fun filterFriendsCorrectlyFilters() =
+      runTest(testDispatcher) {
+        val viewModel = createViewModel()
+
+        viewModel.filterFriends("a")
+        advanceUntilIdle()
+
+        assertEquals(listOf(FRIEND_ALICE, FRIEND_CHARLIE), viewModel.uiState.value.friendsList)
+
+        viewModel.filterFriends("")
+        advanceUntilIdle()
+
+        assertEquals(ALL_FRIENDS, viewModel.uiState.value.friendsList)
       }
 }
