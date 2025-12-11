@@ -165,7 +165,10 @@ class AddTodoViewModelTest {
     // Reset VM for next add
     addToDoViewModel =
         AddTodoViewModel(
-            toDosRepository, profileRepository, authProvider = { mockitoUtils.mockAuth })
+            toDosRepository,
+            profileRepository,
+            authProvider = { mockitoUtils.mockAuth },
+            todoCategoryRepository = toDoCategoryRepository)
 
     // Second ToDo
     addToDoViewModel.onTitleChanged("Do groceries")
@@ -272,7 +275,12 @@ class AddTodoViewModelTest {
           override suspend fun toggleStatus(todoID: String) {}
         }
 
-    val viewModel = AddTodoViewModel(failingRepo, profileRepository, { mockitoUtils.mockAuth })
+    val viewModel =
+        AddTodoViewModel(
+            failingRepo,
+            profileRepository,
+            { mockitoUtils.mockAuth },
+            todoCategoryRepository = toDoCategoryRepository)
 
     viewModel.onTitleChanged("Some task")
     viewModel.onDescriptionChanged("Should fail to save")
