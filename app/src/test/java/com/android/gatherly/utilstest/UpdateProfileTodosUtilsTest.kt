@@ -9,7 +9,6 @@ import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.utils.addTodo
 import com.android.gatherly.utils.editTodo
 import com.google.firebase.Timestamp
-import io.mockk.awaits
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.just
@@ -42,7 +41,7 @@ class UpdateProfileTodosUtilsTest {
     coEvery { todoRepository.getTodo(any()) } returns mockTodo
     coEvery { todoRepository.editTodo(any(), any()) } just runs
 
-    coEvery { profileRepository.incrementBadge(any(), any()) } just awaits
+    coEvery { profileRepository.incrementBadge(any(), any()) } returns null
   }
 
   /** Test adding a ToDo calls addTodo and increments "created todos" exactly once. */
