@@ -36,7 +36,6 @@ import com.android.gatherly.ui.homePage.HomePageScreen
 import com.android.gatherly.ui.map.MapScreen
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.Screen
-import com.android.gatherly.ui.notifications.FriendRequestsScreen
 import com.android.gatherly.ui.notifications.NotificationsScreen
 import com.android.gatherly.ui.points.FocusPointsScreen
 import com.android.gatherly.ui.profile.ProfileScreen
@@ -348,16 +347,6 @@ fun GatherlyApp(
       composable(Screen.NotificationsScreen.route) {
         NotificationsScreen(
             goBack = { navigationActions.goBack() }, navigationActions = navigationActions)
-      }
-    }
-
-    // FRIEND REQUESTS COMPOSABLE  ------------------------------
-    navigation(
-        startDestination = Screen.FriendRequestsScreen.route,
-        route = Screen.FriendRequestsScreen.name,
-    ) {
-      composable(Screen.FriendRequestsScreen.route) {
-        FriendRequestsScreen(goBack = { navigationActions.goBack() })
       }
     }
 
