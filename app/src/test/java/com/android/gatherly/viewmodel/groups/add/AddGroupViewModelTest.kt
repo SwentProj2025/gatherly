@@ -578,7 +578,7 @@ class AddGroupViewModelTest {
         advanceUntilIdle()
 
         // Add Alice
-        viewModel.onFriendToggled(FRIEND_ALICE.uid)
+        viewModel.onFriendToggled(FRIEND_ALICE)
         advanceUntilIdle()
 
         // Input a name
