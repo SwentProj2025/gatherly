@@ -69,7 +69,7 @@ fun GroupInformationScreen(
         TopNavigationMenu_Goback(
             selectedTab = Tab.GroupInfo,
             modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
-            goBack = { navigationActions?.goBack() })
+            goBack = { navigationActions?.navigateTo(Screen.OverviewGroupsScreen) })
       },
       content = { padding ->
         Column(
