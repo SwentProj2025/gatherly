@@ -1,6 +1,5 @@
 package com.android.gatherly.ui.todo
 
-import android.util.Log
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -136,7 +135,7 @@ class EditTodoViewModel(
       val list = todoCategoryRepository.getAllCategories()
       _categories.value = list
     } catch (e: Exception) {
-      Log.e("EditTodoVM", "Failed to load categories: ${e.message}")
+      setErrorMsg("Failed to load categories: ${e.message}")
     }
   }
 
@@ -421,18 +420,25 @@ class EditTodoViewModel(
         val newCategory = ToDoCategory(name = name, color = color, isDefault = false)
         todoCategoryRepository.addToDoCategory(newCategory)
         _categories.value = todoCategoryRepository.getAllCategories()
-      } catch (e: Exception) {}
+      } catch (e: Exception) {
+        setErrorMsg("Failed to create a new category of todo: $name")
+      }
     }
   }
 
-  fun deleteCategory(category: ToDoCategory) {
-    viewModelScope.launch {
-      try {
-        todoCategoryRepository.deleteToDoCategory(category.id)
-        _categories.value = todoCategoryRepository.getAllCategories()
-      } catch (e: Exception) {}
+    fun deleteCategory(category: ToDoCategory) {
+        viewModelScope.launch {
+            try {
+                val ownerId = category.ownerId
+                todoRepository.updateTodosTagToNull(category.id, ownerId)
+                todoCategoryRepository.deleteToDoCategory(category.id)
+                _categories.value = todoCategoryRepository.getAllCategories()
+
+            } catch (e: Exception) {
+                setErrorMsg("Failed to delete the category of todo: ${category.name}")
+            }
+        }
     }
-  }
 
   /*----------------------------------Helpers--------------------------------------------------*/
 

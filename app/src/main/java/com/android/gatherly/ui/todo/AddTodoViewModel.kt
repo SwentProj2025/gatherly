@@ -289,18 +289,26 @@ class AddTodoViewModel(
         val newCategory = ToDoCategory(name = name, color = color, isDefault = false)
         todoCategoryRepository.addToDoCategory(newCategory)
         _categories.value = todoCategoryRepository.getAllCategories()
-      } catch (e: Exception) {}
+      } catch (e: Exception) {
+        _uiState.value = _uiState.value.copy(saveError = e.message)
+      }
     }
   }
+    fun deleteCategory(category: ToDoCategory) {
+        viewModelScope.launch {
+            try {
+                val ownerId = authProvider().currentUser?.uid
+                    ?: throw IllegalStateException("User not authenticated.")
 
-  fun deleteCategory(category: ToDoCategory) {
-    viewModelScope.launch {
-      try {
-        todoCategoryRepository.deleteToDoCategory(category.id)
-        _categories.value = todoCategoryRepository.getAllCategories()
-      } catch (e: Exception) {}
+                todoRepository.updateTodosTagToNull(category.id, ownerId)
+                todoCategoryRepository.deleteToDoCategory(category.id)
+                _categories.value = todoCategoryRepository.getAllCategories()
+
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(saveError = e.message)
+            }
+        }
     }
-  }
 
   /*----------------------------------Helpers---------------------------------------------------*/
 

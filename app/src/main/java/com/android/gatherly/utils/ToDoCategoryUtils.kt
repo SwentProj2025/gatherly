@@ -20,9 +20,9 @@ import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material.icons.filled.ModeEdit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.Divider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
@@ -73,7 +73,7 @@ fun CategoriesDropDown(
     categoriesList: List<ToDoCategory>
 ) {
 
-  var expanded by remember { mutableStateOf(false) }
+  val expanded = remember { mutableStateOf(false) }
   var isModeEditOn by remember { mutableStateOf(false) }
 
   Column {
@@ -81,7 +81,7 @@ fun CategoriesDropDown(
       IconButton(
           modifier =
               Modifier.fillMaxHeight().testTag(CategoriesDropDownTestTags.CATEGORY_DROP_DOWN),
-          onClick = { expanded = true }) {
+          onClick = { expanded.value = true }) {
             Row {
               Icon(
                   imageVector = Icons.Filled.Folder,
@@ -91,14 +91,16 @@ fun CategoriesDropDown(
             }
           }
       DropdownMenu(
-          expanded = expanded,
-          onDismissRequest = { expanded = false },
+          expanded = expanded.value,
+          onDismissRequest = { expanded.value = false },
           containerColor = MaterialTheme.colorScheme.surfaceVariant) {
             Row(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically) {
-                  Text("Categories", style = MaterialTheme.typography.titleMedium)
+                  Text(
+                      text = stringResource(R.string.events_dropdown_tag_label),
+                      style = MaterialTheme.typography.titleMedium)
 
                   IconButton(
                       modifier =
@@ -113,10 +115,10 @@ fun CategoriesDropDown(
                       }
                 }
 
-            Divider(
-                color = MaterialTheme.colorScheme.onSurface,
+            HorizontalDivider(
+                modifier = Modifier.padding(vertical = 8.dp),
                 thickness = 1.dp,
-                modifier = Modifier.padding(vertical = 8.dp))
+                color = MaterialTheme.colorScheme.onSurface)
 
             if (isModeEditOn) {
               DropdownMenuItem(
@@ -125,7 +127,7 @@ fun CategoriesDropDown(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically) {
-                          Text(text = "Add a new category")
+                          Text(text = stringResource(R.string.events_create_tag_label))
 
                           Icon(Icons.Filled.CreateNewFolder, contentDescription = "Add category")
                         }
@@ -133,34 +135,14 @@ fun CategoriesDropDown(
                   onClick = { showCreateTagDialog.value = true },
                   modifier =
                       Modifier.testTag(CategoriesDropDownTestTags.CATEGORY_CREATE_A_NEW_BUTTON))
-              Divider(
-                  color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
+
+              HorizontalDivider(
+                  modifier = Modifier.padding(vertical = 8.dp),
                   thickness = 1.dp,
-                  modifier = Modifier.padding(vertical = 8.dp))
+                  color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
             }
 
-            if (!isModeEditOn) {
-
-              DropdownMenuItem(
-                  text = {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically) {
-                          Text("None")
-                        }
-                  },
-                  onClick = {
-                    onSelectTag(null)
-                    expanded = false
-                  },
-                  modifier = Modifier.testTag(CategoriesDropDownTestTags.CATEGORY_NONE_ITEM))
-
-              Divider(
-                  color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f),
-                  thickness = 1.dp,
-                  modifier = Modifier.padding(vertical = 8.dp))
-            }
+            NoneCategoryItem(isModeEditOn, onSelectTag, expanded)
 
             categoriesList.forEach { category ->
               DropdownMenuItem(
@@ -171,18 +153,12 @@ fun CategoriesDropDown(
                         verticalAlignment = Alignment.CenterVertically) {
                           Text(category.name)
 
-                          if (isModeEditOn) {
-                            Icon(Icons.Filled.DeleteForever, contentDescription = "Delete category")
-                          }
+                          ModeEditIcon(isModeEditOn)
                         }
                   },
                   onClick = {
-                    if (isModeEditOn) {
-                      showWarningDeleteTagDialog.value = category
-                    } else {
-                      onSelectTag(category)
-                      expanded = false
-                    }
+                    onClickItem(
+                        isModeEditOn, showWarningDeleteTagDialog, category, onSelectTag, expanded)
                   },
                   modifier =
                       Modifier.testTag(
@@ -190,13 +166,84 @@ fun CategoriesDropDown(
             }
           }
     }
+    SubtextTagName(currentTag)
+  }
+}
 
-    if (currentTag != null) {
-      Text(
-          text = currentTag.name,
-          color = MaterialTheme.colorScheme.onSurfaceVariant,
-          style = Typography.bodySmall)
-    }
+/** Helper function: When a category item is clicked on */
+private fun onClickItem(
+    isModeEditOn: Boolean,
+    showWarningDeleteTagDialog: MutableState<ToDoCategory?>,
+    category: ToDoCategory,
+    onSelectTag: (ToDoCategory?) -> Unit,
+    expanded: MutableState<Boolean>
+) {
+
+  if (isModeEditOn) {
+    showWarningDeleteTagDialog.value = category
+  } else {
+    onSelectTag(category)
+    expanded.value = false
+  }
+}
+
+/** Helper composable function: display the None Tag item */
+@Composable
+private fun NoneCategoryItem(
+    isModeEditOn: Boolean,
+    onSelectTag: (ToDoCategory?) -> Unit,
+    expanded: MutableState<Boolean>
+) {
+  if (!isModeEditOn) {
+
+    DropdownMenuItem(
+        text = {
+          Row(
+              modifier = Modifier.fillMaxWidth(),
+              horizontalArrangement = Arrangement.SpaceBetween,
+              verticalAlignment = Alignment.CenterVertically) {
+                Text(stringResource(R.string.events_none_tag_label))
+              }
+        },
+        onClick = {
+          onSelectTag(null)
+          expanded.value = false
+        },
+        modifier = Modifier.testTag(CategoriesDropDownTestTags.CATEGORY_NONE_ITEM))
+
+    HorizontalDivider(
+        modifier = Modifier.padding(vertical = 8.dp),
+        thickness = 1.dp,
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
+  }
+}
+
+/**
+ * Helper composable function: display a subtext in the screen, to let the user know of his choice
+ * of tag.
+ *
+ * @param currentTag The [ToDoCategory] the current user choose
+ */
+@Composable
+private fun SubtextTagName(currentTag: ToDoCategory?) {
+  if (currentTag != null) {
+    Text(
+        text = currentTag.name,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        style = Typography.bodySmall)
+  }
+}
+
+/**
+ * Helper function: Display an trash Icon special when the Mode edit is on. So that the user know if
+ * he can delete this tag or not
+ *
+ * @param isModeEditOn boolean to know if the drop down is inn edit mode or not
+ */
+@Composable
+private fun ModeEditIcon(isModeEditOn: Boolean) {
+  if (isModeEditOn) {
+    Icon(Icons.Filled.DeleteForever, contentDescription = "Delete category")
   }
 }
 
@@ -222,13 +269,20 @@ fun AlertDialogCreateTag(
 
     AlertDialog(
         onDismissRequest = { showCreateTagDialog.value = false },
-        title = { Text("Create a new todo category") },
+        title = {
+          Text(
+              stringResource(R.string.events_alert_dialog_create_tag_title),
+              style = MaterialTheme.typography.titleLarge,
+          )
+        },
         text = {
           Column {
             OutlinedTextField(
                 value = categoryName,
                 onValueChange = { categoryName = it },
-                label = { Text("Name") },
+                label = {
+                  Text(stringResource(R.string.events_alert_dialog_create_tag_name_input))
+                },
                 isError = categoryName.isBlank(),
                 singleLine = true,
                 modifier =
@@ -239,19 +293,24 @@ fun AlertDialogCreateTag(
           }
         },
         confirmButton = {
-          Button(
-              onClick = {
-                onCreateTag(categoryName, chosenColor)
-                showCreateTagDialog.value = false
-                categoryName = ""
-              },
-              enabled = isNameValid,
-              modifier = Modifier.testTag(AlertDialogCreateTagTestTags.ALERT_CREATE_TAG_BUTTON)) {
-                Text("Create")
+          Row(
+              modifier = Modifier.fillMaxWidth(),
+              horizontalArrangement = Arrangement.SpaceBetween) {
+                Button(
+                    onClick = {
+                      onCreateTag(categoryName, chosenColor)
+                      showCreateTagDialog.value = false
+                      categoryName = ""
+                    },
+                    enabled = isNameValid,
+                    modifier =
+                        Modifier.testTag(AlertDialogCreateTagTestTags.ALERT_CREATE_TAG_BUTTON)) {
+                      Text(stringResource(R.string.events_alert_dialog_create_tag_button_label))
+                    }
+                Button(onClick = { showCreateTagDialog.value = false }) {
+                  Text(stringResource(R.string.events_alert_dialog_cancel_tag_button_label))
+                }
               }
-        },
-        dismissButton = {
-          Button(onClick = { showCreateTagDialog.value = false }) { Text("Cancel") }
         },
         containerColor = MaterialTheme.colorScheme.surfaceVariant,
         titleContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -295,7 +354,7 @@ fun RandomColorBox(color: Color, onColorChange: (Color) -> Unit) {
         Button(
             modifier = Modifier.testTag(AlertDialogCreateTagTestTags.ALERT_CREATE_TAG_COLOR_RANDOM),
             onClick = { onColorChange(randomColor()) }) {
-              Text("New random color")
+              Text(stringResource(R.string.events_alert_dialog_create_tag_color_button_label))
             }
       }
 }

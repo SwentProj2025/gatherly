@@ -361,14 +361,7 @@ fun SortMenu(currentOrder: TodoSortOrder, onSortSelected: (TodoSortOrder) -> Uni
                 onSortSelected(TodoSortOrder.DATE_DESC)
                 expanded = false
               },
-              trailingIcon = {
-                if (currentOrder == TodoSortOrder.DATE_DESC) {
-                  Icon(
-                      Icons.Default.Check,
-                      contentDescription =
-                          stringResource(R.string.todos_sort_menu_check_icon_label))
-                }
-              })
+              trailingIcon = { TrailingIcon(currentOrder, TodoSortOrder.DATE_DESC) })
           DropdownMenuItem(
               text = {
                 Text(
@@ -379,14 +372,7 @@ fun SortMenu(currentOrder: TodoSortOrder, onSortSelected: (TodoSortOrder) -> Uni
                 onSortSelected(TodoSortOrder.DATE_ASC)
                 expanded = false
               },
-              trailingIcon = {
-                if (currentOrder == TodoSortOrder.DATE_ASC) {
-                  Icon(
-                      Icons.Default.Check,
-                      contentDescription =
-                          stringResource(R.string.todos_sort_menu_check_icon_label))
-                }
-              })
+              trailingIcon = { TrailingIcon(currentOrder, TodoSortOrder.DATE_ASC) })
           DropdownMenuItem(
               text = {
                 Text(
@@ -397,14 +383,7 @@ fun SortMenu(currentOrder: TodoSortOrder, onSortSelected: (TodoSortOrder) -> Uni
                 onSortSelected(TodoSortOrder.ALPHABETICAL)
                 expanded = false
               },
-              trailingIcon = {
-                if (currentOrder == TodoSortOrder.ALPHABETICAL) {
-                  Icon(
-                      Icons.Default.Check,
-                      contentDescription =
-                          stringResource(R.string.todos_sort_menu_check_icon_label))
-                }
-              })
+              trailingIcon = { TrailingIcon(currentOrder, TodoSortOrder.ALPHABETICAL) })
 
           DropdownMenuItem(
               text = {
@@ -416,15 +395,18 @@ fun SortMenu(currentOrder: TodoSortOrder, onSortSelected: (TodoSortOrder) -> Uni
                 onSortSelected(TodoSortOrder.PRIORITY_LEVEL)
                 expanded = false
               },
-              trailingIcon = {
-                if (currentOrder == TodoSortOrder.PRIORITY_LEVEL) {
-                  Icon(
-                      Icons.Default.Check,
-                      contentDescription =
-                          stringResource(R.string.todos_sort_menu_check_icon_label))
-                }
-              })
+              trailingIcon = { TrailingIcon(currentOrder, TodoSortOrder.PRIORITY_LEVEL) })
         }
+  }
+}
+
+/** Helper composable function: Display the trailing Icon */
+@Composable
+private fun TrailingIcon(currentOrder: TodoSortOrder, itemOrder: TodoSortOrder) {
+  if (currentOrder == itemOrder) {
+    Icon(
+        Icons.Default.Check,
+        contentDescription = stringResource(R.string.todos_sort_menu_check_icon_label))
   }
 }
 
@@ -530,7 +512,7 @@ private fun FilterTagBar(
       horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         item {
           FilterTagButton(
-              "All",
+              stringResource(R.string.events_button_all_categories),
               null,
               selectedTagFilter,
               overviewViewModel,

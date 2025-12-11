@@ -60,4 +60,9 @@ interface ToDosRepository {
    * @return A list of all [ToDo] items marked as ended.
    */
   suspend fun getAllEndedTodos(): List<ToDo>
+
+  /**
+   * Retrieves all [ToDo] items to put the tag to null when this one is deleted
+   */
+  suspend fun updateTodosTagToNull(categoryId: String, ownerId: String)
 }

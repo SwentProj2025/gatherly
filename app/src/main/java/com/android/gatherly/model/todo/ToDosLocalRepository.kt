@@ -51,4 +51,8 @@ class ToDosLocalRepository : ToDosRepository {
   override suspend fun getAllEndedTodos(): List<ToDo> {
     TODO("Not yet implemented")
   }
+
+  override suspend fun updateTodosTagToNull(categoryId: String, ownerId: String) {
+    TODO("Not yet implemented")
+  }
 }

@@ -136,6 +136,26 @@
     <string name="events_alphabetic_sort_button_text">Alphabetical sorting</string>
     <string name="events_proximity_sort_button_text">Proximity sorting</string>
 
+    <!-- Category Events -->
+    <string name="events_dropdown_tag_label">Categories</string>
+    <string name="events_create_tag_label">Add a new category</string>
+    <string name="events_none_tag_label">None</string>
+    <string name="events_alert_dialog_create_tag_title">Create a new todo category</string>
+    <string name="events_alert_dialog_create_tag_name_input">Name</string>
+    <string name="events_alert_dialog_create_tag_color_button_label">New random color</string>
+    <string name="events_alert_dialog_create_tag_button_label">Create</string>
+    <string name="events_alert_dialog_cancel_tag_button_label">Cancel</string>
+
+    <string name="events_button_all_categories">All</string>
+
+
+    <!-- Priority Events -->
+    <string name="events_priority_level_high_label">High</string>
+    <string name="events_priority_level_medium_label">Medium</string>
+    <string name="events_priority_level_low_label">Low</string>
+    <string name="events_priority_level_none_label">None</string>
+
+
     <!-- General -->
     <string name="delete">Yes, Delete</string>
     <string name="cancel">No, Cancel</string>
