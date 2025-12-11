@@ -20,9 +20,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Folder
 import androidx.compose.material3.Button
@@ -341,7 +341,7 @@ fun SortMenu(currentOrder: TodoSortOrder, onSortSelected: (TodoSortOrder) -> Uni
         onClick = { expanded = true },
     ) {
       Icon(
-          imageVector = Icons.AutoMirrored.Filled.Sort,
+          imageVector = Icons.Filled.FilterList,
           modifier =
               Modifier.size(dimensionResource(R.dimen.todo_overview_sort_icon_size)).fillMaxSize(),
           contentDescription = stringResource(R.string.todos_sort_button_label),

@@ -25,5 +25,6 @@ data class Profile(
     val badgeIds: List<String> = emptyList(),
     val badgeCount: Map<String, Long> = emptyMap(),
     val focusPoints: Double = 0.0,
-    val weeklyPoints: Double = 0.0
+    val weeklyPoints: Double = 0.0,
+    val bio: String = ""
 )
