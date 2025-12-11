@@ -17,7 +17,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.text.style.TextAlign
@@ -125,154 +124,113 @@ fun GatherlyAlertDialog(
                           dimensionResource(R.dimen.spacing_between_fields_medium))) {
 
                     // Title Section
-                    Column {
-                      Row(
-                          verticalAlignment = Alignment.CenterVertically,
-                          modifier = Modifier.fillMaxWidth()) {
-                            // Left spacer to balance the button on the right
-                            if (numberAttendees != null) {
-                              Spacer(
-                                  modifier =
-                                      Modifier.height(dimensionResource(R.dimen.padding_large))
-                                          .widthIn(min = dimensionResource(R.dimen.padding_large)))
-                            }
-
-                            // Centered title
-                            Text(
-                                text = titleText,
-                                textAlign = TextAlign.Center,
-                                style = MaterialTheme.typography.titleLarge,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.weight(1f).testTag(AlertDialogTestTags.TITLE))
-
-                            // Attendees button on the right (if present)
-                            if (numberAttendees != null) {
-                              Button(
-                                  colors =
-                                      buttonColors(
-                                          containerColor =
-                                              MaterialTheme.colorScheme.secondaryContainer,
-                                          contentColor =
-                                              MaterialTheme.colorScheme.onSecondaryContainer),
-                                  contentPadding =
-                                      PaddingValues(
-                                          horizontal =
-                                              dimensionResource(R.dimen.padding_extra_small),
-                                          vertical =
-                                              dimensionResource(
-                                                  R.dimen.padding_extra_small_vertical)),
-                                  onClick = { actions.onOpenAttendeesList?.invoke() },
-                                  modifier =
-                                      Modifier.testTag(AlertDialogTestTags.ATTENDEES_BTN)
-                                          .height(dimensionResource(R.dimen.padding_large))
-                                          .widthIn(
-                                              min = dimensionResource(R.dimen.padding_large))) {
-                                    BoxNumberAttendees(numberAttendees)
-                                  }
-                            }
-                          }
-
-                      // Event details (creator, date, time)
-                      GatherlyDialogTitleContent(
-                          creatorText = creatorText,
-                          dateText = dateText,
-                          startTimeText = startTimeText,
-                          endTimeText = endTimeText)
-                    }
+                    DialogTitleSection(
+                        titleText = titleText,
+                        numberAttendees = numberAttendees,
+                        onOpenAttendeesList = actions.onOpenAttendeesList,
+                        creatorText = creatorText,
+                        dateText = dateText,
+                        startTimeText = startTimeText,
+                        endTimeText = endTimeText)
 
                     // Body Section
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                      Text(
-                          text = bodyText,
-                          textAlign = TextAlign.Center,
-                          color = MaterialTheme.colorScheme.onSurfaceVariant,
-                          modifier = Modifier.testTag(AlertDialogTestTags.BODY))
-
-                      // Neutral button (if present)
-                      neutralText?.let { text ->
-                        Spacer(
-                            modifier = Modifier.height(dimensionResource(R.dimen.padding_screen)))
-                        Button(
-                            colors =
-                                buttonColors(
-                                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
-                            onClick = { actions.onNeutral?.invoke() },
-                            enabled = neutralEnabled,
-                            modifier =
-                                Modifier.fillMaxWidth().testTag(AlertDialogTestTags.NEUTRAL_BTN)) {
-                              Text(text = text)
-                            }
-                      }
-                    }
+                    DialogBodySection(
+                        bodyText = bodyText,
+                        neutralText = neutralText,
+                        neutralEnabled = neutralEnabled,
+                        onNeutral = actions.onNeutral)
 
                     // Bottom Buttons Section
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                          // Dismiss Button
-                          Button(
-                              colors =
-                                  buttonColors(
-                                      containerColor = MaterialTheme.colorScheme.primaryContainer,
-                                      contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
-                              onClick = actions.onDismiss,
-                              modifier =
-                                  Modifier.weight(1f).testTag(AlertDialogTestTags.DISMISS_BTN)) {
-                                Text(
-                                    text = dismissText,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer,
-                                    textAlign = TextAlign.Center,
-                                    maxLines = 1)
-                              }
-
-                          // Confirm Button
-                          Button(
-                              colors =
-                                  buttonColors(
-                                      containerColor =
-                                          if (isImportantWarning) {
-                                            MaterialTheme.colorScheme.surfaceVariant
-                                          } else {
-                                            MaterialTheme.colorScheme.primaryContainer
-                                          },
-                                      contentColor = contentColor(isImportantWarning)),
-                              enabled = confirmEnabled,
-                              onClick = actions.onConfirm,
-                              modifier =
-                                  Modifier.weight(1f).testTag(AlertDialogTestTags.CONFIRM_BTN)) {
-                                Text(
-                                    text = confirmText,
-                                    color = contentColor(isImportantWarning),
-                                    textAlign = TextAlign.Center,
-                                    maxLines = 1)
-                              }
-                        }
+                    DialogActionButtons(
+                        dismissText = dismissText,
+                        confirmText = confirmText,
+                        isImportantWarning = isImportantWarning,
+                        confirmEnabled = confirmEnabled,
+                        onDismiss = actions.onDismiss,
+                        onConfirm = actions.onConfirm)
                   }
             }
       }
 }
 
 @Composable
-private fun contentColor(isImportantWarning: Boolean): Color {
-  return if (isImportantWarning) {
-    MaterialTheme.colorScheme.error
-  } else {
-    MaterialTheme.colorScheme.onPrimaryContainer
-  }
-}
-
-@Composable
-private fun GatherlyDialogTitleContent(
+private fun DialogTitleSection(
+    titleText: String,
+    numberAttendees: Int?,
+    onOpenAttendeesList: (() -> Unit)?,
     creatorText: String?,
     dateText: String?,
     startTimeText: String?,
     endTimeText: String?
 ) {
+  Column {
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
+      // Left spacer to balance the button on the right
+      AttendeesButtonSpacer(numberAttendees)
 
-  if (dateText == null || startTimeText == null || endTimeText == null) return
+      // Centered title
+      Text(
+          text = titleText,
+          textAlign = TextAlign.Center,
+          style = MaterialTheme.typography.titleLarge,
+          color = MaterialTheme.colorScheme.onSurfaceVariant,
+          modifier = Modifier.weight(1f).testTag(AlertDialogTestTags.TITLE))
 
-  // Add spacing between title and creator/date info
+      // Attendees button on the right (if present)
+      AttendeesButton(numberAttendees, onOpenAttendeesList)
+    }
+
+    // Event details (creator, date, time)
+    EventDetailsSection(
+        creatorText = creatorText,
+        dateText = dateText,
+        startTimeText = startTimeText,
+        endTimeText = endTimeText)
+  }
+}
+
+@Composable
+private fun AttendeesButtonSpacer(numberAttendees: Int?) {
+  if (numberAttendees != null) {
+    Spacer(
+        modifier =
+            Modifier.height(dimensionResource(R.dimen.padding_large))
+                .widthIn(min = dimensionResource(R.dimen.padding_large)))
+  }
+}
+
+@Composable
+private fun AttendeesButton(numberAttendees: Int?, onOpenAttendeesList: (() -> Unit)?) {
+  if (numberAttendees != null) {
+    Button(
+        colors =
+            buttonColors(
+                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer),
+        contentPadding =
+            PaddingValues(
+                horizontal = dimensionResource(R.dimen.padding_extra_small),
+                vertical = dimensionResource(R.dimen.padding_extra_small_vertical)),
+        onClick = { onOpenAttendeesList?.invoke() },
+        modifier =
+            Modifier.testTag(AlertDialogTestTags.ATTENDEES_BTN)
+                .height(dimensionResource(R.dimen.padding_large))
+                .widthIn(min = dimensionResource(R.dimen.padding_large))) {
+          BoxNumberAttendees(numberAttendees)
+        }
+  }
+}
+
+@Composable
+private fun EventDetailsSection(
+    creatorText: String?,
+    dateText: String?,
+    startTimeText: String?,
+    endTimeText: String?
+) {
+  val hasEventDetails = dateText != null && startTimeText != null && endTimeText != null
+  if (!hasEventDetails) return
+
   Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_small)))
 
   if (!creatorText.isNullOrBlank()) {
@@ -283,7 +241,6 @@ private fun GatherlyDialogTitleContent(
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         modifier = Modifier.fillMaxWidth().testTag(AlertDialogTestTags.CREATOR_TEXT))
 
-    // Small spacing between creator and date
     Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_extra_small)))
   }
 
@@ -293,6 +250,106 @@ private fun GatherlyDialogTitleContent(
       style = MaterialTheme.typography.bodyMedium,
       color = MaterialTheme.colorScheme.onSurfaceVariant,
       modifier = Modifier.fillMaxWidth().testTag(AlertDialogTestTags.DATE_TEXT))
+}
+
+@Composable
+private fun DialogBodySection(
+    bodyText: String,
+    neutralText: String?,
+    neutralEnabled: Boolean,
+    onNeutral: (() -> Unit)?
+) {
+  Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Text(
+        text = bodyText,
+        textAlign = TextAlign.Center,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.testTag(AlertDialogTestTags.BODY))
+
+    NeutralButton(neutralText, neutralEnabled, onNeutral)
+  }
+}
+
+@Composable
+private fun NeutralButton(neutralText: String?, neutralEnabled: Boolean, onNeutral: (() -> Unit)?) {
+  if (neutralText != null) {
+    Spacer(modifier = Modifier.height(dimensionResource(R.dimen.padding_screen)))
+    Button(
+        colors =
+            buttonColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
+        onClick = { onNeutral?.invoke() },
+        enabled = neutralEnabled,
+        modifier = Modifier.fillMaxWidth().testTag(AlertDialogTestTags.NEUTRAL_BTN)) {
+          Text(text = neutralText)
+        }
+  }
+}
+
+@Composable
+private fun DialogActionButtons(
+    dismissText: String,
+    confirmText: String,
+    isImportantWarning: Boolean,
+    confirmEnabled: Boolean,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+  Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    // Dismiss Button
+    Button(
+        colors =
+            buttonColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer),
+        onClick = onDismiss,
+        modifier = Modifier.weight(1f).testTag(AlertDialogTestTags.DISMISS_BTN)) {
+          Text(
+              text = dismissText,
+              color = MaterialTheme.colorScheme.onPrimaryContainer,
+              textAlign = TextAlign.Center,
+              maxLines = 1)
+        }
+
+    // Confirm Button
+    ConfirmButton(
+        confirmText = confirmText,
+        isImportantWarning = isImportantWarning,
+        confirmEnabled = confirmEnabled,
+        onConfirm = onConfirm,
+        modifier = Modifier.weight(1f))
+  }
+}
+
+@Composable
+private fun ConfirmButton(
+    confirmText: String,
+    isImportantWarning: Boolean,
+    confirmEnabled: Boolean,
+    onConfirm: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+  val buttonContainerColor =
+      if (isImportantWarning) MaterialTheme.colorScheme.surfaceVariant
+      else MaterialTheme.colorScheme.primaryContainer
+
+  val buttonContentColor =
+      if (isImportantWarning) MaterialTheme.colorScheme.error
+      else MaterialTheme.colorScheme.onPrimaryContainer
+
+  Button(
+      colors =
+          buttonColors(containerColor = buttonContainerColor, contentColor = buttonContentColor),
+      enabled = confirmEnabled,
+      onClick = onConfirm,
+      modifier = modifier.testTag(AlertDialogTestTags.CONFIRM_BTN)) {
+        Text(
+            text = confirmText,
+            color = buttonContentColor,
+            textAlign = TextAlign.Center,
+            maxLines = 1)
+      }
 }
 
 object AlertDialogTestTags {
