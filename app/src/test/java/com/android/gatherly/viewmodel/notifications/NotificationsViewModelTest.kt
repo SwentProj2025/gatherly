@@ -168,6 +168,7 @@ class NotificationViewModelTest {
         NotificationViewModel(
             notificationsRepository = failingRepo,
             profileRepository = profileRepo,
+            pointsRepository = pointsRepository,
             authProvider = { mockAuth })
 
     // WHEN
@@ -368,6 +369,7 @@ class NotificationViewModelTest {
         NotificationViewModel(
             notificationsRepository = failingRepo,
             profileRepository = profileRepo,
+            pointsRepository = pointsRepository,
             authProvider = { mockAuth })
 
     vm.loadNotifications()

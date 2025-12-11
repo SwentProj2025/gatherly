@@ -164,7 +164,10 @@ class AddTodoViewModelTest {
     // Reset VM for next add
     addToDoViewModel =
         AddTodoViewModel(
-            toDosRepository, profileRepository, authProvider = { mockitoUtils.mockAuth })
+            toDosRepository,
+            profileRepository,
+            pointsRepository,
+            authProvider = { mockitoUtils.mockAuth })
 
     // Second ToDo
     addToDoViewModel.onTitleChanged("Do groceries")
