@@ -31,6 +31,7 @@ import com.android.gatherly.ui.focusTimer.TimerScreen
 import com.android.gatherly.ui.friends.FindFriendsScreen
 import com.android.gatherly.ui.friends.FriendsScreen
 import com.android.gatherly.ui.groups.AddGroupScreen
+import com.android.gatherly.ui.groups.EditGroupScreen
 import com.android.gatherly.ui.groups.GroupInformationScreen
 import com.android.gatherly.ui.groups.GroupsOverviewScreen
 import com.android.gatherly.ui.homePage.HomePageScreen
@@ -359,6 +360,22 @@ fun GatherlyApp(
           GroupsOverviewScreen(navigationActions = navigationActions)
         }
       }
-    }
+
+        // EDIT GROUP COMPOSABLE  ------------------------------
+        composable(Screen.EditGroup.route) { navBackStackEntry ->
+            val uid = navBackStackEntry.arguments?.getString("uid")
+            uid?.let { groupId ->
+                    EditGroupScreen(
+                        groupId = groupId,
+                        goBack = { navigationActions.goBack() },
+                        onSaved = { navigationActions.navigateTo(Screen.GroupInfo(groupId)) })
+                }
+                ?: run {
+                    Log.e("EditGroupScreen", "Group UID is null")
+                    Toast.makeText(context, "Group UID is null", Toast.LENGTH_SHORT).show()
+                }
+        }
+
+  }
   }
 }
