@@ -63,8 +63,11 @@ class NotificationViewModel(
 
         val idToProfile = mutableMapOf<String, Profile>()
         for (notification in notifications) {
-          val senderId = notification.senderId as String
-          idToProfile[senderId] = profileRepository.getProfileByUid(senderId) as Profile
+          val senderId = notification.senderId ?: ""
+          val profile = profileRepository.getProfileByUid(senderId)
+          if (profile != null) {
+            idToProfile[senderId] = profile
+          }
         }
 
         _uiState.value =
@@ -74,6 +77,7 @@ class NotificationViewModel(
                 isLoading = false,
                 hasUnreadFriendRequests = hasUnreadFriendRequests)
       } catch (e: Exception) {
+        println("NotificationViewModel Error loading notifications $e")
         _uiState.value =
             _uiState.value.copy(
                 isLoading = false, errorMessage = "Failed to load user's notifications")
