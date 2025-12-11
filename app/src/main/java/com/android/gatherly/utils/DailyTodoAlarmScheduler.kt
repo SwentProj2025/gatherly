@@ -70,6 +70,9 @@ open class DailyTodoAlarmScheduler(
             intent,
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
 
+    // Cancel existing scheduled future alarms with this PendingIntent to prevent duplicates
+    alarmManager.cancel(pendingIntent)
+
     // Ask AlarmManager to trigger at the next midnight:
     alarmManager.setExactAndAllowWhileIdle(
         AlarmManager.RTC_WAKEUP, // Wake the device up if it is sleeping
