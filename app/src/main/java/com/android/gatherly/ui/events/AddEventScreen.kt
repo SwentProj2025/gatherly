@@ -174,14 +174,14 @@ fun AddEventScreen(
 
   val actions =
       ParticipantsActions(
-          addParticipant = { it -> addEventViewModel.addParticipant(it) },
-          deleteParticipant = { it -> addEventViewModel.deleteParticipant(it) },
-          updateParticipant = { it -> addEventViewModel.updateParticipant(it) })
+          addParticipant = { profile -> addEventViewModel.addParticipant(profile) },
+          deleteParticipant = { profileId -> addEventViewModel.deleteParticipant(profileId) },
+          updateParticipant = { query -> addEventViewModel.updateParticipant(query) })
   val groupAction =
       GroupsActions(
-          inviteGroup = { it -> addEventViewModel.inviteGroup(it) },
-          removeGroup = { it -> addEventViewModel.removeGroup(it) },
-          updateGroup = { it -> addEventViewModel.updateGroup(it) })
+          inviteGroup = { groupName -> addEventViewModel.inviteGroup(groupName) },
+          removeGroup = { groupId -> addEventViewModel.removeGroup(groupId) },
+          updateGroup = { query -> addEventViewModel.updateGroup(query) })
 
   // Search groups when input changes
   LaunchedEffect(ui.group) {

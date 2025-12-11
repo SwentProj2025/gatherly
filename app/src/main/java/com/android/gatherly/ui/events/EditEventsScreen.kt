@@ -144,17 +144,19 @@ fun EditEventsScreen(
           state = ui.state)
   val actions =
       ParticipantsActions(
-          addParticipant = { it -> editEventsViewModel.addParticipant(it) },
-          deleteParticipant = { it -> editEventsViewModel.deleteParticipant(it) },
-          updateParticipant = { it -> editEventsViewModel.updateParticipant(it) })
+          addParticipant = { profile -> editEventsViewModel.addParticipant(profile) },
+          deleteParticipant = { participantId ->
+            editEventsViewModel.deleteParticipant(participantId)
+          },
+          updateParticipant = { query -> editEventsViewModel.updateParticipant(query) })
 
   val groupsUiState =
       GroupsUiState(group = ui.group, groups = ui.groups, suggestedGroups = ui.suggestedGroups)
   val groupAction =
       GroupsActions(
-          inviteGroup = { it -> editEventsViewModel.inviteGroup(it) },
-          removeGroup = { it -> editEventsViewModel.removeGroup(it) },
-          updateGroup = { it -> editEventsViewModel.updateGroup(it) })
+          inviteGroup = { groupName -> editEventsViewModel.inviteGroup(groupName) },
+          removeGroup = { groupId -> editEventsViewModel.removeGroup(groupId) },
+          updateGroup = { query -> editEventsViewModel.updateGroup(query) })
 
   // Toasts
   LaunchedEffect(ui.displayToast, ui.toastString) {

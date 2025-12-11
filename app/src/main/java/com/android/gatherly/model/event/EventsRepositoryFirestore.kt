@@ -9,7 +9,6 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.ktx.Firebase
 import com.google.protobuf.LazyStringArrayList.emptyList
-import kotlin.collections.emptyList
 import kotlinx.coroutines.tasks.await
 
 // This class contains code adapted by an LLM (GitHub Copilot, Claude.ai) from the CS-311 bootcamp.
