@@ -56,6 +56,7 @@ import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Profile
 import com.android.gatherly.ui.theme.GatherlyTheme
 import com.android.gatherly.utils.GatherlyAlertDialog
+import com.android.gatherly.utils.GatherlyAlertDialogActions
 
 /** Contains test tags used for UI testing on the Profile screen. */
 object ProfileScreenTestTags {
@@ -388,11 +389,13 @@ fun ProfileScreen(
               bodyText = stringResource(R.string.anon_log_out_text),
               dismissText = stringResource(R.string.cancel),
               confirmText = stringResource(R.string.log_out),
-              onDismiss = { shouldShowLogOutWarning.value = false },
-              onConfirm = {
-                profileViewModel.signOut(credentialManager)
-                shouldShowLogOutWarning.value = false
-              },
+              actions =
+                  GatherlyAlertDialogActions(
+                      onDismiss = { shouldShowLogOutWarning.value = false },
+                      onConfirm = {
+                        profileViewModel.signOut(credentialManager)
+                        shouldShowLogOutWarning.value = false
+                      }),
               isImportantWarning = true)
         }
       })

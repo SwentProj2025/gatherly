@@ -52,6 +52,7 @@ import com.android.gatherly.utils.AlertDialogWarningDeleteTag
 import com.android.gatherly.utils.CategoriesDropDown
 import com.android.gatherly.utils.DatePickerInputField
 import com.android.gatherly.utils.GatherlyAlertDialog
+import com.android.gatherly.utils.GatherlyAlertDialogActions
 import com.android.gatherly.utils.GatherlyDatePicker
 import com.android.gatherly.utils.PriorityDropDown
 import com.android.gatherly.utils.TimeInputField
@@ -338,11 +339,13 @@ fun EditToDoScreen(
               bodyText = stringResource(R.string.todos_delete_warning_text),
               dismissText = stringResource(R.string.cancel),
               confirmText = stringResource(R.string.delete),
-              onDismiss = { shouldShowDialog.value = false },
-              onConfirm = {
-                editTodoViewModel.deleteToDo(todoID = todoUid)
-                shouldShowDialog.value = false
-              },
+              actions =
+                  GatherlyAlertDialogActions(
+                      onDismiss = { shouldShowDialog.value = false },
+                      onConfirm = {
+                        editTodoViewModel.deleteToDo(todoID = todoUid)
+                        shouldShowDialog.value = false
+                      }),
               isImportantWarning = true)
         }
 
@@ -352,11 +355,14 @@ fun EditToDoScreen(
               bodyText = stringResource(R.string.todos_past_warning_text),
               dismissText = stringResource(R.string.cancel),
               confirmText = stringResource(R.string.todos_edit),
-              onDismiss = { editTodoViewModel.clearPastTime() },
-              onConfirm = {
-                editTodoViewModel.editTodo(todoUid)
-                editTodoViewModel.clearPastTime()
-              })
+              actions =
+                  GatherlyAlertDialogActions(
+                      onDismiss = { editTodoViewModel.clearPastTime() },
+                      onConfirm = {
+                        editTodoViewModel.editTodo(todoUid)
+                        editTodoViewModel.clearPastTime()
+                      }),
+          )
         }
         GatherlyDatePicker(
             show = showDatePicker,

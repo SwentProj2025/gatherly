@@ -52,6 +52,7 @@ import com.android.gatherly.utils.AlertDialogWarningDeleteTag
 import com.android.gatherly.utils.CategoriesDropDown
 import com.android.gatherly.utils.DatePickerInputField
 import com.android.gatherly.utils.GatherlyAlertDialog
+import com.android.gatherly.utils.GatherlyAlertDialogActions
 import com.android.gatherly.utils.GatherlyDatePicker
 import com.android.gatherly.utils.PriorityDropDown
 import com.android.gatherly.utils.TimeInputField
@@ -310,11 +311,14 @@ fun AddToDoScreen(
               bodyText = stringResource(R.string.todos_past_warning_text),
               dismissText = stringResource(R.string.cancel),
               confirmText = stringResource(R.string.todos_create),
-              onDismiss = { addTodoViewModel.clearPastTime() },
-              onConfirm = {
-                addTodoViewModel.saveTodo()
-                addTodoViewModel.clearPastTime()
-              })
+              actions =
+                  GatherlyAlertDialogActions(
+                      onDismiss = { addTodoViewModel.clearPastTime() },
+                      onConfirm = {
+                        addTodoViewModel.saveTodo()
+                        addTodoViewModel.clearPastTime()
+                      }),
+          )
         }
 
         GatherlyDatePicker(
