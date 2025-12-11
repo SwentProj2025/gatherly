@@ -191,9 +191,10 @@ fun FriendsScreen(
   val isLoading = uiState.isLoading && !showUnfriendMessage
 
   // Update the list depending on whether the current user types something in the search bar
-  val filteredFriends = filterUsers(searchQuery, friendsList)
+  LaunchedEffect(searchQuery) { friendsViewModel.searchFriends(searchQuery) }
 
-  val filteredPendingRequests = filterUsers(searchQuery, pendingSentUsernames)
+  val filteredFriends = uiState.friends
+  val filteredPendingRequests = uiState.pendingSentUsernames
 
   // Refresh friends profile when there is an update in the current user profile
   LaunchedEffect(currentUserIdFromVM) {
@@ -260,15 +261,6 @@ fun FriendsScreen(
           }
         }
       })
-}
-
-/** Helper function to filter username list using search query. */
-private fun filterUsers(searchQuery: String, usernameList: List<String>): List<String> {
-  return if (searchQuery.isBlank()) {
-    usernameList
-  } else {
-    usernameList.filter { username -> username.contains(searchQuery, ignoreCase = true) }
-  }
 }
 
 /**
