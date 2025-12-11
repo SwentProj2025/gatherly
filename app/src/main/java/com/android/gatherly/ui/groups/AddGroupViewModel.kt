@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.group.Group
 import com.android.gatherly.model.group.GroupsRepository
 import com.android.gatherly.model.group.GroupsRepositoryFirestore
+import com.android.gatherly.model.group.GroupsRepositoryProvider
 import com.android.gatherly.model.notification.Notification
 import com.android.gatherly.model.notification.NotificationType
 import com.android.gatherly.model.notification.NotificationsRepository
@@ -14,6 +15,7 @@ import com.android.gatherly.model.notification.NotificationsRepositoryProvider
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
+import com.android.gatherly.model.profile.ProfileRepositoryProvider
 import com.android.gatherly.utils.getProfileWithSyncedFriendNotifications
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
@@ -40,7 +42,7 @@ data class AddGroupUiState(
     val description: String = "",
     val nameError: String? = null,
     val friendsList: List<Profile> = emptyList(),
-    val selectedFriendIds: List<String> = emptyList(),
+    val selectedFriends: List<Profile> = emptyList(),
     val isFriendsLoading: Boolean = false,
     val friendsError: String? = null,
     val isSaving: Boolean = false,
@@ -58,9 +60,8 @@ data class AddGroupUiState(
  * @param profileRepository The repository responsible for fetching user profiles and friends.
  */
 class AddGroupViewModel(
-    private val groupsRepository: GroupsRepository = GroupsRepositoryFirestore(Firebase.firestore),
-    private val profileRepository: ProfileRepository =
-        ProfileRepositoryFirestore(Firebase.firestore, Firebase.storage),
+    private val groupsRepository: GroupsRepository = GroupsRepositoryProvider.repository,
+    private val profileRepository: ProfileRepository = ProfileRepositoryProvider.repository,
     private val notificationsRepository: NotificationsRepository =
         NotificationsRepositoryProvider.repository,
     private val authProvider: () -> FirebaseAuth = { Firebase.auth }
@@ -69,6 +70,9 @@ class AddGroupViewModel(
 
   /** Public immutable access to the Add Group UI state. */
   val uiState: StateFlow<AddGroupUiState> = _uiState.asStateFlow()
+
+  /** Local copy of all friends */
+  private var friendsList: List<Profile> = emptyList()
 
   init {
     loadFriends()
@@ -162,6 +166,9 @@ class AddGroupViewModel(
                 null // Skip friends that can't be fetched
               }
             }
+
+        friendsList = friendProfiles
+
         _uiState.value = _uiState.value.copy(friendsList = friendProfiles, isFriendsLoading = false)
       } catch (e: Exception) {
         _uiState.value =
@@ -174,17 +181,17 @@ class AddGroupViewModel(
   /**
    * Toggles the selection of a friend for the group.
    *
-   * @param friendId The ID of the friend to toggle selection for.
+   * @param friend The [Profile] of the friend to toggle selection for.
    */
-  fun onFriendToggled(friendId: String) {
-    val currentSelected = _uiState.value.selectedFriendIds
+  fun onFriendToggled(friend: Profile) {
+    val currentSelected = _uiState.value.selectedFriends
     val newSelected =
-        if (friendId in currentSelected) {
-          currentSelected - friendId
+        if (friend in currentSelected) {
+          currentSelected.filter { it != friend }
         } else {
-          currentSelected + friendId
+          currentSelected + friend
         }
-    _uiState.value = _uiState.value.copy(selectedFriendIds = newSelected)
+    _uiState.value = _uiState.value.copy(selectedFriends = newSelected)
   }
 
   /**
@@ -215,15 +222,16 @@ class AddGroupViewModel(
                 gid = gid,
                 creatorId = "", // will be filled by Firestore repo
                 name = validated.name,
-                description = if (validated.description.isBlank()) null else validated.description,
-                memberIds = validated.selectedFriendIds, // selected friends as initial members
+                description = validated.description.ifBlank { null },
+                memberIds =
+                    validated.selectedFriends.map { it.uid }, // selected friends as initial members
                 adminIds = emptyList() // creator will be added by Firestore repo
                 )
 
         groupsRepository.addGroup(group)
 
         // Add notifications for members
-        for (member in uiState.value.selectedFriendIds) {
+        for (member in uiState.value.selectedFriends) {
           val nid = notificationsRepository.getNewId()
 
           val notification =
@@ -233,7 +241,7 @@ class AddGroupViewModel(
                   emissionTime = Timestamp.now(),
                   senderId = authProvider().currentUser?.uid ?: "",
                   relatedEntityId = gid,
-                  recipientId = member,
+                  recipientId = member.uid,
                   wasRead = false)
           notificationsRepository.addNotification(notification)
         }
@@ -241,6 +249,22 @@ class AddGroupViewModel(
       } catch (e: Exception) {
         _uiState.value = _uiState.value.copy(isSaving = false, saveError = e.message)
       }
+    }
+  }
+
+  /**
+   * Function to filter the friends to display according to a search query
+   *
+   * @param query the query to filter by
+   */
+  fun filterFriends(query: String) {
+    if (query.isNotBlank()) {
+      val filteredList =
+          friendsList.filter { profile -> profile.username.contains(query, ignoreCase = true) }
+
+      _uiState.value = _uiState.value.copy(friendsList = filteredList)
+    } else {
+      _uiState.value = _uiState.value.copy(friendsList = friendsList)
     }
   }
 }

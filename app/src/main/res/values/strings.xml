@@ -122,6 +122,8 @@
     <string name="events_delete_warning_text">This action cannot be reversed. Are you sure?</string>
     <string name="see_on_map_button_title">See on map</string>
     <string name="events_loading">Loading events …</string>
+    <string name="events_search_bar_label">Search events…</string>
+    <string name="events_sort_menu_check_icon_label">Selected</string>
     <string name="events_group_field_label">Group</string>
     <string name="events_group_placeholder">Add a group</string>
     <string name="events_public_state_label">Public event</string>
@@ -129,6 +131,9 @@
     <string name="events_private_friends_label">Friends only</string>
     <string name="events_private_group_label">Group to invite</string>
     <string name="events_alert_dialog_button_label">Close</string>
+    <string name="events_date_sort_button_text">Date sorting</string>
+    <string name="events_alphabetic_sort_button_text">Alphabetical sorting</string>
+    <string name="events_proximity_sort_button_text">Proximity sorting</string>
 
     <!-- General -->
     <string name="delete">Yes, Delete</string>
@@ -199,8 +204,9 @@
 
     <!-- Groups -->
     <string name="add_group_button_label">Add New Group</string>
-    <string name="group_name_bar_label">Group Name</string>
+    <string name="group_name_bar_label">Group Name*</string>
     <string name="group_name_bar_placeholder">Name the Group</string>
+    <string name="group_description_bar_placeholder">Describe the Group</string>
     <string name="group_members_text_singular">member</string>
     <string name="group_members_text_plural">members</string>
 
