@@ -341,15 +341,15 @@ fun GatherlyApp(
             onCreate = { navigationActions.navigateTo(Screen.OverviewGroupsScreen) })
       }
 
-    // NOTIFICATIONS COMPOSABLE  ------------------------------
-    navigation(
-        startDestination = Screen.NotificationsScreen.route,
-        route = Screen.NotificationsScreen.name,
-    ) {
-      composable(Screen.NotificationsScreen.route) {
-        NotificationsScreen(navigationActions = navigationActions)
+      // NOTIFICATIONS COMPOSABLE  ------------------------------
+      navigation(
+          startDestination = Screen.NotificationsScreen.route,
+          route = Screen.NotificationsScreen.name,
+      ) {
+        composable(Screen.NotificationsScreen.route) {
+          NotificationsScreen(navigationActions = navigationActions)
+        }
       }
-    }
 
       // GROUP INFO COMPOSABLE  ------------------------------
       composable(Screen.GroupInfo.route) { navBackStackEntry ->
