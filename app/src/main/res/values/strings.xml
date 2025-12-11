@@ -240,4 +240,9 @@
     <!-- Groups -->
     <string name="groups_overview_no_groups">You have no groups</string>
     <string name="groups_overview_loading">Loading groups…</string>
+    <string name="groups_info_members">Members</string>
+    <string name="groups_info_loading">Loading group information…</string>
+    <string name="groups_info_edit">Edit Group</string>
+    <string name="groups_info_admin">Admin</string>
+    <string name="groups_profile_pic_tag">Profile Picture</string>
 </resources>
