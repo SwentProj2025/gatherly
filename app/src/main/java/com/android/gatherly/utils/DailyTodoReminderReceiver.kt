@@ -66,7 +66,7 @@ class DailyTodoReminderReceiver : BroadcastReceiver() {
     val todoRepository = todoRepoProvider(context)
     val notificationsRepository = notificationsRepoProvider(context)
     // Scheduler responsible for generating todo reminder notifications.
-    val scheduler = NotificationScheduler(todoRepository, notificationsRepository)
+    val scheduler = ToDoNotificationScheduler(todoRepository, notificationsRepository)
     CoroutineScope(Dispatchers.IO).launch {
       scheduler.generateDailyTodoNotifications(userId)
       alarmSchedulerProvider(context).scheduleNextTodoCheck(userId)

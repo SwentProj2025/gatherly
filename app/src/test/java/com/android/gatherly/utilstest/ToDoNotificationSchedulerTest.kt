@@ -15,7 +15,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-class NotificationSchedulerTest {
+class ToDoNotificationSchedulerTest {
 
   private val userId = "user42"
   private val today = Date()
