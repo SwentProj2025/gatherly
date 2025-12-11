@@ -51,6 +51,7 @@ import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
 import com.android.gatherly.ui.theme.GatherlyTheme
 import com.android.gatherly.utils.DatePickerInputField
+import com.android.gatherly.utils.EventAlarmScheduler
 import com.android.gatherly.utils.GatherlyAlertDialog
 import com.android.gatherly.utils.GatherlyAlertDialogActions
 import com.android.gatherly.utils.GatherlyDatePicker
@@ -183,6 +184,21 @@ fun EditEventsScreen(
   // Navigate back after save/delete
   LaunchedEffect(ui.backToOverview) {
     if (ui.backToOverview) {
+        if(ui.editedEvent != null){
+            if(ui.eventDeleted){
+                EventAlarmScheduler(context).cancelEventReminder(
+                    eventId = ui.editedEvent.id,
+                    userId = ui.editedEvent.creatorId
+                )
+            }else{
+                EventAlarmScheduler(context).scheduleEventReminder(
+                    userId = ui.editedEvent.creatorId,
+                    eventId = ui.editedEvent.id,
+                    eventDate = ui.editedEvent.date,
+                    eventStartTime = ui.editedEvent.startTime
+                )
+            }
+        }
       onSave()
     }
   }
