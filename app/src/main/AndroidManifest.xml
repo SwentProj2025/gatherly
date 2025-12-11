@@ -44,8 +44,9 @@
         <receiver
             android:name=".utils.DailyTodoReminderReceiver"
             android:exported="false" />
-
-
+        <receiver
+            android:name=".utils.EventReminderReceiver"
+            android:exported="false" />
     </application>
 
 </manifest>
