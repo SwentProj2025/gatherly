@@ -22,7 +22,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults.buttonColors
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -199,16 +199,7 @@ fun TimerScreenContent(timerViewModel: TimerViewModel) {
                 selectedTab.value = TimerScreenTab.TIMER
                 timerViewModel.loadUI()
               },
-              colors =
-                  buttonColors(
-                      containerColor =
-                          if (selectedTab.value == TimerScreenTab.TIMER)
-                              MaterialTheme.colorScheme.primary
-                          else MaterialTheme.colorScheme.surfaceVariant,
-                      contentColor =
-                          if (selectedTab.value == TimerScreenTab.TIMER)
-                              MaterialTheme.colorScheme.onPrimary
-                          else MaterialTheme.colorScheme.background),
+              colors = buttonColorsForTab(TimerScreenTab.TIMER, selectedTab.value),
               shape = RoundedCornerShape(dimensionResource(R.dimen.rounded_corner_shape_large)),
               modifier =
                   Modifier.height(dimensionResource(R.dimen.events_filter_button_height))
@@ -222,16 +213,7 @@ fun TimerScreenContent(timerViewModel: TimerViewModel) {
                 selectedTab.value = TimerScreenTab.HISTORY
                 timerViewModel.loadUI()
               },
-              colors =
-                  buttonColors(
-                      containerColor =
-                          if (selectedTab.value == TimerScreenTab.HISTORY)
-                              MaterialTheme.colorScheme.primary
-                          else MaterialTheme.colorScheme.surfaceVariant,
-                      contentColor =
-                          if (selectedTab.value == TimerScreenTab.HISTORY)
-                              MaterialTheme.colorScheme.onPrimary
-                          else MaterialTheme.colorScheme.background),
+              colors = buttonColorsForTab(TimerScreenTab.HISTORY, selectedTab.value),
               shape = RoundedCornerShape(dimensionResource(R.dimen.rounded_corner_shape_large)),
               modifier =
                   Modifier.height(dimensionResource(R.dimen.focus_session_history_button_height))
@@ -245,16 +227,7 @@ fun TimerScreenContent(timerViewModel: TimerViewModel) {
                 selectedTab.value = TimerScreenTab.LEADERBOARD
                 timerViewModel.loadUI()
               },
-              colors =
-                  buttonColors(
-                      containerColor =
-                          if (selectedTab.value == TimerScreenTab.LEADERBOARD)
-                              MaterialTheme.colorScheme.primary
-                          else MaterialTheme.colorScheme.surfaceVariant,
-                      contentColor =
-                          if (selectedTab.value == TimerScreenTab.LEADERBOARD)
-                              MaterialTheme.colorScheme.onPrimary
-                          else MaterialTheme.colorScheme.background),
+              colors = buttonColorsForTab(TimerScreenTab.LEADERBOARD, selectedTab.value),
               shape = RoundedCornerShape(dimensionResource(R.dimen.rounded_corner_shape_large)),
               modifier =
                   Modifier.height(dimensionResource(R.dimen.events_filter_button_height))
@@ -264,27 +237,35 @@ fun TimerScreenContent(timerViewModel: TimerViewModel) {
         }
 
     // If the timer is selected, show that
-    if (selectedTab.value == TimerScreenTab.TIMER) {
-
-      // If the timer didn't start, display the first view (editing timer time)
-      if (!uiState.isStarted) {
-        TimerNotStarted(uiState = uiState, timerViewModel = timerViewModel, corner = corner)
+    when (selectedTab.value) {
+      TimerScreenTab.TIMER -> {
+        if (!uiState.isStarted) {
+          TimerNotStarted(uiState = uiState, timerViewModel = timerViewModel, corner = corner)
+        } else {
+          TimerStarted(uiState = uiState, timerViewModel = timerViewModel, corner = corner)
+        }
       }
-
-      // Second view, if timer is running or paused
-      if (uiState.isStarted) {
-        TimerStarted(uiState = uiState, timerViewModel = timerViewModel, corner = corner)
-      }
-
-      // If the leaderboard is selected, show that
-    } else if (selectedTab.value == TimerScreenTab.LEADERBOARD) {
-      Leaderboard(uiState = uiState, timerViewModel = timerViewModel)
-    } else if (selectedTab.value == TimerScreenTab.HISTORY) {
-      FocusSessionsHistory(uiState = uiState)
-    } else {
-      // Default case, should not happen
+      TimerScreenTab.LEADERBOARD -> Leaderboard(uiState = uiState, timerViewModel = timerViewModel)
+      TimerScreenTab.HISTORY -> FocusSessionsHistory(uiState = uiState)
     }
   }
+}
+
+/**
+ * Helper function to get button colors for a tab
+ *
+ * @param tab The tab to get colors for
+ * @param selectedTab The currently selected tab
+ */
+@Composable
+private fun buttonColorsForTab(tab: TimerScreenTab, selectedTab: TimerScreenTab): ButtonColors {
+  return buttonColors(
+      containerColor =
+          if (selectedTab == tab) MaterialTheme.colorScheme.primary
+          else MaterialTheme.colorScheme.surfaceVariant,
+      contentColor =
+          if (selectedTab == tab) MaterialTheme.colorScheme.onPrimary
+          else MaterialTheme.colorScheme.background)
 }
 
 /**
@@ -671,8 +652,7 @@ fun TimerButton(
   Button(
       onClick = onClick,
       shape = RoundedCornerShape(corner),
-      colors =
-          ButtonDefaults.buttonColors(containerColor = containerColor, contentColor = contentColor),
+      colors = buttonColors(containerColor = containerColor, contentColor = contentColor),
       modifier = Modifier.width((configuration.screenWidthDp * buttonRatio).dp).testTag(testTag)) {
         Text(text = text, fontWeight = FontWeight.Bold)
       }
