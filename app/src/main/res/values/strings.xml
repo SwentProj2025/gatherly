@@ -134,6 +134,16 @@
     <string name="events_date_sort_button_text">Date sorting</string>
     <string name="events_alphabetic_sort_button_text">Alphabetical sorting</string>
     <string name="events_proximity_sort_button_text">Proximity sorting</string>
+    <string name="events_edit_private_to_public_label">Make the event public</string>
+    <string name="events_confirm_text_private_to_public_text">Make it public</string>
+    <string name="events_warning_to_public_event_body_text">This action is unreversible, the event will be open to everyone</string>
+    <string name="events_alert_dialog_see_attendees_title">Participants</string>
+    <string name="events_alert_dialog_see_attendees_groups_subtitle">From groups: </string>
+
+    <string name="events_status_filter_all_label">All</string>
+    <string name="events_status_filter_upcoming_label">Upcoming</string>
+    <string name="events_status_filter_ongoing_label">Ongoing</string>
+    <string name="events_status_filter_past_label">Past</string>
 
     <!-- General -->
     <string name="delete">Yes, Delete</string>
