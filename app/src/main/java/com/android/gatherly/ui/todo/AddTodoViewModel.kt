@@ -7,6 +7,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.map.Location
 import com.android.gatherly.model.map.NominatimLocationRepository
+import com.android.gatherly.model.points.PointsRepository
+import com.android.gatherly.model.points.PointsRepositoryProvider
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryProvider
 import com.android.gatherly.model.todo.ToDo
@@ -89,6 +91,7 @@ private var client: OkHttpClient =
 class AddTodoViewModel(
     private val todoRepository: ToDosRepository = ToDosRepositoryProvider.repository,
     private val profileRepository: ProfileRepository = ProfileRepositoryProvider.repository,
+    private val pointsRepository: PointsRepository = PointsRepositoryProvider.repository,
     private val authProvider: () -> FirebaseAuth = { Firebase.auth },
     private val nominatimClient: NominatimLocationRepository = NominatimLocationRepository(client),
     private val todoCategoryRepository: ToDoCategoryRepository =
@@ -409,7 +412,7 @@ class AddTodoViewModel(
                 priorityLevel = validated.priorityLevel,
                 tag = validated.tag)
 
-        addTodo(todoRepository, profileRepository, todo, ownerId)
+        addTodo(todoRepository, profileRepository, pointsRepository, todo, ownerId)
         _uiState.value = _uiState.value.copy(isSaving = false, saveSuccess = true)
         Log.d("AddTodoVM", "SUCCESS todo with: ${todo}")
       } catch (e: Exception) {

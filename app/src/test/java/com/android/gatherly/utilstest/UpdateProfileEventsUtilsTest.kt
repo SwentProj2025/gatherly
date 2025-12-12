@@ -4,6 +4,7 @@ import com.android.gatherly.model.badge.BadgeType
 import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsRepository
+import com.android.gatherly.model.points.PointsLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.utils.cancelEvent
 import com.android.gatherly.utils.createEvent
@@ -45,9 +46,12 @@ class UpdateProfileEventsUtilsTest {
   fun createEvent_updateBadges_callsRepositoriesAndIncrementsCounters() = runTest {
     val event = buildEvent()
 
+    val pointsRepository = PointsLocalRepository()
+
     createEvent(
         eventsRepository = eventsRepository,
         profileRepository = profileRepository,
+        pointsRepository = pointsRepository,
         event = event,
         creatorId = creatorId,
         participants = participantIds)

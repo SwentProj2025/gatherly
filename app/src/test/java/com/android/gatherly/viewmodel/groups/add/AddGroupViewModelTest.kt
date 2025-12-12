@@ -3,6 +3,8 @@ package com.android.gatherly.viewmodel.groups.add
 import com.android.gatherly.model.notification.NotificationType
 import com.android.gatherly.model.notification.NotificationsLocalRepository
 import com.android.gatherly.model.notification.NotificationsRepository
+import com.android.gatherly.model.points.PointsLocalRepository
+import com.android.gatherly.model.points.PointsRepository
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.ui.groups.AddGroupViewModel
 import com.android.gatherly.utilstest.MockitoUtils
@@ -49,6 +51,7 @@ class AddGroupViewModelTest {
   private lateinit var groupsRepository: FakeGroupsRepositoryLocal
   private lateinit var profileRepository: ProfileLocalRepository
   private lateinit var notificationsRepository: NotificationsRepository
+  private lateinit var pointsRepository: PointsRepository
   private lateinit var mockitoUtils: MockitoUtils
 
   private val testDispatcher = UnconfinedTestDispatcher()
@@ -67,6 +70,7 @@ class AddGroupViewModelTest {
     groupsRepository = FakeGroupsRepositoryLocal(currentUserId = TEST_USER_ID)
     profileRepository = ProfileLocalRepository()
     notificationsRepository = NotificationsLocalRepository()
+    pointsRepository = PointsLocalRepository()
 
     // Mock Firebase Auth
     mockitoUtils = MockitoUtils()
@@ -90,6 +94,7 @@ class AddGroupViewModelTest {
         groupsRepository = groupsRepository,
         profileRepository = profileRepository,
         notificationsRepository = notificationsRepository,
+        pointsRepository = pointsRepository,
         authProvider = { mockitoUtils.mockAuth })
   }
 
