@@ -67,6 +67,9 @@ class FriendsViewModel(
   private val _uiState = MutableStateFlow(FriendsUIState())
   val uiState: StateFlow<FriendsUIState> = _uiState.asStateFlow()
 
+  private var allFriendsCache: List<String> = emptyList()
+  private var allPendingCache: List<String> = emptyList()
+
   /**
    * Initializes the ViewModel by loading all the friends' profile from the repository and filtering
    * them to display only drawable todos.
@@ -100,6 +103,8 @@ class FriendsViewModel(
           currentUserProfile.pendingSentFriendsUids.mapNotNull { uid ->
             repository.getProfileByUid(uid)?.username
           }
+      allFriendsCache = friendsData.friendUsernames
+      allPendingCache = pendingSentUsernames
 
       _uiState.value =
           _uiState.value.copy(
@@ -272,6 +277,19 @@ class FriendsViewModel(
         _uiState.value = _uiState.value.copy(errorMsg = "Failed to cancel friend request")
       }
     }
+  }
+
+  fun searchFriends(query: String) {
+    val normalized = query.trim().lowercase()
+    if (normalized.isEmpty()) {
+      _uiState.value =
+          _uiState.value.copy(friends = allFriendsCache, pendingSentUsernames = allPendingCache)
+      return
+    }
+    val filteredFriends = allFriendsCache.filter { it.lowercase().contains(normalized) }
+    val filteredPending = allPendingCache.filter { it.lowercase().contains(normalized) }
+    _uiState.value =
+        _uiState.value.copy(friends = filteredFriends, pendingSentUsernames = filteredPending)
   }
 
   /**

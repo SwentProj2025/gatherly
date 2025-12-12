@@ -9,6 +9,7 @@ import com.android.gatherly.model.notification.NotificationsRepository
 import com.android.gatherly.model.notification.NotificationsRepositoryFirestore
 import com.android.gatherly.model.points.PointsRepository
 import com.android.gatherly.model.points.PointsRepositoryProvider
+import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.android.gatherly.utils.addFriendWithPointsCheck
@@ -25,6 +26,7 @@ import kotlinx.coroutines.launch
 /** UI state for the Notifications screen. */
 data class NotificationUiState(
     val notifications: List<Notification> = emptyList(),
+    val idToProfile: Map<String, Profile> = emptyMap(),
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val hasUnreadFriendRequests: Boolean = false
@@ -62,9 +64,20 @@ class NotificationViewModel(
         val notifications = notificationsRepository.getUserNotifications(currentUserId)
         val hasUnreadFriendRequests =
             notifications.any { it.type == NotificationType.FRIEND_REQUEST && !it.wasRead }
+
+        val idToProfile = mutableMapOf<String, Profile>()
+        for (notification in notifications) {
+          val senderId = notification.senderId ?: ""
+          val profile = profileRepository.getProfileByUid(senderId)
+          if (profile != null) {
+            idToProfile[senderId] = profile
+          }
+        }
+
         _uiState.value =
             _uiState.value.copy(
                 notifications = notifications,
+                idToProfile = idToProfile,
                 isLoading = false,
                 hasUnreadFriendRequests = hasUnreadFriendRequests)
       } catch (e: Exception) {
