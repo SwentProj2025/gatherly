@@ -1,7 +1,6 @@
 package com.android.gatherly.utils
 
 import com.android.gatherly.model.badge.Badge
-import com.android.gatherly.model.badge.BadgeRank
 import com.android.gatherly.model.badge.BadgeType
 import com.android.gatherly.model.points.Points
 import com.android.gatherly.model.points.PointsRepository
@@ -30,29 +29,10 @@ suspend fun incrementBadgeCheckPoints(
     // add the badge
     profileRepository.addBadge(uid, badgeToAdd)
 
-    val startingPoints = 10.0
-    val bronzePoints = 30.0
-    val silverPoints = 50.0
-    val goldPoints = 100.0
-    val diamondPoints = 200.0
-    val legendPoints = 300.0
-
     val badgeById = Badge.entries.associateBy { it.id }
     val badge = badgeById[badgeToAdd]
 
-    badge?.let {
-      when (it.rank) {
-        BadgeRank.BLANK -> Unit
-        BadgeRank.STARTING ->
-            addToPoints(it, pointsRepository, profileRepository, uid, startingPoints)
-        BadgeRank.BRONZE -> addToPoints(it, pointsRepository, profileRepository, uid, bronzePoints)
-        BadgeRank.SILVER -> addToPoints(it, pointsRepository, profileRepository, uid, silverPoints)
-        BadgeRank.GOLD -> addToPoints(it, pointsRepository, profileRepository, uid, goldPoints)
-        BadgeRank.DIAMOND ->
-            addToPoints(it, pointsRepository, profileRepository, uid, diamondPoints)
-        BadgeRank.LEGEND -> addToPoints(it, pointsRepository, profileRepository, uid, legendPoints)
-      }
-    }
+    badge?.let { addToPoints(it, pointsRepository, profileRepository, uid) }
   }
 }
 
@@ -64,15 +44,14 @@ suspend fun incrementBadgeCheckPoints(
  * @param pointsRepository the points repository to call
  * @param profileRepository the profile repository to call
  * @param uid the user's id
- * @param obtained the number of points obtained by the user
  */
 suspend fun addToPoints(
     badge: Badge,
     pointsRepository: PointsRepository,
     profileRepository: ProfileRepository,
-    uid: String,
-    obtained: Double
+    uid: String
 ) {
+  val obtained = badge.rank.pointsEarned
   pointsRepository.addPoints(
       Points(userId = uid, obtained = obtained, reason = PointsSource.Badge(badge.title)))
 
