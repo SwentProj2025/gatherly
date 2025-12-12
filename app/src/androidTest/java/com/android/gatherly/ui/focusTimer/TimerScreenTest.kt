@@ -2,6 +2,7 @@ package com.android.gatherly.ui.focusTimer
 
 import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.isDisplayed
 import androidx.compose.ui.test.junit4.ComposeTestRule
@@ -11,6 +12,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.android.gatherly.model.focusSession.FocusSession
 import com.android.gatherly.model.focusSession.FocusSessionsLocalRepository
 import com.android.gatherly.model.focusSession.FocusSessionsRepository
 import com.android.gatherly.model.notification.NotificationsLocalRepository
@@ -27,13 +29,20 @@ import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.utils.MockitoUtils
 import com.google.firebase.Timestamp
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.util.Date
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+
+private const val TIMEOUT = 15000L
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
@@ -52,6 +61,33 @@ class TimerScreenTest {
           status = ToDoStatus.ONGOING,
           ownerId = "test-user")
 
+  private val focusSessionStartInstant1 =
+      LocalDateTime.of(2025, 11, 11, 13, 35, 20).atZone(ZoneId.systemDefault()).toInstant()
+  private val focusSessionEndInstant1 =
+      LocalDateTime.of(2025, 11, 11, 14, 47, 45).atZone(ZoneId.systemDefault()).toInstant()
+  private val focusSessionStartInstant2 =
+      LocalDateTime.of(2025, 11, 12, 11, 25, 20).atZone(ZoneId.systemDefault()).toInstant()
+  private val focusSessionEndInstant2 =
+      LocalDateTime.of(2025, 11, 12, 14, 47, 45).atZone(ZoneId.systemDefault()).toInstant()
+  private val focusSessionWithTodo =
+      FocusSession(
+          focusSessionId = "focusSession1",
+          creatorId = "test-user",
+          linkedTodoId = "1",
+          duration = 1.hours + 12.minutes + 25.seconds,
+          startedAt = Timestamp(Date.from(focusSessionStartInstant1)),
+          endedAt = Timestamp(Date.from(focusSessionEndInstant1)),
+      )
+  private val focusSessionNoTodo =
+      FocusSession(
+          focusSessionId = "focusSession2",
+          creatorId = "test-user",
+          linkedTodoId = null,
+          duration = 3.hours + 22.minutes + 25.seconds,
+          startedAt = Timestamp(Date.from(focusSessionStartInstant2)),
+          endedAt = Timestamp(Date.from(focusSessionEndInstant2)),
+      )
+
   private lateinit var toDosRepository: ToDosRepository
   private lateinit var focusSessionsRepository: FocusSessionsRepository
   private lateinit var timerViewModel: TimerViewModel
@@ -63,15 +99,14 @@ class TimerScreenTest {
   private lateinit var userStatusManager: UserStatusManager
   private val fakeUid = "test-user"
 
-  @Before
-  fun setUp() {
+  private fun setContent(fillFocusSessions: Boolean = true) {
     toDosRepository = ToDosLocalRepository()
     focusSessionsRepository = FocusSessionsLocalRepository()
     // Add a todo in the repository to test linking
     profileRepository = ProfileLocalRepository()
     pointsRepository = PointsLocalRepository()
     notificationsRepository = NotificationsLocalRepository()
-    fill_repository()
+    fill_repository(fillFocusSessions)
 
     mockitoUtils = MockitoUtils()
     mockitoUtils.chooseCurrentUser(fakeUid)
@@ -90,16 +125,20 @@ class TimerScreenTest {
     composeTestRule.setContent { TimerScreen(timerViewModel) }
   }
 
-  fun fill_repository() = runTest {
+  fun fill_repository(fillFocusSessions: Boolean = true) = runTest {
     toDosRepository.addTodo(todo1)
     profileRepository.addProfile(Profile(uid = fakeUid, name = "Test", profilePicture = ""))
-
+    if (fillFocusSessions) {
+      focusSessionsRepository.addFocusSession(focusSessionWithTodo)
+      focusSessionsRepository.addFocusSession(focusSessionNoTodo)
+    }
     advanceUntilIdle()
   }
 
   // Can enter a valid number of hours in the corresponding field
   @Test
   fun canWriteHours() {
+    setContent()
     composeTestRule.assertScreenDisplaysTimerNotStarted()
 
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.HOURS_TEXT).performTextClearance()
@@ -111,6 +150,7 @@ class TimerScreenTest {
   // Can enter a valid number of minutes in the corresponding field
   @Test
   fun canWriteMinutes() {
+    setContent()
     composeTestRule.assertScreenDisplaysTimerNotStarted()
 
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.MINUTES_TEXT).performTextClearance()
@@ -122,6 +162,7 @@ class TimerScreenTest {
   // Can enter a valid number of seconds in the corresponding field
   @Test
   fun canWriteSeconds() {
+    setContent()
     composeTestRule.assertScreenDisplaysTimerNotStarted()
 
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.SECONDS_TEXT).performTextClearance()
@@ -133,6 +174,7 @@ class TimerScreenTest {
   // Starting the timer changes the screen
   @Test
   fun canStartTimer() {
+    setContent()
     composeTestRule.assertScreenDisplaysTimerNotStarted()
 
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.HOURS_TEXT).performTextClearance()
@@ -146,6 +188,7 @@ class TimerScreenTest {
   // Resetting the timer puts all fields to 00
   @Test
   fun canResetTimer() {
+    setContent()
     composeTestRule.assertScreenDisplaysTimerNotStarted()
 
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.HOURS_TEXT).performTextClearance()
@@ -167,6 +210,7 @@ class TimerScreenTest {
   // Pausing the timer updates correctly the pause/resume button
   @Test
   fun canPauseTimer() {
+    setContent()
     composeTestRule.assertScreenDisplaysTimerNotStarted()
 
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.HOURS_TEXT).performTextClearance()
@@ -184,6 +228,7 @@ class TimerScreenTest {
   // Resuming the timer updates correctly the pause/resume button
   @Test
   fun canResumeTimer() {
+    setContent()
     composeTestRule.assertScreenDisplaysTimerNotStarted()
 
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.HOURS_TEXT).performTextClearance()
@@ -205,6 +250,7 @@ class TimerScreenTest {
   // Stopping the timer displays the editing time screen
   @Test
   fun canStopTimer() {
+    setContent()
     composeTestRule.assertScreenDisplaysTimerNotStarted()
 
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.HOURS_TEXT).performTextClearance()
@@ -222,6 +268,7 @@ class TimerScreenTest {
   // Linking a todo displys it when the timer starts
   @Test
   fun canLinkToDo() {
+    setContent()
     composeTestRule.assertScreenDisplaysTimerNotStarted()
 
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.TODO_TO_CHOOSE).assertIsDisplayed()
@@ -243,12 +290,14 @@ class TimerScreenTest {
 
   @Test
   fun canSeeLeaderboard() {
+    setContent()
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.TIMER_SELECT).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.HISTORY_SELECT).assertIsDisplayed()
     composeTestRule
         .onNodeWithTag(FocusTimerScreenTestTags.LEADERBOARD_SELECT)
         .assertIsDisplayed()
         .performClick()
-    composeTestRule.waitUntil(15000L) {
+    composeTestRule.waitUntil(TIMEOUT) {
       composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.LEADERBOARD_LIST).isDisplayed()
     }
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.LEADERBOARD_LIST).assertIsDisplayed()
@@ -277,5 +326,57 @@ class TimerScreenTest {
     onNodeWithTag(FocusTimerScreenTestTags.TIMER_TIME).assertIsDisplayed()
     onNodeWithTag(FocusTimerScreenTestTags.RESUME_BUTTON).assertIsDisplayed()
     onNodeWithTag(FocusTimerScreenTestTags.STOP_BUTTON).assertIsDisplayed()
+  }
+
+  /** Test: Verifies that the sessions history screen correctly displays focus sessions */
+  @Test
+  fun sessionsHistoryCorrectlyDisplaysFocusSessions() {
+    setContent()
+    composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.TIMER_SELECT).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.LEADERBOARD_SELECT).assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(FocusTimerScreenTestTags.HISTORY_SELECT)
+        .assertIsDisplayed()
+        .performClick()
+    composeTestRule.waitUntil(TIMEOUT) {
+      composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.HISTORY_LIST).isDisplayed()
+    }
+    composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.HISTORY_LIST).assertIsDisplayed()
+
+    composeTestRule
+        .onNodeWithTag(FocusTimerScreenTestTags.getDurationTagForFocusSessionItem("focusSession1"))
+        .assertTextContains("01:12:25")
+
+    composeTestRule
+        .onNodeWithTag(FocusTimerScreenTestTags.getTimestampTagForFocusSessionItem("focusSession1"))
+        .assertTextContains("11/11/2025 - 13:35:20")
+
+    composeTestRule
+        .onNodeWithTag(FocusTimerScreenTestTags.getTodoTagForFocusSessionItem("focusSession1"))
+        .assertTextContains("Buy groceries")
+
+    composeTestRule
+        .onNodeWithTag(FocusTimerScreenTestTags.getTodoTagForFocusSessionItem("focusSession2"))
+        .assertTextContains("NO LINKED TODO")
+  }
+
+  /**
+   * Test: Verifies that the sessions history screen correctly displays an empty list message when
+   * there are no focus sessions
+   */
+  @Test
+  fun sessionsHistoryCorrectlyDisplaysEmptyFocusSessions() {
+    setContent(fillFocusSessions = false)
+    composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.TIMER_SELECT).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.LEADERBOARD_SELECT).assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(FocusTimerScreenTestTags.HISTORY_SELECT)
+        .assertIsDisplayed()
+        .performClick()
+
+    composeTestRule
+        .onNodeWithTag(FocusTimerScreenTestTags.EMPTY_HISTORY_LIST_MSG)
+        .assertIsDisplayed()
+    composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.HISTORY_LIST).assertIsNotDisplayed()
   }
 }

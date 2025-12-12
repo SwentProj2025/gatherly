@@ -26,6 +26,8 @@ import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.Screen
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.theme.GatherlyTheme
+import com.android.gatherly.utils.DailyTodoAlarmScheduler
+import com.google.firebase.auth.FirebaseAuth
 
 object SignInScreenTestTags {
   const val WELCOME_TITLE = "welcomeTitle"
@@ -58,6 +60,10 @@ fun SignInScreen(
   // Navigate to home page screen on successful login
   LaunchedEffect(signedIn) {
     if (signedIn) {
+      val user = FirebaseAuth.getInstance().currentUser
+      if (user != null) {
+        DailyTodoAlarmScheduler(context).scheduleNextTodoCheck(user.uid)
+      }
       when (uiState.destinationScreen) {
         "home" -> navigationActions?.navigateTo(Tab.HomePage.destination)
         "init_profile" -> navigationActions?.navigateTo(Screen.InitProfileScreen)

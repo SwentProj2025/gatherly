@@ -3,28 +3,25 @@
 // Initializes the firebase functions and gives admin rights to reset values
 
 const {onSchedule} = require("firebase-functions/v2/scheduler");
+const {onRequest} = require("firebase-functions/v2/https");
 const admin = require("firebase-admin");
 const logger = require("firebase-functions/logger");
 
 admin.initializeApp();
 
 // Function that resets every monday at 00:00 Paris time
-exports.weeklyReset = onSchedule(
-    "0 0 * * MON",
-    {timeZone: "Europe/Paris"},
-    async (event) => {
-      try {
-        const db = admin.firestore();
-        const usersSnapshot = await db.collection("profiles").get();
+async function runWeeklyReset() {
+  try {
+    const db = admin.firestore();
+    const usersSnapshot = await db.collection("profiles").get();
 
-        for (const userDoc of usersSnapshot.docs) {
-          const userData = userDoc.data();
-          const userId = userDoc.id;
+    for (const userDoc of usersSnapshot.docs) {
+      const userData = userDoc.data();
+      const userId = userDoc.id;
 
-          const friends = userData.friends || []; // array of userIDs
+      const friends = userData.friendUids || []; // array of userIDs
 
-          if (friends.length < 3) continue;
-
+      if (friends.length >= 3) {
           // ---- Fetch friends weeklyPoints IN BATCHES ----
           const friendChunks = [];
           for (let i = 0; i < friends.length; i += 10) {
@@ -79,71 +76,87 @@ exports.weeklyReset = onSchedule(
           const userRef = db.collection("profiles").doc(userId);
           if (rank == 0) {
             const achievementRef = db.collection("points").doc();
-            const batch = db.batch();
+            const pointsBatch = db.batch();
 
-            batch.set(achievementRef, {
+            pointsBatch.set(achievementRef, {
               userId: userId,
               rank: "first",
               obtained: 100.0,
-              dateObtained: admin.firestore.Timestamp.now(),
+              dateObtained: admin.firestore.FieldValue.serverTimestamp(),
               reason: "Leaderboard",
             });
 
-            batch.update(userRef, {
+            pointsBatch.update(userRef, {
               focusPoints: admin.firestore.FieldValue.increment(100.0)
             });
 
-            await batch.commit();
+            await pointsBatch.commit();
             logger.info("Achievement added and user points updated!");
           } else if (rank == 1) {
             const achievementRef = db.collection("points").doc();
-            const batch = db.batch();
+            const pointsBatch = db.batch();
 
-            batch.set(achievementRef, {
+            pointsBatch.set(achievementRef, {
               userId: userId,
               rank: "second",
               obtained: 75.0,
-              dateObtained: admin.firestore.Timestamp.now(),
+              dateObtained: admin.firestore.FieldValue.serverTimestamp(),
               reason: "Leaderboard",
             });
 
-            batch.update(userRef, {
+            pointsBatch.update(userRef, {
               focusPoints: admin.firestore.FieldValue.increment(75.0)
             });
 
-            await batch.commit();
+            await pointsBatch.commit();
             logger.info("Achievement added and user points updated!");
           } else if (rank == 2) {
             const achievementRef = db.collection("points").doc();
-            const batch = db.batch();
+            const pointsBatch = db.batch();
 
-            batch.set(achievementRef, {
+            pointsBatch.set(achievementRef, {
               userId: userId,
               rank: "third",
               obtained: 50.0,
-              dateObtained: admin.firestore.Timestamp.now(),
+              dateObtained: admin.firestore.FieldValue.serverTimestamp(),
               reason: "Leaderboard",
             });
 
-            batch.update(userRef, {
+            pointsBatch.update(userRef, {
               focusPoints: admin.firestore.FieldValue.increment(50.0)
             });
 
-            await batch.commit();
+            await pointsBatch.commit();
             logger.info("Achievement added and user points updated!");
           }
-        }
-
-        const batch = db.batch();
-        usersSnapshot.forEach((doc) => {
-          batch.update(doc.ref, {weeklyPoints: 0.0});
-        });
-
-        await batch.commit();
-
-        logger.info("Weekly reset executed successfully");
-      } catch (err) {
-        logger.error("Weekly reset failed", err);
       }
-    },
+
+    }
+
+    const batch = db.batch();
+    usersSnapshot.forEach((doc) => {
+      batch.update(doc.ref, {weeklyPoints: 0.0});
+    });
+
+    await batch.commit();
+
+    logger.info("Weekly reset executed successfully");
+  } catch (err) {
+    logger.error("Weekly reset failed: " + err.message);
+  }
+}
+
+exports.weeklyReset = onSchedule(
+  {
+    schedule: "0 0 * * MON",
+    timeZone: "Europe/Paris",
+  },
+  async () => {
+    await runWeeklyReset();
+  }
 );
+
+exports.weeklyResetHttp = onRequest(async (req, res) => {
+  await runWeeklyReset();
+  res.send("OK");
+});
