@@ -1,6 +1,7 @@
 package com.android.gatherly.utils
 
 import com.android.gatherly.model.badge.BadgeType
+import com.android.gatherly.model.points.PointsRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
@@ -17,11 +18,13 @@ import com.android.gatherly.model.todo.ToDosRepository
 suspend fun addTodo(
     todoRepository: ToDosRepository,
     profileRepository: ProfileRepository,
+    pointsRepository: PointsRepository,
     todo: ToDo,
     currentUserId: String
 ) {
   todoRepository.addTodo(todo)
-  profileRepository.incrementBadge(currentUserId, BadgeType.TODOS_CREATED)
+  incrementBadgeCheckPoints(
+      profileRepository, pointsRepository, currentUserId, BadgeType.TODOS_CREATED)
 }
 
 /**
@@ -36,6 +39,7 @@ suspend fun addTodo(
 suspend fun editTodo(
     todoRepository: ToDosRepository,
     profileRepository: ProfileRepository,
+    pointsRepository: PointsRepository,
     todoID: String,
     newStatus: ToDoStatus,
     currentUserId: String
@@ -48,6 +52,7 @@ suspend fun editTodo(
 
   val isNowCompleted = newStatus == ToDoStatus.ENDED
   if (!wasCompleted && isNowCompleted) {
-    profileRepository.incrementBadge(currentUserId, BadgeType.TODOS_COMPLETED)
+    incrementBadgeCheckPoints(
+        profileRepository, pointsRepository, currentUserId, BadgeType.TODOS_COMPLETED)
   }
 }

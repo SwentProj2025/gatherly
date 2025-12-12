@@ -3,17 +3,40 @@ package com.android.gatherly.utilstest
 import com.android.gatherly.model.notification.Notification
 import com.android.gatherly.model.notification.NotificationType
 import com.android.gatherly.model.notification.NotificationsLocalRepository
+import com.android.gatherly.model.points.PointsLocalRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.utils.getProfileWithSyncedFriendNotifications
 import com.google.firebase.Timestamp
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
 import org.junit.Assert.*
+import org.junit.Before
 import org.junit.Test
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class UpdateProfileFriendsUtilsTest {
 
   private fun ts() = Timestamp.now()
+
+  private val pointsRepository = PointsLocalRepository()
+
+  private val testDispatcher = UnconfinedTestDispatcher()
+
+  @Before
+  fun setUp() {
+    Dispatchers.setMain(testDispatcher)
+  }
+
+  @After
+  fun tearDown() {
+    Dispatchers.resetMain()
+  }
 
   @Test
   fun friendAccepted_addsFriend_andDeletesNotification() = runTest {
@@ -37,7 +60,7 @@ class UpdateProfileFriendsUtilsTest {
             wasRead = false)
     notifs.addNotification(notif)
 
-    val updated = getProfileWithSyncedFriendNotifications(profiles, notifs, "u1")
+    val updated = getProfileWithSyncedFriendNotifications(profiles, notifs, pointsRepository, "u1")
 
     assertNotNull(updated)
     assertTrue(updated!!.friendUids.contains("u2"))
@@ -69,7 +92,7 @@ class UpdateProfileFriendsUtilsTest {
             wasRead = false)
     notifs.addNotification(notif)
 
-    val updated = getProfileWithSyncedFriendNotifications(profiles, notifs, "u1")
+    val updated = getProfileWithSyncedFriendNotifications(profiles, notifs, pointsRepository, "u1")
 
     assertNotNull(updated)
     assertTrue(updated!!.friendUids.isEmpty())
@@ -101,7 +124,7 @@ class UpdateProfileFriendsUtilsTest {
             wasRead = false)
     notifs.addNotification(notif)
 
-    val updated = getProfileWithSyncedFriendNotifications(profiles, notifs, "u1")
+    val updated = getProfileWithSyncedFriendNotifications(profiles, notifs, pointsRepository, "u1")
 
     assertNotNull(updated)
     assertTrue(updated!!.friendUids.isEmpty())
@@ -132,7 +155,8 @@ class UpdateProfileFriendsUtilsTest {
             wasRead = false)
     notifs.addNotification(notif)
 
-    val updated = getProfileWithSyncedFriendNotifications(profiles, notifs, "u1")!!
+    val updated =
+        getProfileWithSyncedFriendNotifications(profiles, notifs, pointsRepository, "u1")!!
 
     // Should now be friends
     assertTrue(updated.friendUids.contains("u2"))
@@ -160,7 +184,8 @@ class UpdateProfileFriendsUtilsTest {
             wasRead = false)
     notifs.addNotification(notif)
 
-    val updated = getProfileWithSyncedFriendNotifications(profiles, notifs, "u1")!!
+    val updated =
+        getProfileWithSyncedFriendNotifications(profiles, notifs, pointsRepository, "u1")!!
 
     // Should NOT become friends
     assertFalse(updated.friendUids.contains("u2"))
@@ -191,7 +216,8 @@ class UpdateProfileFriendsUtilsTest {
             wasRead = false)
     notifs.addNotification(notif)
 
-    val updated = getProfileWithSyncedFriendNotifications(profiles, notifs, "u1")!!
+    val updated =
+        getProfileWithSyncedFriendNotifications(profiles, notifs, pointsRepository, "u1")!!
 
     // Friend must be removed
     assertFalse(updated.friendUids.contains("u2"))
@@ -248,7 +274,8 @@ class UpdateProfileFriendsUtilsTest {
     notifs.addNotification(cancel)
 
     // Sync u2’s profile with its notifications
-    val updatedU2 = getProfileWithSyncedFriendNotifications(profiles, notifs, "u2")!!
+    val updatedU2 =
+        getProfileWithSyncedFriendNotifications(profiles, notifs, pointsRepository, "u2")!!
 
     // --- Assertions ---
 
