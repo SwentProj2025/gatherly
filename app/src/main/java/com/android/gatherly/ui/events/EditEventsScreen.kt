@@ -184,21 +184,19 @@ fun EditEventsScreen(
   // Navigate back after save/delete
   LaunchedEffect(ui.backToOverview) {
     if (ui.backToOverview) {
-        if(ui.editedEvent != null){
-            if(ui.eventDeleted){
-                EventAlarmScheduler(context).cancelEventReminder(
-                    eventId = ui.editedEvent.id,
-                    userId = ui.editedEvent.creatorId
-                )
-            }else{
-                EventAlarmScheduler(context).scheduleEventReminder(
-                    userId = ui.editedEvent.creatorId,
-                    eventId = ui.editedEvent.id,
-                    eventDate = ui.editedEvent.date,
-                    eventStartTime = ui.editedEvent.startTime
-                )
-            }
+      if (ui.editedEvent != null) {
+        if (ui.eventDeleted) {
+          EventAlarmScheduler(context)
+              .cancelEventReminder(eventId = ui.editedEvent.id, userId = ui.editedEvent.creatorId)
+        } else {
+          EventAlarmScheduler(context)
+              .scheduleEventReminder(
+                  userId = ui.editedEvent.creatorId,
+                  eventId = ui.editedEvent.id,
+                  eventDate = ui.editedEvent.date,
+                  eventStartTime = ui.editedEvent.startTime)
         }
+      }
       onSave()
     }
   }
