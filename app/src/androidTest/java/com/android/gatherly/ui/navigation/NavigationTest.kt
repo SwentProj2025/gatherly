@@ -27,7 +27,6 @@ import com.google.firebase.auth.auth
 import kotlin.test.Ignore
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.test.runTest
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 
