@@ -84,13 +84,9 @@ class EditGroupScreenTest {
 
       // Add profiles
       profileRepository.addProfile(ownerProfile)
-      advanceUntilIdle()
       profileRepository.addProfile(gersProfile)
-      advanceUntilIdle()
       profileRepository.addProfile(claireProfile)
-      advanceUntilIdle()
       profileRepository.addProfile(alessandroProfile)
-      advanceUntilIdle()
       profileRepository.addProfile(claudiaProfile)
       advanceUntilIdle()
 

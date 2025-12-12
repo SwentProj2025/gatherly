@@ -46,13 +46,14 @@ data class EditGroupUiState(
     val membersToRemove: List<String> = emptyList(),
     val currentUserId: String = "",
     val creatorId: String = "",
-    val isOwner: Boolean = false,
-    val isAdmin: Boolean = false,
     val isLoading: Boolean = false,
     val loadError: String? = null,
     val isSaving: Boolean = false,
     val saveError: String? = null,
-    val saveSuccess: Boolean = false
+    val saveSuccess: Boolean = false,
+    val friendsSearchQuery: String = "",
+    val filteredAvailableFriends: List<Profile> = emptyList(),
+    val membersForList: List<Profile> = emptyList(),
 )
 
 /**
@@ -146,9 +147,7 @@ class EditGroupViewModel(
                 description = group.description ?: "",
                 adminIds = group.adminIds,
                 creatorId = group.creatorId,
-                currentUserId = currentUserId.orEmpty(),
-                isOwner = currentUserId == group.creatorId,
-                isAdmin = currentUserId != null && group.adminIds.contains(currentUserId))
+                currentUserId = currentUserId.orEmpty())
 
         loadMemberProfiles(group.memberIds)
         loadFriends(group.memberIds)
@@ -176,11 +175,29 @@ class EditGroupViewModel(
               null // Skip members that can't be fetched
             }
           }
-      _uiState.value = _uiState.value.copy(currentMemberProfiles = memberProfiles)
+      updateMembersForList(memberProfiles)
     } catch (e: Exception) {
       // 'Silently' fail - member profiles are not critical for editing
       Log.e("EditGroupViewModel", "Failed to update member profiles UI state", e)
     }
+  }
+
+  /** Updates both currentMemberProfiles and membersForList according to current user role. */
+  private fun updateMembersForList(memberProfiles: List<Profile>) {
+    val state = _uiState.value
+    val currentUserId = state.currentUserId
+    val creatorId = state.creatorId
+
+    val membersForList =
+        if (currentUserId.isNotBlank() && currentUserId == creatorId) {
+          // Owner does not see themselves in the editable members list
+          memberProfiles.filter { it.uid != currentUserId }
+        } else {
+          memberProfiles
+        }
+
+    _uiState.value =
+        state.copy(currentMemberProfiles = memberProfiles, membersForList = membersForList)
   }
 
   /**
@@ -210,10 +227,23 @@ class EditGroupViewModel(
             }
           }
       val currentMemberIdSet = currentMemberIds.toSet()
+
+      // Friends who are not already members
       val availableFriends = friendProfiles.filter { it.uid !in currentMemberIdSet }
+
+      val searchQuery = _uiState.value.friendsSearchQuery
+      val filtered =
+          if (searchQuery.isBlank()) {
+            availableFriends
+          } else {
+            availableFriends.filter { it.username.contains(searchQuery, ignoreCase = true) }
+          }
+
       _uiState.value =
           _uiState.value.copy(
-              friendsList = friendProfiles, availableFriendsToAdd = availableFriends)
+              friendsList = friendProfiles,
+              availableFriendsToAdd = availableFriends,
+              filteredAvailableFriends = filtered)
     } catch (e: Exception) {
       Log.e("EditGroupViewModel", "Failed to load friends list", e)
       // 'Silently' fail - friends list is not critical for basic editing
@@ -356,5 +386,19 @@ class EditGroupViewModel(
         _uiState.value = _uiState.value.copy(saveError = e.message)
       }
     }
+  }
+
+  /** Updates the search query and filtered friends list. */
+  fun onFriendsSearchQueryChanged(newQuery: String) {
+    val available = _uiState.value.availableFriendsToAdd
+    val filtered =
+        if (newQuery.isBlank()) {
+          available
+        } else {
+          available.filter { it.username.contains(newQuery, ignoreCase = true) }
+        }
+
+    _uiState.value =
+        _uiState.value.copy(friendsSearchQuery = newQuery, filteredAvailableFriends = filtered)
   }
 }

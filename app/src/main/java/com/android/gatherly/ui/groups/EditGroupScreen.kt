@@ -37,9 +37,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -72,6 +69,8 @@ object EditGroupScreenTestTags {
   const val SEARCH_FRIENDS_BAR = "editSearchFriendsBar"
   const val EMPTY_FRIENDS_MSG = "editEmptyFriendsMessage"
   const val NAME_ERROR_MESSAGE = "editNameErrorMessage"
+
+  const val GENERAL_ERROR_MESSAGE = "editGroupGeneralErrorMessage"
 
   /**
    * Returns a unique test tag for the card representing a given friend.
@@ -152,8 +151,6 @@ fun EditGroupScreen(
 ) {
   val uiState by editGroupViewModel.uiState.collectAsState()
 
-  var searchQuery by remember { mutableStateOf("") }
-
   val screenPadding = dimensionResource(R.dimen.padding_screen)
   val smallPadding = dimensionResource(R.dimen.padding_small)
   val groupNameLabel = stringResource(R.string.group_name_bar_label)
@@ -207,50 +204,22 @@ fun EditGroupScreen(
     }
   }
 
-  val isOwner = uiState.isOwner
-  val isAdmin = uiState.isAdmin
-  val currentUserId = uiState.currentUserId
-  val creatorId = uiState.creatorId
+  val isOwner = uiState.currentUserId.isNotBlank() && uiState.currentUserId == uiState.creatorId
+  val isAdmin =
+      uiState.currentUserId.isNotBlank() && uiState.adminIds.contains(uiState.currentUserId)
 
-  // Search query filtering for available friends
-  val filteredAvailableFriends =
-      remember(searchQuery, uiState.availableFriendsToAdd) {
-        if (searchQuery.isBlank()) {
-          uiState.availableFriendsToAdd
-        } else {
-          uiState.availableFriendsToAdd.filter {
-            it.username.contains(searchQuery, ignoreCase = true)
-          }
-        }
-      }
+  val generalError = uiState.loadError ?: uiState.saveError
 
-  // List of all current participants
-  val currentParticipants =
-      remember(
-          uiState.currentMemberProfiles,
-          uiState.membersToRemove,
-          uiState.availableFriendsToAdd,
-          uiState.selectedNewFriendIds) {
-            val removedIds = uiState.membersToRemove.toSet()
-            val selectedNewIds = uiState.selectedNewFriendIds.toSet()
+  // List of current participants
+  val currentParticipants = run {
+    val removedIds = uiState.membersToRemove.toSet()
+    val selectedNewIds = uiState.selectedNewFriendIds.toSet()
 
-            val remainingMembers = uiState.currentMemberProfiles.filter { it.uid !in removedIds }
+    val remainingMembers = uiState.currentMemberProfiles.filter { it.uid !in removedIds }
+    val newFriends = uiState.availableFriendsToAdd.filter { it.uid in selectedNewIds }
 
-            val newFriends = uiState.availableFriendsToAdd.filter { it.uid in selectedNewIds }
-
-            (remainingMembers + newFriends).distinctBy { it.uid }
-          }
-
-  // Members of the group (if owner they don't see themselves, if admin they see everyone but can't
-  // edit owner)
-  val membersForList =
-      remember(uiState.currentMemberProfiles, isOwner, currentUserId) {
-        if (isOwner && currentUserId.isNotBlank()) {
-          uiState.currentMemberProfiles.filter { it.uid != currentUserId }
-        } else {
-          uiState.currentMemberProfiles
-        }
-      }
+    (remainingMembers + newFriends).distinctBy { it.uid }
+  }
 
   Scaffold(
       topBar = {
@@ -331,7 +300,7 @@ fun EditGroupScreen(
               }
 
               // ------------------------ Current members section ---------------------
-              if (membersForList.isNotEmpty()) {
+              if (uiState.membersForList.isNotEmpty()) {
                 item {
                   Spacer(modifier = Modifier.height(smallSpacing))
                   Text(
@@ -341,21 +310,12 @@ fun EditGroupScreen(
                   Spacer(modifier = Modifier.height(smallSpacing))
                 }
 
-                items(membersForList) { member ->
-                  val isCurrentUser = member.uid == currentUserId
-                  val isOwnerMember = member.uid == creatorId
-
+                items(uiState.membersForList) { member ->
                   // Only owner can toggle admins
                   val showAdminToggle = isOwner
 
                   // Owner and admins can remove anyone except the owner
-                  val canRemoveForAdmin = isAdmin && !isOwnerMember
-                  val showRemoveToggle =
-                      if (isOwner) {
-                        true
-                      } else {
-                        canRemoveForAdmin
-                      }
+                  val showRemoveToggle = isOwner || (isAdmin && member.uid != uiState.creatorId)
 
                   MemberItem(
                       member = member,
@@ -397,8 +357,8 @@ fun EditGroupScreen(
                 // Search bar
                 item {
                   OutlinedTextField(
-                      value = searchQuery,
-                      onValueChange = { searchQuery = it },
+                      value = uiState.friendsSearchQuery,
+                      onValueChange = { editGroupViewModel.onFriendsSearchQueryChanged(it) },
                       modifier =
                           Modifier.fillMaxWidth()
                               .padding(vertical = screenPadding)
@@ -413,7 +373,7 @@ fun EditGroupScreen(
                 item {
                   Box(modifier = Modifier.fillMaxWidth().height(friendSectionHeight)) {
                     LazyColumn {
-                      items(filteredAvailableFriends) { friend ->
+                      items(uiState.filteredAvailableFriends) { friend ->
                         AvailableFriendItem(
                             friend = friend,
                             isSelected = uiState.selectedNewFriendIds.contains(friend.uid),
@@ -421,6 +381,19 @@ fun EditGroupScreen(
                       }
                     }
                   }
+                }
+              }
+
+              // -------------------- General error --------------------
+              if (generalError != null) {
+                item {
+                  Spacer(modifier = Modifier.height(smallSpacing))
+                  Text(
+                      text = generalError,
+                      color = MaterialTheme.colorScheme.error,
+                      style = MaterialTheme.typography.bodyMedium,
+                      modifier = Modifier.testTag(EditGroupScreenTestTags.GENERAL_ERROR_MESSAGE))
+                  Spacer(modifier = Modifier.height(smallSpacing))
                 }
               }
 
@@ -558,9 +531,9 @@ private fun MemberItem(
                               .clickable { onToggleAdmin() },
                       tint =
                           if (isAdmin) {
-                            MaterialTheme.colorScheme.primary
+                            MaterialTheme.colorScheme.onBackground
                           } else {
-                            MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f)
+                            MaterialTheme.colorScheme.onBackground.copy(alpha = 0.4f)
                           })
                 }
 
