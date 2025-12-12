@@ -21,8 +21,15 @@ import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.todo.ToDo
+import com.android.gatherly.model.todo.ToDoPriority
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosLocalRepository
+import com.android.gatherly.model.todoCategory.TAG_COURSES
+import com.android.gatherly.model.todoCategory.TAG_HOMEWORK
+import com.android.gatherly.model.todoCategory.TAG_PERSONAL
+import com.android.gatherly.model.todoCategory.TAG_PROJECT
+import com.android.gatherly.model.todoCategory.ToDoCategoryLocalRepository
+import com.android.gatherly.model.todoCategory.ToDoCategoryRepository
 import com.android.gatherly.utils.GatherlyTest
 import com.google.firebase.Timestamp
 import java.util.Calendar
@@ -41,12 +48,14 @@ class OverviewScreenTest : GatherlyTest() {
   private lateinit var overviewViewModel: OverviewViewModel
   private lateinit var profileRepository: ProfileRepository
   private lateinit var pointsRepository: PointsRepository
+  private lateinit var toDoCategoryRepository: ToDoCategoryRepository
 
   @Before
   fun setUp() {
     repository = ToDosLocalRepository()
     profileRepository = ProfileLocalRepository()
     pointsRepository = PointsLocalRepository()
+    toDoCategoryRepository = ToDoCategoryLocalRepository()
   }
 
   fun setContent(withInitialTodos: List<ToDo> = emptyList()) = runTest {
@@ -56,6 +65,7 @@ class OverviewScreenTest : GatherlyTest() {
             todoRepository = repository,
             profileRepository = profileRepository,
             pointsRepository = pointsRepository)
+            todoCategoryRepository = toDoCategoryRepository)
     composeTestRule.setContent { OverviewScreen(overviewViewModel = overviewViewModel) }
     profileRepository.addProfile(Profile(uid = "user", name = "Test User", profilePicture = ""))
     advanceUntilIdle()
@@ -397,5 +407,66 @@ class OverviewScreenTest : GatherlyTest() {
         .fetchSemanticsNode()
         .boundsInRoot
         .top
+  }
+
+  @Test
+  fun correctTodoCategoryFeaturesDisplay() = runTest {
+    val todoHomework = todo1.copy(name = "HOMEWORK", tag = TAG_HOMEWORK)
+    val todoCourses = todo2.copy(name = "COURSES", tag = TAG_COURSES)
+    val todoPersonal = todo1.copy(name = "PERSONAL", tag = TAG_PERSONAL)
+    val todoProject = todo2.copy(name = "PROJECT", tag = TAG_PROJECT)
+
+    setContent(listOf(todoHomework, todoCourses, todoPersonal, todoProject))
+
+    composeTestRule.onNode(hasText("Homework")).performClick()
+    advanceUntilIdle()
+
+    composeTestRule
+        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todoHomework))
+        .assertIsDisplayed()
+
+    composeTestRule.onNode(hasText("Courses")).performClick()
+    advanceUntilIdle()
+    composeTestRule
+        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todoCourses))
+        .assertIsDisplayed()
+
+    composeTestRule.onNode(hasText("Personal")).performClick()
+    advanceUntilIdle()
+
+    composeTestRule
+        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todoPersonal))
+        .assertIsDisplayed()
+    composeTestRule.onNode(hasText("Project")).performClick()
+    advanceUntilIdle()
+
+    composeTestRule
+        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todoProject))
+        .assertIsDisplayed()
+  }
+
+  @Test
+  fun correctPriorityLevelSortingDisplay() = runTest {
+    val todoNonePriority = todo1.copy(name = "A", priorityLevel = ToDoPriority.NONE)
+    val todoLowPriority = todo2.copy(name = "B", priorityLevel = ToDoPriority.LOW)
+    val todoMediumPriority =
+        todo3.copy(name = "C", priorityLevel = ToDoPriority.MEDIUM, status = ToDoStatus.ONGOING)
+    val todoHighPriority = todo1.copy(uid = "X", name = "D", priorityLevel = ToDoPriority.HIGH)
+
+    setContent(listOf(todoNonePriority, todoLowPriority, todoMediumPriority, todoHighPriority))
+
+    composeTestRule.onNodeWithTag(OverviewScreenTestTags.SORT_MENU_BUTTON).performClick()
+    composeTestRule.onNode(hasText("Priority level")).performClick()
+    advanceUntilIdle()
+
+    val posA = positionOf(todoNonePriority)
+    val posB = positionOf(todoLowPriority)
+
+    val posC = positionOf(todoMediumPriority)
+    val posD = positionOf(todoHighPriority)
+
+    assertTrue(posC > posD)
+    assertTrue(posB > posC)
+    assertTrue(posA > posB)
   }
 }

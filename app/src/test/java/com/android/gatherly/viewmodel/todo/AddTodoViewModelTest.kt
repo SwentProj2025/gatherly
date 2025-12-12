@@ -10,6 +10,8 @@ import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.model.todo.ToDosRepository
+import com.android.gatherly.model.todoCategory.ToDoCategoryLocalRepository
+import com.android.gatherly.model.todoCategory.ToDoCategoryRepository
 import com.android.gatherly.ui.todo.AddTodoViewModel
 import com.android.gatherly.utilstest.MockitoUtils
 import kotlinx.coroutines.Dispatchers
@@ -45,6 +47,8 @@ class AddTodoViewModelTest {
   private lateinit var toDosRepository: ToDosRepository
   private lateinit var profileRepository: ProfileRepository
   private lateinit var pointsRepository: PointsRepository
+
+  private lateinit var toDoCategoryRepository: ToDoCategoryRepository
   private lateinit var mockitoUtils: MockitoUtils
 
   // initialize this so that tests control all coroutines and can wait on them
@@ -66,6 +70,7 @@ class AddTodoViewModelTest {
     toDosRepository = ToDosLocalRepository()
     profileRepository = ProfileLocalRepository()
     pointsRepository = PointsLocalRepository()
+    toDoCategoryRepository = ToDoCategoryLocalRepository()
 
     // Add owner profile to repo
     runTest { profileRepository.addProfile(ownerProfile) }
@@ -79,7 +84,8 @@ class AddTodoViewModelTest {
             todoRepository = toDosRepository,
             profileRepository = profileRepository,
             pointsRepository = pointsRepository,
-            authProvider = { mockitoUtils.mockAuth })
+            authProvider = { mockitoUtils.mockAuth },
+            todoCategoryRepository = toDoCategoryRepository)
   }
 
   @After
@@ -167,7 +173,8 @@ class AddTodoViewModelTest {
             toDosRepository,
             profileRepository,
             pointsRepository,
-            authProvider = { mockitoUtils.mockAuth })
+            authProvider = { mockitoUtils.mockAuth },
+            todoCategoryRepository = toDoCategoryRepository)
 
     // Second ToDo
     addToDoViewModel.onTitleChanged("Do groceries")
@@ -269,6 +276,8 @@ class AddTodoViewModelTest {
 
           override suspend fun getAllEndedTodos() = emptyList<ToDo>()
 
+          override suspend fun updateTodosTagToNull(categoryId: String, ownerId: String) {}
+
           override fun getNewUid() = "fake-id"
 
           override suspend fun toggleStatus(todoID: String) {}
@@ -276,7 +285,11 @@ class AddTodoViewModelTest {
 
     val viewModel =
         AddTodoViewModel(
-            failingRepo, profileRepository, pointsRepository, { mockitoUtils.mockAuth })
+            failingRepo,
+            profileRepository,
+            pointsRepository,
+            { mockitoUtils.mockAuth },
+            todoCategoryRepository = toDoCategoryRepository)
 
     viewModel.onTitleChanged("Some task")
     viewModel.onDescriptionChanged("Should fail to save")
