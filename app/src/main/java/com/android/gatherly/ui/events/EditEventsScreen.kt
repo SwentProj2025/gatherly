@@ -473,11 +473,13 @@ fun EditEventsScreen(
               bodyText = stringResource(R.string.events_warning_to_public_event_body_text),
               dismissText = stringResource(R.string.cancel),
               confirmText = stringResource(R.string.events_confirm_text_private_to_public_text),
-              onDismiss = { showWarningPublicEvent = false },
-              onConfirm = {
-                editEventsViewModel.updatePrivateEventToPublicEvent()
-                showWarningPublicEvent = false
-              })
+              actions =
+                  GatherlyAlertDialogActions(
+                      onDismiss = { showWarningPublicEvent = false },
+                      onConfirm = {
+                        editEventsViewModel.updatePrivateEventToPublicEvent()
+                        showWarningPublicEvent = false
+                      }))
         }
         GatherlyDatePicker(
             show = showDatePicker,
