@@ -17,11 +17,13 @@ import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.ui.homePage.HomePageScreen
+import com.android.gatherly.ui.homePage.HomePageScreenActions
 import com.android.gatherly.ui.homePage.HomePageScreenTestTags
 import com.android.gatherly.ui.homePage.HomePageViewModel
 import com.android.gatherly.ui.homePage.getFriendAvatarTestTag
 import com.android.gatherly.ui.homePage.getFriendStatusTestTag
 import com.android.gatherly.ui.homePage.getTaskItemTestTag
+import com.android.gatherly.utils.MapCoordinator
 import com.android.gatherly.utils.MockitoUtils
 import com.google.firebase.Timestamp
 import kotlinx.coroutines.runBlocking
@@ -87,6 +89,7 @@ class HomePageScreenTest {
   private lateinit var profileLocalRepo: ProfileLocalRepository
   private lateinit var notificationsRepository: NotificationsRepository
   private lateinit var mockitoUtils: MockitoUtils
+  private lateinit var mapCoordinator: MapCoordinator
 
   @Before
   fun setUp() {
@@ -104,7 +107,7 @@ class HomePageScreenTest {
     // Mock Firebase Auth
     mockitoUtils = MockitoUtils()
     mockitoUtils.chooseCurrentUser(currentProfile.uid)
-
+    mapCoordinator = MapCoordinator()
     fakeViewModel =
         HomePageViewModel(
             toDosRepository = todosLocalRepo,
@@ -112,7 +115,12 @@ class HomePageScreenTest {
             profileRepository = profileLocalRepo,
             notificationsRepository = notificationsRepository,
             authProvider = { mockitoUtils.mockAuth })
-    composeRule.setContent { HomePageScreen(homePageViewModel = fakeViewModel) }
+    composeRule.setContent {
+      HomePageScreen(
+          homePageViewModel = fakeViewModel,
+          homePageScreenActions = HomePageScreenActions(),
+          coordinator = mapCoordinator)
+    }
   }
 
   /** Populates local repositories with fake data for testing. */
@@ -132,6 +140,7 @@ class HomePageScreenTest {
     composeRule.onNodeWithTag(HomePageScreenTestTags.FOCUS_TIMER_TEXT).assertIsDisplayed()
     composeRule.onNodeWithTag(HomePageScreenTestTags.FOCUS_BUTTON).assertIsDisplayed()
     composeRule.onNodeWithTag(HomePageScreenTestTags.FOCUS_BUTTON).performClick()
+    composeRule.onNodeWithTag(HomePageScreenTestTags.MINIMAP_BUTTON, useUnmergedTree = true)
   }
 
   /** Ensures that the focus button is visible and can be clicked without crashing. */
@@ -202,7 +211,12 @@ class HomePageScreenTest {
             profileRepository = profileLocalRepo,
             notificationsRepository = notificationsRepository,
             authProvider = { mockitoUtils.mockAuth })
-    composeRule.setContent { HomePageScreen(homePageViewModel = fakeViewModel) }
+    composeRule.setContent {
+      HomePageScreen(
+          homePageViewModel = fakeViewModel,
+          homePageScreenActions = HomePageScreenActions(),
+          coordinator = mapCoordinator)
+    }
 
     // Check that the friends section is not displayed
     composeRule.onNodeWithTag(HomePageScreenTestTags.FRIENDS_SECTION).assertIsNotDisplayed()
