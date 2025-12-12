@@ -38,6 +38,7 @@ import com.android.gatherly.ui.homePage.HomePageScreen
 import com.android.gatherly.ui.map.MapScreen
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.Screen
+import com.android.gatherly.ui.notifications.NotificationsScreen
 import com.android.gatherly.ui.points.FocusPointsScreen
 import com.android.gatherly.ui.profile.ProfileScreen
 import com.android.gatherly.ui.profile.UserProfileScreen
@@ -339,6 +340,16 @@ fun GatherlyApp(
         AddGroupScreen(
             goBack = { navigationActions.goBack() },
             onCreate = { navigationActions.navigateTo(Screen.OverviewGroupsScreen) })
+      }
+
+      // NOTIFICATIONS COMPOSABLE  ------------------------------
+      navigation(
+          startDestination = Screen.NotificationsScreen.route,
+          route = Screen.NotificationsScreen.name,
+      ) {
+        composable(Screen.NotificationsScreen.route) {
+          NotificationsScreen(navigationActions = navigationActions)
+        }
       }
 
       // GROUP INFO COMPOSABLE  ------------------------------

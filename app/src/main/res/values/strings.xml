@@ -60,6 +60,10 @@
     <string name="timer_select">Timer</string>
     <string name="leaderboard_select">Leaderboard</string>
     <string name="leaderboard_points">%1$.2f pts</string>
+    <string name="history_select">Sessions History</string>
+    <string name="no_focus_sessions_history_text">You have no focus sessions yet.</string>
+    <string name="focus_session_missing_detail">N/A</string>
+    <string name="focus_session_no_linked_todo">NO LINKED TODO</string>
 
     <!-- Settings Page -->
     <string name="settings_edit_photo">Edit Photo</string>
@@ -134,6 +138,16 @@
     <string name="events_date_sort_button_text">Date sorting</string>
     <string name="events_alphabetic_sort_button_text">Alphabetical sorting</string>
     <string name="events_proximity_sort_button_text">Proximity sorting</string>
+    <string name="events_edit_private_to_public_label">Make the event public</string>
+    <string name="events_confirm_text_private_to_public_text">Make it public</string>
+    <string name="events_warning_to_public_event_body_text">This action is unreversible, the event will be open to everyone</string>
+    <string name="events_alert_dialog_see_attendees_title">Participants</string>
+    <string name="events_alert_dialog_see_attendees_groups_subtitle">From groups: </string>
+
+    <string name="events_status_filter_all_label">All</string>
+    <string name="events_status_filter_upcoming_label">Upcoming</string>
+    <string name="events_status_filter_ongoing_label">Ongoing</string>
+    <string name="events_status_filter_past_label">Past</string>
 
     <!-- General -->
     <string name="delete">Yes, Delete</string>
@@ -182,6 +196,15 @@
     <string name="go_to_event_page_button">Go to Event</string>
     <string name="go_to_todo_page_button">Go to ToDo</string>
     <string name="loading_map">Loading…</string>
+
+    <!-- Notifications Screen -->
+    <string name="notifications_empty_list_message">There are no notifications at the moment.</string>
+    <string name="friend_requests_label">Friend Requests</string>
+    <string name="friend_requests_button_text_zero">0 pending requests</string>
+    <string name="friend_requests_button_text_two">other</string>
+    <string name="friend_requests_button_text_multiple">others</string>
+    <string name="friend_requests_notification_text">sent you a friend request.</string>
+    <string name="friend_requests_notification_button_title">Visit Profile</string>
 
     <!-- Friends Screen -->
     <string name="friends_empty_list_msg">You have no friends added yet.</string>

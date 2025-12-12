@@ -54,6 +54,7 @@ import kotlinx.coroutines.launch
  * @param errorMsg An optional error message to be displayed in the UI
  * @param linkedTodo The ToDo item linked to this timer session, if any
  * @param allTodos A list of all ToDo items available for linking
+ * @param usersFocusSessions A list of focus sessions created by the current user
  * @param leaderboard A list of all friend profiles ordered by number of weekly points
  */
 data class TimerState(
@@ -68,6 +69,7 @@ data class TimerState(
     val errorMsg: String? = null,
     val linkedTodo: ToDo? = null,
     val allTodos: List<ToDo> = emptyList(),
+    val usersFocusSessions: List<FocusSession> = emptyList(),
     val leaderboard: SortedMap<Double, List<Profile>> = sortedMapOf(),
     val pointsGained: Double = 0.0
 )
@@ -113,6 +115,14 @@ class TimerViewModel(
       try {
         val todos = todoRepository.getAllTodos()
         _uiState.value = _uiState.value.copy(allTodos = todos)
+
+        val focusSessions =
+            focusSessionsRepository
+                .getAllFocusSessions()
+                .filter { it.creatorId == authProvider().currentUser?.uid }
+                .toSortedSet(compareByDescending { it.startedAt })
+                .toList()
+        _uiState.value = _uiState.value.copy(usersFocusSessions = focusSessions)
 
         val profile =
             getProfileWithSyncedFriendNotifications(
