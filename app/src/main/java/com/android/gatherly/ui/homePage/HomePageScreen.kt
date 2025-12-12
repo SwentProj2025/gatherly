@@ -338,7 +338,8 @@ fun MiniMap(
                   MarkerComposable(
                       state = rememberMarkerState(position = LatLng(loc.latitude, loc.longitude)),
                       onClick = {
-                        coordinator // todo replace THIS
+                        coordinator.requestCenterOnTodo(todo.uid)
+                        navigationActions?.navigateTo(Screen.Map)
                         true
                       }) {
                         ToDoIcon(todo)

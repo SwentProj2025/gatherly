@@ -13,9 +13,14 @@ class MapCoordinator {
    * Data class representing a centering request for a specific event.
    *
    * @property eventId The ID of the event to center on.
+   * @property todoId The ID of the todo to center on.
    * @property consumed A flag indicating whether the request has been consumed.
    */
-  private data class CenterRequest(val eventId: String, val consumed: Boolean = false)
+  private data class CenterRequest(
+      val eventId: String? = null,
+      val todoId: String? = null,
+      val consumed: Boolean = false
+  )
 
   /**
    * StateFlow holding the current centering request. It is private to prevent external
@@ -33,6 +38,14 @@ class MapCoordinator {
   }
 
   /**
+   * Requests the map to center on the specified todo ID.
+   *
+   * @param todoId The ID of the todo to center on.
+   */
+  fun requestCenterOnTodo(todoId: String) {
+    _pendingRequest.value = CenterRequest(todoId = todoId, consumed = false)
+  }
+  /**
    * Retrieves the event ID of the unconsumed centering request, if any.
    *
    * @return The event ID if there is an unconsumed request; otherwise, null.
@@ -40,6 +53,14 @@ class MapCoordinator {
   fun getUnconsumedEventId(): String? {
     return _pendingRequest.value?.let { if (!it.consumed) it.eventId else null }
   }
+
+  /**
+   * Retrieves the todo ID of the unconsumed centering request, if any.
+   *
+   * @return The todo ID if there is an unconsumed request; otherwise, null.
+   */
+  fun getUnconsumedTodoId(): String? =
+      _pendingRequest.value?.let { if (!it.consumed) it.todoId else null }
 
   /** Marks the current centering request as consumed. */
   fun markConsumed() {
