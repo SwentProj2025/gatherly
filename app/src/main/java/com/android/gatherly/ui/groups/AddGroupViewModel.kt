@@ -8,6 +8,8 @@ import com.android.gatherly.model.group.Group
 import com.android.gatherly.model.group.GroupsRepository
 import com.android.gatherly.model.group.GroupsRepositoryFirestore
 import com.android.gatherly.model.group.GroupsRepositoryProvider
+import com.android.gatherly.model.notification.Notification
+import com.android.gatherly.model.notification.NotificationType
 import com.android.gatherly.model.notification.NotificationsRepository
 import com.android.gatherly.model.notification.NotificationsRepositoryProvider
 import com.android.gatherly.model.points.PointsRepository
@@ -18,6 +20,7 @@ import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.android.gatherly.model.profile.ProfileRepositoryProvider
 import com.android.gatherly.utils.getProfileWithSyncedFriendNotifications
 import com.google.firebase.Firebase
+import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import com.google.firebase.firestore.firestore
@@ -216,6 +219,7 @@ class AddGroupViewModel(
     viewModelScope.launch {
       _uiState.value = _uiState.value.copy(isSaving = true, saveError = null)
       try {
+        // Create a group
         val gid = groupsRepository.getNewId()
 
         val group =
@@ -230,6 +234,22 @@ class AddGroupViewModel(
                 )
 
         groupsRepository.addGroup(group)
+
+        // Add notifications for members
+        for (member in uiState.value.selectedFriends) {
+          val nid = notificationsRepository.getNewId()
+
+          val notification =
+              Notification(
+                  id = nid,
+                  type = NotificationType.GROUP_ADDED,
+                  emissionTime = Timestamp.now(),
+                  senderId = authProvider().currentUser?.uid ?: "",
+                  relatedEntityId = gid,
+                  recipientId = member.uid,
+                  wasRead = false)
+          notificationsRepository.addNotification(notification)
+        }
         _uiState.value = _uiState.value.copy(isSaving = false, saveSuccess = true)
       } catch (e: Exception) {
         _uiState.value = _uiState.value.copy(isSaving = false, saveError = e.message)

@@ -1,5 +1,6 @@
 package com.android.gatherly.model.event
 
+import com.android.gatherly.model.group.Group
 import com.android.gatherly.model.map.Location
 import com.android.gatherly.utils.updateEventStatus
 import com.google.firebase.auth.ktx.auth
@@ -7,6 +8,7 @@ import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.ktx.Firebase
+import com.google.protobuf.LazyStringArrayList.emptyList
 import kotlinx.coroutines.tasks.await
 
 // This class contains code adapted by an LLM (GitHub Copilot, Claude.ai) from the CS-311 bootcamp.
@@ -116,6 +118,24 @@ class EventsRepositoryFirestore(private val db: FirebaseFirestore) : EventsRepos
     val status = EventStatus.valueOf(statusStr)
     val stateStr = doc.getString("state") ?: return null
     val state = EventState.valueOf(stateStr)
+    val groupsRaw = doc.get("groups") as? List<*> ?: emptyList()
+
+    val groups: List<Group> =
+        groupsRaw.mapNotNull { groupData ->
+          if (groupData is Map<*, *>) {
+            Group(
+                gid = groupData["gid"] as? String ?: "",
+                creatorId = groupData["creatorId"] as? String ?: "",
+                name = groupData["name"] as? String ?: "",
+                description = groupData["description"] as? String,
+                memberIds =
+                    (groupData["memberIds"] as? List<*>)?.filterIsInstance<String>() ?: emptyList(),
+                adminIds =
+                    (groupData["adminIds"] as? List<*>)?.filterIsInstance<String>() ?: emptyList())
+          } else {
+            null
+          }
+        }
 
     val event =
         Event(
@@ -130,7 +150,8 @@ class EventsRepositoryFirestore(private val db: FirebaseFirestore) : EventsRepos
             creatorId,
             participants,
             status,
-            state)
+            state,
+            groups)
 
     return updateEventStatus(event)
   }
@@ -159,6 +180,7 @@ class EventsRepositoryFirestore(private val db: FirebaseFirestore) : EventsRepos
         "creatorId" to event.creatorId,
         "participants" to event.participants,
         "status" to event.status.name,
-        "state" to event.state)
+        "state" to event.state,
+        "groups" to event.groups)
   }
 }

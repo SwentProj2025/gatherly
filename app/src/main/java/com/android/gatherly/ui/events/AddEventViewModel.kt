@@ -25,7 +25,6 @@ import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.android.gatherly.utils.GenericViewModelFactory
 import com.android.gatherly.utils.createEvent
-import com.android.gatherly.utils.registerGroup
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
@@ -86,7 +85,7 @@ data class AddEventUiState(
     // the event group search string
     val group: String = "",
     // when it's a private group event
-    val isGroupEvent: Group? = null,
+    val groups: List<Group> = emptyList(),
     // list of suggested groups given the search string
     val suggestedGroups: List<Group> = emptyList(),
     // state of the event whether it's a public event or a private (friend only or group) event
@@ -299,12 +298,12 @@ class AddEventViewModel(
         }
     uiState =
         uiState.copy(
-            state = EventState.PRIVATE_FRIENDS, isGroupEvent = null, participants = friendsOnly)
+            state = EventState.PRIVATE_FRIENDS, groups = emptyList(), participants = friendsOnly)
   }
 
   /** Updates the event status to a public Event */
   fun updateEventToPublic() {
-    uiState = uiState.copy(state = EventState.PUBLIC, isGroupEvent = null)
+    uiState = uiState.copy(state = EventState.PUBLIC, groups = emptyList())
   }
 
   /**
@@ -313,7 +312,7 @@ class AddEventViewModel(
   fun updateEventToPrivateGroup() {
     uiState =
         uiState.copy(
-            state = EventState.PRIVATE_GROUP, isGroupEvent = null, participants = emptyList())
+            state = EventState.PRIVATE_GROUP, groups = emptyList(), participants = emptyList())
   }
 
   /*----------------------------------Participants----------------------------------------------*/
@@ -365,15 +364,44 @@ class AddEventViewModel(
    */
   fun inviteGroup(groupName: String) {
     viewModelScope.launch {
-      val group = groupsRepository.getGroupByName(groupName)
-      val membersProfile = registerGroup(profileRepository, group)
-      uiState = uiState.copy(isGroupEvent = group, participants = membersProfile)
+      val newGroup = groupsRepository.getGroupByName(groupName)
+
+      if (uiState.groups.any { it.gid == newGroup.gid }) {
+        uiState =
+            uiState.copy(
+                displayToast = true, toastString = "You already invited this group to this event")
+        return@launch
+      }
+
+      val updatedGroups = uiState.groups + newGroup
+
+      val allMemberUids = updatedGroups.flatMap { it.memberIds }.distinct()
+
+      val membersProfile =
+          allMemberUids.mapNotNull { uid -> profileRepository.getProfileByUid(uid) }
+
+      uiState = uiState.copy(groups = updatedGroups, participants = membersProfile)
     }
   }
 
-  /** The user changes his mind, he does not want to invite his chosen group anymore */
-  fun removeGroup() {
-    uiState = uiState.copy(isGroupEvent = null, participants = emptyList())
+  /**
+   * The user changes his mind, he wants to remove a chosen group
+   *
+   * @param groupId the id of the group the user wants to remove for the event
+   */
+  fun removeGroup(groupId: String) {
+    if (uiState.groups.isEmpty()) return
+
+    val updatedGroups = uiState.groups.filter { it.gid != groupId }
+
+    viewModelScope.launch {
+      val allMemberUids = updatedGroups.flatMap { it.memberIds }.distinct()
+
+      val membersProfile =
+          allMemberUids.mapNotNull { uid -> profileRepository.getProfileByUid(uid) }
+
+      uiState = uiState.copy(groups = updatedGroups, participants = membersProfile)
+    }
   }
 
   /*----------------------------------Location--------------------------------------------------*/
@@ -424,16 +452,8 @@ class AddEventViewModel(
   fun searchGroupsNameByString(string: String) {
     viewModelScope.launch {
       val trimmedString = string.trim()
-      val groupsIds = currentProfile.groupIds
 
-      val allGroups =
-          groupsIds.mapNotNull { groupId ->
-            try {
-              groupsRepository.getGroup(groupId)
-            } catch (e: NoSuchElementException) {
-              null
-            }
-          }
+      val allGroups = groupsRepository.getUserGroups()
 
       if (trimmedString.isBlank()) {
         uiState = uiState.copy(suggestedGroups = allGroups)
@@ -525,9 +545,10 @@ class AddEventViewModel(
 
       // List of the ID of every participants
       val participants: List<String> =
-          if (uiState.state != EventState.PRIVATE_GROUP) uiState.participants.map { it.uid }
-          else {
-            uiState.isGroupEvent?.memberIds!!
+          if (uiState.state != EventState.PRIVATE_GROUP) {
+            uiState.participants.map { it.uid }
+          } else {
+            uiState.groups.flatMap { it.memberIds }.distinct()
           }
 
       // Create new event
@@ -545,7 +566,7 @@ class AddEventViewModel(
               participants = participants,
               status = EventStatus.UPCOMING,
               state = uiState.state,
-              group = uiState.isGroupEvent)
+              groups = uiState.groups)
 
       // Save in event repository
       viewModelScope.launch {
