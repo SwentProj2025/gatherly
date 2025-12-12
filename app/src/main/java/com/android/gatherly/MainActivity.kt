@@ -352,12 +352,14 @@ fun GatherlyApp(
         }
       }
 
+      val nullUIDMessage = "Group UID is null"
+
       // GROUP INFO COMPOSABLE  ------------------------------
       composable(Screen.GroupInfo.route) { navBackStackEntry ->
         val uid = navBackStackEntry.arguments?.getString("uid")
         uid?.let { GroupInformationScreen(navigationActions = navigationActions, groupId = it) }
             ?: run {
-              Log.e("GroupInformationScreen", "Group UID is null")
+              Log.e("GroupInformationScreen", nullUIDMessage)
               Toast.makeText(context, "Navigating to an invalid group", Toast.LENGTH_SHORT).show()
             }
       }
@@ -383,8 +385,8 @@ fun GatherlyApp(
               onDelete = { navigationActions.navigateTo(Screen.OverviewGroupsScreen) })
         }
             ?: run {
-              Log.e("EditGroupScreen", "Group UID is null")
-              Toast.makeText(context, "Group UID is null", Toast.LENGTH_SHORT).show()
+              Log.e("EditGroupScreen", nullUIDMessage)
+              Toast.makeText(context, "Trying to edit an invalid group", Toast.LENGTH_SHORT).show()
             }
       }
     }

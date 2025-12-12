@@ -89,7 +89,7 @@ class EditGroupViewModel(
   }
 
   /**
-   * Factory to create AddGroupViewModel with dependencies.
+   * Factory to create EditGroupViewModel with dependencies.
    *
    * @param groupsRepository The GroupsRepository to use (default: Firestore implementation).
    * @param profileRepository The ProfileRepository to use (default: Firestore implementation).
