@@ -49,6 +49,7 @@ import com.android.gatherly.utils.profilePicturePainter
 object GroupInformationScreenTestTags {
   const val MEMBERS_LIST = "membersList"
   const val EDIT_BUTTON = "editButton"
+  const val LEAVE_BUTTON = "leaveButton"
   const val GROUP_NAME = "groupName"
   const val GROUP_DESCRIPTION = "groupDescription"
 
@@ -123,6 +124,7 @@ fun GroupInformationScreen(
                     modifier = Modifier.weight(1f))
 
                 if (uiState.isAdmin) {
+                  // Edit group button
                   Button(
                       onClick = {
                         navigationActions?.navigateTo(Screen.EditGroup(uiState.group.gid))
@@ -146,13 +148,15 @@ fun GroupInformationScreen(
                 }
 
                 if (!uiState.isOwner) {
+                  // Leave group button
                   Button(
                       onClick = { showDialog.value = true },
                       modifier =
                           Modifier.padding(
                                   all = dimensionResource(R.dimen.add_group_button_vertical))
                               .fillMaxWidth()
-                              .height(dimensionResource(R.dimen.homepage_focus_button_height)),
+                              .height(dimensionResource(R.dimen.homepage_focus_button_height))
+                              .testTag(GroupInformationScreenTestTags.LEAVE_BUTTON),
                       shape =
                           RoundedCornerShape(
                               dimensionResource(R.dimen.friends_item_rounded_corner_shape)),
@@ -165,6 +169,7 @@ fun GroupInformationScreen(
                       }
                 }
 
+                // Leave group warning pop up
                 if (showDialog.value) {
                   GatherlyAlertDialog(
                       titleText = stringResource(R.string.groups_dialog_title),
