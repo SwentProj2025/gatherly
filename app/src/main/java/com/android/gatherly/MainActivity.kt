@@ -37,6 +37,8 @@ import com.android.gatherly.ui.homePage.HomePageScreen
 import com.android.gatherly.ui.map.MapScreen
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.Screen
+import com.android.gatherly.ui.notifications.FriendRequestsScreen
+import com.android.gatherly.ui.notifications.NotificationsScreen
 import com.android.gatherly.ui.points.FocusPointsScreen
 import com.android.gatherly.ui.profile.ProfileScreen
 import com.android.gatherly.ui.profile.UserProfileScreen
@@ -349,15 +351,35 @@ fun GatherlyApp(
               Toast.makeText(context, "Navigating to an invalid group", Toast.LENGTH_SHORT).show()
             }
       }
+    }
 
-      // GROUP OVERVIEW COMPOSABLE  ------------------------------
-      navigation(
-          startDestination = Screen.OverviewGroupsScreen.route,
-          route = Screen.OverviewGroupsScreen.name,
-      ) {
-        composable(Screen.OverviewGroupsScreen.route) {
-          GroupsOverviewScreen(navigationActions = navigationActions)
-        }
+    // GROUP OVERVIEW COMPOSABLE  ------------------------------
+    navigation(
+        startDestination = Screen.OverviewGroupsScreen.route,
+        route = Screen.OverviewGroupsScreen.name,
+    ) {
+      composable(Screen.OverviewGroupsScreen.route) {
+        GroupsOverviewScreen(navigationActions = navigationActions)
+      }
+    }
+
+    // NOTIFICATIONS COMPOSABLE  ------------------------------
+    navigation(
+        startDestination = Screen.NotificationsScreen.route,
+        route = Screen.NotificationsScreen.name,
+    ) {
+      composable(Screen.NotificationsScreen.route) {
+        NotificationsScreen(navigationActions = navigationActions)
+      }
+    }
+
+    // FRIEND REQUESTS COMPOSABLE  ------------------------------
+    navigation(
+        startDestination = Screen.FriendRequestsScreen.route,
+        route = Screen.FriendRequestsScreen.name,
+    ) {
+      composable(Screen.FriendRequestsScreen.route) {
+        FriendRequestsScreen(goBack = { navigationActions.goBack() })
       }
     }
   }
