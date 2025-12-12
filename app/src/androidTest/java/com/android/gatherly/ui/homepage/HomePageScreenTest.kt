@@ -98,7 +98,7 @@ class HomePageScreenTest {
       eventsLocalRepo = EventsLocalRepository()
       profileLocalRepo = ProfileLocalRepository()
       notificationsRepository = NotificationsLocalRepository()
-
+      mapCoordinator = MapCoordinator()
       populateRepositories()
     }
   }
@@ -107,7 +107,6 @@ class HomePageScreenTest {
     // Mock Firebase Auth
     mockitoUtils = MockitoUtils()
     mockitoUtils.chooseCurrentUser(currentProfile.uid)
-    mapCoordinator = MapCoordinator()
     fakeViewModel =
         HomePageViewModel(
             toDosRepository = todosLocalRepo,
