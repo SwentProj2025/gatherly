@@ -1,6 +1,5 @@
 package com.android.gatherly.ui.notifications
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Box
@@ -208,17 +207,13 @@ private fun FriendRequestItem(
     profilePicUrl: String? = null
 ) {
   Card(
-      border =
-          BorderStroke(
-              dimensionResource(R.dimen.friend_request_item_card_border_width),
-              MaterialTheme.colorScheme.primary),
       shape =
           RoundedCornerShape(
               dimensionResource(R.dimen.friend_request_item_card_rounded_corner_shape)),
       colors =
           CardDefaults.cardColors(
-              containerColor = MaterialTheme.colorScheme.secondaryContainer,
-              contentColor = MaterialTheme.colorScheme.onSecondaryContainer),
+              containerColor = MaterialTheme.colorScheme.surfaceVariant,
+              contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
       modifier =
           modifier
               .testTag(FriendRequestsScreenTestTags.getTestTagForFriendRequestItem(senderUsername))
@@ -254,7 +249,7 @@ private fun FriendRequestItem(
             Text(
                 text = senderName,
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.primary,
+                color = MaterialTheme.colorScheme.onBackground,
                 fontWeight = FontWeight.Bold,
                 modifier =
                     Modifier.testTag(
@@ -264,7 +259,7 @@ private fun FriendRequestItem(
             Text(
                 text = senderUsername,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.primary,
+                color = MaterialTheme.colorScheme.onBackground,
                 fontWeight = FontWeight.Light,
                 modifier =
                     Modifier.testTag(
@@ -297,8 +292,8 @@ private fun FriendRequestItem(
               onClick = rejectFriendRequest,
               colors =
                   buttonColors(
-                      containerColor = MaterialTheme.colorScheme.tertiary,
-                      contentColor = MaterialTheme.colorScheme.onTertiary),
+                      containerColor = MaterialTheme.colorScheme.background,
+                      contentColor = MaterialTheme.colorScheme.onBackground),
               modifier =
                   Modifier.wrapContentWidth()
                       .testTag(
@@ -341,7 +336,7 @@ private fun LazyListScope.FriendRequestsList(
             senderUsername = senderProfile.username,
             acceptFriendRequest = { onAcceptFriendRequest(friendRequest.id) },
             rejectFriendRequest = { onRejectFriendRequest(friendRequest.id) },
-            profilePicUrl = idToProfile[senderId]?.profilePicture)
+            profilePicUrl = senderProfile.profilePicture)
       }
       else -> {
         // Do nothing for other notification types

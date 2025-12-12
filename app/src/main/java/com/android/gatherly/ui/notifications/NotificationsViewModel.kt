@@ -77,7 +77,6 @@ class NotificationViewModel(
                 isLoading = false,
                 hasUnreadFriendRequests = hasUnreadFriendRequests)
       } catch (e: Exception) {
-        println("NotificationViewModel Error loading notifications $e")
         _uiState.value =
             _uiState.value.copy(
                 isLoading = false, errorMessage = "Failed to load user's notifications")

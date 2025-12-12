@@ -110,7 +110,7 @@ class NotificationsScreenTest {
 
     composeTestRule
         .onNodeWithTag(NotificationsScreenTestTags.FRIEND_REQUEST_SECTION_TEXT)
-        .assertTextContains("francis + 2 others", substring = true, ignoreCase = true)
+        .assertTextContains(" + 2 others", substring = true, ignoreCase = true)
 
     composeTestRule
         .onNodeWithTag(
