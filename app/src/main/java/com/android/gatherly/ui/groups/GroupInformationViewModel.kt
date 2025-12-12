@@ -31,6 +31,7 @@ data class GroupInformationUIState(
     val group: Group = Group(),
     val memberProfiles: List<Profile> = emptyList(),
     val isAdmin: Boolean = false,
+    val isOwner: Boolean = false,
     val isLoading: Boolean = true,
     val errorMessage: String? = null,
     val navigateToOverview: Boolean = false
@@ -72,11 +73,14 @@ class GroupInformationViewModel(
 
         val isAdmin = group.adminIds.contains(authProvider().currentUser?.uid!!)
 
+        val isOwner = (group.creatorId == authProvider().currentUser?.uid!!)
+
         _uiState.value =
             _uiState.value.copy(
                 group = group,
                 memberProfiles = membersProfile,
                 isAdmin = isAdmin,
+                isOwner = isOwner,
                 isLoading = false)
       } catch (e: Exception) {
         _uiState.value =

@@ -22,6 +22,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,6 +42,8 @@ import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Screen
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
+import com.android.gatherly.utils.GatherlyAlertDialog
+import com.android.gatherly.utils.GatherlyAlertDialogActions
 import com.android.gatherly.utils.profilePicturePainter
 
 object GroupInformationScreenTestTags {
@@ -61,8 +65,15 @@ fun GroupInformationScreen(
 ) {
 
   val uiState by groupInformationViewModel.uiState.collectAsState()
+  val showDialog = remember { mutableStateOf(false) }
 
   LaunchedEffect(Unit) { groupInformationViewModel.loadUIState(groupId) }
+
+  LaunchedEffect(uiState.navigateToOverview) {
+    if (uiState.navigateToOverview) {
+      navigationActions?.navigateTo(Screen.OverviewGroupsScreen)
+    }
+  }
 
   Scaffold(
       topBar = {
@@ -132,6 +143,43 @@ fun GroupInformationScreen(
                             fontWeight = FontWeight.Medium,
                             color = MaterialTheme.colorScheme.onPrimary)
                       }
+                }
+
+                if (!uiState.isOwner) {
+                  Button(
+                      onClick = { showDialog.value = true },
+                      modifier =
+                          Modifier.padding(
+                                  all = dimensionResource(R.dimen.add_group_button_vertical))
+                              .fillMaxWidth()
+                              .height(dimensionResource(R.dimen.homepage_focus_button_height)),
+                      shape =
+                          RoundedCornerShape(
+                              dimensionResource(R.dimen.friends_item_rounded_corner_shape)),
+                      colors = buttonColors(containerColor = MaterialTheme.colorScheme.error)) {
+                        Text(
+                            text = stringResource(R.string.groups_info_leave),
+                            style = MaterialTheme.typography.bodyLarge,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onError)
+                      }
+                }
+
+                if (showDialog.value) {
+                  GatherlyAlertDialog(
+                      titleText = stringResource(R.string.groups_dialog_title),
+                      bodyText = stringResource(R.string.groups_dialog_text),
+                      dismissText = stringResource(R.string.cancel),
+                      confirmText = stringResource(R.string.groups_dialog_confirm),
+                      neutralEnabled = false,
+                      actions =
+                          GatherlyAlertDialogActions(
+                              onConfirm = {
+                                showDialog.value = false
+                                groupInformationViewModel.onLeaveGroup()
+                              },
+                              onDismiss = { showDialog.value = false }),
+                      isImportantWarning = true)
                 }
               }
             }
