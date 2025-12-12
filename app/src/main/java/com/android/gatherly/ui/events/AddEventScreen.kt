@@ -143,14 +143,14 @@ fun AddEventScreen(
   // Navigate back after save/delete
   LaunchedEffect(ui.backToOverview) {
     if (ui.backToOverview) {
-        if(ui.savedEvent != null){
-            EventAlarmScheduler(context).scheduleEventReminder(
+      if (ui.savedEvent != null) {
+        EventAlarmScheduler(context)
+            .scheduleEventReminder(
                 userId = ui.currentUserId,
                 eventId = ui.savedEvent.id,
                 eventDate = ui.savedEvent.date,
-                eventStartTime = ui.savedEvent.startTime
-            )
-        }
+                eventStartTime = ui.savedEvent.startTime)
+      }
       onSave()
     }
   }
