@@ -1,6 +1,11 @@
 package com.android.gatherly.ui.events
 
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
 import android.icu.text.SimpleDateFormat
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -20,6 +25,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Directions
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.AlertDialog
@@ -58,10 +64,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
 import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.event.EventStatus
+import com.android.gatherly.ui.map.MapViewModel
 import com.android.gatherly.ui.navigation.BottomNavigationMenu
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.NavigationTestTags
@@ -77,6 +85,7 @@ import com.android.gatherly.utils.DateParser.dateToString
 import com.android.gatherly.utils.DateParser.timeToString
 import com.android.gatherly.utils.GatherlyAlertDialog
 import com.android.gatherly.utils.MapCoordinator
+import com.google.android.gms.location.LocationServices
 import java.util.Locale
 import kotlinx.coroutines.launch
 
@@ -173,12 +182,31 @@ data class EventsScreenActions(
  */
 @Composable
 fun EventsScreen(
+    eventsViewModel: EventsViewModel? = null,
     navigationActions: NavigationActions? = null,
-    eventsViewModel: EventsViewModel = viewModel(factory = EventsViewModel.provideFactory()),
+    //eventsViewModel: EventsViewModel = viewModel(factory = EventsViewModel.provideFactory()),
     eventId: String? = null,
     coordinator: MapCoordinator,
-    actions: EventsScreenActions
+    actions: EventsScreenActions,
+    isLocationPermissionGrantedProvider: (Context) -> Boolean = { ctx ->
+        (ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION) ==
+                PackageManager.PERMISSION_GRANTED) ||
+                (ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_COARSE_LOCATION) ==
+                        PackageManager.PERMISSION_GRANTED)
+    }
 ) {
+
+
+    val context = LocalContext.current
+    val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
+
+    /** ViewModel setup * */
+    val eventsViewModel: EventsViewModel =
+        eventsViewModel
+            ?: viewModel(
+                factory =
+                    MapViewModel.provideFactory(
+                        fusedLocationClient = fusedLocationClient, coordinator = coordinator))
 
   val coroutineScope = rememberCoroutineScope()
 
@@ -243,9 +271,6 @@ fun EventsScreen(
   }
   val showAttendeesDialog = remember { mutableStateOf(false) }
 
-    val userLocation by eventsViewModel.currentUserLocation.collectAsState()
-    val context = LocalContext.current
-
     LaunchedEffect(Unit) {
         eventsViewModel.startLocationUpdates(context)
     }
@@ -255,6 +280,50 @@ fun EventsScreen(
       eventsViewModel.refreshEvents(currentUserIdFromVM)
     }
   }
+
+    /** Variable to track location permission status */
+    var isLocationPermissionGranted by remember { mutableStateOf(false) }
+
+    /** Handle permission request for location access * */
+    val permissionLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+                permissions ->
+            val isGranted =
+                permissions.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false) ||
+                        permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false)
+
+            isLocationPermissionGranted = isGranted
+
+            if (isGranted) {
+                eventsViewModel.startLocationUpdates(context)
+            }
+        }
+
+    /** Check permission and start location updates * */
+    LaunchedEffect(Unit) {
+        // Check if we already have permissions (Fine OR Coarse)
+
+        val hasPermission = isLocationPermissionGrantedProvider(context)
+
+        if (hasPermission) {
+            // Already existing permissions
+            // Set the blue dot state
+            isLocationPermissionGranted = true
+
+            // Start the location data stream
+            eventsViewModel.startLocationUpdates(context)
+        } else {
+            // No initial permission granted
+
+            // Disable blue dot to prevent crash
+            isLocationPermissionGranted = false
+
+            // Launch the dialog
+            permissionLauncher.launch(
+                arrayOf(
+                    Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
+        }
+    }
 
   Scaffold(
       topBar = {
@@ -393,7 +462,11 @@ fun EventsScreen(
                         onClick = {
                           selectedYourEvent.value = myOwnEvents[index]
                           isPopupOnYourE.value = true
-                        })
+                        },
+                        distance =
+                            eventsViewModel.getDistanceUserEvent(myOwnEvents[index]),
+                        isProximityModeOn = (uiState.sortOrder == EventSortOrder.PROXIMITY)
+                    )
                   }
                 } else {
                   item {
@@ -651,7 +724,7 @@ fun UpcomingEventsItem(event: Event, onClick: () -> Unit) {
  *   event's description
  */
 @Composable
-fun MyOwnEventsItem(event: Event, onClick: () -> Unit) {
+fun MyOwnEventsItem(event: Event, onClick: () -> Unit, distance: Double?, isProximityModeOn: Boolean) {
   Card(
       border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurfaceVariant),
       shape = RoundedCornerShape(8.dp),
@@ -690,6 +763,20 @@ fun MyOwnEventsItem(event: Event, onClick: () -> Unit) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.testTag(EventsScreenTestTags.EVENT_DATE))
           }
+
+            if ((event.location != null) && (isProximityModeOn)){
+                Column {
+                    Icon(
+                        imageVector = Icons.Filled.Directions,
+                        contentDescription = "Proximity distance"
+                    )
+
+                    Text(
+                        text = distance.toString()
+                    )
+                }
+            }
+
 
           BoxNumberAttendees(
               event.participants.size,

@@ -1,6 +1,7 @@
 package com.android.gatherly.ui.events
 
 import android.content.Context
+import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -339,6 +340,16 @@ class EventsViewModel(
       _participantsNames.value = names
     }
   }
+
+    fun getDistanceUserEvent(event : Event): Double?{
+        val userLocation = _currentUserLocation.value
+        if ((userLocation != null) && (event.location != null) ){
+            val distance = distance(userLocation, event.location)
+            Log.e("distance", "distance between event and user: $distance")
+            return distance
+        }
+        else return null
+    }
     fun updateCurrentUserLocation(newLocation: Location) {
         _currentUserLocation.value = newLocation
         if (_uiState.value.sortOrder == EventSortOrder.PROXIMITY) {
