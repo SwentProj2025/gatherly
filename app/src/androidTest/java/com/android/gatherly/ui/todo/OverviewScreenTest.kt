@@ -64,7 +64,7 @@ class OverviewScreenTest : GatherlyTest() {
         OverviewViewModel(
             todoRepository = repository,
             profileRepository = profileRepository,
-            pointsRepository = pointsRepository)
+            pointsRepository = pointsRepository,
             todoCategoryRepository = toDoCategoryRepository)
     composeTestRule.setContent { OverviewScreen(overviewViewModel = overviewViewModel) }
     profileRepository.addProfile(Profile(uid = "user", name = "Test User", profilePicture = ""))
