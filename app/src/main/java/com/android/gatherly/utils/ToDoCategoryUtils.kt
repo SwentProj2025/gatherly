@@ -337,11 +337,13 @@ fun AlertDialogWarningDeleteTag(
         bodyText = stringResource(R.string.todos_delete_warning_text),
         dismissText = stringResource(R.string.cancel),
         confirmText = stringResource(R.string.delete),
-        onDismiss = { showWarningDeleteTagDialog.value = null },
-        onConfirm = {
-          onConfirmDelete(showWarningDeleteTagDialog.value!!)
-          showWarningDeleteTagDialog.value = null
-        },
+        actions =
+            GatherlyAlertDialogActions(
+                onDismiss = { showWarningDeleteTagDialog.value = null },
+                onConfirm = {
+                  onConfirmDelete(showWarningDeleteTagDialog.value!!)
+                  showWarningDeleteTagDialog.value = null
+                }),
         isImportantWarning = true)
   }
 }
