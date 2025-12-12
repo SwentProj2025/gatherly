@@ -572,11 +572,19 @@ class AddEventViewModel(
         createEvent(eventsRepository, profileRepository, event, currentProfile.uid, participants)
         uiState =
             uiState.copy(
-                displayToast = true, toastString = "Saved", isSaving = false, backToOverview = true, savedEvent = event)
+                displayToast = true,
+                toastString = "Saved",
+                isSaving = false,
+                backToOverview = true,
+                savedEvent = event)
       }
     } else {
       uiState =
-          uiState.copy(displayToast = true, toastString = "Failed to save :(", isSaving = false, savedEvent = null)
+          uiState.copy(
+              displayToast = true,
+              toastString = "Failed to save :(",
+              isSaving = false,
+              savedEvent = null)
     }
   }
 

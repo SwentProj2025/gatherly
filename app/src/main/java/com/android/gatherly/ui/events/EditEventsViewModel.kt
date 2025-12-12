@@ -158,8 +158,7 @@ class EditEventsViewModel(
               currentUserId = event.creatorId,
               groups = event.groups,
               editedEvent = event,
-              eventDeleted = false
-          )
+              eventDeleted = false)
 
       eventId = event.id
       creatorId = event.creatorId
@@ -555,12 +554,15 @@ class EditEventsViewModel(
                 isLoading = false,
                 backToOverview = true,
                 editedEvent = event,
-                eventDeleted = false
-                )
+                eventDeleted = false)
       }
     } else {
       uiState =
-          uiState.copy(displayToast = true, toastString = "Failed to save :(", isLoading = false, editedEvent = null)
+          uiState.copy(
+              displayToast = true,
+              toastString = "Failed to save :(",
+              isLoading = false,
+              editedEvent = null)
     }
   }
 
