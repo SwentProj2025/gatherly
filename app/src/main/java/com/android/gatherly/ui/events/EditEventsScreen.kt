@@ -173,21 +173,19 @@ fun EditEventsScreen(
   // Navigate back after save/delete
   LaunchedEffect(ui.backToOverview) {
     if (ui.backToOverview) {
-        if(ui.editedEvent != null){
-            if(ui.eventDeleted){
-                EventAlarmScheduler(context).cancelEventReminder(
-                    eventId = ui.editedEvent.id,
-                    userId = ui.editedEvent.creatorId
-                )
-            }else{
-                EventAlarmScheduler(context).scheduleEventReminder(
-                    userId = ui.editedEvent.creatorId,
-                    eventId = ui.editedEvent.id,
-                    eventDate = ui.editedEvent.date,
-                    eventStartTime = ui.editedEvent.startTime
-                )
-            }
+      if (ui.editedEvent != null) {
+        if (ui.eventDeleted) {
+          EventAlarmScheduler(context)
+              .cancelEventReminder(eventId = ui.editedEvent.id, userId = ui.editedEvent.creatorId)
+        } else {
+          EventAlarmScheduler(context)
+              .scheduleEventReminder(
+                  userId = ui.editedEvent.creatorId,
+                  eventId = ui.editedEvent.id,
+                  eventDate = ui.editedEvent.date,
+                  eventStartTime = ui.editedEvent.startTime)
         }
+      }
       onSave()
     }
   }
@@ -489,11 +487,13 @@ fun EditEventsScreen(
               bodyText = stringResource(R.string.events_warning_to_public_event_body_text),
               dismissText = stringResource(R.string.cancel),
               confirmText = stringResource(R.string.events_confirm_text_private_to_public_text),
-              onDismiss = { showWarningPublicEvent = false },
-              onConfirm = {
-                editEventsViewModel.updatePrivateEventToPublicEvent()
-                showWarningPublicEvent = false
-              })
+              actions =
+                  GatherlyAlertDialogActions(
+                      onDismiss = { showWarningPublicEvent = false },
+                      onConfirm = {
+                        editEventsViewModel.updatePrivateEventToPublicEvent()
+                        showWarningPublicEvent = false
+                      }))
         }
         GatherlyDatePicker(
             show = showDatePicker,
