@@ -8,6 +8,8 @@ import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.model.todo.ToDosRepository
+import com.android.gatherly.model.todoCategory.ToDoCategoryLocalRepository
+import com.android.gatherly.model.todoCategory.ToDoCategoryRepository
 import com.android.gatherly.ui.todo.OverviewViewModel
 import com.android.gatherly.ui.todo.TodoSortOrder
 import com.android.gatherly.utilstest.MockitoUtils
@@ -49,6 +51,8 @@ class OverviewViewModelTest {
   private lateinit var profileRepository: ProfileRepository
   private lateinit var mockitoUtils: MockitoUtils
 
+  private lateinit var toDoCategoryRepository: ToDoCategoryRepository
+
   private val testDispatcher = StandardTestDispatcher()
 
   @Before
@@ -57,12 +61,15 @@ class OverviewViewModelTest {
 
     toDosRepository = ToDosLocalRepository()
     profileRepository = ProfileLocalRepository()
+    toDoCategoryRepository = ToDoCategoryLocalRepository()
 
     // Mock Firebase Auth
     mockitoUtils = MockitoUtils()
     mockitoUtils.chooseCurrentUser("0")
 
-    overviewViewModel = OverviewViewModel(toDosRepository, profileRepository)
+    overviewViewModel =
+        OverviewViewModel(
+            toDosRepository, profileRepository, todoCategoryRepository = toDoCategoryRepository)
   }
 
   @After

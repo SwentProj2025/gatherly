@@ -1,6 +1,8 @@
 package com.android.gatherly.ui.todo
 
 import android.annotation.SuppressLint
+import android.util.Log
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.map.Location
@@ -8,9 +10,13 @@ import com.android.gatherly.model.map.NominatimLocationRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryProvider
 import com.android.gatherly.model.todo.ToDo
+import com.android.gatherly.model.todo.ToDoPriority
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.model.todo.ToDosRepositoryProvider
+import com.android.gatherly.model.todoCategory.ToDoCategory
+import com.android.gatherly.model.todoCategory.ToDoCategoryRepository
+import com.android.gatherly.model.todoCategory.ToDoCategoryRepositoryProvider
 import com.android.gatherly.utils.addTodo
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
@@ -19,6 +25,7 @@ import com.google.firebase.ktx.Firebase
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -45,7 +52,9 @@ data class AddTodoUiState(
     val saveSuccess: Boolean = false,
     val isLocLoading: Boolean = false,
     val suggestions: List<Location> = emptyList(),
-    val pastTime: Boolean = false
+    val pastTime: Boolean = false,
+    val priorityLevel: ToDoPriority = ToDoPriority.NONE,
+    val tag: ToDoCategory? = null
 ) {
   val isValid: Boolean
     get() = titleError == null && dueDateError == null && dueTimeError == null && !isSaving
@@ -81,12 +90,48 @@ class AddTodoViewModel(
     private val todoRepository: ToDosRepository = ToDosRepositoryProvider.repository,
     private val profileRepository: ProfileRepository = ProfileRepositoryProvider.repository,
     private val authProvider: () -> FirebaseAuth = { Firebase.auth },
-    private val nominatimClient: NominatimLocationRepository = NominatimLocationRepository(client)
+    private val nominatimClient: NominatimLocationRepository = NominatimLocationRepository(client),
+    private val todoCategoryRepository: ToDoCategoryRepository =
+        ToDoCategoryRepositoryProvider.repository
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(AddTodoUiState())
 
   /** Public immutable access to the Add ToDo UI state. */
   val uiState: StateFlow<AddTodoUiState> = _uiState.asStateFlow()
+
+  private val _categories = MutableStateFlow<List<ToDoCategory>>(emptyList())
+  val categories: StateFlow<List<ToDoCategory>> = _categories.asStateFlow()
+
+  private val _isInitialized = MutableStateFlow(false)
+
+  init {
+    val auth = authProvider()
+    auth.addAuthStateListener { firebaseAuth ->
+      val currentUser = firebaseAuth.currentUser
+
+      if (currentUser != null && !_isInitialized.value) {
+        viewModelScope.launch { initializeUserData(currentUser.uid) }
+      } else if (currentUser == null) {
+        _categories.value = emptyList()
+        _isInitialized.value = false
+      }
+    }
+  }
+
+  private suspend fun initializeUserData(userId: String) {
+    try {
+      todoCategoryRepository.initializeDefaultCategories()
+
+      val list = todoCategoryRepository.getAllCategories()
+      _categories.value = list
+      _isInitialized.value = true
+    } catch (e: Exception) {
+      viewModelScope.launch {
+        delay(1000)
+        initializeUserData(userId)
+      }
+    }
+  }
 
   // Chosen location
   private var chosenLocation: Location? = null
@@ -212,6 +257,60 @@ class AddTodoViewModel(
     chosenLocation = location
   }
 
+  /*----------------------------------Priority Level--------------------------------------------*/
+
+  /**
+   * Updates the priority level of the item
+   *
+   * @param priorityLevel the selected priority level
+   */
+  fun selectPriorityLevel(priorityLevel: ToDoPriority) {
+    _uiState.value = _uiState.value.copy(priorityLevel = priorityLevel)
+  }
+
+  /*------------------------------------Category------------------------------------------------*/
+
+  /**
+   * Updates the tag of the item
+   *
+   * @param category the selected category
+   */
+  fun selectTodoTag(category: ToDoCategory?) {
+    _uiState.value = _uiState.value.copy(tag = category)
+  }
+
+  fun addCategory(name: String, color: Color) {
+
+    viewModelScope.launch {
+      try {
+        val newCategory = ToDoCategory(name = name, color = color, isDefault = false)
+        todoCategoryRepository.addToDoCategory(newCategory)
+        _categories.value = todoCategoryRepository.getAllCategories()
+      } catch (e: Exception) {
+        _uiState.value = _uiState.value.copy(saveError = e.message)
+      }
+    }
+  }
+
+  fun deleteCategory(category: ToDoCategory) {
+    viewModelScope.launch {
+      try {
+        val ownerId =
+            authProvider().currentUser?.uid
+                ?: throw IllegalStateException("User not authenticated.")
+
+        todoRepository.updateTodosTagToNull(category.id, ownerId)
+        todoCategoryRepository.deleteToDoCategory(category.id)
+        _categories.value = todoCategoryRepository.getAllCategories()
+        if (_uiState.value.tag == category) {
+          _uiState.value = _uiState.value.copy(tag = null)
+        }
+      } catch (e: Exception) {
+        _uiState.value = _uiState.value.copy(saveError = e.message)
+      }
+    }
+  }
+
   /*----------------------------------Helpers---------------------------------------------------*/
 
   /**
@@ -306,10 +405,13 @@ class AddTodoViewModel(
                 dueTime = dueTimeTimestamp,
                 location = chosenLocation,
                 status = ToDoStatus.ONGOING,
-                ownerId = ownerId)
+                ownerId = ownerId,
+                priorityLevel = validated.priorityLevel,
+                tag = validated.tag)
 
         addTodo(todoRepository, profileRepository, todo, ownerId)
         _uiState.value = _uiState.value.copy(isSaving = false, saveSuccess = true)
+        Log.d("AddTodoVM", "SUCCESS todo with: ${todo}")
       } catch (e: Exception) {
         _uiState.value = _uiState.value.copy(isSaving = false, saveError = e.message)
       }
