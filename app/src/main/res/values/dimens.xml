@@ -130,4 +130,9 @@
 
     <!-- Focus History Screen -->
     <dimen name="focus_item_height">100.dp</dimen>
+    <dimen name="focus_session_item_vertical_padding">4.dp</dimen>
+    <dimen name="focus_session_item_row_padding">12.dp</dimen>
+    <dimen name="focus_session_history_vertical_padding">8.dp</dimen>
+    <dimen name="focus_session_history_horizontal_padding">16.dp</dimen>
+    <dimen name="focus_session_history_button_height">35.dp</dimen>
 </resources>
