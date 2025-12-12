@@ -173,8 +173,7 @@ fun FriendsScreen(
 
   // Retrieve the necessary values for the implementation from the ViewModel
   val uiState by friendsViewModel.uiState.collectAsState()
-  val friendsList = uiState.friends
-  val pendingSentUsernames = uiState.pendingSentUsernames
+
   val currentUserIdFromVM = uiState.currentUserId
 
   // Holds the current text entered by the friend username in the search bar
