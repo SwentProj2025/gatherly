@@ -213,7 +213,7 @@ class EditEventsViewModelTest {
   @Test
   fun canEnterEventDueDate() {
     runTest {
-      val dateString = "13/12/2100"
+      val dateString = "13/12/2026"
       editEventsViewModel.updateDate(dateString)
       assert(!editEventsViewModel.uiState.dateError) { "\'13/12/2025\' should not make an error" }
       assert(editEventsViewModel.uiState.date == dateString) { "\'13/12/2025\' should work" }
