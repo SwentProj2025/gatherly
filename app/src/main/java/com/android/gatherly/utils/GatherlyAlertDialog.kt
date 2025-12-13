@@ -20,7 +20,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.android.gatherly.R
@@ -124,7 +123,7 @@ fun GatherlyAlertDialog(
                     .testTag(AlertDialogTestTags.ALERT),
             shape = MaterialTheme.shapes.extraLarge,
             color = MaterialTheme.colorScheme.surfaceVariant,
-            tonalElevation = R.dimen.elevation_medium.dp) {
+            tonalElevation = dimensionResource(R.dimen.elevation_medium)) {
               Column(
                   modifier = Modifier.padding(dimensionResource(R.dimen.padding_screen)),
                   verticalArrangement =
@@ -369,7 +368,7 @@ private fun DialogActionButtons(
 ) {
   Row(
       modifier = Modifier.fillMaxWidth(),
-      horizontalArrangement = Arrangement.spacedBy(R.dimen.padding_small.dp)) {
+      horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.padding_small))) {
         // Dismiss Button
         Button(
             colors =
