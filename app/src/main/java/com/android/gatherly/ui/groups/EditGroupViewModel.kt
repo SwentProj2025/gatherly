@@ -2,6 +2,7 @@ package com.android.gatherly.ui.groups
 
 import android.util.Log
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.group.Group
 import com.android.gatherly.model.group.GroupsRepository
@@ -45,11 +46,16 @@ data class EditGroupUiState(
     val availableFriendsToAdd: List<Profile> = emptyList(),
     val selectedNewFriendIds: List<String> = emptyList(),
     val membersToRemove: List<String> = emptyList(),
+    val currentUserId: String = "",
+    val creatorId: String = "",
     val isLoading: Boolean = false,
     val loadError: String? = null,
     val isSaving: Boolean = false,
     val saveError: String? = null,
-    val saveSuccess: Boolean = false
+    val saveSuccess: Boolean = false,
+    val friendsSearchQuery: String = "",
+    val filteredAvailableFriends: List<Profile> = emptyList(),
+    val membersForList: List<Profile> = emptyList(),
 )
 
 /**
@@ -86,6 +92,43 @@ class EditGroupViewModel(
   }
 
   /**
+   * Factory to create EditGroupViewModel with dependencies.
+   *
+   * @param groupsRepository The GroupsRepository to use (default: Firestore implementation).
+   * @param profileRepository The ProfileRepository to use (default: Firestore implementation).
+   * @param notificationsRepository The NotificationsRepository to use (default: provided by
+   *   NotificationsRepositoryProvider).
+   * @param authProvider A function that provides the FirebaseAuth instance (default:
+   *   Firebase.auth).
+   * @return A ViewModelProvider.Factory that creates EditGroupViewModel instances.
+   */
+  companion object {
+    fun provideFactory(
+        groupsRepository: GroupsRepository = GroupsRepositoryFirestore(Firebase.firestore),
+        profileRepository: ProfileRepository =
+            ProfileRepositoryFirestore(Firebase.firestore, Firebase.storage),
+        notificationsRepository: NotificationsRepository =
+            NotificationsRepositoryProvider.repository,
+        authProvider: () -> FirebaseAuth = { Firebase.auth }
+    ): ViewModelProvider.Factory {
+      return object : ViewModelProvider.Factory {
+        @Suppress("UNCHECKED_CAST")
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+          if (modelClass.isAssignableFrom(EditGroupViewModel::class.java)) {
+            return EditGroupViewModel(
+                groupsRepository = groupsRepository,
+                profileRepository = profileRepository,
+                notificationsRepository = notificationsRepository,
+                authProvider = authProvider)
+                as T
+          }
+          throw IllegalArgumentException("Unknown ViewModel class $modelClass")
+        }
+      }
+    }
+  }
+
+  /**
    * Loads the group with the specified ID and initializes the UI state.
    *
    * Fetches the group data, loads current member profiles, loads the user's friends list, and
@@ -98,15 +141,17 @@ class EditGroupViewModel(
       _uiState.value = _uiState.value.copy(isLoading = true, loadError = null)
       try {
         val group = groupsRepository.getGroup(groupId)
+        val currentUserId = authProvider().currentUser?.uid
 
         _uiState.value =
             _uiState.value.copy(
                 groupId = group.gid,
                 name = group.name,
                 description = group.description ?: "",
-                adminIds = group.adminIds)
+                adminIds = group.adminIds,
+                creatorId = group.creatorId,
+                currentUserId = currentUserId.orEmpty())
 
-        // Load member profiles and friends list in parallel
         loadMemberProfiles(group.memberIds)
         loadFriends(group.memberIds)
 
@@ -133,11 +178,29 @@ class EditGroupViewModel(
               null // Skip members that can't be fetched
             }
           }
-      _uiState.value = _uiState.value.copy(currentMemberProfiles = memberProfiles)
+      updateMembersForList(memberProfiles)
     } catch (e: Exception) {
       // 'Silently' fail - member profiles are not critical for editing
       Log.e("EditGroupViewModel", "Failed to update member profiles UI state", e)
     }
+  }
+
+  /** Updates both currentMemberProfiles and membersForList according to current user role. */
+  private fun updateMembersForList(memberProfiles: List<Profile>) {
+    val state = _uiState.value
+    val currentUserId = state.currentUserId
+    val creatorId = state.creatorId
+
+    val membersForList =
+        if (currentUserId.isNotBlank() && currentUserId == creatorId) {
+          // Owner does not see themselves in the editable members list
+          memberProfiles.filter { it.uid != currentUserId }
+        } else {
+          memberProfiles
+        }
+
+    _uiState.value =
+        state.copy(currentMemberProfiles = memberProfiles, membersForList = membersForList)
   }
 
   /**
@@ -169,10 +232,23 @@ class EditGroupViewModel(
             }
           }
       val currentMemberIdSet = currentMemberIds.toSet()
+
+      // Friends who are not already members
       val availableFriends = friendProfiles.filter { it.uid !in currentMemberIdSet }
+
+      val searchQuery = _uiState.value.friendsSearchQuery
+      val filtered =
+          if (searchQuery.isBlank()) {
+            availableFriends
+          } else {
+            availableFriends.filter { it.username.contains(searchQuery, ignoreCase = true) }
+          }
+
       _uiState.value =
           _uiState.value.copy(
-              friendsList = friendProfiles, availableFriendsToAdd = availableFriends)
+              friendsList = friendProfiles,
+              availableFriendsToAdd = availableFriends,
+              filteredAvailableFriends = filtered)
     } catch (e: Exception) {
       Log.e("EditGroupViewModel", "Failed to load friends list", e)
       // 'Silently' fail - friends list is not critical for basic editing
@@ -301,5 +377,33 @@ class EditGroupViewModel(
         _uiState.value = _uiState.value.copy(isSaving = false, saveError = e.message)
       }
     }
+  }
+
+  /** Deletes the current group from the repository. */
+  fun deleteGroup() {
+    val groupId = _uiState.value.groupId
+    if (groupId.isBlank()) return
+
+    viewModelScope.launch {
+      try {
+        groupsRepository.deleteGroup(groupId)
+      } catch (e: Exception) {
+        _uiState.value = _uiState.value.copy(saveError = e.message)
+      }
+    }
+  }
+
+  /** Updates the search query and filtered friends list. */
+  fun onFriendsSearchQueryChanged(newQuery: String) {
+    val available = _uiState.value.availableFriendsToAdd
+    val filtered =
+        if (newQuery.isBlank()) {
+          available
+        } else {
+          available.filter { it.username.contains(newQuery, ignoreCase = true) }
+        }
+
+    _uiState.value =
+        _uiState.value.copy(friendsSearchQuery = newQuery, filteredAvailableFriends = filtered)
   }
 }
