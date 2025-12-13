@@ -50,12 +50,3 @@ sealed class PointsSource {
    */
   data class Leaderboard(val rank: String) : PointsSource()
 }
-
-/** Transforms the [PointsSource] to a string displayable to the user */
-fun pointsSourceToString(type: PointsSource): String {
-  return when (type) {
-    is PointsSource.Timer -> "Focused for ${type.minutes} minutes"
-    is PointsSource.Badge -> "Obtained the ${type.badgeName} badge"
-    is PointsSource.Leaderboard -> "Reached ${type.rank} on your friends leaderboard"
-  }
-}

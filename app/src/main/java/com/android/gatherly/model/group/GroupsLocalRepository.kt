@@ -3,8 +3,8 @@ package com.android.gatherly.model.group
 /**
  * Simplified in-memory local implementation of [GroupsRepository].
  *
- * Used for local testing or offline mode. Only implements the methods actually needed in the
- * current app logic.
+ * Used for local testing. Does not behave like the real implementation in all cases. Data is not
+ * persisted and will be lost when the instance is destroyed.
  */
 class GroupsLocalRepository : GroupsRepository {
 
@@ -53,19 +53,31 @@ class GroupsLocalRepository : GroupsRepository {
   }
 
   override suspend fun addMember(groupId: String, userId: String) {
-    TODO("GroupsLocalRepository.addMember Not yet implemented")
+    val group = getGroup(groupId)
+    if (userId !in group.memberIds) {
+      editGroup(groupId, group.copy(memberIds = group.memberIds + userId))
+    }
   }
 
   override suspend fun removeMember(groupId: String, userId: String) {
-    TODO("GroupsLocalRepository.removeMember Not yet implemented")
+    val group = getGroup(groupId)
+    editGroup(
+        groupId,
+        group.copy(
+            memberIds = group.memberIds.filter { it != userId },
+            adminIds = group.adminIds.filter { it != userId }))
   }
 
   override suspend fun addAdmin(groupId: String, userId: String) {
-    TODO("GroupsLocalRepository.addAdmin Not yet implemented")
+    val group = getGroup(groupId)
+    if (userId !in group.adminIds) {
+      editGroup(groupId, group.copy(adminIds = group.adminIds + userId))
+    }
   }
 
   override suspend fun removeAdmin(groupId: String, userId: String) {
-    TODO("GroupsLocalRepository.removeAdmin Not yet implemented")
+    val group = getGroup(groupId)
+    editGroup(groupId, group.copy(adminIds = group.adminIds.filter { it != userId }))
   }
 
   override suspend fun getGroupByName(groupName: String): Group {

@@ -5,11 +5,16 @@ package com.android.gatherly.model.event
 /**
  * Repository interface that defines all operations for managing [Event] items.
  *
- * This abstraction allows different data sources (e.g., Firestore, local DB, or fake data)
+ * This abstraction allows different data sources (e.g., Firestore, local DB, or fake data) to be
+ * used interchangeably throughout the application.
  */
 interface EventsRepository {
 
-  /** Generates and returns a new unique identifier for an [Event]. */
+  /**
+   * Generates and returns a new unique identifier for an [Event].
+   *
+   * @return A unique identifier that can be used when creating a new [Event].
+   */
   fun getNewId(): String
 
   /**

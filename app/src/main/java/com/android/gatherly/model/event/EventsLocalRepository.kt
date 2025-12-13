@@ -10,6 +10,7 @@ import com.android.gatherly.utils.updateEventStatus
  *
  * @property counter Internal counter used to generate unique sequential IDs for new events.
  * @property events Mutable list that holds all events in memory.
+ * @throws IllegalArgumentException if attempting to edit an event that does not exist.
  */
 class EventsLocalRepository : EventsRepository {
 
@@ -39,7 +40,7 @@ class EventsLocalRepository : EventsRepository {
     val index = events.indexOf(getEvent(eventId))
     val updatedEvent = updateEventStatus(newValue)
     if (index == -1) {
-      throw IllegalArgumentException()
+      throw IllegalArgumentException("EventsLocalRepository.editEvent: Event not found")
     } else {
       events[index] = updatedEvent
     }
