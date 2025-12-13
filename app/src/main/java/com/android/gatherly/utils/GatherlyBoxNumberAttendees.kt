@@ -13,8 +13,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.android.gatherly.R
 
-/** Helper function : Display the number of attendees a event got */
+/**
+ * Attendee count display components for the Gatherly app.
+ *
+ * Provides UI components to display the number of attendees for events.
+ */
+
+/**
+ * Displays the number of attendees for an event with a person icon.
+ *
+ * @param numberAttendees The number of attendees to display.
+ * @param modifier Modifier applied to the root row container.
+ */
 @Composable
 fun BoxNumberAttendees(numberAttendees: Int, modifier: Modifier = Modifier) {
 
@@ -24,7 +36,7 @@ fun BoxNumberAttendees(numberAttendees: Int, modifier: Modifier = Modifier) {
         contentDescription = "Attendees",
         tint = MaterialTheme.colorScheme.onSurfaceVariant)
 
-    Spacer(modifier = Modifier.width(6.dp))
+    Spacer(modifier = Modifier.width(R.dimen.spacing_between_elements.dp))
 
     Text(
         text = "$numberAttendees",
