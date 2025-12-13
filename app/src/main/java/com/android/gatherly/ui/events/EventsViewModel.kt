@@ -341,15 +341,43 @@ class EventsViewModel(
     }
   }
 
-    fun getDistanceUserEvent(event : Event): Double?{
+
+    // Dans EventsViewModel.kt - Modification de getDistanceUserEvent
+    fun getDistanceUserEvent(event: Event): String? {
         val userLocation = _currentUserLocation.value
-        if ((userLocation != null) && (event.location != null) ){
-            val distance = distance(userLocation, event.location)
-            Log.e("distance", "distance between event and user: $distance")
-            return distance
+        if (userLocation != null && event.location != null) {
+            val distanceInMeters = distance(userLocation, event.location)
+            // Convertir en km si > 1000m
+            return if (distanceInMeters >= 1000) {
+                String.format("%.1f km", distanceInMeters / 1000)
+            } else {
+                String.format("%.0f m", distanceInMeters)
+            }
         }
-        else return null
+        return null
     }
+
+    // Dans startLocationUpdates - ajoute une vérification
+    fun startLocationUpdates(context: Context) {
+        fusedLocationClient ?: return
+
+        viewModelScope.launch {
+            try {
+                fusedLocationClient.locationFlow(context).collect { loc ->
+                    updateCurrentUserLocation(
+                        Location(
+                            latitude = loc.latitude,
+                            longitude = loc.longitude,
+                            name = "currentUserLocation"
+                        )
+                    )
+                }
+            } catch (e: Exception) {
+                Log.e("EventsViewModel", "Error getting location: ${e.message}")
+            }
+        }
+    }
+
     fun updateCurrentUserLocation(newLocation: Location) {
         _currentUserLocation.value = newLocation
         if (_uiState.value.sortOrder == EventSortOrder.PROXIMITY) {
@@ -358,21 +386,4 @@ class EventsViewModel(
             }
         }
     }
-
-    fun startLocationUpdates(context: Context) {
-        fusedLocationClient ?: return
-
-        viewModelScope.launch {
-            fusedLocationClient.locationFlow(context).collect { loc ->
-                updateCurrentUserLocation(
-                    Location(
-                        latitude = loc.latitude,
-                        longitude = loc.longitude,
-                        name = "currentUserLocation"
-                    )
-                )
-            }
-        }
-    }
-
 }
