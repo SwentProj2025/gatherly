@@ -153,6 +153,10 @@ class GroupInformationScreenTest {
         .onNodeWithTag(GroupInformationScreenTestTags.LEAVE_BUTTON)
         .assertIsDisplayed()
         .performClick()
-    composeTestRule.onNodeWithTag(AlertDialogTestTags.ALERT)
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.ALERT).assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(AlertDialogTestTags.DISMISS_BTN)
+        .assertIsDisplayed()
+        .performClick()
   }
 }

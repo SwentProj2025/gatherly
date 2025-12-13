@@ -20,6 +20,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -123,51 +124,11 @@ fun GroupInformationScreen(
                     adminIds = uiState.group.adminIds,
                     modifier = Modifier.weight(1f))
 
-                if (uiState.isAdmin) {
-                  // Edit group button
-                  Button(
-                      onClick = {
-                        navigationActions?.navigateTo(Screen.EditGroup(uiState.group.gid))
-                      },
-                      modifier =
-                          Modifier.padding(
-                                  all = dimensionResource(R.dimen.add_group_button_vertical))
-                              .fillMaxWidth()
-                              .height(dimensionResource(R.dimen.homepage_focus_button_height))
-                              .testTag(GroupInformationScreenTestTags.EDIT_BUTTON),
-                      shape =
-                          RoundedCornerShape(
-                              dimensionResource(R.dimen.friends_item_rounded_corner_shape)),
-                      colors = buttonColors(containerColor = MaterialTheme.colorScheme.secondary)) {
-                        Text(
-                            text = stringResource(R.string.groups_info_edit),
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onPrimary)
-                      }
-                }
+                // Edit group
+                EditButton(uiState, navigationActions)
 
-                if (!uiState.isOwner) {
-                  // Leave group button
-                  Button(
-                      onClick = { showDialog.value = true },
-                      modifier =
-                          Modifier.padding(
-                                  all = dimensionResource(R.dimen.add_group_button_vertical))
-                              .fillMaxWidth()
-                              .height(dimensionResource(R.dimen.homepage_focus_button_height))
-                              .testTag(GroupInformationScreenTestTags.LEAVE_BUTTON),
-                      shape =
-                          RoundedCornerShape(
-                              dimensionResource(R.dimen.friends_item_rounded_corner_shape)),
-                      colors = buttonColors(containerColor = MaterialTheme.colorScheme.error)) {
-                        Text(
-                            text = stringResource(R.string.groups_info_leave),
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onError)
-                      }
-                }
+                // Leave group
+                LeaveButton(uiState, showDialog)
 
                 // Leave group warning pop up
                 if (showDialog.value) {
@@ -189,6 +150,52 @@ fun GroupInformationScreen(
               }
             }
       })
+}
+
+/** Displays a "leave group" button if the user is not the owner */
+@Composable
+fun LeaveButton(uiState: GroupInformationUIState, showDialog: MutableState<Boolean>) {
+  if (!uiState.isOwner) {
+    // Leave group button
+    Button(
+        onClick = { showDialog.value = true },
+        modifier =
+            Modifier.padding(all = dimensionResource(R.dimen.add_group_button_vertical))
+                .fillMaxWidth()
+                .height(dimensionResource(R.dimen.homepage_focus_button_height))
+                .testTag(GroupInformationScreenTestTags.LEAVE_BUTTON),
+        shape = RoundedCornerShape(dimensionResource(R.dimen.friends_item_rounded_corner_shape)),
+        colors = buttonColors(containerColor = MaterialTheme.colorScheme.error)) {
+          Text(
+              text = stringResource(R.string.groups_info_leave),
+              style = MaterialTheme.typography.bodyLarge,
+              fontWeight = FontWeight.Medium,
+              color = MaterialTheme.colorScheme.onError)
+        }
+  }
+}
+
+/** Displays an "edit group" button if the user is an admin */
+@Composable
+fun EditButton(uiState: GroupInformationUIState, navigationActions: NavigationActions?) {
+  if (uiState.isAdmin) {
+    // Edit group button
+    Button(
+        onClick = { navigationActions?.navigateTo(Screen.EditGroup(uiState.group.gid)) },
+        modifier =
+            Modifier.padding(all = dimensionResource(R.dimen.add_group_button_vertical))
+                .fillMaxWidth()
+                .height(dimensionResource(R.dimen.homepage_focus_button_height))
+                .testTag(GroupInformationScreenTestTags.EDIT_BUTTON),
+        shape = RoundedCornerShape(dimensionResource(R.dimen.friends_item_rounded_corner_shape)),
+        colors = buttonColors(containerColor = MaterialTheme.colorScheme.secondary)) {
+          Text(
+              text = stringResource(R.string.groups_info_edit),
+              style = MaterialTheme.typography.bodyLarge,
+              fontWeight = FontWeight.Medium,
+              color = MaterialTheme.colorScheme.onPrimary)
+        }
+  }
 }
 
 @Composable
