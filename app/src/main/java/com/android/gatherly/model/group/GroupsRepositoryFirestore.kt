@@ -9,6 +9,14 @@ import kotlinx.coroutines.tasks.await
 
 // This class contains code adapted by an LLM (GitHub Copilot, Claude.ai) from the CS-311 bootcamp.
 
+/**
+ * Firebase Firestore implementation of [GroupsRepository].
+ *
+ * This implementation enforces security rules, requiring admin privileges for most modification
+ * operations. Uses Firebase Authentication to identify the current user.
+ *
+ * @property db The Firestore database instance.
+ */
 class GroupsRepositoryFirestore(private val db: FirebaseFirestore) : GroupsRepository {
 
   /** Firestore collection for groups. */
