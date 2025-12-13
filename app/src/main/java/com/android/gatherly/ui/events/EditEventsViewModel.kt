@@ -84,7 +84,11 @@ data class EditEventsUIState(
     // list of suggested groups given the search string
     val suggestedGroups: List<Group> = emptyList(),
     // the id of the current user
-    val currentUserId: String = ""
+    val currentUserId: String = "",
+    // event we just saved successfully
+    val editedEvent: Event? = null,
+    // true if the event was deleted otherwise false
+    val eventDeleted: Boolean = false
 )
 
 // create a HTTP Client for Nominatim
@@ -152,7 +156,10 @@ class EditEventsViewModel(
               participants = event.participants.map { profileRepository.getProfileByUid(it)!! },
               state = event.state,
               currentUserId = event.creatorId,
-              groups = event.groups)
+              groups = event.groups,
+              editedEvent = event,
+              eventDeleted = false)
+
       eventId = event.id
       creatorId = event.creatorId
       creatorName = event.creatorName
@@ -545,11 +552,17 @@ class EditEventsViewModel(
                 displayToast = true,
                 toastString = "Saved",
                 isLoading = false,
-                backToOverview = true)
+                backToOverview = true,
+                editedEvent = event,
+                eventDeleted = false)
       }
     } else {
       uiState =
-          uiState.copy(displayToast = true, toastString = "Failed to save :(", isLoading = false)
+          uiState.copy(
+              displayToast = true,
+              toastString = "Failed to save :(",
+              isLoading = false,
+              editedEvent = null)
     }
   }
 
@@ -558,7 +571,7 @@ class EditEventsViewModel(
     // Call event repository
     viewModelScope.launch {
       cancelEvent(eventsRepository, profileRepository, eventId, creatorId, participants)
-      uiState = uiState.copy(backToOverview = true)
+      uiState = uiState.copy(backToOverview = true, eventDeleted = true)
     }
   }
 

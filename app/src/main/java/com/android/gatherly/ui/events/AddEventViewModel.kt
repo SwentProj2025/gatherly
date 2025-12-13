@@ -89,7 +89,9 @@ data class AddEventUiState(
     // list of suggested groups given the search string
     val suggestedGroups: List<Group> = emptyList(),
     // state of the event whether it's a public event or a private (friend only or group) event
-    val state: EventState = EventState.PUBLIC
+    val state: EventState = EventState.PUBLIC,
+    // event we just saved successfully
+    val savedEvent: Event? = null
 )
 
 // create a HTTP Client for Nominatim
@@ -579,11 +581,19 @@ class AddEventViewModel(
             participants)
         uiState =
             uiState.copy(
-                displayToast = true, toastString = "Saved", isSaving = false, backToOverview = true)
+                displayToast = true,
+                toastString = "Saved",
+                isSaving = false,
+                backToOverview = true,
+                savedEvent = event)
       }
     } else {
       uiState =
-          uiState.copy(displayToast = true, toastString = "Failed to save :(", isSaving = false)
+          uiState.copy(
+              displayToast = true,
+              toastString = "Failed to save :(",
+              isSaving = false,
+              savedEvent = null)
     }
   }
 
