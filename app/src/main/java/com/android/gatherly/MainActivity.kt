@@ -34,6 +34,7 @@ import com.android.gatherly.ui.groups.AddGroupScreen
 import com.android.gatherly.ui.groups.GroupInformationScreen
 import com.android.gatherly.ui.groups.GroupsOverviewScreen
 import com.android.gatherly.ui.homePage.HomePageScreen
+import com.android.gatherly.ui.homePage.HomePageScreenActions
 import com.android.gatherly.ui.map.MapScreen
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.Screen
@@ -109,11 +110,15 @@ fun GatherlyApp(
       composable(Screen.HomePage.route) {
         HomePageScreen(
             navigationActions = navigationActions,
-            onClickFocusButton = { navigationActions.navigateTo(Screen.FocusTimerScreen) },
-            onClickTodoTitle = { navigationActions.navigateTo(Screen.OverviewToDo) },
-            onClickFriendsSection = { navigationActions.navigateTo(Screen.FriendsScreen) },
-            onClickTodo = { navigationActions.navigateTo(Screen.EditToDo(it.uid)) },
-            onClickEventsTitle = { navigationActions.navigateTo(Screen.EventsScreen) })
+            homePageScreenActions =
+                HomePageScreenActions(
+                    onClickFocusButton = { navigationActions.navigateTo(Screen.FocusTimerScreen) },
+                    onClickTodoTitle = { navigationActions.navigateTo(Screen.OverviewToDo) },
+                    onClickFriendsSection = { navigationActions.navigateTo(Screen.FriendsScreen) },
+                    onClickTodo = { navigationActions.navigateTo(Screen.EditToDo(it.uid)) },
+                    onClickEventsTitle = { navigationActions.navigateTo(Screen.EventsScreen) },
+                ),
+            coordinator = mapCoordinator)
       }
     }
 

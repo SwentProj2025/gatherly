@@ -225,7 +225,7 @@ class MapViewModel(
   /**
    * Fetches the location to center the map on based on a priority chain:
    * 1. Last consulted `ToDo` (if any)
-   * 2. Unconsumed event from coordinator (navigation-triggered)
+   * 2. Unconsumed event or `ToDo` from coordinator (navigation-triggered)
    * 3. Last consulted `Event` (if any)
    * 4. User's current location (with 5-second timeout)
    * 5. EPFL default location (fallback)
@@ -250,6 +250,17 @@ class MapViewModel(
             coordinator.markConsumed()
             // Switch to events view and update itemsList
             _uiState.update { it.copy(displayEventsPage = true, itemsList = eventsList) }
+            return toLatLng(location)
+          }
+    }
+
+    coordinator.getUnconsumedTodoId()?.let { todoId ->
+      todoList
+          .find { it.uid == todoId }
+          ?.location
+          ?.let { location ->
+            coordinator.markConsumed()
+            _uiState.update { it.copy(displayEventsPage = false, itemsList = todoList) }
             return toLatLng(location)
           }
     }
