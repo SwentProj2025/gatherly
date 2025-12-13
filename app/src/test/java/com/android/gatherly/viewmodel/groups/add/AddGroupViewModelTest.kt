@@ -1,7 +1,10 @@
 package com.android.gatherly.viewmodel.groups.add
 
+import com.android.gatherly.model.notification.NotificationType
 import com.android.gatherly.model.notification.NotificationsLocalRepository
 import com.android.gatherly.model.notification.NotificationsRepository
+import com.android.gatherly.model.points.PointsLocalRepository
+import com.android.gatherly.model.points.PointsRepository
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.ui.groups.AddGroupViewModel
 import com.android.gatherly.utilstest.MockitoUtils
@@ -48,6 +51,7 @@ class AddGroupViewModelTest {
   private lateinit var groupsRepository: FakeGroupsRepositoryLocal
   private lateinit var profileRepository: ProfileLocalRepository
   private lateinit var notificationsRepository: NotificationsRepository
+  private lateinit var pointsRepository: PointsRepository
   private lateinit var mockitoUtils: MockitoUtils
 
   private val testDispatcher = UnconfinedTestDispatcher()
@@ -66,6 +70,7 @@ class AddGroupViewModelTest {
     groupsRepository = FakeGroupsRepositoryLocal(currentUserId = TEST_USER_ID)
     profileRepository = ProfileLocalRepository()
     notificationsRepository = NotificationsLocalRepository()
+    pointsRepository = PointsLocalRepository()
 
     // Mock Firebase Auth
     mockitoUtils = MockitoUtils()
@@ -89,6 +94,7 @@ class AddGroupViewModelTest {
         groupsRepository = groupsRepository,
         profileRepository = profileRepository,
         notificationsRepository = notificationsRepository,
+        pointsRepository = pointsRepository,
         authProvider = { mockitoUtils.mockAuth })
   }
 
@@ -564,6 +570,40 @@ class AddGroupViewModelTest {
         assertFalse(state.friendsList.contains(FRIEND_BOB))
         assertFalse(state.isFriendsLoading)
         assertNull(state.friendsError) // No error because the operation succeeds partially
+      }
+
+  /**
+   * Verifies that upon group creation, members that were added get a notification, and members that
+   * weren't don't
+   */
+  @Test
+  fun saveGroupSendsNotificationToMembers() =
+      runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        // Add Alice
+        viewModel.onFriendToggled(FRIEND_ALICE)
+        advanceUntilIdle()
+
+        // Input a name
+        viewModel.onNameChanged("Alice & Me :)")
+        advanceUntilIdle()
+
+        // Save the group
+        viewModel.saveGroup()
+        advanceUntilIdle()
+
+        // Check that notifications are sent
+        val aliceNotifs = notificationsRepository.getUserNotifications(FRIEND_ALICE.uid)
+        val bobNotifs = notificationsRepository.getUserNotifications(FRIEND_BOB.uid)
+
+        // Check that Alice has a notification of the correct type, and Bob has no notifications
+
+        assertEquals(1, aliceNotifs.size)
+        assertEquals(NotificationType.GROUP_ADDED, aliceNotifs[0].type)
+
+        assertEquals(0, bobNotifs.size)
       }
 
   /** Checks that searching and then clearing the search query has the intended behaviour */

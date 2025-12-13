@@ -3,7 +3,7 @@ package com.android.gatherly.model.todo
 import kotlin.String
 
 /** Represents a repository that manages a local list of todos. */
-class ToDosLocalRepository : ToDosRepository {
+class ToDosLocalRepository(private val limitToUser: String? = null) : ToDosRepository {
 
   private val todos: MutableList<ToDo> = mutableListOf()
 
@@ -14,7 +14,11 @@ class ToDosLocalRepository : ToDosRepository {
   }
 
   override suspend fun getAllTodos(): List<ToDo> {
-    return todos
+    return if (limitToUser == null) {
+      todos
+    } else {
+      todos.filter { it.ownerId == limitToUser }
+    }
   }
 
   override suspend fun getTodo(todoID: String): ToDo {
@@ -50,5 +54,19 @@ class ToDosLocalRepository : ToDosRepository {
 
   override suspend fun getAllEndedTodos(): List<ToDo> {
     TODO("Not yet implemented")
+  }
+
+  override suspend fun updateTodosTagToNull(categoryId: String, ownerId: String) {
+    val todosToUpdate =
+        todos.filter {
+          val tag = it.tag
+          tag != null && tag.id == categoryId
+        }
+    todosToUpdate.forEach { todo ->
+      val index = todos.indexOf(todo)
+      if (index != -1) {
+        todos[index] = todo.copy(tag = null)
+      }
+    }
   }
 }

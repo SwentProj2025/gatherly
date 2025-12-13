@@ -23,9 +23,12 @@ import com.android.gatherly.model.group.GroupsLocalRepository
 import com.android.gatherly.model.group.GroupsRepository
 import com.android.gatherly.model.map.FakeNominatimLocationRepository
 import com.android.gatherly.model.map.Location
+import com.android.gatherly.model.points.PointsLocalRepository
+import com.android.gatherly.model.points.PointsRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
+import com.android.gatherly.utils.EventsParticipantsSuggestionTestTag
 import com.android.gatherly.utils.MockitoUtils
 import com.android.gatherly.utils.TestDates.currentDay
 import com.android.gatherly.utils.TestDates.currentMonth
@@ -40,7 +43,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -56,6 +58,7 @@ class AddEventsScreenTest {
   private lateinit var addEventsViewModel: AddEventViewModel
   private lateinit var eventsRepository: EventsRepository
   private lateinit var profileRepository: ProfileRepository
+  private lateinit var pointsRepository: PointsRepository
   private lateinit var groupsRepository: GroupsRepository
   private lateinit var mockitoUtils: MockitoUtils
 
@@ -66,6 +69,7 @@ class AddEventsScreenTest {
     profileRepository = ProfileLocalRepository()
     eventsRepository = EventsLocalRepository()
     groupsRepository = GroupsLocalRepository()
+    pointsRepository = PointsLocalRepository()
     fakeNominatimClient = FakeNominatimLocationRepository()
 
     fill_repositories()
@@ -77,6 +81,7 @@ class AddEventsScreenTest {
         AddEventViewModel(
             profileRepository = profileRepository,
             eventsRepository = eventsRepository,
+            pointsRepository = pointsRepository,
             nominatimClient = fakeNominatimClient,
             authProvider = { mockitoUtils.mockAuth },
             groupsRepository = groupsRepository)
@@ -307,9 +312,13 @@ class AddEventsScreenTest {
         .onNodeWithTag(AddEventScreenTestTags.BUTTON_PRIVATE_FRIENDS_EVENT)
         .assertIsDisplayed()
 
-    composeTestRule.onNodeWithTag(AddEventScreenTestTags.INPUT_PARTICIPANT).assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(EventsParticipantsSuggestionTestTag.INPUT_PARTICIPANT)
+        .assertIsDisplayed()
 
-    composeTestRule.onNodeWithTag(AddEventScreenTestTags.INPUT_GROUP).assertIsNotDisplayed()
+    composeTestRule
+        .onNodeWithTag(EventsParticipantsSuggestionTestTag.INPUT_GROUP)
+        .assertIsNotDisplayed()
 
     composeTestRule
         .onNodeWithTag(AddEventScreenTestTags.BUTTON_PRIVATE_GROUP_EVENT)
@@ -319,21 +328,26 @@ class AddEventsScreenTest {
     // Wait for the input participant disappear from the compose tree
     composeTestRule.waitUntil(TIMEOUT) {
       try {
-        composeTestRule.onNodeWithTag(AddEventScreenTestTags.INPUT_PARTICIPANT).assertDoesNotExist()
+        composeTestRule
+            .onNodeWithTag(EventsParticipantsSuggestionTestTag.INPUT_PARTICIPANT)
+            .assertDoesNotExist()
         true
       } catch (e: AssertionError) {
         false
       }
     }
 
-    composeTestRule.onNodeWithTag(AddEventScreenTestTags.INPUT_PARTICIPANT).assertIsNotDisplayed()
+    composeTestRule
+        .onNodeWithTag(EventsParticipantsSuggestionTestTag.INPUT_PARTICIPANT)
+        .assertIsNotDisplayed()
 
-    composeTestRule.onNodeWithTag(AddEventScreenTestTags.INPUT_GROUP).assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(EventsParticipantsSuggestionTestTag.INPUT_GROUP)
+        .assertIsDisplayed()
   }
 
   /** Test: Verifies that group suggestion working correctly */
   @Test
-  @Ignore("Need to fix first the issue with groupsRepository addGroup")
   fun testGroupSuggestionsAppear() = runTest {
     groupsRepository.addGroup(
         Group(
@@ -343,31 +357,43 @@ class AddEventsScreenTest {
             creatorId = ownerProfile.uid,
             description = "",
             adminIds = listOf(ownerProfile.uid)))
+    val group = groupsRepository.getGroupByName("MyGroup")
 
     composeTestRule.onNodeWithTag(AddEventScreenTestTags.SWITCH_PUBLIC_PRIVATE_EVENT).performClick()
     composeTestRule.onNodeWithTag(AddEventScreenTestTags.BUTTON_PRIVATE_GROUP_EVENT).performClick()
 
-    composeTestRule.onNodeWithTag(AddEventScreenTestTags.INPUT_GROUP).performTextInput("My")
+    composeTestRule
+        .onNodeWithTag(EventsParticipantsSuggestionTestTag.INPUT_GROUP)
+        .performTextInput("My")
 
-    composeTestRule.waitUntil(timeoutMillis = 5000L) {
-      composeTestRule.onNodeWithTag(AddEventScreenTestTags.GROUP_MENU).isDisplayed()
+    composeTestRule.waitUntil(timeoutMillis = 10000L) {
+      composeTestRule.onNodeWithTag(EventsParticipantsSuggestionTestTag.GROUP_MENU).isDisplayed()
+
+      composeTestRule
+          .onNodeWithTag(
+              EventsParticipantsSuggestionTestTag.getTestTagGroupSuggestionItem(group.gid),
+              useUnmergedTree = true)
+          .isDisplayed()
     }
-    composeTestRule
-        .onNodeWithTag(AddEventScreenTestTags.getTestTagGroupSuggestionItem("G1"))
-        .assertIsDisplayed()
 
     composeTestRule
-        .onNodeWithTag(AddEventScreenTestTags.getTestTagGroupSuggestionAdd("G1"))
+        .onNodeWithTag(EventsParticipantsSuggestionTestTag.getTestTagGroupSuggestionAdd(group.gid))
         .assertIsDisplayed()
         .performClick()
 
     composeTestRule
-        .onNodeWithTag(AddEventScreenTestTags.getTestTagGroupSuggestionAdd("G1"))
+        .onNodeWithTag(EventsParticipantsSuggestionTestTag.getTestTagGroupSuggestionAdd(group.gid))
         .assertIsNotDisplayed()
 
     composeTestRule
-        .onNodeWithTag(AddEventScreenTestTags.getTestTagProfileRemoveItem("G1"))
+        .onNodeWithTag(
+            EventsParticipantsSuggestionTestTag.getTestTagGroupSuggestionRemove(group.gid))
         .assertIsDisplayed()
+
+    composeTestRule
+        .onNodeWithTag(EventsParticipantsSuggestionTestTag.BUTTON_SEE_ADDED_GROUP)
+        .assertIsDisplayed()
+        .performClick()
   }
 
   /** Test: Verify that the suggestion works for private friends event */
@@ -382,41 +408,41 @@ class AddEventsScreenTest {
         .performClick()
 
     composeTestRule
-        .onNodeWithTag(AddEventScreenTestTags.INPUT_PARTICIPANT)
+        .onNodeWithTag(EventsParticipantsSuggestionTestTag.INPUT_PARTICIPANT)
         .performTextInput(nameParticipant)
 
     composeTestRule.waitUntil(timeoutMillis = 10000L) {
       composeTestRule
-          .onAllNodes(hasTestTag(AddEventScreenTestTags.PARTICIPANT_MENU))
+          .onAllNodes(hasTestTag(EventsParticipantsSuggestionTestTag.PARTICIPANT_MENU))
           .fetchSemanticsNodes()
           .isNotEmpty()
     }
 
     composeTestRule
         .onNodeWithTag(
-            AddEventScreenTestTags.getTestTagProfileSuggestionItem(uidParticipant),
+            EventsParticipantsSuggestionTestTag.getTestTagProfileSuggestionItem(uidParticipant),
             useUnmergedTree = true)
         .assertIsDisplayed()
 
     composeTestRule
-        .onNodeWithTag(AddEventScreenTestTags.getTestTagProfileAddItem(uidParticipant))
+        .onNodeWithTag(EventsParticipantsSuggestionTestTag.getTestTagProfileAddItem(uidParticipant))
         .assertIsDisplayed()
         .performClick()
 
     composeTestRule
-        .onNodeWithTag(AddEventScreenTestTags.BUTTON_SEE_ADDED_PARTICIPANT)
+        .onNodeWithTag(EventsParticipantsSuggestionTestTag.BUTTON_SEE_ADDED_PARTICIPANT)
         .assertIsDisplayed()
         .performClick()
 
     composeTestRule
         .onNodeWithTag(
-            AddEventScreenTestTags.getTestTagAddedProfileItem(uidParticipant),
+            EventsParticipantsSuggestionTestTag.getTestTagAddedProfileItem(uidParticipant),
             useUnmergedTree = true)
         .assertIsDisplayed()
 
     composeTestRule
         .onNodeWithTag(
-            AddEventScreenTestTags.getTestTagAddedProfileRemoveItem(uidParticipant),
+            EventsParticipantsSuggestionTestTag.getTestTagAddedProfileRemoveItem(uidParticipant),
             useUnmergedTree = true)
         .assertIsDisplayed()
   }

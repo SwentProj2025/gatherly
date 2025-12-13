@@ -31,11 +31,13 @@ import com.android.gatherly.ui.focusTimer.TimerScreen
 import com.android.gatherly.ui.friends.FindFriendsScreen
 import com.android.gatherly.ui.friends.FriendsScreen
 import com.android.gatherly.ui.groups.AddGroupScreen
+import com.android.gatherly.ui.groups.GroupInformationScreen
 import com.android.gatherly.ui.groups.GroupsOverviewScreen
 import com.android.gatherly.ui.homePage.HomePageScreen
 import com.android.gatherly.ui.map.MapScreen
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.Screen
+import com.android.gatherly.ui.notifications.NotificationsScreen
 import com.android.gatherly.ui.points.FocusPointsScreen
 import com.android.gatherly.ui.profile.ProfileScreen
 import com.android.gatherly.ui.profile.UserProfileScreen
@@ -326,25 +328,47 @@ fun GatherlyApp(
       }
     }
 
-    // ADD GROUP COMPOSABLE  ------------------------------
+    // GROUPS COMPOSABLE  ------------------------------
     navigation(
         startDestination = Screen.AddGroupScreen.route,
         route = Screen.AddGroupScreen.name,
     ) {
+
+      // ADD GROUP COMPOSABLE  ------------------------------
       composable(Screen.AddGroupScreen.route) {
         AddGroupScreen(
             goBack = { navigationActions.goBack() },
-            onCreate = { navigationActions.navigateTo(Screen.HomePage) })
+            onCreate = { navigationActions.navigateTo(Screen.OverviewGroupsScreen) })
       }
-    }
 
-    // GROUP OVERVIEW COMPOSABLE  ------------------------------
-    navigation(
-        startDestination = Screen.OverviewGroupsScreen.route,
-        route = Screen.OverviewGroupsScreen.name,
-    ) {
-      composable(Screen.OverviewGroupsScreen.route) {
-        GroupsOverviewScreen(navigationActions = navigationActions)
+      // NOTIFICATIONS COMPOSABLE  ------------------------------
+      navigation(
+          startDestination = Screen.NotificationsScreen.route,
+          route = Screen.NotificationsScreen.name,
+      ) {
+        composable(Screen.NotificationsScreen.route) {
+          NotificationsScreen(navigationActions = navigationActions)
+        }
+      }
+
+      // GROUP INFO COMPOSABLE  ------------------------------
+      composable(Screen.GroupInfo.route) { navBackStackEntry ->
+        val uid = navBackStackEntry.arguments?.getString("uid")
+        uid?.let { GroupInformationScreen(navigationActions = navigationActions, groupId = it) }
+            ?: run {
+              Log.e("GroupInformationScreen", "Group UID is null")
+              Toast.makeText(context, "Navigating to an invalid group", Toast.LENGTH_SHORT).show()
+            }
+      }
+
+      // GROUP OVERVIEW COMPOSABLE  ------------------------------
+      navigation(
+          startDestination = Screen.OverviewGroupsScreen.route,
+          route = Screen.OverviewGroupsScreen.name,
+      ) {
+        composable(Screen.OverviewGroupsScreen.route) {
+          GroupsOverviewScreen(navigationActions = navigationActions)
+        }
       }
     }
   }

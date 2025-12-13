@@ -39,6 +39,7 @@ import com.android.gatherly.model.profile.ProfileStatus
 import com.android.gatherly.ui.navigation.*
 import com.android.gatherly.ui.profile.ProfilePictureWithStatus
 import com.android.gatherly.utils.GatherlyAlertDialog
+import com.android.gatherly.utils.GatherlyAlertDialogActions
 import java.io.File
 
 // Technical constants
@@ -369,11 +370,14 @@ fun SettingsScreen(
               bodyText = stringResource(R.string.anon_log_out_text),
               dismissText = stringResource(R.string.cancel),
               confirmText = stringResource(R.string.log_out),
-              onDismiss = { shouldShowLogOutWarning.value = false },
-              onConfirm = {
-                settingsViewModel.signOut(credentialManager)
-                shouldShowLogOutWarning.value = false
-              },
+              actions =
+                  GatherlyAlertDialogActions(
+                      onDismiss = { shouldShowLogOutWarning.value = false },
+                      onConfirm = {
+                        settingsViewModel.signOut(credentialManager)
+                        shouldShowLogOutWarning.value = false
+                      },
+                  ),
               isImportantWarning = true)
         }
       })

@@ -7,6 +7,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsRepositoryFirestore
+import com.android.gatherly.model.points.PointsLocalRepository
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.utils.FirebaseEmulator
 import com.android.gatherly.utils.FirestoreGatherlyProfileTest
@@ -940,8 +941,10 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
 
         eventRepo.addEvent(event)
 
+        val pointsRepository = PointsLocalRepository()
+
         // UserB create a new event
-        createEvent(eventRepo, repo, event, userAUid, emptyList())
+        createEvent(eventRepo, repo, pointsRepository, event, userAUid, emptyList())
 
         // Verify that the event is in the User B profile's events list
         val profileA = repo.getProfileByUid(userAUid)
@@ -1028,7 +1031,9 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
 
         eventRepo.addEvent(event)
 
-        createEvent(eventRepo, repo, event, userAUid, emptyList())
+        val pointsRepository = PointsLocalRepository()
+
+        createEvent(eventRepo, repo, pointsRepository, event, userAUid, emptyList())
 
         assertTrue(
             repository.getProfileByUid(userAUid)?.badgeIds?.contains("starting_EventsCreated") ==

@@ -3,6 +3,8 @@ package com.android.gatherly.ui.friends
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
 import com.android.gatherly.model.notification.NotificationsLocalRepository
 import com.android.gatherly.model.notification.NotificationsRepository
+import com.android.gatherly.model.points.PointsLocalRepository
+import com.android.gatherly.model.points.PointsRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
@@ -140,6 +142,7 @@ class FriendsScreensTestHelper(private val composeTestRule: ComposeContentTestRu
     runTest(timeout = 120.seconds) {
       val profileRepository: ProfileRepository = ProfileLocalRepository()
       val notificationsRepository: NotificationsRepository = NotificationsLocalRepository()
+      val pointsRepository: PointsRepository = PointsLocalRepository()
 
       profileRepository.addProfile(user)
       addProfiles(profileRepository)
@@ -153,6 +156,7 @@ class FriendsScreensTestHelper(private val composeTestRule: ComposeContentTestRu
           FriendsViewModel(
               repository = profileRepository,
               notificationsRepository = notificationsRepository,
+              pointsRepository = pointsRepository,
               authProvider = { mockito.mockAuth })
 
       composeTestRule.setContent {

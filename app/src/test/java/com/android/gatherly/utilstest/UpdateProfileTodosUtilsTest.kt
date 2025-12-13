@@ -1,6 +1,7 @@
 package com.android.gatherly.utilstest
 
 import com.android.gatherly.model.badge.BadgeType
+import com.android.gatherly.model.points.PointsLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
@@ -40,13 +41,15 @@ class UpdateProfileTodosUtilsTest {
     coEvery { todoRepository.getTodo(any()) } returns mockTodo
     coEvery { todoRepository.editTodo(any(), any()) } just runs
 
-    coEvery { profileRepository.incrementBadge(any(), any()) } just runs
+    coEvery { profileRepository.incrementBadge(any(), any()) } returns null
   }
 
   /** Test adding a ToDo calls addTodo and increments "created todos" exactly once. */
   @Test
   fun testAddTodoUpdateBadges_callsIncrementCreatedTodo() = runTest {
-    addTodo(todoRepository, profileRepository, mockTodo, currentUserId)
+    val pointsRepository = PointsLocalRepository()
+
+    addTodo(todoRepository, profileRepository, pointsRepository, mockTodo, currentUserId)
 
     coVerify(exactly = 1) {
       todoRepository.addTodo(mockTodo)
@@ -61,12 +64,14 @@ class UpdateProfileTodosUtilsTest {
     val existing = mockTodo.copy(uid = todoId, status = ToDoStatus.ONGOING)
     val newStatus = ToDoStatus.ENDED
     val expectedUpdated = existing.copy(status = newStatus)
+    val pointsRepository = PointsLocalRepository()
 
     coEvery { todoRepository.getTodo(todoId) } returns existing
 
     editTodo(
         todoRepository = todoRepository,
         profileRepository = profileRepository,
+        pointsRepository = pointsRepository,
         todoID = todoId,
         newStatus = newStatus,
         currentUserId = currentUserId)
@@ -85,12 +90,14 @@ class UpdateProfileTodosUtilsTest {
     val existing = mockTodo.copy(uid = todoId, status = ToDoStatus.ENDED)
     val newStatus = ToDoStatus.ONGOING
     val expectedUpdated = existing.copy(status = newStatus)
+    val pointsRepository = PointsLocalRepository()
 
     coEvery { todoRepository.getTodo(todoId) } returns existing
 
     editTodo(
         todoRepository = todoRepository,
         profileRepository = profileRepository,
+        pointsRepository = pointsRepository,
         todoID = todoId,
         newStatus = newStatus,
         currentUserId = currentUserId)

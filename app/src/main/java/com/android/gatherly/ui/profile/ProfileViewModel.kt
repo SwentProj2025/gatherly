@@ -18,6 +18,8 @@ import com.android.gatherly.model.group.GroupsRepository
 import com.android.gatherly.model.group.GroupsRepositoryProvider
 import com.android.gatherly.model.notification.NotificationsRepository
 import com.android.gatherly.model.notification.NotificationsRepositoryProvider
+import com.android.gatherly.model.points.PointsRepository
+import com.android.gatherly.model.points.PointsRepositoryProvider
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryProvider
@@ -98,6 +100,7 @@ data class ProfileState(
 class ProfileViewModel(
     private val profileRepository: ProfileRepository = ProfileRepositoryProvider.repository,
     private val groupsRepository: GroupsRepository = GroupsRepositoryProvider.repository,
+    private val pointsRepository: PointsRepository = PointsRepositoryProvider.repository,
     private val notificationsRepository: NotificationsRepository =
         NotificationsRepositoryProvider.repository,
     private val authProvider: () -> FirebaseAuth = { Firebase.auth },
@@ -132,7 +135,10 @@ class ProfileViewModel(
       try {
         val profile =
             getProfileWithSyncedFriendNotifications(
-                profileRepository, notificationsRepository, authProvider().currentUser?.uid!!)
+                profileRepository,
+                notificationsRepository,
+                pointsRepository,
+                authProvider().currentUser?.uid!!)
         if (profile == null) {
           _uiState.value =
               _uiState.value.copy(isLoading = false, errorMessage = "Profile not found")
@@ -141,6 +147,7 @@ class ProfileViewModel(
               _uiState.value.copy(
                   isLoading = false,
                   profile = profile,
+                  focusPoints = profile.focusPoints,
                   topBadges = buildUiStateFromProfile(profile))
         }
       } catch (e: Exception) {
