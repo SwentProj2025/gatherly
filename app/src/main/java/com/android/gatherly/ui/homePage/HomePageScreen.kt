@@ -370,35 +370,37 @@ fun MiniMap(
             modifier =
                 Modifier.padding(dimensionResource(id = R.dimen.padding_small_regular))
                     .align(Alignment.BottomStart)) {
-              FilterIconButton(toggled = showEvents, onClick = { showEvents = !showEvents })
+              FilterIconButton(isTodo = showEvents, onClick = { showEvents = !showEvents })
             }
       }
 }
 
 /**
- * A circular toggle button used to switch between two filter modes (e.g., todos vs. events).
+ * A circular toggle button used to switch between two filter modes (e.g. todos vs. events).
  *
- * @param toggled Indicates whether the button is in the toggled state. Drives which icon is shown.
+ * @param isTodo Drives which icon is shown and what color should the button be.
  * @param onClick Callback invoked when the user taps the button.
  */
 @Composable
-fun FilterIconButton(toggled: Boolean, onClick: () -> Unit) {
+fun FilterIconButton(isTodo: Boolean, onClick: () -> Unit) {
+  val backgroundColor =
+      if (isTodo) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.secondary
   Card(
       modifier =
           Modifier.size(dimensionResource(id = R.dimen.homepage_filter_icon_button_size))
               .clickable { onClick() }
               .testTag(HomePageScreenTestTags.MINIMAP_BUTTON),
-      shape = CircleShape,
+      shape = RoundedCornerShape(dimensionResource(id = R.dimen.rounded_corner_shape_medium)),
       elevation =
           CardDefaults.cardElevation(
               dimensionResource(id = R.dimen.homepage_filter_card_elevation)),
       colors =
           CardDefaults.cardColors(
-              containerColor = MaterialTheme.colorScheme.primaryContainer,
+              containerColor = backgroundColor,
               contentColor = MaterialTheme.colorScheme.onPrimaryContainer)) {
         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
           Icon(
-              imageVector = if (toggled) Icons.Default.Event else Icons.AutoMirrored.Filled.List,
+              imageVector = if (isTodo) Icons.Default.Event else Icons.AutoMirrored.Filled.List,
               contentDescription =
                   stringResource(id = R.string.homepage_map_button_icon_description))
         }
