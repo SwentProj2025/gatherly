@@ -882,4 +882,54 @@ class MapViewModelTests {
               assertTrue(vm.uiState.value.itemsList.isEmpty())
             }
       }
+
+  /**
+   * Verifies that [MapViewModel.initialiseCameraPosition] checks the coordinator, consumes the Todo
+   * ID, and centers the camera on that event.
+   */
+  @OptIn(ExperimentalCoroutinesApi::class)
+  @Test
+  fun initialiseCameraPosition_withCoordinatorTodoRequest_centersOnTodo() =
+      runTest(testDispatcher) {
+        val targetTodoId = "target_todo"
+        val targetLocation = com.android.gatherly.model.map.Location(46.4, 6.5, "Todo Loc")
+
+        val targetTodo =
+            ToDo(
+                uid = targetTodoId,
+                name = "Todo",
+                description = "Desc",
+                dueDate = null,
+                dueTime = null,
+                location = targetLocation,
+                status = ToDoStatus.ONGOING,
+                ownerId = "ownerId")
+
+        val todosRepo = mockk<ToDosRepository>()
+        val eventsRepo = mockk<EventsRepository>(relaxed = true)
+        val mockCoordinator = mockk<MapCoordinator>(relaxed = true)
+        val mockContext = mockk<Context>(relaxed = true)
+
+        coEvery { todosRepo.getAllTodos() } returns listOf(targetTodo)
+        every { mockCoordinator.getUnconsumedEventId() } returns null
+        every { mockCoordinator.getUnconsumedTodoId() } returns targetTodoId
+
+        val vm =
+            MapViewModel(
+                todosRepository = todosRepo,
+                eventsRepository = eventsRepo,
+                fusedLocationClient = null,
+                coordinator = mockCoordinator)
+
+        advanceUntilIdle()
+
+        vm.initialiseCameraPosition(mockContext)
+        advanceUntilIdle()
+
+        verify { mockCoordinator.markConsumed() }
+
+        val expectedLatLng = LatLng(targetLocation.latitude, targetLocation.longitude)
+        assertEquals(expectedLatLng, vm.uiState.value.cameraPos)
+        assertFalse(vm.uiState.value.displayEventsPage)
+      }
 }
