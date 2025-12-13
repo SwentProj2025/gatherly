@@ -7,8 +7,12 @@ import com.android.gatherly.model.notification.Notification
 import com.android.gatherly.model.notification.NotificationType
 import com.android.gatherly.model.notification.NotificationsRepository
 import com.android.gatherly.model.notification.NotificationsRepositoryFirestore
+import com.android.gatherly.model.points.PointsRepository
+import com.android.gatherly.model.points.PointsRepositoryProvider
+import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
+import com.android.gatherly.utils.addFriendWithPointsCheck
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
@@ -22,6 +26,7 @@ import kotlinx.coroutines.launch
 /** UI state for the Notifications screen. */
 data class NotificationUiState(
     val notifications: List<Notification> = emptyList(),
+    val idToProfile: Map<String, Profile> = emptyMap(),
     val isLoading: Boolean = false,
     val errorMessage: String? = null,
     val hasUnreadFriendRequests: Boolean = false
@@ -41,6 +46,7 @@ class NotificationViewModel(
         NotificationsRepositoryFirestore(Firebase.firestore),
     private val profileRepository: ProfileRepository =
         ProfileRepositoryFirestore(Firebase.firestore, Firebase.storage),
+    private val pointsRepository: PointsRepository = PointsRepositoryProvider.repository,
     private val authProvider: () -> FirebaseAuth = { Firebase.auth }
 ) : ViewModel() {
 
@@ -58,9 +64,20 @@ class NotificationViewModel(
         val notifications = notificationsRepository.getUserNotifications(currentUserId)
         val hasUnreadFriendRequests =
             notifications.any { it.type == NotificationType.FRIEND_REQUEST && !it.wasRead }
+
+        val idToProfile = mutableMapOf<String, Profile>()
+        for (notification in notifications) {
+          val senderId = notification.senderId ?: ""
+          val profile = profileRepository.getProfileByUid(senderId)
+          if (profile != null) {
+            idToProfile[senderId] = profile
+          }
+        }
+
         _uiState.value =
             _uiState.value.copy(
                 notifications = notifications,
+                idToProfile = idToProfile,
                 isLoading = false,
                 hasUnreadFriendRequests = hasUnreadFriendRequests)
       } catch (e: Exception) {
@@ -96,7 +113,7 @@ class NotificationViewModel(
                 ?: throw IllegalStateException("Sender profile not found")
         val senderUsername = senderProfile.username
 
-        profileRepository.addFriend(friend = senderUsername, currentUserId = recipientId)
+        addFriendWithPointsCheck(profileRepository, pointsRepository, senderUsername, recipientId)
 
         val acceptedId = notificationsRepository.getNewId()
         val acceptedNotification =

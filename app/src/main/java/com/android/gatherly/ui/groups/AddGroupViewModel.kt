@@ -12,6 +12,8 @@ import com.android.gatherly.model.notification.Notification
 import com.android.gatherly.model.notification.NotificationType
 import com.android.gatherly.model.notification.NotificationsRepository
 import com.android.gatherly.model.notification.NotificationsRepositoryProvider
+import com.android.gatherly.model.points.PointsRepository
+import com.android.gatherly.model.points.PointsRepositoryProvider
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
@@ -62,6 +64,7 @@ data class AddGroupUiState(
 class AddGroupViewModel(
     private val groupsRepository: GroupsRepository = GroupsRepositoryProvider.repository,
     private val profileRepository: ProfileRepository = ProfileRepositoryProvider.repository,
+    private val pointsRepository: PointsRepository = PointsRepositoryProvider.repository,
     private val notificationsRepository: NotificationsRepository =
         NotificationsRepositoryProvider.repository,
     private val authProvider: () -> FirebaseAuth = { Firebase.auth }
@@ -155,7 +158,9 @@ class AddGroupViewModel(
             getProfileWithSyncedFriendNotifications(
                 profileRepository = profileRepository,
                 notificationsRepository = notificationsRepository,
-                currentUserId) ?: throw NoSuchElementException("Current user profile not found")
+                pointsRepository = pointsRepository,
+                userId = currentUserId)
+                ?: throw NoSuchElementException("Current user profile not found")
 
         val friendProfiles =
             currentProfile.friendUids.mapNotNull { friendId ->

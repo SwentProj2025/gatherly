@@ -9,6 +9,8 @@ import com.android.gatherly.model.event.EventsRepository
 import com.android.gatherly.model.event.EventsRepositoryFirestore
 import com.android.gatherly.model.notification.NotificationsRepository
 import com.android.gatherly.model.notification.NotificationsRepositoryProvider
+import com.android.gatherly.model.points.PointsRepository
+import com.android.gatherly.model.points.PointsRepositoryProvider
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryProvider
@@ -40,6 +42,7 @@ class HomePageViewModel(
     private val eventsRepository: EventsRepository = EventsRepositoryFirestore(Firebase.firestore),
     private val toDosRepository: ToDosRepository = ToDosRepositoryProvider.repository,
     private val profileRepository: ProfileRepository = ProfileRepositoryProvider.repository,
+    private val pointsRepository: PointsRepository = PointsRepositoryProvider.repository,
     private val notificationsRepository: NotificationsRepository =
         NotificationsRepositoryProvider.repository,
     private val authProvider: () -> FirebaseAuth = { Firebase.auth }
@@ -60,7 +63,10 @@ class HomePageViewModel(
         val events = eventsRepository.getAllEvents()
         val profile =
             getProfileWithSyncedFriendNotifications(
-                profileRepository, notificationsRepository, authProvider().currentUser?.uid!!)!!
+                profileRepository,
+                notificationsRepository,
+                pointsRepository,
+                authProvider().currentUser?.uid!!)!!
         val friends = profile.friendUids.map { profileRepository.getProfileByUid(it)!! }
         val isAnon = authProvider().currentUser?.isAnonymous ?: true
 

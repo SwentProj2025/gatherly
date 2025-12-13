@@ -18,6 +18,8 @@ import com.android.gatherly.model.group.GroupsRepositoryFirestore
 import com.android.gatherly.model.map.Location
 import com.android.gatherly.model.map.LocationRepository
 import com.android.gatherly.model.map.NominatimLocationRepository
+import com.android.gatherly.model.points.PointsRepository
+import com.android.gatherly.model.points.PointsRepositoryProvider
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
@@ -117,6 +119,7 @@ class AddEventViewModel(
     private val profileRepository: ProfileRepository,
     private val groupsRepository: GroupsRepository,
     private val eventsRepository: EventsRepository,
+    private val pointsRepository: PointsRepository,
     private val nominatimClient: LocationRepository = NominatimLocationRepository(client),
     private val authProvider: () -> FirebaseAuth = { Firebase.auth }
 ) : ViewModel() {
@@ -567,7 +570,13 @@ class AddEventViewModel(
 
       // Save in event repository
       viewModelScope.launch {
-        createEvent(eventsRepository, profileRepository, event, currentProfile.uid, participants)
+        createEvent(
+            eventsRepository,
+            profileRepository,
+            pointsRepository,
+            event,
+            currentProfile.uid,
+            participants)
         uiState =
             uiState.copy(
                 displayToast = true, toastString = "Saved", isSaving = false, backToOverview = true)
@@ -588,12 +597,14 @@ class AddEventViewModel(
             ProfileRepositoryFirestore(Firebase.firestore, Firebase.storage),
         eventsRepository: EventsRepository = EventsRepositoryFirestore(Firebase.firestore),
         nominatimClient: NominatimLocationRepository = NominatimLocationRepository(client),
-        groupsRepository: GroupsRepository = GroupsRepositoryFirestore(Firebase.firestore)
+        groupsRepository: GroupsRepository = GroupsRepositoryFirestore(Firebase.firestore),
+        pointsRepository: PointsRepository = PointsRepositoryProvider.repository
     ): ViewModelProvider.Factory {
       return GenericViewModelFactory {
         AddEventViewModel(
             profileRepository = profileRepository,
             eventsRepository = eventsRepository,
+            pointsRepository = pointsRepository,
             nominatimClient = nominatimClient,
             groupsRepository = groupsRepository)
       }
