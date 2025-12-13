@@ -576,7 +576,6 @@ private fun MemberItem(
                   markedForRemoval = markedForRemoval,
                   showAdminToggle = showAdminToggle,
                   showRemoveToggle = showRemoveToggle,
-                  spacing = smallSpacing,
                   onToggleAdmin = onToggleAdmin,
                   onToggleRemove = onToggleRemove)
             }
@@ -599,10 +598,12 @@ private fun MemberToggles(
     markedForRemoval: Boolean,
     showAdminToggle: Boolean,
     showRemoveToggle: Boolean,
-    spacing: Dp,
     onToggleAdmin: () -> Unit,
     onToggleRemove: () -> Unit
 ) {
+
+  val smallSpacing = dimensionResource(R.dimen.spacing_between_fields)
+
   if (!showAdminToggle && !showRemoveToggle) return
 
   Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.wrapContentWidth()) {
@@ -611,7 +612,7 @@ private fun MemberToggles(
     }
 
     if (showAdminToggle && showRemoveToggle) {
-      Spacer(modifier = Modifier.width(spacing))
+      Spacer(modifier = Modifier.width(smallSpacing))
     }
 
     if (showRemoveToggle) {
