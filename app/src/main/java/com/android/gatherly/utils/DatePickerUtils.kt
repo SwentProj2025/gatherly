@@ -19,6 +19,12 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
+/**
+ * Date picker UI components for the Gatherly app.
+ *
+ * Provides Material3-based date selection dialog and input field with proper formatting and error
+ * handling.
+ */
 object DatePickerTestTags {
   const val DATE_PICKER_DIALOG = "datePickerDialog"
   const val DATE_PICKER_SAVE = "datePickerSaveButton"
@@ -27,7 +33,7 @@ object DatePickerTestTags {
 private const val placeholder: String = "dd/MM/yyyy"
 
 /**
- * Helper function who displays a Material3 Date Picker dialog allowing the user to select a date.
+ * Displays a Material3 Date Picker dialog that allows the user to select a date.
  *
  * The dialog is shown only when [show] is true. It initializes with the provided [initialDate] if
  * valid and formats the selected date using the specified [dateFormat].
@@ -86,18 +92,17 @@ fun GatherlyDatePicker(
 }
 
 /**
- * Helper function : Read-only input date field that displays a selected date and triggers the Date
- * Picker when clicked.
+ * Read-only date input field that displays a selected date and opens the Date Picker when clicked.
  *
- * This composable shows an outlined text field styled for date input, with optional error handling
+ * This composable shows an outlined text field styled for date input, with optional error handling.
  *
  * @param value Current value displayed in the field.
  * @param label Label displayed above the input field.
- * @param placeholder Placeholder text when the field is empty.
- * @param isErrorMessage Indicates whether the field is in an error state with a specific message.
+ * @param isErrorMessage Error message to display, or null if no error.
  * @param onClick Callback invoked when the field is clicked.
  * @param modifier Modifier applied to the root container.
- * @param testTag will represent (testTagInput: String,testTagError: String)
+ * @param testTag Pair of test tags where first is for the input field and second is for the error
+ *   message.
  * @param colors Color configuration for the text field.
  */
 @Composable
@@ -110,7 +115,7 @@ fun DatePickerInputField(
     testTag: Pair<String, String>,
     colors: TextFieldColors
 ) {
-  Box(modifier = modifier.fillMaxWidth().testTag(testTag.first)) { // Tag OUTER box
+  Box(modifier = modifier.fillMaxWidth().testTag(testTag.first)) {
     OutlinedTextField(
         value = value,
         onValueChange = {},
@@ -124,8 +129,8 @@ fun DatePickerInputField(
           }
         },
         colors = colors,
-        modifier = Modifier.fillMaxWidth()) // No tag here
+        modifier = Modifier.fillMaxWidth())
 
-    Box(modifier = Modifier.matchParentSize().clickable { onClick() }) // No tag here either
+    Box(modifier = Modifier.matchParentSize().clickable { onClick() })
   }
 }
