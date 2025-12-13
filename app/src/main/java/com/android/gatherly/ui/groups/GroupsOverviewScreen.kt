@@ -68,6 +68,8 @@ fun GroupsOverviewScreen(
   val snackBarHostState = remember { SnackbarHostState() }
   val errorMessage = uiState.value.errorMsg
 
+  LaunchedEffect(Unit) { groupsOverviewViewModel.refreshUIState() }
+
   LaunchedEffect(errorMessage) {
     if (errorMessage != null) {
       snackBarHostState.showSnackbar(message = errorMessage, withDismissAction = true)
