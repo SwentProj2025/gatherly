@@ -38,16 +38,23 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.integerResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
+import com.android.gatherly.model.todoCategory.ToDoCategory
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
 import com.android.gatherly.ui.theme.GatherlyTheme
+import com.android.gatherly.utils.AlertDialogCreateTag
+import com.android.gatherly.utils.AlertDialogWarningDeleteTag
+import com.android.gatherly.utils.CategoriesDropDown
 import com.android.gatherly.utils.DatePickerInputField
 import com.android.gatherly.utils.GatherlyAlertDialog
 import com.android.gatherly.utils.GatherlyAlertDialogActions
 import com.android.gatherly.utils.GatherlyDatePicker
+import com.android.gatherly.utils.PriorityDropDown
 import com.android.gatherly.utils.TimeInputField
 import kotlinx.coroutines.delay
 
@@ -76,6 +83,7 @@ object AddToDoScreenTestTags {
 
   /** Tag for the extra options button */
   const val MORE_OPTIONS = "moreOptions"
+  const val DROP_DOWN_PRIORITY_LEVEL = "dropDownPriorityLevel"
 }
 
 /**
@@ -125,8 +133,13 @@ fun AddToDoScreen(
   val fieldSpacing = dimensionResource(id = R.dimen.spacing_between_fields)
   val inputHeight = dimensionResource(id = R.dimen.input_height)
 
-  // Date state for the alert dialog visibilty
+  // Date state for the alert dialog visibility
   var showDatePicker by remember { mutableStateOf(false) }
+
+  // Create a new category alert dialog visibility
+  val showCreateTagDialog = remember { mutableStateOf(false) }
+  val showWarningDeleteTagDialog = remember { mutableStateOf<ToDoCategory?>(null) }
+  val categoriesList by addTodoViewModel.categories.collectAsStateWithLifecycle()
 
   LaunchedEffect(errorMsg) {
     if (errorMsg != null) {
@@ -196,7 +209,7 @@ fun AddToDoScreen(
                     maxLines = integerResource(R.integer.todo_description_max_lines))
               }
 
-              // Assignee Input
+              // More options bar
               item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -217,6 +230,27 @@ fun AddToDoScreen(
               }
 
               if (expandAdvanced.value) {
+
+                // Buttons row
+                item {
+                  Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+
+                    // Category drop down
+                    CategoriesDropDown(
+                        { category -> addTodoViewModel.selectTodoTag(category) },
+                        showCreateTagDialog,
+                        todoUIState.tag,
+                        showWarningDeleteTagDialog,
+                        categoriesList)
+                    // Priority level drop down
+                    PriorityDropDown(
+                        onSelectPriorityLevel = { level ->
+                          addTodoViewModel.selectPriorityLevel(level)
+                        },
+                        currentPriorityLevel = todoUIState.priorityLevel)
+                  }
+                }
+
                 // Location Input with dropdown
                 item {
                   LocationSuggestions(
@@ -293,6 +327,14 @@ fun AddToDoScreen(
             onDateSelected = { selectedDate -> addTodoViewModel.onDateChanged(selectedDate) },
             onDismiss = { showDatePicker = false })
       })
+
+  AlertDialogCreateTag(
+      showCreateTagDialog,
+      onCreateTag = { name, color -> addTodoViewModel.addCategory(name, color) })
+
+  AlertDialogWarningDeleteTag(
+      showWarningDeleteTagDialog,
+      onConfirmDelete = { category -> addTodoViewModel.deleteCategory(category) })
 }
 
 @Composable

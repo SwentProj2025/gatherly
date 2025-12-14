@@ -280,14 +280,14 @@ enum class Badge(
  * did the action 10 times Diamond : the user did the action 20 times Legend : the user did the
  * action more than 20 times
  */
-enum class BadgeRank {
-  BLANK,
-  STARTING,
-  BRONZE,
-  SILVER,
-  GOLD,
-  DIAMOND,
-  LEGEND
+enum class BadgeRank(val pointsEarned: Double) {
+  BLANK(pointsEarned = 0.0),
+  STARTING(pointsEarned = 10.0),
+  BRONZE(pointsEarned = 30.0),
+  SILVER(pointsEarned = 50.0),
+  GOLD(pointsEarned = 100.0),
+  DIAMOND(pointsEarned = 200.0),
+  LEGEND(pointsEarned = 300.0)
 }
 
 /**

@@ -442,7 +442,6 @@ class ProfileRepositoryFirestore(
     val docRef = profilesCollection.document(currentUserId)
     val friendId = getProfileByUsername(friend)?.uid
     docRef.update("friendUids", FieldValue.arrayUnion(friendId)).await()
-    incrementBadge(currentUserId, BadgeType.FRIENDS_ADDED)
   }
 
   override suspend fun deleteFriend(friend: String, currentUserId: String) {
@@ -508,27 +507,30 @@ class ProfileRepositoryFirestore(
     docRef.update("badgeIds", FieldValue.arrayUnion(badgeId)).await()
   }
 
-  override suspend fun incrementBadge(uid: String, type: BadgeType) {
+  override suspend fun incrementBadge(uid: String, type: BadgeType): String? {
     val docRef = profilesCollection.document(uid)
     val fieldName = "badgeCount.${type.name}"
 
     docRef.update(fieldName, FieldValue.increment(1)).await()
 
-    awardBadgeFor(uid, type, docRef.get().await().getLong(fieldName) ?: 0L)
+    val addBadge = awardBadgeFor(type, docRef.get().await().getLong(fieldName) ?: 0L)
+
+    return addBadge
   }
 
   /**
-   * Converts a count to a rank, then finds the matching badge in Badges enum and adds it to
-   * profile.
+   * Converts a count to a rank, then finds the matching badge in Badges enum
+   *
+   * It returns null if no badge should be awarded, or the id of the badge to award
    */
-  private suspend fun awardBadgeFor(uid: String, type: BadgeType, count: Long) {
+  private fun awardBadgeFor(type: BadgeType, count: Long): String? {
     val rank = countToRank(count)
-    if (rank == BadgeRank.BLANK) return
+    if (rank == BadgeRank.BLANK) return null
 
     // Find the matching Badge enum entry for this type + rank
-    val badge = Badge.entries.firstOrNull { it.type == type && it.rank == rank } ?: return
+    val badge = Badge.entries.firstOrNull { it.type == type && it.rank == rank } ?: return null
 
-    addBadge(uid, badge.id)
+    return badge.id
   }
 
   override suspend fun updateFocusPoints(uid: String, points: Double, addToLeaderboard: Boolean) {

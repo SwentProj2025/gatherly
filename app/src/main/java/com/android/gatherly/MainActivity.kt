@@ -31,6 +31,7 @@ import com.android.gatherly.ui.focusTimer.TimerScreen
 import com.android.gatherly.ui.friends.FindFriendsScreen
 import com.android.gatherly.ui.friends.FriendsScreen
 import com.android.gatherly.ui.groups.AddGroupScreen
+import com.android.gatherly.ui.groups.EditGroupScreen
 import com.android.gatherly.ui.groups.GroupInformationScreen
 import com.android.gatherly.ui.groups.GroupsOverviewScreen
 import com.android.gatherly.ui.homePage.HomePageScreen
@@ -351,12 +352,14 @@ fun GatherlyApp(
         }
       }
 
+      val nullUIDMessage = "Group UID is null"
+
       // GROUP INFO COMPOSABLE  ------------------------------
       composable(Screen.GroupInfo.route) { navBackStackEntry ->
         val uid = navBackStackEntry.arguments?.getString("uid")
         uid?.let { GroupInformationScreen(navigationActions = navigationActions, groupId = it) }
             ?: run {
-              Log.e("GroupInformationScreen", "Group UID is null")
+              Log.e("GroupInformationScreen", nullUIDMessage)
               Toast.makeText(context, "Navigating to an invalid group", Toast.LENGTH_SHORT).show()
             }
       }
@@ -369,6 +372,22 @@ fun GatherlyApp(
         composable(Screen.OverviewGroupsScreen.route) {
           GroupsOverviewScreen(navigationActions = navigationActions)
         }
+      }
+
+      // EDIT GROUP COMPOSABLE  ------------------------------
+      composable(Screen.EditGroup.route) { navBackStackEntry ->
+        val uid = navBackStackEntry.arguments?.getString("uid")
+        uid?.let { groupId ->
+          EditGroupScreen(
+              groupId = groupId,
+              goBack = { navigationActions.goBack() },
+              onSaved = { navigationActions.navigateTo(Screen.GroupInfo(groupId)) },
+              onDelete = { navigationActions.navigateTo(Screen.OverviewGroupsScreen) })
+        }
+            ?: run {
+              Log.e("EditGroupScreen", nullUIDMessage)
+              Toast.makeText(context, "Trying to edit an invalid group", Toast.LENGTH_SHORT).show()
+            }
       }
     }
   }
