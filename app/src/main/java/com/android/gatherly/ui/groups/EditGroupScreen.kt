@@ -64,6 +64,8 @@ import com.android.gatherly.utils.profilePicturePainter
 
 /** Object containing test tags for the EditGroupScreen and its components. */
 object EditGroupScreenTestTags {
+
+  const val LAZY_COLUMN_GROUP = "lazy_column_edit_group"
   const val BUTTON_SAVE_GROUP = "buttonSaveGroup"
 
   const val BUTTON_DELETE_GROUP = "buttonDeleteGroup"
@@ -135,6 +137,112 @@ object EditGroupScreenTestTags {
   fun getTestTagForMemberRemoveCheckbox(member: String): String = "groupMemberRemoveCheckbox$member"
 }
 
+/* ----------------------- UI Helpers ----------------------- */
+
+data class GroupButtonUI(
+    val text: String,
+    val testTag: String,
+    val enabled: Boolean = true,
+    val onClick: () -> Unit,
+)
+
+data class GroupButtonStyle(
+    val height: Dp,
+    val verticalPadding: Dp,
+    val cornerRadius: Dp,
+    val fontSize: Dp,
+    val containerColor: Color,
+    val contentColor: Color,
+)
+
+@Composable
+private fun GroupButton(
+    ui: GroupButtonUI,
+    style: GroupButtonStyle,
+    modifier: Modifier = Modifier,
+) {
+  Button(
+      onClick = ui.onClick,
+      enabled = ui.enabled,
+      modifier =
+          modifier
+              .fillMaxWidth()
+              .height(style.height)
+              .padding(vertical = style.verticalPadding)
+              .testTag(ui.testTag),
+      shape = RoundedCornerShape(style.cornerRadius),
+      colors = ButtonDefaults.buttonColors(containerColor = style.containerColor),
+  ) {
+    Text(
+        text = ui.text,
+        fontSize = style.fontSize.value.sp,
+        fontWeight = FontWeight.Medium,
+        color = style.contentColor,
+    )
+  }
+}
+
+@Composable
+private fun ProfileRowCard(
+    profile: Profile,
+    testTag: String,
+    trailing: @Composable () -> Unit,
+    modifier: Modifier = Modifier,
+    subtitle: (@Composable () -> Unit)? = null,
+    profilePictureTestTag: String? = null,
+) {
+  val roundedCornerShape = dimensionResource(R.dimen.friends_item_card_rounded_corner_shape)
+  val verticalPadding = dimensionResource(R.dimen.friends_item_card_padding_vertical)
+  val cardPadding = dimensionResource(R.dimen.friends_item_card_padding)
+  val picDescription = stringResource(R.string.profile_picture_description)
+  val picSize = dimensionResource(R.dimen.profile_pic_size_regular)
+  val smallSpacing = dimensionResource(R.dimen.spacing_between_fields_smaller_regular)
+  val regularSpacing = dimensionResource(R.dimen.spacing_between_fields_regular)
+
+  Card(
+      shape = RoundedCornerShape(roundedCornerShape),
+      colors =
+          CardDefaults.cardColors(
+              containerColor = MaterialTheme.colorScheme.surfaceVariant,
+              contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
+      modifier = modifier.testTag(testTag).fillMaxWidth().padding(vertical = verticalPadding),
+  ) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(cardPadding),
+        verticalAlignment = Alignment.CenterVertically) {
+          Image(
+              painter = profilePicturePainter(profile.profilePicture),
+              contentDescription = picDescription,
+              modifier =
+                  Modifier.size(picSize)
+                      .clip(CircleShape)
+                      .then(
+                          if (profilePictureTestTag != null) Modifier.testTag(profilePictureTestTag)
+                          else Modifier),
+              contentScale = ContentScale.Crop)
+
+          Spacer(modifier = Modifier.width(smallSpacing))
+
+          Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = profile.username,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Medium)
+
+            subtitle?.let {
+              Spacer(modifier = Modifier.height(smallSpacing / 2))
+              it()
+            }
+          }
+
+          Spacer(modifier = Modifier.width(regularSpacing))
+          trailing()
+        }
+  }
+}
+
+/* ----------------------- EditGroupScreen ----------------------- */
+
 /**
  * Composable function representing the Edit Group screen.
  *
@@ -165,6 +273,22 @@ fun EditGroupScreen(
 
   val dividerThickness = dimensionResource(R.dimen.add_group_horizontal_divider_thickness)
   val friendSectionHeight = dimensionResource(R.dimen.add_group_friend_section_height)
+
+  val buttonStyle =
+      GroupButtonStyle(
+          height = buttonHeight,
+          verticalPadding = buttonVerticalPadding,
+          cornerRadius = buttonCornerRadius,
+          fontSize = buttonFontSize,
+          containerColor = MaterialTheme.colorScheme.secondary,
+          contentColor = MaterialTheme.colorScheme.onSecondary,
+      )
+
+  val deleteButtonStyle =
+      buttonStyle.copy(
+          containerColor = MaterialTheme.colorScheme.error,
+          contentColor = MaterialTheme.colorScheme.onError,
+      )
 
   val inputFieldColors =
       OutlinedTextFieldDefaults.colors(
@@ -222,7 +346,10 @@ fun EditGroupScreen(
         LazyColumn(
             contentPadding = PaddingValues(vertical = smallPadding),
             modifier =
-                Modifier.fillMaxWidth().padding(horizontal = screenPadding).padding(padding)) {
+                Modifier.fillMaxWidth()
+                    .padding(horizontal = screenPadding)
+                    .padding(padding)
+                    .testTag(EditGroupScreenTestTags.LAZY_COLUMN_GROUP)) {
               groupFieldsSection(
                   uiState = uiState,
                   inputFieldColors = inputFieldColors,
@@ -257,23 +384,19 @@ fun EditGroupScreen(
 
               saveButtonSection(
                   enabled = uiState.nameError == null && !uiState.isSaving,
-                  buttonHeight = buttonHeight,
-                  buttonVerticalPadding = buttonVerticalPadding,
-                  buttonCornerRadius = buttonCornerRadius,
-                  buttonFontSize = buttonFontSize,
-                  onClick = editGroupViewModel::saveGroup)
+                  style = buttonStyle,
+                  onClick = editGroupViewModel::saveGroup,
+              )
 
               deleteButtonSection(
                   isOwner = isOwner,
-                  buttonHeight = buttonHeight,
-                  buttonVerticalPadding = buttonVerticalPadding,
-                  buttonCornerRadius = buttonCornerRadius,
-                  buttonFontSize = buttonFontSize,
+                  style = deleteButtonStyle,
                   smallSpacing = smallSpacing,
                   onClick = {
                     editGroupViewModel.deleteGroup()
                     onDelete()
-                  })
+                  },
+              )
             }
       }
 }
@@ -459,60 +582,42 @@ private fun LazyListScope.generalErrorSection(generalError: String?, smallSpacin
 
 private fun LazyListScope.saveButtonSection(
     enabled: Boolean,
-    buttonHeight: Dp,
-    buttonVerticalPadding: Dp,
-    buttonCornerRadius: Dp,
-    buttonFontSize: Dp,
-    onClick: () -> Unit
+    style: GroupButtonStyle,
+    onClick: () -> Unit,
 ) {
   item {
-    Button(
-        onClick = onClick,
-        modifier =
-            Modifier.fillMaxWidth()
-                .height(buttonHeight)
-                .padding(vertical = buttonVerticalPadding)
-                .testTag(EditGroupScreenTestTags.BUTTON_SAVE_GROUP),
-        shape = RoundedCornerShape(buttonCornerRadius),
-        enabled = enabled,
-        colors =
-            ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)) {
-          Text(
-              text = stringResource(R.string.edit_group_button),
-              fontSize = buttonFontSize.value.sp,
-              fontWeight = FontWeight.Medium,
-              color = MaterialTheme.colorScheme.onSecondary)
-        }
+    GroupButton(
+        ui =
+            GroupButtonUI(
+                text = stringResource(R.string.edit_group_button),
+                testTag = EditGroupScreenTestTags.BUTTON_SAVE_GROUP,
+                enabled = enabled,
+                onClick = onClick,
+            ),
+        style = style,
+    )
   }
 }
 
 private fun LazyListScope.deleteButtonSection(
     isOwner: Boolean,
-    buttonHeight: Dp,
-    buttonVerticalPadding: Dp,
-    buttonCornerRadius: Dp,
-    buttonFontSize: Dp,
+    style: GroupButtonStyle,
     smallSpacing: Dp,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
   if (!isOwner) return
   item {
     Spacer(modifier = Modifier.height(smallSpacing))
-    Button(
-        onClick = onClick,
-        modifier =
-            Modifier.fillMaxWidth()
-                .height(buttonHeight)
-                .padding(vertical = buttonVerticalPadding)
-                .testTag(EditGroupScreenTestTags.BUTTON_DELETE_GROUP),
-        shape = RoundedCornerShape(buttonCornerRadius),
-        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) {
-          Text(
-              text = stringResource(R.string.group_delete_button),
-              fontSize = buttonFontSize.value.sp,
-              fontWeight = FontWeight.Medium,
-              color = MaterialTheme.colorScheme.onError)
-        }
+    GroupButton(
+        ui =
+            GroupButtonUI(
+                text = stringResource(R.string.group_delete_button),
+                testTag = EditGroupScreenTestTags.BUTTON_DELETE_GROUP,
+                enabled = true,
+                onClick = onClick,
+            ),
+        style = style,
+    )
   }
 }
 
@@ -527,59 +632,22 @@ private fun MemberItem(
     onToggleAdmin: () -> Unit,
     onToggleRemove: () -> Unit
 ) {
-  val roundedCornerShape = dimensionResource(R.dimen.friends_item_card_rounded_corner_shape)
-  val verticalPadding = dimensionResource(R.dimen.friends_item_card_padding_vertical)
-  val cardPadding = dimensionResource(R.dimen.friends_item_card_padding)
-  val picDescription = stringResource(R.string.profile_picture_description)
-  val picSize = dimensionResource(R.dimen.profile_pic_size_regular)
-  val smallSpacing = dimensionResource(R.dimen.spacing_between_fields_smaller_regular)
-  val regularSpacing = dimensionResource(R.dimen.spacing_between_fields_regular)
-
-  Card(
-      shape = RoundedCornerShape(roundedCornerShape),
-      colors =
-          CardDefaults.cardColors(
-              containerColor = MaterialTheme.colorScheme.surfaceVariant,
-              contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
-      modifier =
-          Modifier.testTag(EditGroupScreenTestTags.getTestTagForMemberItem(member.username))
-              .fillMaxWidth()
-              .padding(vertical = verticalPadding)) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(cardPadding),
-            verticalAlignment = Alignment.CenterVertically) {
-              Image(
-                  painter = profilePicturePainter(member.profilePicture),
-                  contentDescription = picDescription,
-                  modifier = Modifier.size(picSize).clip(CircleShape),
-                  contentScale = ContentScale.Crop)
-
-              Spacer(modifier = Modifier.width(smallSpacing))
-
-              Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = member.username,
-                    style = MaterialTheme.typography.bodyLarge,
-                    fontWeight = FontWeight.Medium)
-
-                if (isAdmin) {
-                  Spacer(modifier = Modifier.height(smallSpacing / 2))
-                  AdminLabel()
-                }
-              }
-
-              Spacer(modifier = Modifier.width(regularSpacing))
-
-              MemberToggles(
-                  username = member.username,
-                  isAdmin = isAdmin,
-                  markedForRemoval = markedForRemoval,
-                  showAdminToggle = showAdminToggle,
-                  showRemoveToggle = showRemoveToggle,
-                  onToggleAdmin = onToggleAdmin,
-                  onToggleRemove = onToggleRemove)
-            }
-      }
+  ProfileRowCard(
+      profile = member,
+      testTag = EditGroupScreenTestTags.getTestTagForMemberItem(member.username),
+      subtitle = if (isAdmin) ({ AdminLabel() }) else null,
+      trailing = {
+        MemberToggles(
+            username = member.username,
+            isAdmin = isAdmin,
+            markedForRemoval = markedForRemoval,
+            showAdminToggle = showAdminToggle,
+            showRemoveToggle = showRemoveToggle,
+            onToggleAdmin = onToggleAdmin,
+            onToggleRemove = onToggleRemove,
+        )
+      },
+  )
 }
 
 @Composable
@@ -663,59 +731,21 @@ private fun MemberRemoveToggle(
 /** Row for a friend that can be added to the group. */
 @Composable
 private fun AvailableFriendItem(friend: Profile, isSelected: Boolean, onToggle: () -> Unit) {
-  val roundedCornerShape = dimensionResource(R.dimen.friends_item_card_rounded_corner_shape)
-  val verticalPadding = dimensionResource(R.dimen.friends_item_card_padding_vertical)
-  val cardPadding = dimensionResource(R.dimen.friends_item_card_padding)
-  val picDescription = stringResource(R.string.profile_picture_description)
-  val picSize = dimensionResource(R.dimen.profile_pic_size_regular)
-  val smallSpacing = dimensionResource(R.dimen.spacing_between_fields_smaller_regular)
-  val regularSpacing = dimensionResource(R.dimen.spacing_between_fields_regular)
-
-  Card(
-      shape = RoundedCornerShape(roundedCornerShape),
-      colors =
-          CardDefaults.cardColors(
-              containerColor = MaterialTheme.colorScheme.surfaceVariant,
-              contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
-      modifier =
-          Modifier.testTag(
-                  EditGroupScreenTestTags.getTestTagForAvailableFriendItem(friend.username))
-              .fillMaxWidth()
-              .padding(vertical = verticalPadding)) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(cardPadding),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-          Image(
-              painter = profilePicturePainter(friend.profilePicture),
-              contentDescription = picDescription,
-              modifier =
-                  Modifier.size(picSize)
-                      .clip(CircleShape)
-                      .testTag(
-                          EditGroupScreenTestTags.getTestTagForAvailableFriendProfilePicture(
-                              friend.username)),
-              contentScale = ContentScale.Crop)
-
-          Spacer(modifier = Modifier.width(smallSpacing))
-
-          Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = friend.username,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Medium)
-          }
-
-          Spacer(modifier = Modifier.width(regularSpacing))
-
-          Checkbox(
-              checked = isSelected,
-              onCheckedChange = { onToggle() },
-              modifier =
-                  Modifier.wrapContentWidth()
-                      .testTag(
-                          EditGroupScreenTestTags.getTestTagForAvailableFriendCheckbox(
-                              friend.username)))
-        }
-      }
+  ProfileRowCard(
+      profile = friend,
+      testTag = EditGroupScreenTestTags.getTestTagForAvailableFriendItem(friend.username),
+      profilePictureTestTag =
+          EditGroupScreenTestTags.getTestTagForAvailableFriendProfilePicture(friend.username),
+      trailing = {
+        Checkbox(
+            checked = isSelected,
+            onCheckedChange = { onToggle() },
+            modifier =
+                Modifier.wrapContentWidth()
+                    .testTag(
+                        EditGroupScreenTestTags.getTestTagForAvailableFriendCheckbox(
+                            friend.username)),
+        )
+      },
+  )
 }

@@ -865,4 +865,39 @@ class EditGroupViewModelTest {
         // After load
         assertFalse(viewModel.uiState.value.isLoading)
       }
+
+  /**
+   * Verifies that deleteGroup() deletes the loaded group from the repository. After deletion,
+   * fetching the group should fail.
+   */
+  @Test
+  fun deleteGroup_WithLoadedGroup_DeletesGroupFromRepository() =
+      runTest(testDispatcher) {
+        val viewModel = createViewModel()
+
+        viewModel.loadGroup(TEST_GROUP_ID)
+        advanceUntilIdle()
+
+        viewModel.deleteGroup()
+        advanceUntilIdle()
+
+        try {
+          groupsRepository.getGroup(TEST_GROUP_ID)
+          fail("Expected group to be deleted, but it was still found.")
+        } catch (e: Exception) {}
+        assertNull(viewModel.uiState.value.saveError)
+      }
+
+  /** Verifies that deleteGroup() does nothing if given blank groupId. */
+  @Test
+  fun deleteGroupWithBlankGroupIdDoesNothing() =
+      runTest(testDispatcher) {
+        val viewModel = createViewModel()
+
+        viewModel.deleteGroup()
+        advanceUntilIdle()
+
+        val group = groupsRepository.getGroup(TEST_GROUP_ID)
+        assertEquals("Study Group", group.name)
+      }
 }

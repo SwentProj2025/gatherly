@@ -1,8 +1,10 @@
 package com.android.gatherly.ui.groups
 
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
 import com.android.gatherly.model.group.Group
 import com.android.gatherly.model.group.GroupsLocalRepository
@@ -211,6 +213,26 @@ class EditGroupScreenTest {
     // At least one participant profile picture (gers)
     composeTestRule
         .onNodeWithTag(EditGroupScreenTestTags.getTestTagForSelectedFriendProfilePicture("gers"))
+        .assertExists()
+        .assertIsDisplayed()
+
+    composeTestRule.waitForIdle()
+
+    composeTestRule
+        .onNodeWithTag(EditGroupScreenTestTags.LAZY_COLUMN_GROUP)
+        .performScrollToNode(hasTestTag(EditGroupScreenTestTags.BUTTON_SAVE_GROUP))
+
+    composeTestRule
+        .onNodeWithTag(EditGroupScreenTestTags.BUTTON_SAVE_GROUP)
+        .assertExists()
+        .assertIsDisplayed()
+
+    composeTestRule
+        .onNodeWithTag(EditGroupScreenTestTags.LAZY_COLUMN_GROUP)
+        .performScrollToNode(hasTestTag(EditGroupScreenTestTags.BUTTON_DELETE_GROUP))
+
+    composeTestRule
+        .onNodeWithTag(EditGroupScreenTestTags.BUTTON_DELETE_GROUP)
         .assertExists()
         .assertIsDisplayed()
   }
