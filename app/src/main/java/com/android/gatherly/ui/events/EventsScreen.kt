@@ -435,7 +435,7 @@ fun EventsScreen(
                       isProximityModeOn = (uiState.sortOrder == EventSortOrder.PROXIMITY),
                       hasLocationPermission = isLocationPermissionGranted)
                 }
-              } else if (browserEvents.isEmpty() && !browserEventVisibility.value) {
+              } else if (browserEvents.isEmpty() && browserEventVisibility.value) {
                 // When there is no events in the browser list
                 item {
                   Text(
@@ -507,7 +507,7 @@ fun EventsScreen(
                         isProximityModeOn = (uiState.sortOrder == EventSortOrder.PROXIMITY),
                         hasLocationPermission = isLocationPermissionGranted)
                   }
-                } else if (upcomingEvents.isEmpty() && !upcomingEventVisibility.value) {
+                } else if (upcomingEvents.isEmpty() && upcomingEventVisibility.value) {
                   // When there is no events in the upcoming list
                   item {
                     Text(
@@ -576,7 +576,7 @@ fun EventsScreen(
                         isProximityModeOn = (uiState.sortOrder == EventSortOrder.PROXIMITY),
                         hasLocationPermission = isLocationPermissionGranted)
                   }
-                } else if (myOwnEvents.isEmpty() && !myOwnEventVisibility.value) {
+                } else if (myOwnEvents.isEmpty() && myOwnEventVisibility.value) {
                   item {
                     Text(
                         stringResource(R.string.userEvents_emptylist_msg),

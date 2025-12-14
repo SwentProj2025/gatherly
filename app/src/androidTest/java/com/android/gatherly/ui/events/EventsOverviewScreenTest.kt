@@ -1259,7 +1259,6 @@ class EventsOverviewScreenTest {
 
     val fakeLocationMilano = Location(45.4642, 9.1900, "Milano")
 
-    val currentUserId = "bobId"
     profileRepository.addProfile(Profile(uid = "bobId", name = "Test User", profilePicture = ""))
 
     val eventMilano = upcomingEvent.copy(location = fakeLocationMilano)
