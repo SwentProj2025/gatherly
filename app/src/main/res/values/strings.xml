@@ -1,6 +1,5 @@
 <resources>
     <string name="app_name">Gatherly</string>
-    <string name="title_activity_main">MainActivity</string>
 
     <!-- To-Do Pages. -->
     <string name="todos_title_add_todo_screen">Add To-Do</string>
