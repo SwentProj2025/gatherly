@@ -4,6 +4,8 @@ import com.android.gatherly.model.badge.BadgeType
 import com.android.gatherly.model.notification.NotificationType
 import com.android.gatherly.model.notification.NotificationsLocalRepository
 import com.android.gatherly.model.notification.NotificationsRepository
+import com.android.gatherly.model.points.PointsLocalRepository
+import com.android.gatherly.model.points.PointsRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
@@ -39,6 +41,7 @@ class FriendsViewModelTest {
 
   private lateinit var profileRepository: ProfileLocalRepository
   private lateinit var notificationsRepository: NotificationsRepository
+  private lateinit var pointsRepository: PointsRepository
   private lateinit var viewModel: FriendsViewModel
   private lateinit var mockitoUtils: MockitoUtils
 
@@ -52,6 +55,7 @@ class FriendsViewModelTest {
     // initialize repos and viewModel
     profileRepository = ProfileLocalRepository()
     notificationsRepository = NotificationsLocalRepository()
+    pointsRepository = PointsLocalRepository()
 
     fill_repositories()
 
@@ -63,6 +67,7 @@ class FriendsViewModelTest {
         FriendsViewModel(
             repository = profileRepository,
             notificationsRepository = notificationsRepository,
+            pointsRepository = pointsRepository,
             authProvider = { mockitoUtils.mockAuth })
   }
 
@@ -239,7 +244,7 @@ class FriendsViewModelTest {
             TODO("Not yet implemented")
           }
 
-          override suspend fun incrementBadge(uid: String, type: BadgeType) {
+          override suspend fun incrementBadge(uid: String, type: BadgeType): String? {
             TODO("Not yet implemented")
           }
 
@@ -255,6 +260,7 @@ class FriendsViewModelTest {
         FriendsViewModel(
             repository = throwingRepository,
             notificationsRepository = notificationsRepository,
+            pointsRepository = pointsRepository,
             authProvider = { mockitoUtils.mockAuth })
     errorViewModel.refreshFriends("A")
 

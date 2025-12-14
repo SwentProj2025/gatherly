@@ -1,6 +1,8 @@
 package com.android.gatherly.viewmodel.todo
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.android.gatherly.model.points.PointsLocalRepository
+import com.android.gatherly.model.points.PointsRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
@@ -44,6 +46,7 @@ class AddTodoViewModelTest {
   private lateinit var addToDoViewModel: AddTodoViewModel
   private lateinit var toDosRepository: ToDosRepository
   private lateinit var profileRepository: ProfileRepository
+  private lateinit var pointsRepository: PointsRepository
 
   private lateinit var toDoCategoryRepository: ToDoCategoryRepository
   private lateinit var mockitoUtils: MockitoUtils
@@ -66,6 +69,7 @@ class AddTodoViewModelTest {
 
     toDosRepository = ToDosLocalRepository()
     profileRepository = ProfileLocalRepository()
+    pointsRepository = PointsLocalRepository()
     toDoCategoryRepository = ToDoCategoryLocalRepository()
 
     // Add owner profile to repo
@@ -79,6 +83,7 @@ class AddTodoViewModelTest {
         AddTodoViewModel(
             todoRepository = toDosRepository,
             profileRepository = profileRepository,
+            pointsRepository = pointsRepository,
             authProvider = { mockitoUtils.mockAuth },
             todoCategoryRepository = toDoCategoryRepository)
   }
@@ -167,6 +172,7 @@ class AddTodoViewModelTest {
         AddTodoViewModel(
             toDosRepository,
             profileRepository,
+            pointsRepository,
             authProvider = { mockitoUtils.mockAuth },
             todoCategoryRepository = toDoCategoryRepository)
 
@@ -281,6 +287,7 @@ class AddTodoViewModelTest {
         AddTodoViewModel(
             failingRepo,
             profileRepository,
+            pointsRepository,
             { mockitoUtils.mockAuth },
             todoCategoryRepository = toDoCategoryRepository)
 

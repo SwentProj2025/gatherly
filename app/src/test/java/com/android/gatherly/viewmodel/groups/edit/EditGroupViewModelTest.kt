@@ -2,6 +2,8 @@ package com.android.gatherly.viewmodel.groups.edit
 
 import com.android.gatherly.model.notification.NotificationsLocalRepository
 import com.android.gatherly.model.notification.NotificationsRepository
+import com.android.gatherly.model.points.PointsLocalRepository
+import com.android.gatherly.model.points.PointsRepository
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.ui.groups.EditGroupViewModel
 import com.android.gatherly.utilstest.MockitoUtils
@@ -52,6 +54,7 @@ class EditGroupViewModelTest {
   private lateinit var groupsRepository: FakeGroupsRepositoryLocal
   private lateinit var profileRepository: ProfileLocalRepository
   private lateinit var notificationsRepository: NotificationsRepository
+  private lateinit var pointsRepository: PointsRepository
   private lateinit var mockitoUtils: MockitoUtils
 
   private val testDispatcher = StandardTestDispatcher()
@@ -71,6 +74,7 @@ class EditGroupViewModelTest {
     groupsRepository = FakeGroupsRepositoryLocal(currentUserId = TEST_USER_ID)
     profileRepository = ProfileLocalRepository()
     notificationsRepository = NotificationsLocalRepository()
+    pointsRepository = PointsLocalRepository()
 
     // Mock Firebase Auth
     mockitoUtils = MockitoUtils()
@@ -97,6 +101,7 @@ class EditGroupViewModelTest {
         groupsRepository = groupsRepository,
         profileRepository = profileRepository,
         notificationsRepository = notificationsRepository,
+        pointsRepository = pointsRepository,
         authProvider = { mockitoUtils.mockAuth })
   }
 
@@ -859,5 +864,40 @@ class EditGroupViewModelTest {
 
         // After load
         assertFalse(viewModel.uiState.value.isLoading)
+      }
+
+  /**
+   * Verifies that deleteGroup() deletes the loaded group from the repository. After deletion,
+   * fetching the group should fail.
+   */
+  @Test
+  fun deleteGroup_WithLoadedGroup_DeletesGroupFromRepository() =
+      runTest(testDispatcher) {
+        val viewModel = createViewModel()
+
+        viewModel.loadGroup(TEST_GROUP_ID)
+        advanceUntilIdle()
+
+        viewModel.deleteGroup()
+        advanceUntilIdle()
+
+        try {
+          groupsRepository.getGroup(TEST_GROUP_ID)
+          fail("Expected group to be deleted, but it was still found.")
+        } catch (e: Exception) {}
+        assertNull(viewModel.uiState.value.saveError)
+      }
+
+  /** Verifies that deleteGroup() does nothing if given blank groupId. */
+  @Test
+  fun deleteGroupWithBlankGroupIdDoesNothing() =
+      runTest(testDispatcher) {
+        val viewModel = createViewModel()
+
+        viewModel.deleteGroup()
+        advanceUntilIdle()
+
+        val group = groupsRepository.getGroup(TEST_GROUP_ID)
+        assertEquals("Study Group", group.name)
       }
 }

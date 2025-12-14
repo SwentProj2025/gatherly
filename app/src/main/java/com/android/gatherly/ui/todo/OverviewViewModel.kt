@@ -2,6 +2,8 @@ package com.android.gatherly.ui.todo
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.android.gatherly.model.points.PointsRepository
+import com.android.gatherly.model.points.PointsRepositoryProvider
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryProvider
 import com.android.gatherly.model.todo.ToDo
@@ -58,6 +60,7 @@ enum class TodoSortOrder {
 class OverviewViewModel(
     private val todoRepository: ToDosRepository = ToDosRepositoryProvider.repository,
     private val profileRepository: ProfileRepository = ProfileRepositoryProvider.repository,
+    private val pointsRepository: PointsRepository = PointsRepositoryProvider.repository,
     private val todoCategoryRepository: ToDoCategoryRepository =
         ToDoCategoryRepositoryProvider.repository
 ) : ViewModel() {
@@ -115,7 +118,7 @@ class OverviewViewModel(
   fun onCheckboxChanged(uid: String, newStatus: ToDoStatus) {
     viewModelScope.launch {
       val ownerId = todoRepository.getTodo(uid).ownerId
-      editTodo(todoRepository, profileRepository, uid, newStatus, ownerId)
+      editTodo(todoRepository, profileRepository, pointsRepository, uid, newStatus, ownerId)
       refreshUIState()
     }
   }

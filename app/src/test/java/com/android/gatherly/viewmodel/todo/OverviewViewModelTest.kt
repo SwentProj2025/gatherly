@@ -1,6 +1,8 @@
 package com.android.gatherly.viewmodel.todo
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.android.gatherly.model.points.PointsLocalRepository
+import com.android.gatherly.model.points.PointsRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
@@ -49,6 +51,7 @@ class OverviewViewModelTest {
   private lateinit var overviewViewModel: OverviewViewModel
   private lateinit var toDosRepository: ToDosRepository
   private lateinit var profileRepository: ProfileRepository
+  private lateinit var pointsRepository: PointsRepository
   private lateinit var mockitoUtils: MockitoUtils
 
   private lateinit var toDoCategoryRepository: ToDoCategoryRepository
@@ -61,6 +64,7 @@ class OverviewViewModelTest {
 
     toDosRepository = ToDosLocalRepository()
     profileRepository = ProfileLocalRepository()
+    pointsRepository = PointsLocalRepository()
     toDoCategoryRepository = ToDoCategoryLocalRepository()
 
     // Mock Firebase Auth
@@ -69,7 +73,7 @@ class OverviewViewModelTest {
 
     overviewViewModel =
         OverviewViewModel(
-            toDosRepository, profileRepository, todoCategoryRepository = toDoCategoryRepository)
+            toDosRepository, profileRepository, pointsRepository, toDoCategoryRepository)
   }
 
   @After
