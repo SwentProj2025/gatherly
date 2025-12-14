@@ -1,5 +1,6 @@
 package com.android.gatherly.ui.events
 
+import android.Manifest
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.assertIsDisplayed
@@ -8,6 +9,8 @@ import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.hasAnyDescendant
 import androidx.compose.ui.test.hasTestTag
+import androidx.compose.ui.test.isDisplayed
+import androidx.compose.ui.test.isNotDisplayed
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
@@ -16,6 +19,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
+import androidx.test.rule.GrantPermissionRule
 import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsLocalRepository
@@ -29,12 +33,14 @@ import com.android.gatherly.utils.AlertDialogTestTags
 import com.android.gatherly.utils.MapCoordinator
 import com.android.gatherly.utils.MockitoUtils
 import com.android.gatherly.utils.UI_WAIT_TIMEOUT
+import com.android.gatherly.utils.distance
 import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.Date
 import java.util.NoSuchElementException
+import kotlin.math.ceil
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -44,6 +50,11 @@ import org.junit.Test
 class EventsOverviewScreenTest {
 
   @get:Rule val composeTestRule = createComposeRule()
+
+  @get:Rule
+  val permissionRule: GrantPermissionRule =
+      GrantPermissionRule.grant(
+          Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
 
   private lateinit var currentUserId: String
   private lateinit var eventsRepository: EventsRepository
@@ -1152,5 +1163,157 @@ class EventsOverviewScreenTest {
     composeTestRule.onNodeWithTag(EventsScreenTestTags.SORT_DATE_BUTTON).performClick()
 
     composeTestRule.waitForIdle()
+  }
+
+  /** Test: Verifies that the visibility events buttons work correctly */
+  @Test
+  fun visibilityEventsWorks() = runTest {
+    val currentUserId = "bobId"
+
+    profileRepository.addProfile(Profile(uid = "bobId", name = "Test User", profilePicture = ""))
+
+    val events = listOf(upcomingEventCreated, upcomingEventParticipate, upcomingEvent)
+    events.forEach { eventsRepository.addEvent(it) }
+
+    setContent(currentUserId)
+    composeTestRule.waitForIdle()
+
+    composeTestRule.waitUntil(UI_WAIT_TIMEOUT) {
+      composeTestRule
+          .onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(upcomingEvent))
+          .isDisplayed()
+      composeTestRule
+          .onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(upcomingEventCreated))
+          .isDisplayed()
+      composeTestRule
+          .onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(upcomingEventParticipate))
+          .isDisplayed()
+    }
+
+    composeTestRule
+        .onNodeWithTag(EventsScreenTestTags.BROWSER_EVENT_VISIBILITY_BUTTON)
+        .assertIsDisplayed()
+        .performClick()
+
+    composeTestRule.waitUntil(UI_WAIT_TIMEOUT) {
+      composeTestRule
+          .onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(upcomingEvent))
+          .isNotDisplayed()
+      composeTestRule
+          .onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(upcomingEventCreated))
+          .isDisplayed()
+      composeTestRule
+          .onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(upcomingEventParticipate))
+          .isDisplayed()
+    }
+
+    composeTestRule
+        .onNodeWithTag(EventsScreenTestTags.EMPTY_BROWSER_LIST_MSG)
+        .assertIsNotDisplayed()
+
+    composeTestRule
+        .onNodeWithTag(EventsScreenTestTags.UPCOMING_EVENT_VISIBILITY_BUTTON)
+        .assertIsDisplayed()
+        .performClick()
+
+    composeTestRule.waitUntil(UI_WAIT_TIMEOUT) {
+      composeTestRule
+          .onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(upcomingEvent))
+          .isNotDisplayed()
+      composeTestRule
+          .onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(upcomingEventParticipate))
+          .isNotDisplayed()
+      composeTestRule
+          .onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(upcomingEventCreated))
+          .isDisplayed()
+    }
+    composeTestRule
+        .onNodeWithTag(EventsScreenTestTags.EMPTY_UPCOMING_LIST_MSG)
+        .assertIsNotDisplayed()
+
+    composeTestRule
+        .onNodeWithTag(EventsScreenTestTags.MY_OWN_EVENT_VISIBILITY_BUTTON)
+        .assertIsDisplayed()
+        .performClick()
+
+    composeTestRule.waitUntil(UI_WAIT_TIMEOUT) {
+      composeTestRule
+          .onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(upcomingEvent))
+          .isNotDisplayed()
+      composeTestRule
+          .onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(upcomingEventCreated))
+          .isNotDisplayed()
+      composeTestRule
+          .onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(upcomingEventParticipate))
+          .isNotDisplayed()
+    }
+    composeTestRule
+        .onNodeWithTag(EventsScreenTestTags.EMPTY_OUREVENTS_LIST_MSG)
+        .assertIsNotDisplayed()
+  }
+
+  /** Test: Verifies that the proximity filter show the correct distance */
+  @Test
+  fun proximitySortingWorks() = runTest {
+    val fakeLocationEPFL = Location(latitude = 46.520278, longitude = 6.565556, name = "EPFL")
+
+    val fakeLocationMilano = Location(45.4642, 9.1900, "Milano")
+
+    val currentUserId = "bobId"
+    profileRepository.addProfile(Profile(uid = "bobId", name = "Test User", profilePicture = ""))
+
+    val eventMilano = upcomingEvent.copy(location = fakeLocationMilano)
+    eventsRepository.addEvent(eventMilano)
+
+    eventsViewModel =
+        EventsViewModel(
+            eventsRepository = eventsRepository,
+            profileRepository = profileRepository,
+            authProvider = { mockitoUtils.mockAuth },
+            fakeCurrentUserLocation = fakeLocationEPFL)
+
+    composeTestRule.setContent {
+      EventsScreen(
+          eventsViewModel = eventsViewModel,
+          actions = EventsScreenActions(),
+          coordinator = mapCoordinator)
+    }
+
+    composeTestRule.waitForIdle()
+
+    composeTestRule.waitUntil(UI_WAIT_TIMEOUT) {
+      composeTestRule
+          .onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(eventMilano))
+          .isDisplayed()
+    }
+
+    composeTestRule.onNodeWithTag(EventsScreenTestTags.ICONS_PROXIMITY).assertIsNotDisplayed()
+
+    composeTestRule
+        .onNodeWithTag(EventsScreenTestTags.SORT_MENU_BUTTON)
+        .assertIsDisplayed()
+        .performClick()
+
+    composeTestRule.waitUntil(UI_WAIT_TIMEOUT) {
+      composeTestRule.onNodeWithTag(EventsScreenTestTags.SORT_PROX_BUTTON).isDisplayed()
+    }
+
+    composeTestRule
+        .onNodeWithTag(EventsScreenTestTags.SORT_PROX_BUTTON)
+        .assertIsDisplayed()
+        .performClick()
+
+    composeTestRule.waitUntil(UI_WAIT_TIMEOUT) {
+      composeTestRule
+          .onNodeWithTag(EventsScreenTestTags.ICONS_PROXIMITY, useUnmergedTree = true)
+          .isDisplayed()
+    }
+
+    val distance = distance(fakeLocationEPFL, fakeLocationMilano)
+    val roundUp = ceil(distance * 10) / 10
+    composeTestRule
+        .onNodeWithTag(EventsScreenTestTags.ICONS_PROXIMITY_DISTANCE_TEXT, useUnmergedTree = true)
+        .assertIsDisplayed()
+        .assertTextContains("$roundUp km")
   }
 }

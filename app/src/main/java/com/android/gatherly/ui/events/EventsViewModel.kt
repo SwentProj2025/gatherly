@@ -92,6 +92,7 @@ class EventsViewModel(
     private val eventsRepository: EventsRepository,
     private val authProvider: () -> FirebaseAuth = { Firebase.auth },
     private val fusedLocationClient: FusedLocationProviderClient? = null,
+    private val fakeCurrentUserLocation: Location? = null, // Used only for testing
 ) : ViewModel() {
   private val _uiState: MutableStateFlow<EventsUIState> = MutableStateFlow(EventsUIState())
 
@@ -109,11 +110,9 @@ class EventsViewModel(
   private val _searchQuery = MutableStateFlow("")
   private var allEventsCache: List<Event> = emptyList()
 
-    private val _currentUserLocation = MutableStateFlow<Location?>(null)
-    val currentUserLocation: StateFlow<Location?> = _currentUserLocation.asStateFlow()
+  private val _currentUserLocation = MutableStateFlow<Location?>(null)
 
-
-    /**
+  /**
    * Initializes the ViewModel by loading all events for the current user. Events are automatically
    * categorized into created, participated, and global lists.
    */
@@ -215,12 +214,15 @@ class EventsViewModel(
         eventsRepository: EventsRepository = EventsRepositoryFirestore(Firebase.firestore),
         profileRepository: ProfileRepository =
             ProfileRepositoryFirestore(
-                com.google.firebase.Firebase.firestore, com.google.firebase.Firebase.storage) ,
+                com.google.firebase.Firebase.firestore, com.google.firebase.Firebase.storage),
         fusedLocationClient: FusedLocationProviderClient? = null,
     ): ViewModelProvider.Factory {
 
       return GenericViewModelFactory {
-        EventsViewModel(profileRepository = profileRepository, eventsRepository = eventsRepository, fusedLocationClient = fusedLocationClient)
+        EventsViewModel(
+            profileRepository = profileRepository,
+            eventsRepository = eventsRepository,
+            fusedLocationClient = fusedLocationClient)
       }
     }
   }
@@ -270,23 +272,23 @@ class EventsViewModel(
    */
   private fun applySortOrder(list: List<Event>): List<Event> {
     return when (_uiState.value.sortOrder) {
-        EventSortOrder.ALPHABETICAL -> list.sortedBy { it.title.lowercase() }
-        EventSortOrder.DATE_ASC -> list.sortedBy { it.date.toDate() }
-        EventSortOrder.PROXIMITY -> {
-            val userLocation = _currentUserLocation.value
-            if (userLocation == null) {
-                list.sortedBy { it.title.lowercase() }
-            } else {
-                list.sortedWith(compareBy { event ->
-                    if (event.location == null) {
-                        Double.MAX_VALUE
-                    } else {
-                        distance(userLocation, event.location)
-
-                    }
-                })
-            }
+      EventSortOrder.ALPHABETICAL -> list.sortedBy { it.title.lowercase() }
+      EventSortOrder.DATE_ASC -> list.sortedBy { it.date.toDate() }
+      EventSortOrder.PROXIMITY -> {
+        val userLocation = fakeCurrentUserLocation ?: _currentUserLocation.value
+        if (userLocation == null) {
+          list.sortedBy { it.title.lowercase() }
+        } else {
+          list.sortedWith(
+              compareBy { event ->
+                if (event.location == null) {
+                  Double.MAX_VALUE
+                } else {
+                  distance(userLocation, event.location)
+                }
+              })
         }
+      }
     }
   }
 
@@ -341,49 +343,56 @@ class EventsViewModel(
     }
   }
 
-
-    // Dans EventsViewModel.kt - Modification de getDistanceUserEvent
-    fun getDistanceUserEvent(event: Event): String? {
-        val userLocation = _currentUserLocation.value
-        if (userLocation != null && event.location != null) {
-            val distanceInMeters = distance(userLocation, event.location)
-            // Convertir en km si > 1000m
-            return if (distanceInMeters >= 1000) {
-                String.format("%.1f km", distanceInMeters / 1000)
-            } else {
-                String.format("%.0f m", distanceInMeters)
-            }
-        }
-        return null
+  /**
+   * Handles the creation fo the string who represent the distance between the user and the event
+   * location
+   *
+   * @param event the event that the user wants to know his proximity with
+   */
+  fun getDistanceUserEvent(event: Event): String? {
+    val userLocation = fakeCurrentUserLocation ?: _currentUserLocation.value
+    if (userLocation != null && event.location != null) {
+      val distanceInKilometers = distance(userLocation, event.location)
+      return if (distanceInKilometers >= 1.0) {
+        String.format("%.1f km", distanceInKilometers)
+      } else {
+        val distanceInMeters = distanceInKilometers * 1000
+        String.format("%.0f m", distanceInMeters)
+      }
     }
+    return null
+  }
 
-    // Dans startLocationUpdates - ajoute une vérification
-    fun startLocationUpdates(context: Context) {
-        fusedLocationClient ?: return
+  /**
+   * Initialize the first position of the current user
+   *
+   * @param context The context used to access location services.
+   */
+  fun startLocationUpdates(context: Context) {
+    fusedLocationClient ?: return
 
-        viewModelScope.launch {
-            try {
-                fusedLocationClient.locationFlow(context).collect { loc ->
-                    updateCurrentUserLocation(
-                        Location(
-                            latitude = loc.latitude,
-                            longitude = loc.longitude,
-                            name = "currentUserLocation"
-                        )
-                    )
-                }
-            } catch (e: Exception) {
-                Log.e("EventsViewModel", "Error getting location: ${e.message}")
-            }
+    viewModelScope.launch {
+      try {
+        fusedLocationClient.locationFlow(context).collect { loc ->
+          updateCurrentUserLocation(
+              Location(
+                  latitude = loc.latitude, longitude = loc.longitude, name = "currentUserLocation"))
         }
+      } catch (e: Exception) {
+        Log.e("EventsViewModel", "Error getting location: ${e.message}")
+      }
     }
+  }
 
-    fun updateCurrentUserLocation(newLocation: Location) {
-        _currentUserLocation.value = newLocation
-        if (_uiState.value.sortOrder == EventSortOrder.PROXIMITY) {
-            viewModelScope.launch {
-                updateUIStateWithProcessedEvents(_uiState.value.currentUserId)
-            }
-        }
+  /**
+   * Update the location of the current user by the launch trigger from the UI
+   *
+   * @param newLocation the new location of the current user to register
+   */
+  fun updateCurrentUserLocation(newLocation: Location) {
+    _currentUserLocation.value = newLocation
+    if (_uiState.value.sortOrder == EventSortOrder.PROXIMITY) {
+      viewModelScope.launch { updateUIStateWithProcessedEvents(_uiState.value.currentUserId) }
     }
+  }
 }
