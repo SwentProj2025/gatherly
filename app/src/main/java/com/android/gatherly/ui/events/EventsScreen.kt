@@ -412,42 +412,46 @@ fun EventsScreen(
                     }
               }
 
-              if (uiState.isLoading && browserEventVisibility.value) {
-                // Events are loading so display that text
-                item {
-                  Text(
-                      stringResource(R.string.events_loading),
-                      modifier = Modifier.fillMaxWidth().padding(8.dp),
-                      textAlign = TextAlign.Center,
-                      style = MaterialTheme.typography.titleMedium,
-                      fontWeight = FontWeight.Bold,
-                      color = MaterialTheme.colorScheme.onBackground)
+              when {
+                uiState.isLoading && browserEventVisibility.value -> {
+                  // Events are loading so display that text
+                  item {
+                    Text(
+                        stringResource(R.string.events_loading),
+                        modifier = Modifier.fillMaxWidth().padding(8.dp),
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground)
+                  }
                 }
-              } else if (browserEvents.isNotEmpty() && browserEventVisibility.value) {
-                items(browserEvents.size) { index ->
-                  BrowserEventsItem(
-                      event = browserEvents[index],
-                      onClick = {
-                        selectedBrowserEvent.value = browserEvents[index]
-                        isPopupOnBrowser.value = true
-                      },
-                      distance = eventsViewModel.getDistanceUserEvent(browserEvents[index]),
-                      isProximityModeOn = (uiState.sortOrder == EventSortOrder.PROXIMITY),
-                      hasLocationPermission = isLocationPermissionGranted)
+                browserEvents.isNotEmpty() && browserEventVisibility.value -> {
+                  items(browserEvents.size) { index ->
+                    BrowserEventsItem(
+                        event = browserEvents[index],
+                        onClick = {
+                          selectedBrowserEvent.value = browserEvents[index]
+                          isPopupOnBrowser.value = true
+                        },
+                        distance = eventsViewModel.getDistanceUserEvent(browserEvents[index]),
+                        isProximityModeOn = (uiState.sortOrder == EventSortOrder.PROXIMITY),
+                        hasLocationPermission = isLocationPermissionGranted)
+                  }
                 }
-              } else if (browserEvents.isEmpty() && browserEventVisibility.value) {
-                // When there is no events in the browser list
-                item {
-                  Text(
-                      stringResource(R.string.browseEvents_emptylist_msg),
-                      modifier =
-                          Modifier.fillMaxWidth()
-                              .padding(8.dp)
-                              .testTag(EventsScreenTestTags.EMPTY_BROWSER_LIST_MSG),
-                      textAlign = TextAlign.Center,
-                      style = MaterialTheme.typography.titleMedium,
-                      fontWeight = FontWeight.Bold,
-                      color = MaterialTheme.colorScheme.onBackground)
+                browserEvents.isEmpty() && browserEventVisibility.value -> {
+                  // When there is no events in the browser list
+                  item {
+                    Text(
+                        stringResource(R.string.browseEvents_emptylist_msg),
+                        modifier =
+                            Modifier.fillMaxWidth()
+                                .padding(8.dp)
+                                .testTag(EventsScreenTestTags.EMPTY_BROWSER_LIST_MSG),
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground)
+                  }
                 }
               }
 
@@ -482,44 +486,46 @@ fun EventsScreen(
                       }
                 }
 
-                if (uiState.isLoading && upcomingEventVisibility.value) {
-                  // Events are loading so display that text
-                  item {
-                    Text(
-                        stringResource(R.string.events_loading),
-                        modifier = Modifier.fillMaxWidth().padding(8.dp),
-                        textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground)
+                when {
+                  uiState.isLoading && upcomingEventVisibility.value -> {
+                    // Events are loading so display that text
+                    item {
+                      Text(
+                          stringResource(R.string.events_loading),
+                          modifier = Modifier.fillMaxWidth().padding(8.dp),
+                          textAlign = TextAlign.Center,
+                          style = MaterialTheme.typography.titleMedium,
+                          fontWeight = FontWeight.Bold,
+                          color = MaterialTheme.colorScheme.onBackground)
+                    }
                   }
-                }
-
-                if (upcomingEvents.isNotEmpty() && upcomingEventVisibility.value) {
-                  items(upcomingEvents.size) { index ->
-                    UpcomingEventsItem(
-                        event = upcomingEvents[index],
-                        onClick = {
-                          selectedUpcomingEvent.value = upcomingEvents[index]
-                          isPopupOnUpcoming.value = true
-                        },
-                        distance = eventsViewModel.getDistanceUserEvent(upcomingEvents[index]),
-                        isProximityModeOn = (uiState.sortOrder == EventSortOrder.PROXIMITY),
-                        hasLocationPermission = isLocationPermissionGranted)
+                  upcomingEvents.isNotEmpty() && upcomingEventVisibility.value -> {
+                    items(upcomingEvents.size) { index ->
+                      UpcomingEventsItem(
+                          event = upcomingEvents[index],
+                          onClick = {
+                            selectedUpcomingEvent.value = upcomingEvents[index]
+                            isPopupOnUpcoming.value = true
+                          },
+                          distance = eventsViewModel.getDistanceUserEvent(upcomingEvents[index]),
+                          isProximityModeOn = (uiState.sortOrder == EventSortOrder.PROXIMITY),
+                          hasLocationPermission = isLocationPermissionGranted)
+                    }
                   }
-                } else if (upcomingEvents.isEmpty() && upcomingEventVisibility.value) {
-                  // When there is no events in the upcoming list
-                  item {
-                    Text(
-                        stringResource(R.string.upcomingEvents_emptylist_msg),
-                        modifier =
-                            Modifier.fillMaxWidth()
-                                .padding(8.dp)
-                                .testTag(EventsScreenTestTags.EMPTY_UPCOMING_LIST_MSG),
-                        textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground)
+                  upcomingEvents.isEmpty() && upcomingEventVisibility.value -> {
+                    // When there is no events in the upcoming list
+                    item {
+                      Text(
+                          stringResource(R.string.upcomingEvents_emptylist_msg),
+                          modifier =
+                              Modifier.fillMaxWidth()
+                                  .padding(8.dp)
+                                  .testTag(EventsScreenTestTags.EMPTY_UPCOMING_LIST_MSG),
+                          textAlign = TextAlign.Center,
+                          style = MaterialTheme.typography.titleMedium,
+                          fontWeight = FontWeight.Bold,
+                          color = MaterialTheme.colorScheme.onBackground)
+                    }
                   }
                 }
 
@@ -553,41 +559,45 @@ fun EventsScreen(
                       }
                 }
 
-                if (uiState.isLoading && myOwnEventVisibility.value) {
-                  // Events are loading so display that text
-                  item {
-                    Text(
-                        stringResource(R.string.events_loading),
-                        modifier = Modifier.fillMaxWidth().padding(8.dp),
-                        textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground)
+                when {
+                  uiState.isLoading && myOwnEventVisibility.value -> {
+                    // Events are loading so display that text
+                    item {
+                      Text(
+                          stringResource(R.string.events_loading),
+                          modifier = Modifier.fillMaxWidth().padding(8.dp),
+                          textAlign = TextAlign.Center,
+                          style = MaterialTheme.typography.titleMedium,
+                          fontWeight = FontWeight.Bold,
+                          color = MaterialTheme.colorScheme.onBackground)
+                    }
                   }
-                } else if (myOwnEvents.isNotEmpty() && myOwnEventVisibility.value) {
-                  items(myOwnEvents.size) { index ->
-                    MyOwnEventsItem(
-                        event = myOwnEvents[index],
-                        onClick = {
-                          selectedYourEvent.value = myOwnEvents[index]
-                          isPopupOnYourE.value = true
-                        },
-                        distance = eventsViewModel.getDistanceUserEvent(myOwnEvents[index]),
-                        isProximityModeOn = (uiState.sortOrder == EventSortOrder.PROXIMITY),
-                        hasLocationPermission = isLocationPermissionGranted)
+                  myOwnEvents.isNotEmpty() && myOwnEventVisibility.value -> {
+                    items(myOwnEvents.size) { index ->
+                      MyOwnEventsItem(
+                          event = myOwnEvents[index],
+                          onClick = {
+                            selectedYourEvent.value = myOwnEvents[index]
+                            isPopupOnYourE.value = true
+                          },
+                          distance = eventsViewModel.getDistanceUserEvent(myOwnEvents[index]),
+                          isProximityModeOn = (uiState.sortOrder == EventSortOrder.PROXIMITY),
+                          hasLocationPermission = isLocationPermissionGranted)
+                    }
                   }
-                } else if (myOwnEvents.isEmpty() && myOwnEventVisibility.value) {
-                  item {
-                    Text(
-                        stringResource(R.string.userEvents_emptylist_msg),
-                        modifier =
-                            Modifier.fillMaxWidth()
-                                .padding(8.dp)
-                                .testTag(EventsScreenTestTags.EMPTY_OUREVENTS_LIST_MSG),
-                        textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground)
+                  myOwnEvents.isEmpty() && myOwnEventVisibility.value -> {
+                    item {
+                      Text(
+                          stringResource(R.string.userEvents_emptylist_msg),
+                          modifier =
+                              Modifier.fillMaxWidth()
+                                  .padding(8.dp)
+                                  .testTag(EventsScreenTestTags.EMPTY_OUREVENTS_LIST_MSG),
+                          textAlign = TextAlign.Center,
+                          style = MaterialTheme.typography.titleMedium,
+                          fontWeight = FontWeight.Bold,
+                          color = MaterialTheme.colorScheme.onBackground)
+                    }
                   }
                 }
 

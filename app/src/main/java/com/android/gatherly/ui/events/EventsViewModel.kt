@@ -25,6 +25,7 @@ import com.google.firebase.firestore.firestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.storage
+import java.util.Locale
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -354,10 +355,10 @@ class EventsViewModel(
     if (userLocation != null && event.location != null) {
       val distanceInKilometers = distance(userLocation, event.location)
       return if (distanceInKilometers >= 1.0) {
-        String.format("%.1f km", distanceInKilometers)
+        String.format(Locale.getDefault(), "%.1f km", distanceInKilometers)
       } else {
         val distanceInMeters = distanceInKilometers * 1000
-        String.format("%.0f m", distanceInMeters)
+        String.format(Locale.getDefault(), "%.0f m", distanceInMeters)
       }
     }
     return null
