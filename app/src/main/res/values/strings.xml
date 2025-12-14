@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">gatherly</string>
+    <string name="app_name">Gatherly</string>
     <string name="title_activity_main">MainActivity</string>
 
     <!-- To-Do Pages. -->
