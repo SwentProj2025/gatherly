@@ -221,9 +221,9 @@ class AddEventsViewModelTest {
   @Test
   fun cannotEnterInvalidEventDueDate3() {
     runTest {
-      val dateString = "33/12/2025"
+      val dateString = "33/12/2026"
       addEventViewModel.updateDate(dateString)
-      assert(addEventViewModel.uiState.dateError) { "\'33/12/2025\' should be wrong" }
+      assert(addEventViewModel.uiState.dateError) { "\'33/12/2026\' should be wrong" }
     }
   }
 

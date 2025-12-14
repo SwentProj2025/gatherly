@@ -21,10 +21,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.automirrored.filled.List
+import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.PersonAdd
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -35,6 +38,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -55,20 +61,24 @@ import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileStatus
 import com.android.gatherly.model.todo.ToDo
+import com.android.gatherly.ui.map.EventIcon
+import com.android.gatherly.ui.map.ToDoIcon
 import com.android.gatherly.ui.navigation.BottomNavigationMenu
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.NavigationTestTags
+import com.android.gatherly.ui.navigation.Screen
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_HomePage
+import com.android.gatherly.utils.MapCoordinator
 import com.android.gatherly.utils.profilePicturePainter
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.MapProperties
 import com.google.maps.android.compose.MapUiSettings
-import com.google.maps.android.compose.Marker
-import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.MarkerComposable
 import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.maps.android.compose.rememberMarkerState
 
 // The documentation in this file was generated with the help of ChatGPT.
 
@@ -91,6 +101,7 @@ object HomePageScreenTestTags {
   const val ADD_FRIENDS_TEXT = "addFriendsText"
   const val FRIENDS_LAZY_COLUMN = "friendsLazyColumn"
   const val TASKS_LAZY_COLUMN = "tasksLazyColumn"
+  const val MINIMAP_BUTTON = "miniMapButton"
 }
 
 /**
@@ -111,6 +122,25 @@ fun getFriendStatusTestTag(friendUid: String) =
     "${HomePageScreenTestTags.FRIEND_STATUS_PREFIX}$friendUid"
 
 /**
+ * Actions that can be performed on the HomePage Screen.
+ *
+ * @param onClickFocusButton Callback invoked when the focus button is clicked to start/stop a focus
+ *   session.
+ * @param onClickTodoTitle Callback invoked when the "Upcoming Tasks" title is clicked.
+ * @param onClickFriendsSection Callback invoked when the friends section is clicked.
+ * @param onClickTodo Callback invoked when a specific todo item is clicked. Takes a [ToDo] as a
+ *   parameter.
+ * @param onClickEventsTitle Callback invoked when the "Upcoming Events" title is clicked.
+ */
+data class HomePageScreenActions(
+    val onClickFocusButton: () -> Unit = {},
+    val onClickTodoTitle: () -> Unit = {},
+    val onClickFriendsSection: () -> Unit = {},
+    val onClickTodo: (ToDo) -> Unit = {},
+    val onClickEventsTitle: () -> Unit = {},
+)
+
+/**
  * Main Home Page screen composable.
  *
  * Displays:
@@ -125,11 +155,8 @@ fun getFriendStatusTestTag(friendUid: String) =
 fun HomePageScreen(
     homePageViewModel: HomePageViewModel = viewModel(),
     navigationActions: NavigationActions? = null,
-    onClickFocusButton: () -> Unit = {},
-    onClickTodoTitle: () -> Unit = {},
-    onClickFriendsSection: () -> Unit = {},
-    onClickTodo: (ToDo) -> Unit = {},
-    onClickEventsTitle: () -> Unit = {}
+    homePageScreenActions: HomePageScreenActions,
+    coordinator: MapCoordinator,
 ) {
 
   val lifecycle = LocalLifecycleOwner.current.lifecycle
@@ -164,16 +191,18 @@ fun HomePageScreen(
               modifier =
                   Modifier.padding(horizontal = screenPadding)
                       .testTag(HomePageScreenTestTags.UPCOMING_EVENTS_TITLE)
-                      .clickable { onClickEventsTitle() })
+                      .clickable { homePageScreenActions.onClickEventsTitle() })
 
           Spacer(modifier = Modifier.height(sectionSpacing))
 
           EventsAndFriendsSection(
               todos = uiState.displayableTodos,
               events = uiState.displayableEvents,
-              onClickFriendsSection = onClickFriendsSection,
+              onClickFriendsSection = homePageScreenActions.onClickFriendsSection,
               isAnon = uiState.isAnon,
-              friends = uiState.friends)
+              friends = uiState.friends,
+              coordinator = coordinator,
+              navigationActions = navigationActions)
 
           Spacer(modifier = Modifier.height(verticalSpacing))
 
@@ -182,11 +211,14 @@ fun HomePageScreen(
               modifier =
                   Modifier.padding(horizontal = screenPadding)
                       .testTag(HomePageScreenTestTags.UPCOMING_TASKS_TITLE)
-                      .clickable { onClickTodoTitle() })
+                      .clickable { homePageScreenActions.onClickTodoTitle() })
 
           Spacer(modifier = Modifier.height(sectionSpacing))
 
-          TaskList(todos = uiState.todos, onClickTodoTitle, onClickTodo)
+          TaskList(
+              todos = uiState.todos,
+              homePageScreenActions.onClickTodoTitle,
+              homePageScreenActions.onClickTodo)
 
           Spacer(modifier = Modifier.height(verticalSpacing))
 
@@ -194,7 +226,7 @@ fun HomePageScreen(
           FocusSection(
               modifier = Modifier.padding(horizontal = screenPadding),
               timerString = uiState.timerString,
-              onClick = onClickFocusButton)
+              onClick = homePageScreenActions.onClickFocusButton)
 
           Spacer(
               modifier =
@@ -225,7 +257,9 @@ fun EventsAndFriendsSection(
     events: List<Event>,
     onClickFriendsSection: () -> Unit,
     isAnon: Boolean,
-    friends: List<Profile>
+    friends: List<Profile>,
+    coordinator: MapCoordinator,
+    navigationActions: NavigationActions? = null
 ) {
 
   val spacingRegular = dimensionResource(id = R.dimen.spacing_between_fields_regular)
@@ -235,9 +269,14 @@ fun EventsAndFriendsSection(
               .height(dimensionResource(id = R.dimen.homepage_events_section_height))) {
         Spacer(modifier = Modifier.width(spacingRegular))
 
-        MiniMap(todos = todos, events = events, modifier = Modifier.weight(0.8f))
+        MiniMap(
+            todos = todos,
+            events = events,
+            modifier = Modifier.weight(0.8f),
+            coordinator = coordinator,
+            navigationActions = navigationActions)
 
-        Spacer(modifier = Modifier.width(spacingRegular))
+        Spacer(modifier = Modifier.width(dimensionResource(id = R.dimen.spacing_between_fields)))
 
         if (!isAnon) {
           FriendsSection(
@@ -254,46 +293,118 @@ fun EventsAndFriendsSection(
  * campus if no locations are available.
  */
 @Composable
-fun MiniMap(todos: List<ToDo>, events: List<Event>, modifier: Modifier) {
+fun MiniMap(
+    todos: List<ToDo>,
+    events: List<Event>,
+    modifier: Modifier = Modifier,
+    coordinator: MapCoordinator,
+    navigationActions: NavigationActions? = null
+) {
   val defaultLoc = LatLng(46.5191, 6.5668) // EPFL campus loc
-  val firstTodoLoc =
-      todos.firstOrNull()?.location?.let { LatLng(it.latitude, it.longitude) } ?: defaultLoc
+  val firstEventLoc = events.firstOrNull()?.location?.let { LatLng(it.latitude, it.longitude) }
 
-  val cameraPositionState = rememberCameraPositionState {
-    position = CameraPosition.fromLatLngZoom(firstTodoLoc, 15f)
+  val firstTodoLoc = todos.firstOrNull()?.location?.let { LatLng(it.latitude, it.longitude) }
+
+  val startLoc =
+      when {
+        firstEventLoc != null -> firstEventLoc
+        firstTodoLoc != null -> firstTodoLoc
+        else -> defaultLoc
+      }
+
+  val cameraState = rememberCameraPositionState {
+    position = CameraPosition.fromLatLngZoom(startLoc, 15f)
   }
+  var showEvents by remember { mutableStateOf(false) }
 
+  Box(
+      modifier =
+          modifier
+              .fillMaxSize()
+              .clip(RoundedCornerShape(dimensionResource(id = R.dimen.rounded_corner_shape_medium)))
+              .testTag(HomePageScreenTestTags.MINI_MAP_CARD)) {
+        GoogleMap(
+            cameraPositionState = cameraState,
+            modifier = Modifier.fillMaxSize(),
+            properties = MapProperties(isMyLocationEnabled = false),
+            uiSettings =
+                MapUiSettings(myLocationButtonEnabled = false, zoomControlsEnabled = false)) {
+
+              // ---------- TODOS ----------
+              if (showEvents) {
+                todos.forEach { todo ->
+                  val loc = todo.location ?: return@forEach
+
+                  MarkerComposable(
+                      state = rememberMarkerState(position = LatLng(loc.latitude, loc.longitude)),
+                      onClick = {
+                        coordinator.requestCenterOnTodo(todo.uid)
+                        navigationActions?.navigateTo(Screen.Map)
+                        true
+                      }) {
+                        ToDoIcon(todo)
+                      }
+                }
+              }
+
+              // ---------- EVENTS ----------
+              if (!showEvents) {
+                events.forEach { event ->
+                  val loc = event.location ?: return@forEach
+
+                  MarkerComposable(
+                      state = rememberMarkerState(position = LatLng(loc.latitude, loc.longitude)),
+                      onClick = {
+                        coordinator.requestCenterOnEvent(event.id)
+                        navigationActions?.navigateTo(Screen.Map)
+                        true
+                      }) {
+                        EventIcon(event)
+                      }
+                }
+              }
+            }
+
+        // ---------- Bottom-left Toggle Button ----------
+        Box(
+            modifier =
+                Modifier.padding(dimensionResource(id = R.dimen.padding_small_regular))
+                    .align(Alignment.BottomStart)) {
+              FilterIconButton(isTodo = showEvents, onClick = { showEvents = !showEvents })
+            }
+      }
+}
+
+/**
+ * A circular toggle button used to switch between two filter modes (e.g. todos vs. events).
+ *
+ * @param isTodo Drives which icon is shown and what color should the button be.
+ * @param onClick Callback invoked when the user taps the button.
+ */
+@Composable
+fun FilterIconButton(isTodo: Boolean, onClick: () -> Unit) {
+  val backgroundColor =
+      if (isTodo) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.secondary
   Card(
-      modifier = modifier.fillMaxSize().testTag(HomePageScreenTestTags.MINI_MAP_CARD),
+      modifier =
+          Modifier.size(dimensionResource(id = R.dimen.homepage_filter_icon_button_size))
+              .clickable { onClick() }
+              .testTag(HomePageScreenTestTags.MINIMAP_BUTTON),
       shape = RoundedCornerShape(dimensionResource(id = R.dimen.rounded_corner_shape_medium)),
-  ) {
-    GoogleMap(
-        modifier = Modifier.fillMaxSize(),
-        cameraPositionState = cameraPositionState,
-        uiSettings =
-            MapUiSettings(
-                zoomControlsEnabled = false,
-                scrollGesturesEnabled = true,
-                zoomGesturesEnabled = true,
-                tiltGesturesEnabled = false,
-            ),
-        properties = MapProperties(isMyLocationEnabled = false)) {
-          todos.forEach { todo ->
-            val loc = todo.location ?: return@forEach
-            Marker(
-                state = MarkerState(LatLng(loc.latitude, loc.longitude)),
-                title = todo.name,
-                snippet = todo.description)
-          }
-          events.forEach { event ->
-            val loc = event.location ?: return@forEach
-            Marker(
-                state = MarkerState(LatLng(loc.latitude, loc.longitude)),
-                title = event.title,
-                snippet = event.description)
-          }
+      elevation =
+          CardDefaults.cardElevation(
+              dimensionResource(id = R.dimen.homepage_filter_card_elevation)),
+      colors =
+          CardDefaults.cardColors(
+              containerColor = backgroundColor,
+              contentColor = MaterialTheme.colorScheme.onPrimaryContainer)) {
+        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+          Icon(
+              imageVector = if (isTodo) Icons.Default.Event else Icons.AutoMirrored.Filled.List,
+              contentDescription =
+                  stringResource(id = R.string.homepage_map_button_icon_description))
         }
-  }
+      }
 }
 
 /**

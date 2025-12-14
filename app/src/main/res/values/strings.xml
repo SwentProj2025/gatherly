@@ -189,6 +189,7 @@
     <string name="homepage_empty_task_list_message">You don\'t have any todos, click here to add some !</string>
     <string name="homepage_no_friends_message">Add friends</string>
     <string name="homepage_add_friend_icon_description">Add friends icon</string>
+    <string name="homepage_map_button_icon_description">Mini map icon for events or todos</string>
 
     <string name="goback_button_title">Go back</string>
     <string name="unregister_button_title">Unregister</string>
