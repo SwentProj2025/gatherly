@@ -41,7 +41,7 @@ import kotlinx.coroutines.tasks.await
 
 /** Represents the UI state of the Profile screen. */
 data class ProfileState(
-    val isLoading: Boolean = false,
+    val isLoading: Boolean = true,
     val profile: Profile? = null,
     val groupsToMembers: Map<Group, List<Profile>> = emptyMap(),
     val focusPoints: Double = 0.0,

@@ -19,7 +19,7 @@ import kotlinx.coroutines.launch
 /** UI state for the Badge ViewModel */
 data class UIState(
     val badgesByType: Map<BadgeType, List<BadgeUI>> = emptyMap(),
-    val isLoading: Boolean = false,
+    val isLoading: Boolean = true,
 )
 
 /**

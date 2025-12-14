@@ -84,6 +84,7 @@ import com.android.gatherly.utils.DateParser.dateToString
 import com.android.gatherly.utils.DateParser.timeToString
 import com.android.gatherly.utils.GatherlyAlertDialog
 import com.android.gatherly.utils.GatherlyAlertDialogActions
+import com.android.gatherly.utils.LoadingAnimation
 import com.android.gatherly.utils.MapCoordinator
 import java.util.Locale
 import kotlinx.coroutines.launch
@@ -278,93 +279,46 @@ fun EventsScreen(
                     .padding(horizontal = 16.dp)
                     .padding(padding)
                     .testTag(EventsScreenTestTags.ALL_LISTS)) {
-
-              // ---- SEARCH EVENT BAR ----
-              item { SearchBar(uiState, eventsViewModel, searchQuery) }
-
-              // -- FILTER BAR --
-              item { FilterBar(selectedFilter) }
-
-              // --  BROWSE EVENTS LIST --
-              item {
-                Text(
-                    text = stringResource(R.string.browseEvents_list_title),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    modifier =
-                        Modifier.padding(vertical = 10.dp)
-                            .testTag(EventsScreenTestTags.BROWSE_TITLE),
-                    color = MaterialTheme.colorScheme.onBackground)
-              }
-
               if (uiState.isLoading) {
                 // Events are loading so display that text
-                item {
-                  Text(
-                      stringResource(R.string.events_loading),
-                      modifier = Modifier.fillMaxWidth().padding(8.dp),
-                      textAlign = TextAlign.Center,
-                      style = MaterialTheme.typography.titleMedium,
-                      fontWeight = FontWeight.Bold,
-                      color = MaterialTheme.colorScheme.onBackground)
-                }
-              } else if (browserEvents.isNotEmpty()) {
-                items(browserEvents.size) { index ->
-                  BrowserEventsItem(
-                      event = browserEvents[index],
-                      onClick = {
-                        selectedBrowserEvent.value = browserEvents[index]
-                        isPopupOnBrowser.value = true
-                      })
-                }
-              } else { // When there is no events in the browser list
-                item {
-                  Text(
-                      stringResource(R.string.browseEvents_emptylist_msg),
-                      modifier =
-                          Modifier.fillMaxWidth()
-                              .padding(8.dp)
-                              .testTag(EventsScreenTestTags.EMPTY_BROWSER_LIST_MSG),
-                      textAlign = TextAlign.Center,
-                      style = MaterialTheme.typography.titleMedium,
-                      fontWeight = FontWeight.Bold,
-                      color = MaterialTheme.colorScheme.onBackground)
-                }
-              }
+                item { LoadingAnimation(stringResource(R.string.loading_events), padding) }
+              } else {
 
-              if (!uiState.isAnon) {
-                // Spacer between Browse and Upcoming
-                item { Spacer(modifier = Modifier.height(24.dp)) }
+                // ---- SEARCH EVENT BAR ----
+                item { SearchBar(uiState, eventsViewModel, searchQuery) }
 
-                // -- MY UPCOMING EVENTS LIST --
+                // -- FILTER BAR --
+                item { FilterBar(selectedFilter) }
+
+                // --  BROWSE EVENTS LIST --
                 item {
                   Text(
-                      text = stringResource(R.string.upcomingEvents_list_title),
+                      text = stringResource(R.string.browseEvents_list_title),
                       style = MaterialTheme.typography.titleMedium,
                       fontWeight = FontWeight.Bold,
                       modifier =
                           Modifier.padding(vertical = 10.dp)
-                              .testTag(EventsScreenTestTags.UPCOMING_TITLE),
+                              .testTag(EventsScreenTestTags.BROWSE_TITLE),
                       color = MaterialTheme.colorScheme.onBackground)
                 }
 
-                if (upcomingEvents.isNotEmpty()) {
-                  items(upcomingEvents.size) { index ->
-                    UpcomingEventsItem(
-                        event = upcomingEvents[index],
+                if (browserEvents.isNotEmpty()) {
+                  items(browserEvents.size) { index ->
+                    BrowserEventsItem(
+                        event = browserEvents[index],
                         onClick = {
-                          selectedUpcomingEvent.value = upcomingEvents[index]
-                          isPopupOnUpcoming.value = true
+                          selectedBrowserEvent.value = browserEvents[index]
+                          isPopupOnBrowser.value = true
                         })
                   }
-                } else { // When there is no events in the upcoming list
+                } else { // When there is no events in the browser list
                   item {
                     Text(
-                        stringResource(R.string.upcomingEvents_emptylist_msg),
+                        stringResource(R.string.browseEvents_emptylist_msg),
                         modifier =
                             Modifier.fillMaxWidth()
                                 .padding(8.dp)
-                                .testTag(EventsScreenTestTags.EMPTY_UPCOMING_LIST_MSG),
+                                .testTag(EventsScreenTestTags.EMPTY_BROWSER_LIST_MSG),
                         textAlign = TextAlign.Center,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
@@ -372,66 +326,108 @@ fun EventsScreen(
                   }
                 }
 
-                // Spacer between Upcoming and My Own Events
-                item { Spacer(modifier = Modifier.height(24.dp)) }
+                if (!uiState.isAnon) {
+                  // Spacer between Browse and Upcoming
+                  item { Spacer(modifier = Modifier.height(24.dp)) }
 
-                // MY OWN EVENTS
-                item {
-                  Text(
-                      text = stringResource(R.string.userEvents_list_title),
-                      style = MaterialTheme.typography.titleMedium,
-                      fontWeight = FontWeight.Bold,
-                      modifier =
-                          Modifier.padding(vertical = 8.dp)
-                              .testTag(EventsScreenTestTags.YOUR_EVENTS_TITLE),
-                      color = MaterialTheme.colorScheme.onBackground)
-                }
-
-                if (myOwnEvents.isNotEmpty()) {
-                  items(myOwnEvents.size) { index ->
-                    MyOwnEventsItem(
-                        event = myOwnEvents[index],
-                        onClick = {
-                          selectedYourEvent.value = myOwnEvents[index]
-                          isPopupOnYourE.value = true
-                        })
-                  }
-                } else {
+                  // -- MY UPCOMING EVENTS LIST --
                   item {
                     Text(
-                        stringResource(R.string.userEvents_emptylist_msg),
-                        modifier =
-                            Modifier.fillMaxWidth()
-                                .padding(8.dp)
-                                .testTag(EventsScreenTestTags.EMPTY_OUREVENTS_LIST_MSG),
-                        textAlign = TextAlign.Center,
+                        text = stringResource(R.string.upcomingEvents_list_title),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
+                        modifier =
+                            Modifier.padding(vertical = 10.dp)
+                                .testTag(EventsScreenTestTags.UPCOMING_TITLE),
                         color = MaterialTheme.colorScheme.onBackground)
                   }
-                }
 
-                // Spacer before the Create Event button
-                item { Spacer(modifier = Modifier.height(24.dp)) }
+                  if (upcomingEvents.isNotEmpty()) {
+                    items(upcomingEvents.size) { index ->
+                      UpcomingEventsItem(
+                          event = upcomingEvents[index],
+                          onClick = {
+                            selectedUpcomingEvent.value = upcomingEvents[index]
+                            isPopupOnUpcoming.value = true
+                          })
+                    }
+                  } else { // When there is no events in the upcoming list
+                    item {
+                      Text(
+                          stringResource(R.string.upcomingEvents_emptylist_msg),
+                          modifier =
+                              Modifier.fillMaxWidth()
+                                  .padding(8.dp)
+                                  .testTag(EventsScreenTestTags.EMPTY_UPCOMING_LIST_MSG),
+                          textAlign = TextAlign.Center,
+                          style = MaterialTheme.typography.titleMedium,
+                          fontWeight = FontWeight.Bold,
+                          color = MaterialTheme.colorScheme.onBackground)
+                    }
+                  }
 
-                // CREATE A NEW EVENT BUTTON
+                  // Spacer between Upcoming and My Own Events
+                  item { Spacer(modifier = Modifier.height(24.dp)) }
 
-                item {
-                  Button(
-                      onClick = { actions.onAddEvent() },
-                      modifier =
-                          Modifier.fillMaxWidth()
-                              .height(80.dp)
-                              .padding(vertical = 12.dp)
-                              .testTag(EventsScreenTestTags.CREATE_EVENT_BUTTON),
-                      shape = RoundedCornerShape(12.dp),
-                      colors = buttonColors(containerColor = MaterialTheme.colorScheme.secondary)) {
-                        Text(
-                            text = stringResource(R.string.create_event_button_title),
-                            fontSize = 16.sp,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onSecondary)
-                      }
+                  // MY OWN EVENTS
+                  item {
+                    Text(
+                        text = stringResource(R.string.userEvents_list_title),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        modifier =
+                            Modifier.padding(vertical = 8.dp)
+                                .testTag(EventsScreenTestTags.YOUR_EVENTS_TITLE),
+                        color = MaterialTheme.colorScheme.onBackground)
+                  }
+
+                  if (myOwnEvents.isNotEmpty()) {
+                    items(myOwnEvents.size) { index ->
+                      MyOwnEventsItem(
+                          event = myOwnEvents[index],
+                          onClick = {
+                            selectedYourEvent.value = myOwnEvents[index]
+                            isPopupOnYourE.value = true
+                          })
+                    }
+                  } else {
+                    item {
+                      Text(
+                          stringResource(R.string.userEvents_emptylist_msg),
+                          modifier =
+                              Modifier.fillMaxWidth()
+                                  .padding(8.dp)
+                                  .testTag(EventsScreenTestTags.EMPTY_OUREVENTS_LIST_MSG),
+                          textAlign = TextAlign.Center,
+                          style = MaterialTheme.typography.titleMedium,
+                          fontWeight = FontWeight.Bold,
+                          color = MaterialTheme.colorScheme.onBackground)
+                    }
+                  }
+
+                  // Spacer before the Create Event button
+                  item { Spacer(modifier = Modifier.height(24.dp)) }
+
+                  // CREATE A NEW EVENT BUTTON
+
+                  item {
+                    Button(
+                        onClick = { actions.onAddEvent() },
+                        modifier =
+                            Modifier.fillMaxWidth()
+                                .height(80.dp)
+                                .padding(vertical = 12.dp)
+                                .testTag(EventsScreenTestTags.CREATE_EVENT_BUTTON),
+                        shape = RoundedCornerShape(12.dp),
+                        colors =
+                            buttonColors(containerColor = MaterialTheme.colorScheme.secondary)) {
+                          Text(
+                              text = stringResource(R.string.create_event_button_title),
+                              fontSize = 16.sp,
+                              fontWeight = FontWeight.Medium,
+                              color = MaterialTheme.colorScheme.onSecondary)
+                        }
+                  }
                 }
               }
             }

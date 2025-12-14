@@ -34,6 +34,7 @@ import kotlinx.coroutines.tasks.await
  * @property signedIn Whether the authentication was successful
  * @property destinationScreen The screen to navigate to upon successful authentication
  * @property isLoading Whether an authentication operation is in progress.
+ * @property errorMessage String tat holds the error message.
  */
 data class SignInUIState(
     val signedIn: Boolean = false,
@@ -77,7 +78,8 @@ class SignInViewModel(
                   "init_profile"
                 } else {
                   "home"
-                })
+                },
+            isLoading = true)
   }
 
   /** Authenticate to Firebase */
@@ -97,7 +99,7 @@ class SignInViewModel(
           profileRepository.initProfileIfMissing(uid, "")
           profileRepository.updateStatus(uid, ProfileStatus.ONLINE)
           handlePostSignInNav()
-          uiState = uiState.copy(signedIn = true, isLoading = false)
+          uiState = uiState.copy(signedIn = true)
         } catch (e: Exception) {
           uiState = uiState.copy(isLoading = false, errorMessage = "Google sign-in failed")
           Log.e("SignInViewModel", "Google sign-in failed", e)
@@ -112,7 +114,7 @@ class SignInViewModel(
 
   /** Sign in with Google */
   fun signInWithGoogle(context: Context, credentialManager: CredentialManager) {
-    uiState = uiState.copy(isLoading = true)
+    uiState = uiState.copy(isLoading = true, signedIn = false)
     viewModelScope.launch {
       try {
         val signInWithGoogleOption =
@@ -138,7 +140,7 @@ class SignInViewModel(
 
   /** Sign in anonymously */
   fun signInAnonymously() {
-    uiState = uiState.copy(isLoading = true)
+    uiState = uiState.copy(isLoading = true, signedIn = false)
     viewModelScope.launch {
       try {
         Firebase.auth.signInAnonymously().await()
@@ -147,7 +149,7 @@ class SignInViewModel(
         profileRepository.updateStatus(uid, ProfileStatus.ONLINE)
         handlePostSignInNav()
 
-        uiState = uiState.copy(signedIn = true, isLoading = false)
+        uiState = uiState.copy(signedIn = true)
       } catch (e: Exception) {
         uiState = uiState.copy(isLoading = false, errorMessage = "Failed to log in")
         Log.e("SignInViewModel", "Anonymous sign-in failed", e)

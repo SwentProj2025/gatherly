@@ -48,6 +48,7 @@ import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Screen
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu
+import com.android.gatherly.utils.LoadingAnimation
 import com.android.gatherly.utils.profilePicturePainter
 
 object GroupsOverviewScreenTestTags {
@@ -109,16 +110,7 @@ fun OverviewContent(
       horizontalAlignment = Alignment.CenterHorizontally,
       verticalArrangement = Arrangement.SpaceEvenly) {
         if (uiState.value.isLoading) {
-          Box(modifier = Modifier.fillMaxWidth().weight(1f), contentAlignment = Alignment.Center) {
-            Text(
-                text = stringResource(R.string.groups_overview_loading),
-                modifier =
-                    Modifier.fillMaxWidth().padding(dimensionResource(R.dimen.padding_small)),
-                textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground)
-          }
+          LoadingAnimation(stringResource(R.string.groups_overview_loading), padding)
         } else if (uiState.value.groups.isEmpty()) {
           Box(
               modifier =

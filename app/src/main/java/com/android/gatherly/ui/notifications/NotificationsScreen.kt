@@ -23,7 +23,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults.buttonColors
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -50,6 +49,7 @@ import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
+import com.android.gatherly.utils.LoadingAnimation
 import com.android.gatherly.utils.profilePicturePainter
 
 const val MAX_MEMBERS_DISPLAYED = 3
@@ -58,7 +58,6 @@ object NotificationsScreenTestTags {
   const val EMPTY_LIST_MSG = "messageEmptyList"
   const val FRIEND_REQUEST_SECTION = "friendRequestSection"
   const val FRIEND_REQUEST_SECTION_TEXT = "friendRequestSectionText"
-  const val LOADING_CIRCLE = "loadingCircle"
 
   /**
    * Returns a unique test tag for the card or container representing a given [Profile.username]
@@ -144,14 +143,7 @@ fun NotificationsScreen(
 
           // --- LOADING NOTIFICATIONS ANIMATION ---
           if (isLoading) {
-            Box(
-                modifier =
-                    Modifier.fillMaxSize()
-                        .padding(padding)
-                        .testTag(NotificationsScreenTestTags.LOADING_CIRCLE),
-                contentAlignment = Alignment.Center) {
-                  CircularProgressIndicator()
-                }
+            LoadingAnimation(stringResource(R.string.loading_notifications_message), padding)
           } else {
             LazyColumn(
                 contentPadding = PaddingValues(vertical = dimensionResource(R.dimen.padding_small)),
