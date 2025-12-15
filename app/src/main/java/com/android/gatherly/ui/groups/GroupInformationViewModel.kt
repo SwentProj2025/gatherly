@@ -97,7 +97,6 @@ class GroupInformationViewModel(
   fun onLeaveGroup() {
     viewModelScope.launch {
       groupsRepository.removeMember(uiState.value.group.gid, authProvider().currentUser?.uid!!)
-      println("just before true")
       _uiState.value = _uiState.value.copy(navigateToOverview = true)
     }
   }
