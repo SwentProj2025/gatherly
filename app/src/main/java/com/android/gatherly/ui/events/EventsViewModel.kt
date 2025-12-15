@@ -345,7 +345,7 @@ class EventsViewModel(
   }
 
   /**
-   * Handles the creation fo the string who represent the distance between the user and the event
+   * Handles the creation of the string who represents the distance between the user and the event
    * location
    *
    * @param event the event that the user wants to know his proximity with
