@@ -6,6 +6,15 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.ktx.Firebase
 import kotlinx.coroutines.tasks.await
 
+/**
+ * Firebase Firestore implementation of [PointsRepository].
+ *
+ * Points are stored per-user in Firestore and filtered by the currently authenticated user.
+ *
+ * @property db The Firestore database instance.
+ * @throws IllegalStateException when no user is currently signed in
+ * @throws IllegalArgumentException when attempting to add points for another user
+ */
 class PointsRepositoryFirestore(private val db: FirebaseFirestore) : PointsRepository {
 
   private val collection

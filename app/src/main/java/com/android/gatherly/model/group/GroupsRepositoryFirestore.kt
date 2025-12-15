@@ -9,6 +9,14 @@ import kotlinx.coroutines.tasks.await
 
 // This class contains code adapted by an LLM (GitHub Copilot, Claude.ai) from the CS-311 bootcamp.
 
+/**
+ * Firebase Firestore implementation of [GroupsRepository].
+ *
+ * This implementation enforces security rules, requiring admin privileges for most modification
+ * operations. Uses Firebase Authentication to identify the current user.
+ *
+ * @property db The Firestore database instance.
+ */
 class GroupsRepositoryFirestore(private val db: FirebaseFirestore) : GroupsRepository {
 
   /** Firestore collection for groups. */
@@ -91,8 +99,8 @@ class GroupsRepositoryFirestore(private val db: FirebaseFirestore) : GroupsRepos
     }
 
     // Prevent removing the last admin
-    if (userId in existing.adminIds && existing.adminIds.size <= 1) {
-      throw IllegalStateException("Cannot remove the last admin from the group")
+    check(userId !in existing.adminIds || existing.adminIds.size > 1) {
+      "Cannot remove the last admin from the group"
     }
 
     val groupRef = collection.document(groupId)
@@ -111,9 +119,8 @@ class GroupsRepositoryFirestore(private val db: FirebaseFirestore) : GroupsRepos
       throw SecurityException("Only admins can promote members to admin")
     }
     // Verify user is a member before making them admin
-    if (userId !in existing.memberIds) {
-      throw IllegalStateException("User must be a member before becoming an admin")
-    }
+    check(userId in existing.memberIds) { "User must be a member before becoming an admin" }
+
     collection.document(groupId).update("adminIds", FieldValue.arrayUnion(userId)).await()
   }
 
@@ -123,9 +130,7 @@ class GroupsRepositoryFirestore(private val db: FirebaseFirestore) : GroupsRepos
       throw SecurityException("Only admins can demote other admins")
     }
     // Prevent removing the last admin
-    if (existing.adminIds.size <= 1) {
-      throw IllegalStateException("Cannot remove the last admin from the group")
-    }
+    check(existing.adminIds.size > 1) { "Cannot remove the last admin from the group" }
 
     collection.document(groupId).update("adminIds", FieldValue.arrayRemove(userId)).await()
   }
@@ -151,8 +156,8 @@ class GroupsRepositoryFirestore(private val db: FirebaseFirestore) : GroupsRepos
     val creatorId = doc.getString("creatorId") ?: return null
     val name = doc.getString("name") ?: return null
     val description = doc.getString("description")
-    val memberIds = doc.get("memberIds") as? List<*> ?: return null
-    val adminIds = doc.get("adminIds") as? List<*> ?: return null
+    val memberIds = doc["memberIds"] as? List<*> ?: return null
+    val adminIds = doc["adminIds"] as? List<*> ?: return null
 
     // Ensure all memberIds and adminIds are strings
     val memberIdsStr = memberIds.mapNotNull { it as? String }
