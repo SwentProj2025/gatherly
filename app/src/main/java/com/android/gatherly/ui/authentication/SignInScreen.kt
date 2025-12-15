@@ -17,15 +17,12 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
-import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.Screen
 import com.android.gatherly.ui.navigation.Tab
-import com.android.gatherly.ui.theme.GatherlyTheme
 import com.android.gatherly.utils.DailyTodoAlarmScheduler
 import com.google.firebase.auth.FirebaseAuth
 
@@ -43,6 +40,7 @@ object SignInScreenTestTags {
  *
  * @param authViewModel ViewModel managing authentication state and logic.
  * @param credentialManager Used for Google Credential authentication.
+ * @param navigationActions Used to navigate to different screens
  */
 @Composable
 fun SignInScreen(
@@ -72,6 +70,7 @@ fun SignInScreen(
     }
   }
 
+  // Displays error messages then clears them
   LaunchedEffect(errorMessage) {
     if (errorMessage != null) {
       snackBarHostState.showSnackbar(message = errorMessage, withDismissAction = true)
@@ -213,13 +212,4 @@ fun SignInButton(
                   fontWeight = FontWeight.Medium)
             }
       }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun SignInScreenPreview() {
-  GatherlyTheme(darkTheme = true) {
-    val fakeViewMod = SignInViewModel(ProfileLocalRepository())
-    SignInScreen(fakeViewMod)
-  }
 }

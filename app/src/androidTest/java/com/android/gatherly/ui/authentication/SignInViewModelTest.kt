@@ -25,6 +25,7 @@ import org.junit.runner.RunWith
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
+/** Tests the sign in viewModel with Firebase */
 class SignInViewModelTest : FirestoreGatherlyTest() {
 
   private lateinit var signInViewModel: SignInViewModel
@@ -82,7 +83,7 @@ class SignInViewModelTest : FirestoreGatherlyTest() {
   @Test
   fun signInWithNoGoogleErrorMessage() =
       runTest(timeout = 120.seconds) {
-        // Sign in with no creds
+        // Sign in with no credentials
         val context = ApplicationProvider.getApplicationContext<Context>()
         signInViewModel = SignInViewModel(profileRepository = profileRepository)
         signInViewModel.signInWithGoogle(context, CredentialManager.create(context))
@@ -112,8 +113,9 @@ class SignInViewModelTest : FirestoreGatherlyTest() {
         assert(signInViewModel.uiState.errorMessage == null)
       }
 
+  /** Checks that signing in anonymously directs the user to the homepage */
   @Test
-  fun canSignInAnonymously_destinationInitProfileIfFirst() = runTest {
+  fun canSignInAnonymously_destinationHomePage() = runTest {
     signInViewModel = SignInViewModel(profileRepository = profileRepository)
 
     signInViewModel.signInAnonymously()
@@ -156,6 +158,7 @@ class SignInViewModelTest : FirestoreGatherlyTest() {
     assertEquals(ProfileStatus.ONLINE, status)
   }
 
+  /** Helper function to wait for the sign in to complete */
   fun waitForUserSignIn() = runTest {
     withContext(Dispatchers.Default.limitedParallelism(1)) {
       while (!signInViewModel.uiState.signedIn) delay(50)
