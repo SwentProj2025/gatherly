@@ -53,9 +53,13 @@ class BadgeViewModel(
   /** Load the user's profile and it's badgeIds list to get the UI state */
   private fun loadUserBadges() {
     viewModelScope.launch {
-      val uid = authProvider().currentUser?.uid ?: return@launch
-      val profile = repository.getProfileByUid(uid) ?: return@launch
-
+      val uid =
+          authProvider().currentUser?.uid
+              ?: run {
+                _uiState.value = UIState(isLoading = false, badgesByType = emptyMap())
+                return@launch
+              }
+      val profile = repository.getProfileByUid(uid)
       _uiState.value = buildUiStateFromProfile(profile)
     }
   }
@@ -67,8 +71,15 @@ class BadgeViewModel(
    *
    * @param profile the user's profile
    */
-  private fun buildUiStateFromProfile(profile: Profile): UIState {
+  private fun buildUiStateFromProfile(profile: Profile?): UIState {
+    _uiState.value = _uiState.value.copy(isLoading = true)
 
+    if (profile == null) {
+      return UIState(
+          badgesByType = emptyMap(),
+          isLoading = false,
+      )
+    }
     val userBadges: List<Badge> =
         profile.badgeIds.mapNotNull { badgeId -> Badge.entries.firstOrNull { it.id == badgeId } }
 
@@ -109,6 +120,7 @@ class BadgeViewModel(
 
           if (lockedUi != null) obtainedUi + lockedUi else obtainedUi
         }
+    _uiState.value = _uiState.value.copy(isLoading = false)
 
     return UIState(
         badgesByType = badgesByType,
