@@ -4,8 +4,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDefaults
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -87,7 +89,12 @@ fun GatherlyDatePicker(
             }
       },
       dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }) {
-        DatePicker(state = datePickerState)
+        DatePicker(
+            state = datePickerState,
+            colors =
+                DatePickerDefaults.colors(
+                    dayContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    weekdayContentColor = MaterialTheme.colorScheme.onSurfaceVariant))
       }
 }
 
