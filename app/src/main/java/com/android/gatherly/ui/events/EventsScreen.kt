@@ -97,7 +97,6 @@ import com.android.gatherly.utils.DateParser.dateToString
 import com.android.gatherly.utils.DateParser.timeToString
 import com.android.gatherly.utils.GatherlyAlertDialog
 import com.android.gatherly.utils.GatherlyAlertDialogActions
-import com.android.gatherly.utils.LoadingAnimation
 import com.android.gatherly.utils.MapCoordinator
 import com.google.android.gms.location.LocationServices
 import java.util.Locale
@@ -379,284 +378,252 @@ fun EventsScreen(
                     .padding(padding)
                     .testTag(EventsScreenTestTags.ALL_LISTS)) {
 
-                // ---- SEARCH EVENT BAR ----
+              // ---- SEARCH EVENT BAR ----
+              item {
+                SearchBar(
+                    uiState,
+                    eventsViewModel,
+                    searchQuery,
+                    onProximitySelected = requestLocationPermission,
+                    isLocationPermissionGranted)
+              }
+
+              // -- FILTER BAR --
+              item { FilterBar(selectedFilter) }
+
+              // --  BROWSE EVENTS LIST --
+              item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically) {
+                      Text(
+                          text = stringResource(R.string.browseEvents_list_title),
+                          style = MaterialTheme.typography.titleMedium,
+                          fontWeight = FontWeight.Bold,
+                          modifier =
+                              Modifier.padding(vertical = 10.dp)
+                                  .testTag(EventsScreenTestTags.BROWSE_TITLE),
+                          color = MaterialTheme.colorScheme.onBackground)
+
+                      IconsEventsVisibility(
+                          browserEventVisibility,
+                          EventsScreenTestTags.BROWSER_EVENT_VISIBILITY_BUTTON)
+                    }
+              }
+
+              when {
+                uiState.isLoading && browserEventVisibility.value -> {
+                  // Events are loading so display that text
+                  item {
+                    Text(
+                        stringResource(R.string.loading_events),
+                        modifier = Modifier.fillMaxWidth().padding(8.dp),
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground)
+                  }
+                }
+                browserEvents.isNotEmpty() && browserEventVisibility.value -> {
+                  items(browserEvents.size) { index ->
+                    BrowserEventsItem(
+                        event = browserEvents[index],
+                        onClick = {
+                          selectedBrowserEvent.value = browserEvents[index]
+                          isPopupOnBrowser.value = true
+                        },
+                        distance = eventsViewModel.getDistanceUserEvent(browserEvents[index]),
+                        isProximityModeOn = (uiState.sortOrder == EventSortOrder.PROXIMITY),
+                        hasLocationPermission = isLocationPermissionGranted)
+                  }
+                }
+                browserEvents.isEmpty() && browserEventVisibility.value -> {
+                  // When there is no events in the browser list
+                  item {
+                    Text(
+                        stringResource(R.string.browseEvents_emptylist_msg),
+                        modifier =
+                            Modifier.fillMaxWidth()
+                                .padding(8.dp)
+                                .testTag(EventsScreenTestTags.EMPTY_BROWSER_LIST_MSG),
+                        textAlign = TextAlign.Center,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onBackground)
+                  }
+                }
+              }
+              if (!uiState.isAnon) {
+                // Spacer between Browse and Upcoming
                 item {
-                    SearchBar(
-                        uiState,
-                        eventsViewModel,
-                        searchQuery,
-                        onProximitySelected = requestLocationPermission,
-                        isLocationPermissionGranted
-                    )
+                  Spacer(modifier = Modifier.height(12.dp))
+                  HorizontalDivider(
+                      thickness = dimensionResource(id = R.dimen.thickness_small),
+                      color = MaterialTheme.colorScheme.primary)
+                  Spacer(modifier = Modifier.height(12.dp))
                 }
 
-                // -- FILTER BAR --
-                item { FilterBar(selectedFilter) }
-
-                // --  BROWSE EVENTS LIST --
+                // -- MY UPCOMING EVENTS LIST --
                 item {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                  Row(
+                      modifier = Modifier.fillMaxWidth(),
+                      horizontalArrangement = Arrangement.SpaceBetween,
+                      verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            text = stringResource(R.string.browseEvents_list_title),
+                            text = stringResource(R.string.upcomingEvents_list_title),
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             modifier =
                                 Modifier.padding(vertical = 10.dp)
-                                    .testTag(EventsScreenTestTags.BROWSE_TITLE),
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
+                                    .testTag(EventsScreenTestTags.UPCOMING_TITLE),
+                            color = MaterialTheme.colorScheme.onBackground)
 
                         IconsEventsVisibility(
-                            browserEventVisibility,
-                            EventsScreenTestTags.BROWSER_EVENT_VISIBILITY_BUTTON
-                        )
-                    }
+                            upcomingEventVisibility,
+                            EventsScreenTestTags.UPCOMING_EVENT_VISIBILITY_BUTTON)
+                      }
                 }
 
                 when {
-                    uiState.isLoading && browserEventVisibility.value -> {
-                        // Events are loading so display that text
-                        item {
-                            Text(
-                                stringResource(R.string.loading_events),
-                                modifier = Modifier.fillMaxWidth().padding(8.dp),
-                                textAlign = TextAlign.Center,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                        }
+                  uiState.isLoading && upcomingEventVisibility.value -> {
+                    // Events are loading so display that text
+                    item {
+                      Text(
+                          stringResource(R.string.loading_events),
+                          modifier = Modifier.fillMaxWidth().padding(8.dp),
+                          textAlign = TextAlign.Center,
+                          style = MaterialTheme.typography.titleMedium,
+                          fontWeight = FontWeight.Bold,
+                          color = MaterialTheme.colorScheme.onBackground)
                     }
-
-                    browserEvents.isNotEmpty() && browserEventVisibility.value -> {
-                        items(browserEvents.size) { index ->
-                            BrowserEventsItem(
-                                event = browserEvents[index],
-                                onClick = {
-                                    selectedBrowserEvent.value = browserEvents[index]
-                                    isPopupOnBrowser.value = true
-                                },
-                                distance = eventsViewModel.getDistanceUserEvent(browserEvents[index]),
-                                isProximityModeOn = (uiState.sortOrder == EventSortOrder.PROXIMITY),
-                                hasLocationPermission = isLocationPermissionGranted
-                            )
-                        }
+                  }
+                  upcomingEvents.isNotEmpty() && upcomingEventVisibility.value -> {
+                    items(upcomingEvents.size) { index ->
+                      UpcomingEventsItem(
+                          event = upcomingEvents[index],
+                          onClick = {
+                            selectedUpcomingEvent.value = upcomingEvents[index]
+                            isPopupOnUpcoming.value = true
+                          },
+                          distance = eventsViewModel.getDistanceUserEvent(upcomingEvents[index]),
+                          isProximityModeOn = (uiState.sortOrder == EventSortOrder.PROXIMITY),
+                          hasLocationPermission = isLocationPermissionGranted)
                     }
-
-                    browserEvents.isEmpty() && browserEventVisibility.value -> {
-                        // When there is no events in the browser list
-                        item {
-                            Text(
-                                stringResource(R.string.browseEvents_emptylist_msg),
-                                modifier =
-                                    Modifier.fillMaxWidth()
-                                        .padding(8.dp)
-                                        .testTag(EventsScreenTestTags.EMPTY_BROWSER_LIST_MSG),
-                                textAlign = TextAlign.Center,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onBackground
-                            )
-                        }
+                  }
+                  upcomingEvents.isEmpty() && upcomingEventVisibility.value -> {
+                    // When there is no events in the upcoming list
+                    item {
+                      Text(
+                          stringResource(R.string.upcomingEvents_emptylist_msg),
+                          modifier =
+                              Modifier.fillMaxWidth()
+                                  .padding(8.dp)
+                                  .testTag(EventsScreenTestTags.EMPTY_UPCOMING_LIST_MSG),
+                          textAlign = TextAlign.Center,
+                          style = MaterialTheme.typography.titleMedium,
+                          fontWeight = FontWeight.Bold,
+                          color = MaterialTheme.colorScheme.onBackground)
                     }
+                  }
                 }
-                    if (!uiState.isAnon) {
-                        // Spacer between Browse and Upcoming
-                        item {
-                            Spacer(modifier = Modifier.height(12.dp))
-                            HorizontalDivider(
-                                thickness = dimensionResource(id = R.dimen.thickness_small),
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                            Spacer(modifier = Modifier.height(12.dp))
-                        }
 
-                        // -- MY UPCOMING EVENTS LIST --
-                        item {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.upcomingEvents_list_title),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier =
-                                        Modifier.padding(vertical = 10.dp)
-                                            .testTag(EventsScreenTestTags.UPCOMING_TITLE),
-                                    color = MaterialTheme.colorScheme.onBackground
-                                )
-
-                                IconsEventsVisibility(
-                                    upcomingEventVisibility,
-                                    EventsScreenTestTags.UPCOMING_EVENT_VISIBILITY_BUTTON
-                                )
-                            }
-                        }
-
-                        when {
-                            uiState.isLoading && upcomingEventVisibility.value -> {
-                                // Events are loading so display that text
-                                item {
-                                    Text(
-                                        stringResource(R.string.loading_events),
-                                        modifier = Modifier.fillMaxWidth().padding(8.dp),
-                                        textAlign = TextAlign.Center,
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onBackground
-                                    )
-                                }
-                            }
-
-                            upcomingEvents.isNotEmpty() && upcomingEventVisibility.value -> {
-                                items(upcomingEvents.size) { index ->
-                                    UpcomingEventsItem(
-                                        event = upcomingEvents[index],
-                                        onClick = {
-                                            selectedUpcomingEvent.value = upcomingEvents[index]
-                                            isPopupOnUpcoming.value = true
-                                        },
-                                        distance = eventsViewModel.getDistanceUserEvent(
-                                            upcomingEvents[index]
-                                        ),
-                                        isProximityModeOn = (uiState.sortOrder == EventSortOrder.PROXIMITY),
-                                        hasLocationPermission = isLocationPermissionGranted
-                                    )
-                                }
-                            }
-
-                            upcomingEvents.isEmpty() && upcomingEventVisibility.value -> {
-                                // When there is no events in the upcoming list
-                                item {
-                                    Text(
-                                        stringResource(R.string.upcomingEvents_emptylist_msg),
-                                        modifier =
-                                            Modifier.fillMaxWidth()
-                                                .padding(8.dp)
-                                                .testTag(EventsScreenTestTags.EMPTY_UPCOMING_LIST_MSG),
-                                        textAlign = TextAlign.Center,
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onBackground
-                                    )
-                                }
-                            }
-                        }
-
-                        // Spacer between Upcoming and My Own Events
-                        item {
-                            Spacer(modifier = Modifier.height(12.dp))
-                            HorizontalDivider(
-                                thickness = dimensionResource(id = R.dimen.thickness_small),
-                                color = MaterialTheme.colorScheme.primary
-                            )
-                            Spacer(modifier = Modifier.height(12.dp))
-                        }
-
-                        // MY OWN EVENTS
-                        item {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.userEvents_list_title),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    modifier =
-                                        Modifier.padding(vertical = 8.dp)
-                                            .testTag(EventsScreenTestTags.YOUR_EVENTS_TITLE),
-                                    color = MaterialTheme.colorScheme.onBackground
-                                )
-
-                                IconsEventsVisibility(
-                                    myOwnEventVisibility,
-                                    EventsScreenTestTags.MY_OWN_EVENT_VISIBILITY_BUTTON
-                                )
-                            }
-                        }
-
-                        when {
-                            uiState.isLoading && myOwnEventVisibility.value -> {
-                                // Events are loading so display that text
-                                item {
-                                    Text(
-                                        stringResource(R.string.loading_events),
-                                        modifier = Modifier.fillMaxWidth().padding(8.dp),
-                                        textAlign = TextAlign.Center,
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onBackground
-                                    )
-                                }
-                            }
-
-                            myOwnEvents.isNotEmpty() && myOwnEventVisibility.value -> {
-                                items(myOwnEvents.size) { index ->
-                                    MyOwnEventsItem(
-                                        event = myOwnEvents[index],
-                                        onClick = {
-                                            selectedYourEvent.value = myOwnEvents[index]
-                                            isPopupOnYourE.value = true
-                                        },
-                                        distance = eventsViewModel.getDistanceUserEvent(myOwnEvents[index]),
-                                        isProximityModeOn = (uiState.sortOrder == EventSortOrder.PROXIMITY),
-                                        hasLocationPermission = isLocationPermissionGranted
-                                    )
-                                }
-                            }
-
-                            myOwnEvents.isEmpty() && myOwnEventVisibility.value -> {
-                                item {
-                                    Text(
-                                        stringResource(R.string.userEvents_emptylist_msg),
-                                        modifier =
-                                            Modifier.fillMaxWidth()
-                                                .padding(8.dp)
-                                                .testTag(EventsScreenTestTags.EMPTY_OUREVENTS_LIST_MSG),
-                                        textAlign = TextAlign.Center,
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = MaterialTheme.colorScheme.onBackground
-                                    )
-                                }
-                            }
-                        }
-
-                        // Spacer before the Create Event button
-                        item { Spacer(modifier = Modifier.height(24.dp)) }
-
-                        // CREATE A NEW EVENT BUTTON
-
-                        item {
-                            Button(
-                                onClick = { actions.onAddEvent() },
-                                modifier =
-                                    Modifier.fillMaxWidth()
-                                        .height(80.dp)
-                                        .padding(vertical = 12.dp)
-                                        .testTag(EventsScreenTestTags.CREATE_EVENT_BUTTON),
-                                shape = RoundedCornerShape(12.dp),
-                                colors =
-                                    buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.create_event_button_title),
-                                    fontSize = 16.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = MaterialTheme.colorScheme.onSecondary
-                                )
-                            }
-                        }
+                // Spacer between Upcoming and My Own Events
+                item {
+                  Spacer(modifier = Modifier.height(12.dp))
+                  HorizontalDivider(
+                      thickness = dimensionResource(id = R.dimen.thickness_small),
+                      color = MaterialTheme.colorScheme.primary)
+                  Spacer(modifier = Modifier.height(12.dp))
                 }
-        }
+
+                // MY OWN EVENTS
+                item {
+                  Row(
+                      modifier = Modifier.fillMaxWidth(),
+                      horizontalArrangement = Arrangement.SpaceBetween,
+                      verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = stringResource(R.string.userEvents_list_title),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            modifier =
+                                Modifier.padding(vertical = 8.dp)
+                                    .testTag(EventsScreenTestTags.YOUR_EVENTS_TITLE),
+                            color = MaterialTheme.colorScheme.onBackground)
+
+                        IconsEventsVisibility(
+                            myOwnEventVisibility,
+                            EventsScreenTestTags.MY_OWN_EVENT_VISIBILITY_BUTTON)
+                      }
+                }
+
+                when {
+                  uiState.isLoading && myOwnEventVisibility.value -> {
+                    // Events are loading so display that text
+                    item {
+                      Text(
+                          stringResource(R.string.loading_events),
+                          modifier = Modifier.fillMaxWidth().padding(8.dp),
+                          textAlign = TextAlign.Center,
+                          style = MaterialTheme.typography.titleMedium,
+                          fontWeight = FontWeight.Bold,
+                          color = MaterialTheme.colorScheme.onBackground)
+                    }
+                  }
+                  myOwnEvents.isNotEmpty() && myOwnEventVisibility.value -> {
+                    items(myOwnEvents.size) { index ->
+                      MyOwnEventsItem(
+                          event = myOwnEvents[index],
+                          onClick = {
+                            selectedYourEvent.value = myOwnEvents[index]
+                            isPopupOnYourE.value = true
+                          },
+                          distance = eventsViewModel.getDistanceUserEvent(myOwnEvents[index]),
+                          isProximityModeOn = (uiState.sortOrder == EventSortOrder.PROXIMITY),
+                          hasLocationPermission = isLocationPermissionGranted)
+                    }
+                  }
+                  myOwnEvents.isEmpty() && myOwnEventVisibility.value -> {
+                    item {
+                      Text(
+                          stringResource(R.string.userEvents_emptylist_msg),
+                          modifier =
+                              Modifier.fillMaxWidth()
+                                  .padding(8.dp)
+                                  .testTag(EventsScreenTestTags.EMPTY_OUREVENTS_LIST_MSG),
+                          textAlign = TextAlign.Center,
+                          style = MaterialTheme.typography.titleMedium,
+                          fontWeight = FontWeight.Bold,
+                          color = MaterialTheme.colorScheme.onBackground)
+                    }
+                  }
+                }
+
+                // Spacer before the Create Event button
+                item { Spacer(modifier = Modifier.height(24.dp)) }
+
+                // CREATE A NEW EVENT BUTTON
+
+                item {
+                  Button(
+                      onClick = { actions.onAddEvent() },
+                      modifier =
+                          Modifier.fillMaxWidth()
+                              .height(80.dp)
+                              .padding(vertical = 12.dp)
+                              .testTag(EventsScreenTestTags.CREATE_EVENT_BUTTON),
+                      shape = RoundedCornerShape(12.dp),
+                      colors = buttonColors(containerColor = MaterialTheme.colorScheme.secondary)) {
+                        Text(
+                            text = stringResource(R.string.create_event_button_title),
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSecondary)
+                      }
+                }
+              }
+            }
 
         // -- EVENT POP UPS --
 
