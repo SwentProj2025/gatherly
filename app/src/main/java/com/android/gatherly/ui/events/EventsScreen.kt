@@ -1,6 +1,11 @@
 package com.android.gatherly.ui.events
 
+import android.Manifest
+import android.content.Context
+import android.content.pm.PackageManager
 import android.icu.text.SimpleDateFormat
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -22,9 +27,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Directions
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Groups
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.Search
@@ -35,6 +44,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -55,6 +65,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
@@ -63,11 +74,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
 import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.event.EventState
 import com.android.gatherly.model.event.EventStatus
+import com.android.gatherly.model.map.Location
 import com.android.gatherly.ui.navigation.BottomNavigationMenu
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.NavigationTestTags
@@ -86,6 +99,7 @@ import com.android.gatherly.utils.GatherlyAlertDialog
 import com.android.gatherly.utils.GatherlyAlertDialogActions
 import com.android.gatherly.utils.LoadingAnimation
 import com.android.gatherly.utils.MapCoordinator
+import com.google.android.gms.location.LocationServices
 import java.util.Locale
 import kotlinx.coroutines.launch
 
@@ -128,6 +142,13 @@ object EventsScreenTestTags {
   const val ATTENDEES_ALERT_DIALOG = "alertDialog"
   const val ATTENDEES_ALERT_DIALOG_CANCEL = "alertDialogCancelButton"
 
+  const val BROWSER_EVENT_VISIBILITY_BUTTON = "browserEventVisibilityButton"
+  const val UPCOMING_EVENT_VISIBILITY_BUTTON = "upcomingEventVisibilityButton"
+  const val MY_OWN_EVENT_VISIBILITY_BUTTON = "myOwnEventVisibilityButton"
+
+  const val ICONS_PROXIMITY = "icons_proximity"
+  const val ICONS_PROXIMITY_DISTANCE_TEXT = "icons_proximity_distance_text"
+
   /**
    * Returns a unique test tag for the card or container representing a given [Event] item.
    *
@@ -136,6 +157,13 @@ object EventsScreenTestTags {
    */
   fun getTestTagForEventItem(event: Event): String = "eventItem${event.id}"
 
+  /**
+   * Returns a unique test tag for the button to see the numbers of attendees of a given [Event]
+   * item.
+   *
+   * @param event The [Event] item whose test tag will be generated.
+   * @return A string uniquely identifying the button Number attendees item in the UI.
+   */
   fun getTestTagForEventNumberAttendees(event: Event): String = "eventNbrAttendees${event.id}"
 }
 
@@ -179,15 +207,33 @@ data class EventsScreenActions(
  * @param eventId Optional event ID for deep linking to a specific event's details.
  * @param coordinator The MapCoordinator to handle map-related actions.
  * @param actions The actions that can be performed on the Events screen.
+ * @param isLocationPermissionGrantedProvider provides the permission to get the location from the
+ *   user
  */
 @Composable
 fun EventsScreen(
+    eventsViewModel: EventsViewModel? = null,
     navigationActions: NavigationActions? = null,
-    eventsViewModel: EventsViewModel = viewModel(factory = EventsViewModel.provideFactory()),
     eventId: String? = null,
     coordinator: MapCoordinator,
-    actions: EventsScreenActions
+    actions: EventsScreenActions,
+    isLocationPermissionGrantedProvider: (Context) -> Boolean = { ctx ->
+      (ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION) ==
+          PackageManager.PERMISSION_GRANTED) ||
+          (ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_COARSE_LOCATION) ==
+              PackageManager.PERMISSION_GRANTED)
+    }
 ) {
+
+  /** Location services setup * */
+  val context = LocalContext.current
+  val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
+
+  /** ViewModel setup * */
+  val eventsViewModel: EventsViewModel =
+      eventsViewModel
+          ?: viewModel(
+              factory = EventsViewModel.provideFactory(fusedLocationClient = fusedLocationClient))
 
   val coroutineScope = rememberCoroutineScope()
 
@@ -202,15 +248,23 @@ fun EventsScreen(
       eventsViewModel.getFilteredEvents(selectedFilter, uiState.participatedEventList)
   val myOwnEvents = eventsViewModel.getFilteredEvents(selectedFilter, uiState.createdEventList)
 
+  // current user id
   val currentUserIdFromVM = uiState.currentUserId
 
+  // event selected by the current user depending on his category
   val selectedBrowserEvent = remember { mutableStateOf<Event?>(null) }
   val selectedUpcomingEvent = remember { mutableStateOf<Event?>(null) }
   val selectedYourEvent = remember { mutableStateOf<Event?>(null) }
 
+  // booleans to handles which type of events alert dialog to display
   val isPopupOnBrowser = remember { mutableStateOf(false) }
   val isPopupOnUpcoming = remember { mutableStateOf(false) }
   val isPopupOnYourE = remember { mutableStateOf(false) }
+
+  // booleans to handle the visibility of the list of events depending on their category
+  val browserEventVisibility = remember { mutableStateOf(true) }
+  val upcomingEventVisibility = remember { mutableStateOf(true) }
+  val myOwnEventVisibility = remember { mutableStateOf(true) }
 
   // Handle the string typed by the user in the search event bar
   val searchQuery = remember { mutableStateOf("") }
@@ -250,11 +304,56 @@ fun EventsScreen(
       eventIdAlreadyProcessed.value = true
     }
   }
+
+  // boolean to handles the visibility of the list of participant alert dialog
   val showAttendeesDialog = remember { mutableStateOf(false) }
 
+  /** Updates the list of displayed events */
   LaunchedEffect(Unit, currentUserIdFromVM) {
     if (currentUserIdFromVM.isNotBlank()) {
       eventsViewModel.refreshEvents(currentUserIdFromVM)
+    }
+  }
+
+  /** Variable to track location permission status */
+  var isLocationPermissionGranted by remember {
+    mutableStateOf(isLocationPermissionGrantedProvider(context))
+  }
+
+  /** Handle permission request for location access * */
+  val permissionLauncher =
+      rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+          permissions ->
+        val isGranted =
+            permissions.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false) ||
+                permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false)
+
+        isLocationPermissionGranted = isGranted
+
+        if (isGranted) {
+          eventsViewModel.startLocationUpdates(context)
+        }
+      }
+
+  /** Check permission and start location updates * */
+  val requestLocationPermission = {
+    val hasPermission = isLocationPermissionGrantedProvider(context)
+
+    if (hasPermission) {
+      isLocationPermissionGranted = true
+      eventsViewModel.startLocationUpdates(context)
+    } else {
+      isLocationPermissionGranted = false
+      permissionLauncher.launch(
+          arrayOf(
+              Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
+    }
+  }
+
+  /** Updates the current location of the current user */
+  LaunchedEffect(Unit) {
+    if (isLocationPermissionGranted) {
+      eventsViewModel.startLocationUpdates(context)
     }
   }
 
@@ -279,158 +378,285 @@ fun EventsScreen(
                     .padding(horizontal = 16.dp)
                     .padding(padding)
                     .testTag(EventsScreenTestTags.ALL_LISTS)) {
-              if (uiState.isLoading) {
-                // Events are loading so display that text
-                item { LoadingAnimation(stringResource(R.string.loading_events), padding) }
-              } else {
 
                 // ---- SEARCH EVENT BAR ----
-                item { SearchBar(uiState, eventsViewModel, searchQuery) }
+                item {
+                    SearchBar(
+                        uiState,
+                        eventsViewModel,
+                        searchQuery,
+                        onProximitySelected = requestLocationPermission,
+                        isLocationPermissionGranted
+                    )
+                }
 
                 // -- FILTER BAR --
                 item { FilterBar(selectedFilter) }
 
                 // --  BROWSE EVENTS LIST --
                 item {
-                  Text(
-                      text = stringResource(R.string.browseEvents_list_title),
-                      style = MaterialTheme.typography.titleMedium,
-                      fontWeight = FontWeight.Bold,
-                      modifier =
-                          Modifier.padding(vertical = 10.dp)
-                              .testTag(EventsScreenTestTags.BROWSE_TITLE),
-                      color = MaterialTheme.colorScheme.onBackground)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(R.string.browseEvents_list_title),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            modifier =
+                                Modifier.padding(vertical = 10.dp)
+                                    .testTag(EventsScreenTestTags.BROWSE_TITLE),
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+
+                        IconsEventsVisibility(
+                            browserEventVisibility,
+                            EventsScreenTestTags.BROWSER_EVENT_VISIBILITY_BUTTON
+                        )
+                    }
                 }
 
-                if (browserEvents.isNotEmpty()) {
-                  items(browserEvents.size) { index ->
-                    BrowserEventsItem(
-                        event = browserEvents[index],
-                        onClick = {
-                          selectedBrowserEvent.value = browserEvents[index]
-                          isPopupOnBrowser.value = true
-                        })
-                  }
-                } else { // When there is no events in the browser list
-                  item {
-                    Text(
-                        stringResource(R.string.browseEvents_emptylist_msg),
-                        modifier =
-                            Modifier.fillMaxWidth()
-                                .padding(8.dp)
-                                .testTag(EventsScreenTestTags.EMPTY_BROWSER_LIST_MSG),
-                        textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onBackground)
-                  }
-                }
-
-                if (!uiState.isAnon) {
-                  // Spacer between Browse and Upcoming
-                  item { Spacer(modifier = Modifier.height(24.dp)) }
-
-                  // -- MY UPCOMING EVENTS LIST --
-                  item {
-                    Text(
-                        text = stringResource(R.string.upcomingEvents_list_title),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        modifier =
-                            Modifier.padding(vertical = 10.dp)
-                                .testTag(EventsScreenTestTags.UPCOMING_TITLE),
-                        color = MaterialTheme.colorScheme.onBackground)
-                  }
-
-                  if (upcomingEvents.isNotEmpty()) {
-                    items(upcomingEvents.size) { index ->
-                      UpcomingEventsItem(
-                          event = upcomingEvents[index],
-                          onClick = {
-                            selectedUpcomingEvent.value = upcomingEvents[index]
-                            isPopupOnUpcoming.value = true
-                          })
-                    }
-                  } else { // When there is no events in the upcoming list
-                    item {
-                      Text(
-                          stringResource(R.string.upcomingEvents_emptylist_msg),
-                          modifier =
-                              Modifier.fillMaxWidth()
-                                  .padding(8.dp)
-                                  .testTag(EventsScreenTestTags.EMPTY_UPCOMING_LIST_MSG),
-                          textAlign = TextAlign.Center,
-                          style = MaterialTheme.typography.titleMedium,
-                          fontWeight = FontWeight.Bold,
-                          color = MaterialTheme.colorScheme.onBackground)
-                    }
-                  }
-
-                  // Spacer between Upcoming and My Own Events
-                  item { Spacer(modifier = Modifier.height(24.dp)) }
-
-                  // MY OWN EVENTS
-                  item {
-                    Text(
-                        text = stringResource(R.string.userEvents_list_title),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        modifier =
-                            Modifier.padding(vertical = 8.dp)
-                                .testTag(EventsScreenTestTags.YOUR_EVENTS_TITLE),
-                        color = MaterialTheme.colorScheme.onBackground)
-                  }
-
-                  if (myOwnEvents.isNotEmpty()) {
-                    items(myOwnEvents.size) { index ->
-                      MyOwnEventsItem(
-                          event = myOwnEvents[index],
-                          onClick = {
-                            selectedYourEvent.value = myOwnEvents[index]
-                            isPopupOnYourE.value = true
-                          })
-                    }
-                  } else {
-                    item {
-                      Text(
-                          stringResource(R.string.userEvents_emptylist_msg),
-                          modifier =
-                              Modifier.fillMaxWidth()
-                                  .padding(8.dp)
-                                  .testTag(EventsScreenTestTags.EMPTY_OUREVENTS_LIST_MSG),
-                          textAlign = TextAlign.Center,
-                          style = MaterialTheme.typography.titleMedium,
-                          fontWeight = FontWeight.Bold,
-                          color = MaterialTheme.colorScheme.onBackground)
-                    }
-                  }
-
-                  // Spacer before the Create Event button
-                  item { Spacer(modifier = Modifier.height(24.dp)) }
-
-                  // CREATE A NEW EVENT BUTTON
-
-                  item {
-                    Button(
-                        onClick = { actions.onAddEvent() },
-                        modifier =
-                            Modifier.fillMaxWidth()
-                                .height(80.dp)
-                                .padding(vertical = 12.dp)
-                                .testTag(EventsScreenTestTags.CREATE_EVENT_BUTTON),
-                        shape = RoundedCornerShape(12.dp),
-                        colors =
-                            buttonColors(containerColor = MaterialTheme.colorScheme.secondary)) {
-                          Text(
-                              text = stringResource(R.string.create_event_button_title),
-                              fontSize = 16.sp,
-                              fontWeight = FontWeight.Medium,
-                              color = MaterialTheme.colorScheme.onSecondary)
+                when {
+                    uiState.isLoading && browserEventVisibility.value -> {
+                        // Events are loading so display that text
+                        item {
+                            Text(
+                                stringResource(R.string.loading_events),
+                                modifier = Modifier.fillMaxWidth().padding(8.dp),
+                                textAlign = TextAlign.Center,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
                         }
-                  }
+                    }
+
+                    browserEvents.isNotEmpty() && browserEventVisibility.value -> {
+                        items(browserEvents.size) { index ->
+                            BrowserEventsItem(
+                                event = browserEvents[index],
+                                onClick = {
+                                    selectedBrowserEvent.value = browserEvents[index]
+                                    isPopupOnBrowser.value = true
+                                },
+                                distance = eventsViewModel.getDistanceUserEvent(browserEvents[index]),
+                                isProximityModeOn = (uiState.sortOrder == EventSortOrder.PROXIMITY),
+                                hasLocationPermission = isLocationPermissionGranted
+                            )
+                        }
+                    }
+
+                    browserEvents.isEmpty() && browserEventVisibility.value -> {
+                        // When there is no events in the browser list
+                        item {
+                            Text(
+                                stringResource(R.string.browseEvents_emptylist_msg),
+                                modifier =
+                                    Modifier.fillMaxWidth()
+                                        .padding(8.dp)
+                                        .testTag(EventsScreenTestTags.EMPTY_BROWSER_LIST_MSG),
+                                textAlign = TextAlign.Center,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onBackground
+                            )
+                        }
+                    }
                 }
-              }
-            }
+                    if (!uiState.isAnon) {
+                        // Spacer between Browse and Upcoming
+                        item {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            HorizontalDivider(
+                                thickness = dimensionResource(id = R.dimen.thickness_small),
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                        }
+
+                        // -- MY UPCOMING EVENTS LIST --
+                        item {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.upcomingEvents_list_title),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier =
+                                        Modifier.padding(vertical = 10.dp)
+                                            .testTag(EventsScreenTestTags.UPCOMING_TITLE),
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+
+                                IconsEventsVisibility(
+                                    upcomingEventVisibility,
+                                    EventsScreenTestTags.UPCOMING_EVENT_VISIBILITY_BUTTON
+                                )
+                            }
+                        }
+
+                        when {
+                            uiState.isLoading && upcomingEventVisibility.value -> {
+                                // Events are loading so display that text
+                                item {
+                                    Text(
+                                        stringResource(R.string.loading_events),
+                                        modifier = Modifier.fillMaxWidth().padding(8.dp),
+                                        textAlign = TextAlign.Center,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onBackground
+                                    )
+                                }
+                            }
+
+                            upcomingEvents.isNotEmpty() && upcomingEventVisibility.value -> {
+                                items(upcomingEvents.size) { index ->
+                                    UpcomingEventsItem(
+                                        event = upcomingEvents[index],
+                                        onClick = {
+                                            selectedUpcomingEvent.value = upcomingEvents[index]
+                                            isPopupOnUpcoming.value = true
+                                        },
+                                        distance = eventsViewModel.getDistanceUserEvent(
+                                            upcomingEvents[index]
+                                        ),
+                                        isProximityModeOn = (uiState.sortOrder == EventSortOrder.PROXIMITY),
+                                        hasLocationPermission = isLocationPermissionGranted
+                                    )
+                                }
+                            }
+
+                            upcomingEvents.isEmpty() && upcomingEventVisibility.value -> {
+                                // When there is no events in the upcoming list
+                                item {
+                                    Text(
+                                        stringResource(R.string.upcomingEvents_emptylist_msg),
+                                        modifier =
+                                            Modifier.fillMaxWidth()
+                                                .padding(8.dp)
+                                                .testTag(EventsScreenTestTags.EMPTY_UPCOMING_LIST_MSG),
+                                        textAlign = TextAlign.Center,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onBackground
+                                    )
+                                }
+                            }
+                        }
+
+                        // Spacer between Upcoming and My Own Events
+                        item {
+                            Spacer(modifier = Modifier.height(12.dp))
+                            HorizontalDivider(
+                                thickness = dimensionResource(id = R.dimen.thickness_small),
+                                color = MaterialTheme.colorScheme.primary
+                            )
+                            Spacer(modifier = Modifier.height(12.dp))
+                        }
+
+                        // MY OWN EVENTS
+                        item {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.userEvents_list_title),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier =
+                                        Modifier.padding(vertical = 8.dp)
+                                            .testTag(EventsScreenTestTags.YOUR_EVENTS_TITLE),
+                                    color = MaterialTheme.colorScheme.onBackground
+                                )
+
+                                IconsEventsVisibility(
+                                    myOwnEventVisibility,
+                                    EventsScreenTestTags.MY_OWN_EVENT_VISIBILITY_BUTTON
+                                )
+                            }
+                        }
+
+                        when {
+                            uiState.isLoading && myOwnEventVisibility.value -> {
+                                // Events are loading so display that text
+                                item {
+                                    Text(
+                                        stringResource(R.string.loading_events),
+                                        modifier = Modifier.fillMaxWidth().padding(8.dp),
+                                        textAlign = TextAlign.Center,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onBackground
+                                    )
+                                }
+                            }
+
+                            myOwnEvents.isNotEmpty() && myOwnEventVisibility.value -> {
+                                items(myOwnEvents.size) { index ->
+                                    MyOwnEventsItem(
+                                        event = myOwnEvents[index],
+                                        onClick = {
+                                            selectedYourEvent.value = myOwnEvents[index]
+                                            isPopupOnYourE.value = true
+                                        },
+                                        distance = eventsViewModel.getDistanceUserEvent(myOwnEvents[index]),
+                                        isProximityModeOn = (uiState.sortOrder == EventSortOrder.PROXIMITY),
+                                        hasLocationPermission = isLocationPermissionGranted
+                                    )
+                                }
+                            }
+
+                            myOwnEvents.isEmpty() && myOwnEventVisibility.value -> {
+                                item {
+                                    Text(
+                                        stringResource(R.string.userEvents_emptylist_msg),
+                                        modifier =
+                                            Modifier.fillMaxWidth()
+                                                .padding(8.dp)
+                                                .testTag(EventsScreenTestTags.EMPTY_OUREVENTS_LIST_MSG),
+                                        textAlign = TextAlign.Center,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onBackground
+                                    )
+                                }
+                            }
+                        }
+
+                        // Spacer before the Create Event button
+                        item { Spacer(modifier = Modifier.height(24.dp)) }
+
+                        // CREATE A NEW EVENT BUTTON
+
+                        item {
+                            Button(
+                                onClick = { actions.onAddEvent() },
+                                modifier =
+                                    Modifier.fillMaxWidth()
+                                        .height(80.dp)
+                                        .padding(vertical = 12.dp)
+                                        .testTag(EventsScreenTestTags.CREATE_EVENT_BUTTON),
+                                shape = RoundedCornerShape(12.dp),
+                                colors =
+                                    buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.create_event_button_title),
+                                    fontSize = 16.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = MaterialTheme.colorScheme.onSecondary
+                                )
+                            }
+                        }
+                }
+        }
 
         // -- EVENT POP UPS --
 
@@ -543,12 +769,22 @@ fun EventsScreen(
 /**
  * Displays a single Event item inside a [Card] : PARTICIPATE OPTION
  *
- * @param events The [Event] item to display.
+ * @param event The [Event] item to display.
  * @param onClick A callback invoked when the user taps the Event card to open a pop Up with the
  *   event's description
+ *     @param distance the distance between the location of the event and the user
+ *     @param isProximityModeOn boolean to know if we want to display the distance or not
+ *     @param hasLocationPermission the boolean to know if we have access to the current user
+ *       location
  */
 @Composable
-fun BrowserEventsItem(event: Event, onClick: () -> Unit) {
+fun BrowserEventsItem(
+    event: Event,
+    onClick: () -> Unit,
+    distance: String?,
+    isProximityModeOn: Boolean,
+    hasLocationPermission: Boolean
+) {
   Card(
       border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurfaceVariant),
       shape = RoundedCornerShape(8.dp),
@@ -586,7 +822,10 @@ fun BrowserEventsItem(event: Event, onClick: () -> Unit) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.testTag(EventsScreenTestTags.EVENT_DATE))
           }
-          IconEventState(event.state)
+
+          IconEventState(event.state, isProximityModeOn)
+
+          IconsProximityFilter(event.location, isProximityModeOn, hasLocationPermission, distance)
 
           Box(
               modifier =
@@ -605,12 +844,21 @@ fun BrowserEventsItem(event: Event, onClick: () -> Unit) {
 /**
  * Displays a single Event item inside a [Card] : UNREGISTER OPTION
  *
- * @param events The [Event] item to display.
+ * @param event The [Event] item to display.
  * @param onClick A callback invoked when the user taps the Event card to open a pop Up with the
  *   event's description
+ * @param distance the distance between the location of the event and the user
+ * @param isProximityModeOn boolean to know if we want to display the distance or not
+ * @param hasLocationPermission the boolean to know if we have access to the current user location
  */
 @Composable
-fun UpcomingEventsItem(event: Event, onClick: () -> Unit) {
+fun UpcomingEventsItem(
+    event: Event,
+    onClick: () -> Unit,
+    distance: String?,
+    isProximityModeOn: Boolean,
+    hasLocationPermission: Boolean
+) {
   Card(
       border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurfaceVariant),
       shape = RoundedCornerShape(8.dp),
@@ -651,7 +899,9 @@ fun UpcomingEventsItem(event: Event, onClick: () -> Unit) {
                 modifier = Modifier.testTag(EventsScreenTestTags.EVENT_DATE))
           }
 
-          IconEventState(event.state)
+          IconEventState(event.state, isProximityModeOn)
+
+          IconsProximityFilter(event.location, isProximityModeOn, hasLocationPermission, distance)
 
           Box(
               modifier =
@@ -670,12 +920,21 @@ fun UpcomingEventsItem(event: Event, onClick: () -> Unit) {
 /**
  * Displays a single Event item inside a [Card] CANCELED OPTION text
  *
- * @param events The [Event] item to display.
+ * @param event The [Event] item to display.
  * @param onClick A callback invoked when the user taps the Event card to open a pop Up with the
  *   event's description
+ * @param distance the distance between the location of the event and the user
+ * @param isProximityModeOn boolean to know if we want to display the distance or not
+ * @param hasLocationPermission the boolean to know if we have access to the current user location
  */
 @Composable
-fun MyOwnEventsItem(event: Event, onClick: () -> Unit) {
+fun MyOwnEventsItem(
+    event: Event,
+    onClick: () -> Unit,
+    distance: String?,
+    isProximityModeOn: Boolean,
+    hasLocationPermission: Boolean
+) {
   Card(
       border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurfaceVariant),
       shape = RoundedCornerShape(8.dp),
@@ -715,7 +974,9 @@ fun MyOwnEventsItem(event: Event, onClick: () -> Unit) {
                 modifier = Modifier.testTag(EventsScreenTestTags.EVENT_DATE))
           }
 
-          IconEventState(event.state)
+          IconEventState(event.state, isProximityModeOn)
+
+          IconsProximityFilter(event.location, isProximityModeOn, hasLocationPermission, distance)
 
           Box(
               modifier =
@@ -887,9 +1148,18 @@ private fun AlertDialogListAttendees(
  * - Proximity
  *
  * @param onSortSelected Callback invoked when the user selects a new [EventSortOrder].
+ * @param onProximitySelected callback when the user select the proximity filtering
+ * @param isLocationPermissionGranted the boolean to know if we have access to the current user
+ *   location
  */
 @Composable
-private fun SortMenu(currentOrder: EventSortOrder, onSortSelected: (EventSortOrder) -> Unit) {
+private fun SortMenu(
+    currentOrder: EventSortOrder,
+    onSortSelected: (EventSortOrder) -> Unit,
+    onProximitySelected: () -> Unit,
+    isLocationPermissionGranted: Boolean
+) {
+
   var expanded by remember { mutableStateOf(false) }
 
   Box(modifier = Modifier.fillMaxHeight(), contentAlignment = Alignment.Center) {
@@ -907,6 +1177,8 @@ private fun SortMenu(currentOrder: EventSortOrder, onSortSelected: (EventSortOrd
         expanded = expanded,
         onDismissRequest = { expanded = false },
         containerColor = MaterialTheme.colorScheme.surfaceVariant) {
+
+          // -- DATE ASC --
           DropdownMenuItem(
               text = {
                 Text(
@@ -926,6 +1198,8 @@ private fun SortMenu(currentOrder: EventSortOrder, onSortSelected: (EventSortOrd
                 }
               },
               modifier = Modifier.testTag(EventsScreenTestTags.SORT_DATE_BUTTON))
+
+          // -- ALPHABETIC --
           DropdownMenuItem(
               text = {
                 Text(
@@ -945,14 +1219,13 @@ private fun SortMenu(currentOrder: EventSortOrder, onSortSelected: (EventSortOrd
                 }
               },
               modifier = Modifier.testTag(EventsScreenTestTags.SORT_ALPHABETIC_BUTTON))
+
+          // -- PROXIMITY --
           DropdownMenuItem(
-              text = {
-                Text(
-                    text = stringResource(R.string.events_proximity_sort_button_text),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
-              },
+              text = { ComponentDropDownProximityItem(isLocationPermissionGranted) },
               onClick = {
-                onSortSelected(EventSortOrder.PROXIMITY)
+                onClickProximityFilterActions(
+                    isLocationPermissionGranted, onSortSelected, onProximitySelected)
                 expanded = false
               },
               trailingIcon = {
@@ -968,11 +1241,81 @@ private fun SortMenu(currentOrder: EventSortOrder, onSortSelected: (EventSortOrd
   }
 }
 
+/**
+ * Helper composable function : Display the drop down item for the proximity filtering
+ *
+ * @param isLocationPermissionGranted: Boolean, display a text when is false to inform the user that
+ *   is needed
+ */
+@Composable
+private fun ComponentDropDownProximityItem(isLocationPermissionGranted: Boolean) {
+  Column {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+      Text(
+          text = stringResource(R.string.events_proximity_sort_button_text),
+          color =
+              if (isLocationPermissionGranted) {
+                MaterialTheme.colorScheme.onSurfaceVariant
+              } else {
+                MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+              })
+      if (!isLocationPermissionGranted) {
+        Spacer(modifier = Modifier.width(4.dp))
+        Icon(
+            imageVector = Icons.Filled.Info,
+            contentDescription = "Location permission needed",
+            modifier = Modifier.size(16.dp))
+      }
+    }
+    if (!isLocationPermissionGranted) {
+      Text(
+          text = stringResource(R.string.events_proximity_message_location_permission),
+          style = MaterialTheme.typography.bodySmall)
+    }
+  }
+}
+
+/**
+ * Helper function: regroups all the callback that will be active once the user click on the drop
+ * down proximity filter item
+ *
+ * @param isLocationPermissionGranted: Boolean to know if we have access to the current user
+ *   location
+ * @param onSortSelected: callback to handle the fact to sort the event depending on their distance
+ *   from the current user
+ * @param onProximitySelected callback callback : requestLocationPermission
+ */
+private fun onClickProximityFilterActions(
+    isLocationPermissionGranted: Boolean,
+    onSortSelected: (EventSortOrder) -> Unit,
+    onProximitySelected: () -> Unit
+) {
+
+  if (isLocationPermissionGranted) {
+    onSortSelected(EventSortOrder.PROXIMITY)
+  } else {
+    onSortSelected(EventSortOrder.PROXIMITY)
+    onProximitySelected()
+  }
+}
+
+/**
+ * Helper composable function : search bar where the current user types to search a specific event
+ *
+ * @param uiState The state exposed to the UI by the VM
+ * @param eventsViewModel the viewModel
+ * @param searchQuery the string typed by the current user
+ * @param onProximitySelected the callback when the current user choose the proximity filtering
+ * @param isLocationPermissionGranted the boolean to know if we have access to the current user
+ *   location
+ */
 @Composable
 private fun SearchBar(
     uiState: EventsUIState,
     eventsViewModel: EventsViewModel,
-    searchQuery: MutableState<String>
+    searchQuery: MutableState<String>,
+    onProximitySelected: () -> Unit,
+    isLocationPermissionGranted: Boolean
 ) {
   Row(
       modifier =
@@ -1008,26 +1351,98 @@ private fun SearchBar(
             shape = RoundedCornerShape(24.dp))
 
         SortMenu(
-            currentOrder = uiState.sortOrder, onSortSelected = { eventsViewModel.setSortOrder(it) })
+            currentOrder = uiState.sortOrder,
+            onSortSelected = { eventsViewModel.setSortOrder(it) },
+            onProximitySelected = onProximitySelected,
+            isLocationPermissionGranted = isLocationPermissionGranted)
       }
 }
 
+/**
+ * Helper composable function: the different icons depending on the event' state
+ *
+ * @param eventState: State of the event
+ * @param isProximityModeOn the boolean to know if the user choose to sort depending on the
+ *   proximity
+ */
 @Composable
-fun IconEventState(eventState: EventState) {
-  when (eventState) {
-    EventState.PUBLIC ->
-        Icon(imageVector = Icons.Filled.LockOpen, contentDescription = "Public event icon")
-    EventState.PRIVATE_FRIENDS ->
-        Row {
-          Icon(imageVector = Icons.Filled.Lock, contentDescription = "Private event icon")
-          Icon(imageVector = Icons.Filled.Favorite, contentDescription = "Friends Only event icon")
-        }
-    EventState.PRIVATE_GROUP ->
-        Row {
-          Icon(imageVector = Icons.Filled.Lock, contentDescription = "Private event icon")
-          Icon(imageVector = Icons.Filled.Groups, contentDescription = "Groups event icon")
+private fun IconEventState(eventState: EventState, isProximityModeOn: Boolean) {
+  if (!isProximityModeOn) {
+    when (eventState) {
+      EventState.PUBLIC ->
+          Icon(imageVector = Icons.Filled.LockOpen, contentDescription = "Public event icon")
+      EventState.PRIVATE_FRIENDS ->
+          Row {
+            Icon(imageVector = Icons.Filled.Lock, contentDescription = "Private event icon")
+            Icon(
+                imageVector = Icons.Filled.Favorite, contentDescription = "Friends Only event icon")
+          }
+      EventState.PRIVATE_GROUP ->
+          Row {
+            Icon(imageVector = Icons.Filled.Lock, contentDescription = "Private event icon")
+            Icon(imageVector = Icons.Filled.Groups, contentDescription = "Groups event icon")
+          }
+    }
+  }
+}
+
+/**
+ * Helper composable function: Special Icon for an [Event] item composable for the proximity sorting
+ *
+ * @param eventLocation: the location assigned to the event
+ * @param isProximityModeOn the user choose to sort depending on the proximity
+ * @param hasLocationPermission we have access to the current user location
+ * @param distance : distance between the event and the current user location
+ */
+@Composable
+private fun IconsProximityFilter(
+    eventLocation: Location?,
+    isProximityModeOn: Boolean,
+    hasLocationPermission: Boolean,
+    distance: String?
+) {
+
+  if (eventLocation != null && isProximityModeOn && hasLocationPermission) {
+    distance?.let { dist ->
+      Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        Icon(
+            imageVector = Icons.Filled.Directions,
+            contentDescription = "Distance icon",
+            modifier = Modifier.testTag(EventsScreenTestTags.ICONS_PROXIMITY))
+
+        Text(
+            text = dist,
+            modifier = Modifier.testTag(EventsScreenTestTags.ICONS_PROXIMITY_DISTANCE_TEXT))
+      }
+    }
+        ?: run {
+          Text(
+              text = stringResource(R.string.events_no_location_permission_message),
+              style = MaterialTheme.typography.bodySmall,
+              color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f))
         }
   }
+}
+
+/**
+ * Helper composable function: the clickable icon to let the user choose about the list of events
+ * visibility
+ *
+ * @param eventVisibility: boolean to know if we let visible or not
+ * @param testTag
+ */
+@Composable
+private fun IconsEventsVisibility(eventVisibility: MutableState<Boolean>, testTag: String) {
+  IconButton(
+      onClick = { eventVisibility.value = !eventVisibility.value },
+      modifier = Modifier.testTag(testTag)) {
+        Icon(
+            imageVector =
+                if (eventVisibility.value) {
+                  Icons.Filled.KeyboardArrowUp
+                } else Icons.Filled.KeyboardArrowDown,
+            contentDescription = "Visibility events")
+      }
 }
 
 @Preview(showBackground = true)

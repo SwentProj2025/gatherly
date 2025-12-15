@@ -1,5 +1,7 @@
 package com.android.gatherly.ui.events
 
+import android.content.Context
+import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
@@ -8,17 +10,22 @@ import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsRepository
 import com.android.gatherly.model.event.EventsRepositoryFirestore
+import com.android.gatherly.model.map.Location
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.android.gatherly.utils.GenericViewModelFactory
+import com.android.gatherly.utils.distance
+import com.android.gatherly.utils.locationFlow
 import com.android.gatherly.utils.userParticipate
 import com.android.gatherly.utils.userUnregister
+import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.firestore
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.storage.storage
+import java.util.Locale
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -84,7 +91,9 @@ private fun getDrawableEvents(events: List<Event>): List<Event> {
 class EventsViewModel(
     private val profileRepository: ProfileRepository,
     private val eventsRepository: EventsRepository,
-    private val authProvider: () -> FirebaseAuth = { Firebase.auth }
+    private val authProvider: () -> FirebaseAuth = { Firebase.auth },
+    private val fusedLocationClient: FusedLocationProviderClient? = null,
+    private val fakeCurrentUserLocation: Location? = null, // Used only for testing
 ) : ViewModel() {
   private val _uiState: MutableStateFlow<EventsUIState> = MutableStateFlow(EventsUIState())
 
@@ -101,6 +110,8 @@ class EventsViewModel(
 
   private val _searchQuery = MutableStateFlow("")
   private var allEventsCache: List<Event> = emptyList()
+
+  private val _currentUserLocation = MutableStateFlow<Location?>(null)
 
   /**
    * Initializes the ViewModel by loading all events for the current user. Events are automatically
@@ -204,11 +215,15 @@ class EventsViewModel(
         eventsRepository: EventsRepository = EventsRepositoryFirestore(Firebase.firestore),
         profileRepository: ProfileRepository =
             ProfileRepositoryFirestore(
-                com.google.firebase.Firebase.firestore, com.google.firebase.Firebase.storage)
+                com.google.firebase.Firebase.firestore, com.google.firebase.Firebase.storage),
+        fusedLocationClient: FusedLocationProviderClient? = null,
     ): ViewModelProvider.Factory {
 
       return GenericViewModelFactory {
-        EventsViewModel(profileRepository = profileRepository, eventsRepository = eventsRepository)
+        EventsViewModel(
+            profileRepository = profileRepository,
+            eventsRepository = eventsRepository,
+            fusedLocationClient = fusedLocationClient)
       }
     }
   }
@@ -260,7 +275,21 @@ class EventsViewModel(
     return when (_uiState.value.sortOrder) {
       EventSortOrder.ALPHABETICAL -> list.sortedBy { it.title.lowercase() }
       EventSortOrder.DATE_ASC -> list.sortedBy { it.date.toDate() }
-      EventSortOrder.PROXIMITY -> list // TODO
+      EventSortOrder.PROXIMITY -> {
+        val userLocation = fakeCurrentUserLocation ?: _currentUserLocation.value
+        if (userLocation == null) {
+          list.sortedBy { it.title.lowercase() }
+        } else {
+          list.sortedWith(
+              compareBy { event ->
+                if (event.location == null) {
+                  Double.MAX_VALUE
+                } else {
+                  distance(userLocation, event.location)
+                }
+              })
+        }
+      }
     }
   }
 
@@ -312,6 +341,59 @@ class EventsViewModel(
             }
           }
       _participantsNames.value = names
+    }
+  }
+
+  /**
+   * Handles the creation of the string who represents the distance between the user and the event
+   * location
+   *
+   * @param event the event that the user wants to know his proximity with
+   */
+  fun getDistanceUserEvent(event: Event): String? {
+    val userLocation = fakeCurrentUserLocation ?: _currentUserLocation.value
+    if (userLocation != null && event.location != null) {
+      val distanceInKilometers = distance(userLocation, event.location)
+      return if (distanceInKilometers >= 1.0) {
+        String.format(Locale.getDefault(), "%.1f km", distanceInKilometers)
+      } else {
+        val distanceInMeters = distanceInKilometers * 1000
+        String.format(Locale.getDefault(), "%.0f m", distanceInMeters)
+      }
+    }
+    return null
+  }
+
+  /**
+   * Initialize the first position of the current user
+   *
+   * @param context The context used to access location services.
+   */
+  fun startLocationUpdates(context: Context) {
+    fusedLocationClient ?: return
+
+    viewModelScope.launch {
+      try {
+        fusedLocationClient.locationFlow(context).collect { loc ->
+          updateCurrentUserLocation(
+              Location(
+                  latitude = loc.latitude, longitude = loc.longitude, name = "currentUserLocation"))
+        }
+      } catch (e: Exception) {
+        Log.e("EventsViewModel", "Error getting location: ${e.message}")
+      }
+    }
+  }
+
+  /**
+   * Update the location of the current user by the launch trigger from the UI
+   *
+   * @param newLocation the new location of the current user to register
+   */
+  fun updateCurrentUserLocation(newLocation: Location) {
+    _currentUserLocation.value = newLocation
+    if (_uiState.value.sortOrder == EventSortOrder.PROXIMITY) {
+      viewModelScope.launch { updateUIStateWithProcessedEvents(_uiState.value.currentUserId) }
     }
   }
 }
