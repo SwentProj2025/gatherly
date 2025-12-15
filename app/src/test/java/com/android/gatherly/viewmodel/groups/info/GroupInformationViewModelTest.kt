@@ -137,27 +137,28 @@ class GroupInformationViewModelTest {
 
         groupsInformationViewModel.clearErrorMessage()
 
-    assertNull(uiState.value.errorMessage)
-  }
+        assertNull(uiState.value.errorMessage)
+      }
 
   /** Verifies that calling leaveGroup removes the group member and navigates to overview */
   @Test
-  fun checkLeaveGroupRemovesMember() = runTest {
-    chooseNonAdmin()
+  fun checkLeaveGroupRemovesMember() =
+      runTest(testDispatcher, testTimeout) {
+        chooseNonAdmin()
 
-    groupsInformationViewModel.loadUIState(userGroup1.gid)
+        groupsInformationViewModel.loadUIState(userGroup1.gid)
 
-    advanceUntilIdle()
+        advanceUntilIdle()
 
-    groupsInformationViewModel.onLeaveGroup()
+        groupsInformationViewModel.onLeaveGroup()
 
-    advanceUntilIdle()
+        advanceUntilIdle()
 
-    val uiState = groupsInformationViewModel.uiState
-    val group = groupsRepository.getGroup(userGroup1.gid)
+        val uiState = groupsInformationViewModel.uiState
+        val group = groupsRepository.getGroup(userGroup1.gid)
 
-    assertTrue(uiState.value.navigateToOverview)
-    assertEquals(1, group.memberIds.size)
-    assertFalse(group.memberIds.contains(FRIEND_USER_ID))
-  }
+        assertTrue(uiState.value.navigateToOverview)
+        assertEquals(1, group.memberIds.size)
+        assertFalse(group.memberIds.contains(FRIEND_USER_ID))
+      }
 }
