@@ -5,12 +5,14 @@ import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
 import com.android.gatherly.model.group.Group
 import com.android.gatherly.model.group.GroupsLocalRepository
 import com.android.gatherly.model.group.GroupsRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
+import com.android.gatherly.utils.AlertDialogTestTags
 import com.android.gatherly.utils.MockitoUtils
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
@@ -140,5 +142,21 @@ class GroupInformationScreenTest {
     composeTestRule
         .onNodeWithTag(GroupInformationScreenTestTags.getTestTagForMemberItem(friendUserId))
         .assertIsDisplayed()
+    composeTestRule.onNodeWithTag(GroupInformationScreenTestTags.LEAVE_BUTTON).assertIsDisplayed()
+  }
+
+  @Test
+  fun leaveGroupShowsPopUp() {
+    setNonAdminUser()
+
+    composeTestRule
+        .onNodeWithTag(GroupInformationScreenTestTags.LEAVE_BUTTON)
+        .assertIsDisplayed()
+        .performClick()
+    composeTestRule.onNodeWithTag(AlertDialogTestTags.ALERT).assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(AlertDialogTestTags.DISMISS_BTN)
+        .assertIsDisplayed()
+        .performClick()
   }
 }

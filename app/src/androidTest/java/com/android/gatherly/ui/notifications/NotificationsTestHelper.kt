@@ -145,7 +145,7 @@ class NotificationsTestHelper(private val composeTestRule: ComposeContentTestRul
       composeTestRule.setContent {
         when (screen) {
           ScreenType.NOTIFICATIONS_SCREEN -> NotificationsScreen(notificationsViewModel)
-          ScreenType.FRIEND_REQUESTS_SCREEN -> {} // TODO: Implement FriendRequestsScreen
+          ScreenType.FRIEND_REQUESTS_SCREEN -> FriendRequestsScreen(notificationsViewModel)
         }
       }
 

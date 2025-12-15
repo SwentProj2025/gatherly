@@ -57,7 +57,12 @@ class GroupsLocalRepository : GroupsRepository {
   }
 
   override suspend fun removeMember(groupId: String, userId: String) {
-    TODO("GroupsLocalRepository.removeMember Not yet implemented")
+    val group = getGroup(groupId)
+    editGroup(
+        groupId,
+        group.copy(
+            memberIds = group.memberIds.filter { it != userId },
+            adminIds = group.adminIds.filter { it != userId }))
   }
 
   override suspend fun addAdmin(groupId: String, userId: String) {
@@ -65,7 +70,8 @@ class GroupsLocalRepository : GroupsRepository {
   }
 
   override suspend fun removeAdmin(groupId: String, userId: String) {
-    TODO("GroupsLocalRepository.removeAdmin Not yet implemented")
+    val group = getGroup(groupId)
+    editGroup(groupId, group.copy(adminIds = group.adminIds.filter { it != userId }))
   }
 
   override suspend fun getGroupByName(groupName: String): Group {
