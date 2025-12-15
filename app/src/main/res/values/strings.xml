@@ -220,12 +220,15 @@
 
     <!-- Notifications Screen -->
     <string name="notifications_empty_list_message">There are no notifications at the moment.</string>
+    <string name="friend_requests_empty_list_message">There are no pending friend requests at the moment.</string>
     <string name="friend_requests_label">Friend Requests</string>
     <string name="friend_requests_button_text_zero">0 pending requests</string>
     <string name="friend_requests_button_text_two">other</string>
     <string name="friend_requests_button_text_multiple">others</string>
     <string name="friend_requests_notification_text">sent you a friend request.</string>
     <string name="friend_requests_notification_button_title">Visit Profile</string>
+    <string name="friend_requests_accept_button_text">Accept</string>
+    <string name="friend_requests_reject_button_text">Reject</string>
 
     <!-- Friends Screen -->
     <string name="friends_empty_list_msg">You have no friends added yet.</string>
