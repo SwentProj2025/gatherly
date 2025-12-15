@@ -39,11 +39,8 @@ class EventsLocalRepository : EventsRepository {
   override suspend fun editEvent(eventId: String, newValue: Event) {
     val index = events.indexOf(getEvent(eventId))
     val updatedEvent = updateEventStatus(newValue)
-    if (index == -1) {
-      throw IllegalArgumentException("EventsLocalRepository.editEvent: Event not found")
-    } else {
-      events[index] = updatedEvent
-    }
+    require(index != -1) { "EventsLocalRepository.editEvent: Event with ID $eventId not found" }
+    events[index] = updatedEvent
   }
 
   override suspend fun deleteEvent(eventId: String) {

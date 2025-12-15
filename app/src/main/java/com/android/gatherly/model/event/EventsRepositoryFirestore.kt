@@ -98,7 +98,7 @@ class EventsRepositoryFirestore(private val db: FirebaseFirestore) : EventsRepos
     val date = doc.getTimestamp("date") ?: return null
     val startTime = doc.getTimestamp("startTime") ?: return null
     val endTime = doc.getTimestamp("endTime") ?: return null
-    val locationMap = doc.get("location") as? Map<*, *>
+    val locationMap = doc["location"] as? Map<*, *>
     val location =
         locationMap?.let { locMap ->
           val lat = locMap["latitude"] as? Double
@@ -112,12 +112,11 @@ class EventsRepositoryFirestore(private val db: FirebaseFirestore) : EventsRepos
         }
     val creatorId = doc.getString("creatorId") ?: return null
     val statusStr = doc.getString("status") ?: return null
-    val participants =
-        (doc.get("participants") as? List<*>)?.filterIsInstance<String>() ?: emptyList()
+    val participants = (doc["participants"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
     val status = EventStatus.valueOf(statusStr)
     val stateStr = doc.getString("state") ?: return null
     val state = EventState.valueOf(stateStr)
-    val groupsRaw = doc.get("groups") as? List<*> ?: emptyList()
+    val groupsRaw = doc["groups"] as? List<*> ?: emptyList()
 
     val groups: List<Group> =
         groupsRaw.mapNotNull { groupData ->
