@@ -96,6 +96,10 @@ data class GatherlyAlertDialogActions(
  * )
  * ```
  */
+@Suppress("kotlin:S107") // NOSONAR
+// Suppression of "too many parameters" warning
+// Rationale: 9 out of 14 parameters are optional dialog configurations.
+// This is acceptable for a flexible dialog component.
 @Composable
 fun GatherlyAlertDialog(
     titleText: String,
