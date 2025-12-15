@@ -216,13 +216,13 @@ fun HomePageScreen(
           Spacer(modifier = Modifier.height(sectionSpacing))
 
           TaskList(
+              modifier = Modifier.weight(1f),
               todos = uiState.todos,
-              homePageScreenActions.onClickTodoTitle,
-              homePageScreenActions.onClickTodo)
+              onClickTodoTitle = homePageScreenActions.onClickTodoTitle,
+              onClickTodo = homePageScreenActions.onClickTodo)
 
           Spacer(modifier = Modifier.height(verticalSpacing))
 
-          Spacer(modifier = Modifier.weight(1f))
           FocusSection(
               modifier = Modifier.padding(horizontal = screenPadding),
               timerString = uiState.timerString,
@@ -479,38 +479,36 @@ fun FriendsSection(
  */
 @Composable
 fun TaskList(
+    modifier: Modifier = Modifier,
     todos: List<ToDo>,
     onClickTodoTitle: () -> Unit = {},
     onClickTodo: (ToDo) -> Unit = {}
 ) {
-  Column(
-      modifier =
-          Modifier.height(dimensionResource(id = R.dimen.homepage_task_section_height))
-              .fillMaxWidth()) {
-        if (todos.isEmpty()) {
-          TextButton(
-              onClick = onClickTodoTitle,
-              modifier =
-                  Modifier.padding(horizontal = dimensionResource(id = R.dimen.padding_small))
-                      .testTag(HomePageScreenTestTags.EMPTY_TASK_LIST_TEXT_BUTTON)) {
-                Text(
-                    text = stringResource(id = R.string.homepage_empty_task_list_message),
-                    color = MaterialTheme.colorScheme.onBackground)
-              }
-        } else {
+  Column(modifier = modifier.fillMaxWidth()) {
+    if (todos.isEmpty()) {
+      TextButton(
+          onClick = onClickTodoTitle,
+          modifier =
+              Modifier.padding(horizontal = dimensionResource(id = R.dimen.padding_small))
+                  .testTag(HomePageScreenTestTags.EMPTY_TASK_LIST_TEXT_BUTTON)) {
+            Text(
+                text = stringResource(id = R.string.homepage_empty_task_list_message),
+                color = MaterialTheme.colorScheme.onBackground)
+          }
+    } else {
 
-          LazyColumn(
-              modifier = Modifier.weight(1f).testTag(HomePageScreenTestTags.TASKS_LAZY_COLUMN)) {
-                items(todos.size) { index ->
-                  val todo = todos[index]
-                  TaskItem(
-                      modifier = Modifier.testTag(getTaskItemTestTag(todo.uid)),
-                      text = todo.description,
-                      onClick = { onClickTodo(todo) })
-                }
-              }
-        }
-      }
+      LazyColumn(
+          modifier = Modifier.fillMaxSize().testTag(HomePageScreenTestTags.TASKS_LAZY_COLUMN)) {
+            items(todos.size) { index ->
+              val todo = todos[index]
+              TaskItem(
+                  modifier = Modifier.testTag(getTaskItemTestTag(todo.uid)),
+                  text = todo.description,
+                  onClick = { onClickTodo(todo) })
+            }
+          }
+    }
+  }
 }
 
 /** A single clickable task item with a description and arrow icon. */
@@ -522,7 +520,9 @@ fun TaskItem(modifier: Modifier = Modifier, text: String, onClick: () -> Unit) {
         modifier =
             Modifier.clickable(onClick = onClick)
                 .fillMaxWidth()
-                .padding(horizontal = paddingRegular, vertical = paddingRegular),
+                .padding(
+                    horizontal = paddingRegular,
+                    vertical = dimensionResource(id = R.dimen.padding_small)),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically) {
           Text(
