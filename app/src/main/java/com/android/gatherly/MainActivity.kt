@@ -39,6 +39,7 @@ import com.android.gatherly.ui.homePage.HomePageScreenActions
 import com.android.gatherly.ui.map.MapScreen
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.Screen
+import com.android.gatherly.ui.notifications.FriendRequestsScreen
 import com.android.gatherly.ui.notifications.NotificationsScreen
 import com.android.gatherly.ui.points.FocusPointsScreen
 import com.android.gatherly.ui.profile.ProfileScreen
@@ -334,6 +335,26 @@ fun GatherlyApp(
       }
     }
 
+    // NOTIFICATIONS COMPOSABLE  ------------------------------
+    navigation(
+        startDestination = Screen.NotificationsScreen.route,
+        route = Screen.NotificationsScreen.name,
+    ) {
+      composable(Screen.NotificationsScreen.route) {
+        NotificationsScreen(navigationActions = navigationActions)
+      }
+    }
+
+    // FRIEND REQUESTS COMPOSABLE  ------------------------------
+    navigation(
+        startDestination = Screen.FriendRequestsScreen.route,
+        route = Screen.FriendRequestsScreen.name,
+    ) {
+      composable(Screen.FriendRequestsScreen.route) {
+        FriendRequestsScreen(goBack = { navigationActions.goBack() })
+      }
+    }
+
     // GROUPS COMPOSABLE  ------------------------------
     navigation(
         startDestination = Screen.AddGroupScreen.route,
@@ -347,16 +368,6 @@ fun GatherlyApp(
             onCreate = { navigationActions.navigateTo(Screen.OverviewGroupsScreen) })
       }
 
-      // NOTIFICATIONS COMPOSABLE  ------------------------------
-      navigation(
-          startDestination = Screen.NotificationsScreen.route,
-          route = Screen.NotificationsScreen.name,
-      ) {
-        composable(Screen.NotificationsScreen.route) {
-          NotificationsScreen(navigationActions = navigationActions)
-        }
-      }
-
       val nullUIDMessage = "Group UID is null"
 
       // GROUP INFO COMPOSABLE  ------------------------------
@@ -367,16 +378,6 @@ fun GatherlyApp(
               Log.e("GroupInformationScreen", nullUIDMessage)
               Toast.makeText(context, "Navigating to an invalid group", Toast.LENGTH_SHORT).show()
             }
-      }
-
-      // GROUP OVERVIEW COMPOSABLE  ------------------------------
-      navigation(
-          startDestination = Screen.OverviewGroupsScreen.route,
-          route = Screen.OverviewGroupsScreen.name,
-      ) {
-        composable(Screen.OverviewGroupsScreen.route) {
-          GroupsOverviewScreen(navigationActions = navigationActions)
-        }
       }
 
       // EDIT GROUP COMPOSABLE  ------------------------------
@@ -393,6 +394,16 @@ fun GatherlyApp(
               Log.e("EditGroupScreen", nullUIDMessage)
               Toast.makeText(context, "Trying to edit an invalid group", Toast.LENGTH_SHORT).show()
             }
+      }
+    }
+
+    // GROUP OVERVIEW COMPOSABLE  ------------------------------
+    navigation(
+        startDestination = Screen.OverviewGroupsScreen.route,
+        route = Screen.OverviewGroupsScreen.name,
+    ) {
+      composable(Screen.OverviewGroupsScreen.route) {
+        GroupsOverviewScreen(navigationActions = navigationActions)
       }
     }
   }
