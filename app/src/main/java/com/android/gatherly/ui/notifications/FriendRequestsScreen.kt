@@ -170,7 +170,6 @@ fun FriendRequestsScreen(
                     // --- FRIEND REQUEST ITEMS ---
                     // --- SHOWING USERS' FRIEND REQUEST ITEMS ---
                     FriendRequestsList(
-                        padding = padding,
                         friendRequests = friendRequests,
                         onAcceptFriendRequest = { notificationId ->
                           notificationsViewModel.acceptFriendRequest(notificationId)
@@ -311,15 +310,13 @@ private fun FriendRequestItem(
  * @param onAcceptFriendRequest Callback triggered when a friend request is accepted.
  * @param onRejectFriendRequest Callback triggered when a friend request is rejected.
  * @param idToProfile Map of user IDs to their corresponding Profile objects.
- * @param padding Padding values to apply to the list.
  */
 @OptIn(ExperimentalFoundationApi::class)
 private fun LazyListScope.FriendRequestsList(
     friendRequests: List<Notification>,
     onAcceptFriendRequest: (String) -> Unit,
     onRejectFriendRequest: (String) -> Unit,
-    idToProfile: Map<String, Profile>,
-    padding: PaddingValues
+    idToProfile: Map<String, Profile>
 ) {
   items(items = friendRequests) { friendRequest ->
     when (friendRequest.type) {
