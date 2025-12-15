@@ -294,26 +294,7 @@ class AddTodoViewModelTest {
 
               override fun getNewUid() = "fake-id"
             }
-        /**
-         * val failingRepo2 = object : ToDosRepository { override suspend fun addTodo(toDo: ToDo) {
-         * throw RuntimeException("Simulated Firestore failure") }
-         *
-         * override suspend fun getAllTodos() = emptyList<ToDo>()
-         *
-         * override suspend fun getTodo(todoID: String) = throw NoSuchElementException()
-         *
-         * override suspend fun deleteTodo(todoID: String) {}
-         *
-         * override suspend fun editTodo(todoID: String, newValue: ToDo) {}
-         *
-         * override suspend fun getAllEndedTodos() = emptyList<ToDo>()
-         *
-         * override suspend fun updateTodosTagToNull(categoryId: String, ownerId: String) {}
-         *
-         * override fun getNewUid() = "fake-id"
-         *
-         * override suspend fun toggleStatus(todoID: String) {} }
-         */
+
         val viewModel =
             AddTodoViewModel(
                 failingRepo,
