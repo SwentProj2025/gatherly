@@ -11,8 +11,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import com.android.gatherly.R
 
 /**
@@ -36,7 +36,7 @@ fun BoxNumberAttendees(numberAttendees: Int, modifier: Modifier = Modifier) {
         contentDescription = "Attendees",
         tint = MaterialTheme.colorScheme.onSurfaceVariant)
 
-    Spacer(modifier = Modifier.width(R.dimen.spacing_between_elements.dp))
+    Spacer(modifier = Modifier.width(dimensionResource(R.dimen.spacing_between_elements)))
 
     Text(
         text = "$numberAttendees",
