@@ -1,6 +1,8 @@
 package com.android.gatherly.viewmodel.todo
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.android.gatherly.model.points.PointsLocalRepository
+import com.android.gatherly.model.points.PointsRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
@@ -8,6 +10,8 @@ import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.model.todo.ToDosRepository
+import com.android.gatherly.model.todoCategory.ToDoCategoryLocalRepository
+import com.android.gatherly.model.todoCategory.ToDoCategoryRepository
 import com.android.gatherly.ui.todo.OverviewViewModel
 import com.android.gatherly.ui.todo.TodoSortOrder
 import com.android.gatherly.utilstest.MockitoUtils
@@ -47,7 +51,10 @@ class OverviewViewModelTest {
   private lateinit var overviewViewModel: OverviewViewModel
   private lateinit var toDosRepository: ToDosRepository
   private lateinit var profileRepository: ProfileRepository
+  private lateinit var pointsRepository: PointsRepository
   private lateinit var mockitoUtils: MockitoUtils
+
+  private lateinit var toDoCategoryRepository: ToDoCategoryRepository
 
   private val testDispatcher = StandardTestDispatcher()
 
@@ -57,12 +64,16 @@ class OverviewViewModelTest {
 
     toDosRepository = ToDosLocalRepository()
     profileRepository = ProfileLocalRepository()
+    pointsRepository = PointsLocalRepository()
+    toDoCategoryRepository = ToDoCategoryLocalRepository()
 
     // Mock Firebase Auth
     mockitoUtils = MockitoUtils()
     mockitoUtils.chooseCurrentUser("0")
 
-    overviewViewModel = OverviewViewModel(toDosRepository, profileRepository)
+    overviewViewModel =
+        OverviewViewModel(
+            toDosRepository, profileRepository, pointsRepository, toDoCategoryRepository)
   }
 
   @After

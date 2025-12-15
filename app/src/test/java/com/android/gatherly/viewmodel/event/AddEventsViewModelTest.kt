@@ -7,6 +7,8 @@ import com.android.gatherly.model.event.EventsLocalRepository
 import com.android.gatherly.model.event.EventsRepository
 import com.android.gatherly.model.group.GroupsLocalRepository
 import com.android.gatherly.model.group.GroupsRepository
+import com.android.gatherly.model.points.PointsLocalRepository
+import com.android.gatherly.model.points.PointsRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
@@ -34,6 +36,7 @@ class AddEventsViewModelTest {
   private lateinit var addEventViewModel: AddEventViewModel
   private lateinit var eventsRepository: EventsRepository
   private lateinit var profileRepository: ProfileRepository
+  private lateinit var pointsRepository: PointsRepository
   private lateinit var groupsRepository: GroupsRepository
   private lateinit var mockitoUtils: MockitoUtils
 
@@ -48,6 +51,7 @@ class AddEventsViewModelTest {
     profileRepository = ProfileLocalRepository()
     eventsRepository = EventsLocalRepository()
     groupsRepository = GroupsLocalRepository()
+    pointsRepository = PointsLocalRepository()
 
     // fill the profile and events repositories with profiles and event
     fill_repositories()
@@ -60,6 +64,7 @@ class AddEventsViewModelTest {
         AddEventViewModel(
             profileRepository = profileRepository,
             eventsRepository = eventsRepository,
+            pointsRepository = pointsRepository,
             authProvider = { mockitoUtils.mockAuth },
             groupsRepository = groupsRepository)
   }
@@ -183,10 +188,10 @@ class AddEventsViewModelTest {
   @Test
   fun canEnterEventDueDate() {
     runTest {
-      val dateString = "13/12/2025"
+      val dateString = "13/12/2026"
       addEventViewModel.updateDate(dateString)
-      assert(!addEventViewModel.uiState.dateError) { "\'13/12/2025\' should not make an error" }
-      assert(addEventViewModel.uiState.date == dateString) { "\'13/12/2025\' should work" }
+      assert(!addEventViewModel.uiState.dateError) { "\'13/12/2026\' should not make an error" }
+      assert(addEventViewModel.uiState.date == dateString) { "\'13/12/2026\' should work" }
     }
   }
 
@@ -216,9 +221,9 @@ class AddEventsViewModelTest {
   @Test
   fun cannotEnterInvalidEventDueDate3() {
     runTest {
-      val dateString = "33/12/2025"
+      val dateString = "33/12/2026"
       addEventViewModel.updateDate(dateString)
-      assert(addEventViewModel.uiState.dateError) { "\'33/12/2025\' should be wrong" }
+      assert(addEventViewModel.uiState.dateError) { "\'33/12/2026\' should be wrong" }
     }
   }
 

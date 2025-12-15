@@ -7,10 +7,13 @@ import com.android.gatherly.model.notification.Notification
 import com.android.gatherly.model.notification.NotificationType
 import com.android.gatherly.model.notification.NotificationsRepository
 import com.android.gatherly.model.notification.NotificationsRepositoryProvider
+import com.android.gatherly.model.points.PointsRepository
+import com.android.gatherly.model.points.PointsRepositoryProvider
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.android.gatherly.utils.GenericViewModelFactory
+import com.android.gatherly.utils.addFriendWithPointsCheck
 import com.android.gatherly.utils.getProfileWithSyncedFriendNotifications
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
@@ -56,12 +59,16 @@ class FriendsViewModel(
     private val repository: ProfileRepository,
     private val notificationsRepository: NotificationsRepository =
         NotificationsRepositoryProvider.repository,
+    private val pointsRepository: PointsRepository,
     private val authProvider: () -> FirebaseAuth = { Firebase.auth }
 ) : ViewModel() {
 
   /** StateFlow that emits the current UI state for the Friends screen. */
   private val _uiState = MutableStateFlow(FriendsUIState())
   val uiState: StateFlow<FriendsUIState> = _uiState.asStateFlow()
+
+  private var allFriendsCache: List<String> = emptyList()
+  private var allPendingCache: List<String> = emptyList()
 
   /**
    * Initializes the ViewModel by loading all the friends' profile from the repository and filtering
@@ -82,6 +89,7 @@ class FriendsViewModel(
       getProfileWithSyncedFriendNotifications(
           profileRepository = repository,
           notificationsRepository = notificationsRepository,
+          pointsRepository = pointsRepository,
           userId = currentUserId)
       val friendsData = repository.getFriendsAndNonFriendsUsernames(currentUserId)
       val allUsernames = friendsData.friendUsernames + friendsData.nonFriendUsernames
@@ -95,6 +103,8 @@ class FriendsViewModel(
           currentUserProfile.pendingSentFriendsUids.mapNotNull { uid ->
             repository.getProfileByUid(uid)?.username
           }
+      allFriendsCache = friendsData.friendUsernames
+      allPendingCache = pendingSentUsernames
 
       _uiState.value =
           _uiState.value.copy(
@@ -148,7 +158,7 @@ class FriendsViewModel(
     _uiState.value = _uiState.value.copy(friends = updatedFriends)
     viewModelScope.launch {
       try {
-        repository.addFriend(friend, currentUserId)
+        addFriendWithPointsCheck(repository, pointsRepository, friend, currentUserId)
         refreshFriends(currentUserId)
       } catch (e: Exception) {
         _uiState.value =
@@ -269,6 +279,19 @@ class FriendsViewModel(
     }
   }
 
+  fun searchFriends(query: String) {
+    val normalized = query.trim().lowercase()
+    if (normalized.isEmpty()) {
+      _uiState.value =
+          _uiState.value.copy(friends = allFriendsCache, pendingSentUsernames = allPendingCache)
+      return
+    }
+    val filteredFriends = allFriendsCache.filter { it.lowercase().contains(normalized) }
+    val filteredPending = allPendingCache.filter { it.lowercase().contains(normalized) }
+    _uiState.value =
+        _uiState.value.copy(friends = filteredFriends, pendingSentUsernames = filteredPending)
+  }
+
   /**
    * Companion Object used to encapsulate a static method to retrieve a ViewModelProvider.Factory
    * and its default dependencies.
@@ -279,10 +302,11 @@ class FriendsViewModel(
             ProfileRepositoryFirestore(Firebase.firestore, Firebase.storage),
         notificationsRepository: NotificationsRepository =
             NotificationsRepositoryProvider.repository,
+        pointsRepository: PointsRepository = PointsRepositoryProvider.repository,
         currentUserId: String = Firebase.auth.currentUser?.uid ?: ""
     ): ViewModelProvider.Factory {
       return GenericViewModelFactory {
-        FriendsViewModel(profileRepository, notificationsRepository)
+        FriendsViewModel(profileRepository, notificationsRepository, pointsRepository)
       }
     }
   }

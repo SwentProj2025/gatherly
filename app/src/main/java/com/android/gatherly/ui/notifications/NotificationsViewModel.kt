@@ -7,9 +7,12 @@ import com.android.gatherly.model.notification.Notification
 import com.android.gatherly.model.notification.NotificationType
 import com.android.gatherly.model.notification.NotificationsRepository
 import com.android.gatherly.model.notification.NotificationsRepositoryFirestore
+import com.android.gatherly.model.points.PointsRepository
+import com.android.gatherly.model.points.PointsRepositoryProvider
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
+import com.android.gatherly.utils.addFriendWithPointsCheck
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
@@ -43,6 +46,7 @@ class NotificationViewModel(
         NotificationsRepositoryFirestore(Firebase.firestore),
     private val profileRepository: ProfileRepository =
         ProfileRepositoryFirestore(Firebase.firestore, Firebase.storage),
+    private val pointsRepository: PointsRepository = PointsRepositoryProvider.repository,
     private val authProvider: () -> FirebaseAuth = { Firebase.auth }
 ) : ViewModel() {
 
@@ -109,7 +113,7 @@ class NotificationViewModel(
                 ?: throw IllegalStateException("Sender profile not found")
         val senderUsername = senderProfile.username
 
-        profileRepository.addFriend(friend = senderUsername, currentUserId = recipientId)
+        addFriendWithPointsCheck(profileRepository, pointsRepository, senderUsername, recipientId)
 
         val acceptedId = notificationsRepository.getNewId()
         val acceptedNotification =

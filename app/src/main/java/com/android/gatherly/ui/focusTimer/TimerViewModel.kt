@@ -24,6 +24,7 @@ import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.model.todo.ToDosRepositoryProvider
 import com.android.gatherly.utils.getProfileWithSyncedFriendNotifications
+import com.android.gatherly.utils.incrementBadgeCheckPoints
 import com.android.gatherly.utils.updateFocusPoints
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
@@ -126,7 +127,10 @@ class TimerViewModel(
 
         val profile =
             getProfileWithSyncedFriendNotifications(
-                profileRepository, notificationsRepository, authProvider().currentUser?.uid!!)!!
+                profileRepository,
+                notificationsRepository,
+                pointsRepository,
+                authProvider().currentUser?.uid!!)!!
         val allFriends =
             profile.friendUids.map { friend -> profileRepository.getProfileByUid(friend)!! } +
                 profile
@@ -318,8 +322,11 @@ class TimerViewModel(
     // add badge to profile
     viewModelScope.launch {
       try {
-        profileRepository.incrementBadge(
-            authProvider().currentUser?.uid!!, BadgeType.FOCUS_SESSIONS_COMPLETED)
+        incrementBadgeCheckPoints(
+            profileRepository,
+            pointsRepository,
+            authProvider().currentUser?.uid!!,
+            BadgeType.FOCUS_SESSIONS_COMPLETED)
       } catch (_: Exception) {
         setError("Failed to update the badge in the profile")
       }
