@@ -47,6 +47,7 @@ import kotlinx.coroutines.launch
  *
  * @param plannedDuration The total planned duration for the timer
  * @param remainingTime The remaining time left on the timer
+ * @param elapsedTime The total time elapsed since the timer was started
  * @param hours The hours part of the timer display (formatted as "HH")
  * @param minutes The minutes part of the timer display (formatted as "MM")
  * @param seconds The seconds part of the timer display (formatted as "SS")
@@ -57,6 +58,7 @@ import kotlinx.coroutines.launch
  * @param allTodos A list of all ToDo items available for linking
  * @param usersFocusSessions A list of focus sessions created by the current user
  * @param leaderboard A list of all friend profiles ordered by number of weekly points
+ * @param pointsGained Number of points gained up until now
  */
 data class TimerState(
     val plannedDuration: Duration = Duration.ZERO,
@@ -79,7 +81,12 @@ data class TimerState(
  * ViewModel that manages a focus countdown timer
  *
  * @param todoRepository The repository used to fetch and manage ToDos
+ * @param pointsRepository The repository used to update users points history
+ * @param profileRepository The repository used to fetch profiles
+ * @param notificationsRepository The repository used to fetch a user's notifications
  * @param userStatusManager Updates the current user's online/offline status.
+ * @param focusSessionsRepository The repository used to update user's focus sessions
+ * @param authProvider Used to inject mock providers in tests
  */
 class TimerViewModel(
     private val todoRepository: ToDosRepository = ToDosRepositoryProvider.repository,
@@ -93,7 +100,10 @@ class TimerViewModel(
     private val authProvider: () -> FirebaseAuth = { Firebase.auth }
 ) : ViewModel() {
 
+  /** Private mutable state for the Timer UI */
   private val _uiState = MutableStateFlow(TimerState())
+
+  /** Public immutable state for the Timer UI */
   val uiState: StateFlow<TimerState> = _uiState.asStateFlow()
 
   private var startedAt: Timestamp? = null
@@ -286,6 +296,7 @@ class TimerViewModel(
             isStarted = false,
             isPaused = false,
             errorMsg = null)
+
     viewModelScope.launch { userStatusManager.setStatus(ProfileStatus.ONLINE) }
     updateClock(Duration.ZERO)
     val updatedSession =
@@ -296,6 +307,7 @@ class TimerViewModel(
             duration = totalDurationSeconds.seconds,
             startedAt = started,
             endedAt = endedAt)
+
     viewModelScope.launch {
       try {
         focusSessionsRepository.updateFocusSession(sessionId, updatedSession)
@@ -391,7 +403,8 @@ class TimerViewModel(
           // minutes, the points gained increases by 5%)
           if (elapsed.inWholeSeconds % 60 == 0L) {
             val bonus = 1 + floor(elapsed.inWholeMinutes / 5.0) * 0.05
-            state = state.copy(pointsGained = state.pointsGained + bonus)
+            val gained = kotlin.math.round((state.pointsGained + bonus) * 100) / 100
+            state = state.copy(pointsGained = gained)
           }
 
           _uiState.value = state.copy(remainingTime = remaining, elapsedTime = elapsed)
@@ -479,10 +492,8 @@ class TimerViewModel(
     val m = (total % 3600) / 60
     val s = total % 60
 
-    /**
-     * Update the UI state with formatted time values : only 2 digits per metric and adding 0 if
-     * only 1 digit like 01:15
-     */
+    // Update the UI state with formatted time values : only 2 digits per metric and adding 0 if
+    // only 1 digit like 01:15
     _uiState.value =
         _uiState.value.copy(
             hours = h.toString().padStart(2, '0'),
@@ -497,6 +508,11 @@ class TimerViewModel(
     super.onCleared()
   }
 
+  /**
+   * Checks if a given user is the current user
+   *
+   * @param uid The user to compare to the current user
+   */
   fun isCurrentUser(uid: String): Boolean {
     return uid == authProvider().currentUser?.uid!!
   }

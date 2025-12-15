@@ -152,4 +152,11 @@
     <dimen name="focus_session_history_vertical_padding">8.dp</dimen>
     <dimen name="focus_session_history_horizontal_padding">16.dp</dimen>
     <dimen name="focus_session_history_button_height">35.dp</dimen>
+    <dimen name="timer_corner">12.dp</dimen>
+    <dimen name="timer_progress_width">15.dp</dimen>
+    <dimen name="timer_progress_gap">5.dp</dimen>
+    <dimen name="timer_padding">6.dp</dimen>
+    <dimen name="timer_todo_height">60.dp</dimen>
+    <dimen name="timer_bar_thickness">0.5.dp</dimen>
+    <dimen name="timer_time_font_size">25.sp</dimen>
 </resources>

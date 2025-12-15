@@ -46,6 +46,7 @@ private const val TIMEOUT = 15000L
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @RunWith(AndroidJUnit4::class)
+/** Tests the Timer display */
 class TimerScreenTest {
 
   @get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()
@@ -99,6 +100,11 @@ class TimerScreenTest {
   private lateinit var userStatusManager: UserStatusManager
   private val fakeUid = "test-user"
 
+  /**
+   * Fills the repository and sets the viewModel and UI contents
+   *
+   * @param fillFocusSessions whether or not to put focus sessions in their repository
+   */
   private fun setContent(fillFocusSessions: Boolean = true) {
     toDosRepository = ToDosLocalRepository()
     focusSessionsRepository = FocusSessionsLocalRepository()
@@ -125,6 +131,11 @@ class TimerScreenTest {
     composeTestRule.setContent { TimerScreen(timerViewModel) }
   }
 
+  /**
+   * Fills the repositories
+   *
+   * @param fillFocusSessions true if focus sessions should be added
+   */
   fun fill_repository(fillFocusSessions: Boolean = true) = runTest {
     toDosRepository.addTodo(todo1)
     profileRepository.addProfile(Profile(uid = fakeUid, name = "Test", profilePicture = ""))
@@ -265,7 +276,7 @@ class TimerScreenTest {
     composeTestRule.assertScreenDisplaysTimerNotStarted()
   }
 
-  // Linking a todo displys it when the timer starts
+  // Linking a todo displays it when the timer starts
   @Test
   fun canLinkToDo() {
     setContent()
@@ -288,6 +299,7 @@ class TimerScreenTest {
         .assertTextContains(todo1.name, substring = true)
   }
 
+  // When going to the leaderboard section, we can view it
   @Test
   fun canSeeLeaderboard() {
     setContent()
