@@ -378,6 +378,9 @@ class AddTodoViewModel(
    */
   fun saveTodo() {
     val validated = uiState.value
+
+    // Abort if validation failed
+    if (!validated.isValid) return
     viewModelScope.launch {
       _uiState.value = _uiState.value.copy(isSaving = true, saveError = null)
       try {

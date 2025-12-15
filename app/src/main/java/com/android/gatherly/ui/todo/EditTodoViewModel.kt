@@ -221,6 +221,10 @@ class EditTodoViewModel(
    */
   fun editTodo(id: String): Boolean {
     val state = uiState.value
+    // Abort if validation failed
+    if (!state.isValid) {
+      return false
+    }
     val date =
         if (state.dueDate.isNotBlank()) {
           val sdfTime = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())

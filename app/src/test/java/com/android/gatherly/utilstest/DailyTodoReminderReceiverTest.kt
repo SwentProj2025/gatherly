@@ -20,6 +20,7 @@ import org.junit.runner.RunWith
 
 private const val DELAY = 500L
 
+/** Instrumented tests for [DailyTodoReminderReceiver], which will execute on an Android device. */
 @RunWith(AndroidJUnit4::class)
 class DailyTodoReminderReceiverInstrumentedTest {
 
@@ -47,6 +48,7 @@ class DailyTodoReminderReceiverInstrumentedTest {
     DailyTodoReminderReceiver.Companion.resetProviders()
   }
 
+  /** Test that the receiver generates notifications for due todos and reschedules the alarm. */
   @Test
   fun receiver_generates_notifications_and_reschedules_alarm() = runBlocking {
     // Arrange
@@ -82,6 +84,7 @@ class DailyTodoReminderReceiverInstrumentedTest {
     Assert.assertTrue("Expected alarm rescheduling", fakeAlarmScheduler.wasCalled)
   }
 
+  /** Test that the receiver does nothing when no user ID is provided in the intent. */
   @Test
   fun receiver_withoutUserId_doesNothing() = runBlocking {
     val userId = "testUser"
@@ -98,6 +101,7 @@ class DailyTodoReminderReceiverInstrumentedTest {
     Assert.assertFalse("Alarm should NOT be rescheduled", fakeAlarmScheduler.wasCalled)
   }
 
+  /** Test that the receiver reschedules the alarm even when there are no todos. */
   @Test
   fun receiver_withNoTodos_reschedulesAlarm_withoutCreatingNotifications() = runBlocking {
     val userId = "user1"
@@ -118,6 +122,7 @@ class DailyTodoReminderReceiverInstrumentedTest {
     Assert.assertTrue("Alarm should be rescheduled even if empty", fakeAlarmScheduler.wasCalled)
   }
 
+  /** Test that the receiver ignores todos owned by another user. */
   @Test
   fun receiver_ignoresTodosOwnedByAnotherUser() = runBlocking {
     val todoRepositoryUser = ToDosLocalRepository("user1")
@@ -148,6 +153,7 @@ class DailyTodoReminderReceiverInstrumentedTest {
     Assert.assertTrue("Alarm should still be rescheduled", fakeAlarmScheduler.wasCalled)
   }
 
+  /** Test that the receiver generates notifications for multiple todos. */
   @Test
   fun receiver_generatesNotificationsForMultipleTodos() = runBlocking {
     val userId = "john"
@@ -174,6 +180,7 @@ class DailyTodoReminderReceiverInstrumentedTest {
   }
 }
 
+/** A fake implementation of [DailyTodoAlarmScheduler] for testing purposes. */
 class FakeDailyTodoAlarmScheduler(context: Context) : DailyTodoAlarmScheduler(context) {
   var wasCalled = false
 

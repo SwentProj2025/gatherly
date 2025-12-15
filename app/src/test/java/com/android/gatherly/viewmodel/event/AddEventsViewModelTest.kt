@@ -16,9 +16,10 @@ import com.android.gatherly.ui.events.AddEventViewModel
 import com.android.gatherly.utilstest.MockitoUtils
 import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -28,9 +29,12 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
+/** Unit tests for the [AddEventViewModel] class. */
 @RunWith(AndroidJUnit4::class)
 @OptIn(ExperimentalCoroutinesApi::class)
 class AddEventsViewModelTest {
+
+  private val testTimeout = 120.seconds
 
   // declare viewModel and repositories
   private lateinit var addEventViewModel: AddEventViewModel
@@ -41,7 +45,7 @@ class AddEventsViewModelTest {
   private lateinit var mockitoUtils: MockitoUtils
 
   // initialize this so that tests control all coroutines and can wait on them
-  private val testDispatcher = StandardTestDispatcher()
+  private val testDispatcher = UnconfinedTestDispatcher()
 
   @Before
   fun setUp() {
@@ -136,10 +140,10 @@ class AddEventsViewModelTest {
           status = EventStatus.UPCOMING)
 
   /*-------------------------------------Title tests--------------------------------------------*/
-  // Title accepts a valid string
+  /** Title accepts a valid string */
   @Test
   fun canEnterEventTitle() {
-    runTest {
+    runTest(testDispatcher, testTimeout) {
       val titleString = "This is a title!"
       addEventViewModel.updateName(titleString)
       assert(!addEventViewModel.uiState.nameError) { "Entering title should not make an error" }
@@ -147,10 +151,10 @@ class AddEventsViewModelTest {
     }
   }
 
-  // Title does not accept a blank string
+  /** Title does not accept a blank string */
   @Test
   fun cannotEnterEmptyEventTitle() {
-    runTest {
+    runTest(testDispatcher, testTimeout) {
       val blankString = " "
       addEventViewModel.updateName(blankString)
       assert(addEventViewModel.uiState.nameError) { "Blank title should be wrong" }
@@ -158,10 +162,10 @@ class AddEventsViewModelTest {
   }
 
   /*-------------------------------Description tests--------------------------------------------*/
-  // Description accepts valid string
+  /** Description accepts valid string */
   @Test
   fun canEnterEventDescription() {
-    runTest {
+    runTest(testDispatcher, testTimeout) {
       val descriptionString = "This is the description of this very very cool event"
       addEventViewModel.updateDescription(descriptionString)
       assert(!addEventViewModel.uiState.descriptionError) {
@@ -173,10 +177,10 @@ class AddEventsViewModelTest {
     }
   }
 
-  // Description does not accept invalid string
+  /** Description does not accept invalid string */
   @Test
   fun cannotEnterEmptyEventDescription() {
-    runTest {
+    runTest(testDispatcher, testTimeout) {
       val blankString = " "
       addEventViewModel.updateDescription(blankString)
       assert(addEventViewModel.uiState.descriptionError) { "Blank description should be wrong" }
@@ -184,21 +188,21 @@ class AddEventsViewModelTest {
   }
 
   /*----------------------------------Due date tests--------------------------------------------*/
-  // Due date accepts valid due date
+  /** Due date accepts valid due date */
   @Test
   fun canEnterEventDueDate() {
-    runTest {
-      val dateString = "13/12/2025"
+    runTest(testDispatcher, testTimeout) {
+      val dateString = "13/12/2026"
       addEventViewModel.updateDate(dateString)
-      assert(!addEventViewModel.uiState.dateError) { "\'13/12/2025\' should not make an error" }
-      assert(addEventViewModel.uiState.date == dateString) { "\'13/12/2025\' should work" }
+      assert(!addEventViewModel.uiState.dateError) { "\'13/12/2026\' should not make an error" }
+      assert(addEventViewModel.uiState.date == dateString) { "\'13/12/2026\' should work" }
     }
   }
 
-  // Due date does not accept words due date
+  /** Due date does not accept words due date */
   @Test
   fun cannotEnterInvalidEventDueDate1() {
-    runTest {
+    runTest(testDispatcher, testTimeout) {
       val dateString = "This date should not work"
       addEventViewModel.updateDate(dateString)
       assert(addEventViewModel.uiState.dateError) {
@@ -207,20 +211,20 @@ class AddEventsViewModelTest {
     }
   }
 
-  // Due date does not accept empty due date
+  /** Due date does not accept empty due date */
   @Test
   fun cannotEnterInvalidEventDueDate2() {
-    runTest {
+    runTest(testDispatcher, testTimeout) {
       val dateString = ""
       addEventViewModel.updateDate(dateString)
       assert(addEventViewModel.uiState.dateError) { "Empty date should be wrong" }
     }
   }
 
-  // Due date does not accept inexistent date
+  /** Due date does not accept inexistent date */
   @Test
   fun cannotEnterInvalidEventDueDate3() {
-    runTest {
+    runTest(testDispatcher, testTimeout) {
       val dateString = "33/12/2025"
       addEventViewModel.updateDate(dateString)
       assert(addEventViewModel.uiState.dateError) { "\'33/12/2025\' should be wrong" }
@@ -228,10 +232,10 @@ class AddEventsViewModelTest {
   }
 
   /*--------------------------------Start time tests--------------------------------------------*/
-  // Start time accepts valid time
+  /** Start time accepts valid time */
   @Test
   fun canEnterEventStartTime() {
-    runTest {
+    runTest(testDispatcher, testTimeout) {
       val startTimeString = "13:15"
       addEventViewModel.updateStartTime(startTimeString)
       assert(!addEventViewModel.uiState.startTimeError) { "\'13:15\' should work" }
@@ -239,10 +243,10 @@ class AddEventsViewModelTest {
     }
   }
 
-  // Start time does not accept words time
+  /** Start time does not accept words time */
   @Test
   fun cannotEnterInvalidEventStartTime1() {
-    runTest {
+    runTest(testDispatcher, testTimeout) {
       val startTimeString = "This time should not work"
       addEventViewModel.updateStartTime(startTimeString)
       assert(addEventViewModel.uiState.startTimeError) {
@@ -251,20 +255,20 @@ class AddEventsViewModelTest {
     }
   }
 
-  // Start time does not accept empty time
+  /** Start time does not accept empty time */
   @Test
   fun cannotEnterInvalidEventStartTime2() {
-    runTest {
+    runTest(testDispatcher, testTimeout) {
       val startTimeString = ""
       addEventViewModel.updateStartTime(startTimeString)
       assert(addEventViewModel.uiState.startTimeError) { "Empty start time should be wrong" }
     }
   }
 
-  // Start time does not accept inexistent time
+  /** Start time does not accept inexistent time */
   @Test
   fun cannotEnterInvalidEventStartTime3() {
-    runTest {
+    runTest(testDispatcher, testTimeout) {
       val startTimeString = "25:77"
       addEventViewModel.updateStartTime(startTimeString)
       assert(addEventViewModel.uiState.startTimeError) { "\'25:77\' should be wrong" }
@@ -272,10 +276,10 @@ class AddEventsViewModelTest {
   }
 
   /*----------------------------------End time tests--------------------------------------------*/
-  // End time accepts valid time
+  /** End time accepts valid time */
   @Test
   fun canEnterEventEndTime() {
-    runTest {
+    runTest(testDispatcher, testTimeout) {
       val endTimeString = "14:15"
       addEventViewModel.updateEndTime(endTimeString)
       assert(!addEventViewModel.uiState.endTimeError) { "\'14:15\' should not make an error" }
@@ -283,10 +287,10 @@ class AddEventsViewModelTest {
     }
   }
 
-  // End time does not accept words time
+  /** End time does not accept words time */
   @Test
   fun cannotEnterInvalidEventEndTime1() {
-    runTest {
+    runTest(testDispatcher, testTimeout) {
       val endTimeString = "This time should not work"
       addEventViewModel.updateEndTime(endTimeString)
       assert(addEventViewModel.uiState.endTimeError) {
@@ -295,20 +299,20 @@ class AddEventsViewModelTest {
     }
   }
 
-  // End time does not accept empty time
+  /** End time does not accept empty time */
   @Test
   fun cannotEnterInvalidEventEndTime2() {
-    runTest {
+    runTest(testDispatcher, testTimeout) {
       val endTimeString = ""
       addEventViewModel.updateEndTime(endTimeString)
       assert(addEventViewModel.uiState.endTimeError) { "Empty end time should be wrong" }
     }
   }
 
-  // End time does not accept inexistent time
+  /** End time does not accept inexistent time */
   @Test
   fun cannotEnterInvalidEventEndTime3() {
-    runTest {
+    runTest(testDispatcher, testTimeout) {
       val endTimeString = "25:77"
       addEventViewModel.updateEndTime(endTimeString)
       assert(addEventViewModel.uiState.endTimeError) { "\'25:77\' should be wrong" }
@@ -316,10 +320,10 @@ class AddEventsViewModelTest {
   }
 
   /*----------------------------------Participant tests-----------------------------------------*/
-  // Entering a participant updates string
+  /** Entering a participant updates string */
   @Test
   fun canEnterEventParticipant() {
-    runTest {
+    runTest(testDispatcher, testTimeout) {
       val participantString = "Participant"
       addEventViewModel.updateParticipant(participantString)
       assert(addEventViewModel.uiState.participant == participantString) {
@@ -328,10 +332,10 @@ class AddEventsViewModelTest {
     }
   }
 
-  // Searching for profile returns correct profiles
+  /** Searching for profile returns correct profiles */
   @Test
   fun canFindProfiles1() {
-    runTest {
+    runTest(testDispatcher, testTimeout) {
       val participantString = "Profile"
       addEventViewModel.updateParticipant(participantString)
       assert(participantString == addEventViewModel.uiState.participant) {
@@ -357,10 +361,10 @@ class AddEventsViewModelTest {
     }
   }
 
-  // Searching for inexistent profile returns no suggestions
+  /** Searching for inexistent profile returns no suggestions */
   @Test
   fun canFindProfiles2() {
-    runTest {
+    runTest(testDispatcher, testTimeout) {
       val participantString = "Not a profile"
       addEventViewModel.updateParticipant(participantString)
       assert(addEventViewModel.uiState.participant == participantString) {
@@ -377,10 +381,10 @@ class AddEventsViewModelTest {
     }
   }
 
-  // Can add a participant to an event
+  /** Can add a participant to an event */
   @Test
   fun canAddEventParticipant() {
-    runTest {
+    runTest(testDispatcher, testTimeout) {
       addEventViewModel.updateParticipant(profile1.name)
       assert(addEventViewModel.uiState.participant == profile1.name) {
         "\'Profile1\' should update the search string"
@@ -393,10 +397,10 @@ class AddEventsViewModelTest {
     }
   }
 
-  // Cannot add a participant that is already participating
+  /** Cannot add a participant that is already participating */
   @Test
   fun cannotAddParticipatingEventParticipant() {
-    runTest {
+    runTest(testDispatcher, testTimeout) {
       addEventViewModel.addParticipant(participantProfile)
 
       addEventViewModel.updateParticipant(participantProfile.name)
@@ -411,10 +415,10 @@ class AddEventsViewModelTest {
     }
   }
 
-  // Can remove a participant of an event
+  /** Can remove a participant of an event */
   @Test
   fun canRemoveEventParticipant() {
-    runTest {
+    runTest(testDispatcher, testTimeout) {
       addEventViewModel.addParticipant(participantProfile)
       addEventViewModel.updateParticipant(participantProfile.name)
       assert(addEventViewModel.uiState.participant == participantProfile.name) {
@@ -428,10 +432,10 @@ class AddEventsViewModelTest {
     }
   }
 
-  // Cannot remove a participant that is not participating
+  /** Cannot remove a participant that is not participating */
   @Test
   fun cannotRemoveUnparticipatingEventParticipant() {
-    runTest {
+    runTest(testDispatcher, testTimeout) {
       addEventViewModel.updateParticipant(profile1.name)
       assert(addEventViewModel.uiState.participant == profile1.name) {
         "\'Profile1\' should update the search string"
@@ -444,10 +448,10 @@ class AddEventsViewModelTest {
     }
   }
 
-  // The event owner cannot not be a participant to his own event
+  /** The event owner cannot not be a participant to his own event */
   @Test
   fun cannotRemoveEventOwner() {
-    runTest {
+    runTest(testDispatcher, testTimeout) {
       addEventViewModel.updateParticipant(ownerProfile.name)
       assert(addEventViewModel.uiState.participant == ownerProfile.name) {
         "\'Owner\' should update the search string"
@@ -459,10 +463,10 @@ class AddEventsViewModelTest {
   }
 
   /*---------------------------------------Saving tests-----------------------------------------*/
-  // Check that modifying the title and saving works
+  /** Check that modifying the title and saving works */
   @Test
   fun canSaveEvent1() {
-    runTest {
+    runTest(testDispatcher, testTimeout) {
       addEventViewModel.updateName(event1.title)
       addEventViewModel.updateDescription(event1.description)
       addEventViewModel.updateDate(SimpleDateFormat("dd/MM/yyyy").format(event1.date.toDate()))
@@ -479,9 +483,9 @@ class AddEventsViewModelTest {
 
   /*-------------------------------------Deleting tests-----------------------------------------*/
 
-  // This function fills the profile repository with the created profiles
+  /** This function fills the profile repository with the created profiles */
   fun fill_repositories() {
-    runTest {
+    runTest(testDispatcher, testTimeout) {
       profileRepository.addProfile(profile1)
       profileRepository.addProfile(profile2)
       profileRepository.addProfile(profile3)
