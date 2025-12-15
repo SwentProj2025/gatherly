@@ -290,8 +290,12 @@
     <string name="groups_info_members">Members</string>
     <string name="groups_info_loading">Loading group information…</string>
     <string name="groups_info_edit">Edit Group</string>
+    <string name="groups_info_leave">Leave Group</string>
     <string name="groups_info_admin">Admin</string>
     <string name="groups_profile_pic_tag">Profile Picture</string>
+    <string name="groups_dialog_title">Warning!</string>
+    <string name="groups_dialog_text">You are leaving a group, only an admin can add you back</string>
+    <string name="groups_dialog_confirm">Yes, leave</string>
     <string name="group_members">Group members</string>
     <string name="group_available_friends">Available friends</string>
     <string name="group_member_admin">Admin</string>
