@@ -158,5 +158,4 @@
     <dimen name="timer_padding">6.dp</dimen>
     <dimen name="timer_todo_height">60.dp</dimen>
     <dimen name="timer_bar_thickness">0.5.dp</dimen>
-    <dimen name="timer_time_font_size">25.sp</dimen>
 </resources>

@@ -60,6 +60,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
 import com.android.gatherly.model.focusSession.FocusSession
@@ -684,7 +685,7 @@ fun TimerTime(
   // Configuration needed to get the width, and ratio to use later and font size
   val configuration = LocalConfiguration.current
   val timeRatio = 1.0 / 4.0
-  val timeFontSize = dimensionResource(R.dimen.timer_time_font_size)
+  val timeFontSize = 25.sp
 
   val placeholderAlpha = LocalContext.current.resources.getFloat(R.dimen.alpha_placeholder)
 
