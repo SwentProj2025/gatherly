@@ -31,8 +31,10 @@ data class GroupInformationUIState(
     val group: Group = Group(),
     val memberProfiles: List<Profile> = emptyList(),
     val isAdmin: Boolean = false,
+    val isOwner: Boolean = false,
     val isLoading: Boolean = true,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val navigateToOverview: Boolean = false
 )
 
 /**
@@ -71,17 +73,31 @@ class GroupInformationViewModel(
 
         val isAdmin = group.adminIds.contains(authProvider().currentUser?.uid!!)
 
+        val isOwner = (group.creatorId == authProvider().currentUser?.uid!!)
+
         _uiState.value =
             _uiState.value.copy(
                 group = group,
                 memberProfiles = membersProfile,
                 isAdmin = isAdmin,
+                isOwner = isOwner,
                 isLoading = false)
       } catch (e: Exception) {
         _uiState.value =
             _uiState.value.copy(
                 isLoading = false, errorMessage = "Error loading the UI: ${e.message}")
       }
+    }
+  }
+
+  /**
+   * If the current user wants to leave the group, remove them, and navigate back to the overview
+   * screen
+   */
+  fun onLeaveGroup() {
+    viewModelScope.launch {
+      groupsRepository.removeMember(uiState.value.group.gid, authProvider().currentUser?.uid!!)
+      _uiState.value = _uiState.value.copy(navigateToOverview = true)
     }
   }
 

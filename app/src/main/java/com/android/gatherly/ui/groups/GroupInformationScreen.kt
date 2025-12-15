@@ -20,8 +20,11 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,11 +43,14 @@ import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Screen
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
+import com.android.gatherly.utils.GatherlyAlertDialog
+import com.android.gatherly.utils.GatherlyAlertDialogActions
 import com.android.gatherly.utils.profilePicturePainter
 
 object GroupInformationScreenTestTags {
   const val MEMBERS_LIST = "membersList"
   const val EDIT_BUTTON = "editButton"
+  const val LEAVE_BUTTON = "leaveButton"
   const val GROUP_NAME = "groupName"
   const val GROUP_DESCRIPTION = "groupDescription"
 
@@ -61,15 +67,22 @@ fun GroupInformationScreen(
 ) {
 
   val uiState by groupInformationViewModel.uiState.collectAsState()
+  val showDialog = remember { mutableStateOf(false) }
 
   LaunchedEffect(Unit) { groupInformationViewModel.loadUIState(groupId) }
+
+  LaunchedEffect(uiState.navigateToOverview) {
+    if (uiState.navigateToOverview) {
+      navigationActions?.navigateTo(Screen.OverviewGroupsScreen)
+    }
+  }
 
   Scaffold(
       topBar = {
         TopNavigationMenu_Goback(
             selectedTab = Tab.GroupInfo,
             modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
-            goBack = { navigationActions?.goBack() })
+            goBack = { navigationActions?.navigateTo(Screen.OverviewGroupsScreen) })
       },
       content = { padding ->
         Column(
@@ -111,31 +124,78 @@ fun GroupInformationScreen(
                     adminIds = uiState.group.adminIds,
                     modifier = Modifier.weight(1f))
 
-                if (uiState.isAdmin) {
-                  Button(
-                      onClick = {
-                        navigationActions?.navigateTo(Screen.EditGroup(uiState.group.gid))
-                      },
-                      modifier =
-                          Modifier.padding(
-                                  all = dimensionResource(R.dimen.add_group_button_vertical))
-                              .fillMaxWidth()
-                              .height(dimensionResource(R.dimen.homepage_focus_button_height))
-                              .testTag(GroupInformationScreenTestTags.EDIT_BUTTON),
-                      shape =
-                          RoundedCornerShape(
-                              dimensionResource(R.dimen.friends_item_rounded_corner_shape)),
-                      colors = buttonColors(containerColor = MaterialTheme.colorScheme.secondary)) {
-                        Text(
-                            text = stringResource(R.string.groups_info_edit),
-                            style = MaterialTheme.typography.bodyLarge,
-                            fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onPrimary)
-                      }
+                // Edit group
+                EditButton(uiState, navigationActions)
+
+                // Leave group
+                LeaveButton(uiState, showDialog)
+
+                // Leave group warning pop up
+                if (showDialog.value) {
+                  GatherlyAlertDialog(
+                      titleText = stringResource(R.string.groups_dialog_title),
+                      bodyText = stringResource(R.string.groups_dialog_text),
+                      dismissText = stringResource(R.string.cancel),
+                      confirmText = stringResource(R.string.groups_dialog_confirm),
+                      neutralEnabled = false,
+                      actions =
+                          GatherlyAlertDialogActions(
+                              onConfirm = {
+                                showDialog.value = false
+                                groupInformationViewModel.onLeaveGroup()
+                              },
+                              onDismiss = { showDialog.value = false }),
+                      isImportantWarning = true)
                 }
               }
             }
       })
+}
+
+/** Displays a "leave group" button if the user is not the owner */
+@Composable
+fun LeaveButton(uiState: GroupInformationUIState, showDialog: MutableState<Boolean>) {
+  if (!uiState.isOwner) {
+    // Leave group button
+    Button(
+        onClick = { showDialog.value = true },
+        modifier =
+            Modifier.padding(all = dimensionResource(R.dimen.add_group_button_vertical))
+                .fillMaxWidth()
+                .height(dimensionResource(R.dimen.homepage_focus_button_height))
+                .testTag(GroupInformationScreenTestTags.LEAVE_BUTTON),
+        shape = RoundedCornerShape(dimensionResource(R.dimen.friends_item_rounded_corner_shape)),
+        colors = buttonColors(containerColor = MaterialTheme.colorScheme.error)) {
+          Text(
+              text = stringResource(R.string.groups_info_leave),
+              style = MaterialTheme.typography.bodyLarge,
+              fontWeight = FontWeight.Medium,
+              color = MaterialTheme.colorScheme.onError)
+        }
+  }
+}
+
+/** Displays an "edit group" button if the user is an admin */
+@Composable
+fun EditButton(uiState: GroupInformationUIState, navigationActions: NavigationActions?) {
+  if (uiState.isAdmin) {
+    // Edit group button
+    Button(
+        onClick = { navigationActions?.navigateTo(Screen.EditGroup(uiState.group.gid)) },
+        modifier =
+            Modifier.padding(all = dimensionResource(R.dimen.add_group_button_vertical))
+                .fillMaxWidth()
+                .height(dimensionResource(R.dimen.homepage_focus_button_height))
+                .testTag(GroupInformationScreenTestTags.EDIT_BUTTON),
+        shape = RoundedCornerShape(dimensionResource(R.dimen.friends_item_rounded_corner_shape)),
+        colors = buttonColors(containerColor = MaterialTheme.colorScheme.secondary)) {
+          Text(
+              text = stringResource(R.string.groups_info_edit),
+              style = MaterialTheme.typography.bodyLarge,
+              fontWeight = FontWeight.Medium,
+              color = MaterialTheme.colorScheme.onPrimary)
+        }
+  }
 }
 
 @Composable

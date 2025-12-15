@@ -11,6 +11,10 @@ import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.Priority
+import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.math.sqrt
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 
@@ -66,3 +70,25 @@ fun FusedLocationProviderClient.locationFlow(context: Context) =
 
       awaitClose { removeLocationUpdates(callback) }
     }
+
+fun distance(
+    location1: com.android.gatherly.model.map.Location,
+    location2: com.android.gatherly.model.map.Location
+): Double {
+  val r = 6371.0
+
+  val lat1Rad = Math.toRadians(location1.latitude)
+  val lon1Rad = Math.toRadians(location1.longitude)
+  val lat2Rad = Math.toRadians(location2.latitude)
+  val lon2Rad = Math.toRadians(location2.longitude)
+
+  val dLat = lat2Rad - lat1Rad
+  val dLon = lon2Rad - lon1Rad
+
+  val a =
+      sin(dLat / 2) * sin(dLat / 2) + cos(lat1Rad) * cos(lat2Rad) * sin(dLon / 2) * sin(dLon / 2)
+
+  val c = 2 * atan2(sqrt(a), sqrt(1 - a))
+
+  return r * c
+}
