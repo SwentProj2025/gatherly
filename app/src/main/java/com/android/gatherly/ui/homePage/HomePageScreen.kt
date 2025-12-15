@@ -1,7 +1,5 @@
 package com.android.gatherly.ui.homePage
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -17,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -44,13 +41,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -59,7 +53,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
 import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.profile.Profile
-import com.android.gatherly.model.profile.ProfileStatus
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.ui.map.EventIcon
 import com.android.gatherly.ui.map.ToDoIcon
@@ -69,8 +62,8 @@ import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Screen
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_HomePage
+import com.android.gatherly.ui.profile.ProfilePictureWithStatus
 import com.android.gatherly.utils.MapCoordinator
-import com.android.gatherly.utils.profilePicturePainter
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
@@ -407,33 +400,6 @@ fun FilterIconButton(isTodo: Boolean, onClick: () -> Unit) {
       }
 }
 
-/**
- * Circular avatar for a friend profile.
- *
- * @param profilePicUrl url to the picture data
- */
-@Composable
-fun FriendAvatar(
-    modifier: Modifier = Modifier,
-    profilePicUrl: String? = null,
-    status: ProfileStatus,
-    statusTag: String
-) {
-  val size = dimensionResource(id = R.dimen.homepage_friend_profile_pic_size)
-  Box(modifier = modifier.size(size)) {
-    Image(
-        painter = profilePicturePainter(profilePicUrl),
-        contentDescription = stringResource(id = R.string.homepage_profile_image_description),
-        modifier = Modifier.fillMaxSize().clip(CircleShape),
-        contentScale = ContentScale.Crop)
-
-    StatusIndicator(
-        status = status,
-        modifier = Modifier.align(Alignment.BottomEnd).testTag(statusTag),
-        size = size * 0.25f)
-  }
-}
-
 /** Displays a bordered section with friend avatars and a label. The entire section is clickable. */
 @Composable
 fun FriendsSection(
@@ -574,28 +540,8 @@ fun FocusSection(modifier: Modifier = Modifier, timerString: String = "", onClic
  * @param friendUid The unique identifier of the friend.
  * @return The generated test tag for the friend's avatar.
  */
-fun getFriendAvatarTestTag(friendUid: String) =
+fun getFriendProfilePicTestTag(friendUid: String) =
     "${HomePageScreenTestTags.FRIEND_AVATAR_PREFIX}$friendUid"
-
-/**
- * Small colored status dot used to represent a user's presence state. (Green = Online, Red =
- * Offline, Blue = Focused)
- *
- * @param status The current [ProfileStatus] to display.
- * @param modifier Optional modifier for positioning.
- * @param size The diameter of the indicator.
- */
-@Composable
-fun StatusIndicator(status: ProfileStatus, modifier: Modifier = Modifier, size: Dp) {
-  val color =
-      when (status) {
-        ProfileStatus.ONLINE -> Color.Green
-        ProfileStatus.FOCUSED -> Color.Blue
-        ProfileStatus.OFFLINE -> Color.Red
-      }
-
-  Box(modifier = modifier.size(size).clip(CircleShape).background(color))
-}
 
 /**
  * Displays the empty state of the friends section.
@@ -636,11 +582,12 @@ private fun PopulatedFriendsView(friends: List<Profile>) {
     ) {
       items(friends.size) { index ->
         val friend = friends[index]
-        FriendAvatar(
-            profilePicUrl = friend.profilePicture,
-            modifier = Modifier.testTag(getFriendAvatarTestTag(friend.uid)),
+        ProfilePictureWithStatus(
+            profilePictureUrl = friend.profilePicture,
+            statusTestTag = getFriendStatusTestTag(friend.uid),
+            profilePictureTestTag = getFriendProfilePicTestTag(friend.uid),
             status = friend.status,
-            statusTag = getFriendStatusTestTag(friend.uid))
+            size = dimensionResource(id = R.dimen.homepage_friend_profile_pic_size))
       }
     }
     Text(

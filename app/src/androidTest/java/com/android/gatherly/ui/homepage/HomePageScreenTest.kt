@@ -22,7 +22,7 @@ import com.android.gatherly.ui.homePage.HomePageScreen
 import com.android.gatherly.ui.homePage.HomePageScreenActions
 import com.android.gatherly.ui.homePage.HomePageScreenTestTags
 import com.android.gatherly.ui.homePage.HomePageViewModel
-import com.android.gatherly.ui.homePage.getFriendAvatarTestTag
+import com.android.gatherly.ui.homePage.getFriendProfilePicTestTag
 import com.android.gatherly.ui.homePage.getFriendStatusTestTag
 import com.android.gatherly.ui.homePage.getTaskItemTestTag
 import com.android.gatherly.utils.MapCoordinator
@@ -233,7 +233,7 @@ class HomePageScreenTest {
     setContentWithGoogle()
     currentProfile.friendUids.forEach { uid ->
       composeRule
-          .onNodeWithTag(useUnmergedTree = true, testTag = getFriendAvatarTestTag(uid))
+          .onNodeWithTag(useUnmergedTree = true, testTag = getFriendProfilePicTestTag(uid))
           .assertIsDisplayed()
     }
   }
@@ -303,17 +303,17 @@ class HomePageScreenTest {
     composeRule.waitForIdle()
     // Check first friend is visible
     composeRule
-        .onNodeWithTag(getFriendAvatarTestTag("scroll_friend1"), useUnmergedTree = true)
+        .onNodeWithTag(getFriendProfilePicTestTag("scroll_friend1"), useUnmergedTree = true)
         .assertIsDisplayed()
 
     // Scroll LazyColumn to the last friend
     composeRule
         .onNodeWithTag(HomePageScreenTestTags.FRIENDS_LAZY_COLUMN, useUnmergedTree = true)
-        .performScrollToNode(hasTestTag(getFriendAvatarTestTag("scroll_friend5")))
+        .performScrollToNode(hasTestTag(getFriendProfilePicTestTag("scroll_friend5")))
 
     // Assert last friend is displayed
     composeRule
-        .onNodeWithTag(getFriendAvatarTestTag("scroll_friend5"), useUnmergedTree = true)
+        .onNodeWithTag(getFriendProfilePicTestTag("scroll_friend5"), useUnmergedTree = true)
         .assertIsDisplayed()
   }
 
