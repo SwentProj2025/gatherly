@@ -541,6 +541,21 @@ class TimerViewModelTest {
 
         advanceUntilIdle()
 
+        // Poll for the ONLINE status
+        withContext(Dispatchers.Default.limitedParallelism(1)) {
+          withTimeout(5000L) {
+            while (true) {
+              try {
+                verify(statusManagerMock, times(1)).setStatus(ProfileStatus.ONLINE)
+                break // Success!
+              } catch (e: Exception) {
+                delay(100) // Not there yet, wait and try again
+                advanceUntilIdle()
+              }
+            }
+          }
+        }
+
         verify(statusManagerMock, times(1)).setStatus(ProfileStatus.FOCUSED)
         verify(statusManagerMock, times(1)).setStatus(ProfileStatus.ONLINE)
       }
