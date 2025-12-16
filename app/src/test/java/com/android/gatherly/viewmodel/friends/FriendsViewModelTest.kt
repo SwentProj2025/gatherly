@@ -86,12 +86,13 @@ class FriendsViewModelTest {
 
   /** Verifies that the initial state contains the correct friends and non-friends lists. */
   @Test
-  fun testInitialStateShouldContainEachFriends() = runTest(testDispatcher, testTimeout) {
-    val state = viewModel.uiState.value
-    assertEquals(listOf("bob"), state.friends)
-    assertTrue(state.listNoFriends.contains("charlie"))
-    assertFalse(state.listNoFriends.contains(""))
-  }
+  fun testInitialStateShouldContainEachFriends() =
+      runTest(testDispatcher, testTimeout) {
+        val state = viewModel.uiState.value
+        assertEquals(listOf("bob"), state.friends)
+        assertTrue(state.listNoFriends.contains("charlie"))
+        assertFalse(state.listNoFriends.contains(""))
+      }
 
   /** Verifies that following a new friend updates the friends list correctly. */
   @Test
@@ -125,7 +126,6 @@ class FriendsViewModelTest {
       profileRepository.addProfile(userC)
       profileRepository.addProfile(anon)
     }
-
   }
 
   /** Verifies that refreshFriends catches exceptions and sets an error message. */

@@ -63,16 +63,16 @@ object FriendsViewModelTestsData {
           friendUids = emptyList(),
           profilePicture = "profileC.png")
 
-    val anon: Profile =
-        Profile(
-            uid = "",
-            username = "",
-            name = "",
-            focusSessionIds = emptyList(),
-            participatingEventIds = emptyList(),
-            groupIds = emptyList(),
-            friendUids = emptyList(),
-            profilePicture = "anon.png")
+  val anon: Profile =
+      Profile(
+          uid = "",
+          username = "",
+          name = "",
+          focusSessionIds = emptyList(),
+          participatingEventIds = emptyList(),
+          groupIds = emptyList(),
+          friendUids = emptyList(),
+          profilePicture = "anon.png")
   /**
    * Creates a mock ProfileRepository that throws an exception when getFriendsAndNonFriendsUsernames
    * is called. Used to test error handling in FriendsViewModel.
