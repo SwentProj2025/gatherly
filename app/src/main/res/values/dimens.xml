@@ -73,7 +73,7 @@
     <dimen name="homepage_friend_profile_pic_size">48.dp</dimen>
     <dimen name="homepage_friends_section_vertical_border_padding">12.dp</dimen>
     <dimen name="homepage_friends_section_border_width">2.dp</dimen>
-    <dimen name="homepage_section_spacing">20.dp</dimen>
+    <dimen name="homepage_section_spacing">16.dp</dimen>
     <dimen name="homepage_events_section_height">200.dp</dimen>
     <dimen name="homepage_minimap_width">280.dp</dimen>
     <dimen name="homepage_add_friends_icon_size">30.dp</dimen>

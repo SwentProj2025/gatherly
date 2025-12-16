@@ -45,7 +45,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
@@ -159,8 +158,6 @@ fun HomePageScreen(
   val uiState by homePageViewModel.uiState.collectAsState()
 
   val screenPadding = dimensionResource(id = R.dimen.padding_screen)
-  val verticalSpacing = dimensionResource(id = R.dimen.spacing_between_fields_medium)
-  val sectionSpacing = dimensionResource(id = R.dimen.homepage_section_spacing)
 
   Scaffold(
       topBar = {
@@ -176,16 +173,12 @@ fun HomePageScreen(
       },
       content = { paddingValues ->
         Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
-          Spacer(modifier = Modifier.height(verticalSpacing))
-
           SectionTitle(
               text = stringResource(id = R.string.homepage_upcoming_events_title),
               modifier =
                   Modifier.padding(horizontal = screenPadding)
                       .testTag(HomePageScreenTestTags.UPCOMING_EVENTS_TITLE)
                       .clickable { homePageScreenActions.onClickEventsTitle() })
-
-          Spacer(modifier = Modifier.height(sectionSpacing))
 
           EventsAndFriendsSection(
               todos = uiState.displayableTodos,
@@ -196,8 +189,6 @@ fun HomePageScreen(
               coordinator = coordinator,
               navigationActions = navigationActions)
 
-          Spacer(modifier = Modifier.height(verticalSpacing))
-
           SectionTitle(
               text = stringResource(id = R.string.homepage_upcoming_tasks_title),
               modifier =
@@ -205,15 +196,11 @@ fun HomePageScreen(
                       .testTag(HomePageScreenTestTags.UPCOMING_TASKS_TITLE)
                       .clickable { homePageScreenActions.onClickTodoTitle() })
 
-          Spacer(modifier = Modifier.height(sectionSpacing))
-
           TaskList(
               modifier = Modifier.weight(1f),
               todos = uiState.todos,
               onClickTodoTitle = homePageScreenActions.onClickTodoTitle,
               onClickTodo = homePageScreenActions.onClickTodo)
-
-          Spacer(modifier = Modifier.height(verticalSpacing))
 
           FocusSection(
               modifier = Modifier.padding(horizontal = screenPadding),
@@ -239,8 +226,9 @@ fun SectionTitle(text: String, modifier: Modifier = Modifier) {
   Text(
       text = text,
       color = MaterialTheme.colorScheme.onBackground,
-      fontSize = 20.sp,
-      modifier = modifier)
+      style = MaterialTheme.typography.titleLarge,
+      modifier =
+          modifier.padding(vertical = dimensionResource(id = R.dimen.homepage_section_spacing)))
 }
 
 /**
@@ -552,13 +540,9 @@ fun TaskItem(modifier: Modifier = Modifier, text: String, onClick: () -> Unit) {
  */
 @Composable
 fun FocusSection(modifier: Modifier = Modifier, timerString: String = "", onClick: () -> Unit) {
-  Text(
-      text = timerString,
-      color = MaterialTheme.colorScheme.onBackground,
-      style = MaterialTheme.typography.bodyLarge,
-      modifier = modifier.testTag(HomePageScreenTestTags.FOCUS_TIMER_TEXT))
 
-  Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.homepage_section_spacing)))
+  SectionTitle(
+      text = timerString, modifier = modifier.testTag(HomePageScreenTestTags.FOCUS_TIMER_TEXT))
 
   Button(
       onClick = onClick,
