@@ -134,15 +134,14 @@ data class HomePageScreenActions(
 )
 
 /**
- * Main Home Page screen composable.
+ * Root composable for the Home Page screen.
  *
- * Displays:
- * - Upcoming events and tasks
- * - A mini-map with markers
- * - Friends section
- * - Focus timer section
+ * Displays upcoming events, tasks, a mini map, friends section, and the focus timer section.
  *
- * Integrates data from [HomePageViewModel] and provides test tags for UI tests.
+ * @param homePageViewModel ViewModel providing UI state and updates.
+ * @param navigationActions Optional navigation callbacks.
+ * @param homePageScreenActions User interaction callbacks for this screen.
+ * @param coordinator Coordinator used for map centering requests.
  */
 @Composable
 fun HomePageScreen(
@@ -228,7 +227,12 @@ fun HomePageScreen(
       })
 }
 
-/** Simple reusable section title used throughout the Home Page. */
+/**
+ * Displays a section title with consistent typography and color.
+ *
+ * @param text Title text to display.
+ * @param modifier Optional modifier for layout and interactions.
+ */
 @Composable
 fun SectionTitle(text: String, modifier: Modifier = Modifier) {
 
@@ -240,9 +244,15 @@ fun SectionTitle(text: String, modifier: Modifier = Modifier) {
 }
 
 /**
- * Displays the top half of the screen:
- * - Mini map of nearby todos/events
- * - Friends section
+ * Displays the top section containing the mini map and friends section.
+ *
+ * @param todos List of todos displayed on the mini map.
+ * @param events List of events displayed on the mini map.
+ * @param onClickFriendsSection Callback when the friends section is clicked.
+ * @param isAnon Whether the current user is anonymous.
+ * @param friends List of user friends.
+ * @param coordinator Coordinator used for map interactions.
+ * @param navigationActions Optional navigation callbacks.
  */
 @Composable
 fun EventsAndFriendsSection(
@@ -282,8 +292,15 @@ fun EventsAndFriendsSection(
 }
 
 /**
- * Displays a small, zoomable Google Map showing markers for todos and events. Defaults to the EPFL
- * campus if no locations are available.
+ * Displays a small Google Map with markers for todos or events.
+ *
+ * Defaults to a predefined location if no items have a location.
+ *
+ * @param todos Todos to display when in todo mode.
+ * @param events Events to display when in event mode.
+ * @param modifier Modifier controlling layout and size.
+ * @param coordinator Coordinator used to request map centering.
+ * @param navigationActions Optional navigation callbacks.
  */
 @Composable
 fun MiniMap(
@@ -400,7 +417,15 @@ fun FilterIconButton(isTodo: Boolean, onClick: () -> Unit) {
       }
 }
 
-/** Displays a bordered section with friend avatars and a label. The entire section is clickable. */
+/**
+ * Displays a bordered, clickable friends section.
+ *
+ * Shows either an empty state or a list of friend avatars.
+ *
+ * @param modifier Optional modifier for layout and styling.
+ * @param onClickFriendsSection Callback invoked when the section is clicked.
+ * @param friends List of friends to display.
+ */
 @Composable
 fun FriendsSection(
     modifier: Modifier = Modifier,
@@ -440,8 +465,14 @@ fun FriendsSection(
 }
 
 /**
- * Displays a vertical list of task items. Each [TaskItem] has a test tag for easier identification
- * in tests.
+ * Displays the list of upcoming tasks.
+ *
+ * Shows an empty-state message when no tasks are available.
+ *
+ * @param modifier Modifier controlling layout and available space.
+ * @param todos List of todos to display.
+ * @param onClickTodoTitle Callback invoked from the empty state.
+ * @param onClickTodo Callback invoked when a task is clicked.
  */
 @Composable
 fun TaskList(
@@ -477,7 +508,13 @@ fun TaskList(
   }
 }
 
-/** A single clickable task item with a description and arrow icon. */
+/**
+ * Displays a single task item with its description and navigation arrow.
+ *
+ * @param modifier Optional modifier for layout and testing.
+ * @param text Task description text.
+ * @param onClick Callback invoked when the item is clicked.
+ */
 @Composable
 fun TaskItem(modifier: Modifier = Modifier, text: String, onClick: () -> Unit) {
   Surface(modifier = modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.background) {
@@ -506,7 +543,13 @@ fun TaskItem(modifier: Modifier = Modifier, text: String, onClick: () -> Unit) {
   }
 }
 
-/** Displays the focus timer text and button used for starting focus sessions. */
+/**
+ * Displays the focus timer and action button.
+ *
+ * @param modifier Modifier applied to the timer text and button.
+ * @param timerString Formatted timer value.
+ * @param onClick Callback invoked when the focus button is pressed.
+ */
 @Composable
 fun FocusSection(modifier: Modifier = Modifier, timerString: String = "", onClick: () -> Unit) {
   Text(
