@@ -13,7 +13,7 @@ import com.android.gatherly.model.map.FakeNominatimLocationRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
-import com.android.gatherly.ui.events.EditEventsViewModel
+import com.android.gatherly.ui.events.EditEventViewModel
 import com.google.firebase.Timestamp
 import junit.framework.TestCase.assertNotNull
 import kotlinx.coroutines.Dispatchers
@@ -36,7 +36,7 @@ import org.junit.runner.RunWith
 class EditEventsViewModelTest {
 
   // declare viewModel and repositories
-  private lateinit var editEventsViewModel: EditEventsViewModel
+  private lateinit var editEventViewModel: EditEventViewModel
   private lateinit var eventsRepository: EventsRepository
   private lateinit var profileRepository: ProfileRepository
   private lateinit var fakeNominatimClient: FakeNominatimLocationRepository
@@ -59,8 +59,8 @@ class EditEventsViewModelTest {
     // fill the profile and events repositories with profiles and event
     fill_repositories()
 
-    editEventsViewModel =
-        EditEventsViewModel(
+    editEventViewModel =
+        EditEventViewModel(
             profileRepository = profileRepository,
             eventsRepository = eventsRepository,
             groupsRepository = groupsRepository,
@@ -68,7 +68,7 @@ class EditEventsViewModelTest {
 
     // set the event to edit
     runTest {
-      editEventsViewModel.setEventValues(event.id)
+      editEventViewModel.setEventValues(event.id)
       advanceUntilIdle()
     }
   }
@@ -166,9 +166,9 @@ class EditEventsViewModelTest {
   fun canEnterEventTitle() {
     runTest {
       val titleString = "This is a title!"
-      editEventsViewModel.updateName(titleString)
-      assert(!editEventsViewModel.uiState.nameError) { "Entering title should not make an error" }
-      assert(editEventsViewModel.uiState.name == titleString) { "Entering title should work" }
+      editEventViewModel.updateName(titleString)
+      assert(!editEventViewModel.uiState.nameError) { "Entering title should not make an error" }
+      assert(editEventViewModel.uiState.name == titleString) { "Entering title should work" }
     }
   }
 
@@ -177,8 +177,8 @@ class EditEventsViewModelTest {
   fun cannotEnterEmptyEventTitle() {
     runTest {
       val blankString = " "
-      editEventsViewModel.updateName(blankString)
-      assert(editEventsViewModel.uiState.nameError) { "Blank title should be wrong" }
+      editEventViewModel.updateName(blankString)
+      assert(editEventViewModel.uiState.nameError) { "Blank title should be wrong" }
     }
   }
 
@@ -188,11 +188,11 @@ class EditEventsViewModelTest {
   fun canEnterEventDescription() {
     runTest {
       val descriptionString = "This is the description of this very very cool event"
-      editEventsViewModel.updateDescription(descriptionString)
-      assert(!editEventsViewModel.uiState.descriptionError) {
+      editEventViewModel.updateDescription(descriptionString)
+      assert(!editEventViewModel.uiState.descriptionError) {
         "Entering description should not make an error"
       }
-      assert(editEventsViewModel.uiState.description == descriptionString) {
+      assert(editEventViewModel.uiState.description == descriptionString) {
         "Entering description should work"
       }
     }
@@ -203,8 +203,8 @@ class EditEventsViewModelTest {
   fun cannotEnterEmptyEventDescription() {
     runTest {
       val blankString = " "
-      editEventsViewModel.updateDescription(blankString)
-      assert(editEventsViewModel.uiState.descriptionError) { "Blank description should be wrong" }
+      editEventViewModel.updateDescription(blankString)
+      assert(editEventViewModel.uiState.descriptionError) { "Blank description should be wrong" }
     }
   }
 
@@ -214,9 +214,9 @@ class EditEventsViewModelTest {
   fun canEnterEventDueDate() {
     runTest {
       val dateString = "13/12/2026"
-      editEventsViewModel.updateDate(dateString)
-      assert(!editEventsViewModel.uiState.dateError) { "\'13/12/2026\' should not make an error" }
-      assert(editEventsViewModel.uiState.date == dateString) { "\'13/12/2026\' should work" }
+      editEventViewModel.updateDate(dateString)
+      assert(!editEventViewModel.uiState.dateError) { "\'13/12/2026\' should not make an error" }
+      assert(editEventViewModel.uiState.date == dateString) { "\'13/12/2026\' should work" }
     }
   }
 
@@ -225,8 +225,8 @@ class EditEventsViewModelTest {
   fun cannotEnterInvalidEventDueDate1() {
     runTest {
       val dateString = "This date should not work"
-      editEventsViewModel.updateDate(dateString)
-      assert(editEventsViewModel.uiState.dateError) {
+      editEventViewModel.updateDate(dateString)
+      assert(editEventViewModel.uiState.dateError) {
         "\'This date should not work\' should be wrong"
       }
     }
@@ -237,8 +237,8 @@ class EditEventsViewModelTest {
   fun cannotEnterInvalidEventDueDate2() {
     runTest {
       val dateString = ""
-      editEventsViewModel.updateDate(dateString)
-      assert(editEventsViewModel.uiState.dateError) { "Empty date should be wrong" }
+      editEventViewModel.updateDate(dateString)
+      assert(editEventViewModel.uiState.dateError) { "Empty date should be wrong" }
     }
   }
 
@@ -247,8 +247,8 @@ class EditEventsViewModelTest {
   fun cannotEnterInvalidEventDueDate3() {
     runTest {
       val dateString = "33/12/2025"
-      editEventsViewModel.updateDate(dateString)
-      assert(editEventsViewModel.uiState.dateError) { "\'33/12/2025\' should be wrong" }
+      editEventViewModel.updateDate(dateString)
+      assert(editEventViewModel.uiState.dateError) { "\'33/12/2025\' should be wrong" }
     }
   }
 
@@ -258,9 +258,9 @@ class EditEventsViewModelTest {
   fun canEnterEventStartTime() {
     runTest {
       val startTimeString = "13:15"
-      editEventsViewModel.updateStartTime(startTimeString)
-      assert(!editEventsViewModel.uiState.startTimeError) { "\'13:15\' should work" }
-      assert(editEventsViewModel.uiState.startTime == startTimeString) { "\'13:15\' should work" }
+      editEventViewModel.updateStartTime(startTimeString)
+      assert(!editEventViewModel.uiState.startTimeError) { "\'13:15\' should work" }
+      assert(editEventViewModel.uiState.startTime == startTimeString) { "\'13:15\' should work" }
     }
   }
 
@@ -269,8 +269,8 @@ class EditEventsViewModelTest {
   fun cannotEnterInvalidEventStartTime1() {
     runTest {
       val startTimeString = "This time should not work"
-      editEventsViewModel.updateStartTime(startTimeString)
-      assert(editEventsViewModel.uiState.startTimeError) {
+      editEventViewModel.updateStartTime(startTimeString)
+      assert(editEventViewModel.uiState.startTimeError) {
         "\'This time should not work\' should be wrong"
       }
     }
@@ -281,8 +281,8 @@ class EditEventsViewModelTest {
   fun cannotEnterInvalidEventStartTime2() {
     runTest {
       val startTimeString = ""
-      editEventsViewModel.updateStartTime(startTimeString)
-      assert(editEventsViewModel.uiState.startTimeError) { "Empty start time should be wrong" }
+      editEventViewModel.updateStartTime(startTimeString)
+      assert(editEventViewModel.uiState.startTimeError) { "Empty start time should be wrong" }
     }
   }
 
@@ -291,8 +291,8 @@ class EditEventsViewModelTest {
   fun cannotEnterInvalidEventStartTime3() {
     runTest {
       val startTimeString = "25:77"
-      editEventsViewModel.updateStartTime(startTimeString)
-      assert(editEventsViewModel.uiState.startTimeError) { "\'25:77\' should be wrong" }
+      editEventViewModel.updateStartTime(startTimeString)
+      assert(editEventViewModel.uiState.startTimeError) { "\'25:77\' should be wrong" }
     }
   }
 
@@ -303,8 +303,8 @@ class EditEventsViewModelTest {
   fun cannotEnterInvalidEventEndTime1() {
     runTest {
       val endTimeString = "This time should not work"
-      editEventsViewModel.updateEndTime(endTimeString)
-      assert(editEventsViewModel.uiState.endTimeError) {
+      editEventViewModel.updateEndTime(endTimeString)
+      assert(editEventViewModel.uiState.endTimeError) {
         "\'This time should not work\' should be wrong"
       }
     }
@@ -315,8 +315,8 @@ class EditEventsViewModelTest {
   fun cannotEnterInvalidEventEndTime2() {
     runTest {
       val endTimeString = ""
-      editEventsViewModel.updateEndTime(endTimeString)
-      assert(editEventsViewModel.uiState.endTimeError) { "Empty end time should be wrong" }
+      editEventViewModel.updateEndTime(endTimeString)
+      assert(editEventViewModel.uiState.endTimeError) { "Empty end time should be wrong" }
     }
   }
 
@@ -325,8 +325,8 @@ class EditEventsViewModelTest {
   fun cannotEnterInvalidEventEndTime3() {
     runTest {
       val endTimeString = "25:77"
-      editEventsViewModel.updateEndTime(endTimeString)
-      assert(editEventsViewModel.uiState.endTimeError) { "\'25:77\' should be wrong" }
+      editEventViewModel.updateEndTime(endTimeString)
+      assert(editEventViewModel.uiState.endTimeError) { "\'25:77\' should be wrong" }
     }
   }
 
@@ -336,8 +336,8 @@ class EditEventsViewModelTest {
   fun canEnterEventParticipant() {
     runTest {
       val participantString = "Participant"
-      editEventsViewModel.updateParticipant(participantString)
-      assert(editEventsViewModel.uiState.participant == participantString) {
+      editEventViewModel.updateParticipant(participantString)
+      assert(editEventViewModel.uiState.participant == participantString) {
         "\'Participant\' should update the search string"
       }
     }
@@ -348,25 +348,25 @@ class EditEventsViewModelTest {
   fun canFindProfiles1() {
     runTest {
       val participantString = "Profile"
-      editEventsViewModel.updateParticipant(participantString)
-      assert(participantString == editEventsViewModel.uiState.participant) {
+      editEventViewModel.updateParticipant(participantString)
+      assert(participantString == editEventViewModel.uiState.participant) {
         "\'Profile\' should update the search string"
       }
 
-      editEventsViewModel.searchProfileByString(participantString)
+      editEventViewModel.searchProfileByString(participantString)
       // wait for search coroutine to complete
       advanceUntilIdle()
 
-      assert(editEventsViewModel.uiState.suggestedProfiles.size == 3) {
+      assert(editEventViewModel.uiState.suggestedProfiles.size == 3) {
         "\'Profile\' should find 3 profiles"
       }
-      assert(editEventsViewModel.uiState.suggestedProfiles.contains(profile1)) {
+      assert(editEventViewModel.uiState.suggestedProfiles.contains(profile1)) {
         "\'Profile\' should find Profile1"
       }
-      assert(editEventsViewModel.uiState.suggestedProfiles.contains(profile2)) {
+      assert(editEventViewModel.uiState.suggestedProfiles.contains(profile2)) {
         "\'Profile\' should find Profile2"
       }
-      assert(editEventsViewModel.uiState.suggestedProfiles.contains(profile3)) {
+      assert(editEventViewModel.uiState.suggestedProfiles.contains(profile3)) {
         "\'Profile\' should find Profile3"
       }
     }
@@ -377,16 +377,16 @@ class EditEventsViewModelTest {
   fun canFindProfiles2() {
     runTest {
       val participantString = "Not a profile"
-      editEventsViewModel.updateParticipant(participantString)
-      assert(editEventsViewModel.uiState.participant == participantString) {
+      editEventViewModel.updateParticipant(participantString)
+      assert(editEventViewModel.uiState.participant == participantString) {
         "\'Not a profile\' should update the search string"
       }
 
-      editEventsViewModel.searchProfileByString(participantString)
+      editEventViewModel.searchProfileByString(participantString)
       // wait for search coroutine to complete
       advanceUntilIdle()
 
-      assert(editEventsViewModel.uiState.suggestedProfiles.isEmpty()) {
+      assert(editEventViewModel.uiState.suggestedProfiles.isEmpty()) {
         "\'Not a profile\' should find no profiles"
       }
     }
@@ -396,12 +396,12 @@ class EditEventsViewModelTest {
   @Test
   fun canAddEventParticipant() {
     runTest {
-      editEventsViewModel.updateParticipant(profile1.name)
-      editEventsViewModel.addParticipant(profile1)
-      assert(editEventsViewModel.uiState.participant == profile1.name) {
+      editEventViewModel.updateParticipant(profile1.name)
+      editEventViewModel.addParticipant(profile1)
+      assert(editEventViewModel.uiState.participant == profile1.name) {
         "\'Profile1\' should update the search string"
       }
-      assert(editEventsViewModel.uiState.participants.contains(profile1)) {
+      assert(editEventViewModel.uiState.participants.contains(profile1)) {
         "\'Profile1\' should be in participants"
       }
     }
@@ -411,12 +411,12 @@ class EditEventsViewModelTest {
   @Test
   fun cannotAddParticipatingEventParticipant() {
     runTest {
-      editEventsViewModel.updateParticipant(participantProfile.name)
-      editEventsViewModel.addParticipant(participantProfile)
-      assert(editEventsViewModel.uiState.participant == participantProfile.name) {
+      editEventViewModel.updateParticipant(participantProfile.name)
+      editEventViewModel.addParticipant(participantProfile)
+      assert(editEventViewModel.uiState.participant == participantProfile.name) {
         "\'Participant\' should update the search string"
       }
-      assert(editEventsViewModel.uiState.displayToast) {
+      assert(editEventViewModel.uiState.displayToast) {
         "Adding \'Participant\' should display toast"
       }
     }
@@ -426,12 +426,12 @@ class EditEventsViewModelTest {
   @Test
   fun canRemoveEventParticipant() {
     runTest {
-      editEventsViewModel.updateParticipant(participantProfile.name)
-      editEventsViewModel.deleteParticipant(participantProfile.uid)
-      assert(editEventsViewModel.uiState.participant == participantProfile.name) {
+      editEventViewModel.updateParticipant(participantProfile.name)
+      editEventViewModel.deleteParticipant(participantProfile.uid)
+      assert(editEventViewModel.uiState.participant == participantProfile.name) {
         "\'Participant\' should update the search string"
       }
-      assert(!editEventsViewModel.uiState.participants.contains(participantProfile)) {
+      assert(!editEventViewModel.uiState.participants.contains(participantProfile)) {
         "Removing \'Participant\' should work"
       }
     }
@@ -441,12 +441,12 @@ class EditEventsViewModelTest {
   @Test
   fun cannotRemoveUnparticipatingEventParticipant() {
     runTest {
-      editEventsViewModel.updateParticipant(profile1.name)
-      editEventsViewModel.deleteParticipant(profile1.uid)
-      assert(editEventsViewModel.uiState.participant == profile1.name) {
+      editEventViewModel.updateParticipant(profile1.name)
+      editEventViewModel.deleteParticipant(profile1.uid)
+      assert(editEventViewModel.uiState.participant == profile1.name) {
         "\'Profile1\' should update the search string"
       }
-      assert(editEventsViewModel.uiState.displayToast) {
+      assert(editEventViewModel.uiState.displayToast) {
         "Removing \'Profile1\' should display toast"
       }
     }
@@ -456,12 +456,12 @@ class EditEventsViewModelTest {
   @Test
   fun cannotRemoveEventOwner() {
     runTest {
-      editEventsViewModel.updateParticipant(ownerProfile.name)
-      editEventsViewModel.addParticipant(ownerProfile)
-      assert(editEventsViewModel.uiState.participant == ownerProfile.name) {
+      editEventViewModel.updateParticipant(ownerProfile.name)
+      editEventViewModel.addParticipant(ownerProfile)
+      assert(editEventViewModel.uiState.participant == ownerProfile.name) {
         "\'Owner\' should update the search string"
       }
-      assert(editEventsViewModel.uiState.displayToast) { "Removing \'Owner\' should display toast" }
+      assert(editEventViewModel.uiState.displayToast) { "Removing \'Owner\' should display toast" }
     }
   }
 
@@ -470,10 +470,10 @@ class EditEventsViewModelTest {
   @Test
   fun canSaveEvent1() {
     runTest {
-      editEventsViewModel.setEventValues(event.id)
+      editEventViewModel.setEventValues(event.id)
       val modifiedEvent = event.copy(title = "Something else")
-      editEventsViewModel.updateName(modifiedEvent.title)
-      editEventsViewModel.saveEvent()
+      editEventViewModel.updateName(modifiedEvent.title)
+      editEventViewModel.saveEvent()
       advanceUntilIdle()
 
       assert(eventsRepository.getEvent(event.id).title == modifiedEvent.title) {
@@ -486,8 +486,8 @@ class EditEventsViewModelTest {
   @Test
   fun canSaveEvent2() {
     runTest {
-      editEventsViewModel.setEventValues(event.id)
-      editEventsViewModel.saveEvent()
+      editEventViewModel.setEventValues(event.id)
+      editEventViewModel.saveEvent()
       advanceUntilIdle()
 
       assert(eventsRepository.getEvent(event.id).creatorName == ownerProfile.name) {
@@ -502,10 +502,10 @@ class EditEventsViewModelTest {
   @Test
   fun canDeleteEvent() {
     runTest {
-      editEventsViewModel.deleteEvent()
+      editEventViewModel.deleteEvent()
       // wait
       advanceUntilIdle()
-      assert(editEventsViewModel.uiState.backToOverview) {
+      assert(editEventViewModel.uiState.backToOverview) {
         "Successfully deleting should go back to overview events"
       }
     }
@@ -514,13 +514,13 @@ class EditEventsViewModelTest {
   @Test
   fun provideFactory_CreatesViewModelWithDependencies() {
     val factory =
-        EditEventsViewModel.provideFactory(
+        EditEventViewModel.provideFactory(
             profileRepository = profileRepository,
             eventsRepository = eventsRepository,
             nominatimClient = fakeNominatimClient,
             groupsRepository = groupsRepository)
 
-    val viewModel = factory.create(EditEventsViewModel::class.java)
+    val viewModel = factory.create(EditEventViewModel::class.java)
     assertNotNull(viewModel)
   }
 
@@ -574,16 +574,16 @@ class EditEventsViewModelTest {
       val updatedOwner = ownerProfile.copy(groupIds = listOf("group1", "group2"))
       profileRepository.updateProfile(updatedOwner)
 
-      editEventsViewModel.setEventValues(event.id)
+      editEventViewModel.setEventValues(event.id)
       advanceUntilIdle()
 
       // Search for groups starting with "Sp"
-      editEventsViewModel.updateGroup("Sp")
-      editEventsViewModel.searchGroupsNameByString("Sp")
+      editEventViewModel.updateGroup("Sp")
+      editEventViewModel.searchGroupsNameByString("Sp")
       advanceUntilIdle()
 
-      assertEquals(1, editEventsViewModel.uiState.suggestedGroups.size)
-      assertEquals("Sports Group", editEventsViewModel.uiState.suggestedGroups[0].name)
+      assertEquals(1, editEventViewModel.uiState.suggestedGroups.size)
+      assertEquals("Sports Group", editEventViewModel.uiState.suggestedGroups[0].name)
     }
   }
 
@@ -591,9 +591,9 @@ class EditEventsViewModelTest {
   fun updateGroup_updatesGroupString() {
     runTest {
       val groupName = "My Group"
-      editEventsViewModel.updateGroup(groupName)
+      editEventViewModel.updateGroup(groupName)
 
-      assertEquals(groupName, editEventsViewModel.uiState.group)
+      assertEquals(groupName, editEventViewModel.uiState.group)
     }
   }
 
@@ -601,21 +601,21 @@ class EditEventsViewModelTest {
   fun updatePrivateEventToPublicEvent_changesState() {
     runTest {
       // First set event to private
-      editEventsViewModel.setEventValues(event.id)
+      editEventViewModel.setEventValues(event.id)
       advanceUntilIdle()
 
       // Change state to something else
       val privateEvent = event.copy(state = EventState.PRIVATE_FRIENDS)
       eventsRepository.editEvent(event.id, privateEvent)
-      editEventsViewModel.setEventValues(event.id)
+      editEventViewModel.setEventValues(event.id)
       advanceUntilIdle()
 
-      assertNotEquals(EventState.PUBLIC, editEventsViewModel.uiState.state)
+      assertNotEquals(EventState.PUBLIC, editEventViewModel.uiState.state)
 
       // Call method
-      editEventsViewModel.updatePrivateEventToPublicEvent()
+      editEventViewModel.updatePrivateEventToPublicEvent()
 
-      assertEquals(EventState.PUBLIC, editEventsViewModel.uiState.state)
+      assertEquals(EventState.PUBLIC, editEventViewModel.uiState.state)
     }
   }
 
@@ -627,15 +627,15 @@ class EditEventsViewModelTest {
       profileRepository.addFriend(friend1.username, ownerProfile.uid)
       profileRepository.addFriend(friend2.username, ownerProfile.uid)
 
-      editEventsViewModel.setEventValues(event.id)
+      editEventViewModel.setEventValues(event.id)
       advanceUntilIdle()
 
       // Search for friends starting with "Al"
-      editEventsViewModel.searchFriendsProfileByString("Al")
+      editEventViewModel.searchFriendsProfileByString("Al")
       advanceUntilIdle()
 
-      assertEquals(1, editEventsViewModel.uiState.suggestedFriendsProfile.size)
-      assertEquals("Alice", editEventsViewModel.uiState.suggestedFriendsProfile[0].name)
+      assertEquals(1, editEventViewModel.uiState.suggestedFriendsProfile.size)
+      assertEquals("Alice", editEventViewModel.uiState.suggestedFriendsProfile[0].name)
     }
   }
 }
