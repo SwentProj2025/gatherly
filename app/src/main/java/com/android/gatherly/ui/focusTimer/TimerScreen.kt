@@ -576,11 +576,12 @@ fun TimerNotStarted(uiState: TimerState, timerViewModel: TimerViewModel, corner:
               FocusTimerScreenTestTags.RESET_BUTTON)
         }
 
+    val padding = dimensionResource(R.dimen.timer_padding)
+    val todoHeight = dimensionResource(R.dimen.timer_todo_height)
+    val horizontalThickness = dimensionResource(R.dimen.timer_bar_thickness)
+
     // Todos to link, in a lazy column to enable scrolling
     LazyColumn(modifier = Modifier.fillMaxSize().weight(todosWeight)) {
-      val padding = dimensionResource(R.dimen.timer_padding)
-      val todoHeight = dimensionResource(R.dimen.timer_todo_height)
-      val horizontalThickness = dimensionResource(R.dimen.timer_bar_thickness)
 
       // Title text for linking todos
       item {
