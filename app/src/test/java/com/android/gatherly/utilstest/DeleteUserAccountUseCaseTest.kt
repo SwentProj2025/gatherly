@@ -1,10 +1,11 @@
-package com.android.gatherly.utils
+package com.android.gatherly.utilstest
 
 import com.android.gatherly.model.event.EventsLocalRepository
 import com.android.gatherly.model.focusSession.FocusSessionsLocalRepository
 import com.android.gatherly.model.group.GroupsLocalRepository
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.todo.ToDosLocalRepository
+import com.android.gatherly.utils.DeleteUserAccountUseCase
 import com.android.gatherly.utilstest.DeleteUserAccountUseCaseTestData.CURRENT_USER_ID
 import com.android.gatherly.utilstest.DeleteUserAccountUseCaseTestData.FRIEND_1_ID
 import com.android.gatherly.utilstest.DeleteUserAccountUseCaseTestData.currentUserProfile
@@ -26,7 +27,8 @@ import org.junit.Before
 import org.junit.Test
 
 /**
- * Unit tests for [DeleteUserAccountUseCase] using local in-memory repositories.
+ * Unit tests for [com.android.gatherly.utils.DeleteUserAccountUseCase] using local in-memory
+ * repositories.
  *
  * These tests verify that all user-owned data is deleted and that shared data is correctly updated
  * when a user deletes their account.
