@@ -44,44 +44,10 @@ import org.junit.Test
  */
 class HomePageScreenTest {
 
-  val friend1 =
-      Profile(
-          uid = "homePageTests_friend1",
-          name = "Alice",
-          focusSessionIds = emptyList(),
-          participatingEventIds = emptyList(),
-          groupIds = emptyList(),
-          friendUids = emptyList(),
-          status = ProfileStatus.ONLINE)
-  val friend2 =
-      Profile(
-          uid = "homePageTests_friend2",
-          name = "Bob",
-          focusSessionIds = emptyList(),
-          participatingEventIds = emptyList(),
-          groupIds = emptyList(),
-          friendUids = emptyList(),
-          status = ProfileStatus.FOCUSED)
-
-  val todo1 =
-      ToDo(
-          uid = "todo_1",
-          name = "Plan party",
-          description = "Buy decorations and invite friends",
-          dueDate = Timestamp.now(),
-          dueTime = null,
-          location = null,
-          status = ToDoStatus.ONGOING,
-          ownerId = "user1")
-
-  private var currentProfile: Profile =
-      Profile(
-          uid = "0+",
-          name = "Current",
-          focusSessionIds = emptyList(),
-          participatingEventIds = emptyList(),
-          groupIds = emptyList(),
-          friendUids = listOf(friend1.uid, friend2.uid))
+  val friend1 = HomePageScreenTestData.friend1
+  val friend2 = HomePageScreenTestData.friend2
+  val todo1 = HomePageScreenTestData.todo1
+  val currentProfile = HomePageScreenTestData.currentProfile
 
   @get:Rule val composeRule = createComposeRule()
 
@@ -107,6 +73,12 @@ class HomePageScreenTest {
     }
   }
 
+  /**
+   * Sets the HomePageScreen content with a mocked Firebase authentication context.
+   *
+   * Initializes a [HomePageViewModel] backed by local repositories and injects a mocked
+   * authenticated user before rendering the screen.
+   */
   private fun setContentWithGoogle() {
     // Mock Firebase Auth
     mockitoUtils = MockitoUtils()
