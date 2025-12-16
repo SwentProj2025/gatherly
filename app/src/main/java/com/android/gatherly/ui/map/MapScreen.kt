@@ -5,6 +5,8 @@ import android.content.Context
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,6 +17,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.Card
@@ -34,10 +37,12 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -391,35 +396,71 @@ fun MapScreen(
 
 // -------------------------------- Event icons --------------------------------
 /**
- * Collapsed Event marker icon
+ * Pin-style Event marker icon with rounded pill shape and triangular pointer
  *
  * @param event The Event data to display in the marker.
+ * @param scale Scaling factor based on zoom level to prevent oversized markers when zoomed out.
  */
 @Composable
-fun EventIcon(event: Event) {
-  Card(
-      colors =
-          CardDefaults.cardColors(
-              containerColor = MaterialTheme.colorScheme.tertiary,
-              contentColor = MaterialTheme.colorScheme.onTertiary),
-      modifier =
-          Modifier.size(Dimensions.markerWidth, Dimensions.markerHeightCollapsed)
-              .testTag(MapScreenTestTags.EVENT_CARD),
-  ) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(Dimensions.cardPadding),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-      Column(modifier = Modifier.weight(Dimensions.weight)) {
-        Text(
-            modifier = Modifier.testTag(MapScreenTestTags.EVENT_TITLE),
-            text = event.title.uppercase(),
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onTertiary,
-            fontWeight = FontWeight.Medium)
+fun EventIcon(event: Event, scale: Float = 1f) {
+  Column(
+      horizontalAlignment = Alignment.CenterHorizontally,
+      modifier = Modifier.testTag(MapScreenTestTags.EVENT_CARD)) {
+        // Main pill-shaped card
+        Card(
+            border =
+                BorderStroke(2.dp * scale, MaterialTheme.colorScheme.onTertiary.copy(alpha = 0.5f)),
+            shape = RoundedCornerShape(12.dp),
+            colors =
+                CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.tertiary,
+                    contentColor = MaterialTheme.colorScheme.onTertiary),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            modifier = Modifier.size(width = 180.dp * scale, height = 50.dp * scale)) {
+              Column(
+                  modifier = Modifier.padding(horizontal = 16.dp * scale, vertical = 12.dp * scale),
+                  horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = event.title.uppercase(),
+                        style =
+                            MaterialTheme.typography.bodyLarge.copy(
+                                fontSize = MaterialTheme.typography.bodyLarge.fontSize * scale),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        color = MaterialTheme.colorScheme.onTertiary,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.fillMaxWidth().testTag(MapScreenTestTags.EVENT_TITLE))
+                  }
+            }
+
+        // Triangle pointer at the bottom
+        // Extract colors before Canvas to avoid composable context issues
+        val borderColor = MaterialTheme.colorScheme.onTertiary.copy(alpha = 0.5f)
+        val fillColor = MaterialTheme.colorScheme.tertiary
+
+        Canvas(modifier = Modifier.size(width = 24.dp * scale, height = 14.dp * scale)) {
+          // Border triangle
+          val borderPath =
+              Path().apply {
+                moveTo(size.width / 2, size.height) // bottom point
+                lineTo(0f, 0f) // top left
+                lineTo(size.width, 0f) // top right
+                close()
+              }
+          drawPath(borderPath, color = borderColor)
+
+          // Fill triangle (slightly smaller to show border)
+          val fillPath =
+              Path().apply {
+                val inset = 2.dp.toPx()
+                moveTo(size.width / 2, size.height - inset) // bottom point
+                lineTo(inset, 0f) // top left
+                lineTo(size.width - inset, 0f) // top right
+                close()
+              }
+          drawPath(fillPath, color = fillColor)
+        }
       }
-    }
-  }
 }
 
 /**
@@ -493,35 +534,72 @@ fun EventSheet(event: Event, onGoToEvent: () -> Unit, onClose: () -> Unit) {
 /** -------------------------------- [ToDo] icons -------------------------------- * */
 
 /**
- * Collapsed [ToDo] marker icon
+ * Pin-style ToDo marker icon with rounded pill shape and triangular pointer
  *
- * @param toDo The [ToDo] data to display in the marker.
+ * @param toDo The ToDo data to display in the marker.
+ * @param scale Scaling factor based on zoom level to prevent oversized markers when zoomed out.
  */
 @Composable
-fun ToDoIcon(toDo: ToDo) {
-  Card(
-      colors =
-          CardDefaults.cardColors(
-              containerColor = MaterialTheme.colorScheme.secondary,
-              contentColor = MaterialTheme.colorScheme.onSecondary),
-      modifier =
-          Modifier.size(Dimensions.markerWidth, Dimensions.markerHeightCollapsed)
-              .testTag(MapScreenTestTags.TODO_CARD),
-  ) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(Dimensions.cardPadding),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-      Column(modifier = Modifier.weight(Dimensions.weight)) {
-        Text(
-            modifier = Modifier.testTag(MapScreenTestTags.TODO_TITLE),
-            text = toDo.name.uppercase(),
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSecondary,
-            fontWeight = FontWeight.Medium)
+fun ToDoIcon(toDo: ToDo, scale: Float = 1f) {
+  Column(
+      horizontalAlignment = Alignment.CenterHorizontally,
+      modifier = Modifier.testTag(MapScreenTestTags.TODO_CARD)) {
+        // Main pill-shaped card
+        Card(
+            border =
+                BorderStroke(
+                    2.dp * scale, MaterialTheme.colorScheme.onSecondary.copy(alpha = 0.5f)),
+            shape = RoundedCornerShape(12.dp),
+            colors =
+                CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.secondary,
+                    contentColor = MaterialTheme.colorScheme.onSecondary),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            modifier = Modifier.size(width = 180.dp * scale, height = 50.dp * scale)) {
+              Column(
+                  modifier = Modifier.padding(horizontal = 16.dp * scale, vertical = 12.dp * scale),
+                  horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = toDo.name.uppercase(),
+                        style =
+                            MaterialTheme.typography.bodyLarge.copy(
+                                fontSize = MaterialTheme.typography.bodyLarge.fontSize * scale),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        color = MaterialTheme.colorScheme.onSecondary,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.fillMaxWidth().testTag(MapScreenTestTags.TODO_TITLE))
+                  }
+            }
+
+        // Triangle pointer at the bottom
+        // Extract colors before Canvas to avoid composable context issues
+        val borderColor = MaterialTheme.colorScheme.onSecondary.copy(alpha = 0.5f)
+        val fillColor = MaterialTheme.colorScheme.secondary
+
+        Canvas(modifier = Modifier.size(width = 24.dp * scale, height = 14.dp * scale)) {
+          // Border triangle
+          val borderPath =
+              Path().apply {
+                moveTo(size.width / 2, size.height) // bottom point
+                lineTo(0f, 0f) // top left
+                lineTo(size.width, 0f) // top right
+                close()
+              }
+          drawPath(borderPath, color = borderColor)
+
+          // Fill triangle (slightly smaller to show border)
+          val fillPath =
+              Path().apply {
+                val inset = 2.dp.toPx()
+                moveTo(size.width / 2, size.height - inset) // bottom point
+                lineTo(inset, 0f) // top left
+                lineTo(size.width - inset, 0f) // top right
+                close()
+              }
+          drawPath(fillPath, color = fillColor)
+        }
       }
-    }
-  }
 }
 
 /**
