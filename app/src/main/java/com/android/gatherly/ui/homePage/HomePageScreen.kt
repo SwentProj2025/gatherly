@@ -204,7 +204,6 @@ fun HomePageScreen(
 
           FocusSection(
               modifier = Modifier.padding(horizontal = screenPadding),
-              timerString = uiState.timerString,
               onClick = homePageScreenActions.onClickFocusButton)
 
           Spacer(
@@ -535,14 +534,14 @@ fun TaskItem(modifier: Modifier = Modifier, text: String, onClick: () -> Unit) {
  * Displays the focus timer and action button.
  *
  * @param modifier Modifier applied to the timer text and button.
- * @param timerString Formatted timer value.
  * @param onClick Callback invoked when the focus button is pressed.
  */
 @Composable
-fun FocusSection(modifier: Modifier = Modifier, timerString: String = "", onClick: () -> Unit) {
+fun FocusSection(modifier: Modifier = Modifier, onClick: () -> Unit) {
 
   SectionTitle(
-      text = timerString, modifier = modifier.testTag(HomePageScreenTestTags.FOCUS_TIMER_TEXT))
+      text = stringResource(id = R.string.homepage_focus_section_title),
+      modifier = modifier.testTag(HomePageScreenTestTags.FOCUS_TIMER_TEXT))
 
   Button(
       onClick = onClick,
