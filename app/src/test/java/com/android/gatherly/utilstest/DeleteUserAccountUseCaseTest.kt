@@ -23,9 +23,6 @@ import org.junit.Test
  */
 class DeleteUserAccountUseCaseTest {
 
-  private val userId = "userA"
-  private val otherUserId = "userB"
-
   private lateinit var profileRepo: ProfileLocalRepository
   private lateinit var groupsRepo: GroupsLocalRepository
   private lateinit var eventsRepo: EventsLocalRepository
