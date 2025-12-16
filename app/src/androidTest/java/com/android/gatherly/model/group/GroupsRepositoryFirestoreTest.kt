@@ -173,16 +173,38 @@ class GroupsRepositoryFirestoreTest : FirestoreGroupsGatherlyTest() {
       }
 
   @Test
-  fun deleteGroup_throws_security_exception_when_not_admin() =
+  fun deleteGroup_throws_security_exception_when_not_creator() =
       runTest(timeout = 120.seconds) {
         val testedGroup =
-            group3.copy(memberIds = listOf(user2Id, user3Id), adminIds = listOf(user2Id))
+            group3.copy(
+                memberIds = listOf(user2Id, user3Id), adminIds = listOf(user2Id) // user2 is admin
+                )
+
+        // user1 is creator (default signed-in user)
         repository.addGroup(testedGroup)
 
-        // Sign in as user4 (not an admin)
-        signInWithToken(user4Token)
+        // Sign in as admin but NOT creator
+        signInWithToken(user2Token)
 
         assertFailsWith<SecurityException> { repository.deleteGroup(testedGroup.gid) }
+      }
+
+  @Test
+  fun deleteGroup_allows_creator_even_with_multiple_admins() =
+      runTest(timeout = 120.seconds) {
+        val testedGroup =
+            group2.copy(
+                memberIds = listOf(user1Id, user2Id),
+                adminIds = listOf(user1Id, user2Id) // multiple admins
+                )
+
+        // user1 is creator
+        repository.addGroup(testedGroup)
+
+        // user1 deletes
+        repository.deleteGroup(testedGroup.gid)
+
+        assertTrue(repository.getAllGroups().isEmpty())
       }
 
   @Test
