@@ -74,7 +74,7 @@ class GroupsRepositoryFirestore(private val db: FirebaseFirestore) : GroupsRepos
 
   override suspend fun deleteGroup(groupId: String) {
     val existing = getGroup(groupId)
-    if (currentUserId() !in existing.adminIds) {
+    if (currentUserId() != existing.creatorId) {
       throw SecurityException("Only admins can delete this group")
     }
     collection.document(groupId).delete().await()
