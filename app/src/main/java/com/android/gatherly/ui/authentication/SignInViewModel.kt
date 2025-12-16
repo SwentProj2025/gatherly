@@ -128,6 +128,7 @@ class SignInViewModel(
         val result = credentialManager.getCredential(request = request, context = context)
 
         authenticateFirebaseWithGoogle(result.credential)
+        uiState = uiState.copy(isLoading = false)
       } catch (e: NoCredentialException) {
         uiState = uiState.copy(isLoading = false, errorMessage = "No Google credentials")
         Log.e("Google authentication", e.message.orEmpty())
@@ -148,8 +149,7 @@ class SignInViewModel(
         profileRepository.initProfileIfMissing(uid, "")
         profileRepository.updateStatus(uid, ProfileStatus.ONLINE)
         handlePostSignInNav()
-
-        uiState = uiState.copy(signedIn = true)
+        uiState = uiState.copy(signedIn = true, isLoading = false)
       } catch (e: Exception) {
         uiState = uiState.copy(isLoading = false, errorMessage = "Failed to log in")
         Log.e("SignInViewModel", "Anonymous sign-in failed", e)

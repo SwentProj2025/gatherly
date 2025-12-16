@@ -17,6 +17,12 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import com.android.gatherly.R
 
+/**
+ * A composable that shows a loading animation with a message.
+ *
+ * @param loadingMessage The message to display below the loading animation.
+ * @param innerPadding The padding values to apply to the Box containing the loading animation.
+ */
 @Composable
 fun LoadingAnimation(loadingMessage: String, innerPadding: PaddingValues) {
   Box(
@@ -35,6 +41,7 @@ fun LoadingAnimation(loadingMessage: String, innerPadding: PaddingValues) {
       }
 }
 
+/** Test tags for the LoadingAnimation composable */
 object LoadingAnimationTestTags {
   const val LOADING = "circularAnimationLoading"
   const val LOADING_TEXT = "textMessageLoading"
