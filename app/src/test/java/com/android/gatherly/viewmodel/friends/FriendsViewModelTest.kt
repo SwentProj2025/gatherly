@@ -14,6 +14,7 @@ import com.android.gatherly.viewmodel.friends.FriendsViewModelTestsData.USER_B_I
 import com.android.gatherly.viewmodel.friends.FriendsViewModelTestsData.USER_B_USERNAME
 import com.android.gatherly.viewmodel.friends.FriendsViewModelTestsData.USER_C_ID
 import com.android.gatherly.viewmodel.friends.FriendsViewModelTestsData.USER_C_USERNAME
+import com.android.gatherly.viewmodel.friends.FriendsViewModelTestsData.anon
 import com.android.gatherly.viewmodel.friends.FriendsViewModelTestsData.createErrorThrowingProfileRepository
 import com.android.gatherly.viewmodel.friends.FriendsViewModelTestsData.userA
 import com.android.gatherly.viewmodel.friends.FriendsViewModelTestsData.userB
@@ -85,12 +86,12 @@ class FriendsViewModelTest {
 
   /** Verifies that the initial state contains the correct friends and non-friends lists. */
   @Test
-  fun testInitialStateShouldContainEachFriends() =
-      runTest(testDispatcher, testTimeout) {
-        val state = viewModel.uiState.value
-        assertEquals(listOf(USER_B_USERNAME), state.friends)
-        assertTrue(state.listNoFriends.contains(USER_C_USERNAME))
-      }
+  fun testInitialStateShouldContainEachFriends() = runTest(testDispatcher, testTimeout) {
+    val state = viewModel.uiState.value
+    assertEquals(listOf("bob"), state.friends)
+    assertTrue(state.listNoFriends.contains("charlie"))
+    assertFalse(state.listNoFriends.contains(""))
+  }
 
   /** Verifies that following a new friend updates the friends list correctly. */
   @Test
@@ -122,7 +123,9 @@ class FriendsViewModelTest {
       profileRepository.addProfile(userA)
       profileRepository.addProfile(userB)
       profileRepository.addProfile(userC)
+      profileRepository.addProfile(anon)
     }
+
   }
 
   /** Verifies that refreshFriends catches exceptions and sets an error message. */

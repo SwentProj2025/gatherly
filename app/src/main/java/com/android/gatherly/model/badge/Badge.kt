@@ -3,7 +3,15 @@ package com.android.gatherly.model.badge
 import androidx.annotation.DrawableRes
 import com.android.gatherly.R
 
-/** Represents a single [Badge] item within the app. */
+/**
+ * Represents a single [Badge] item within the app.
+ *
+ * @param id The identifier of the badge
+ * @param title The displayable title of the badge
+ * @param description The description to display with badges obtained
+ * @param rank The rank of the badge according to the number of times they did an action
+ * @param type The action the user has to do in order to get this badge
+ */
 enum class Badge(
     val id: String,
     val title: String,

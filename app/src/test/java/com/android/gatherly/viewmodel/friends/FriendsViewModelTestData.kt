@@ -17,6 +17,7 @@ import com.android.gatherly.model.profile.UserStatusSource
  * - Profile fixtures representing different friend relationships:
  *     - [userA] and [userB]: Mutual friends
  *     - [userC]: User with no friends
+ *     - [anon]: Anonymous user profile
  * - [createErrorThrowingProfileRepository]: Factory function for mock repository that throws
  *   exceptions on getFriendsAndNonFriendsUsernames to test error handling
  */
@@ -62,6 +63,16 @@ object FriendsViewModelTestsData {
           friendUids = emptyList(),
           profilePicture = "profileC.png")
 
+    val anon: Profile =
+        Profile(
+            uid = "",
+            username = "",
+            name = "",
+            focusSessionIds = emptyList(),
+            participatingEventIds = emptyList(),
+            groupIds = emptyList(),
+            friendUids = emptyList(),
+            profilePicture = "anon.png")
   /**
    * Creates a mock ProfileRepository that throws an exception when getFriendsAndNonFriendsUsernames
    * is called. Used to test error handling in FriendsViewModel.

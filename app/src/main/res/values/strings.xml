@@ -138,6 +138,8 @@
     <string name="events_date_sort_button_text">Date sorting</string>
     <string name="events_alphabetic_sort_button_text">Alphabetical sorting</string>
     <string name="events_proximity_sort_button_text">Proximity sorting</string>
+    <string name="events_proximity_message_location_permission">Location permission needed</string>
+    <string name="events_no_location_permission_message">Calculating distance…</string>
     <string name="events_edit_private_to_public_label">Make the event public</string>
     <string name="events_confirm_text_private_to_public_text">Make it public</string>
     <string name="events_warning_to_public_event_body_text">This action is unreversible, the event will be open to everyone</string>
