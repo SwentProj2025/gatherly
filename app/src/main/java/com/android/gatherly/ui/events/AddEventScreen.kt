@@ -59,6 +59,8 @@ import com.android.gatherly.utils.ParticipantsUiState
 import com.android.gatherly.utils.TimeInputField
 import kotlinx.coroutines.delay
 
+
+/** Test tags for the AddEventScreen composable, used to identify UI elements during testing. */
 object AddEventScreenTestTags {
   const val LAZY_LIST = "LAZY_LIST"
   const val INPUT_NAME = "EVENT_NAME"
@@ -73,17 +75,15 @@ object AddEventScreenTestTags {
   const val INPUT_PARTICIPANT = "EVENT_PARTICIPANT_SEARCH"
   const val PARTICIPANT_MENU = "PARTICIPANT_MENU"
   const val LOCATION_MENU = "LOCATION_MENU"
-
   const val SWITCH_PUBLIC_PRIVATE_EVENT = "EVENT_SWITCH_PUBLIC_PRIVATE"
-
   const val BUTTON_PRIVATE_FRIENDS_EVENT = "EVENT_BUTTON_PRIVATE_FRIENDS"
-
   const val BUTTON_PRIVATE_GROUP_EVENT = "EVENT_BUTTON_PRIVATE_GROUP"
 }
 
 /**
- * Screen for adding an existing Event.
+ * Screen for creating an Event.
  *
+ * @param addEventViewModel the ViewModel to use for this screen.
  * @param onSave called after a successful save or deletion and navigation intent.
  * @param goBack called when back arrow is pressed.
  */
