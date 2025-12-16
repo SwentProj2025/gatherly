@@ -16,50 +16,53 @@ import org.junit.Rule
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
+/** Tests the Group Overview display */
 class GroupsOverviewScreenTest {
   @get:Rule val composeTestRule = createComposeRule()
   private lateinit var groupsRepository: GroupsRepository
   private lateinit var profileRepository: ProfileRepository
   private lateinit var groupsOverviewViewModel: GroupsOverviewViewModel
 
-  val TEST_USER_ID = "testUser"
-  val OTHER_USER_ID = "otherUser"
-  val FRIEND_USER_ID = "friendUser"
+  val testUserId = "testUser"
+  val otherUserId = "otherUser"
+  val friendUserId = "friendUser"
 
   val userGroup1 =
       Group(
           gid = "group1",
-          creatorId = TEST_USER_ID,
+          creatorId = testUserId,
           name = "Study Group",
           description = "CS students study group",
-          memberIds = listOf(TEST_USER_ID, FRIEND_USER_ID),
-          adminIds = listOf(TEST_USER_ID))
+          memberIds = listOf(testUserId, friendUserId),
+          adminIds = listOf(testUserId))
 
   val userGroup2 =
       Group(
           gid = "group2",
-          creatorId = OTHER_USER_ID,
+          creatorId = otherUserId,
           name = "Running Club",
           description = "Weekly running meetups",
-          memberIds = listOf(TEST_USER_ID, OTHER_USER_ID, FRIEND_USER_ID),
-          adminIds = listOf(OTHER_USER_ID, TEST_USER_ID))
+          memberIds = listOf(testUserId, otherUserId, friendUserId),
+          adminIds = listOf(otherUserId, testUserId))
 
   val testProfilePic = "testProfilePic"
   val otherProfilePic = "otherProfilePic"
   val friendProfilePic = "friendProfilePic"
 
-  val testUser = Profile(uid = TEST_USER_ID, profilePicture = testProfilePic)
+  val testUser = Profile(uid = testUserId, profilePicture = testProfilePic)
 
-  val otherUser = Profile(uid = OTHER_USER_ID, profilePicture = otherProfilePic)
+  val otherUser = Profile(uid = otherUserId, profilePicture = otherProfilePic)
 
-  val friendUser = Profile(uid = FRIEND_USER_ID, profilePicture = friendProfilePic)
+  val friendUser = Profile(uid = friendUserId, profilePicture = friendProfilePic)
 
+  /** Sets repositories to local implementations */
   @Before
   fun setUp() {
     groupsRepository = GroupsLocalRepository()
     profileRepository = ProfileLocalRepository()
   }
 
+  /** Sets the content of the repositories by adding groups */
   fun setContentGroups() = runBlocking {
     profileRepository.addProfile(testUser)
     profileRepository.addProfile(friendUser)
@@ -76,6 +79,7 @@ class GroupsOverviewScreenTest {
     }
   }
 
+  /** Sets the content of the repositories without adding any groups */
   fun setContentNoGroups() = runBlocking {
     profileRepository.addProfile(testUser)
     profileRepository.addProfile(friendUser)
@@ -90,6 +94,7 @@ class GroupsOverviewScreenTest {
     }
   }
 
+  /** Checks that multiple groups are correctly displayed when they exist */
   @Test
   fun checkGroupsAreDisplayed() {
     setContentGroups()
@@ -104,6 +109,7 @@ class GroupsOverviewScreenTest {
         .assertIsDisplayed()
   }
 
+  /** Checks that when the user isn't part of any groups, an empty message is displayed */
   @Test
   fun checkNoGroupsDisplaysMessage() {
     setContentNoGroups()
