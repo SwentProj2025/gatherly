@@ -399,6 +399,31 @@ class GroupsRepositoryFirestoreTest : FirestoreGroupsGatherlyTest() {
       }
 
   @Test
+  fun removeMember_throws_when_trying_to_remove_creator() =
+      runTest(timeout = 120.seconds) {
+        val testedGroup =
+            group2.copy(
+                creatorId = user1Id,
+                memberIds = listOf(user1Id, user2Id),
+                adminIds = listOf(user1Id, user2Id) // multiple admins
+                )
+
+        // user1 is creator
+        repository.addGroup(testedGroup)
+
+        // Sign in as another admin
+        signInWithToken(user2Token)
+
+        // Attempt to remove the creator
+        assertFailsWith<IllegalStateException> { repository.removeMember(testedGroup.gid, user1Id) }
+
+        // Ensure creator is still present
+        val retrieved = repository.getGroup(testedGroup.gid)
+        assertTrue(retrieved.memberIds.contains(user1Id))
+        assertTrue(retrieved.adminIds.contains(user1Id))
+      }
+
+  @Test
   fun getNewId_works_and_returns_unique_values() {
     val id1 = repository.getNewId()
     val id2 = repository.getNewId()
