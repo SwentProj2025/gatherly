@@ -109,11 +109,23 @@ class FriendsViewModelTest {
           friendUids = emptyList(),
           profilePicture = "profileC.png")
 
+  val anon: Profile =
+      Profile(
+          uid = "",
+          username = "",
+          name = "",
+          focusSessionIds = emptyList(),
+          participatingEventIds = emptyList(),
+          groupIds = emptyList(),
+          friendUids = emptyList(),
+          profilePicture = "anon.png")
+
   @Test
   fun testInitialStateShouldContainEachFriends() = runTest {
     val state = viewModel.uiState.value
     assertEquals(listOf("bob"), state.friends)
     assertTrue(state.listNoFriends.contains("charlie"))
+    assertFalse(state.listNoFriends.contains(""))
   }
 
   @Test
@@ -142,6 +154,7 @@ class FriendsViewModelTest {
       profileRepository.addProfile(userA)
       profileRepository.addProfile(userB)
       profileRepository.addProfile(userC)
+      profileRepository.addProfile(anon)
       advanceUntilIdle()
     }
   }

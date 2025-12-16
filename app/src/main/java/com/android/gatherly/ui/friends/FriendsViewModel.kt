@@ -92,7 +92,9 @@ class FriendsViewModel(
           pointsRepository = pointsRepository,
           userId = currentUserId)
       val friendsData = repository.getFriendsAndNonFriendsUsernames(currentUserId)
-      val allUsernames = friendsData.friendUsernames + friendsData.nonFriendUsernames
+      // Anonymous users are automatically assigned an empty username
+      val nonFriendSignedInUsers = friendsData.nonFriendUsernames.filterNot { it.isEmpty() }
+      val allUsernames = friendsData.friendUsernames + nonFriendSignedInUsers
       val profiles =
           allUsernames
               .mapNotNull { username -> repository.getProfileByUsername(username) }
@@ -109,7 +111,7 @@ class FriendsViewModel(
       _uiState.value =
           _uiState.value.copy(
               friends = friendsData.friendUsernames,
-              listNoFriends = friendsData.nonFriendUsernames,
+              listNoFriends = nonFriendSignedInUsers,
               pendingSentUsernames = pendingSentUsernames,
               profiles = profiles,
               errorMsg = null,
