@@ -93,6 +93,11 @@ class GroupsRepositoryFirestore(private val db: FirebaseFirestore) : GroupsRepos
     val existing = getGroup(groupId)
     val currentUser = currentUserId()
 
+    // Prevent creator from being removed from the group
+    if (userId == existing.creatorId) {
+      throw IllegalStateException("User cannot be removed from a group he created")
+    }
+
     // Allow self-removal (leaving the group) OR admin removing someone
     if (currentUser != userId && currentUser !in existing.adminIds) {
       throw SecurityException("Only admins can remove other members from this group")
