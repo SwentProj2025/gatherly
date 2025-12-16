@@ -23,6 +23,7 @@ import kotlinx.coroutines.test.runTest
  */
 class NotificationsTestHelper(private val composeTestRule: ComposeContentTestRule) {
 
+    /* --------------- ENUMS AND DATA HELPER CLASSES ---------------  */
   /**
    * Enum specifying which screen should be rendered during test setup.
    * - [NOTIFICATIONS_SCREEN] renders NotificationsScreen
