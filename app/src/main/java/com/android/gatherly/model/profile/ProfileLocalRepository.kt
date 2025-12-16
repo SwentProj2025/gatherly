@@ -11,6 +11,10 @@ import com.android.gatherly.model.friends.Friends
  *
  * Used for local testing or offline mode. Only implements the methods actually needed in the
  * current app logic.
+ *
+ * @property profiles Mutable list that holds all profiles in memory.
+ * @property shouldFailRegisterUsername boolean that represent failure when registering a username.
+ * @throws NoSuchElementException if attempting to update or delete a profile that does not exist.
  */
 class ProfileLocalRepository : ProfileRepository {
 
@@ -18,14 +22,20 @@ class ProfileLocalRepository : ProfileRepository {
 
   var shouldFailRegisterUsername = false
 
+  // ---- ADD / UPDATE / DELETE PART ----
+
   override suspend fun addProfile(profile: Profile) {
     if (!profiles.any { it.uid == profile.uid }) {
       profiles += profile
     }
   }
 
-  override suspend fun getProfileByUid(uid: String): Profile? {
-    return profiles.find { it.uid == uid }
+  override suspend fun initProfileIfMissing(uid: String, defaultPhotoUrl: String): Boolean {
+    if (profiles.none { it.uid == uid }) {
+      addProfile(Profile(uid = uid, profilePicture = defaultPhotoUrl))
+      return true
+    }
+    return false
   }
 
   override suspend fun updateProfile(profile: Profile) {
@@ -41,18 +51,39 @@ class ProfileLocalRepository : ProfileRepository {
     profiles.removeAll { it.uid == uid }
   }
 
+  override suspend fun deleteUserProfile(uid: String) {
+    profiles.removeIf { it.uid == uid }
+  }
+
+  // ---- CHECK PART ----
+
   override suspend fun isUidRegistered(uid: String): Boolean {
     return profiles.any { it.uid == uid }
   }
+
+  override suspend fun isUsernameAvailable(username: String): Boolean {
+    return profiles.none { it.username == username }
+  }
+
+  // ---- RETRIEVE PART ----
+
+  override suspend fun getProfileByUid(uid: String): Profile? {
+    return profiles.find { it.uid == uid }
+  }
+
+  override suspend fun getProfileByUsername(username: String): Profile? =
+      profiles.find { it.username == username }
+
+  // ---- SEARCH PART ----
 
   override suspend fun searchProfilesByNamePrefix(prefix: String): List<Profile> {
     return profiles.filter { it.name.contains(prefix, ignoreCase = true) }
   }
 
-  // --- No-op or unused methods below ---
-  override suspend fun isUsernameAvailable(username: String): Boolean {
-    return profiles.none { it.username == username }
-  }
+  override suspend fun searchProfilesByUsernamePrefix(prefix: String, limit: Int): List<Profile> =
+      profiles.filter { it.username.startsWith(prefix, ignoreCase = true) }.take(limit)
+
+  // ---- USERNAME GESTION PART ----
 
   override suspend fun registerUsername(uid: String, username: String): Boolean {
     if (shouldFailRegisterUsername) return false
@@ -78,6 +109,8 @@ class ProfileLocalRepository : ProfileRepository {
     return true
   }
 
+  // ---- PROFILE PICTURE GESTION PART ----
+
   override suspend fun updateProfilePic(uid: String, uri: Uri): String {
     val fakeUrl = "https://local.test.storage/$uid.jpg"
     val index = profiles.indexOfFirst { it.uid == uid }
@@ -89,20 +122,6 @@ class ProfileLocalRepository : ProfileRepository {
       profiles[index] = updated
     }
     return fakeUrl
-  }
-
-  override suspend fun getProfileByUsername(username: String): Profile? =
-      profiles.find { it.username == username }
-
-  override suspend fun searchProfilesByUsernamePrefix(prefix: String, limit: Int): List<Profile> =
-      profiles.filter { it.username.startsWith(prefix, ignoreCase = true) }.take(limit)
-
-  override suspend fun initProfileIfMissing(uid: String, defaultPhotoUrl: String): Boolean {
-    if (profiles.none { it.uid == uid }) {
-      addProfile(Profile(uid = uid, profilePicture = defaultPhotoUrl))
-      return true
-    }
-    return false
   }
 
   // ---- FRIENDS GESTION PART ----
@@ -117,12 +136,6 @@ class ProfileLocalRepository : ProfileRepository {
 
     return Friends(friendUsernames = friendUsernames, nonFriendUsernames = nonFriendUsernames)
   }
-
-  override suspend fun deleteUserProfile(uid: String) {
-    profiles.removeIf { it.uid == uid }
-  }
-
-  // ---- FRIENDS GESTION PART ----
 
   override suspend fun getListNoFriends(currentUserId: String): List<String> {
     val currentProfile = getProfileByUid(currentUserId) ?: return emptyList()
@@ -177,6 +190,8 @@ class ProfileLocalRepository : ProfileRepository {
       profiles[index] = existing.copy(status = status, userStatusSource = source)
     }
   }
+
+  // ---- EVENT GESTION PART ----
 
   override suspend fun createEvent(eventId: String, currentUserId: String) {
     val currentProfile = getProfileByUid(currentUserId) ?: return
@@ -235,7 +250,6 @@ class ProfileLocalRepository : ProfileRepository {
     updateProfile(profile.copy(badgeIds = currentBadgesSet.toList()))
   }
 
-  // ---- COUNTERS + BADGES (LOCAL) ----
   override suspend fun incrementBadge(uid: String, type: BadgeType): String? {
     val profile =
         getProfileByUid(uid) ?: throw NoSuchElementException("Profile not found for uid=$uid")
@@ -254,6 +268,8 @@ class ProfileLocalRepository : ProfileRepository {
 
     return addBadge
   }
+
+  // ---- FOCUS POINTS GESTION PART ----
 
   override suspend fun updateFocusPoints(uid: String, points: Double, addToLeaderboard: Boolean) {
     var profile = getProfileByUid(uid) ?: throw IllegalArgumentException("Profile doesn't exist")
