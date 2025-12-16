@@ -1,5 +1,6 @@
 package com.android.gatherly.ui.homePage
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.event.Event
@@ -114,6 +115,7 @@ class HomePageViewModel(
                 isAnon = isAnon)
       } catch (e: Exception) {
         _uiState.value = _uiState.value.copy(errorMsg = "There was an error loading your home page")
+        Log.e("Homepage loading", "Exception when loading lists for Homepage displaying: $e")
       }
     }
   }
