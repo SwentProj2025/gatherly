@@ -88,13 +88,13 @@ class EventAlarmScheduler(
     val timeCal = Calendar.getInstance().apply { time = eventStartTime.toDate() }
     return Calendar.getInstance()
         .apply {
-          set(Calendar.YEAR, dateCal.get(Calendar.YEAR))
-          set(Calendar.MONTH, dateCal.get(Calendar.MONTH))
-          set(Calendar.DAY_OF_MONTH, dateCal.get(Calendar.DAY_OF_MONTH))
-          set(Calendar.HOUR_OF_DAY, timeCal.get(Calendar.HOUR_OF_DAY))
-          set(Calendar.MINUTE, timeCal.get(Calendar.MINUTE))
-          set(Calendar.SECOND, 0)
-          set(Calendar.MILLISECOND, 0)
+          this[Calendar.YEAR] = dateCal[Calendar.YEAR]
+          this[Calendar.MONTH] = dateCal[Calendar.MONTH]
+          this[Calendar.DAY_OF_MONTH] = dateCal[Calendar.DAY_OF_MONTH]
+          this[Calendar.HOUR_OF_DAY] = timeCal[Calendar.HOUR_OF_DAY]
+          this[Calendar.MINUTE] = timeCal[Calendar.MINUTE]
+          this[Calendar.SECOND] = 0
+          this[Calendar.MILLISECOND] = 0
         }
         .timeInMillis
   }
