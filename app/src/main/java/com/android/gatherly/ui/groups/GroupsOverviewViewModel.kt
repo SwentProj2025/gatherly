@@ -22,12 +22,15 @@ import kotlinx.coroutines.launch
 /**
  * Represents the UI state for the Groups Overview screen.
  *
- * @property groups A list of `Group` items to be displayed in the Overview screen. Defaults to an
+ * @param groups A list of [Group] items to be displayed in the Overview screen. Defaults to an
  *   empty list if no items are available.
+ * @param profilePics The profile pictures to be displayed alongside groups
+ * @param errorMsg If there is an error message, the string to display
+ * @param isLoading If the screen is loading the data
  */
 data class GroupsOverviewUIState(
     val groups: List<Group> = emptyList(),
-    val profilePics: List<List<String>> = emptyList<List<String>>(),
+    val profilePics: List<List<String>> = emptyList(),
     val errorMsg: String? = null,
     val isLoading: Boolean = false
 )
@@ -38,14 +41,18 @@ data class GroupsOverviewUIState(
  * Responsible for managing the UI state, by fetching and providing Group items via the
  * [GroupsRepository].
  *
- * @property groupsRepository The repository used to fetch and manage Group items.
+ * @param groupsRepository The repository used to fetch and manage Group items.
+ * @param profileRepository The repository used to fetch profiles
  */
 class GroupsOverviewViewModel(
     private val groupsRepository: GroupsRepository = GroupsRepositoryFirestore(Firebase.firestore),
     private val profileRepository: ProfileRepository = ProfileRepositoryProvider.repository
 ) : ViewModel() {
 
+  /** Private mutable state for Groups Overview UI */
   private val _uiState = MutableStateFlow(GroupsOverviewUIState())
+
+  /** Public immutable access to the Groups Overview UI state. */
   val uiState: StateFlow<GroupsOverviewUIState> = _uiState.asStateFlow()
 
   init {

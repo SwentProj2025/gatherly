@@ -23,6 +23,7 @@ import org.junit.Test
 
 // This class was inspired by the FriendsScreenTest class.
 
+/** Tests the Add Group Display */
 class AddGroupScreenTest {
 
   @get:Rule val composeTestRule = createComposeRule()
