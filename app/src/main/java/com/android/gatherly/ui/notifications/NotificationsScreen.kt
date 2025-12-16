@@ -196,22 +196,20 @@ fun NotificationsScreen(
 }
 
 /**
- * Helper function : Composable helper that displays a single friend request item in the
- * notifications list.
+ * Helper function : Composable helper that displays a single notification item
  *
- * @param senderUsername Username of the user that sent the request.
- * @param senderName Name of the user that sent the request.
- * @param visitProfile Callback triggered when the "Visit Profile" button is clicked.
+ * @param senderProfile The profile of the user who sent the notification
+ * @param notificationType The type of the notification that was sent
+ * @param visitProfile Callback triggered when the "Visit Profile" button is clicked, if the
+ *   notification type is a friend request
  * @param modifier Optional [Modifier] for layout customization.
- * @param profilePicUrl Optional URL of the sender's profile picture.
  */
 @Composable
-private fun FriendRequestItem(
-    senderUsername: String,
-    senderName: String,
-    visitProfile: () -> Unit,
+private fun NotificationsItem(
+    senderProfile: Profile,
+    notificationType: NotificationType,
     modifier: Modifier = Modifier,
-    profilePicUrl: String? = null
+    visitProfile: () -> Unit = {}
 ) {
   Card(
       shape =
@@ -223,7 +221,9 @@ private fun FriendRequestItem(
               contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
       modifier =
           modifier
-              .testTag(NotificationsScreenTestTags.getTestTagForFriendRequestItem(senderUsername))
+              .testTag(
+                  NotificationsScreenTestTags.getTestTagForFriendRequestItem(
+                      senderProfile.username))
               .fillMaxWidth()
               .padding(
                   vertical =
@@ -235,20 +235,43 @@ private fun FriendRequestItem(
             verticalAlignment = Alignment.CenterVertically,
         ) {
           Image(
-              painter = profilePicturePainter(profilePicUrl),
-              contentDescription = "Profile picture of $senderUsername",
+              painter = profilePicturePainter(senderProfile.profilePicture),
+              contentDescription = "Profile picture of ${senderProfile.username}",
               contentScale = ContentScale.Crop,
               modifier =
                   Modifier.size(dimensionResource(R.dimen.friend_request_item_profile_picture_size))
                       .clip(CircleShape)
                       .testTag(
                           NotificationsScreenTestTags
-                              .getTestTagForSenderProfilePictureInNotification(senderUsername)))
+                              .getTestTagForSenderProfilePictureInNotification(
+                                  senderProfile.username)))
 
           // -- SPACER
           Spacer(
               modifier =
                   Modifier.width(dimensionResource(R.dimen.spacing_between_fields_smaller_regular)))
+
+          val senderName =
+              when (notificationType) {
+                NotificationType.EVENT_REMINDER,
+                NotificationType.TODO_REMINDER ->
+                    stringResource(R.string.notification_reminder_user)
+                else -> senderProfile.name
+              }
+
+          val text =
+              when (notificationType) {
+                NotificationType.FRIEND_REQUEST ->
+                    stringResource(R.string.friend_requests_notification_text)
+                NotificationType.EVENT_REMINDER ->
+                    stringResource(R.string.notification_event_reminder)
+                NotificationType.TODO_REMINDER ->
+                    stringResource(R.string.notification_todo_reminder)
+                NotificationType.GROUP_ADDED -> stringResource(R.string.notification_group_added)
+                NotificationType.EVENT_PARTICIPATION ->
+                    stringResource(R.string.notification_event_added)
+                else -> ""
+              }
 
           Column(modifier = Modifier.weight(1f)) {
 
@@ -260,33 +283,37 @@ private fun FriendRequestItem(
                 fontWeight = FontWeight.Bold,
                 modifier =
                     Modifier.testTag(
-                        NotificationsScreenTestTags.getTestTagForSenderName(senderUsername)))
+                        NotificationsScreenTestTags.getTestTagForSenderName(
+                            senderProfile.username)))
             // -- Friend Request Text --
             Text(
-                text = stringResource(R.string.friend_requests_notification_text),
+                text = text,
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onBackground,
                 fontWeight = FontWeight.Light)
           }
 
-          // -- SPACER
-          Spacer(
-              modifier = Modifier.width(dimensionResource(R.dimen.spacing_between_fields_regular)))
+          if (notificationType == NotificationType.FRIEND_REQUEST) {
+            // -- SPACER
+            Spacer(
+                modifier =
+                    Modifier.width(dimensionResource(R.dimen.spacing_between_fields_regular)))
 
-          // -- Visit Profile Button --
-          Button(
-              onClick = visitProfile,
-              colors =
-                  buttonColors(
-                      containerColor = MaterialTheme.colorScheme.secondary,
-                      contentColor = MaterialTheme.colorScheme.onSecondary),
-              modifier =
-                  Modifier.wrapContentWidth()
-                      .testTag(
-                          NotificationsScreenTestTags.getTestTagForVisitProfileButton(
-                              senderUsername))) {
-                Text(stringResource(R.string.friend_requests_notification_button_title))
-              }
+            // -- Visit Profile Button --
+            Button(
+                onClick = visitProfile,
+                colors =
+                    buttonColors(
+                        containerColor = MaterialTheme.colorScheme.secondary,
+                        contentColor = MaterialTheme.colorScheme.onSecondary),
+                modifier =
+                    Modifier.wrapContentWidth()
+                        .testTag(
+                            NotificationsScreenTestTags.getTestTagForVisitProfileButton(
+                                senderProfile.username))) {
+                  Text(stringResource(R.string.friend_requests_notification_button_title))
+                }
+          }
         }
       }
 }
@@ -306,20 +333,25 @@ private fun LazyListScope.NotificationsList(
 ) {
   // --- NOTIFICATIONS ITEMS ---
   items(items = notifications) { notification ->
+    val senderId = notification.senderId
+    val senderProfile = idToProfile[senderId]
+    if (senderProfile == null || senderId == null) {
+      // Profile/ID not found, skip rendering this item
+      return@items
+    }
+
     when (notification.type) {
       NotificationType.FRIEND_REQUEST -> {
-        val senderId = notification.senderId
-        val senderProfile = idToProfile[senderId]
-        if (senderProfile == null || senderId == null) {
-          // Profile/ID not found, skip rendering this item
-          return@items
-        }
-        val senderName = senderProfile.name
-        FriendRequestItem(
-            senderName = senderName,
-            senderUsername = senderProfile.username,
-            visitProfile = { onVisitProfile(senderId) },
-            profilePicUrl = senderProfile.profilePicture)
+        NotificationsItem(
+            senderProfile = senderProfile,
+            notificationType = notification.type,
+            visitProfile = { onVisitProfile(senderId) })
+      }
+      NotificationType.EVENT_REMINDER,
+      NotificationType.TODO_REMINDER,
+      NotificationType.GROUP_ADDED,
+      NotificationType.EVENT_PARTICIPATION -> {
+        NotificationsItem(senderProfile = senderProfile, notificationType = notification.type)
       }
       else -> {
         // Do nothing for other notification types
