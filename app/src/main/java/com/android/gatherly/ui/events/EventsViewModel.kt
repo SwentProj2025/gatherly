@@ -11,6 +11,8 @@ import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsRepository
 import com.android.gatherly.model.event.EventsRepositoryFirestore
 import com.android.gatherly.model.map.Location
+import com.android.gatherly.model.notification.NotificationsRepository
+import com.android.gatherly.model.notification.NotificationsRepositoryProvider
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.android.gatherly.utils.GenericViewModelFactory
@@ -94,6 +96,8 @@ class EventsViewModel(
     private val authProvider: () -> FirebaseAuth = { Firebase.auth },
     private val fusedLocationClient: FusedLocationProviderClient? = null,
     private val fakeCurrentUserLocation: Location? = null, // Used only for testing
+    val notificationsRepository: NotificationsRepository =
+        NotificationsRepositoryProvider.repository,
 ) : ViewModel() {
   private val _uiState: MutableStateFlow<EventsUIState> = MutableStateFlow(EventsUIState())
 
@@ -165,7 +169,8 @@ class EventsViewModel(
    */
   fun onParticipate(eventId: String, currentUserId: String) {
     viewModelScope.launch {
-      userParticipate(eventsRepository, profileRepository, eventId, currentUserId)
+      userParticipate(
+          eventsRepository, profileRepository, eventId, currentUserId, notificationsRepository)
       refreshEvents(currentUserId)
     }
   }
