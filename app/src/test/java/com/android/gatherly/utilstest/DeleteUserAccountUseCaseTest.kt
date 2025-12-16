@@ -1,19 +1,15 @@
 package com.android.gatherly.utils
 
-import com.android.gatherly.model.event.Event
-import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsLocalRepository
-import com.android.gatherly.model.focusSession.FocusSession
 import com.android.gatherly.model.focusSession.FocusSessionsLocalRepository
-import com.android.gatherly.model.group.Group
 import com.android.gatherly.model.group.GroupsLocalRepository
-import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
-import com.android.gatherly.model.todo.ToDo
-import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosLocalRepository
-import com.google.firebase.Timestamp
-import kotlin.time.Duration
+import com.android.gatherly.utilstest.DeleteUserAccountUseCaseTestData
+import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.TestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
 import org.junit.Before
@@ -35,9 +31,11 @@ class DeleteUserAccountUseCaseTest {
   private lateinit var eventsRepo: EventsLocalRepository
   private lateinit var focusRepo: FocusSessionsLocalRepository
   private lateinit var todosRepo: ToDosLocalRepository
-
   private lateinit var useCase: DeleteUserAccountUseCase
+  private lateinit var testDispatcher: TestDispatcher
+  private val testTimeout = 120.seconds
 
+  @OptIn(ExperimentalCoroutinesApi::class)
   @Before
   fun setup() {
     profileRepo = ProfileLocalRepository()
@@ -45,6 +43,7 @@ class DeleteUserAccountUseCaseTest {
     eventsRepo = EventsLocalRepository()
     focusRepo = FocusSessionsLocalRepository()
     todosRepo = ToDosLocalRepository()
+    testDispatcher = UnconfinedTestDispatcher()
 
     useCase =
         DeleteUserAccountUseCase(
@@ -56,142 +55,91 @@ class DeleteUserAccountUseCaseTest {
   }
 
   @Test
-  fun deleteUserAccount_deletesOwnedGroups() = runTest {
-    val group =
-        Group(
-            gid = groupsRepo.getNewId(),
-            name = "Owned group",
-            creatorId = userId,
-            adminIds = listOf(userId),
-            memberIds = listOf(userId))
-    groupsRepo.addGroup(group)
+  fun deleteUserAccount_deletesOwnedGroups() =
+      runTest(testDispatcher, testTimeout) {
+        groupsRepo.addGroup(DeleteUserAccountUseCaseTestData.ownedGroup)
 
-    useCase.deleteUserAccount(userId)
+        useCase.deleteUserAccount(DeleteUserAccountUseCaseTestData.CURRENT_USER_ID)
 
-    assertTrue(groupsRepo.getAllGroups().isEmpty())
-  }
+        assertTrue(groupsRepo.getAllGroups().isEmpty())
+      }
 
   @Test
-  fun deleteUserAccount_removesUserFromMemberGroups() = runTest {
-    val group =
-        Group(
-            gid = groupsRepo.getNewId(),
-            name = "Shared group",
-            creatorId = otherUserId,
-            adminIds = listOf(otherUserId),
-            memberIds = listOf(userId, otherUserId))
-    groupsRepo.addGroup(group)
+  fun deleteUserAccount_removesUserFromMemberGroups() =
+      runTest(testDispatcher, testTimeout) {
+        groupsRepo.addGroup(DeleteUserAccountUseCaseTestData.sharedGroup)
 
-    useCase.deleteUserAccount(userId)
+        useCase.deleteUserAccount(DeleteUserAccountUseCaseTestData.CURRENT_USER_ID)
 
-    val updatedGroup = groupsRepo.getAllGroups().single()
-    assertFalse(updatedGroup.memberIds.contains(userId))
-    assertTrue(updatedGroup.memberIds.contains(otherUserId))
-  }
+        val updatedGroup = groupsRepo.getAllGroups().single()
+        assertFalse(
+            updatedGroup.memberIds.contains(DeleteUserAccountUseCaseTestData.CURRENT_USER_ID))
+        assertTrue(updatedGroup.memberIds.contains(DeleteUserAccountUseCaseTestData.FRIEND_1_ID))
+      }
 
   @Test
-  fun deleteUserAccount_deletesOwnedEvents() = runTest {
-    val event =
-        Event(
-            id = eventsRepo.getNewId(),
-            title = "Owned event",
-            description = "",
-            creatorName = "",
-            location = null,
-            date = Timestamp(1700000000, 0),
-            startTime = Timestamp(1700000000, 0),
-            endTime = Timestamp(1700000000 + 3600, 0),
-            creatorId = userId,
-            participants = listOf(userId),
-            status = EventStatus.UPCOMING)
-    eventsRepo.addEvent(event)
+  fun deleteUserAccount_deletesOwnedEvents() =
+      runTest(testDispatcher, testTimeout) {
+        eventsRepo.addEvent(DeleteUserAccountUseCaseTestData.ownedEvent)
 
-    useCase.deleteUserAccount(userId)
+        useCase.deleteUserAccount(DeleteUserAccountUseCaseTestData.CURRENT_USER_ID)
 
-    assertTrue(eventsRepo.getAllEvents().isEmpty())
-  }
+        assertTrue(eventsRepo.getAllEvents().isEmpty())
+      }
 
   @Test
-  fun deleteUserAccount_removesUserFromParticipatingEvents() = runTest {
-    val event =
-        Event(
-            id = eventsRepo.getNewId(),
-            title = "Shared event",
-            description = "",
-            creatorName = "",
-            location = null,
-            date = Timestamp(1700000000, 0),
-            startTime = Timestamp(1700000000, 0),
-            endTime = Timestamp(1700000000 + 3600, 0),
-            creatorId = otherUserId,
-            participants = listOf(userId, otherUserId),
-            status = EventStatus.UPCOMING)
-    eventsRepo.addEvent(event)
+  fun deleteUserAccount_removesUserFromParticipatingEvents() =
+      runTest(testDispatcher, testTimeout) {
+        eventsRepo.addEvent(DeleteUserAccountUseCaseTestData.sharedEvent)
 
-    useCase.deleteUserAccount(userId)
+        useCase.deleteUserAccount(DeleteUserAccountUseCaseTestData.CURRENT_USER_ID)
 
-    val updatedEvent = eventsRepo.getAllEvents().single()
-    assertFalse(updatedEvent.participants.contains(userId))
-    assertTrue(updatedEvent.participants.contains(otherUserId))
-  }
+        val updatedEvent = eventsRepo.getAllEvents().single()
+        assertFalse(
+            updatedEvent.participants.contains(DeleteUserAccountUseCaseTestData.CURRENT_USER_ID))
+        assertTrue(updatedEvent.participants.contains(DeleteUserAccountUseCaseTestData.FRIEND_1_ID))
+      }
 
   @Test
-  fun deleteUserAccount_deletesUserFocusSessions() = runTest {
-    val session =
-        FocusSession(
-            focusSessionId = focusRepo.getNewId(), creatorId = userId, duration = Duration.ZERO)
-    focusRepo.addFocusSession(session)
+  fun deleteUserAccount_deletesUserFocusSessions() =
+      runTest(testDispatcher, testTimeout) {
+        focusRepo.addFocusSession(DeleteUserAccountUseCaseTestData.focusSession)
 
-    useCase.deleteUserAccount(userId)
+        useCase.deleteUserAccount(DeleteUserAccountUseCaseTestData.CURRENT_USER_ID)
 
-    assertTrue(focusRepo.getAllFocusSessions().isEmpty())
-  }
+        assertTrue(focusRepo.getAllFocusSessions().isEmpty())
+      }
 
   @Test
-  fun deleteUserAccount_deletesUserTodos() = runTest {
-    val todo =
-        ToDo(
-            uid = todosRepo.getNewUid(),
-            name = "Todo",
-            description = "",
-            dueDate = null,
-            dueTime = null,
-            location = null,
-            status = ToDoStatus.ONGOING,
-            ownerId = userId)
-    todosRepo.addTodo(todo)
+  fun deleteUserAccount_deletesUserTodos() =
+      runTest(testDispatcher, testTimeout) {
+        todosRepo.addTodo(DeleteUserAccountUseCaseTestData.todo)
 
-    useCase.deleteUserAccount(userId)
+        useCase.deleteUserAccount(DeleteUserAccountUseCaseTestData.CURRENT_USER_ID)
 
-    assertTrue(todosRepo.getAllTodos().isEmpty())
-  }
+        assertTrue(todosRepo.getAllTodos().isEmpty())
+      }
 
   @Test
-  fun deleteUserAccount_deletesProfileLast() = runTest {
-    profileRepo.addProfile(Profile(uid = userId, name = "Alice"))
+  fun deleteUserAccount_deletesProfileLast() =
+      runTest(testDispatcher, testTimeout) {
+        profileRepo.addProfile(DeleteUserAccountUseCaseTestData.currentUserProfile)
 
-    useCase.deleteUserAccount(userId)
+        useCase.deleteUserAccount(DeleteUserAccountUseCaseTestData.CURRENT_USER_ID)
 
-    assertNull(profileRepo.getProfileByUid(userId))
-  }
+        assertNull(profileRepo.getProfileByUid(DeleteUserAccountUseCaseTestData.CURRENT_USER_ID))
+      }
 
   @Test
-  fun deleteUserAccount_doesNotAffectOtherUsersData() = runTest {
-    profileRepo.addProfile(Profile(uid = userId, name = "Alice"))
-    profileRepo.addProfile(Profile(uid = otherUserId, name = "Bob"))
+  fun deleteUserAccount_doesNotAffectOtherUsersData() =
+      runTest(testDispatcher, testTimeout) {
+        profileRepo.addProfile(DeleteUserAccountUseCaseTestData.currentUserProfile)
+        profileRepo.addProfile(DeleteUserAccountUseCaseTestData.friend1Profile)
+        groupsRepo.addGroup(DeleteUserAccountUseCaseTestData.otherUserGroup)
 
-    val group =
-        Group(
-            gid = groupsRepo.getNewId(),
-            name = "Bob group",
-            creatorId = otherUserId,
-            adminIds = listOf(otherUserId),
-            memberIds = listOf(otherUserId))
-    groupsRepo.addGroup(group)
+        useCase.deleteUserAccount(DeleteUserAccountUseCaseTestData.CURRENT_USER_ID)
 
-    useCase.deleteUserAccount(userId)
-
-    assertNotNull(profileRepo.getProfileByUid(otherUserId))
-    assertEquals(1, groupsRepo.getAllGroups().size)
-  }
+        assertNotNull(profileRepo.getProfileByUid(DeleteUserAccountUseCaseTestData.FRIEND_1_ID))
+        assertEquals(1, groupsRepo.getAllGroups().size)
+      }
 }
