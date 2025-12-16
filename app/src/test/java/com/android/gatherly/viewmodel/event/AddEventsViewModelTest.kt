@@ -7,6 +7,8 @@ import com.android.gatherly.model.event.EventsLocalRepository
 import com.android.gatherly.model.event.EventsRepository
 import com.android.gatherly.model.group.GroupsLocalRepository
 import com.android.gatherly.model.group.GroupsRepository
+import com.android.gatherly.model.notification.NotificationsLocalRepository
+import com.android.gatherly.model.notification.NotificationsRepository
 import com.android.gatherly.model.points.PointsLocalRepository
 import com.android.gatherly.model.points.PointsRepository
 import com.android.gatherly.model.profile.Profile
@@ -40,6 +42,8 @@ class AddEventsViewModelTest {
   private lateinit var groupsRepository: GroupsRepository
   private lateinit var mockitoUtils: MockitoUtils
 
+  private lateinit var notificationsRepository: NotificationsRepository
+
   // initialize this so that tests control all coroutines and can wait on them
   private val testDispatcher = StandardTestDispatcher()
 
@@ -52,6 +56,7 @@ class AddEventsViewModelTest {
     eventsRepository = EventsLocalRepository()
     groupsRepository = GroupsLocalRepository()
     pointsRepository = PointsLocalRepository()
+    notificationsRepository = NotificationsLocalRepository()
 
     // fill the profile and events repositories with profiles and event
     fill_repositories()
@@ -66,7 +71,8 @@ class AddEventsViewModelTest {
             eventsRepository = eventsRepository,
             pointsRepository = pointsRepository,
             authProvider = { mockitoUtils.mockAuth },
-            groupsRepository = groupsRepository)
+            groupsRepository = groupsRepository,
+            notificationsRepository = notificationsRepository)
   }
 
   @After
