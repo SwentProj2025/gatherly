@@ -13,7 +13,8 @@ enum class NotificationType {
   FRIEND_REQUEST_CANCELLED,
   TODO_REMINDER,
   EVENT_REMINDER,
-  GROUP_ADDED
+  GROUP_ADDED,
+  EVENT_PARTICIPATION
 }
 
 /** Represents a single [Notification] item within the app. */
