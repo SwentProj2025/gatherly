@@ -403,64 +403,19 @@ fun MapScreen(
  */
 @Composable
 fun EventIcon(event: Event, scale: Float = 1f) {
-  Column(
-      horizontalAlignment = Alignment.CenterHorizontally,
-      modifier = Modifier.testTag(MapScreenTestTags.EVENT_CARD)) {
-        // Main pill-shaped card
-        Card(
-            border =
-                BorderStroke(2.dp * scale, MaterialTheme.colorScheme.onTertiary.copy(alpha = 0.5f)),
-            shape = RoundedCornerShape(12.dp),
-            colors =
-                CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.tertiary,
-                    contentColor = MaterialTheme.colorScheme.onTertiary),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-            modifier = Modifier.size(width = 180.dp * scale, height = 50.dp * scale)) {
-              Column(
-                  modifier = Modifier.padding(horizontal = 16.dp * scale, vertical = 12.dp * scale),
-                  horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = event.title.uppercase(),
-                        style =
-                            MaterialTheme.typography.bodyLarge.copy(
-                                fontSize = MaterialTheme.typography.bodyLarge.fontSize * scale),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        color = MaterialTheme.colorScheme.onTertiary,
-                        fontWeight = FontWeight.Medium,
-                        modifier = Modifier.fillMaxWidth().testTag(MapScreenTestTags.EVENT_TITLE))
-                  }
-            }
+  val containerColor = MaterialTheme.colorScheme.tertiary
+  val contentColor = MaterialTheme.colorScheme.onTertiary
+  val borderColor = contentColor.copy(alpha = 0.5f)
 
-        // Triangle pointer at the bottom
-        // Extract colors before Canvas to avoid composable context issues
-        val borderColor = MaterialTheme.colorScheme.onTertiary.copy(alpha = 0.5f)
-        val fillColor = MaterialTheme.colorScheme.tertiary
-
-        Canvas(modifier = Modifier.size(width = 24.dp * scale, height = 14.dp * scale)) {
-          // Border triangle
-          val borderPath =
-              Path().apply {
-                moveTo(size.width / 2, size.height) // bottom point
-                lineTo(0f, 0f) // top left
-                lineTo(size.width, 0f) // top right
-                close()
-              }
-          drawPath(borderPath, color = borderColor)
-
-          // Fill triangle (slightly smaller to show border)
-          val fillPath =
-              Path().apply {
-                val inset = 2.dp.toPx()
-                moveTo(size.width / 2, size.height - inset) // bottom point
-                lineTo(inset, 0f) // top left
-                lineTo(size.width - inset, 0f) // top right
-                close()
-              }
-          drawPath(fillPath, color = fillColor)
-        }
-      }
+  PinMarkerIcon(
+      title = event.title,
+      containerColor = containerColor,
+      contentColor = contentColor,
+      borderColor = borderColor,
+      cardTestTag = MapScreenTestTags.EVENT_CARD,
+      titleTestTag = MapScreenTestTags.EVENT_TITLE,
+      scale = scale,
+  )
 }
 
 /**
@@ -541,65 +496,19 @@ fun EventSheet(event: Event, onGoToEvent: () -> Unit, onClose: () -> Unit) {
  */
 @Composable
 fun ToDoIcon(toDo: ToDo, scale: Float = 1f) {
-  Column(
-      horizontalAlignment = Alignment.CenterHorizontally,
-      modifier = Modifier.testTag(MapScreenTestTags.TODO_CARD)) {
-        // Main pill-shaped card
-        Card(
-            border =
-                BorderStroke(
-                    2.dp * scale, MaterialTheme.colorScheme.onSecondary.copy(alpha = 0.5f)),
-            shape = RoundedCornerShape(12.dp),
-            colors =
-                CardDefaults.cardColors(
-                    containerColor = MaterialTheme.colorScheme.secondary,
-                    contentColor = MaterialTheme.colorScheme.onSecondary),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-            modifier = Modifier.size(width = 180.dp * scale, height = 50.dp * scale)) {
-              Column(
-                  modifier = Modifier.padding(horizontal = 16.dp * scale, vertical = 12.dp * scale),
-                  horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = toDo.name.uppercase(),
-                        style =
-                            MaterialTheme.typography.bodyLarge.copy(
-                                fontSize = MaterialTheme.typography.bodyLarge.fontSize * scale),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        color = MaterialTheme.colorScheme.onSecondary,
-                        fontWeight = FontWeight.Medium,
-                        modifier = Modifier.fillMaxWidth().testTag(MapScreenTestTags.TODO_TITLE))
-                  }
-            }
+  val containerColor = MaterialTheme.colorScheme.secondary
+  val contentColor = MaterialTheme.colorScheme.onSecondary
+  val borderColor = contentColor.copy(alpha = 0.5f)
 
-        // Triangle pointer at the bottom
-        // Extract colors before Canvas to avoid composable context issues
-        val borderColor = MaterialTheme.colorScheme.onSecondary.copy(alpha = 0.5f)
-        val fillColor = MaterialTheme.colorScheme.secondary
-
-        Canvas(modifier = Modifier.size(width = 24.dp * scale, height = 14.dp * scale)) {
-          // Border triangle
-          val borderPath =
-              Path().apply {
-                moveTo(size.width / 2, size.height) // bottom point
-                lineTo(0f, 0f) // top left
-                lineTo(size.width, 0f) // top right
-                close()
-              }
-          drawPath(borderPath, color = borderColor)
-
-          // Fill triangle (slightly smaller to show border)
-          val fillPath =
-              Path().apply {
-                val inset = 2.dp.toPx()
-                moveTo(size.width / 2, size.height - inset) // bottom point
-                lineTo(inset, 0f) // top left
-                lineTo(size.width - inset, 0f) // top right
-                close()
-              }
-          drawPath(fillPath, color = fillColor)
-        }
-      }
+  PinMarkerIcon(
+      title = toDo.name,
+      containerColor = containerColor,
+      contentColor = contentColor,
+      borderColor = borderColor,
+      cardTestTag = MapScreenTestTags.TODO_CARD,
+      titleTestTag = MapScreenTestTags.TODO_TITLE,
+      scale = scale,
+  )
 }
 
 /**
@@ -670,5 +579,77 @@ fun ToDoSheet(toDo: ToDo, onGoToToDo: () -> Unit, onClose: () -> Unit) {
             }
 
         Spacer(modifier = Modifier.size(Dimensions.spacerPadding))
+      }
+}
+
+/**
+ * Reusable pin-style marker UI for Google Maps markers.
+ *
+ * @param title Text shown inside the marker (will be uppercased).
+ * @param containerColor Background color of the pill card and the filled triangle.
+ * @param contentColor Text color inside the pill card.
+ * @param borderColor Color of the border stroke and the triangle border.
+ * @param cardTestTag Test tag applied to the marker container.
+ * @param titleTestTag Test tag applied to the title Text.
+ * @param scale Multiplier applied to sizes (width, height, padding, border thickness, triangle
+ *   size).
+ */
+@Composable
+private fun PinMarkerIcon(
+    title: String,
+    containerColor: androidx.compose.ui.graphics.Color,
+    contentColor: androidx.compose.ui.graphics.Color,
+    borderColor: androidx.compose.ui.graphics.Color,
+    cardTestTag: String,
+    titleTestTag: String,
+    scale: Float = 1f,
+) {
+  Column(
+      horizontalAlignment = Alignment.CenterHorizontally,
+      modifier = Modifier.testTag(cardTestTag)) {
+        Card(
+            border = BorderStroke(2.dp * scale, borderColor),
+            shape = RoundedCornerShape(12.dp),
+            colors =
+                CardDefaults.cardColors(
+                    containerColor = containerColor, contentColor = contentColor),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            modifier = Modifier.size(width = 180.dp * scale, height = 50.dp * scale)) {
+              Column(
+                  modifier = Modifier.padding(horizontal = 16.dp * scale, vertical = 12.dp * scale),
+                  horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = title.uppercase(),
+                        style =
+                            MaterialTheme.typography.bodyLarge.copy(
+                                fontSize = MaterialTheme.typography.bodyLarge.fontSize * scale),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        color = contentColor,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.fillMaxWidth().testTag(titleTestTag))
+                  }
+            }
+
+        Canvas(modifier = Modifier.size(width = 24.dp * scale, height = 14.dp * scale)) {
+          val borderPath =
+              Path().apply {
+                moveTo(size.width / 2, size.height)
+                lineTo(0f, 0f)
+                lineTo(size.width, 0f)
+                close()
+              }
+          drawPath(borderPath, color = borderColor)
+
+          val fillPath =
+              Path().apply {
+                val inset = (2.dp * scale).toPx()
+                moveTo(size.width / 2, size.height - inset)
+                lineTo(inset, 0f)
+                lineTo(size.width - inset, 0f)
+                close()
+              }
+          drawPath(fillPath, color = containerColor)
+        }
       }
 }
