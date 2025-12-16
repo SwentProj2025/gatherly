@@ -408,13 +408,13 @@ class ProfileRepositoryFirestore(
 
   /** Shared thresholds from count to BadgeRank. */
   private fun countToRank(count: Long): BadgeRank =
-      when (count.toInt()) {
-        30 -> BadgeRank.LEGEND
-        20 -> BadgeRank.DIAMOND
-        10 -> BadgeRank.GOLD
-        5 -> BadgeRank.SILVER
-        3 -> BadgeRank.BRONZE
-        1 -> BadgeRank.STARTING
+      when {
+        count == 30L -> BadgeRank.LEGEND
+        count >= 20 -> BadgeRank.DIAMOND
+        count >= 10 -> BadgeRank.GOLD
+        count >= 5 -> BadgeRank.SILVER
+        count >= 3 -> BadgeRank.BRONZE
+        count >= 1 -> BadgeRank.STARTING
         else -> BadgeRank.BLANK
       }
 
