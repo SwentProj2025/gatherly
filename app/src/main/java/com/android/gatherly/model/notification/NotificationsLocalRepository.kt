@@ -18,7 +18,7 @@ open class NotificationsLocalRepository() : NotificationsRepository {
   override suspend fun getUserNotifications(userId: String): List<Notification> {
     return notifications.values
         .filter { it.recipientId == userId }
-        .sortedByDescending { it.emissionTime }
+        .sortedBy { it.emissionTime }
   }
 
   override suspend fun getNotification(notificationId: String): Notification {
