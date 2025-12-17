@@ -167,22 +167,6 @@ fun MapScreen(
     }
   }
 
-  val selectedEvent =
-      remember(uiState.selectedItemId, uiState.itemsList) {
-        uiState.itemsList.asSequence().filterIsInstance<Event>().firstOrNull {
-          it.id == uiState.selectedItemId
-        }
-      }
-
-  val selectedToDo =
-      remember(uiState.selectedItemId, uiState.itemsList) {
-        uiState.itemsList.asSequence().filterIsInstance<ToDo>().firstOrNull {
-          it.uid == uiState.selectedItemId
-        }
-      }
-
-  val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-
   Scaffold(
       topBar = { MapTopBar(navigationActions) },
       bottomBar = { MapBottomBar(navigationActions) },
@@ -200,10 +184,6 @@ fun MapScreen(
             isLocationPermissionGranted = isLocationPermissionGranted,
             onClearSelection = { vm.clearSelection() },
             onSelectItem = { vm.onSelectedItem(it) },
-            selectedEvent = selectedEvent,
-            selectedToDo = selectedToDo,
-            sheetState = sheetState,
-            onDismissSheet = { vm.clearSelection() },
             onGoToEvent = { eventId ->
               vm.onItemConsulted(eventId)
               vm.clearSelection()
@@ -339,10 +319,6 @@ private fun MapToggleFab(isVisible: Boolean, isEvents: Boolean, onToggle: () -> 
  * @param isLocationPermissionGranted Whether location permission is granted (enables blue dot).
  * @param onClearSelection Callback invoked when selection should be cleared.
  * @param onSelectItem Callback invoked when a marker is tapped.
- * @param selectedEvent Event selected for the bottom sheet, or null.
- * @param selectedToDo ToDo selected for the bottom sheet, or null.
- * @param sheetState State object for the bottom sheet.
- * @param onDismissSheet Callback invoked when bottom sheet is dismissed.
  * @param onGoToEvent Callback invoked when user taps "Go to event".
  * @param onGoToToDo Callback invoked when user taps "Go to todo".
  */
@@ -354,10 +330,6 @@ private fun MapScreenContent(
     isLocationPermissionGranted: Boolean,
     onClearSelection: () -> Unit,
     onSelectItem: (String) -> Unit,
-    selectedEvent: Event?,
-    selectedToDo: ToDo?,
-    sheetState: androidx.compose.material3.SheetState,
-    onDismissSheet: () -> Unit,
     onGoToEvent: (String) -> Unit,
     onGoToToDo: (String) -> Unit,
 ) {
@@ -365,6 +337,23 @@ private fun MapScreenContent(
     LoadingContent(modifier)
     return
   }
+
+  val selectedEvent =
+      remember(uiState.selectedItemId, uiState.itemsList) {
+        uiState.itemsList.asSequence().filterIsInstance<Event>().firstOrNull {
+          it.id == uiState.selectedItemId
+        }
+      }
+
+  val selectedToDo =
+      remember(uiState.selectedItemId, uiState.itemsList) {
+        uiState.itemsList.asSequence().filterIsInstance<ToDo>().firstOrNull {
+          it.uid == uiState.selectedItemId
+        }
+      }
+
+  // Created here to reduce parameter count and keep state local to the content.
+  val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
   MapWithMarkers(
       modifier = Modifier.fillMaxSize().then(modifier).testTag(MapScreenTestTags.GOOGLE_MAP_SCREEN),
@@ -380,7 +369,7 @@ private fun MapScreenContent(
       selectedEvent = selectedEvent,
       selectedToDo = selectedToDo,
       sheetState = sheetState,
-      onDismiss = onDismissSheet,
+      onDismiss = onClearSelection,
       onGoToEvent = onGoToEvent,
       onGoToToDo = onGoToToDo,
   )
@@ -449,11 +438,7 @@ private fun MapWithMarkers(
       onMapClick = { onMapClick() },
       properties = MapProperties(isMyLocationEnabled = isMyLocationEnabled),
       uiSettings = MapUiSettings(myLocationButtonEnabled = isMyLocationEnabled)) {
-        MapMarkers(
-            items = items,
-            selectedItemId = selectedItemId,
-            onSelectItem = onSelectItem,
-        )
+        MapMarkers(items = items, selectedItemId = selectedItemId, onSelectItem = onSelectItem)
       }
 }
 
