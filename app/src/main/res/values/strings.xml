@@ -227,6 +227,11 @@
     <string name="friend_requests_notification_text">sent you a friend request.</string>
     <string name="friend_requests_notification_button_title">Visit Profile</string>
     <string name="friend_requests_accept_button_text">Accept</string>
+    <string name="notification_reminder_user">You</string>
+    <string name="notification_event_reminder">have an upcoming event.</string>
+    <string name="notification_todo_reminder">have an upcoming deadline.</string>
+    <string name="notification_group_added">has added you to a group.</string>
+    <string name="notification_event_added">has added you to an event.</string>
     <string name="friend_requests_reject_button_text">Reject</string>
 
     <!-- Friends Screen -->
