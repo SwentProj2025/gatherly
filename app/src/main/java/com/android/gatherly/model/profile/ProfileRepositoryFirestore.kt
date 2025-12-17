@@ -22,7 +22,7 @@ import kotlinx.coroutines.tasks.await
  * - /profiles/{uid} : main [Profile] documents
  * - /usernames/{username} : mapping from usernames to UIDs
  */
-class gitProfileRepositoryFirestore(
+class ProfileRepositoryFirestore(
     private val db: FirebaseFirestore,
     private val storage: FirebaseStorage
 ) : ProfileRepository {
