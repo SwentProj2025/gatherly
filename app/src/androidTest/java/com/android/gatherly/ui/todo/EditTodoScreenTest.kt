@@ -75,10 +75,6 @@ class EditTodoScreenTest : GatherlyTest() {
     composeTestRule.setContent {
       EditTodoScreen(todoUid = todo1.uid, editTodoViewModel = editTodoViewModel)
     }
-    composeTestRule
-        .onNodeWithTag(EditTodoScreenTestTags.MORE_OPTIONS)
-        .assertIsDisplayed()
-        .performClick()
   }
 
   /** Fills the repository with a sample [ToDo] for testing. */

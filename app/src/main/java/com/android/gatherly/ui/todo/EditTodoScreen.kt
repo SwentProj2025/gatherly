@@ -222,7 +222,7 @@ fun EditTodoScreen(
               advancedOptions(
                   expandAdvanced = expandAdvanced.value,
                   todoUIState = todoUIState,
-                  addTodoViewModel = editTodoViewModel,
+                  editTodoViewModel = editTodoViewModel,
                   showCreateTagDialog = showCreateTagDialog,
                   showWarningDeleteTagDialog = showWarningDeleteTagDialog,
                   categoriesList = categoriesList,
@@ -333,7 +333,7 @@ fun EditTodoScreen(
  *
  * @param expandAdvanced Boolean indicating whether to show advanced options.
  * @param todoUIState The current UI state of the Add To-Do screen.
- * @param addTodoViewModel The ViewModel managing the Add To-Do screen state.
+ * @param editTodoViewModel The ViewModel managing the Edit To-Do screen state.
  * @param showCreateTagDialog MutableState controlling the visibility of the create tag dialog.
  * @param showWarningDeleteTagDialog MutableState controlling the visibility of the delete tag
  *   warning dialog.
@@ -343,7 +343,7 @@ fun EditTodoScreen(
 fun LazyListScope.advancedOptions(
     expandAdvanced: Boolean,
     todoUIState: EditTodoUIState,
-    addTodoViewModel: EditTodoViewModel,
+    editTodoViewModel: EditTodoViewModel,
     showCreateTagDialog: androidx.compose.runtime.MutableState<Boolean>,
     showWarningDeleteTagDialog: androidx.compose.runtime.MutableState<ToDoCategory?>,
     categoriesList: List<ToDoCategory>,
@@ -360,14 +360,14 @@ fun LazyListScope.advancedOptions(
 
             // Category drop down
             CategoriesDropDown(
-                { category -> addTodoViewModel.selectTodoTag(category) },
+                { category -> editTodoViewModel.selectTodoTag(category) },
                 showCreateTagDialog,
                 todoUIState.tag,
                 showWarningDeleteTagDialog,
                 categoriesList)
             // Priority level drop down
             PriorityDropDown(
-                onSelectPriorityLevel = { level -> addTodoViewModel.selectPriorityLevel(level) },
+                onSelectPriorityLevel = { level -> editTodoViewModel.selectPriorityLevel(level) },
                 currentPriorityLevel = todoUIState.priorityLevel)
           }
     }
@@ -377,8 +377,8 @@ fun LazyListScope.advancedOptions(
       ToDoLocationSuggestionsUtils(
           location = todoUIState.location,
           suggestions = todoUIState.suggestions,
-          onLocationChanged = { addTodoViewModel.onLocationChanged(it) },
-          onSelectLocation = { loc -> addTodoViewModel.selectLocation(loc) },
+          onLocationChanged = { editTodoViewModel.onLocationChanged(it) },
+          onSelectLocation = { loc -> editTodoViewModel.selectLocation(loc) },
           modifier = Modifier.fillMaxWidth(),
           textFieldColors = toDoTextFieldColors)
     }
@@ -392,19 +392,19 @@ fun LazyListScope.advancedOptions(
           onClick = { onDatePickerClick },
           colors = toDoTextFieldColors,
           testTag =
-              Pair(AddTodoScreenTestTags.INPUT_TODO_DATE, AddTodoScreenTestTags.ERROR_MESSAGE))
+              Pair(EditTodoScreenTestTags.INPUT_TODO_DATE, EditTodoScreenTestTags.ERROR_MESSAGE))
     }
 
     // Due Time Input
     item {
       TimeInputField(
           initialTime = todoUIState.dueTime,
-          onTimeChanged = { addTodoViewModel.onTimeChanged(it) },
+          onTimeChanged = { editTodoViewModel.onTimeChanged(it) },
           dueTimeError = (todoUIState.dueTimeError != null),
           label = stringResource(R.string.todos_time_field_label),
           textFieldColors = toDoTextFieldColors,
-          testTagInput = AddTodoScreenTestTags.INPUT_TODO_TIME,
-          testTagErrorMessage = AddTodoScreenTestTags.ERROR_MESSAGE,
+          testTagInput = EditTodoScreenTestTags.INPUT_TODO_TIME,
+          testTagErrorMessage = EditTodoScreenTestTags.ERROR_MESSAGE,
       )
     }
   }
