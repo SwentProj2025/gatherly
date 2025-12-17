@@ -56,6 +56,7 @@ import com.android.gatherly.utils.GatherlyAlertDialogActions
 import com.android.gatherly.utils.GatherlyDatePicker
 import com.android.gatherly.utils.PriorityDropDown
 import com.android.gatherly.utils.TimeInputField
+import com.android.gatherly.utils.ToDoLocationSuggestionsUtils
 import kotlinx.coroutines.delay
 
 // Portions of the code in this file are copy-pasted from the Bootcamp solution provided by the
@@ -63,7 +64,7 @@ import kotlinx.coroutines.delay
 
 private const val DELAY = 1000L
 
-/** Contains test tags used for UI testing on the [EditToDoScreen]. */
+/** Contains test tags used for UI testing on the [EditTodoScreen]. */
 object EditToDoScreenTestTags {
   /** Tag for the [ToDo] title input field. */
   const val INPUT_TODO_TITLE = "inputTodoTitle"
@@ -91,7 +92,7 @@ object EditToDoScreenTestTags {
 }
 
 /**
- * Displays the screen for editing an existing ToDo.
+ * Displays the screen for editing an existing [ToDo].
  *
  * @param todoUid The unique identifier of the [ToDo] to be edited.
  * @param editTodoViewModel The [EditTodoViewModel] that provides the current ToDo state.
@@ -101,7 +102,7 @@ object EditToDoScreenTestTags {
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EditToDoScreen(
+fun EditTodoScreen(
     todoUid: String,
     editTodoViewModel: EditTodoViewModel = viewModel(),
     onSave: () -> Unit = {},
@@ -244,7 +245,7 @@ fun EditToDoScreen(
 
                 // Location Input with dropdown
                 item {
-                  LocationSuggestions(
+                  ToDoLocationSuggestionsUtils(
                       location = todoUIState.location,
                       suggestions = todoUIState.suggestions,
                       onLocationChanged = { editTodoViewModel.onLocationChanged(it) },
@@ -388,9 +389,9 @@ fun EditToDoScreen(
       onConfirmDelete = { category -> editTodoViewModel.deleteCategory(category) })
 }
 
-/** Preview of the [EditToDoScreen]. */
+/** Preview of the [EditTodoScreen]. */
 @Preview
 @Composable
 fun EditToDoScreenPreview() {
-  GatherlyTheme(darkTheme = false) { EditToDoScreen(todoUid = "1") }
+  GatherlyTheme(darkTheme = false) { EditTodoScreen(todoUid = "1") }
 }

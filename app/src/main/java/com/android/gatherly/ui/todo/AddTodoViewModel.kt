@@ -78,7 +78,7 @@ private var client: OkHttpClient =
         .build()
 
 /**
- * ViewModel responsible for managing the [AddToDoScreen].
+ * ViewModel responsible for managing the [AddTodoScreen].
  *
  * Handles user input updates, field validation, and saving [ToDo] items to the Firestore repository
  * through [ToDosRepository].

@@ -33,8 +33,8 @@ import com.android.gatherly.ui.theme.Typography
 import com.android.gatherly.ui.theme.theme_todo_priority_level_high
 import com.android.gatherly.ui.theme.theme_todo_priority_level_low
 import com.android.gatherly.ui.theme.theme_todo_priority_level_medium
-import com.android.gatherly.ui.todo.AddToDoScreen
-import com.android.gatherly.ui.todo.EditToDoScreen
+import com.android.gatherly.ui.todo.AddTodoScreen
+import com.android.gatherly.ui.todo.EditTodoScreen
 
 /** Test tags for [PriorityDropDown] composable and its items. */
 object PriorityDropDownTestTags {
@@ -47,7 +47,7 @@ object PriorityDropDownTestTags {
 
 /**
  * Helper composable function: The user can assign to his task a specif priority level Displayed in
- * [AddToDoScreen] and [EditToDoScreen]
+ * [AddTodoScreen] and [EditTodoScreen]
  *
  * @param onSelectPriorityLevel : function when the user choose a level
  * @param currentPriorityLevel: the level that the user already choose.

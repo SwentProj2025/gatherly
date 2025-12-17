@@ -70,7 +70,7 @@ class OverviewScreenTest : GatherlyTest() {
             profileRepository = profileRepository,
             pointsRepository = pointsRepository,
             todoCategoryRepository = toDoCategoryRepository)
-    composeTestRule.setContent { OverviewScreen(overviewViewModel = overviewViewModel) }
+    composeTestRule.setContent { TodoOverviewScreen(overviewViewModel = overviewViewModel) }
     profileRepository.addProfile(Profile(uid = "user", name = "Test User", profilePicture = ""))
     advanceUntilIdle()
   }
@@ -80,10 +80,10 @@ class OverviewScreenTest : GatherlyTest() {
   fun testTagsCorrectlySetWhenListIsEmpty() {
     setContent()
     composeTestRule
-        .onNodeWithTag(OverviewScreenTestTags.TODO_LIST, useUnmergedTree = true)
+        .onNodeWithTag(TodoOverviewScreenTestTags.TODO_LIST, useUnmergedTree = true)
         .assertIsNotDisplayed()
     composeTestRule
-        .onNodeWithTag(OverviewScreenTestTags.EMPTY_TODO_LIST_MSG, useUnmergedTree = true)
+        .onNodeWithTag(TodoOverviewScreenTestTags.EMPTY_TODO_LIST_MSG, useUnmergedTree = true)
         .assertIsDisplayed()
   }
 
@@ -92,16 +92,19 @@ class OverviewScreenTest : GatherlyTest() {
   fun testTagsCorrectlySetWhenListIsNotEmpty() {
     setContent(withInitialTodos = listOf(todo1, todo2, todo3))
     composeTestRule
-        .onNodeWithTag(OverviewScreenTestTags.TODO_LIST, useUnmergedTree = true)
+        .onNodeWithTag(TodoOverviewScreenTestTags.TODO_LIST, useUnmergedTree = true)
         .assertIsDisplayed()
     composeTestRule
-        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todo1), useUnmergedTree = true)
+        .onNodeWithTag(
+            TodoOverviewScreenTestTags.getTestTagForTodoItem(todo1), useUnmergedTree = true)
         .assertIsDisplayed()
     composeTestRule
-        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todo2), useUnmergedTree = true)
+        .onNodeWithTag(
+            TodoOverviewScreenTestTags.getTestTagForTodoItem(todo2), useUnmergedTree = true)
         .assertIsDisplayed()
     composeTestRule
-        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todo3), useUnmergedTree = true)
+        .onNodeWithTag(
+            TodoOverviewScreenTestTags.getTestTagForTodoItem(todo3), useUnmergedTree = true)
         .assertIsDisplayed()
   }
 
@@ -151,15 +154,16 @@ class OverviewScreenTest : GatherlyTest() {
     setContent(withInitialTodos = todos)
     composeTestRule
         .onNodeWithTag(
-            OverviewScreenTestTags.getTestTagForTodoItem(todos.first()), useUnmergedTree = true)
+            TodoOverviewScreenTestTags.getTestTagForTodoItem(todos.first()), useUnmergedTree = true)
         .assertIsDisplayed()
     val lastNode =
         composeTestRule.onNodeWithTag(
-            OverviewScreenTestTags.getTestTagForTodoItem(todos.last()), useUnmergedTree = true)
+            TodoOverviewScreenTestTags.getTestTagForTodoItem(todos.last()), useUnmergedTree = true)
     lastNode.assertIsNotDisplayed()
     composeTestRule
-        .onNodeWithTag(OverviewScreenTestTags.TODO_LIST, useUnmergedTree = true)
-        .performScrollToNode(hasTestTag(OverviewScreenTestTags.getTestTagForTodoItem(todos.last())))
+        .onNodeWithTag(TodoOverviewScreenTestTags.TODO_LIST, useUnmergedTree = true)
+        .performScrollToNode(
+            hasTestTag(TodoOverviewScreenTestTags.getTestTagForTodoItem(todos.last())))
     lastNode.assertIsDisplayed()
   }
 
@@ -174,7 +178,7 @@ class OverviewScreenTest : GatherlyTest() {
     val todo = todo1.copy(status = ToDoStatus.ONGOING)
     setContent(withInitialTodos = listOf(todo))
 
-    val checkboxTag = OverviewScreenTestTags.getCheckboxTagForTodoItem(todo)
+    val checkboxTag = TodoOverviewScreenTestTags.getCheckboxTagForTodoItem(todo)
 
     // checkbox is not checked (Ongoing section)
     composeTestRule.onNodeWithTag(checkboxTag).assertExists().assertIsOff()
@@ -216,21 +220,21 @@ class OverviewScreenTest : GatherlyTest() {
 
     // Type a query that matches only one item
     composeTestRule
-        .onNodeWithTag(OverviewScreenTestTags.SEARCH_BAR)
+        .onNodeWithTag(TodoOverviewScreenTestTags.SEARCH_BAR)
         .performClick()
         .performTextInput("dog")
 
     // Only "Walk dog" should remain visible
     composeTestRule
-        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todos[1]))
+        .onNodeWithTag(TodoOverviewScreenTestTags.getTestTagForTodoItem(todos[1]))
         .assertIsDisplayed()
 
     composeTestRule
-        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todos[0]))
+        .onNodeWithTag(TodoOverviewScreenTestTags.getTestTagForTodoItem(todos[0]))
         .assertIsNotDisplayed()
 
     composeTestRule
-        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todos[2]))
+        .onNodeWithTag(TodoOverviewScreenTestTags.getTestTagForTodoItem(todos[2]))
         .assertIsNotDisplayed()
   }
 
@@ -248,16 +252,16 @@ class OverviewScreenTest : GatherlyTest() {
 
     // Search a word found only in the description of todo1
     composeTestRule
-        .onNodeWithTag(OverviewScreenTestTags.SEARCH_BAR)
+        .onNodeWithTag(TodoOverviewScreenTestTags.SEARCH_BAR)
         .performClick()
         .performTextInput("meeting")
 
     composeTestRule
-        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todos[0]))
+        .onNodeWithTag(TodoOverviewScreenTestTags.getTestTagForTodoItem(todos[0]))
         .assertIsDisplayed()
 
     composeTestRule
-        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todos[1]))
+        .onNodeWithTag(TodoOverviewScreenTestTags.getTestTagForTodoItem(todos[1]))
         .assertIsNotDisplayed()
   }
 
@@ -268,7 +272,7 @@ class OverviewScreenTest : GatherlyTest() {
 
     setContent(withInitialTodos = todos)
 
-    val searchBar = composeTestRule.onNodeWithTag(OverviewScreenTestTags.SEARCH_BAR)
+    val searchBar = composeTestRule.onNodeWithTag(TodoOverviewScreenTestTags.SEARCH_BAR)
 
     // Filter down to a single match
     searchBar.performClick().performTextInput("abc")
@@ -281,7 +285,7 @@ class OverviewScreenTest : GatherlyTest() {
     // All todos should reappear
     todos.forEach { todo ->
       composeTestRule
-          .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todo))
+          .onNodeWithTag(TodoOverviewScreenTestTags.getTestTagForTodoItem(todo))
           .assertIsDisplayed()
     }
   }
@@ -291,7 +295,7 @@ class OverviewScreenTest : GatherlyTest() {
   fun sortMenu_opensOnClick() = runTest {
     setContent(withInitialTodos = listOf(todo1))
 
-    composeTestRule.onNodeWithTag(OverviewScreenTestTags.SORT_MENU_BUTTON).performClick()
+    composeTestRule.onNodeWithTag(TodoOverviewScreenTestTags.SORT_MENU_BUTTON).performClick()
 
     composeTestRule.onNode(hasText("Date ascending")).assertIsDisplayed()
     composeTestRule.onNode(hasText("Date descending")).assertIsDisplayed()
@@ -308,7 +312,7 @@ class OverviewScreenTest : GatherlyTest() {
             todo3.copy(name = "Bravo", status = ToDoStatus.ONGOING))
     setContent(todos)
 
-    composeTestRule.onNodeWithTag(OverviewScreenTestTags.SORT_MENU_BUTTON).performClick()
+    composeTestRule.onNodeWithTag(TodoOverviewScreenTestTags.SORT_MENU_BUTTON).performClick()
     composeTestRule.onNode(hasText("Alphabetical")).performClick()
     advanceUntilIdle()
 
@@ -333,7 +337,7 @@ class OverviewScreenTest : GatherlyTest() {
     val todos = listOf(todoA, todoC, todoB)
     setContent(todos)
 
-    composeTestRule.onNodeWithTag(OverviewScreenTestTags.SORT_MENU_BUTTON).performClick()
+    composeTestRule.onNodeWithTag(TodoOverviewScreenTestTags.SORT_MENU_BUTTON).performClick()
     composeTestRule.onNode(hasText("Date ascending")).performClick()
     advanceUntilIdle()
 
@@ -358,7 +362,7 @@ class OverviewScreenTest : GatherlyTest() {
     val todos = listOf(a, b, c)
     setContent(withInitialTodos = todos)
 
-    composeTestRule.onNodeWithTag(OverviewScreenTestTags.SORT_MENU_BUTTON).performClick()
+    composeTestRule.onNodeWithTag(TodoOverviewScreenTestTags.SORT_MENU_BUTTON).performClick()
     composeTestRule.onNode(hasText("Date descending")).performClick()
     advanceUntilIdle()
 
@@ -385,11 +389,11 @@ class OverviewScreenTest : GatherlyTest() {
     setContent(listOf(banana, apple, apricot))
 
     // Search "ap"
-    composeTestRule.onNodeWithTag(OverviewScreenTestTags.SEARCH_BAR).performTextInput("ap")
+    composeTestRule.onNodeWithTag(TodoOverviewScreenTestTags.SEARCH_BAR).performTextInput("ap")
     advanceUntilIdle()
 
     // Sort alphabetical
-    composeTestRule.onNodeWithTag(OverviewScreenTestTags.SORT_MENU_BUTTON).performClick()
+    composeTestRule.onNodeWithTag(TodoOverviewScreenTestTags.SORT_MENU_BUTTON).performClick()
     composeTestRule.onNode(hasText("Alphabetical")).performClick()
     advanceUntilIdle()
 
@@ -414,7 +418,7 @@ class OverviewScreenTest : GatherlyTest() {
 
     setContent(listOf(a, b, c, d))
 
-    composeTestRule.onNodeWithTag(OverviewScreenTestTags.SORT_MENU_BUTTON).performClick()
+    composeTestRule.onNodeWithTag(TodoOverviewScreenTestTags.SORT_MENU_BUTTON).performClick()
     composeTestRule.onNode(hasText("Date ascending")).performClick()
     advanceUntilIdle()
 
@@ -436,7 +440,7 @@ class OverviewScreenTest : GatherlyTest() {
 
   /** Helper: Returns the vertical position of a [ToDo] item in the list. */
   private fun positionOf(todo: ToDo): Float {
-    val tag = OverviewScreenTestTags.getTestTagForTodoItem(todo)
+    val tag = TodoOverviewScreenTestTags.getTestTagForTodoItem(todo)
 
     // Ensure it's brought into view first
     composeTestRule.onNodeWithTag(tag, useUnmergedTree = true).performScrollTo()
@@ -465,26 +469,26 @@ class OverviewScreenTest : GatherlyTest() {
     advanceUntilIdle()
 
     composeTestRule
-        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todoHomework))
+        .onNodeWithTag(TodoOverviewScreenTestTags.getTestTagForTodoItem(todoHomework))
         .assertIsDisplayed()
 
     composeTestRule.onNode(hasText("Courses")).performClick()
     advanceUntilIdle()
     composeTestRule
-        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todoCourses))
+        .onNodeWithTag(TodoOverviewScreenTestTags.getTestTagForTodoItem(todoCourses))
         .assertIsDisplayed()
 
     composeTestRule.onNode(hasText("Personal")).performClick()
     advanceUntilIdle()
 
     composeTestRule
-        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todoPersonal))
+        .onNodeWithTag(TodoOverviewScreenTestTags.getTestTagForTodoItem(todoPersonal))
         .assertIsDisplayed()
     composeTestRule.onNode(hasText("Project")).performClick()
     advanceUntilIdle()
 
     composeTestRule
-        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todoProject))
+        .onNodeWithTag(TodoOverviewScreenTestTags.getTestTagForTodoItem(todoProject))
         .assertIsDisplayed()
   }
 
@@ -499,7 +503,7 @@ class OverviewScreenTest : GatherlyTest() {
 
     setContent(listOf(todoNonePriority, todoLowPriority, todoMediumPriority, todoHighPriority))
 
-    composeTestRule.onNodeWithTag(OverviewScreenTestTags.SORT_MENU_BUTTON).performClick()
+    composeTestRule.onNodeWithTag(TodoOverviewScreenTestTags.SORT_MENU_BUTTON).performClick()
     composeTestRule.onNode(hasText("Priority level")).performClick()
     advanceUntilIdle()
 

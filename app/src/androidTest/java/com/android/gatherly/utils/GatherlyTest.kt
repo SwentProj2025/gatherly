@@ -17,6 +17,7 @@ import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.ui.todo.AddToDoScreenTestTags
 import com.android.gatherly.ui.todo.EditToDoScreenTestTags
+import com.android.gatherly.ui.todo.LocationSuggestionsTestTags
 import com.android.gatherly.ui.todo.OverviewScreenTestTags
 import com.google.firebase.Timestamp
 import java.util.Calendar
@@ -32,7 +33,7 @@ const val UI_WAIT_TIMEOUT = 100_000L
 /**
  * Base class for Gatherly tests, providing common setup and utility functions.
  *
- * It includes predefined ToDo items and helper methods for interacting with the UI during tests.
+ * It includes predefined [ToDo] items and helper methods for interacting with the UI during tests.
  */
 abstract class GatherlyTest() {
 
@@ -71,28 +72,28 @@ abstract class GatherlyTest() {
           status = ToDoStatus.ENDED,
           ownerId = "user")
 
-  /** Enters the title of a ToDo into the EditTodo screen fields. */
+  /** Enters the title of a [ToDo] into the EditTodo screen fields. */
   fun ComposeTestRule.enterEditTodoTitle(title: String) {
     onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_TITLE).performTextClearance()
     onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_TITLE).performTextInput(title)
   }
 
-  /** Enters the description of a ToDo into the EditTodo screen fields. */
+  /** Enters the description of a [ToDo] into the EditTodo screen fields. */
   fun ComposeTestRule.enterEditTodoDescription(description: String) {
     onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_DESCRIPTION).performTextClearance()
     onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_DESCRIPTION).performTextInput(description)
   }
 
-  /** Enters the time of a ToDo into the EditTodo screen fields. */
+  /** Enters the time of a [ToDo] into the EditTodo screen fields. */
   fun ComposeTestRule.enterEditTodoTime(time: String) {
     onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_TIME).performTextClearance()
     onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_TIME).performTextInput(time)
   }
 
-  /** Enters the location of a ToDo into the EditTodo screen fields. */
+  /** Enters the location of a [ToDo] into the EditTodo screen fields. */
   fun ComposeTestRule.enterEditTodoLocation(location: String) {
-    onNodeWithTag(ToDoLocationSuggestionsTestTags.INPUT).performTextClearance()
-    onNodeWithTag(ToDoLocationSuggestionsTestTags.INPUT).performTextInput(location)
+    onNodeWithTag(LocationSuggestionsTestTags.INPUT).performTextClearance()
+    onNodeWithTag(LocationSuggestionsTestTags.INPUT).performTextInput(location)
   }
 
   /** Clicks the Save button on the EditTodo screen. */
@@ -100,15 +101,15 @@ abstract class GatherlyTest() {
       onNodeWithTag(EditToDoScreenTestTags.ERROR_MESSAGE, useUnmergedTree = true)
           .assertIsDisplayed()
 
-  /** Enters the title of a ToDo into the AddTodo screen fields. */
+  /** Enters the title of a [ToDo] into the AddTodo screen fields. */
   fun ComposeTestRule.enterAddTodoTitle(title: String) =
       onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_TITLE).performTextInput(title)
 
-  /** Enters the description of a ToDo into the AddTodo screen fields. */
+  /** Enters the description of a [ToDo] into the AddTodo screen fields. */
   fun ComposeTestRule.enterAddTodoDescription(description: String) =
       onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_DESCRIPTION).performTextInput(description)
 
-  /** Enters the date of a ToDo into the AddTodo screen fields. */
+  /** Enters the date of a [ToDo] into the AddTodo screen fields. */
   fun ComposeTestRule.enterAddTodoDate(date: String) = {
     openDatePicker(AddToDoScreenTestTags.INPUT_TODO_DATE)
     val parts = date.split("/")
@@ -120,15 +121,15 @@ abstract class GatherlyTest() {
     }
   }
 
-  /** Enters the time of a ToDo into the AddTodo screen fields. */
+  /** Enters the time of a [ToDo] into the AddTodo screen fields. */
   fun ComposeTestRule.enterAddTodoTime(time: String) =
       onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_TIME).performTextInput(time)
 
-  /** Enters the location of a ToDo into the AddTodo screen fields. */
+  /** Enters the location of a [ToDo] into the AddTodo screen fields. */
   fun ComposeTestRule.enterAddTodoLocation(location: String) =
-      onNodeWithTag(ToDoLocationSuggestionsTestTags.INPUT).performTextInput(location)
+      onNodeWithTag(LocationSuggestionsTestTags.INPUT).performTextInput(location)
 
-  /** Enters all details of a ToDo into the AddTodo screen fields. */
+  /** Enters all details of a [ToDo] into the AddTodo screen fields. */
   fun ComposeTestRule.enterAddTodoDetails(todo: ToDo) {
     enterAddTodoTitle(todo.name)
     enterAddTodoDescription(todo.description)
@@ -144,7 +145,7 @@ abstract class GatherlyTest() {
     }
   }
 
-  /** Asserts that a ToDo item is displayed in the ToDo overview screen. */
+  /** Asserts that a [ToDo] item is displayed in the [ToDo] overview screen. */
   fun ComposeTestRule.onTodoItem(todo: ToDo, matcher: SemanticsMatcher) {
     onNode(
             hasTestTag(OverviewScreenTestTags.getTestTagForTodoItem(todo))
@@ -157,7 +158,9 @@ abstract class GatherlyTest() {
   fun ComposeTestRule.checkErrorMessageIsDisplayedForAddTodo() =
       onNodeWithTag(AddToDoScreenTestTags.ERROR_MESSAGE, useUnmergedTree = true).assertIsDisplayed()
 
-  /** Utility function to check that no ToDo items were added during the execution of an action. */
+  /**
+   * Utility function to check that no [ToDo] items were added during the execution of an action.
+   */
   fun checkNoTodoWereAdded(action: () -> Unit) {
     val numberOfTodos = runBlocking { repository.getAllTodos().size }
     action()

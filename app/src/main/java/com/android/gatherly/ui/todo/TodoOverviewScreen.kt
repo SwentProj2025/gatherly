@@ -78,10 +78,10 @@ import java.util.Locale
 // SwEnt staff.
 
 /**
- * Contains test tags used in [OverviewScreen] and its child composable for identifying UI elements
- * during Compose UI testing.
+ * Contains test tags used in [TodoOverviewScreen] and its child composable for identifying UI
+ * elements during Compose UI testing.
  */
-object OverviewScreenTestTags {
+object TodoOverviewScreenTestTags {
   /** Test tag for the FloatingActionButton used to create a new [ToDo] item. */
   const val CREATE_TODO_BUTTON = "createTodoFab"
 
@@ -134,7 +134,7 @@ object OverviewScreenTestTags {
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun OverviewScreen(
+fun TodoOverviewScreen(
     overviewViewModel: OverviewViewModel = viewModel(),
     onAddTodo: () -> Unit = {},
     onSelectTodo: (ToDo) -> Unit = {},
@@ -170,7 +170,7 @@ fun OverviewScreen(
       floatingActionButton = {
         FloatingActionButton(
             onClick = { onAddTodo() },
-            modifier = Modifier.testTag(OverviewScreenTestTags.CREATE_TODO_BUTTON),
+            modifier = Modifier.testTag(TodoOverviewScreenTestTags.CREATE_TODO_BUTTON),
             containerColor = MaterialTheme.colorScheme.secondary,
             contentColor = MaterialTheme.colorScheme.onSecondary) {
               Icon(
@@ -216,7 +216,7 @@ fun OverviewScreen(
                                         horizontal =
                                             dimensionResource(
                                                 R.dimen.todos_overview_horizontal_padding))
-                                    .testTag(OverviewScreenTestTags.SEARCH_BAR),
+                                    .testTag(TodoOverviewScreenTestTags.SEARCH_BAR),
                             label = { Text(stringResource(R.string.todos_search_bar_label)) },
                             singleLine = true,
                             colors =
@@ -265,7 +265,7 @@ fun SortMenu(currentOrder: TodoSortOrder, onSortSelected: (TodoSortOrder) -> Uni
 
   Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxHeight()) {
     IconButton(
-        modifier = Modifier.fillMaxHeight().testTag(OverviewScreenTestTags.SORT_MENU_BUTTON),
+        modifier = Modifier.fillMaxHeight().testTag(TodoOverviewScreenTestTags.SORT_MENU_BUTTON),
         onClick = { expanded = true },
     ) {
       Icon(
@@ -368,7 +368,7 @@ fun ToDoItem(
               contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
       modifier =
           Modifier.clickable(onClick = onClick)
-              .testTag(OverviewScreenTestTags.getTestTagForTodoItem(todo))
+              .testTag(TodoOverviewScreenTestTags.getTestTagForTodoItem(todo))
               .fillMaxWidth()
               .padding(vertical = dimensionResource(id = R.dimen.todo_item_vertical_padding))) {
         Row(
@@ -382,7 +382,7 @@ fun ToDoItem(
               onCheckedChange = onCheckedChange,
               modifier =
                   Modifier.padding(end = dimensionResource(id = R.dimen.todo_item_checkbox_padding))
-                      .testTag(OverviewScreenTestTags.getCheckboxTagForTodoItem(todo)))
+                      .testTag(TodoOverviewScreenTestTags.getCheckboxTagForTodoItem(todo)))
 
           Column(
               modifier =
@@ -462,7 +462,7 @@ private fun FilterTagBar(
               null,
               selectedTagFilter,
               overviewViewModel,
-              Modifier.testTag(OverviewScreenTestTags.ALL_TAG_BUTTON))
+              Modifier.testTag(TodoOverviewScreenTestTags.ALL_TAG_BUTTON))
         }
 
         items(categoriesList.size) { index ->
@@ -472,7 +472,7 @@ private fun FilterTagBar(
               category,
               selectedTagFilter,
               overviewViewModel,
-              Modifier.testTag(OverviewScreenTestTags.getTestTagForTagButton(category)))
+              Modifier.testTag(TodoOverviewScreenTestTags.getTestTagForTagButton(category)))
         }
       }
 }
@@ -614,7 +614,7 @@ private fun TodoItemsList(
             Modifier.fillMaxWidth()
                 .padding(
                     horizontal = dimensionResource(id = R.dimen.todos_overview_horizontal_padding))
-                .testTag(OverviewScreenTestTags.TODO_LIST)) {
+                .testTag(TodoOverviewScreenTestTags.TODO_LIST)) {
           ongoingTodoSection(
               ongoingTodos = ongoingTodos,
               onSelectTodo = onSelectTodo,
@@ -627,7 +627,8 @@ private fun TodoItemsList(
         }
   } else {
     Text(
-        modifier = Modifier.padding(padding).testTag(OverviewScreenTestTags.EMPTY_TODO_LIST_MSG),
+        modifier =
+            Modifier.padding(padding).testTag(TodoOverviewScreenTestTags.EMPTY_TODO_LIST_MSG),
         text = stringResource(R.string.no_todos_text))
   }
 }

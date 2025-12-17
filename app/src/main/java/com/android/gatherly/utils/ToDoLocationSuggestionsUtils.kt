@@ -1,4 +1,4 @@
-package com.android.gatherly.ui.todo
+package com.android.gatherly.utils
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -26,12 +26,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.window.PopupProperties
 import com.android.gatherly.R
 import com.android.gatherly.model.map.Location
+import com.android.gatherly.ui.todo.AddTodoScreen
+import com.android.gatherly.ui.todo.EditTodoScreen
 import kotlin.collections.isNotEmpty
 
 /**
  * A reusable composable that displays a location text input field with an attached dropdown menu
- * showing location suggestions. This component is shared between the [EditToDoScreen] and
- * [AddToDoScreen] to avoid code duplication.
+ * showing location suggestions. This component is shared between the [EditTodoScreen] and
+ * [AddTodoScreen] to avoid code duplication.
  *
  * @param location The current text value of the location field.
  * @param suggestions The list of suggested locations returned by the ViewModel.
@@ -42,7 +44,7 @@ import kotlin.collections.isNotEmpty
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun LocationSuggestions(
+fun ToDoLocationSuggestionsUtils(
     location: String,
     suggestions: List<Location>,
     onLocationChanged: (String) -> Unit,
@@ -69,7 +71,7 @@ fun LocationSuggestions(
         label = { Text(label) },
         placeholder = { Text(placeholder) },
         colors = textFieldColors,
-        modifier = Modifier.fillMaxWidth().testTag(LocationSuggestionsTestTags.INPUT))
+        modifier = Modifier.fillMaxWidth().testTag(ToDoLocationSuggestionsTestTags.INPUT))
 
     DropdownMenu(
         expanded = showLocationDropdown && suggestions.isNotEmpty(),
@@ -77,7 +79,7 @@ fun LocationSuggestions(
         properties = PopupProperties(focusable = false),
         containerColor = MaterialTheme.colorScheme.surfaceVariant,
         modifier =
-            Modifier.testTag(LocationSuggestionsTestTags.DROPDOWN)
+            Modifier.testTag(ToDoLocationSuggestionsTestTags.DROPDOWN)
                 .fillMaxWidth()
                 .heightIn(dimensionResource(R.dimen.todo_location_dropdown_height))) {
           suggestions.take(suggestionLimit).forEach { loc ->
@@ -112,8 +114,8 @@ fun LocationSuggestions(
   }
 }
 
-/** Test tags for the [LocationSuggestions] composable. */
-object LocationSuggestionsTestTags {
+/** Test tags for the [ToDoLocationSuggestionsUtils] composable. */
+object ToDoLocationSuggestionsTestTags {
   const val INPUT = "input"
   const val DROPDOWN = "dropdown"
 }

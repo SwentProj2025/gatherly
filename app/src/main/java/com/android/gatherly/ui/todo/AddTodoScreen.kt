@@ -56,6 +56,7 @@ import com.android.gatherly.utils.GatherlyAlertDialogActions
 import com.android.gatherly.utils.GatherlyDatePicker
 import com.android.gatherly.utils.PriorityDropDown
 import com.android.gatherly.utils.TimeInputField
+import com.android.gatherly.utils.ToDoLocationSuggestionsUtils
 import kotlinx.coroutines.delay
 
 // Portions of the code in this file are copy-pasted from the Bootcamp solution provided by the
@@ -63,7 +64,7 @@ import kotlinx.coroutines.delay
 
 private const val DELAY = 1000L
 
-/** Contains test tags used for UI testing on the [AddToDoScreen]. */
+/** Contains test tags used for UI testing on the [AddTodoScreen]. */
 object AddToDoScreenTestTags {
   /** Tag for the [ToDo] title input field. */
   const val INPUT_TODO_TITLE = "inputTodoTitle"
@@ -88,8 +89,8 @@ object AddToDoScreenTestTags {
 }
 
 /**
- * Text field colors defined outside the composable scope to be shared between [AddToDoScreen] and
- * [EditToDoScreen]
+ * Text field colors defined outside the composable scope to be shared between [AddTodoScreen] and
+ * [EditTodoScreen]
  */
 val toDoTextFieldColors
   @Composable
@@ -119,7 +120,7 @@ val toDoTextFieldColors
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddToDoScreen(
+fun AddTodoScreen(
     addTodoViewModel: AddTodoViewModel = viewModel(),
     onAdd: () -> Unit = {},
     goBack: () -> Unit = {},
@@ -260,7 +261,7 @@ fun AddToDoScreen(
 
                 // Location Input with dropdown
                 item {
-                  LocationSuggestions(
+                  ToDoLocationSuggestionsUtils(
                       location = todoUIState.location,
                       suggestions = todoUIState.suggestions,
                       onLocationChanged = { addTodoViewModel.onLocationChanged(it) },
@@ -366,5 +367,5 @@ fun SavingText(todoUIState: AddTodoUiState) {
 @Preview
 @Composable
 fun AddToDoScreenPreview() {
-  GatherlyTheme(darkTheme = true) { AddToDoScreen() }
+  GatherlyTheme(darkTheme = true) { AddTodoScreen() }
 }
