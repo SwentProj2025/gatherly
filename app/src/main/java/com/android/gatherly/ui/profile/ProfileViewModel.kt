@@ -95,7 +95,10 @@ data class ProfileState(
  *
  * @param profileRepository The [ProfileRepository] used to interact with Firestore.
  * @param groupsRepository The [GroupsRepository] used to fetch user groups.
+ * @param pointsRepository The [PointsRepository] used to fetch user points.
+ * @param notificationsRepository The [NotificationsRepository] used to sync friend notifications.
  * @param authProvider A lambda that provides the current [FirebaseAuth] instance.
+ * @param userStatusManager The [UserStatusManager] used to update user status on sign-out.
  */
 class ProfileViewModel(
     private val profileRepository: ProfileRepository = ProfileRepositoryProvider.repository,
@@ -189,7 +192,10 @@ class ProfileViewModel(
 
   /**
    * Upgrades the user's current account to a Google account. The user keeps all of their current
-   * data
+   * data.
+   *
+   * @param context The context used to access resources.
+   * @param credentialManager The CredentialManager used to retrieve Google credentials.
    */
   fun upgradeWithGoogle(context: Context, credentialManager: CredentialManager) {
     viewModelScope.launch {
@@ -240,8 +246,12 @@ class ProfileViewModel(
     }
   }
 
-  /** Initiates sign-out */
-  fun signOut(credentialManager: CredentialManager): Unit {
+  /**
+   * Initiates sign-out.
+   *
+   * @param credentialManager The CredentialManager used to clear credentials.
+   */
+  fun signOut(credentialManager: CredentialManager) {
     viewModelScope.launch {
       userStatusManager.setStatus(ProfileStatus.OFFLINE)
       _uiState.value = _uiState.value.copy(signedOut = true)
@@ -253,7 +263,10 @@ class ProfileViewModel(
   /**
    * Builds the top badges map for the profile screen:
    * - starts from the default blank badges
-   * - replaces each entry with the highest ranked badge of that type, if the user has one
+   * - replaces each entry with the highest ranked badge of that type, if the user has one.
+   *
+   * @param profile The user's profile containing badge IDs.
+   * @return A map of [BadgeType] to [BadgeUI] representing the user's top badges.
    */
   private fun buildUiStateFromProfile(profile: Profile): Map<BadgeType, BadgeUI> {
     val userBadges: List<Badge> =
