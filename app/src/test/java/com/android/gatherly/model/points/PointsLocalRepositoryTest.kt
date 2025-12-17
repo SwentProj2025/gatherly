@@ -1,14 +1,18 @@
 package com.android.gatherly.model.points
 
+import com.android.gatherly.runUnconfinedTest
 import com.google.firebase.Timestamp
-import kotlinx.coroutines.test.runTest
+import kotlin.time.Duration.Companion.seconds
 import org.junit.Before
 import org.junit.Test
 
+/** Unit tests for [PointsLocalRepository]. */
 class PointsLocalRepositoryTest {
 
   private lateinit var pointsRepository: PointsRepository
+  private val testTimeout = 120.seconds
 
+  /** Sample Points instances for testing. */
   val points1 =
       Points(
           obtained = 23.9,
@@ -37,14 +41,15 @@ class PointsLocalRepositoryTest {
    * in the correct order
    */
   @Test
-  fun addAndFetchWorks() = runTest {
-    pointsRepository.addPoints(points1)
-    pointsRepository.addPoints(points2)
-    pointsRepository.addPoints(points3)
+  fun addAndFetchWorks() =
+      runUnconfinedTest(testTimeout) {
+        pointsRepository.addPoints(points1)
+        pointsRepository.addPoints(points2)
+        pointsRepository.addPoints(points3)
 
-    val pointsList = pointsRepository.getAllPoints()
+        val pointsList = pointsRepository.getAllPoints()
 
-    assert(pointsList.size == 3)
-    assert(pointsList == listOf(points2, points1, points3))
-  }
+        assert(pointsList.size == 3)
+        assert(pointsList == listOf(points2, points1, points3))
+      }
 }

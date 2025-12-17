@@ -86,7 +86,7 @@ service cloud.firestore {
 
                 // Only admins can delete the group
                 allow delete: if request.auth != null
-                               && request.auth.uid in resource.data.adminIds;
+                               && request.auth.uid == resource.data.creatorId;
 
                 // Allow updates if:
                 // - User is an admin (can do anything)

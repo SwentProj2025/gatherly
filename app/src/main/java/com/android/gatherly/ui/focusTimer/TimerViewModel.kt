@@ -23,7 +23,7 @@ import com.android.gatherly.model.profile.UserStatusManager
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.model.todo.ToDosRepositoryProvider
-import com.android.gatherly.utils.getProfileWithSyncedFriendNotifications
+import com.android.gatherly.utils.getProfileWithSyncedNotifications
 import com.android.gatherly.utils.incrementBadgeCheckPoints
 import com.android.gatherly.utils.updateFocusPoints
 import com.google.firebase.Firebase
@@ -142,7 +142,7 @@ class TimerViewModel(
         _uiState.value = _uiState.value.copy(usersFocusSessions = focusSessions)
 
         val profile =
-            getProfileWithSyncedFriendNotifications(
+            getProfileWithSyncedNotifications(
                 profileRepository,
                 notificationsRepository,
                 pointsRepository,
