@@ -93,7 +93,6 @@
     <dimen name="homepage_events_section_height">200.dp</dimen>
     <dimen name="homepage_minimap_width">280.dp</dimen>
     <dimen name="homepage_add_friends_icon_size">30.dp</dimen>
-    <dimen name="homepage_task_section_height">200.dp</dimen>
     <dimen name="homepage_filter_icon_button_size">48.dp</dimen>
     <dimen name="homepage_filter_card_elevation">4.dp</dimen>
 

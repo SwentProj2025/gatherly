@@ -189,7 +189,6 @@
     <string name="homepage_arrow_icon_description">Navigate</string>
     <string name="homepage_focus_button_text">Go to Focus Timer</string>
     <string name="homepage_friends_section_label">Friends</string>
-    <string name="homepage_profile_image_description">Friend Profile Picture</string>
     <string name="homepage_upcoming_events_title">Upcoming events</string>
     <string name="homepage_upcoming_tasks_title">My upcoming tasks</string>
     <string name="homepage_empty_task_list_message">You don\'t have any todos, click here to add some !</string>
@@ -335,5 +334,4 @@
     <string name="location_suggestion_more">More…</string>
     <string name="empty_string"> </string>
     <string name="error_date_picker_message">Invalid format or past date</string>
-    <string name="date_pattern">dd/MM/yyyy HH:mm</string>
 </resources>
