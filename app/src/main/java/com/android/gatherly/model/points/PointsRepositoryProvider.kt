@@ -4,8 +4,8 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.ktx.Firebase
 
 /**
- * Provides a single instance of the repository in the app. `repository` is mutable for testing
- * purposes.
+ * Provides a single instance of the [PointsRepository] in the app. `repository` is mutable for
+ * testing purposes.
  */
 object PointsRepositoryProvider {
 

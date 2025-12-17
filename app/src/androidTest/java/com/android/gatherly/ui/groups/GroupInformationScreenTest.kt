@@ -21,6 +21,7 @@ import org.junit.Rule
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
+/** Tests the Group Information display */
 class GroupInformationScreenTest {
   @get:Rule val composeTestRule = createComposeRule()
   private lateinit var groupsRepository: GroupsRepository
@@ -47,6 +48,7 @@ class GroupInformationScreenTest {
 
   val friendUser = Profile(uid = friendUserId, profilePicture = friendProfilePic)
 
+  /** Sets all repositories to local repositories and sets up the viewModel */
   @Before
   fun setUp() {
     groupsRepository = GroupsLocalRepository()
@@ -145,6 +147,7 @@ class GroupInformationScreenTest {
     composeTestRule.onNodeWithTag(GroupInformationScreenTestTags.LEAVE_BUTTON).assertIsDisplayed()
   }
 
+  /** Checks that clicking to leave a group shows a confirmation popup */
   @Test
   fun leaveGroupShowsPopUp() {
     setNonAdminUser()

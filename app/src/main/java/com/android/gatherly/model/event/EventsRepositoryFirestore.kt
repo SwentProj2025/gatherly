@@ -13,6 +13,17 @@ import kotlinx.coroutines.tasks.await
 
 // This class contains code adapted by an LLM (GitHub Copilot, Claude.ai) from the CS-311 bootcamp.
 
+/**
+ * Firebase Firestore implementation of [EventsRepository].
+ *
+ * This implementation enforces security rules requiring the event creator to edit or delete events.
+ * Uses Firebase Authentication to identify the current user.
+ *
+ * @property db The Firestore database instance.
+ * @throws SecurityException for operations requiring creator privileges
+ * @throws NoSuchElementException when requested events are not found
+ * @throws IllegalStateException when no user is currently signed in
+ */
 class EventsRepositoryFirestore(private val db: FirebaseFirestore) : EventsRepository {
 
   /**
@@ -29,34 +40,25 @@ class EventsRepositoryFirestore(private val db: FirebaseFirestore) : EventsRepos
     return Firebase.auth.currentUser?.uid ?: throw IllegalStateException("No signed in user")
   }
 
-  /** Returns a new unique ID for an event. */
   override fun getNewId(): String {
     return collection.document().id
   }
 
-  /**
-   * Returns a list of all events in the system. Note that this does not filter events by user - it
-   * returns all events. User-specific access control is enforced in the methods below.
-   */
   override suspend fun getAllEvents(): List<Event> {
     val snap = collection.get().await() // No filtering - get ALL events
     return snap.documents.mapNotNull { doc -> snapshotToEvent(doc) }
   }
 
-  /** Returns the event with the given ID, or throws NoSuchElementException if not found. */
   override suspend fun getEvent(eventId: String): Event {
     val doc = collection.document(eventId).get().await()
     return snapshotToEvent(doc) ?: throw NoSuchElementException("Event with id=$eventId not found")
   }
 
-  /** Adds the given event to Firestore. The event's creatorId is set to the current user ID. */
   override suspend fun addEvent(event: Event) {
-    // Should probably enforce that creatorId matches currentUserId
     val ownedEvent = event.copy(creatorId = currentUserId())
     collection.document(ownedEvent.id).set(eventToMap(ownedEvent)).await()
   }
 
-  /** Edits the event with the given ID to have the new values. */
   override suspend fun editEvent(eventId: String, newValue: Event) {
     val existing = getEvent(eventId)
     if (existing.creatorId != currentUserId()) {
@@ -66,7 +68,6 @@ class EventsRepositoryFirestore(private val db: FirebaseFirestore) : EventsRepos
     collection.document(eventId).set(eventToMap(updated)).await()
   }
 
-  /** Deletes the event with the given ID. */
   override suspend fun deleteEvent(eventId: String) {
     val existing = getEvent(eventId)
     if (existing.creatorId != currentUserId()) {
@@ -75,12 +76,10 @@ class EventsRepositoryFirestore(private val db: FirebaseFirestore) : EventsRepos
     collection.document(eventId).delete().await()
   }
 
-  /** Adds the given user ID to the participants list of the event with the given ID. */
   override suspend fun addParticipant(eventId: String, userId: String) {
     collection.document(eventId).update("participants", FieldValue.arrayUnion(userId)).await()
   }
 
-  /** Removes the given user ID from the participants list of the event with the given ID. */
   override suspend fun removeParticipant(eventId: String, userId: String) {
     collection.document(eventId).update("participants", FieldValue.arrayRemove(userId)).await()
   }
@@ -99,7 +98,7 @@ class EventsRepositoryFirestore(private val db: FirebaseFirestore) : EventsRepos
     val date = doc.getTimestamp("date") ?: return null
     val startTime = doc.getTimestamp("startTime") ?: return null
     val endTime = doc.getTimestamp("endTime") ?: return null
-    val locationMap = doc.get("location") as? Map<*, *>
+    val locationMap = doc["location"] as? Map<*, *>
     val location =
         locationMap?.let { locMap ->
           val lat = locMap["latitude"] as? Double
@@ -113,12 +112,11 @@ class EventsRepositoryFirestore(private val db: FirebaseFirestore) : EventsRepos
         }
     val creatorId = doc.getString("creatorId") ?: return null
     val statusStr = doc.getString("status") ?: return null
-    val participants =
-        (doc.get("participants") as? List<*>)?.filterIsInstance<String>() ?: emptyList()
+    val participants = (doc["participants"] as? List<*>)?.filterIsInstance<String>() ?: emptyList()
     val status = EventStatus.valueOf(statusStr)
     val stateStr = doc.getString("state") ?: return null
     val state = EventState.valueOf(stateStr)
-    val groupsRaw = doc.get("groups") as? List<*> ?: emptyList()
+    val groupsRaw = doc["groups"] as? List<*> ?: emptyList()
 
     val groups: List<Group> =
         groupsRaw.mapNotNull { groupData ->

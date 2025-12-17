@@ -58,6 +58,13 @@ object GroupInformationScreenTestTags {
   fun getTestTagForAdminItem(uid: String): String = "admin_${uid}"
 }
 
+/**
+ * Displays information about a given group
+ *
+ * @param navigationActions Used to navigate from one screen to another
+ * @param groupInformationViewModel The viewModel through which we access data
+ * @param groupId The id of the group to display
+ */
 @Composable
 fun GroupInformationScreen(
     navigationActions: NavigationActions? = null,
@@ -68,8 +75,10 @@ fun GroupInformationScreen(
   val uiState by groupInformationViewModel.uiState.collectAsState()
   val showDialog = remember { mutableStateOf(false) }
 
+  // Loads the UI
   LaunchedEffect(Unit) { groupInformationViewModel.loadUIState(groupId) }
 
+  // Checks whether to navigate back to overview
   LaunchedEffect(uiState.navigateToOverview) {
     if (uiState.navigateToOverview) {
       navigationActions?.navigateTo(Screen.OverviewGroupsScreen)
@@ -87,15 +96,20 @@ fun GroupInformationScreen(
         Column(
             modifier = Modifier.padding(padding).fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally) {
+
+              // While the screen is loading
               if (uiState.isLoading) {
                 LoadingAnimation(stringResource(R.string.groups_info_loading), padding)
               } else {
+
+                // Group name
                 Text(
                     text = uiState.group.name,
                     style = MaterialTheme.typography.displayLarge,
                     fontWeight = FontWeight.Bold,
                     modifier = Modifier.testTag(GroupInformationScreenTestTags.GROUP_NAME))
 
+                // Group description
                 uiState.group.description?.let {
                   Text(
                       text = it,
@@ -104,6 +118,7 @@ fun GroupInformationScreen(
                       modifier = Modifier.testTag(GroupInformationScreenTestTags.GROUP_DESCRIPTION))
                 }
 
+                // Members text
                 Text(
                     text = stringResource(R.string.groups_info_members),
                     style = MaterialTheme.typography.headlineMedium,
@@ -113,6 +128,7 @@ fun GroupInformationScreen(
                     modifier =
                         Modifier.padding(vertical = dimensionResource(R.dimen.padding_regular)))
 
+                // The list of group members
                 MembersList(
                     membersProfiles = uiState.memberProfiles,
                     adminIds = uiState.group.adminIds,
@@ -146,7 +162,12 @@ fun GroupInformationScreen(
       })
 }
 
-/** Displays a "leave group" button if the user is not the owner */
+/**
+ * Displays a "leave group" button if the user is not the owner
+ *
+ * @param uiState The state currently exposed to the UI
+ * @param showDialog Whether to show the [GatherlyAlertDialog]
+ */
 @Composable
 fun LeaveButton(uiState: GroupInformationUIState, showDialog: MutableState<Boolean>) {
   if (!uiState.isOwner) {
@@ -169,7 +190,12 @@ fun LeaveButton(uiState: GroupInformationUIState, showDialog: MutableState<Boole
   }
 }
 
-/** Displays an "edit group" button if the user is an admin */
+/**
+ * Displays an "edit group" button if the user is an admin
+ *
+ * @param uiState The state currently exposed to the UI
+ * @param navigationActions Used to navigate to different screens
+ */
 @Composable
 fun EditButton(uiState: GroupInformationUIState, navigationActions: NavigationActions?) {
   if (uiState.isAdmin) {
@@ -192,6 +218,13 @@ fun EditButton(uiState: GroupInformationUIState, navigationActions: NavigationAc
   }
 }
 
+/**
+ * Displays list of current group members
+ *
+ * @param membersProfiles The list of profiles to display
+ * @param adminIds The list of ids that are admins to determine if a certain user is admin or not
+ * @param modifier The modifier passed down to the composable
+ */
 @Composable
 fun MembersList(membersProfiles: List<Profile>, adminIds: List<String>, modifier: Modifier) {
   LazyColumn(

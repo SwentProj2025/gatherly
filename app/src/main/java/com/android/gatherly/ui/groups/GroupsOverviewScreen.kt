@@ -59,6 +59,12 @@ object GroupsOverviewScreenTestTags {
   fun getTestTagForGroupItem(gid: String): String = "group${gid}"
 }
 
+/**
+ * Displays the groups that a user belongs to
+ *
+ * @param navigationActions Used to navigate to other screens
+ * @param groupsOverviewViewModel Used to interact with data
+ */
 @Composable
 fun GroupsOverviewScreen(
     navigationActions: NavigationActions? = null,
@@ -69,8 +75,10 @@ fun GroupsOverviewScreen(
   val snackBarHostState = remember { SnackbarHostState() }
   val errorMessage = uiState.value.errorMsg
 
+  // Refresh groups upon arrival on the screen
   LaunchedEffect(Unit) { groupsOverviewViewModel.refreshUIState() }
 
+  // Show error messages in a snackbar
   LaunchedEffect(errorMessage) {
     if (errorMessage != null) {
       snackBarHostState.showSnackbar(message = errorMessage, withDismissAction = true)
@@ -99,6 +107,13 @@ fun GroupsOverviewScreen(
       })
 }
 
+/**
+ * The content of the screen
+ *
+ * @param groupsOverviewViewModel Used to interact with data
+ * @param padding The screen padding to be used
+ * @param navigationActions Used to navigate to other screens
+ */
 @Composable
 fun OverviewContent(
     groupsOverviewViewModel: GroupsOverviewViewModel,
@@ -211,6 +226,11 @@ fun OverviewContent(
       }
 }
 
+/**
+ * Displays the list of picture given
+ *
+ * @param picsList The list of pictures to display
+ */
 @Composable
 fun GroupPictures(picsList: List<String>) {
   for (i in 0 until picsList.size) {

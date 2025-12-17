@@ -251,6 +251,7 @@ private fun ProfileRowCard(
  * @param editGroupViewModel ViewModel managing the Edit Group screen state.
  * @param goBack Callback to navigate back.
  * @param onSaved Callback invoked after a successful save.
+ * @param onDelete Callback invoked after a successful delete.
  */
 @Composable
 fun EditGroupScreen(
@@ -409,6 +410,15 @@ fun EditGroupScreen(
 
 /* ----------------------- EditGroupScreen Helpers ----------------------- */
 
+/**
+ * Displays the section with editable text fields for the group name and description
+ *
+ * @param uiState The state currently exposed to the UI
+ * @param inputFieldColors Colors for the text fields
+ * @param onNameChanged The function to call when the name is changes
+ * @param onDescriptionChanged The function to call when the description is changed
+ * @param smallSpacing Spacing to use below the fields
+ */
 private fun LazyListScope.groupFieldsSection(
     uiState: EditGroupUiState,
     inputFieldColors: TextFieldColors,
@@ -444,6 +454,13 @@ private fun LazyListScope.groupFieldsSection(
   }
 }
 
+/**
+ * Line to show the profile pictures of the currently selected participants
+ *
+ * @param participants The participants to display
+ * @param dividerThickness The thickness of the divider to display below the pictures
+ * @param smallSpacing The spacing to use for modifiers
+ */
 private fun LazyListScope.participantsStripSection(
     participants: List<Profile>,
     dividerThickness: Dp,
@@ -474,11 +491,22 @@ private fun LazyListScope.participantsStripSection(
       }
     }
     Spacer(modifier = Modifier.height(smallSpacing))
-    HorizontalDivider(thickness = dividerThickness, color = MaterialTheme.colorScheme.primary)
+    HorizontalDivider(thickness = dividerThickness, color = MaterialTheme.colorScheme.onBackground)
     Spacer(modifier = Modifier.height(smallSpacing))
   }
 }
 
+/**
+ * The section containing the list of currently group members
+ *
+ * @param uiState The state currently exposed to the UI
+ * @param isOwner A boolean if the current user is the group owner
+ * @param isAdmin A boolean if the current user is an admin of the group
+ * @param dividerThickness The thickness for the divider to insert beneath the list
+ * @param smallSpacing The spacing to user for spacers
+ * @param onToggleAdmin The function to call if a member is added or removed as admin
+ * @param onToggleRemove The function to call if a member is removed from the group
+ */
 private fun LazyListScope.membersSection(
     uiState: EditGroupUiState,
     isOwner: Boolean,
@@ -515,7 +543,7 @@ private fun LazyListScope.membersSection(
 
   item {
     Spacer(modifier = Modifier.height(smallSpacing))
-    HorizontalDivider(thickness = dividerThickness, color = MaterialTheme.colorScheme.primary)
+    HorizontalDivider(thickness = dividerThickness, color = MaterialTheme.colorScheme.onBackground)
     Spacer(modifier = Modifier.height(smallSpacing))
     Text(
         text = stringResource(R.string.group_available_friends),
@@ -525,6 +553,17 @@ private fun LazyListScope.membersSection(
   }
 }
 
+/**
+ * The section containing friends that can still be added
+ *
+ * @param uiState The state currently exposed to the UI
+ * @param inputFieldColors The colors to use for the input fields
+ * @param screenPadding The padding to use in general
+ * @param smallSpacing The spacing to use for spacers
+ * @param friendSectionHeight The max height of this section
+ * @param onSearchChanged The function to call if the search query is changed
+ * @param onToggleFriend The function to call if a friend has been added to the group
+ */
 private fun LazyListScope.availableFriendsSection(
     uiState: EditGroupUiState,
     inputFieldColors: TextFieldColors,
@@ -573,6 +612,12 @@ private fun LazyListScope.availableFriendsSection(
   }
 }
 
+/**
+ * The section to show if there is an error to display
+ *
+ * @param generalError The error to display
+ * @param smallSpacing The spacing to use in spacers
+ */
 private fun LazyListScope.generalErrorSection(generalError: String?, smallSpacing: Dp) {
   if (generalError == null) return
   item {
@@ -586,6 +631,13 @@ private fun LazyListScope.generalErrorSection(generalError: String?, smallSpacin
   }
 }
 
+/**
+ * The section for the save button
+ *
+ * @param enabled If the button can be used or not
+ * @param style The style to use for the button
+ * @param onClick The function to call if the button is clicked
+ */
 private fun LazyListScope.saveButtonSection(
     enabled: Boolean,
     style: GroupButtonStyle,
@@ -605,6 +657,14 @@ private fun LazyListScope.saveButtonSection(
   }
 }
 
+/**
+ * The section for the delete group button
+ *
+ * @param isOwner The button can only be shown to the group owner
+ * @param style The style of buttons to use
+ * @param smallSpacing The spacing to use in spacers
+ * @param onClick The function to call if the group is deleted
+ */
 private fun LazyListScope.deleteButtonSection(
     isOwner: Boolean,
     style: GroupButtonStyle,
@@ -627,7 +687,17 @@ private fun LazyListScope.deleteButtonSection(
   }
 }
 
-/** Row for a current group member with admin and remove toggles. */
+/**
+ * Row for a current group member with admin and remove toggles.
+ *
+ * @param member The group member to display
+ * @param isAdmin If the group member is also an admin
+ * @param markedForRemoval If the group member is set to be removed from the group
+ * @param showAdminToggle If the admin toggle should be shown or not
+ * @param showRemoveToggle If the checkbox should be shown
+ * @param onToggleAdmin The function to call if the member is added or removed as an admin
+ * @param onToggleRemove The function to call if the member is removed from the group
+ */
 @Composable
 private fun MemberItem(
     member: Profile,
@@ -656,6 +726,7 @@ private fun MemberItem(
   )
 }
 
+/** The admin label to show under admin users */
 @Composable
 private fun AdminLabel() {
   Text(
@@ -665,6 +736,17 @@ private fun AdminLabel() {
       color = MaterialTheme.colorScheme.primary)
 }
 
+/**
+ * The Admin and checkbox toggles to show for members
+ *
+ * @param username The member's username
+ * @param isAdmin If the user is an admin
+ * @param markedForRemoval If the user is set to be removed from the group
+ * @param showAdminToggle If the admin toggle should be shown
+ * @param showRemoveToggle If the checkbox should be shown
+ * @param onToggleAdmin The function to call when a member is added or removed as an admin
+ * @param onToggleRemove The function to call if a member is removed from the group
+ */
 @Composable
 private fun MemberToggles(
     username: String,
@@ -696,6 +778,13 @@ private fun MemberToggles(
   }
 }
 
+/**
+ * The toggle of admin for members of the group
+ *
+ * @param username The username of the member
+ * @param isAdmin If the user is an admin of the group
+ * @param onToggleAdmin The function to call if the user is added or removed as an admin
+ */
 @Composable
 private fun MemberAdminToggle(username: String, isAdmin: Boolean, onToggleAdmin: () -> Unit) {
   val contentDesc =
@@ -720,6 +809,13 @@ private fun MemberAdminToggle(username: String, isAdmin: Boolean, onToggleAdmin:
           })
 }
 
+/**
+ * The toggle to remove members
+ *
+ * @param username The username of the user to display
+ * @param markedForRemoval If the user is set to be removed from the group
+ * @param onToggleRemove The function to call when a member is removed
+ */
 @Composable
 private fun MemberRemoveToggle(
     username: String,
@@ -734,7 +830,13 @@ private fun MemberRemoveToggle(
               .testTag(EditGroupScreenTestTags.getTestTagForMemberRemoveCheckbox(username)))
 }
 
-/** Row for a friend that can be added to the group. */
+/**
+ * Row for a friend that can be added to the group.
+ *
+ * @param friend The friend's [Profile] to display
+ * @param isSelected If the user is set to be added to the group
+ * @param onToggle The function to call if the user is added or removed from the group
+ */
 @Composable
 private fun AvailableFriendItem(friend: Profile, isSelected: Boolean, onToggle: () -> Unit) {
   ProfileRowCard(
