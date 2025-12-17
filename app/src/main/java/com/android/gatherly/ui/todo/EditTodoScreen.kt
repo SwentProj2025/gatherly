@@ -389,7 +389,7 @@ fun LazyListScope.advancedOptions(
           value = todoUIState.dueDate,
           label = stringResource(R.string.todos_date_field_label),
           isErrorMessage = todoUIState.dueDateError,
-          onClick = { onDatePickerClick },
+          onClick = { onDatePickerClick() },
           colors = toDoTextFieldColors,
           testTag =
               Pair(EditTodoScreenTestTags.INPUT_TODO_DATE, EditTodoScreenTestTags.ERROR_MESSAGE))
