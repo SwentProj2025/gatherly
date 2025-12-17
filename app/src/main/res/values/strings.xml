@@ -144,10 +144,16 @@
     <string name="events_alert_dialog_see_attendees_title">Participants</string>
     <string name="events_alert_dialog_see_attendees_groups_subtitle">From groups: </string>
 
+    <string name="events_error_name_message">Name is required</string>
+    <string name="events_error_description_message">Description is required</string>
+
     <string name="events_status_filter_all_label">All</string>
     <string name="events_status_filter_upcoming_label">Upcoming</string>
     <string name="events_status_filter_ongoing_label">Ongoing</string>
     <string name="events_status_filter_past_label">Past</string>
+
+    <string name="events_anonymous_attendees">Anonymous user</string>
+    <string name="events_current_user_attendees">You</string>
 
     <!-- Category Events -->
     <string name="events_dropdown_tag_label">Categories</string>
@@ -324,4 +330,10 @@
     <string name="loading_map">Loading the map…</string>
     <string name="loading_todos">Loading your todos …</string>
 
+    <!-- Utils -->
+    <string name="location_suggestion_loading">…</string>
+    <string name="location_suggestion_more">More…</string>
+    <string name="empty_string"> </string>
+    <string name="error_date_picker_message">Invalid format or past date</string>
+    <string name="date_pattern">dd/MM/yyyy HH:mm</string>
 </resources>

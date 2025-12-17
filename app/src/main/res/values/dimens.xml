@@ -21,6 +21,7 @@
 
     <!-- Spacing -->
     <dimen name="spacing_between_buttons">4dp</dimen>
+    <dimen name="spacing_between_icons">4dp</dimen>
     <dimen name="spacing_between_elements">6dp</dimen>
     <dimen name="spacing_between_fields">8dp</dimen>
     <dimen name="spacing_between_fields_smaller_regular">12dp</dimen>
@@ -30,6 +31,7 @@
 
     <!-- Component Sizes -->
     <dimen name="input_height">100dp</dimen>
+    <dimen name="dropdown_height">200dp</dimen>
     <dimen name="profile_pic_size_small">30dp</dimen>
     <dimen name="profile_pic_size_medium">40dp</dimen>
     <dimen name="profile_pic_size_regular">50dp</dimen>
@@ -43,9 +45,11 @@
 
     <!-- Shapes -->
     <dimen name="rounded_corner_shape_small">4dp</dimen>
+    <dimen name="rounded_corner_shape_small_medium">8dp</dimen>
     <dimen name="rounded_corner_shape_medium">12dp</dimen>
     <dimen name="rounded_corner_shape_medium_large">16dp</dimen>
     <dimen name="rounded_corner_shape_large">20dp</dimen>
+    <dimen name="rounded_corner_shape_extra_large">24dp</dimen>
     <dimen name="rounded_corner_shape_clip_large">50dp</dimen>
     <dimen name="border_width_regular">2dp</dimen>
 
@@ -53,10 +57,17 @@
     <dimen name="thickness_small">1dp</dimen>
 
     <!-- Icons -->
+    <dimen name="icons_size_extra_small">16.dp</dimen>
+    <dimen name="icons_size_small">20.dp</dimen>
     <dimen name="icons_size_medium">30.dp</dimen>
 
     <!-- Box -->
+    <dimen name="box_width_size_small">1.dp</dimen>
+    <dimen name="box_height_size_small">24.dp</dimen>
     <dimen name="box_size_large">150.dp</dimen>
+
+    <!-- Border -->
+    <dimen name="border_width_small">1.dp</dimen>
 
     <!-- ToDos -->
     <dimen name="todos_overview_vertical_padding">8dp</dimen>
@@ -140,6 +151,12 @@
     <dimen name="events_filter_bar_vertical_size">10.dp</dimen>
     <dimen name="events_filter_button_height">35.dp</dimen>
     <dimen name="events_overview_horizontal_padding">16dp</dimen>
+    <dimen name="events_state_switch_button_width">60dp</dimen>
+    <dimen name="events_state_switch_button_height">40dp</dimen>
+    <dimen name="events_title_section_padding">10dp</dimen>
+    <dimen name="events_empty_message_padding">8dp</dimen>
+    <dimen name="events_create_button_height">80dp</dimen>
+    <dimen name="events_create_button_vertical">12dp</dimen>
 
     <!-- Notifications Screen -->
     <dimen name="notification_avatar_spacing">4.dp</dimen>

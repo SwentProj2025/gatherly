@@ -39,58 +39,62 @@ import kotlin.collections.plus
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 
+/**
+ * Data class representing the UI state for the "Add Event" screen.
+ *
+ * @property name The event title.
+ * @property description The event description.
+ * @property location The event location.
+ * @property date The event date.
+ * @property startTime The event start time.
+ * @property endTime The event end time.
+ * @property participant The event participant search string.
+ * @property participants List of event participants.
+ * @property suggestedLocations List of suggested locations given the search string.
+ * @property nameError If there is an error in the name.
+ * @property descriptionError If there is an error in the description.
+ * @property dateError If there is an error in the date.
+ * @property startTimeError If there is an error in the start time.
+ * @property endTimeError If there is an error in the end time.
+ * @property displayToast If the UI should display a toast.
+ * @property toastString The string the toast should display.
+ * @property backToOverview When the event is edited or deleted, return to event overview.
+ * @property isSaving When the event is being saved.
+ * @property currentUserId Current user profile Id.
+ * @property suggestedProfiles List of suggested profiles given the search string.
+ * @property friend The event friend search string.
+ * @property suggestedFriendsProfile List of suggested friends' profiles given the search string.
+ * @property group The event group search string.
+ * @property groups List of groups invited to the event.
+ * @property suggestedGroups List of suggested groups given the search string.
+ * @property state The event state (public, private friends, private group).
+ */
 data class AddEventUiState(
-    // the event title
     val name: String = "",
-    // the event description
     val description: String = "",
-    // the event location
     val location: String = "",
-    // the event date
     val date: String = "",
-    // the event start time
     val startTime: String = "",
-    // the event end time
     val endTime: String = "",
-    // the event participant search string
     val participant: String = "",
-    // list of event participants
     val participants: List<Profile> = listOf(),
-    // list of suggested locations given the search string
     val suggestedLocations: List<Location> = emptyList(),
-    // if there is an error in the name
     val nameError: Boolean = false,
-    // if there is an error in the description
     val descriptionError: Boolean = false,
-    // if there is an error in the date
     val dateError: Boolean = false,
-    // if there is an error in the start time
     val startTimeError: Boolean = false,
-    // if there is an error in the end time
     val endTimeError: Boolean = false,
-    // if the UI should display a toast
     val displayToast: Boolean = false,
-    // the string the toast should display
     val toastString: String? = null,
-    // when the event is edited or deleted, return to event overview
     val backToOverview: Boolean = false,
-    // when the event is being saved
     val isSaving: Boolean = false,
-    // current user profile Id
     val currentUserId: String = "",
-    // list of suggested profiles given the search string
     val suggestedProfiles: List<Profile> = emptyList(),
-    // the friend participant search string
     val friend: String = "",
-    // list of suggested friends given the search string
     val suggestedFriendsProfile: List<Profile> = emptyList(),
-    // the event group search string
     val group: String = "",
-    // when it's a private group event
     val groups: List<Group> = emptyList(),
-    // list of suggested groups given the search string
     val suggestedGroups: List<Group> = emptyList(),
-    // state of the event whether it's a public event or a private (friend only or group) event
     val state: EventState = EventState.PUBLIC
 )
 
@@ -114,7 +118,12 @@ private var client: OkHttpClient =
  * Handles user input updates, field validation, and saving Event items to the Firestore repository
  * through [EventsRepository].
  *
+ * @param profileRepository The repository responsible for retrieving Profile items.
+ * @param groupsRepository The repository responsible for retrieving Group items.
  * @param eventsRepository The repository responsible for persisting Event items.
+ * @param pointsRepository The repository responsible for managing points.
+ * @param nominatimClient The repository responsible for retrieving Location items.
+ * @param authProvider A function that provides the FirebaseAuth instance.
  */
 @SuppressLint("SimpleDateFormat")
 class AddEventViewModel(
@@ -595,6 +604,14 @@ class AddEventViewModel(
   /**
    * Companion Object used to encapsulate a static method to retrieve a ViewModelProvider.Factory
    * and its default dependencies.
+   *
+   * @param profileRepository The repository responsible for retrieving Profile items.
+   * @param eventsRepository The repository responsible for persisting Event items.
+   * @param nominatimClient The repository responsible for retrieving Location items.
+   * @param groupsRepository The repository responsible for retrieving Group items.
+   * @param pointsRepository The repository responsible for managing points.
+   * @return A ViewModelProvider.Factory that creates AddEventViewModel instances with default
+   *   dependencies.
    */
   companion object {
     fun provideFactory(
