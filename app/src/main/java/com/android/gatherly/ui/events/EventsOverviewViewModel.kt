@@ -164,7 +164,7 @@ class EventsOverviewViewModel(
    *
    * @param currentUserId the ID of the current user
    */
-  private fun updateUIStateWithProcessedEvents(currentUserId: String) {
+  private suspend fun updateUIStateWithProcessedEvents(currentUserId: String) {
     val processedEvents = processEvents(allEventsCache, currentUserId)
 
     _uiState.value =
@@ -279,7 +279,7 @@ class EventsOverviewViewModel(
    */
   fun searchEvents(query: String, currentUserId: String) {
     _searchQuery.value = query
-    updateUIStateWithProcessedEvents(currentUserId)
+    viewModelScope.launch { updateUIStateWithProcessedEvents(currentUserId) }
   }
 
   /**
@@ -333,7 +333,10 @@ class EventsOverviewViewModel(
    * @param currentUserId the id of the current user
    * @return ProcessedEvents containing all categorized event lists
    */
-  private fun processEvents(allEvents: List<Event>, currentUserId: String): ProcessedEvents {
+  private suspend fun processEvents(
+      allEvents: List<Event>,
+      currentUserId: String
+  ): ProcessedEvents {
     val searchFiltered =
         if (_searchQuery.value.isNotBlank()) {
           val normalized = _searchQuery.value.trim().lowercase()
@@ -344,16 +347,23 @@ class EventsOverviewViewModel(
 
     val sorted = applySortOrder(searchFiltered)
 
+    val creatorIds = sorted.map { it.creatorId }.toSet()
+    val profilesMap = creatorIds.associateWith { profileRepository.getProfileByUid(it) }
+
     val participatedEventList =
         sorted.filter { it.participants.contains(currentUserId) && it.creatorId != currentUserId }
-
     val createdEventList = sorted.filter { it.creatorId == currentUserId }
 
     val globalEventList =
-        sorted.filter {
-          it.creatorId != currentUserId &&
-              !it.participants.contains(currentUserId) &&
-              conditionToParticipate(it, currentUserId)
+        sorted.filter { event ->
+          event.creatorId != currentUserId &&
+              !event.participants.contains(currentUserId) &&
+              when (event.state) {
+                EventState.PUBLIC -> true
+                EventState.PRIVATE_GROUP -> false
+                EventState.PRIVATE_FRIENDS ->
+                    profilesMap[event.creatorId]?.friendUids?.contains(currentUserId) ?: false
+              }
         }
 
     return ProcessedEvents(
@@ -439,33 +449,6 @@ class EventsOverviewViewModel(
     _currentUserLocation.value = newLocation
     if (_uiState.value.sortOrder == EventSortOrder.PROXIMITY) {
       viewModelScope.launch { updateUIStateWithProcessedEvents(_uiState.value.currentUserId) }
-    }
-  }
-
-  /**
-   * Helper private function : return true if the user can participate to the event
-   *
-   * @param event the event to check
-   * @param currentUserId the id of the current user
-   * @return Boolean indicating if the user can participate to the event depending on its state
-   */
-  private fun conditionToParticipate(event: Event, currentUserId: String): Boolean {
-    return when (event.state) {
-      EventState.PUBLIC -> true
-      EventState.PRIVATE_GROUP -> false
-      EventState.PRIVATE_FRIENDS -> {
-        val final = false
-        viewModelScope.launch {
-          val creatorProfile = profileRepository.getProfileByUid(event.creatorId)
-          if (creatorProfile == null) {
-            false
-          } else {
-            val friendsIdsList = creatorProfile.friendUids
-            friendsIdsList.contains(currentUserId)
-          }
-        }
-        return final
-      }
     }
   }
 }
