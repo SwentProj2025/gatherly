@@ -115,7 +115,7 @@ fun EditTodoScreen(
   val errorMsg = todoUIState.errorMsg
   val context = LocalContext.current
   val shouldShowDialog = remember { mutableStateOf(false) }
-  val expandAdvanced = remember { mutableStateOf(false) }
+  val expandAdvanced = remember { mutableStateOf(true) }
 
   val screenPadding = dimensionResource(id = R.dimen.padding_screen)
   val fieldSpacing = dimensionResource(id = R.dimen.spacing_between_fields)
