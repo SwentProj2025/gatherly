@@ -2,11 +2,15 @@ package com.android.gatherly.viewmodel.settings
 
 import android.net.Uri
 import androidx.credentials.CredentialManager
+import com.android.gatherly.model.event.EventsLocalRepository
+import com.android.gatherly.model.focusSession.FocusSessionsLocalRepository
+import com.android.gatherly.model.group.GroupsLocalRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileStatus
 import com.android.gatherly.model.profile.UserStatusManager
 import com.android.gatherly.model.profile.UserStatusSource
+import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.ui.settings.SettingsViewModel
 import com.android.gatherly.utilstest.MockitoUtils
 import kotlin.time.Duration.Companion.seconds
@@ -34,7 +38,11 @@ import org.mockito.Mockito.mock
 class SettingsViewModelTest {
 
   private val testDispatcher = UnconfinedTestDispatcher()
-  private lateinit var repo: ProfileLocalRepository
+  private lateinit var profileLocalRepository: ProfileLocalRepository
+  private lateinit var groupsLocalRepository: GroupsLocalRepository
+  private lateinit var eventsLocalRepository: EventsLocalRepository
+  private lateinit var focusSessionsLocalRepository: FocusSessionsLocalRepository
+  private lateinit var toDosLocalRepository: ToDosLocalRepository
   private lateinit var viewModel: SettingsViewModel
   private lateinit var mockitoUtils: MockitoUtils
   private lateinit var statusManagerMock: UserStatusManager
@@ -44,7 +52,11 @@ class SettingsViewModelTest {
   @Before
   fun setup() {
     Dispatchers.setMain(testDispatcher)
-    repo = ProfileLocalRepository()
+    profileLocalRepository = ProfileLocalRepository()
+    groupsLocalRepository = GroupsLocalRepository()
+    eventsLocalRepository = EventsLocalRepository()
+    focusSessionsLocalRepository = FocusSessionsLocalRepository()
+    toDosLocalRepository = ToDosLocalRepository()
     statusManagerMock = mock()
     fill_repository()
     credentialManager = mock()
@@ -53,9 +65,13 @@ class SettingsViewModelTest {
 
     viewModel =
         SettingsViewModel(
-            repository = repo,
+            profileRepository = profileLocalRepository,
             userStatusManager = statusManagerMock,
-            authProvider = { mockitoUtils.mockAuth })
+            authProvider = { mockitoUtils.mockAuth },
+            groupsRepository = groupsLocalRepository,
+            eventsRepository = eventsLocalRepository,
+            focusSessionsRepository = focusSessionsLocalRepository,
+            todosRepository = toDosLocalRepository)
   }
 
   @After
@@ -65,7 +81,7 @@ class SettingsViewModelTest {
 
   fun fill_repository() =
       runTest(testDispatcher, testTimeout) {
-        repo.initProfileIfMissing("currentUser", "")
+        profileLocalRepository.initProfileIfMissing("currentUser", "")
         advanceUntilIdle()
       }
 
@@ -85,7 +101,7 @@ class SettingsViewModelTest {
                 school = "Harvard",
                 schoolYear = "3",
                 bio = "settingsTestBio")
-        repo.addProfile(profile)
+        profileLocalRepository.addProfile(profile)
 
         viewModel.loadProfile("u1")
         advanceUntilIdle()
@@ -196,7 +212,7 @@ class SettingsViewModelTest {
       runTest(testDispatcher, testTimeout) {
         val profile =
             Profile(uid = "u1", name = "Alice", username = "old_name", bio = "settingsTestBio")
-        repo.addProfile(profile)
+        profileLocalRepository.addProfile(profile)
 
         viewModel.loadProfile("u1")
         advanceUntilIdle()
@@ -209,7 +225,7 @@ class SettingsViewModelTest {
         viewModel.updateProfile("u1", isFirstTime = true)
         advanceUntilIdle()
 
-        val updated = repo.getProfileByUid("u1")
+        val updated = profileLocalRepository.getProfileByUid("u1")
         assertEquals("Bob", updated?.name)
         assertEquals("new_user", updated?.username)
         assertEquals("new_bio", updated?.bio)
@@ -221,7 +237,7 @@ class SettingsViewModelTest {
   fun updateProfile_WhenInvalidName_SetsErrorMsgAndDoesNotUpdate() =
       runTest(testDispatcher, testTimeout) {
         val profile = Profile(uid = "u1", name = "Alice", username = "ok")
-        repo.addProfile(profile)
+        profileLocalRepository.addProfile(profile)
 
         viewModel.loadProfile("u1")
         advanceUntilIdle()
@@ -232,7 +248,7 @@ class SettingsViewModelTest {
         viewModel.updateProfile("u1", isFirstTime = true)
         advanceUntilIdle()
 
-        val updated = repo.getProfileByUid("u1")
+        val updated = profileLocalRepository.getProfileByUid("u1")
         assertEquals("Alice", updated?.name)
         assertEquals("ok", updated?.username)
         assertEquals("At least one field is not valid.", viewModel.uiState.value.errorMsg)
@@ -245,10 +261,10 @@ class SettingsViewModelTest {
   fun updateProfile_WhenUsernameAlreadyTaken_SetsErrorMsg() =
       runTest(testDispatcher, testTimeout) {
         val existing = Profile(uid = "u2", name = "Bob", username = "taken_name")
-        repo.addProfile(existing)
+        profileLocalRepository.addProfile(existing)
 
         val newProfile = Profile(uid = "u1", name = "Alice", username = "old_name")
-        repo.addProfile(newProfile)
+        profileLocalRepository.addProfile(newProfile)
 
         viewModel.loadProfile("u1")
         advanceUntilIdle()
@@ -272,7 +288,7 @@ class SettingsViewModelTest {
   fun updateProfile_WhenUsernameUnchanged_DoesNotTriggerError() =
       runTest(testDispatcher, testTimeout) {
         val existing = Profile(uid = "u1", name = "Alice", username = "same_user")
-        repo.addProfile(existing)
+        profileLocalRepository.addProfile(existing)
 
         viewModel.loadProfile("u1")
         advanceUntilIdle()
@@ -293,7 +309,7 @@ class SettingsViewModelTest {
   fun updateProfile_WhenValid_ShowsSaveSuccessFlag() =
       runTest(testDispatcher, testTimeout) {
         val profile = Profile(uid = "u1", name = "Alice", username = "user_ok")
-        repo.addProfile(profile)
+        profileLocalRepository.addProfile(profile)
 
         viewModel.loadProfile("u1")
         advanceUntilIdle()
@@ -305,7 +321,7 @@ class SettingsViewModelTest {
         viewModel.updateProfile("u1", isFirstTime = false)
         advanceUntilIdle()
 
-        val updated = repo.getProfileByUid("u1")
+        val updated = profileLocalRepository.getProfileByUid("u1")
         assertEquals("Alice Updated", updated?.name)
         assertEquals("user_ok_new", updated?.username)
         assertTrue(viewModel.uiState.value.saveSuccess)
@@ -333,9 +349,9 @@ class SettingsViewModelTest {
   fun updateProfile_WhenRepositoryReturnsFalse_SetsUsernameTakenError() =
       runTest(testDispatcher, testTimeout) {
         val existing = Profile(uid = "u1", name = "Alice", username = "old_name")
-        repo.addProfile(existing)
+        profileLocalRepository.addProfile(existing)
 
-        repo.shouldFailRegisterUsername = true
+        profileLocalRepository.shouldFailRegisterUsername = true
 
         viewModel.loadProfile("u1")
         advanceUntilIdle()
@@ -350,7 +366,7 @@ class SettingsViewModelTest {
         val state = viewModel.uiState.value
         assertEquals("Username is invalid or already taken.", state.errorMsg)
         assertFalse(state.saveSuccess)
-        repo.shouldFailRegisterUsername = false
+        profileLocalRepository.shouldFailRegisterUsername = false
       }
 
   /** Tests that updating profile with unchanged URL doesn't modify the repository unnecessarily. */
@@ -362,9 +378,13 @@ class SettingsViewModelTest {
         mockitoUtils.chooseCurrentUser(uid)
         val viewModel =
             SettingsViewModel(
-                repository = repo,
+                profileRepository = repo,
                 authProvider = { mockitoUtils.mockAuth },
-                userStatusManager = statusManagerMock)
+                userStatusManager = statusManagerMock,
+                groupsRepository = groupsLocalRepository,
+                eventsRepository = eventsLocalRepository,
+                focusSessionsRepository = focusSessionsLocalRepository,
+                todosRepository = toDosLocalRepository)
 
         val originalProfile =
             Profile(uid = uid, name = "Alice", username = "alice_ok", profilePicture = "same_url")
@@ -395,9 +415,13 @@ class SettingsViewModelTest {
         mockitoUtils.chooseCurrentUser(uid)
         val viewModel =
             SettingsViewModel(
-                repository = repo,
+                profileRepository = repo,
                 authProvider = { mockitoUtils.mockAuth },
-                userStatusManager = statusManagerMock)
+                userStatusManager = statusManagerMock,
+                groupsRepository = groupsLocalRepository,
+                eventsRepository = eventsLocalRepository,
+                focusSessionsRepository = focusSessionsLocalRepository,
+                todosRepository = toDosLocalRepository)
 
         val fakeUri = Mockito.mock(Uri::class.java)
         Mockito.mockStatic(Uri::class.java).use { mockedStatic ->

@@ -39,7 +39,7 @@ class InitProfileScreenTest {
     `when`(mockUser.isAnonymous).thenReturn(false)
 
     settingsViewModel =
-        SettingsViewModel(repository = profileRepository, authProvider = { mockAuth })
+        SettingsViewModel(profileRepository = profileRepository, authProvider = { mockAuth })
     composeRule.setContent { InitProfileScreen(settingsViewModel = settingsViewModel) }
   }
 

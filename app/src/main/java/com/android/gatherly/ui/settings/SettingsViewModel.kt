@@ -105,15 +105,15 @@ data class SettingsUiState(
 /**
  * ViewModel responsible for managing Settings screen state and profile updates.
  *
- * @param repository Repository used for reading and writing profile data.
+ * @param profileRepository Repository used for reading and writing profile data.
  * @param authProvider Provider for FirebaseAuth instance.
  * @param userStatusManager Manages user presence/status updates.
  */
 class SettingsViewModel(
-    private val repository: ProfileRepository = ProfileRepositoryProvider.repository,
+    private val profileRepository: ProfileRepository = ProfileRepositoryProvider.repository,
     private val authProvider: () -> FirebaseAuth = { Firebase.auth },
     private val userStatusManager: UserStatusManager =
-        UserStatusManager(authProvider(), repository),
+        UserStatusManager(authProvider(), profileRepository),
     private val groupsRepository: GroupsRepository = GroupsRepositoryProvider.repository,
     private val eventsRepository: EventsRepository = EventsRepositoryProvider.repository,
     private val focusSessionsRepository: FocusSessionsRepository =
@@ -121,7 +121,7 @@ class SettingsViewModel(
     private val todosRepository: ToDosRepository = ToDosRepositoryProvider.repository,
     private val deleteUserAccountUseCase: DeleteUserAccountUseCase =
         DeleteUserAccountUseCase(
-            profileRepository = repository,
+            profileRepository = profileRepository,
             groupsRepository = groupsRepository,
             eventsRepository = eventsRepository,
             focusSessionsRepository = focusSessionsRepository,
@@ -181,7 +181,8 @@ class SettingsViewModel(
     viewModelScope.launch {
       try {
         _uiState.value = _uiState.value.copy(isLoadingProfile = true)
-        val profile = repository.getProfileByUid(profileUID) ?: Profile(uid = profileUID, name = "")
+        val profile =
+            profileRepository.getProfileByUid(profileUID) ?: Profile(uid = profileUID, name = "")
         originalProfile = profile
         _uiState.value =
             SettingsUiState(
@@ -246,7 +247,7 @@ class SettingsViewModel(
         val newProfilePictureUrl =
             if (state.profilePictureUrl.isNotBlank() &&
                 state.profilePictureUrl != originalProfile?.profilePicture) {
-              repository.updateProfilePic(id, state.profilePictureUrl.toUri())
+              profileRepository.updateProfilePic(id, state.profilePictureUrl.toUri())
             } else {
               originalProfile?.profilePicture.orEmpty()
             }
@@ -263,7 +264,7 @@ class SettingsViewModel(
                 bio = state.bio,
             )
 
-        repository.updateProfile(updatedProfile)
+        profileRepository.updateProfile(updatedProfile)
         clearErrorMsg()
         _uiState.value = _uiState.value.copy(saveSuccess = true, isSaving = false)
       } catch (e: Exception) {
@@ -363,7 +364,7 @@ class SettingsViewModel(
             val uid = Firebase.auth.currentUser?.uid ?: return@launch
 
             // Initialize profile in profileRepository
-            repository.initProfileIfMissing(uid, "")
+            profileRepository.initProfileIfMissing(uid, "")
 
             // Navigate to init profile
             _uiState.value = _uiState.value.copy(navigateToInit = true)
@@ -397,7 +398,7 @@ class SettingsViewModel(
           _uiState.value.copy(isUsernameAvailable = true, invalidUsernameMsg = null)
           return@launch
         }
-        val available = repository.isUsernameAvailable(username)
+        val available = profileRepository.isUsernameAvailable(username)
         _uiState.value =
             _uiState.value.copy(
                 isUsernameAvailable = available,
@@ -425,11 +426,11 @@ class SettingsViewModel(
   ): Boolean {
     val usernameChanged = state.username != originalProfile?.username
     return if (isFirstTime) {
-      repository.registerUsername(id, state.username)
+      profileRepository.registerUsername(id, state.username)
     } else if (!usernameChanged) {
       true
     } else {
-      repository.updateUsername(id, originalProfile?.username, state.username)
+      profileRepository.updateUsername(id, originalProfile?.username, state.username)
     }
   }
 

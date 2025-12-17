@@ -5,8 +5,12 @@ import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.android.gatherly.model.event.EventsLocalRepository
+import com.android.gatherly.model.focusSession.FocusSessionsLocalRepository
+import com.android.gatherly.model.group.GroupsLocalRepository
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
+import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.utils.MockitoUtils
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -37,6 +41,10 @@ class SettingsScreenTest {
   @get:Rule val composeRule = createComposeRule()
 
   private lateinit var profileRepository: ProfileRepository
+  private lateinit var groupsLocalRepository: GroupsLocalRepository
+  private lateinit var eventsLocalRepository: EventsLocalRepository
+  private lateinit var focusSessionsLocalRepository: FocusSessionsLocalRepository
+  private lateinit var toDosLocalRepository: ToDosLocalRepository
   private lateinit var settingsViewModel: SettingsViewModel
   private lateinit var mockitoUtils: MockitoUtils
 
@@ -44,6 +52,10 @@ class SettingsScreenTest {
   @Before
   fun setUp() {
     profileRepository = ProfileLocalRepository()
+    groupsLocalRepository = GroupsLocalRepository()
+    eventsLocalRepository = EventsLocalRepository()
+    focusSessionsLocalRepository = FocusSessionsLocalRepository()
+    toDosLocalRepository = ToDosLocalRepository()
     fill_repository()
   }
 
@@ -63,7 +75,13 @@ class SettingsScreenTest {
     mockitoUtils.chooseCurrentUser("currentUser")
 
     settingsViewModel =
-        SettingsViewModel(repository = profileRepository, authProvider = { mockitoUtils.mockAuth })
+        SettingsViewModel(
+            profileRepository = profileRepository,
+            authProvider = { mockitoUtils.mockAuth },
+            groupsRepository = groupsLocalRepository,
+            eventsRepository = eventsLocalRepository,
+            focusSessionsRepository = focusSessionsLocalRepository,
+            todosRepository = toDosLocalRepository)
     composeRule.setContent { SettingsScreen(settingsViewModel) }
   }
 
@@ -398,7 +416,13 @@ class SettingsScreenTest {
     mockitoUtils.chooseCurrentUser("currentUser", true)
 
     settingsViewModel =
-        SettingsViewModel(repository = profileRepository, authProvider = { mockitoUtils.mockAuth })
+        SettingsViewModel(
+            profileRepository = profileRepository,
+            authProvider = { mockitoUtils.mockAuth },
+            groupsRepository = groupsLocalRepository,
+            eventsRepository = eventsLocalRepository,
+            focusSessionsRepository = focusSessionsLocalRepository,
+            todosRepository = toDosLocalRepository)
     composeRule.setContent { SettingsScreen(settingsViewModel) }
 
     composeRule.onNodeWithTag(SettingsScreenTestTags.GOOGLE_BUTTON).assertIsDisplayed()
