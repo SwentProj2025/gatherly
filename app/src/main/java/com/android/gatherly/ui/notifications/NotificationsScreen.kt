@@ -38,6 +38,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.integerResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -54,6 +55,7 @@ import com.android.gatherly.utils.profilePicturePainter
 
 const val MAX_MEMBERS_DISPLAYED = 3
 
+/** Test tags for Notifications Screen composables. */
 object NotificationsScreenTestTags {
   const val EMPTY_LIST_MSG = "messageEmptyList"
   const val FRIEND_REQUEST_SECTION = "friendRequestSection"
@@ -113,12 +115,14 @@ object NotificationsScreenTestTags {
  *
  * @param notificationsViewModel The ViewModel managing the notifications data and state.
  * @param navigationActions Optional [NavigationActions] for handling navigation events.
+ * @param onVisitProfile Callback triggered when the "Visit Profile" button is clicked.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun NotificationsScreen(
     notificationsViewModel: NotificationViewModel = viewModel(),
-    navigationActions: NavigationActions? = null
+    navigationActions: NavigationActions? = null,
+    onVisitProfile: (Profile) -> Unit = { _ -> }
 ) {
 
   // Retrieve the necessary values for the implementation from the ViewModel
@@ -172,13 +176,9 @@ fun NotificationsScreen(
                     }
 
                     // --- SHOWING USERS' NOTIFICATION ITEMS ---
-                    NotificationsList(
+                    notificationsList(
                         notifications = notifications,
-                        // TODO: Navigate to sender's profile screen when UserProfileScreen is
-                        // merged
-                        onVisitProfile = { _ ->
-                          navigationActions?.navigateTo(Tab.Profile.destination)
-                        },
+                        onVisitProfile = { profile -> onVisitProfile(profile) },
                         idToProfile = uiState.idToProfile)
                   }
                 }
@@ -265,25 +265,28 @@ private fun NotificationsItem(
                 else -> ""
               }
 
-          Column(modifier = Modifier.weight(1f)) {
+          Column(
+              modifier =
+                  Modifier.weight(
+                      integerResource(R.integer.friend_request_column_weight).toFloat())) {
 
-            // -- Name Text --
-            Text(
-                text = senderName,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onBackground,
-                fontWeight = FontWeight.Bold,
-                modifier =
-                    Modifier.testTag(
-                        NotificationsScreenTestTags.getTestTagForSenderName(
-                            senderProfile.username)))
-            // -- Friend Request Text --
-            Text(
-                text = text,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onBackground,
-                fontWeight = FontWeight.Light)
-          }
+                // -- Name Text --
+                Text(
+                    text = senderName,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    fontWeight = FontWeight.Bold,
+                    modifier =
+                        Modifier.testTag(
+                            NotificationsScreenTestTags.getTestTagForSenderName(
+                                senderProfile.username)))
+                // -- Friend Request Text --
+                Text(
+                    text = text,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    fontWeight = FontWeight.Light)
+              }
 
           if (notificationType == NotificationType.FRIEND_REQUEST) {
             // -- SPACER
@@ -318,9 +321,9 @@ private fun NotificationsItem(
  * @param idToProfile Map of profile IDs to Profile objects for sender information.
  */
 @OptIn(ExperimentalFoundationApi::class)
-private fun LazyListScope.NotificationsList(
+private fun LazyListScope.notificationsList(
     notifications: List<Notification>,
-    onVisitProfile: (String) -> Unit,
+    onVisitProfile: (Profile) -> Unit,
     idToProfile: Map<String, Profile>
 ) {
   // --- NOTIFICATIONS ITEMS ---
@@ -337,7 +340,7 @@ private fun LazyListScope.NotificationsList(
         NotificationsItem(
             senderProfile = senderProfile,
             notificationType = notification.type,
-            visitProfile = { onVisitProfile(senderId) })
+            visitProfile = { onVisitProfile(senderProfile) })
       }
       NotificationType.EVENT_REMINDER,
       NotificationType.TODO_REMINDER,
@@ -423,18 +426,21 @@ fun FriendRequestsNavigation(
 
           Spacer(modifier = Modifier.width(regularSpacing))
 
-          Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = stringResource(R.string.friend_requests_label),
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.SemiBold)
-            Text(
-                text = requestsText,
-                modifier =
-                    Modifier.testTag(NotificationsScreenTestTags.FRIEND_REQUEST_SECTION_TEXT),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
-          }
+          Column(
+              modifier =
+                  Modifier.weight(
+                      integerResource(R.integer.friend_request_column_weight).toFloat())) {
+                Text(
+                    text = stringResource(R.string.friend_requests_label),
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.SemiBold)
+                Text(
+                    text = requestsText,
+                    modifier =
+                        Modifier.testTag(NotificationsScreenTestTags.FRIEND_REQUEST_SECTION_TEXT),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+              }
 
           IconButton(
               content = {

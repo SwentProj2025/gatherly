@@ -1,4 +1,5 @@
 <resources>
+    <integer name="friend_request_column_weight">1</integer>
     <integer name="todo_description_min_lines">3</integer>
     <integer name="todo_description_max_lines">6</integer>
     <integer name="todo_item_column_weight">1</integer>

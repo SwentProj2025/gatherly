@@ -11,6 +11,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
+/** Instrumented tests for the Notifications Screen composables. */
 class NotificationsScreenTest {
 
   @get:Rule val composeTestRule = createComposeRule()
