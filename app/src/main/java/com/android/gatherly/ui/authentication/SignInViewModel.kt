@@ -34,7 +34,7 @@ import kotlinx.coroutines.tasks.await
  * @property signedIn Whether the authentication was successful
  * @property destinationScreen The screen to navigate to upon successful authentication
  * @property isLoading Whether an authentication operation is in progress.
- * @property errorMessage String tat holds the error message.
+ * @property errorMessage The error message to display upon failure
  */
 data class SignInUIState(
     val signedIn: Boolean = false,
@@ -43,6 +43,11 @@ data class SignInUIState(
     val errorMessage: String? = null
 )
 
+/**
+ * Allows the UI and repositories to interact with one another
+ *
+ * @param profileRepository The repository to fetch and store user profile information
+ */
 class SignInViewModel(
     private val profileRepository: ProfileRepository =
         ProfileRepositoryFirestore(Firebase.firestore, Firebase.storage)
