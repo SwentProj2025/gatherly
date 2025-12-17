@@ -37,9 +37,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.integerResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
@@ -59,6 +59,7 @@ import com.android.gatherly.utils.ParticipantsUiState
 import com.android.gatherly.utils.TimeInputField
 import kotlinx.coroutines.delay
 
+/** Test tags for the AddEventScreen composable, used to identify UI elements during testing. */
 object AddEventScreenTestTags {
   const val LAZY_LIST = "LAZY_LIST"
   const val INPUT_NAME = "EVENT_NAME"
@@ -73,17 +74,15 @@ object AddEventScreenTestTags {
   const val INPUT_PARTICIPANT = "EVENT_PARTICIPANT_SEARCH"
   const val PARTICIPANT_MENU = "PARTICIPANT_MENU"
   const val LOCATION_MENU = "LOCATION_MENU"
-
   const val SWITCH_PUBLIC_PRIVATE_EVENT = "EVENT_SWITCH_PUBLIC_PRIVATE"
-
   const val BUTTON_PRIVATE_FRIENDS_EVENT = "EVENT_BUTTON_PRIVATE_FRIENDS"
-
   const val BUTTON_PRIVATE_GROUP_EVENT = "EVENT_BUTTON_PRIVATE_GROUP"
 }
 
 /**
- * Screen for adding an existing Event.
+ * Screen for creating an Event.
  *
+ * @param addEventViewModel the ViewModel to use for this screen.
  * @param onSave called after a successful save or deletion and navigation intent.
  * @param goBack called when back arrow is pressed.
  */
@@ -95,13 +94,18 @@ fun AddEventScreen(
     goBack: () -> Unit = {},
 ) {
 
+  // UI state from the ViewModel
   val ui = addEventViewModel.uiState
+  // Local context
   val context = LocalContext.current
 
+  // Stores values for dimensions
   val screenPadding = dimensionResource(id = R.dimen.padding_screen)
   val fieldSpacing = dimensionResource(id = R.dimen.spacing_between_fields)
   val buttonSpacing = dimensionResource(id = R.dimen.spacing_between_buttons)
+  val suggestionsLength = integerResource(id = R.integer.events_location_suggestion_length)
 
+  // Text field colors
   val textFieldColors =
       TextFieldDefaults.colors(
           focusedContainerColor = MaterialTheme.colorScheme.background,
@@ -168,6 +172,7 @@ fun AddEventScreen(
     }
   }
 
+  // Participants UI state
   val participantsUiState =
       ParticipantsUiState(
           participant = ui.participant,
@@ -175,20 +180,32 @@ fun AddEventScreen(
           suggestedProfiles = ui.suggestedProfiles,
           suggestedFriendsProfile = ui.suggestedFriendsProfile,
           state = ui.state)
+
+  // Groups UI state
   val groupsUiState =
       GroupsUiState(group = ui.group, groups = ui.groups, suggestedGroups = ui.suggestedGroups)
 
+  // Value that defines actions that can be performed on participants.
+  // - addParticipant: adds a new participant given their profile.
+  // - deleteParticipant: removes a participant by their ID.
+  // - updateParticipant: updates participant information based on a query.
   val actions =
       ParticipantsActions(
           addParticipant = { profile -> addEventViewModel.addParticipant(profile) },
           deleteParticipant = { profileId -> addEventViewModel.deleteParticipant(profileId) },
           updateParticipant = { query -> addEventViewModel.updateParticipant(query) })
+
+  // Defines actions that can be performed on groups.
+  // - inviteGroup: sends an invitation to a group by its name.
+  // - removeGroup: removes a group by its ID.
+  // - updateGroup: updates group information based on a query.
   val groupAction =
       GroupsActions(
           inviteGroup = { groupName -> addEventViewModel.inviteGroup(groupName) },
           removeGroup = { groupId -> addEventViewModel.removeGroup(groupId) },
           updateGroup = { query -> addEventViewModel.updateGroup(query) })
 
+  // --- Main scaffold for the Add Event screen ---
   Scaffold(
       topBar = {
         TopNavigationMenu_Goback(
@@ -204,7 +221,7 @@ fun AddEventScreen(
                     .testTag(AddEventScreenTestTags.LAZY_LIST),
             verticalArrangement = Arrangement.spacedBy(fieldSpacing)) {
 
-              // Switch button to choose between private and public
+              // -- Switch button to choose between private and public --
               item {
                 Row {
                   EventStateSwitch(
@@ -224,8 +241,8 @@ fun AddEventScreen(
                       style = MaterialTheme.typography.bodyMedium)
                 }
               }
+              // -- Input: Event's Name --
               item {
-                // Name
                 OutlinedTextField(
                     value = ui.name,
                     onValueChange = { addEventViewModel.updateName(it) },
@@ -235,7 +252,7 @@ fun AddEventScreen(
                     supportingText = {
                       if (ui.nameError) {
                         Text(
-                            "Name is required",
+                            stringResource(R.string.events_error_name_message),
                             modifier = Modifier.testTag(AddEventScreenTestTags.ERROR_MESSAGE))
                       }
                     },
@@ -243,8 +260,8 @@ fun AddEventScreen(
                     modifier = Modifier.fillMaxWidth().testTag(AddEventScreenTestTags.INPUT_NAME))
               }
 
+              // -- Input: Event's Description --
               item {
-                // Description
                 OutlinedTextField(
                     value = ui.description,
                     onValueChange = { addEventViewModel.updateDescription(it) },
@@ -254,20 +271,19 @@ fun AddEventScreen(
                     supportingText = {
                       if (ui.descriptionError) {
                         Text(
-                            "Description is required",
+                            stringResource(R.string.events_error_description_message),
                             modifier = Modifier.testTag(AddEventScreenTestTags.ERROR_MESSAGE))
                       }
                     },
                     colors = textFieldColors,
                     modifier =
                         Modifier.fillMaxWidth().testTag(AddEventScreenTestTags.INPUT_DESCRIPTION),
-                    minLines = 3)
+                    minLines = integerResource(R.integer.events_description_min_lines))
               }
 
               if (isPublicEvent) {
-
+                // -- Input: Participants search with dropdown and + / - actions --
                 item {
-                  // Participants search with dropdown and + / - actions
                   ParticipantsFieldItem(
                       uiState = participantsUiState,
                       currentUserId = ui.currentUserId,
@@ -276,9 +292,8 @@ fun AddEventScreen(
                       showProfilesDropdown = showProfilesDropdown)
                 }
               } else {
-
+                // -- Buttons to choose between private friends only or private group --
                 item {
-                  // Buttons to choose the type of the event
                   PrivateEventButtons(
                       isFriendsOnly = isPrivateFriendsEvent,
                       onFriendsOnlySelected = { addEventViewModel.updateEventToPrivateFriends() },
@@ -286,8 +301,8 @@ fun AddEventScreen(
                 }
 
                 if (isPrivateFriendsEvent) {
+                  // -- Input: Friends search with dropdown and + / - actions --
                   item {
-                    // Participants friends search with dropdown and + / - actions
                     ParticipantsFieldItem(
                         uiState = participantsUiState,
                         currentUserId = ui.currentUserId,
@@ -296,8 +311,8 @@ fun AddEventScreen(
                         showProfilesDropdown = showProfilesDropdown)
                   }
                 } else {
+                  // -- Input: Group search with dropdown and + / - actions --
                   item {
-                    // Group search with dropdown and + / - actions
                     GroupsFieldItem(
                         uiState = groupsUiState,
                         actions = groupAction,
@@ -308,7 +323,7 @@ fun AddEventScreen(
               }
 
               item {
-                // Location with suggestions dropdown
+                // -- Input: Location with suggestions dropdown --
                 Box(modifier = Modifier.fillMaxWidth()) {
                   OutlinedTextField(
                       value = ui.location,
@@ -332,26 +347,35 @@ fun AddEventScreen(
                       modifier =
                           Modifier.testTag(AddEventScreenTestTags.LOCATION_MENU)
                               .fillMaxWidth()
-                              .height(200.dp)) {
-                        ui.suggestedLocations.take(3).forEach { loc ->
+                              .height(dimensionResource(R.dimen.dropdown_height))) {
+                        ui.suggestedLocations
+                            .take(integerResource(R.integer.events_location_number_of_suggestions))
+                            .forEach { loc ->
+                              DropdownMenuItem(
+                                  text = {
+                                    Text(
+                                        text =
+                                            loc.name.take(suggestionsLength) +
+                                                if (loc.name.length > suggestionsLength)
+                                                    stringResource(
+                                                        R.string.location_suggestion_loading)
+                                                else stringResource(R.string.empty_string),
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                  },
+                                  onClick = {
+                                    addEventViewModel.selectLocation(loc)
+                                    showLocationDropdown = false
+                                  },
+                                  modifier =
+                                      Modifier.testTag(AddEventScreenTestTags.LOCATION_SUGGESTION))
+                            }
+                        if (ui.suggestedLocations.size >
+                            integerResource(R.integer.events_location_number_of_suggestions)) {
                           DropdownMenuItem(
                               text = {
                                 Text(
-                                    text =
-                                        loc.name.take(40) + if (loc.name.length > 40) "..." else "",
+                                    stringResource(R.string.location_suggestion_more),
                                     color = MaterialTheme.colorScheme.onSurfaceVariant)
-                              },
-                              onClick = {
-                                addEventViewModel.selectLocation(loc)
-                                showLocationDropdown = false
-                              },
-                              modifier =
-                                  Modifier.testTag(AddEventScreenTestTags.LOCATION_SUGGESTION))
-                        }
-                        if (ui.suggestedLocations.size > 3) {
-                          DropdownMenuItem(
-                              text = {
-                                Text("More...", color = MaterialTheme.colorScheme.onSurfaceVariant)
                               },
                               onClick = {})
                         }
@@ -359,12 +383,14 @@ fun AddEventScreen(
                 }
               }
 
+              // -- Input: Date picker --
               item {
-                // Date
                 DatePickerInputField(
                     value = ui.date,
                     label = stringResource(R.string.events_date_field_label),
-                    isErrorMessage = if (!ui.dateError) null else "Invalid format or past date",
+                    isErrorMessage =
+                        if (!ui.dateError) null
+                        else stringResource(R.string.error_date_picker_message),
                     onClick = { showDatePicker = true },
                     colors = textFieldColors,
                     testTag =
@@ -374,8 +400,8 @@ fun AddEventScreen(
                 )
               }
 
+              // -- Input: Start time --
               item {
-                // Start time
                 TimeInputField(
                     initialTime = ui.startTime,
                     onTimeChanged = { addEventViewModel.updateStartTime(it) },
@@ -387,8 +413,8 @@ fun AddEventScreen(
                     isStarting = true)
               }
 
+              // -- Input: End time --
               item {
-                // End time
                 TimeInputField(
                     initialTime = ui.endTime,
                     onTimeChanged = { addEventViewModel.updateEndTime(it) },
@@ -402,8 +428,8 @@ fun AddEventScreen(
 
               item { Spacer(modifier = Modifier.height(buttonSpacing)) }
 
+              // -- Save button --
               item {
-                // Save
                 Button(
                     onClick = { addEventViewModel.saveEvent() },
                     modifier = Modifier.fillMaxWidth().testTag(AddEventScreenTestTags.BTN_SAVE),
@@ -427,6 +453,7 @@ fun AddEventScreen(
               }
             }
 
+        // -- Date Picker Dialog --
         GatherlyDatePicker(
             show = showDatePicker,
             initialDate = ui.date,
@@ -435,6 +462,7 @@ fun AddEventScreen(
       }
 }
 
+/** Preview of AddEventScreen in dark mode */
 @Preview(showBackground = true)
 @Composable
 fun AddEventScreenPreview() {
@@ -458,18 +486,21 @@ private fun EventStateSwitch(checked: Boolean, onCheckedChange: (Boolean) -> Uni
               Icon(
                   imageVector = Icons.Filled.LockOpen,
                   contentDescription = "Public Event",
-                  modifier = Modifier.size(19.dp))
+                  modifier = Modifier.size(dimensionResource(R.dimen.icons_size_small)))
             }
           } else {
             {
               Icon(
                   imageVector = Icons.Filled.Lock,
                   contentDescription = "Private Event",
-                  modifier = Modifier.size(19.dp))
+                  modifier = Modifier.size(dimensionResource(R.dimen.icons_size_small)))
             }
           },
       modifier =
-          Modifier.size(60.dp, 40.dp).testTag(AddEventScreenTestTags.SWITCH_PUBLIC_PRIVATE_EVENT),
+          Modifier.size(
+                  dimensionResource(R.dimen.events_state_switch_button_width),
+                  dimensionResource(R.dimen.events_state_switch_button_height))
+              .testTag(AddEventScreenTestTags.SWITCH_PUBLIC_PRIVATE_EVENT),
   )
 }
 
@@ -492,7 +523,7 @@ private fun PrivateEventButtons(
           Modifier.fillMaxWidth()
               .padding(vertical = dimensionResource(R.dimen.events_filter_bar_vertical_size)),
       horizontalArrangement = Arrangement.SpaceEvenly) {
-        // Button private friends only event
+        // -- Button private friends only event --
         Button(
             onClick = onFriendsOnlySelected,
             colors =
@@ -510,7 +541,7 @@ private fun PrivateEventButtons(
               Text(text = stringResource(R.string.events_private_friends_label))
             }
 
-        // Button private group event
+        // -- Button private group event --
         Button(
             onClick = onGroupSelected,
             colors =
