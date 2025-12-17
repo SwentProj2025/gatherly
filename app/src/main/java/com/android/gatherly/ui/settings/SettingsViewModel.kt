@@ -108,6 +108,10 @@ data class SettingsUiState(
  * @param profileRepository Repository used for reading and writing profile data.
  * @param authProvider Provider for FirebaseAuth instance.
  * @param userStatusManager Manages user presence/status updates.
+ * @param groupsRepository Repository for managing groups the user belongs to.
+ * @param eventsRepository Repository for managing user events.
+ * @param focusSessionsRepository Repository for managing user focus sessions.
+ * @param todosRepository Repository for managing user to-dos.
  */
 class SettingsViewModel(
     private val profileRepository: ProfileRepository = ProfileRepositoryProvider.repository,
@@ -119,23 +123,24 @@ class SettingsViewModel(
     private val focusSessionsRepository: FocusSessionsRepository =
         FocusSessionsRepositoryProvider.repository,
     private val todosRepository: ToDosRepository = ToDosRepositoryProvider.repository,
-    private val deleteUserAccountUseCase: DeleteUserAccountUseCase =
-        DeleteUserAccountUseCase(
-            profileRepository = profileRepository,
-            groupsRepository = groupsRepository,
-            eventsRepository = eventsRepository,
-            focusSessionsRepository = focusSessionsRepository,
-            todosRepository = todosRepository,
-        )
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(SettingsUiState())
   /** Observable UI state exposed to the Settings screen. */
   val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
-  private var originalProfile: Profile? = null
+  /**
+   * Use case responsible for deleting all user data associated with a given account, including
+   * profile, groups, events, focus sessions, and to-dos.
+   */
+  private val deleteUserAccountUseCase =
+      DeleteUserAccountUseCase(
+          profileRepository = profileRepository,
+          groupsRepository = groupsRepository,
+          eventsRepository = eventsRepository,
+          focusSessionsRepository = focusSessionsRepository,
+          todosRepository = todosRepository)
 
-  private val _accountDeleted = MutableStateFlow(false)
-  val accountDeleted: StateFlow<Boolean> = _accountDeleted.asStateFlow()
+  private var originalProfile: Profile? = null
 
   /**
    * Signs the user out of Firebase and clears credential state.
@@ -460,6 +465,8 @@ class SettingsViewModel(
    * Deletes the current user's account and all associated data.
    *
    * On success, emits an account-deleted event. On failure, exposes an error message.
+   *
+   * @param credentialManager CredentialManager used to clear stored credentials.
    */
   fun deleteProfile(credentialManager: CredentialManager) {
     val uid = authProvider().currentUser?.uid ?: return
@@ -467,7 +474,6 @@ class SettingsViewModel(
       try {
         deleteUserAccountUseCase.deleteUserAccount(uid)
         signOutAfterDeletion(credentialManager)
-        _accountDeleted.value = true
       } catch (e: Exception) {
         Log.e("SettingsViewModel", "Failed to delete profile", e)
         _uiState.value =

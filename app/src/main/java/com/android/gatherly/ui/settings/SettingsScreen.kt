@@ -31,7 +31,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -286,7 +285,7 @@ fun SettingsScreen(
                             Text(
                                 text = stringResource(id = R.string.settings_edit_photo),
                                 color = MaterialTheme.colorScheme.onBackground,
-                                fontSize = 16.sp)
+                                style = MaterialTheme.typography.labelLarge)
                           }
 
                       PhotoPicker(
@@ -404,7 +403,7 @@ fun SettingsScreen(
                     enabled = uiState.isValid && !uiState.isSaving) {
                       Text(
                           text = stringResource(R.string.settings_save),
-                          fontSize = 16.sp,
+                          style = MaterialTheme.typography.labelLarge,
                           fontWeight = FontWeight.Medium)
                     }
               }
@@ -494,14 +493,15 @@ fun SettingsField(
                 unfocusedBorderColor = Color.Transparent),
         shape = RoundedCornerShape(dimensionResource(id = R.dimen.rounded_corner_shape_medium)),
         singleLine = true,
-        textStyle = LocalTextStyle.current.copy(fontSize = 16.sp))
+        textStyle =
+            MaterialTheme.typography.bodyLarge) // LocalTextStyle.current.copy(fontSize = 16.sp))
 
     // Show error message if not null
     if (!errorMessage.isNullOrEmpty()) {
       Text(
           text = errorMessage,
           color = MaterialTheme.colorScheme.error,
-          fontSize = 14.sp,
+          style = MaterialTheme.typography.bodySmall,
           modifier =
               Modifier.padding(top = dimensionResource(id = R.dimen.padding_extra_small))
                   .testTag("${testTag}_error"))
@@ -608,7 +608,7 @@ private fun UsernameValidationMessage(isAvailable: Boolean?, invalidMessage: Str
     Text(
         text = stringResource(R.string.settings_valid_username),
         color = MaterialTheme.colorScheme.primary,
-        fontSize = 14.sp,
+        style = MaterialTheme.typography.bodySmall,
         modifier = Modifier.padding(top = dimensionResource(id = R.dimen.padding_extra_small)))
   }
 }
