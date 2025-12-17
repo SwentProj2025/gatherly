@@ -365,7 +365,7 @@ fun GatherlyApp(
         NotificationsScreen(
             navigationActions = navigationActions,
             onVisitProfile = { profile ->
-              navigationActions.navigateTo(Screen.UserProfile(profile.uid))
+              navigationActions.navigateTo(Screen.UserProfileScreen(profile.uid))
             })
       }
     }
