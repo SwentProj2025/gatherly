@@ -37,7 +37,6 @@
     <string name="todos_priority_sort_button_text">Priority level</string>
     <string name="todos_sort_menu_check_icon_label">Selected</string>
     <string name="todos_advanced_settings">More Options</string>
-    <string name="todos_loading">Loading your todos …</string>
 
     <!-- Sign In Page. -->
     <string name="web_client_id">854490974901-rc0seqlo7nbm1net10ujpte2ckkrsgn2.apps.googleusercontent.com</string>
@@ -125,7 +124,6 @@
     <string name="events_delete_warning">Warning! You are deleting an event</string>
     <string name="events_delete_warning_text">This action cannot be reversed. Are you sure?</string>
     <string name="see_on_map_button_title">See on map</string>
-    <string name="events_loading">Loading events …</string>
     <string name="events_search_bar_label">Search events…</string>
     <string name="events_sort_menu_check_icon_label">Selected</string>
     <string name="events_group_field_label">Group</string>
@@ -146,10 +144,16 @@
     <string name="events_alert_dialog_see_attendees_title">Participants</string>
     <string name="events_alert_dialog_see_attendees_groups_subtitle">From groups: </string>
 
+    <string name="events_error_name_message">Name is required</string>
+    <string name="events_error_description_message">Description is required</string>
+
     <string name="events_status_filter_all_label">All</string>
     <string name="events_status_filter_upcoming_label">Upcoming</string>
     <string name="events_status_filter_ongoing_label">Ongoing</string>
     <string name="events_status_filter_past_label">Past</string>
+
+    <string name="events_anonymous_attendees">Anonymous user</string>
+    <string name="events_current_user_attendees">You</string>
 
     <!-- Category Events -->
     <string name="events_dropdown_tag_label">Categories</string>
@@ -218,7 +222,6 @@
     <string name="show_todos_button_title">Show toDos</string>
     <string name="go_to_event_page_button">Go to Event</string>
     <string name="go_to_todo_page_button">Go to ToDo</string>
-    <string name="loading_map">Loading…</string>
 
     <!-- Notifications Screen -->
     <string name="notifications_empty_list_message">There are no notifications at the moment.</string>
@@ -230,6 +233,11 @@
     <string name="friend_requests_notification_text">sent you a friend request.</string>
     <string name="friend_requests_notification_button_title">Visit Profile</string>
     <string name="friend_requests_accept_button_text">Accept</string>
+    <string name="notification_reminder_user">You</string>
+    <string name="notification_event_reminder">have an upcoming event.</string>
+    <string name="notification_todo_reminder">have an upcoming deadline.</string>
+    <string name="notification_group_added">has added you to a group.</string>
+    <string name="notification_event_added">has added you to an event.</string>
     <string name="friend_requests_reject_button_text">Reject</string>
 
     <!-- Friends Screen -->
@@ -305,4 +313,26 @@
     <string name="edit_group_button">Save changes</string>
     <string name="group_delete_button">Delete group</string>
 
+    <!-- Map Screen -->
+    <string name="map_date_format">dd/MM/yyyy</string>
+
+
+    <!-- Loading messages -->
+    <string name="loading_badges_message">Loading your badges…</string>
+    <string name="loading_group_message">Loading group information…</string>
+    <string name="loading_event_message">Loading event information…</string>
+    <string name="loading_events">Loading events …</string>
+    <string name="loading_homepage_message">Loading information…</string>
+    <string name="loading_notifications_message">Loading notifications…</string>
+    <string name="loading_user_profile_message">Loading profile information…</string>
+    <string name="loading_settings_message">Loading settings information…</string>
+    <string name="loading_map">Loading the map…</string>
+    <string name="loading_todos">Loading your todos …</string>
+
+    <!-- Utils -->
+    <string name="location_suggestion_loading">…</string>
+    <string name="location_suggestion_more">More…</string>
+    <string name="empty_string"> </string>
+    <string name="error_date_picker_message">Invalid format or past date</string>
+    <string name="date_pattern">dd/MM/yyyy HH:mm</string>
 </resources>

@@ -19,7 +19,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -57,6 +56,7 @@ import com.android.gatherly.ui.navigation.TopNavigationMenu_Profile
 import com.android.gatherly.ui.theme.GatherlyTheme
 import com.android.gatherly.utils.GatherlyAlertDialog
 import com.android.gatherly.utils.GatherlyAlertDialogActions
+import com.android.gatherly.utils.LoadingAnimation
 
 /** Contains test tags used for UI testing on the Profile screen. */
 object ProfileScreenTestTags {
@@ -151,11 +151,7 @@ fun ProfileScreen(
       },
       content = { padding ->
         if (uiState.isLoading) {
-          Box(
-              modifier = Modifier.fillMaxSize().padding(padding),
-              contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-              }
+          LoadingAnimation(stringResource(R.string.loading_user_profile_message), padding)
         } else if (uiState.isAnon) {
 
           // If the user is anonymous, they do not have a profile

@@ -6,6 +6,7 @@ import androidx.compose.runtime.MutableState
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
+import com.android.gatherly.R
 import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsRepository
@@ -36,25 +37,36 @@ import kotlinx.coroutines.launch
 /**
  * UI state for the Events ViewModel
  *
- * @param fullEventList list of events
- * @param participatedEventList list of events the current user is participating in
- * @param createdEventList list of events the current user has created
- * @param globalEventList list of events neither created by nor participated in by current user
+ * @property fullEventList list of events
+ * @property participatedEventList list of events the current user is participating in
+ * @property createdEventList list of events the current user has created
+ * @property globalEventList list of events neither created by nor participated in by current user
+ * @property errorMsg optional error message to display
+ * @property currentUserId the id of the current user
+ * @property isAnon whether the current user is anonymous
+ * @property isLoading whether the data is currently loading
+ * @property sortOrder the current sorting order for the events list
  */
-data class EventsUIState(
+data class EventsOverviewUIState(
     val fullEventList: List<Event> = emptyList(),
     val participatedEventList: List<Event> = emptyList(),
     val createdEventList: List<Event> = emptyList(),
-    val globalEventList: List<Event> =
-        emptyList(), // Events neither created by nor participated in by current user
+    val globalEventList: List<Event> = emptyList(),
     val errorMsg: String? = null,
     val currentUserId: String = "",
     val isAnon: Boolean = true,
-    val isLoading: Boolean = false,
+    val isLoading: Boolean = true,
     val sortOrder: EventSortOrder = EventSortOrder.DATE_ASC,
 )
 
-/** Data class with all the needed events list */
+/**
+ * Data class with all the needed events list
+ *
+ * @property fullEventList list of all events
+ * @property participatedEventList list of events the current user is participating in
+ * @property createdEventList list of events the current user has created
+ * @property globalEventList list of events neither created by nor participated in by current user
+ */
 private data class ProcessedEvents(
     val fullEventList: List<Event>,
     val participatedEventList: List<Event>,
@@ -64,9 +76,10 @@ private data class ProcessedEvents(
 
 /**
  * Specifies the available sorting criteria for the Events list.
- * - [DATE_ASC]: Sort events by increasing date (earliest first)
- * - [ALPHABETICAL]: Sort events by their name in alphabetical order (A -> Z).
- * - [PROXIMITY]: Sort events by their proximity (nearest first)
+ *
+ * @property DATE_ASC : Sort events by increasing date (earliest first)
+ * @property ALPHABETICAL : Sort events by their name in alphabetical order (A -> Z).
+ * @property PROXIMITY : Sort events by their proximity (nearest first)
  */
 enum class EventSortOrder {
   DATE_ASC,
@@ -77,33 +90,44 @@ enum class EventSortOrder {
 /**
  * ViewModel for the Events screen.
  *
+ * @param profileRepository the repository to fetch user profiles from
  * @param eventsRepository the repository to fetch events from
+ * @param authProvider function that provides the FirebaseAuth instance
+ * @param fusedLocationClient the FusedLocationProviderClient for location updates
+ * @param fakeCurrentUserLocation optional fake location for testing purposes
  */
-class EventsViewModel(
+class EventsOverviewViewModel(
     private val profileRepository: ProfileRepository,
     private val eventsRepository: EventsRepository,
     private val authProvider: () -> FirebaseAuth = { Firebase.auth },
     private val fusedLocationClient: FusedLocationProviderClient? = null,
-    private val fakeCurrentUserLocation: Location? = null, // Used only for testing
+    private val fakeCurrentUserLocation: Location? = null,
     val notificationsRepository: NotificationsRepository =
         NotificationsRepositoryProvider.repository,
 ) : ViewModel() {
-  private val _uiState: MutableStateFlow<EventsUIState> = MutableStateFlow(EventsUIState())
+
+  // MutableStateFlow holding the current UI state
+  private val _uiState: MutableStateFlow<EventsOverviewUIState> =
+      MutableStateFlow(EventsOverviewUIState())
 
   /**
    * StateFlow exposing the current UI state, including all event lists categorized by user
    * relationship.
    */
-  val uiState: StateFlow<EventsUIState> = _uiState.asStateFlow()
+  val uiState: StateFlow<EventsOverviewUIState> = _uiState.asStateFlow()
 
   private val _editEventRequest = MutableStateFlow<Event?>(null)
 
   /** StateFlow exposing the event currently being edited, or null if no edit is in progress. */
   val editEventRequest: StateFlow<Event?> = _editEventRequest.asStateFlow()
 
+  // MutableStateFlow holding the current search query
   private val _searchQuery = MutableStateFlow("")
+
+  // Cache of all events fetched from the repository
   private var allEventsCache: List<Event> = emptyList()
 
+  // MutableStateFlow holding the current user location
   private val _currentUserLocation = MutableStateFlow<Location?>(null)
 
   /**
@@ -203,6 +227,11 @@ class EventsViewModel(
   /**
    * Companion Object used to encapsulate a static method to retrieve a ViewModelProvider.Factory
    * and its default dependencies.
+   *
+   * @param eventsRepository The EventsRepository to use (default is EventsRepositoryFirestore).
+   * @param profileRepository The ProfileRepository to use (default is ProfileRepositoryFirestore).
+   * @param fusedLocationClient The FusedLocationProviderClient for location updates (optional).
+   * @return A ViewModelProvider.Factory for creating EventsOverviewViewModel instances.
    */
   companion object {
     fun provideFactory(
@@ -214,7 +243,7 @@ class EventsViewModel(
     ): ViewModelProvider.Factory {
 
       return GenericViewModelFactory {
-        EventsViewModel(
+        EventsOverviewViewModel(
             profileRepository = profileRepository,
             eventsRepository = eventsRepository,
             fusedLocationClient = fusedLocationClient)
@@ -224,6 +253,10 @@ class EventsViewModel(
 
   /**
    * Helper function : return the list of events filtered according to the selected filter status
+   *
+   * @param selectedFilter the filter selected by the user
+   * @param listEvents the list of events to filter
+   * @return the filtered list of events
    */
   fun getFilteredEvents(
       selectedFilter: MutableState<EventFilter>,
@@ -237,7 +270,12 @@ class EventsViewModel(
     }
   }
 
-  /** Invoked when users type in the search bar to filter [Event]s according to the typed query. */
+  /**
+   * Invoked when users type in the search bar to filter [Event]s according to the typed query.
+   *
+   * @param query The current search query entered by the user.
+   * @param currentUserId the id of the current user
+   */
   fun searchEvents(query: String, currentUserId: String) {
     _searchQuery.value = query
     updateUIStateWithProcessedEvents(currentUserId)
@@ -292,6 +330,7 @@ class EventsViewModel(
    *
    * @param allEvents list of all the events
    * @param currentUserId the id of the current user
+   * @return ProcessedEvents containing all categorized event lists
    */
   private fun processEvents(allEvents: List<Event>, currentUserId: String): ProcessedEvents {
     val searchFiltered =
@@ -323,15 +362,21 @@ class EventsViewModel(
   private val _participantsNames = MutableStateFlow<List<String>>(emptyList())
   val participantsNames: StateFlow<List<String>> = _participantsNames
 
+  /**
+   * Loads the names of participants given their IDs, replacing the current user ID with "YOU".
+   *
+   * @param listIds List of participant IDs.
+   * @param currentUserId The ID of the current user.
+   */
   fun loadParticipantsNames(listIds: List<String>, currentUserId: String) {
     viewModelScope.launch {
       val names =
           listIds.map { id ->
             if (id != currentUserId) {
               val profile = profileRepository.getProfileByUid(id)
-              profile?.name ?: "Anonymous user"
+              profile?.name ?: R.string.events_anonymous_attendees.toString()
             } else {
-              "YOU"
+              R.string.events_current_user_attendees.toString()
             }
           }
       _participantsNames.value = names
@@ -343,6 +388,7 @@ class EventsViewModel(
    * location
    *
    * @param event the event that the user wants to know his proximity with
+   * @return the string representing the distance (in km or m) or null if location is not available
    */
   fun getDistanceUserEvent(event: Event): String? {
     val userLocation = fakeCurrentUserLocation ?: _currentUserLocation.value
@@ -374,7 +420,7 @@ class EventsViewModel(
                   latitude = loc.latitude, longitude = loc.longitude, name = "currentUserLocation"))
         }
       } catch (e: Exception) {
-        Log.e("EventsViewModel", "Error getting location: ${e.message}")
+        Log.e("EventsOverviewViewModel", "Error getting location: ${e.message}")
       }
     }
   }

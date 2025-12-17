@@ -447,9 +447,11 @@ class AddEventsScreenTest {
         .assertIsDisplayed()
   }
 
-  // This function fills the profile repository with the created profiles, and the event repository
-  // with the created event
-  fun fill_repositories() {
+  /**
+   * Helper private function : fills the profile repository with the created profiles, and the event
+   * repository with the created event
+   */
+  private fun fill_repositories() {
     runTest {
       profileRepository.addProfile(profile1)
       profileRepository.addProfile(profile2)

@@ -34,6 +34,7 @@ import kotlinx.coroutines.tasks.await
  * @property signedIn Whether the authentication was successful
  * @property destinationScreen The screen to navigate to upon successful authentication
  * @property isLoading Whether an authentication operation is in progress.
+ * @property errorMessage The error message to display upon failure
  */
 data class SignInUIState(
     val signedIn: Boolean = false,
@@ -42,6 +43,11 @@ data class SignInUIState(
     val errorMessage: String? = null
 )
 
+/**
+ * Allows the UI and repositories to interact with one another
+ *
+ * @param profileRepository The repository to fetch and store user profile information
+ */
 class SignInViewModel(
     private val profileRepository: ProfileRepository =
         ProfileRepositoryFirestore(Firebase.firestore, Firebase.storage)
@@ -77,7 +83,8 @@ class SignInViewModel(
                   "init_profile"
                 } else {
                   "home"
-                })
+                },
+            isLoading = false)
   }
 
   /** Authenticate to Firebase */
@@ -97,7 +104,7 @@ class SignInViewModel(
           profileRepository.initProfileIfMissing(uid, "")
           profileRepository.updateStatus(uid, ProfileStatus.ONLINE)
           handlePostSignInNav()
-          uiState = uiState.copy(signedIn = true, isLoading = false)
+          uiState = uiState.copy(signedIn = true)
         } catch (e: Exception) {
           uiState = uiState.copy(isLoading = false, errorMessage = "Google sign-in failed")
           Log.e("SignInViewModel", "Google sign-in failed", e)
@@ -112,7 +119,7 @@ class SignInViewModel(
 
   /** Sign in with Google */
   fun signInWithGoogle(context: Context, credentialManager: CredentialManager) {
-    uiState = uiState.copy(isLoading = true)
+    uiState = uiState.copy(isLoading = true, signedIn = false)
     viewModelScope.launch {
       try {
         val signInWithGoogleOption =
@@ -138,7 +145,7 @@ class SignInViewModel(
 
   /** Sign in anonymously */
   fun signInAnonymously() {
-    uiState = uiState.copy(isLoading = true)
+    uiState = uiState.copy(isLoading = true, signedIn = false)
     viewModelScope.launch {
       try {
         Firebase.auth.signInAnonymously().await()
@@ -146,8 +153,7 @@ class SignInViewModel(
         profileRepository.initProfileIfMissing(uid, "")
         profileRepository.updateStatus(uid, ProfileStatus.ONLINE)
         handlePostSignInNav()
-
-        uiState = uiState.copy(signedIn = true, isLoading = false)
+        uiState = uiState.copy(signedIn = true)
       } catch (e: Exception) {
         uiState = uiState.copy(isLoading = false, errorMessage = "Failed to log in")
         Log.e("SignInViewModel", "Anonymous sign-in failed", e)
