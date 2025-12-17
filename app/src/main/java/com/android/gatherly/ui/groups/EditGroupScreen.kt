@@ -58,6 +58,7 @@ import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
+import com.android.gatherly.utils.LoadingAnimation
 import com.android.gatherly.utils.profilePicturePainter
 
 // This file was inspired by AddGroupScreen.kt in this project.
@@ -351,53 +352,58 @@ fun EditGroupScreen(
                     .padding(horizontal = screenPadding)
                     .padding(padding)
                     .testTag(EditGroupScreenTestTags.LAZY_COLUMN_GROUP)) {
-              groupFieldsSection(
-                  uiState = uiState,
-                  inputFieldColors = inputFieldColors,
-                  onNameChanged = editGroupViewModel::onNameChanged,
-                  onDescriptionChanged = editGroupViewModel::onDescriptionChanged,
-                  smallSpacing = smallSpacing)
+              if (uiState.isLoading) {
+                item { LoadingAnimation(stringResource(R.string.loading_group_message), padding) }
+              } else {
 
-              participantsStripSection(
-                  participants = currentParticipants,
-                  dividerThickness = dividerThickness,
-                  smallSpacing = smallSpacing)
+                groupFieldsSection(
+                    uiState = uiState,
+                    inputFieldColors = inputFieldColors,
+                    onNameChanged = editGroupViewModel::onNameChanged,
+                    onDescriptionChanged = editGroupViewModel::onDescriptionChanged,
+                    smallSpacing = smallSpacing)
 
-              membersSection(
-                  uiState = uiState,
-                  isOwner = isOwner,
-                  isAdmin = isAdmin,
-                  dividerThickness = dividerThickness,
-                  smallSpacing = smallSpacing,
-                  onToggleAdmin = editGroupViewModel::onToggleAdmin,
-                  onToggleRemove = editGroupViewModel::onToggleRemoveMember)
+                participantsStripSection(
+                    participants = currentParticipants,
+                    dividerThickness = dividerThickness,
+                    smallSpacing = smallSpacing)
 
-              availableFriendsSection(
-                  uiState = uiState,
-                  inputFieldColors = inputFieldColors,
-                  screenPadding = screenPadding,
-                  smallSpacing = smallSpacing,
-                  friendSectionHeight = friendSectionHeight,
-                  onSearchChanged = editGroupViewModel::onFriendsSearchQueryChanged,
-                  onToggleFriend = editGroupViewModel::onNewFriendToggled)
+                membersSection(
+                    uiState = uiState,
+                    isOwner = isOwner,
+                    isAdmin = isAdmin,
+                    dividerThickness = dividerThickness,
+                    smallSpacing = smallSpacing,
+                    onToggleAdmin = editGroupViewModel::onToggleAdmin,
+                    onToggleRemove = editGroupViewModel::onToggleRemoveMember)
 
-              generalErrorSection(generalError, smallSpacing)
+                availableFriendsSection(
+                    uiState = uiState,
+                    inputFieldColors = inputFieldColors,
+                    screenPadding = screenPadding,
+                    smallSpacing = smallSpacing,
+                    friendSectionHeight = friendSectionHeight,
+                    onSearchChanged = editGroupViewModel::onFriendsSearchQueryChanged,
+                    onToggleFriend = editGroupViewModel::onNewFriendToggled)
 
-              saveButtonSection(
-                  enabled = uiState.nameError == null && !uiState.isSaving,
-                  style = buttonStyle,
-                  onClick = editGroupViewModel::saveGroup,
-              )
+                generalErrorSection(generalError, smallSpacing)
 
-              deleteButtonSection(
-                  isOwner = isOwner,
-                  style = deleteButtonStyle,
-                  smallSpacing = smallSpacing,
-                  onClick = {
-                    editGroupViewModel.deleteGroup()
-                    onDelete()
-                  },
-              )
+                saveButtonSection(
+                    enabled = uiState.nameError == null && !uiState.isSaving,
+                    style = buttonStyle,
+                    onClick = editGroupViewModel::saveGroup,
+                )
+
+                deleteButtonSection(
+                    isOwner = isOwner,
+                    style = deleteButtonStyle,
+                    smallSpacing = smallSpacing,
+                    onClick = {
+                      editGroupViewModel.deleteGroup()
+                      onDelete()
+                    },
+                )
+              }
             }
       }
 }

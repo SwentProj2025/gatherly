@@ -18,7 +18,7 @@ import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.model.todo.ToDosRepositoryProvider
-import com.android.gatherly.utils.getProfileWithSyncedFriendNotifications
+import com.android.gatherly.utils.getProfileWithSyncedNotifications
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
@@ -46,7 +46,8 @@ data class HomePageUIState(
     val friends: List<Profile> = emptyList(),
     val todos: List<ToDo> = emptyList(),
     val errorMsg: String? = null,
-    val isAnon: Boolean = true
+    val isAnon: Boolean = true,
+    val isLoading: Boolean = true,
 )
 
 /**
@@ -98,7 +99,7 @@ class HomePageViewModel(
         val todos = toDosRepository.getAllTodos()
         val events = eventsRepository.getAllEvents()
         val profile =
-            getProfileWithSyncedFriendNotifications(
+            getProfileWithSyncedNotifications(
                 profileRepository,
                 notificationsRepository,
                 pointsRepository,
@@ -112,7 +113,8 @@ class HomePageViewModel(
                 displayableEvents = getDrawableEvents(events),
                 friends = friends,
                 todos = todos,
-                isAnon = isAnon)
+                isAnon = isAnon,
+                isLoading = false)
       } catch (e: Exception) {
         _uiState.value = _uiState.value.copy(errorMsg = "There was an error loading your home page")
         Log.e("Homepage loading", "Exception when loading lists for Homepage displaying: $e")

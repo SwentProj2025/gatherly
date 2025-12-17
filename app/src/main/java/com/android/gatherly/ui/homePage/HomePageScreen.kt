@@ -62,6 +62,7 @@ import com.android.gatherly.ui.navigation.Screen
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_HomePage
 import com.android.gatherly.ui.profile.ProfilePictureWithStatus
+import com.android.gatherly.utils.LoadingAnimation
 import com.android.gatherly.utils.MapCoordinator
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
@@ -172,43 +173,48 @@ fun HomePageScreen(
             modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU))
       },
       content = { paddingValues ->
-        Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
-          SectionTitle(
-              text = stringResource(id = R.string.homepage_upcoming_events_title),
-              modifier =
-                  Modifier.padding(horizontal = screenPadding)
-                      .testTag(HomePageScreenTestTags.UPCOMING_EVENTS_TITLE)
-                      .clickable { homePageScreenActions.onClickEventsTitle() })
+        if (uiState.isLoading) {
+          LoadingAnimation(stringResource(R.string.loading_homepage_message), paddingValues)
+        } else {
 
-          EventsAndFriendsSection(
-              todos = uiState.displayableTodos,
-              events = uiState.displayableEvents,
-              onClickFriendsSection = homePageScreenActions.onClickFriendsSection,
-              isAnon = uiState.isAnon,
-              friends = uiState.friends,
-              coordinator = coordinator,
-              navigationActions = navigationActions)
+          Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+            SectionTitle(
+                text = stringResource(id = R.string.homepage_upcoming_events_title),
+                modifier =
+                    Modifier.padding(horizontal = screenPadding)
+                        .testTag(HomePageScreenTestTags.UPCOMING_EVENTS_TITLE)
+                        .clickable { homePageScreenActions.onClickEventsTitle() })
 
-          SectionTitle(
-              text = stringResource(id = R.string.homepage_upcoming_tasks_title),
-              modifier =
-                  Modifier.padding(horizontal = screenPadding)
-                      .testTag(HomePageScreenTestTags.UPCOMING_TASKS_TITLE)
-                      .clickable { homePageScreenActions.onClickTodoTitle() })
+            EventsAndFriendsSection(
+                todos = uiState.displayableTodos,
+                events = uiState.displayableEvents,
+                onClickFriendsSection = homePageScreenActions.onClickFriendsSection,
+                isAnon = uiState.isAnon,
+                friends = uiState.friends,
+                coordinator = coordinator,
+                navigationActions = navigationActions)
 
-          TaskList(
-              modifier = Modifier.weight(1f),
-              todos = uiState.todos,
-              onClickTodoTitle = homePageScreenActions.onClickTodoTitle,
-              onClickTodo = homePageScreenActions.onClickTodo)
+            SectionTitle(
+                text = stringResource(id = R.string.homepage_upcoming_tasks_title),
+                modifier =
+                    Modifier.padding(horizontal = screenPadding)
+                        .testTag(HomePageScreenTestTags.UPCOMING_TASKS_TITLE)
+                        .clickable { homePageScreenActions.onClickTodoTitle() })
 
-          FocusSection(
-              modifier = Modifier.padding(horizontal = screenPadding),
-              onClick = homePageScreenActions.onClickFocusButton)
+            TaskList(
+                modifier = Modifier.weight(1f),
+                todos = uiState.todos,
+                onClickTodoTitle = homePageScreenActions.onClickTodoTitle,
+                onClickTodo = homePageScreenActions.onClickTodo)
 
-          Spacer(
-              modifier =
-                  Modifier.height(dimensionResource(id = R.dimen.spacing_between_fields_regular)))
+            FocusSection(
+                modifier = Modifier.padding(horizontal = screenPadding),
+                onClick = homePageScreenActions.onClickFocusButton)
+
+            Spacer(
+                modifier =
+                    Modifier.height(dimensionResource(id = R.dimen.spacing_between_fields_regular)))
+          }
         }
       })
 }

@@ -1,7 +1,6 @@
 package com.android.gatherly.ui.groups
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -34,7 +33,6 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
 import com.android.gatherly.model.profile.Profile
@@ -45,6 +43,7 @@ import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
 import com.android.gatherly.utils.GatherlyAlertDialog
 import com.android.gatherly.utils.GatherlyAlertDialogActions
+import com.android.gatherly.utils.LoadingAnimation
 import com.android.gatherly.utils.profilePicturePainter
 
 object GroupInformationScreenTestTags {
@@ -100,12 +99,7 @@ fun GroupInformationScreen(
 
               // While the screen is loading
               if (uiState.isLoading) {
-                Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
-                  Text(
-                      text = stringResource(R.string.groups_info_loading),
-                      style = MaterialTheme.typography.bodyLarge,
-                      textAlign = TextAlign.Center)
-                }
+                LoadingAnimation(stringResource(R.string.groups_info_loading), padding)
               } else {
 
                 // Group name
