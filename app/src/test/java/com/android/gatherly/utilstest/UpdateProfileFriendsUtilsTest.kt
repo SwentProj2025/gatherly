@@ -6,294 +6,285 @@ import com.android.gatherly.model.notification.NotificationsLocalRepository
 import com.android.gatherly.model.points.PointsLocalRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
-import com.android.gatherly.utils.getProfileWithSyncedFriendNotifications
+import com.android.gatherly.runUnconfinedTest
+import com.android.gatherly.utils.getProfileWithSyncedNotifications
 import com.google.firebase.Timestamp
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
-import org.junit.After
+import kotlin.time.Duration.Companion.seconds
 import org.junit.Assert.*
-import org.junit.Before
 import org.junit.Test
 
-@OptIn(ExperimentalCoroutinesApi::class)
+/** Unit tests for updating friends based on notifications. */
 class UpdateProfileFriendsUtilsTest {
+
+  private val testTimeout = 120.seconds
 
   private fun ts() = Timestamp.now()
 
   private val pointsRepository = PointsLocalRepository()
 
-  private val testDispatcher = UnconfinedTestDispatcher()
-
-  @Before
-  fun setUp() {
-    Dispatchers.setMain(testDispatcher)
-  }
-
-  @After
-  fun tearDown() {
-    Dispatchers.resetMain()
-  }
-
+  /**
+   * Verify that a FRIEND_ACCEPTED notification adds the sender as a friend and deletes the
+   * notification.
+   */
   @Test
-  fun friendAccepted_addsFriend_andDeletesNotification() = runTest {
-    val profiles = ProfileLocalRepository()
-    val notifs = NotificationsLocalRepository()
+  fun friendAccepted_addsFriend_andDeletesNotification() =
+      runUnconfinedTest(testTimeout) {
+        val profiles = ProfileLocalRepository()
+        val notifs = NotificationsLocalRepository()
 
-    val current = Profile("u1", "alice", "Alice")
-    val sender = Profile("u2", "bob", "Bob")
+        val current = Profile("u1", "alice", "Alice")
+        val sender = Profile("u2", "bob", "Bob")
 
-    profiles.addProfile(current)
-    profiles.addProfile(sender)
+        profiles.addProfile(current)
+        profiles.addProfile(sender)
 
-    val notif =
-        Notification(
-            id = "n1",
-            type = NotificationType.FRIEND_ACCEPTED,
-            emissionTime = ts(),
-            senderId = "u2",
-            relatedEntityId = null,
-            recipientId = "u1",
-            wasRead = false)
-    notifs.addNotification(notif)
+        val notif =
+            Notification(
+                id = "n1",
+                type = NotificationType.FRIEND_ACCEPTED,
+                emissionTime = ts(),
+                senderId = "u2",
+                relatedEntityId = null,
+                recipientId = "u1",
+                wasRead = false)
+        notifs.addNotification(notif)
 
-    val updated = getProfileWithSyncedFriendNotifications(profiles, notifs, pointsRepository, "u1")
+        val updated = getProfileWithSyncedNotifications(profiles, notifs, pointsRepository, "u1")
 
-    assertNotNull(updated)
-    assertTrue(updated!!.friendUids.contains("u2"))
+        assertNotNull(updated)
+        assertTrue(updated!!.friendUids.contains("u2"))
 
-    try {
-      notifs.getNotification("n1")
-      fail("Expected NoSuchElementException")
-    } catch (e: NoSuchElementException) {
-      // success
-    }
-  }
+        try {
+          notifs.getNotification("n1")
+          fail("Expected NoSuchElementException")
+        } catch (e: NoSuchElementException) {
+          // success
+        }
+      }
 
+  /**
+   * Verify that a FRIEND_REJECTED notification deletes the notification without adding a friend.
+   */
   @Test
-  fun friendRejected_deletesNotification_only() = runTest {
-    val profiles = ProfileLocalRepository()
-    val notifs = NotificationsLocalRepository()
+  fun friendRejected_deletesNotification_only() =
+      runUnconfinedTest(testTimeout) {
+        val profiles = ProfileLocalRepository()
+        val notifs = NotificationsLocalRepository()
 
-    val current = Profile("u1", "alice", "Alice")
-    profiles.addProfile(current)
+        val current = Profile("u1", "alice", "Alice")
+        profiles.addProfile(current)
 
-    val notif =
-        Notification(
-            id = "n1",
-            type = NotificationType.FRIEND_REJECTED,
-            emissionTime = ts(),
-            senderId = "u99",
-            relatedEntityId = null,
-            recipientId = "u1",
-            wasRead = false)
-    notifs.addNotification(notif)
+        val notif =
+            Notification(
+                id = "n1",
+                type = NotificationType.FRIEND_REJECTED,
+                emissionTime = ts(),
+                senderId = "u99",
+                relatedEntityId = null,
+                recipientId = "u1",
+                wasRead = false)
+        notifs.addNotification(notif)
 
-    val updated = getProfileWithSyncedFriendNotifications(profiles, notifs, pointsRepository, "u1")
+        val updated = getProfileWithSyncedNotifications(profiles, notifs, pointsRepository, "u1")
 
-    assertNotNull(updated)
-    assertTrue(updated!!.friendUids.isEmpty())
+        assertNotNull(updated)
+        assertTrue(updated!!.friendUids.isEmpty())
 
-    try {
-      notifs.getNotification("n1")
-      fail("Expected NoSuchElementException")
-    } catch (e: NoSuchElementException) {
-      // success
-    }
-  }
+        try {
+          notifs.getNotification("n1")
+          fail("Expected NoSuchElementException")
+        } catch (e: NoSuchElementException) {
+          // success
+        }
+      }
 
+  /** Verify that notifications irrelevant to friend management are not processed or deleted. */
   @Test
-  fun irrelevantNotifications_doNothing() = runTest {
-    val profiles = ProfileLocalRepository()
-    val notifs = NotificationsLocalRepository()
+  fun irrelevantNotifications_doNothing() =
+      runUnconfinedTest(testTimeout) {
+        val profiles = ProfileLocalRepository()
+        val notifs = NotificationsLocalRepository()
 
-    val current = Profile("u1", "alice", "Alice")
-    profiles.addProfile(current)
+        val current = Profile("u1", "alice", "Alice")
+        profiles.addProfile(current)
 
-    val notif =
-        Notification(
-            id = "n1",
-            type = NotificationType.EVENT_REMINDER,
-            emissionTime = ts(),
-            senderId = null,
-            relatedEntityId = null,
-            recipientId = "u1",
-            wasRead = false)
-    notifs.addNotification(notif)
+        val notif =
+            Notification(
+                id = "n1",
+                type = NotificationType.EVENT_REMINDER,
+                emissionTime = ts(),
+                senderId = null,
+                relatedEntityId = null,
+                recipientId = "u1",
+                wasRead = false)
+        notifs.addNotification(notif)
 
-    val updated = getProfileWithSyncedFriendNotifications(profiles, notifs, pointsRepository, "u1")
+        val updated = getProfileWithSyncedNotifications(profiles, notifs, pointsRepository, "u1")
 
-    assertNotNull(updated)
-    assertTrue(updated!!.friendUids.isEmpty())
+        assertNotNull(updated)
+        assertTrue(updated!!.friendUids.isEmpty())
 
-    // Irrelevant notifications remain
-    assertNotNull(notifs.getNotification("n1"))
-  }
+        assertNotNull(notifs.getNotification("n1"))
+      }
 
+  /** Verify that FRIEND_ACCEPTED removes the sender from pendingSentFriendsUids. */
   @Test
-  fun friendAccepted_removesPendingSentUid() = runTest {
-    val profiles = ProfileLocalRepository()
-    val notifs = NotificationsLocalRepository()
+  fun friendAccepted_removesPendingSentUid() =
+      runUnconfinedTest(testTimeout) {
+        val profiles = ProfileLocalRepository()
+        val notifs = NotificationsLocalRepository()
 
-    val current = Profile("u1", "alice", "Alice", pendingSentFriendsUids = listOf("u2"))
-    val sender = Profile("u2", "bob", "Bob")
+        val current = Profile("u1", "alice", "Alice", pendingSentFriendsUids = listOf("u2"))
+        val sender = Profile("u2", "bob", "Bob")
 
-    profiles.addProfile(current)
-    profiles.addProfile(sender)
+        profiles.addProfile(current)
+        profiles.addProfile(sender)
 
-    val notif =
-        Notification(
-            id = "n1",
-            type = NotificationType.FRIEND_ACCEPTED,
-            emissionTime = ts(),
-            senderId = "u2",
-            relatedEntityId = null,
-            recipientId = "u1",
-            wasRead = false)
-    notifs.addNotification(notif)
+        val notif =
+            Notification(
+                id = "n1",
+                type = NotificationType.FRIEND_ACCEPTED,
+                emissionTime = ts(),
+                senderId = "u2",
+                relatedEntityId = null,
+                recipientId = "u1",
+                wasRead = false)
+        notifs.addNotification(notif)
 
-    val updated =
-        getProfileWithSyncedFriendNotifications(profiles, notifs, pointsRepository, "u1")!!
+        val updated = getProfileWithSyncedNotifications(profiles, notifs, pointsRepository, "u1")!!
 
-    // Should now be friends
-    assertTrue(updated.friendUids.contains("u2"))
+        assertTrue(updated.friendUids.contains("u2"))
+        assertFalse(updated.pendingSentFriendsUids.contains("u2"))
+      }
 
-    // Pending should be removed
-    assertFalse(updated.pendingSentFriendsUids.contains("u2"))
-  }
-
+  /**
+   * Verify that FRIEND_REJECTED removes the sender from pendingSentFriendsUids without adding as
+   * friend.
+   */
   @Test
-  fun friendRejected_removesPendingSentUid() = runTest {
-    val profiles = ProfileLocalRepository()
-    val notifs = NotificationsLocalRepository()
+  fun friendRejected_removesPendingSentUid() =
+      runUnconfinedTest(testTimeout) {
+        val profiles = ProfileLocalRepository()
+        val notifs = NotificationsLocalRepository()
 
-    val current = Profile("u1", "alice", "Alice", pendingSentFriendsUids = listOf("u2"))
-    profiles.addProfile(current)
+        val current = Profile("u1", "alice", "Alice", pendingSentFriendsUids = listOf("u2"))
+        profiles.addProfile(current)
 
-    val notif =
-        Notification(
-            id = "n1",
-            type = NotificationType.FRIEND_REJECTED,
-            emissionTime = ts(),
-            senderId = "u2",
-            relatedEntityId = null,
-            recipientId = "u1",
-            wasRead = false)
-    notifs.addNotification(notif)
+        val notif =
+            Notification(
+                id = "n1",
+                type = NotificationType.FRIEND_REJECTED,
+                emissionTime = ts(),
+                senderId = "u2",
+                relatedEntityId = null,
+                recipientId = "u1",
+                wasRead = false)
+        notifs.addNotification(notif)
 
-    val updated =
-        getProfileWithSyncedFriendNotifications(profiles, notifs, pointsRepository, "u1")!!
+        val updated = getProfileWithSyncedNotifications(profiles, notifs, pointsRepository, "u1")!!
 
-    // Should NOT become friends
-    assertFalse(updated.friendUids.contains("u2"))
+        assertFalse(updated.friendUids.contains("u2"))
+        assertFalse(updated.pendingSentFriendsUids.contains("u2"))
+      }
 
-    // Pending should be removed
-    assertFalse(updated.pendingSentFriendsUids.contains("u2"))
-  }
-
+  /**
+   * Verify that REMOVE_FRIEND notification removes the sender from friendUids and deletes the
+   * notification.
+   */
   @Test
-  fun removeFriend_notificationRemovesFriend_andDeletesNotification() = runTest {
-    val profiles = ProfileLocalRepository()
-    val notifs = NotificationsLocalRepository()
+  fun removeFriend_notificationRemovesFriend_andDeletesNotification() =
+      runUnconfinedTest(testTimeout) {
+        val profiles = ProfileLocalRepository()
+        val notifs = NotificationsLocalRepository()
 
-    val current = Profile("u1", "alice", "Alice", friendUids = listOf("u2"))
-    val sender = Profile("u2", "bob", "Bob")
+        val current = Profile("u1", "alice", "Alice", friendUids = listOf("u2"))
+        val sender = Profile("u2", "bob", "Bob")
 
-    profiles.addProfile(current)
-    profiles.addProfile(sender)
+        profiles.addProfile(current)
+        profiles.addProfile(sender)
 
-    val notif =
-        Notification(
-            id = "n1",
-            type = NotificationType.REMOVE_FRIEND,
-            emissionTime = ts(),
-            senderId = "u2",
-            relatedEntityId = null,
-            recipientId = "u1",
-            wasRead = false)
-    notifs.addNotification(notif)
+        val notif =
+            Notification(
+                id = "n1",
+                type = NotificationType.REMOVE_FRIEND,
+                emissionTime = ts(),
+                senderId = "u2",
+                relatedEntityId = null,
+                recipientId = "u1",
+                wasRead = false)
+        notifs.addNotification(notif)
 
-    val updated =
-        getProfileWithSyncedFriendNotifications(profiles, notifs, pointsRepository, "u1")!!
+        val updated = getProfileWithSyncedNotifications(profiles, notifs, pointsRepository, "u1")!!
 
-    // Friend must be removed
-    assertFalse(updated.friendUids.contains("u2"))
+        assertFalse(updated.friendUids.contains("u2"))
 
-    // Notification must be deleted
-    try {
-      notifs.getNotification("n1")
-      fail("Expected deletion of remove-friend notification")
-    } catch (_: NoSuchElementException) {}
-  }
+        try {
+          notifs.getNotification("n1")
+          fail("Expected deletion of remove-friend notification")
+        } catch (_: NoSuchElementException) {}
+      }
 
+  /**
+   * Verify that FRIEND_REQUEST_CANCELLED deletes both the cancellation and original request
+   * notifications.
+   */
   @Test
-  fun friendRequestCancelled_deletesOriginalRequest() = runTest {
-    val profiles = ProfileLocalRepository()
-    val notifs = NotificationsLocalRepository()
+  fun friendRequestCancelled_deletesOriginalRequest() =
+      runUnconfinedTest(testTimeout) {
+        val profiles = ProfileLocalRepository()
+        val notifs = NotificationsLocalRepository()
 
-    // u1 (sender)
-    val u1 =
-        Profile(
-            uid = "u1",
-            username = "alice",
-            name = "Alice",
-            pendingSentFriendsUids = listOf("u2") // u1 has sent a request to u2
-            )
-    profiles.addProfile(u1)
+        val u1 =
+            Profile(
+                uid = "u1",
+                username = "alice",
+                name = "Alice",
+                pendingSentFriendsUids = listOf("u2"))
+        profiles.addProfile(u1)
 
-    // u2 (recipient)
-    val u2 = Profile(uid = "u2", username = "bob", name = "Bob")
-    profiles.addProfile(u2)
+        val u2 = Profile(uid = "u2", username = "bob", name = "Bob")
+        profiles.addProfile(u2)
 
-    // Original friend request (belongs in u2’s inbox)
-    val request =
-        Notification(
-            id = "req1",
-            type = NotificationType.FRIEND_REQUEST,
-            emissionTime = ts(),
-            senderId = "u1",
-            recipientId = "u2",
-            relatedEntityId = null,
-            wasRead = false)
+        val request =
+            Notification(
+                id = "req1",
+                type = NotificationType.FRIEND_REQUEST,
+                emissionTime = ts(),
+                senderId = "u1",
+                recipientId = "u2",
+                relatedEntityId = null,
+                wasRead = false)
 
-    // Cancellation (also belongs in u2’s inbox)
-    val cancel =
-        Notification(
-            id = "req2",
-            type = NotificationType.FRIEND_REQUEST_CANCELLED,
-            emissionTime = ts(),
-            senderId = "u1",
-            recipientId = "u2",
-            relatedEntityId = null,
-            wasRead = false)
+        val cancel =
+            Notification(
+                id = "req2",
+                type = NotificationType.FRIEND_REQUEST_CANCELLED,
+                emissionTime = ts(),
+                senderId = "u1",
+                recipientId = "u2",
+                relatedEntityId = null,
+                wasRead = false)
 
-    notifs.addNotification(request)
-    notifs.addNotification(cancel)
+        notifs.addNotification(request)
+        notifs.addNotification(cancel)
 
-    // Sync u2’s profile with its notifications
-    val updatedU2 =
-        getProfileWithSyncedFriendNotifications(profiles, notifs, pointsRepository, "u2")!!
+        // Sync u2’s profile with its notifications
+        val updatedU2 =
+            getProfileWithSyncedNotifications(profiles, notifs, pointsRepository, "u2")!!
 
-    // --- Assertions ---
+        try {
+          notifs.getNotification("req1")
+          fail("Expected NoSuchElementException")
+        } catch (e: NoSuchElementException) {
+          // success
+        }
+        try {
+          notifs.getNotification("req2")
+          fail("Expected NoSuchElementException")
+        } catch (e: NoSuchElementException) {
+          // success
+        }
 
-    // u2's notifications should be deleted
-    try {
-      notifs.getNotification("req1")
-      fail("Expected NoSuchElementException")
-    } catch (e: NoSuchElementException) {
-      // success
-    }
-    try {
-      notifs.getNotification("req2")
-      fail("Expected NoSuchElementException")
-    } catch (e: NoSuchElementException) {
-      // success
-    }
-
-    // u2 should not have u1 as friend(unchanged)
-    assertFalse("u2 should not have u1 as friend", updatedU2.friendUids.contains("u1"))
-  }
+        assertFalse("u2 should not have u1 as friend", updatedU2.friendUids.contains("u1"))
+      }
 }
