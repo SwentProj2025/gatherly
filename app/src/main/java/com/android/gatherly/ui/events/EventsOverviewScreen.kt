@@ -102,49 +102,34 @@ import com.google.android.gms.location.LocationServices
 import java.util.Locale
 import kotlinx.coroutines.launch
 
+/** Test tags for the Events screen components. */
 object EventsScreenTestTags {
-
   const val ALL_LISTS = "EventsLists"
-
   const val CREATE_EVENT_BUTTON = "CreateANewEvent"
-
   const val EMPTY_BROWSER_LIST_MSG = "EmptyBrowserEvents"
-
   const val EMPTY_UPCOMING_LIST_MSG = "EmptyUpcomingEvents"
-
-  const val EMPTY_OUREVENTS_LIST_MSG = "EmptyOurEvents"
-
+  const val EMPTY_OUR_EVENTS_LIST_MSG = "EmptyOurEvents"
   const val BROWSE_TITLE = "TitleBrowserEvents"
-
   const val UPCOMING_TITLE = "TitleUpcomingEvents"
-
   const val YOUR_EVENTS_TITLE = "TitleYourEvents"
-
   const val EVENT_DATE = "EventDate"
-
   const val EVENT_TITLE = "EventTitle"
-
   const val EVENT_STATUS_INDICATOR_UPCOMING = "EventStatusIndicatorGreen"
   const val EVENT_STATUS_INDICATOR_ONGOING = "EventStatusIndicatorYellow"
   const val EVENT_STATUS_INDICATOR_PAST = "EventStatusIndicatorGrey"
-
   const val FILTER_UPCOMING_BUTTON = "FilterUpcomingButton"
   const val FILTER_ONGOING_BUTTON = "FilterOngoingButton"
   const val FILTER_PAST_BUTTON = "FilterPastButton"
   const val SEARCH_BAR = "SearchBar"
   const val SORT_MENU_BUTTON = "SortMenuButton"
-
   const val SORT_ALPHABETIC_BUTTON = "SortAlphabetic"
   const val SORT_DATE_BUTTON = "SortDateButton"
   const val SORT_PROX_BUTTON = "SortProxButton"
-
   const val ATTENDEES_ALERT_DIALOG = "alertDialog"
   const val ATTENDEES_ALERT_DIALOG_CANCEL = "alertDialogCancelButton"
-
   const val BROWSER_EVENT_VISIBILITY_BUTTON = "browserEventVisibilityButton"
   const val UPCOMING_EVENT_VISIBILITY_BUTTON = "upcomingEventVisibilityButton"
   const val MY_OWN_EVENT_VISIBILITY_BUTTON = "myOwnEventVisibilityButton"
-
   const val ICONS_PROXIMITY = "icons_proximity"
   const val ICONS_PROXIMITY_DISTANCE_TEXT = "icons_proximity_distance_text"
 
@@ -167,9 +152,12 @@ object EventsScreenTestTags {
 }
 
 /**
- * Displays a colored box indicating the status of an event.
+ * Filters for events based on their timing.
  *
- * @param status The [EventStatus] of the event.
+ * @property ALL Shows all events regardless of their timing.
+ * @property UPCOMING Shows only events that are scheduled to occur in the future.
+ * @property ONGOING Shows only events that are currently happening.
+ * @property PAST Shows only events that have already occurred.
  */
 enum class EventFilter {
   ALL,
@@ -181,9 +169,9 @@ enum class EventFilter {
 /**
  * Actions that can be performed on the Events screen.
  *
- * @param onSignedOut Callback invoked when the user signs out.
- * @param onAddEvent Callback to navigate to the event creation screen.
- * @param navigateToEditEvent Callback to navigate to the event editing screen with the selected
+ * @property onSignedOut Callback invoked when the user signs out.
+ * @property onAddEvent Callback to navigate to the event creation screen.
+ * @property navigateToEditEvent Callback to navigate to the event editing screen with the selected
  */
 data class EventsScreenActions(
     val onSignedOut: () -> Unit = {},
@@ -200,9 +188,9 @@ data class EventsScreenActions(
  * Each section allows interaction with the events, such as participating, unregistering, or editing
  * events. The screen also includes navigation menus and a button to create new events.
  *
- * @param navigationActions Handles navigation between different tabs/screens.
- * @param eventsViewModel The ViewModel managing the state and logic for the Events screen,
+ * @param eventsOverviewViewModel The ViewModel managing the state and logic for the Events screen,
  *   instantiated with a factory provider defined in the ViewModel's companion object.
+ * @param navigationActions Handles navigation between different tabs/screens.
  * @param eventId Optional event ID for deep linking to a specific event's details.
  * @param coordinator The MapCoordinator to handle map-related actions.
  * @param actions The actions that can be performed on the Events screen.
@@ -210,8 +198,8 @@ data class EventsScreenActions(
  *   user
  */
 @Composable
-fun EventsScreen(
-    eventsViewModel: EventsViewModel? = null,
+fun EventsOverviewScreen(
+    eventsOverviewViewModel: EventsOverviewViewModel? = null,
     navigationActions: NavigationActions? = null,
     eventId: String? = null,
     coordinator: MapCoordinator,
@@ -229,23 +217,27 @@ fun EventsScreen(
   val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
 
   /** ViewModel setup * */
-  val eventsViewModel: EventsViewModel =
-      eventsViewModel
+  val eventsOverviewViewModel: EventsOverviewViewModel =
+      eventsOverviewViewModel
           ?: viewModel(
-              factory = EventsViewModel.provideFactory(fusedLocationClient = fusedLocationClient))
+              factory =
+                  EventsOverviewViewModel.provideFactory(fusedLocationClient = fusedLocationClient))
 
   val coroutineScope = rememberCoroutineScope()
 
-  val uiState by eventsViewModel.uiState.collectAsState()
+  // UI state
+  val uiState by eventsOverviewViewModel.uiState.collectAsState()
 
   // Filter state
   val selectedFilter = remember { mutableStateOf(EventFilter.ALL) }
 
   // list of type of events based on the selected filter
-  val browserEvents = eventsViewModel.getFilteredEvents(selectedFilter, uiState.globalEventList)
+  val browserEvents =
+      eventsOverviewViewModel.getFilteredEvents(selectedFilter, uiState.globalEventList)
   val upcomingEvents =
-      eventsViewModel.getFilteredEvents(selectedFilter, uiState.participatedEventList)
-  val myOwnEvents = eventsViewModel.getFilteredEvents(selectedFilter, uiState.createdEventList)
+      eventsOverviewViewModel.getFilteredEvents(selectedFilter, uiState.participatedEventList)
+  val myOwnEvents =
+      eventsOverviewViewModel.getFilteredEvents(selectedFilter, uiState.createdEventList)
 
   // current user id
   val currentUserIdFromVM = uiState.currentUserId
@@ -310,7 +302,7 @@ fun EventsScreen(
   /** Updates the list of displayed events */
   LaunchedEffect(Unit, currentUserIdFromVM) {
     if (currentUserIdFromVM.isNotBlank()) {
-      eventsViewModel.refreshEvents(currentUserIdFromVM)
+      eventsOverviewViewModel.refreshEvents(currentUserIdFromVM)
     }
   }
 
@@ -330,7 +322,7 @@ fun EventsScreen(
         isLocationPermissionGranted = isGranted
 
         if (isGranted) {
-          eventsViewModel.startLocationUpdates(context)
+          eventsOverviewViewModel.startLocationUpdates(context)
         }
       }
 
@@ -340,7 +332,7 @@ fun EventsScreen(
 
     if (hasPermission) {
       isLocationPermissionGranted = true
-      eventsViewModel.startLocationUpdates(context)
+      eventsOverviewViewModel.startLocationUpdates(context)
     } else {
       isLocationPermissionGranted = false
       permissionLauncher.launch(
@@ -352,10 +344,11 @@ fun EventsScreen(
   /** Updates the current location of the current user */
   LaunchedEffect(Unit) {
     if (isLocationPermissionGranted) {
-      eventsViewModel.startLocationUpdates(context)
+      eventsOverviewViewModel.startLocationUpdates(context)
     }
   }
 
+  // -- Main Scaffold for the Events Overview screen--
   Scaffold(
       topBar = {
         TopNavigationMenu(
@@ -371,10 +364,10 @@ fun EventsScreen(
       },
       content = { padding ->
         LazyColumn(
-            contentPadding = PaddingValues(vertical = 8.dp),
+            contentPadding = PaddingValues(vertical = dimensionResource(R.dimen.padding_small)),
             modifier =
                 Modifier.fillMaxWidth()
-                    .padding(horizontal = 16.dp)
+                    .padding(horizontal = dimensionResource(R.dimen.padding_screen))
                     .padding(padding)
                     .testTag(EventsScreenTestTags.ALL_LISTS)) {
 
@@ -382,7 +375,7 @@ fun EventsScreen(
               item {
                 SearchBar(
                     uiState,
-                    eventsViewModel,
+                    eventsOverviewViewModel,
                     searchQuery,
                     onProximitySelected = requestLocationPermission,
                     isLocationPermissionGranted)
@@ -397,12 +390,15 @@ fun EventsScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically) {
+                      // -- Title Browse Events --
                       Text(
                           text = stringResource(R.string.browseEvents_list_title),
                           style = MaterialTheme.typography.titleMedium,
                           fontWeight = FontWeight.Bold,
                           modifier =
-                              Modifier.padding(vertical = 10.dp)
+                              Modifier.padding(
+                                      vertical =
+                                          dimensionResource(R.dimen.events_title_section_padding))
                                   .testTag(EventsScreenTestTags.BROWSE_TITLE),
                           color = MaterialTheme.colorScheme.onBackground)
 
@@ -414,7 +410,7 @@ fun EventsScreen(
 
               when {
                 uiState.isLoading && browserEventVisibility.value -> {
-                  // Events are loading so display that text
+                  // -- Loading animation while events are being fetched --
                   item {
                     Text(
                         stringResource(R.string.loading_events),
@@ -426,6 +422,7 @@ fun EventsScreen(
                   }
                 }
                 browserEvents.isNotEmpty() && browserEventVisibility.value -> {
+                  // -- List of browse events --
                   items(browserEvents.size) { index ->
                     BrowserEventsItem(
                         event = browserEvents[index],
@@ -433,19 +430,20 @@ fun EventsScreen(
                           selectedBrowserEvent.value = browserEvents[index]
                           isPopupOnBrowser.value = true
                         },
-                        distance = eventsViewModel.getDistanceUserEvent(browserEvents[index]),
+                        distance =
+                            eventsOverviewViewModel.getDistanceUserEvent(browserEvents[index]),
                         isProximityModeOn = (uiState.sortOrder == EventSortOrder.PROXIMITY),
                         hasLocationPermission = isLocationPermissionGranted)
                   }
                 }
                 browserEvents.isEmpty() && browserEventVisibility.value -> {
-                  // When there is no events in the browser list
+                  // -- Message when there is no events in the browse list --
                   item {
                     Text(
                         stringResource(R.string.browseEvents_emptylist_msg),
                         modifier =
                             Modifier.fillMaxWidth()
-                                .padding(8.dp)
+                                .padding(dimensionResource(R.dimen.events_empty_message_padding))
                                 .testTag(EventsScreenTestTags.EMPTY_BROWSER_LIST_MSG),
                         textAlign = TextAlign.Center,
                         style = MaterialTheme.typography.titleMedium,
@@ -457,11 +455,17 @@ fun EventsScreen(
               if (!uiState.isAnon) {
                 // Spacer between Browse and Upcoming
                 item {
-                  Spacer(modifier = Modifier.height(12.dp))
+                  Spacer(
+                      modifier =
+                          Modifier.height(
+                              dimensionResource(R.dimen.spacing_between_fields_smaller_regular)))
                   HorizontalDivider(
                       thickness = dimensionResource(id = R.dimen.thickness_small),
                       color = MaterialTheme.colorScheme.primary)
-                  Spacer(modifier = Modifier.height(12.dp))
+                  Spacer(
+                      modifier =
+                          Modifier.height(
+                              dimensionResource(R.dimen.spacing_between_fields_smaller_regular)))
                 }
 
                 // -- MY UPCOMING EVENTS LIST --
@@ -475,7 +479,9 @@ fun EventsScreen(
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             modifier =
-                                Modifier.padding(vertical = 10.dp)
+                                Modifier.padding(
+                                        vertical =
+                                            dimensionResource(R.dimen.events_title_section_padding))
                                     .testTag(EventsScreenTestTags.UPCOMING_TITLE),
                             color = MaterialTheme.colorScheme.onBackground)
 
@@ -487,7 +493,7 @@ fun EventsScreen(
 
                 when {
                   uiState.isLoading && upcomingEventVisibility.value -> {
-                    // Events are loading so display that text
+                    // -- Loading animation while events are being fetched --
                     item {
                       Text(
                           stringResource(R.string.loading_events),
@@ -499,6 +505,7 @@ fun EventsScreen(
                     }
                   }
                   upcomingEvents.isNotEmpty() && upcomingEventVisibility.value -> {
+                    // -- List of upcoming events --
                     items(upcomingEvents.size) { index ->
                       UpcomingEventsItem(
                           event = upcomingEvents[index],
@@ -506,19 +513,20 @@ fun EventsScreen(
                             selectedUpcomingEvent.value = upcomingEvents[index]
                             isPopupOnUpcoming.value = true
                           },
-                          distance = eventsViewModel.getDistanceUserEvent(upcomingEvents[index]),
+                          distance =
+                              eventsOverviewViewModel.getDistanceUserEvent(upcomingEvents[index]),
                           isProximityModeOn = (uiState.sortOrder == EventSortOrder.PROXIMITY),
                           hasLocationPermission = isLocationPermissionGranted)
                     }
                   }
                   upcomingEvents.isEmpty() && upcomingEventVisibility.value -> {
-                    // When there is no events in the upcoming list
+                    // Message when there is no events in the upcoming list
                     item {
                       Text(
                           stringResource(R.string.upcomingEvents_emptylist_msg),
                           modifier =
                               Modifier.fillMaxWidth()
-                                  .padding(8.dp)
+                                  .padding(dimensionResource(R.dimen.events_empty_message_padding))
                                   .testTag(EventsScreenTestTags.EMPTY_UPCOMING_LIST_MSG),
                           textAlign = TextAlign.Center,
                           style = MaterialTheme.typography.titleMedium,
@@ -530,14 +538,20 @@ fun EventsScreen(
 
                 // Spacer between Upcoming and My Own Events
                 item {
-                  Spacer(modifier = Modifier.height(12.dp))
+                  Spacer(
+                      modifier =
+                          Modifier.height(
+                              dimensionResource(R.dimen.spacing_between_fields_smaller_regular)))
                   HorizontalDivider(
                       thickness = dimensionResource(id = R.dimen.thickness_small),
                       color = MaterialTheme.colorScheme.primary)
-                  Spacer(modifier = Modifier.height(12.dp))
+                  Spacer(
+                      modifier =
+                          Modifier.height(
+                              dimensionResource(R.dimen.spacing_between_fields_smaller_regular)))
                 }
 
-                // MY OWN EVENTS
+                // -- MY OWN EVENTS LIST --
                 item {
                   Row(
                       modifier = Modifier.fillMaxWidth(),
@@ -548,7 +562,9 @@ fun EventsScreen(
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold,
                             modifier =
-                                Modifier.padding(vertical = 8.dp)
+                                Modifier.padding(
+                                        vertical =
+                                            dimensionResource(R.dimen.events_title_section_padding))
                                     .testTag(EventsScreenTestTags.YOUR_EVENTS_TITLE),
                             color = MaterialTheme.colorScheme.onBackground)
 
@@ -560,7 +576,7 @@ fun EventsScreen(
 
                 when {
                   uiState.isLoading && myOwnEventVisibility.value -> {
-                    // Events are loading so display that text
+                    // -- Loading animation while events are being fetched --
                     item {
                       Text(
                           stringResource(R.string.loading_events),
@@ -572,6 +588,7 @@ fun EventsScreen(
                     }
                   }
                   myOwnEvents.isNotEmpty() && myOwnEventVisibility.value -> {
+                    // -- List of my own events --
                     items(myOwnEvents.size) { index ->
                       MyOwnEventsItem(
                           event = myOwnEvents[index],
@@ -579,19 +596,21 @@ fun EventsScreen(
                             selectedYourEvent.value = myOwnEvents[index]
                             isPopupOnYourE.value = true
                           },
-                          distance = eventsViewModel.getDistanceUserEvent(myOwnEvents[index]),
+                          distance =
+                              eventsOverviewViewModel.getDistanceUserEvent(myOwnEvents[index]),
                           isProximityModeOn = (uiState.sortOrder == EventSortOrder.PROXIMITY),
                           hasLocationPermission = isLocationPermissionGranted)
                     }
                   }
                   myOwnEvents.isEmpty() && myOwnEventVisibility.value -> {
+                    // -- Message when there is no events in the my own events list --
                     item {
                       Text(
                           stringResource(R.string.userEvents_emptylist_msg),
                           modifier =
                               Modifier.fillMaxWidth()
-                                  .padding(8.dp)
-                                  .testTag(EventsScreenTestTags.EMPTY_OUREVENTS_LIST_MSG),
+                                  .padding(dimensionResource(R.dimen.events_empty_message_padding))
+                                  .testTag(EventsScreenTestTags.EMPTY_OUR_EVENTS_LIST_MSG),
                           textAlign = TextAlign.Center,
                           style = MaterialTheme.typography.titleMedium,
                           fontWeight = FontWeight.Bold,
@@ -601,7 +620,11 @@ fun EventsScreen(
                 }
 
                 // Spacer before the Create Event button
-                item { Spacer(modifier = Modifier.height(24.dp)) }
+                item {
+                  Spacer(
+                      modifier =
+                          Modifier.height(dimensionResource(R.dimen.spacing_between_fields_medium)))
+                }
 
                 // CREATE A NEW EVENT BUTTON
 
@@ -610,10 +633,14 @@ fun EventsScreen(
                       onClick = { actions.onAddEvent() },
                       modifier =
                           Modifier.fillMaxWidth()
-                              .height(80.dp)
-                              .padding(vertical = 12.dp)
+                              .height(dimensionResource(R.dimen.events_create_button_height))
+                              .padding(
+                                  vertical =
+                                      dimensionResource(R.dimen.events_create_button_vertical))
                               .testTag(EventsScreenTestTags.CREATE_EVENT_BUTTON),
-                      shape = RoundedCornerShape(12.dp),
+                      shape =
+                          RoundedCornerShape(
+                              dimensionResource(R.dimen.rounded_corner_shape_medium)),
                       colors = buttonColors(containerColor = MaterialTheme.colorScheme.secondary)) {
                         Text(
                             text = stringResource(R.string.create_event_button_title),
@@ -627,6 +654,7 @@ fun EventsScreen(
 
         // -- EVENT POP UPS --
 
+        // -- Browser Events Pop Up --
         selectedBrowserEvent.value?.let { event ->
           GatherlyAlertDialog(
               titleText = event.title,
@@ -638,10 +666,10 @@ fun EventsScreen(
                       onDismiss = { isPopupOnBrowser.value = false },
                       onConfirm = {
                         if (!uiState.isAnon) {
-                          eventsViewModel.onParticipate(
+                          eventsOverviewViewModel.onParticipate(
                               eventId = event.id, currentUserId = currentUserIdFromVM)
                           coroutineScope.launch {
-                            eventsViewModel.refreshEvents(currentUserIdFromVM)
+                            eventsOverviewViewModel.refreshEvents(currentUserIdFromVM)
                           }
                           isPopupOnBrowser.value = false
                         }
@@ -660,10 +688,15 @@ fun EventsScreen(
               startTimeText = timeToString(event.startTime),
               endTimeText = timeToString(event.endTime),
               numberAttendees = event.participants.size)
-          AlertDialogListAttendees(showAttendeesDialog, event, eventsViewModel, uiState)
+
+          // -- Attendees List Alert Dialog --
+          AlertDialogListAttendees(showAttendeesDialog, event, eventsOverviewViewModel, uiState)
+
+          // Reset selected event if popup is dismissed
           selectedBrowserEvent.value = if (isPopupOnBrowser.value) event else null
         }
 
+        // -- Upcoming Events Pop Up --
         selectedUpcomingEvent.value?.let { event ->
           GatherlyAlertDialog(
               titleText = event.title,
@@ -674,9 +707,11 @@ fun EventsScreen(
                   GatherlyAlertDialogActions(
                       onDismiss = { isPopupOnUpcoming.value = false },
                       onConfirm = {
-                        eventsViewModel.onUnregister(
+                        eventsOverviewViewModel.onUnregister(
                             eventId = event.id, currentUserId = currentUserIdFromVM)
-                        coroutineScope.launch { eventsViewModel.refreshEvents(currentUserIdFromVM) }
+                        coroutineScope.launch {
+                          eventsOverviewViewModel.refreshEvents(currentUserIdFromVM)
+                        }
                         isPopupOnUpcoming.value = false
                       },
                       onNeutral = {
@@ -694,10 +729,14 @@ fun EventsScreen(
               neutralEnabled = event.location != null,
               numberAttendees = event.participants.size)
 
-          AlertDialogListAttendees(showAttendeesDialog, event, eventsViewModel, uiState)
+          // -- Attendees List Alert Dialog --
+          AlertDialogListAttendees(showAttendeesDialog, event, eventsOverviewViewModel, uiState)
+
+          // Reset selected event if popup is dismissed
           selectedUpcomingEvent.value = if (isPopupOnUpcoming.value) event else null
         }
 
+        // -- My Own Events Pop Up --
         selectedYourEvent.value?.let { event ->
           GatherlyAlertDialog(
               titleText = event.title,
@@ -709,7 +748,9 @@ fun EventsScreen(
                       onDismiss = { isPopupOnYourE.value = false },
                       onConfirm = {
                         actions.navigateToEditEvent(event)
-                        coroutineScope.launch { eventsViewModel.refreshEvents(currentUserIdFromVM) }
+                        coroutineScope.launch {
+                          eventsOverviewViewModel.refreshEvents(currentUserIdFromVM)
+                        }
                         isPopupOnYourE.value = false
                       },
                       onNeutral = {
@@ -727,7 +768,10 @@ fun EventsScreen(
               neutralEnabled = event.location != null,
               numberAttendees = event.participants.size)
 
-          AlertDialogListAttendees(showAttendeesDialog, event, eventsViewModel, uiState)
+          // -- Attendees List Alert Dialog --
+          AlertDialogListAttendees(showAttendeesDialog, event, eventsOverviewViewModel, uiState)
+
+          // Reset selected event if popup is dismissed
           selectedYourEvent.value = if (isPopupOnYourE.value) event else null
         }
       })
@@ -739,10 +783,9 @@ fun EventsScreen(
  * @param event The [Event] item to display.
  * @param onClick A callback invoked when the user taps the Event card to open a pop Up with the
  *   event's description
- *     @param distance the distance between the location of the event and the user
- *     @param isProximityModeOn boolean to know if we want to display the distance or not
- *     @param hasLocationPermission the boolean to know if we have access to the current user
- *       location
+ * @param distance the distance between the location of the event and the user
+ * @param isProximityModeOn boolean to know if we want to display the distance or not
+ * @param hasLocationPermission the boolean to know if we have access to the current user location
  */
 @Composable
 fun BrowserEventsItem(
@@ -753,8 +796,11 @@ fun BrowserEventsItem(
     hasLocationPermission: Boolean
 ) {
   Card(
-      border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurfaceVariant),
-      shape = RoundedCornerShape(8.dp),
+      border =
+          BorderStroke(
+              dimensionResource(R.dimen.border_width_small),
+              MaterialTheme.colorScheme.onSurfaceVariant),
+      shape = RoundedCornerShape(dimensionResource(R.dimen.rounded_corner_shape_small_medium)),
       colors =
           CardDefaults.cardColors(
               containerColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -763,18 +809,20 @@ fun BrowserEventsItem(
           Modifier.clickable(onClick = onClick)
               .testTag(EventsScreenTestTags.getTestTagForEventItem(event))
               .fillMaxWidth()
-              .padding(vertical = 4.dp)) {
+              .padding(vertical = dimensionResource(R.dimen.padding_extra_small))) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(12.dp),
+            modifier =
+                Modifier.fillMaxWidth().padding(dimensionResource(R.dimen.padding_small_regular)),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-          // Status indicator circle
+
+          // -- Status indicator circle --
           BoxStatusColor(event.status)
 
           Spacer(
               modifier = Modifier.size(dimensionResource(R.dimen.spacing_between_fields_regular)))
 
-          // Event details
+          // -- Event details --
           Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = event.title,
@@ -790,17 +838,21 @@ fun BrowserEventsItem(
                 modifier = Modifier.testTag(EventsScreenTestTags.EVENT_DATE))
           }
 
+          // -- Event state icons --
           IconEventState(event.state, isProximityModeOn)
 
+          // -- Proximity icon --
           IconsProximityFilter(event.location, isProximityModeOn, hasLocationPermission, distance)
 
+          // -- Vertical divider --
           Box(
               modifier =
-                  Modifier.padding(horizontal = 12.dp)
-                      .width(1.dp)
-                      .height(24.dp)
+                  Modifier.padding(horizontal = dimensionResource(R.dimen.padding_small_regular))
+                      .width(dimensionResource(R.dimen.box_width_size_small))
+                      .height(dimensionResource(R.dimen.box_height_size_small))
                       .background(MaterialTheme.colorScheme.outlineVariant))
 
+          // -- Number of attendees box --
           BoxNumberAttendees(
               event.participants.size,
               Modifier.testTag(EventsScreenTestTags.getTestTagForEventNumberAttendees(event)))
@@ -827,8 +879,11 @@ fun UpcomingEventsItem(
     hasLocationPermission: Boolean
 ) {
   Card(
-      border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurfaceVariant),
-      shape = RoundedCornerShape(8.dp),
+      border =
+          BorderStroke(
+              dimensionResource(R.dimen.border_width_small),
+              MaterialTheme.colorScheme.onSurfaceVariant),
+      shape = RoundedCornerShape(dimensionResource(R.dimen.rounded_corner_shape_small_medium)),
       colors =
           CardDefaults.cardColors(
               containerColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -837,20 +892,20 @@ fun UpcomingEventsItem(
           Modifier.clickable(onClick = onClick)
               .testTag(EventsScreenTestTags.getTestTagForEventItem(event))
               .fillMaxWidth()
-              .padding(vertical = 4.dp)) {
+              .padding(vertical = dimensionResource(R.dimen.padding_extra_small))) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(12.dp),
+            modifier =
+                Modifier.fillMaxWidth().padding(dimensionResource(R.dimen.padding_small_regular)),
             verticalAlignment = Alignment.CenterVertically,
         ) {
 
-          // Status indicator circle
+          // -- Status indicator circle --
           BoxStatusColor(event.status)
 
           Spacer(
               modifier = Modifier.size(dimensionResource(R.dimen.spacing_between_fields_regular)))
 
-          // Event details
-
+          // -- Event details --
           Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = event.title,
@@ -866,17 +921,21 @@ fun UpcomingEventsItem(
                 modifier = Modifier.testTag(EventsScreenTestTags.EVENT_DATE))
           }
 
+          // -- Event state icons --
           IconEventState(event.state, isProximityModeOn)
 
+          // -- Proximity icon --
           IconsProximityFilter(event.location, isProximityModeOn, hasLocationPermission, distance)
 
+          // -- Vertical divider --
           Box(
               modifier =
-                  Modifier.padding(horizontal = 12.dp)
-                      .width(1.dp)
-                      .height(24.dp)
+                  Modifier.padding(horizontal = dimensionResource(R.dimen.padding_small_regular))
+                      .width(dimensionResource(R.dimen.box_width_size_small))
+                      .height(dimensionResource(R.dimen.box_height_size_small))
                       .background(MaterialTheme.colorScheme.outlineVariant))
 
+          // -- Number of attendees box --
           BoxNumberAttendees(
               event.participants.size,
               Modifier.testTag(EventsScreenTestTags.getTestTagForEventNumberAttendees(event)))
@@ -903,8 +962,11 @@ fun MyOwnEventsItem(
     hasLocationPermission: Boolean
 ) {
   Card(
-      border = BorderStroke(1.dp, MaterialTheme.colorScheme.onSurfaceVariant),
-      shape = RoundedCornerShape(8.dp),
+      border =
+          BorderStroke(
+              dimensionResource(R.dimen.border_width_small),
+              MaterialTheme.colorScheme.onSurfaceVariant),
+      shape = RoundedCornerShape(dimensionResource(R.dimen.rounded_corner_shape_small_medium)),
       colors =
           CardDefaults.cardColors(
               containerColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -913,19 +975,19 @@ fun MyOwnEventsItem(
           Modifier.clickable(onClick = onClick)
               .testTag(EventsScreenTestTags.getTestTagForEventItem(event))
               .fillMaxWidth()
-              .padding(vertical = 4.dp)) {
+              .padding(vertical = dimensionResource(R.dimen.padding_extra_small))) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(12.dp),
+            modifier =
+                Modifier.fillMaxWidth().padding(dimensionResource(R.dimen.padding_small_regular)),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-          // Status indicator circle
+          // -- Status indicator circle --
           BoxStatusColor(event.status)
 
           Spacer(
               modifier = Modifier.size(dimensionResource(R.dimen.spacing_between_fields_regular)))
 
-          // Event details
-
+          // -- Event details --
           Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = event.title,
@@ -941,17 +1003,21 @@ fun MyOwnEventsItem(
                 modifier = Modifier.testTag(EventsScreenTestTags.EVENT_DATE))
           }
 
+          // -- Event state icons --
           IconEventState(event.state, isProximityModeOn)
 
+          // -- Proximity icon --
           IconsProximityFilter(event.location, isProximityModeOn, hasLocationPermission, distance)
 
+          // -- Vertical divider --
           Box(
               modifier =
-                  Modifier.padding(horizontal = 12.dp)
-                      .width(1.dp)
-                      .height(24.dp)
+                  Modifier.padding(horizontal = dimensionResource(R.dimen.padding_small_regular))
+                      .width(dimensionResource(R.dimen.box_width_size_small))
+                      .height(dimensionResource(R.dimen.box_height_size_small))
                       .background(MaterialTheme.colorScheme.outlineVariant))
 
+          // -- Number of attendees box --
           BoxNumberAttendees(
               event.participants.size,
               Modifier.testTag(EventsScreenTestTags.getTestTagForEventNumberAttendees(event)))
@@ -959,7 +1025,11 @@ fun MyOwnEventsItem(
       }
 }
 
-/** Helper function : Return the color associated to the event status */
+/**
+ * Helper function : Return the color associated to the event status
+ *
+ * @param status The [EventStatus] of the event.
+ */
 @Composable
 private fun statusColor(status: EventStatus): Color {
   return when (status) {
@@ -969,7 +1039,11 @@ private fun statusColor(status: EventStatus): Color {
   }
 }
 
-/** Helper function : Display a status indicator circle */
+/**
+ * Helper function : Display a status indicator circle
+ *
+ * @param status The [EventStatus] of the event.
+ */
 @Composable
 private fun BoxStatusColor(status: EventStatus) {
   Box(
@@ -985,7 +1059,11 @@ private fun BoxStatusColor(status: EventStatus) {
                   }))
 }
 
-/** Displays a filter bar with buttons to filter events by their status. */
+/**
+ * Displays a filter bar with buttons to filter events by their status.
+ *
+ * @param selectedFilter The currently selected [EventFilter] state.
+ */
 @Composable
 private fun FilterBar(selectedFilter: MutableState<EventFilter>) {
   LazyRow(
@@ -1059,23 +1137,36 @@ fun FilterButton(
       }
 }
 
+/**
+ * Alert Dialog showing the list of attendees for a specific event
+ *
+ * @param showAttendeesDialog: MutableState<Boolean> to control the visibility of the dialog
+ * @param event: Event for which to display the attendees
+ * @param eventsOverviewViewModel: ViewModel to load participants names
+ * @param uiState: EventsOverviewUIState to get the current user ID
+ */
 @Composable
 private fun AlertDialogListAttendees(
     showAttendeesDialog: MutableState<Boolean>,
     event: Event,
-    eventsViewModel: EventsViewModel,
-    uiState: EventsUIState
+    eventsOverviewViewModel: EventsOverviewViewModel,
+    uiState: EventsOverviewUIState
 ) {
   if (showAttendeesDialog.value) {
 
+    // Load the participants names when the dialog is shown
     LaunchedEffect(event.participants) {
-      eventsViewModel.loadParticipantsNames(event.participants, uiState.currentUserId)
+      eventsOverviewViewModel.loadParticipantsNames(event.participants, uiState.currentUserId)
     }
 
-    val listNameAttendees by eventsViewModel.participantsNames.collectAsState()
+    // Collect the list of attendees names from the ViewModel
+    val listNameAttendees by eventsOverviewViewModel.participantsNames.collectAsState()
 
+    // -- Alert Dialog showing the list of attendees --
     AlertDialog(
         onDismissRequest = { showAttendeesDialog.value = false },
+
+        // -- Title and subtitle --
         title = {
           Column {
             Text(stringResource(R.string.events_alert_dialog_see_attendees_title))
@@ -1090,7 +1181,11 @@ private fun AlertDialogListAttendees(
             }
           }
         },
+
+        // -- List of attendees --
         text = { Column { listNameAttendees.forEach { name -> Text("• $name") } } },
+
+        // -- Closes the dialog button --
         confirmButton = {
           Button(
               onClick = { showAttendeesDialog.value = false },
@@ -1218,6 +1313,7 @@ private fun SortMenu(
 private fun ComponentDropDownProximityItem(isLocationPermissionGranted: Boolean) {
   Column {
     Row(verticalAlignment = Alignment.CenterVertically) {
+      // -- Proximity text --
       Text(
           text = stringResource(R.string.events_proximity_sort_button_text),
           color =
@@ -1227,13 +1323,17 @@ private fun ComponentDropDownProximityItem(isLocationPermissionGranted: Boolean)
                 MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
               })
       if (!isLocationPermissionGranted) {
-        Spacer(modifier = Modifier.width(4.dp))
+
+        Spacer(modifier = Modifier.width(dimensionResource(R.dimen.spacing_between_icons)))
+
+        // -- Info icon --
         Icon(
             imageVector = Icons.Filled.Info,
             contentDescription = "Location permission needed",
-            modifier = Modifier.size(16.dp))
+            modifier = Modifier.size(dimensionResource(R.dimen.icons_size_extra_small)))
       }
     }
+    // -- Message about location permission --
     if (!isLocationPermissionGranted) {
       Text(
           text = stringResource(R.string.events_proximity_message_location_permission),
@@ -1270,7 +1370,7 @@ private fun onClickProximityFilterActions(
  * Helper composable function : search bar where the current user types to search a specific event
  *
  * @param uiState The state exposed to the UI by the VM
- * @param eventsViewModel the viewModel
+ * @param eventsOverviewViewModel the viewModel
  * @param searchQuery the string typed by the current user
  * @param onProximitySelected the callback when the current user choose the proximity filtering
  * @param isLocationPermissionGranted the boolean to know if we have access to the current user
@@ -1278,8 +1378,8 @@ private fun onClickProximityFilterActions(
  */
 @Composable
 private fun SearchBar(
-    uiState: EventsUIState,
-    eventsViewModel: EventsViewModel,
+    uiState: EventsOverviewUIState,
+    eventsOverviewViewModel: EventsOverviewViewModel,
     searchQuery: MutableState<String>,
     onProximitySelected: () -> Unit,
     isLocationPermissionGranted: Boolean
@@ -1293,7 +1393,8 @@ private fun SearchBar(
             value = searchQuery.value,
             onValueChange = { newText ->
               searchQuery.value = newText
-              eventsViewModel.searchEvents(query = newText, currentUserId = uiState.currentUserId)
+              eventsOverviewViewModel.searchEvents(
+                  query = newText, currentUserId = uiState.currentUserId)
             },
             leadingIcon = {
               Icon(
@@ -1315,11 +1416,11 @@ private fun SearchBar(
                     unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
                     focusedTextColor = MaterialTheme.colorScheme.onBackground,
                 ),
-            shape = RoundedCornerShape(24.dp))
+            shape = RoundedCornerShape(dimensionResource(R.dimen.rounded_corner_shape_extra_large)))
 
         SortMenu(
             currentOrder = uiState.sortOrder,
-            onSortSelected = { eventsViewModel.setSortOrder(it) },
+            onSortSelected = { eventsOverviewViewModel.setSortOrder(it) },
             onProximitySelected = onProximitySelected,
             isLocationPermissionGranted = isLocationPermissionGranted)
       }
@@ -1396,7 +1497,7 @@ private fun IconsProximityFilter(
  * visibility
  *
  * @param eventVisibility: boolean to know if we let visible or not
- * @param testTag
+ * @param testTag : the test tag associated to the icon button
  */
 @Composable
 private fun IconsEventsVisibility(eventVisibility: MutableState<Boolean>, testTag: String) {
@@ -1412,10 +1513,11 @@ private fun IconsEventsVisibility(eventVisibility: MutableState<Boolean>, testTa
       }
 }
 
+/** Preview of the EventsOverviewScreen in dark theme */
 @Preview(showBackground = true)
 @Composable
 fun EventsScreenPreview() {
   GatherlyTheme(darkTheme = true) {
-    EventsScreen(coordinator = MapCoordinator(), actions = EventsScreenActions())
+    EventsOverviewScreen(coordinator = MapCoordinator(), actions = EventsScreenActions())
   }
 }

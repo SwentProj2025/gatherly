@@ -44,12 +44,13 @@ class EditEventsScreenTest {
   @get:Rule val composeTestRule = createAndroidComposeRule<ComponentActivity>()
 
   // declare viewModel and repositories
-  private lateinit var editEventsViewModel: EditEventsViewModel
+  private lateinit var editEventViewModel: EditEventViewModel
   private lateinit var eventsRepository: EventsRepository
   private lateinit var profileRepository: ProfileRepository
   private lateinit var fakeNominatimClient: FakeNominatimLocationRepository
   private lateinit var groupsRepository: GroupsRepository
 
+  /** Initialize viewModel and repositories before each test */
   @Before
   fun setUp() {
     // initialize repos and viewModel
@@ -57,18 +58,23 @@ class EditEventsScreenTest {
     eventsRepository = EventsLocalRepository()
     fakeNominatimClient = FakeNominatimLocationRepository()
     groupsRepository = GroupsLocalRepository()
-    editEventsViewModel =
-        EditEventsViewModel(
+    editEventViewModel =
+        EditEventViewModel(
             profileRepository = profileRepository,
             eventsRepository = eventsRepository,
             nominatimClient = fakeNominatimClient,
             groupsRepository = groupsRepository)
   }
 
+  /**
+   * Helper function: set the content of the composeTestRule with the given event
+   *
+   * @param event The event to be edited
+   */
   fun setUpEvent(event: Event) {
     fill_repositories(event)
 
-    composeTestRule.setContent { EditEventsScreen(event.id, editEventsViewModel) }
+    composeTestRule.setContent { EditEventsScreen(event.id, editEventViewModel) }
   }
 
   /*----------------------------------------Profiles--------------------------------------------*/
@@ -146,6 +152,8 @@ class EditEventsScreenTest {
 
   val privateFriendsEvent: Event = event.copy(state = EventState.PRIVATE_FRIENDS)
   val privateGroupEvent = event.copy(state = EventState.PRIVATE_GROUP)
+
+  /*----------------------------------------Tests-----------------------------------------------*/
 
   /** Check that all components are displayed */
   @Test
@@ -317,9 +325,13 @@ class EditEventsScreenTest {
         .assertIsDisplayed()
   }
 
-  // This function fills the profile repository with the created profiles, and the event repository
-  // with the created event
-  fun fill_repositories(event: Event) {
+  /**
+   * Helper function: fills the profile repository with the created profiles, and the event
+   * repository with the created events
+   *
+   * @param event The event to be added to the events repository
+   */
+  private fun fill_repositories(event: Event) {
     runTest {
       profileRepository.addProfile(profile1)
       profileRepository.addProfile(profile2)

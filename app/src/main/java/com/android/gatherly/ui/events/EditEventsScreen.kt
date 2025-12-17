@@ -39,9 +39,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.integerResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.PopupProperties
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
@@ -65,6 +65,7 @@ import com.android.gatherly.utils.TimeInputField
 import kotlin.collections.forEach
 import kotlinx.coroutines.delay
 
+/** Test tags for the EditEventScreen composable, used to identify UI elements during testing. */
 object EditEventsScreenTestTags {
   const val INPUT_NAME = "EVENT_NAME"
   const val INPUT_DESCRIPTION = "EVENT_DESCRIPTION"
@@ -86,7 +87,7 @@ object EditEventsScreenTestTags {
  * Screen for editing an existing Event.
  *
  * @param eventId id of the event to load and edit.
- * @param editEventsViewModel The ViewModel managing the state and logic for the Edit Event screen,
+ * @param editEventViewModel The ViewModel managing the state and logic for the Edit Event screen,
  *   instantiated with a factory provider defined in the ViewModel's companion object.
  * @param onSave called after a successful save or deletion and navigation intent.
  * @param goBack called when back arrow is pressed.
@@ -95,22 +96,26 @@ object EditEventsScreenTestTags {
 @Composable
 fun EditEventsScreen(
     eventId: String = "",
-    editEventsViewModel: EditEventsViewModel =
-        viewModel(factory = EditEventsViewModel.provideFactory()),
+    editEventViewModel: EditEventViewModel =
+        viewModel(factory = EditEventViewModel.provideFactory()),
     onSave: () -> Unit = {},
     goBack: () -> Unit = {},
 ) {
   // Load event once
-  LaunchedEffect(eventId) { editEventsViewModel.setEventValues(eventId) }
+  LaunchedEffect(eventId) { editEventViewModel.setEventValues(eventId) }
 
-  val ui = editEventsViewModel.uiState
+  // UI state
+  val ui = editEventViewModel.uiState
+  // Local context
   val context = LocalContext.current
-  val shouldShowDialog = remember { mutableStateOf(false) }
 
+  // Dimensions values from resources
   val screenPadding = dimensionResource(id = R.dimen.padding_screen)
   val fieldSpacing = dimensionResource(id = R.dimen.spacing_between_fields)
   val buttonSpacing = dimensionResource(id = R.dimen.spacing_between_buttons)
+  val suggestionsLength = integerResource(id = R.integer.events_location_suggestion_length)
 
+  // Text field colors
   val textFieldColors =
       TextFieldDefaults.colors(
           focusedContainerColor = MaterialTheme.colorScheme.background,
@@ -118,6 +123,9 @@ fun EditEventsScreen(
           unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
           focusedTextColor = MaterialTheme.colorScheme.onBackground,
           errorTextColor = MaterialTheme.colorScheme.onBackground)
+
+  // Warning popup to be sure that the user wants to delete the event
+  val showDeleteEventDialog = remember { mutableStateOf(false) }
 
   // Local state for the dropdown visibility
   var showLocationDropdown by remember { mutableStateOf(false) }
@@ -139,6 +147,7 @@ fun EditEventsScreen(
   val isPrivateGroupEvent = (ui.state == EventState.PRIVATE_GROUP)
   val isPublicEvent = (ui.state == EventState.PUBLIC)
 
+  // Participants UI state and actions
   val participantsUiState =
       ParticipantsUiState(
           participant = ui.participant,
@@ -148,25 +157,26 @@ fun EditEventsScreen(
           state = ui.state)
   val actions =
       ParticipantsActions(
-          addParticipant = { profile -> editEventsViewModel.addParticipant(profile) },
+          addParticipant = { profile -> editEventViewModel.addParticipant(profile) },
           deleteParticipant = { participantId ->
-            editEventsViewModel.deleteParticipant(participantId)
+            editEventViewModel.deleteParticipant(participantId)
           },
-          updateParticipant = { query -> editEventsViewModel.updateParticipant(query) })
+          updateParticipant = { query -> editEventViewModel.updateParticipant(query) })
 
+  // Groups UI state and actions
   val groupsUiState =
       GroupsUiState(group = ui.group, groups = ui.groups, suggestedGroups = ui.suggestedGroups)
   val groupAction =
       GroupsActions(
-          inviteGroup = { groupName -> editEventsViewModel.inviteGroup(groupName) },
-          removeGroup = { groupId -> editEventsViewModel.removeGroup(groupId) },
-          updateGroup = { query -> editEventsViewModel.updateGroup(query) })
+          inviteGroup = { groupName -> editEventViewModel.inviteGroup(groupName) },
+          removeGroup = { groupId -> editEventViewModel.removeGroup(groupId) },
+          updateGroup = { query -> editEventViewModel.updateGroup(query) })
 
   // Toasts
   LaunchedEffect(ui.displayToast, ui.toastString) {
     if (ui.displayToast && ui.toastString != null) {
       Toast.makeText(context, ui.toastString, Toast.LENGTH_SHORT).show()
-      editEventsViewModel.clearErrorMsg()
+      editEventViewModel.clearErrorMsg()
     }
   }
 
@@ -181,7 +191,7 @@ fun EditEventsScreen(
   LaunchedEffect(ui.location) {
     if (ui.location.isNotBlank()) {
       delay(1000)
-      editEventsViewModel.searchLocationByString(ui.location)
+      editEventViewModel.searchLocationByString(ui.location)
     }
   }
 
@@ -189,9 +199,9 @@ fun EditEventsScreen(
   LaunchedEffect(ui.participant, ui.state) {
     if (ui.participant.isNotBlank()) {
       if (isPrivateFriendsEvent) {
-        editEventsViewModel.searchFriendsProfileByString(ui.participant)
+        editEventViewModel.searchFriendsProfileByString(ui.participant)
       } else if (isPublicEvent) {
-        editEventsViewModel.searchProfileByString(ui.participant)
+        editEventViewModel.searchProfileByString(ui.participant)
       }
     }
   }
@@ -199,10 +209,11 @@ fun EditEventsScreen(
   // Search groups when input changes
   LaunchedEffect(ui.group) {
     if (ui.group.isNotBlank() && (isPrivateGroupEvent)) {
-      editEventsViewModel.searchGroupsNameByString(ui.group)
+      editEventViewModel.searchGroupsNameByString(ui.group)
     }
   }
 
+  // --- Main scaffold for the Edit Event screen ---
   Scaffold(
       topBar = {
         TopNavigationMenu_Goback(
@@ -223,8 +234,8 @@ fun EditEventsScreen(
                 }
               } else {
                 if (!isPublicEvent) {
+                  // -- Switch to public event button --
                   item {
-                    // Switch button to go to public event
                     Row(verticalAlignment = Alignment.CenterVertically) {
                       ElevatedButton(
                           onClick = { showWarningPublicEvent = true },
@@ -234,9 +245,15 @@ fun EditEventsScreen(
                             Icon(
                                 imageVector = Icons.Filled.LockOpen,
                                 contentDescription = "Public Event",
-                                modifier = Modifier.size(19.dp))
+                                modifier =
+                                    Modifier.size(dimensionResource(R.dimen.icons_size_small)))
                           }
-                      Spacer(modifier = Modifier.width(12.dp))
+
+                      Spacer(
+                          modifier =
+                              Modifier.width(
+                                  dimensionResource(
+                                      R.dimen.spacing_between_fields_smaller_regular)))
 
                       Text(
                           text = stringResource(R.string.events_edit_private_to_public_label),
@@ -245,11 +262,11 @@ fun EditEventsScreen(
                   }
                 }
 
+                // -- Input: Event's Name --
                 item {
-                  // Name
                   OutlinedTextField(
                       value = ui.name,
-                      onValueChange = { editEventsViewModel.updateName(it) },
+                      onValueChange = { editEventViewModel.updateName(it) },
                       label = { Text(stringResource(R.string.events_title_field_label)) },
                       placeholder = {
                         Text(stringResource(R.string.events_title_field_placeholder))
@@ -258,7 +275,7 @@ fun EditEventsScreen(
                       supportingText = {
                         if (ui.nameError) {
                           Text(
-                              "Name is required",
+                              stringResource(R.string.events_error_name_message),
                               modifier = Modifier.testTag(EditEventsScreenTestTags.ERROR_MESSAGE))
                         }
                       },
@@ -267,11 +284,11 @@ fun EditEventsScreen(
                           Modifier.fillMaxWidth().testTag(EditEventsScreenTestTags.INPUT_NAME))
                 }
 
+                // -- Input: Event's Description --
                 item {
-                  // Description
                   OutlinedTextField(
                       value = ui.description,
-                      onValueChange = { editEventsViewModel.updateDescription(it) },
+                      onValueChange = { editEventViewModel.updateDescription(it) },
                       label = { Text(stringResource(R.string.events_description_field_label)) },
                       placeholder = {
                         Text(stringResource(R.string.events_description_placeholder))
@@ -280,7 +297,7 @@ fun EditEventsScreen(
                       supportingText = {
                         if (ui.descriptionError) {
                           Text(
-                              "Description is required",
+                              stringResource(R.string.events_error_description_message),
                               modifier = Modifier.testTag(EditEventsScreenTestTags.ERROR_MESSAGE))
                         }
                       },
@@ -288,13 +305,12 @@ fun EditEventsScreen(
                       modifier =
                           Modifier.fillMaxWidth()
                               .testTag(EditEventsScreenTestTags.INPUT_DESCRIPTION),
-                      minLines = 3)
+                      minLines = integerResource(R.integer.events_description_min_lines))
                 }
 
                 if (isPublicEvent) {
-
+                  // -- Input: Participants search with dropdown and + / - actions --
                   item {
-                    // Participants search with dropdown and + / - actions
                     ParticipantsFieldItem(
                         uiState = participantsUiState,
                         currentUserId = ui.currentUserId,
@@ -305,8 +321,8 @@ fun EditEventsScreen(
                 } else {
 
                   if (isPrivateFriendsEvent) {
+                    // -- Input: Participants friends search with dropdown and + / - actions --
                     item {
-                      // Participants friends search with dropdown and + / - actions
                       ParticipantsFieldItem(
                           uiState = participantsUiState,
                           currentUserId = ui.currentUserId,
@@ -315,8 +331,8 @@ fun EditEventsScreen(
                           showProfilesDropdown = showProfilesDropdown)
                     }
                   } else {
+                    // -- Input: Groups search with dropdown and + / - actions --
                     item {
-                      // Group search with dropdown and + / - actions
                       GroupsFieldItem(
                           uiState = groupsUiState,
                           actions = groupAction,
@@ -326,13 +342,13 @@ fun EditEventsScreen(
                   }
                 }
 
+                // -- Input: Event's Location with dropdown --
                 item {
-                  // Location with suggestions dropdown
                   Box(modifier = Modifier.fillMaxWidth()) {
                     OutlinedTextField(
                         value = ui.location,
                         onValueChange = {
-                          editEventsViewModel.updateLocation(it)
+                          editEventViewModel.updateLocation(it)
                           showLocationDropdown = it.isNotBlank()
                         },
                         label = { Text(stringResource(R.string.events_location_field_label)) },
@@ -352,40 +368,51 @@ fun EditEventsScreen(
                         modifier =
                             Modifier.testTag(EditEventsScreenTestTags.LOCATION_MENU)
                                 .fillMaxWidth()
-                                .height(200.dp)) {
-                          ui.suggestedLocations.take(3).forEach { loc ->
+                                .height(dimensionResource(R.dimen.dropdown_height))) {
+                          ui.suggestedLocations
+                              .take(
+                                  integerResource(R.integer.events_location_number_of_suggestions))
+                              .forEach { loc ->
+                                DropdownMenuItem(
+                                    text = {
+                                      Text(
+                                          text =
+                                              loc.name.take(suggestionsLength) +
+                                                  if (loc.name.length > suggestionsLength)
+                                                      stringResource(
+                                                          R.string.location_suggestion_loading)
+                                                  else stringResource(R.string.empty_string),
+                                          color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    },
+                                    onClick = {
+                                      editEventViewModel.selectLocation(loc)
+                                      showLocationDropdown = false
+                                    },
+                                    modifier =
+                                        Modifier.testTag(EditEventsScreenTestTags.INPUT_LOCATION))
+                              }
+                          if (ui.suggestedLocations.size >
+                              integerResource(R.integer.events_location_number_of_suggestions)) {
                             DropdownMenuItem(
                                 text = {
                                   Text(
-                                      text =
-                                          loc.name.take(40) +
-                                              if (loc.name.length > 40) "..." else "",
+                                      stringResource(R.string.location_suggestion_more),
                                       color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                },
-                                onClick = {
-                                  editEventsViewModel.selectLocation(loc)
-                                  showLocationDropdown = false
-                                },
-                                modifier =
-                                    Modifier.testTag(EditEventsScreenTestTags.INPUT_LOCATION))
-                          }
-                          if (ui.suggestedLocations.size > 3) {
-                            DropdownMenuItem(
-                                text = {
-                                  Text(
-                                      "More...", color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 },
                                 onClick = {})
                           }
                         }
                   }
                 }
+
+                // -- Input: Event's Date --
                 item {
-                  // Date
                   DatePickerInputField(
                       value = ui.date,
                       label = stringResource(R.string.events_date_field_label),
-                      isErrorMessage = if (!ui.dateError) null else "Invalid format or past date",
+                      isErrorMessage =
+                          if (!ui.dateError) null
+                          else stringResource(R.string.error_date_picker_message),
                       onClick = { showDatePicker = true },
                       colors = textFieldColors,
                       testTag =
@@ -394,11 +421,11 @@ fun EditEventsScreen(
                               EditEventsScreenTestTags.ERROR_MESSAGE))
                 }
 
+                // -- Input: Event's Start Time --
                 item {
-                  // Start time
                   TimeInputField(
                       initialTime = ui.startTime,
-                      onTimeChanged = { editEventsViewModel.updateStartTime(it) },
+                      onTimeChanged = { editEventViewModel.updateStartTime(it) },
                       dueTimeError = ui.startTimeError,
                       label = stringResource(R.string.events_start_time_field_label),
                       textFieldColors = textFieldColors,
@@ -407,11 +434,11 @@ fun EditEventsScreen(
                       isStarting = true)
                 }
 
+                // -- Input: Event's End Time --
                 item {
-                  // End time
                   TimeInputField(
                       initialTime = ui.endTime,
-                      onTimeChanged = { editEventsViewModel.updateEndTime(it) },
+                      onTimeChanged = { editEventViewModel.updateEndTime(it) },
                       dueTimeError = ui.endTimeError,
                       label = stringResource(R.string.events_end_time_field_label),
                       textFieldColors = textFieldColors,
@@ -423,9 +450,9 @@ fun EditEventsScreen(
                 item {
                   Spacer(modifier = Modifier.height(buttonSpacing))
 
-                  // Save
+                  // -- Save button --
                   Button(
-                      onClick = { editEventsViewModel.saveEvent() },
+                      onClick = { editEventViewModel.saveEvent() },
                       modifier = Modifier.fillMaxWidth().testTag(EditEventsScreenTestTags.BTN_SAVE),
                       colors =
                           ButtonDefaults.buttonColors(
@@ -435,8 +462,7 @@ fun EditEventsScreen(
                               !ui.descriptionError &&
                               !ui.dateError &&
                               !ui.startTimeError &&
-                              !ui.endTimeError &&
-                              !ui.isLoading) {
+                              !ui.endTimeError) {
                         Text(
                             text =
                                 if (ui.isLoading) {
@@ -448,10 +474,10 @@ fun EditEventsScreen(
                       }
                 }
 
+                // -- Delete Event button --
                 item {
-                  // Delete
                   TextButton(
-                      onClick = { shouldShowDialog.value = true },
+                      onClick = { showDeleteEventDialog.value = true },
                       modifier =
                           Modifier.fillMaxWidth().testTag(EditEventsScreenTestTags.BTN_DELETE),
                       colors =
@@ -470,7 +496,8 @@ fun EditEventsScreen(
               }
             }
 
-        if (shouldShowDialog.value) {
+        // -- Delete Event Confirmation Dialog --
+        if (showDeleteEventDialog.value) {
           GatherlyAlertDialog(
               titleText = stringResource(R.string.events_delete_warning),
               bodyText = stringResource(R.string.events_delete_warning_text),
@@ -478,14 +505,15 @@ fun EditEventsScreen(
               confirmText = stringResource(R.string.delete),
               actions =
                   GatherlyAlertDialogActions(
-                      onDismiss = { shouldShowDialog.value = false },
+                      onDismiss = { showDeleteEventDialog.value = false },
                       onConfirm = {
-                        editEventsViewModel.deleteEvent()
-                        shouldShowDialog.value = false
+                        editEventViewModel.deleteEvent()
+                        showDeleteEventDialog.value = false
                       }),
               isImportantWarning = true)
         }
 
+        // -- Warning Dialog for switching to Public Event --
         if (showWarningPublicEvent) {
           GatherlyAlertDialog(
               titleText = stringResource(R.string.events_edit_private_to_public_label),
@@ -496,20 +524,23 @@ fun EditEventsScreen(
                   GatherlyAlertDialogActions(
                       onDismiss = { showWarningPublicEvent = false },
                       onConfirm = {
-                        editEventsViewModel.updatePrivateEventToPublicEvent()
+                        editEventViewModel.updatePrivateEventToPublicEvent()
                         showWarningPublicEvent = false
                       }))
         }
+
+        // -- Date Picker Dialog --
         GatherlyDatePicker(
             show = showDatePicker,
             initialDate = ui.date,
-            onDateSelected = { selectedDate -> editEventsViewModel.updateDate(selectedDate) },
+            onDateSelected = { selectedDate -> editEventViewModel.updateDate(selectedDate) },
             onDismiss = { showDatePicker = false })
       }
 }
 
+/** Preview of the EditEventScreen composable in dark theme. */
 @Preview
 @Composable
-fun EditEventsScreenPreview() {
+fun EditEventScreenPreview() {
   GatherlyTheme(darkTheme = true) { EditEventsScreen() }
 }
