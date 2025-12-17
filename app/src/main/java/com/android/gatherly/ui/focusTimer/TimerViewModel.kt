@@ -167,8 +167,10 @@ class TimerViewModel(
    */
   fun setHours(hours: String) {
     if (!hours.isEmpty()) {
-      val h = hours.toIntOrNull() ?: return setError("Invalid hour : Use numbers like 0–23 hours")
-      if (h !in 0..maxHours) return setError("Invalid hour : Use numbers like 0–23 hours")
+      val h =
+          hours.toIntOrNull()
+              ?: return setError("Invalid hour : Use numbers like 0–$maxHours hours")
+      if (h !in 0..maxHours) return setError("Invalid hour : Use numbers like 0–$maxHours hours")
     }
     _uiState.value = _uiState.value.copy(hours = hours)
   }
@@ -182,8 +184,9 @@ class TimerViewModel(
     if (!minutes.isEmpty()) {
       val m =
           minutes.toIntOrNull()
-              ?: return setError("Invalid minutes : Use numbers like 0–59 minutes")
-      if (m !in 0..maxMinutes) return setError("Invalid minutes : Use numbers like 0–59 minutes")
+              ?: return setError("Invalid minutes : Use numbers like 0–$maxMinutes minutes")
+      if (m !in 0..maxMinutes)
+          return setError("Invalid minutes : Use numbers like 0–$maxMinutes minutes")
     }
     _uiState.value = _uiState.value.copy(minutes = minutes)
   }
@@ -197,8 +200,9 @@ class TimerViewModel(
     if (!seconds.isEmpty()) {
       val s =
           seconds.toIntOrNull()
-              ?: return setError("Invalid seconds : Use numbers like 0–59 seconds")
-      if (s !in 0..maxSeconds) return setError("Invalid seconds : Use numbers like 0–59 seconds")
+              ?: return setError("Invalid seconds : Use numbers like 0–$maxSeconds seconds")
+      if (s !in 0..maxSeconds)
+          return setError("Invalid seconds : Use numbers like 0–$maxSeconds seconds")
     }
     _uiState.value = _uiState.value.copy(seconds = seconds)
   }
