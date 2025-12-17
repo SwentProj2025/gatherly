@@ -5,8 +5,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.map.Location
 import com.android.gatherly.model.map.NominatimLocationRepository
-import com.android.gatherly.model.profile.ProfileRepository
-import com.android.gatherly.model.profile.ProfileRepositoryProvider
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoPriority
 import com.android.gatherly.model.todo.ToDoStatus
@@ -28,8 +26,12 @@ import okhttp3.OkHttpClient
 // Portions of the code in this file are copy-pasted from the Bootcamp solution provided by the
 // SwEnt staff.
 
+private const val DATE_FORMAT = "dd/MM/yyyy"
+private const val TIME_FORMAT = "HH:mm"
+
 /**
- * UI state for the EditToDo screen. This state holds the data needed to edit an existing ToDo item.
+ * UI state for the EditToDo screen. This state holds the data needed to edit an existing [ToDo]
+ * item.
  */
 data class EditTodoUIState(
     val title: String = "",
@@ -62,41 +64,38 @@ private var client: OkHttpClient =
               chain
                   .request()
                   .newBuilder()
-                  .header("User-Agent", "BootcampApp (croissant.kerjan@gmail.com)")
+                  .header("User-Agent", "GatherlyApp (kerjangersende@gmail.com)")
                   .build()
           chain.proceed(request)
         }
         .build()
 
 /**
- * ViewModel responsible for managing the "Edit ToDo" screen.
+ * ViewModel responsible for managing the [EditToDoScreen].
  *
- * Handles user input updates, field validation, and updating ToDo items on the Firestore repository
- * through [ToDosRepository].
+ * Handles user input updates, field validation, and updating [ToDo] items on the Firestore
+ * repository through [ToDosRepository].
  *
  * Currently, location handling is limited to plain string input until the Location repository is
  * implemented.
  *
- * @param todoRepository The repository responsible for persisting ToDo items.
+ * @param todoRepository The repository responsible for persisting [ToDo] items.
  */
 class EditTodoViewModel(
     private val todoRepository: ToDosRepository = ToDosRepositoryProvider.repository,
     private val nominatimClient: NominatimLocationRepository = NominatimLocationRepository(client),
-    private val profileRepository: ProfileRepository = ProfileRepositoryProvider.repository,
     private val todoCategoryRepository: ToDoCategoryRepository =
         ToDoCategoryRepositoryProvider.repository
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(EditTodoUIState())
-  /** Public immutable access to the Edit ToDo UI state. */
+  /** Public immutable access to the [EditTodoUIState]. */
   val uiState: StateFlow<EditTodoUIState> = _uiState.asStateFlow()
 
   private val _categories = MutableStateFlow<List<ToDoCategory>>(emptyList())
   val categories: StateFlow<List<ToDoCategory>> = _categories.asStateFlow()
 
-  // Selected Location
   private var chosenLocation: Location? = null
 
-  // Todo ID
   private lateinit var editTodoId: String
 
   /** Clears the error message in the UI state. */
@@ -128,6 +127,7 @@ class EditTodoViewModel(
     viewModelScope.launch { loadAllCategories() }
   }
 
+  /** Loads all [ToDo] categories from the repository and updates the UI state. */
   private suspend fun loadAllCategories() {
     try {
       todoCategoryRepository.initializeDefaultCategories()
@@ -140,9 +140,9 @@ class EditTodoViewModel(
   }
 
   /**
-   * Loads a ToDo by its ID and updates the UI state.
+   * Loads a [ToDo] by its ID and updates the UI state.
    *
-   * @param todoID The ID of the ToDo to be loaded.
+   * @param todoID The ID of the [ToDo] to be loaded.
    */
   fun loadTodo(todoID: String) {
     viewModelScope.launch {
@@ -156,12 +156,12 @@ class EditTodoViewModel(
                 description = todo.description,
                 dueDate =
                     todo.dueDate?.let {
-                      val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                      val dateFormat = SimpleDateFormat(DATE_FORMAT, Locale.getDefault())
                       return@let dateFormat.format(todo.dueDate.toDate())
                     } ?: "",
                 dueTime =
                     todo.dueTime?.let {
-                      val dateFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+                      val dateFormat = SimpleDateFormat(TIME_FORMAT, Locale.getDefault())
                       return@let dateFormat.format(it.toDate())
                     } ?: "",
                 location = todo.location?.name ?: "",
@@ -173,14 +173,15 @@ class EditTodoViewModel(
     }
   }
 
+  /** Checks if the due date and time are in the past before editing the [ToDo]. */
   fun checkPastTime() {
     val validated =
         _uiState.value.copy(
             titleError = if (_uiState.value.title.isBlank()) "Title cannot be empty" else null,
             dueDateError =
-                if (!isValidDate(_uiState.value.dueDate)) "Invalid format (dd/MM/yyyy)" else null,
+                if (!isValidDate(_uiState.value.dueDate)) "Invalid format ($DATE_FORMAT)" else null,
             dueTimeError =
-                if (!isValidTime(_uiState.value.dueTime)) "Invalid time (HH:mm)" else null)
+                if (!isValidTime(_uiState.value.dueTime)) "Invalid time ($TIME_FORMAT)" else null)
     _uiState.value = validated
 
     // Abort if validation failed
@@ -194,11 +195,11 @@ class EditTodoViewModel(
       return
     }
     if (validated.dueTime.isBlank()) {
-      val sdfDate = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+      val sdfDate = SimpleDateFormat(DATE_FORMAT, Locale.getDefault())
       dateAndTime =
           sdfDate.parse(validated.dueDate) ?: throw IllegalArgumentException("Invalid date")
     } else {
-      val sdfDateAndTime = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+      val sdfDateAndTime = SimpleDateFormat("$DATE_FORMAT $TIME_FORMAT", Locale.getDefault())
       dateAndTime =
           sdfDateAndTime.parse(validated.dueDate + " " + validated.dueTime)
               ?: throw IllegalArgumentException("Invalid date or time")
@@ -215,21 +216,21 @@ class EditTodoViewModel(
   }
 
   /**
-   * Edits a ToDo document.
+   * Edits a [ToDo] document.
    *
-   * @param id id of The ToDo document to be edited.
+   * @param id id of The [ToDo] document to be edited.
    */
   fun editTodo(id: String): Boolean {
     val state = uiState.value
     val date =
         if (state.dueDate.isNotBlank()) {
-          val sdfTime = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+          val sdfTime = SimpleDateFormat(DATE_FORMAT, Locale.getDefault())
           Timestamp(sdfTime.parse(state.dueDate)!!)
         } else null
 
     val time =
         if (state.dueTime.isNotBlank()) {
-          val sdfTime = SimpleDateFormat("HH:mm", Locale.getDefault())
+          val sdfTime = SimpleDateFormat(TIME_FORMAT, Locale.getDefault())
           Timestamp(sdfTime.parse(state.dueTime)!!)
         } else null
 
@@ -256,10 +257,10 @@ class EditTodoViewModel(
   }
 
   /**
-   * Edits a ToDo document in the repository.
+   * Edits a [ToDo] document in the repository.
    *
-   * @param todoID The ID of the ToDo document to be edited.
-   * @param todo The ToDo object containing the new values.
+   * @param todoID The ID of the [ToDo] document to be edited.
+   * @param todo The [ToDo] object containing the new values.
    */
   private fun editTodoToRepository(todoID: String, todo: ToDo) {
 
@@ -276,16 +277,14 @@ class EditTodoViewModel(
   }
 
   /**
-   * Deletes a ToDo document by its ID.
+   * Deletes a [ToDo] document by its ID.
    *
-   * @param todoID The ID of the ToDo document to be deleted.
+   * @param todoID The ID of the [ToDo] document to be deleted.
    */
   fun deleteToDo(todoID: String) {
     viewModelScope.launch {
       _uiState.value = _uiState.value.copy(isSaving = true, errorMsg = null)
       try {
-        val ownerId = todoRepository.getTodo(todoID).ownerId
-
         todoRepository.deleteTodo(todoID = todoID)
         _uiState.value = _uiState.value.copy(isSaving = false, saveSuccess = true)
       } catch (e: Exception) {
@@ -330,7 +329,7 @@ class EditTodoViewModel(
    * @param newDate The new due date as a string (expected format: dd/MM/yyyy).
    */
   fun onDateChanged(newDate: String) {
-    val errMsg = if (!isValidDate(newDate)) "Invalid format (dd/MM/yyyy)" else null
+    val errMsg = if (!isValidDate(newDate)) "Invalid format ($DATE_FORMAT)" else null
     _uiState.value = _uiState.value.copy(dueDateError = errMsg, dueDate = newDate)
   }
 
@@ -340,7 +339,7 @@ class EditTodoViewModel(
    * @param newTime The new due time as a string (expected format: HH:mm).
    */
   fun onTimeChanged(newTime: String) {
-    val errMsg = if (!isValidTime(newTime)) "Invalid time (HH:mm)" else null
+    val errMsg = if (!isValidTime(newTime)) "Invalid time ($TIME_FORMAT)" else null
     _uiState.value = _uiState.value.copy(dueTimeError = errMsg, dueTime = newTime)
   }
 
@@ -355,7 +354,7 @@ class EditTodoViewModel(
     val regex = Regex("""\d{2}/\d{2}/\d{4}""")
     if (!regex.matches(date)) return false
     try {
-      val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+      val sdf = SimpleDateFormat(DATE_FORMAT, Locale.getDefault())
       sdf.isLenient = false
       sdf.parse(date)
       return true
@@ -375,7 +374,7 @@ class EditTodoViewModel(
     val regex = Regex("""\d{2}:\d{2}""")
     if (!regex.matches(time)) return false
     try {
-      val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
+      val sdf = SimpleDateFormat(TIME_FORMAT, Locale.getDefault())
       sdf.isLenient = false
       sdf.parse(time)
       return true
@@ -420,7 +419,7 @@ class EditTodoViewModel(
         val newCategory = ToDoCategory(name = name, color = color, isDefault = false)
         todoCategoryRepository.addToDoCategory(newCategory)
         _categories.value = todoCategoryRepository.getAllCategories()
-      } catch (e: Exception) {
+      } catch (_: Exception) {
         setErrorMsg("Failed to create a new category of todo: $name")
       }
     }
@@ -437,7 +436,7 @@ class EditTodoViewModel(
         if (_uiState.value.tag == category) {
           _uiState.value = _uiState.value.copy(tag = null)
         }
-      } catch (e: Exception) {
+      } catch (_: Exception) {
         setErrorMsg("Failed to delete the category of todo: ${category.name}")
       }
     }

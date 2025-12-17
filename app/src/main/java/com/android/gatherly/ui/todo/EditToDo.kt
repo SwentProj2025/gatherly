@@ -38,10 +38,10 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.integerResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
+import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todoCategory.ToDoCategory
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
@@ -61,24 +61,26 @@ import kotlinx.coroutines.delay
 // Portions of the code in this file are copy-pasted from the Bootcamp solution provided by the
 // SwEnt staff.
 
-/** Contains test tags used for UI testing on the Edit To-Do screen. */
+private const val DELAY = 1000L
+
+/** Contains test tags used for UI testing on the [EditToDoScreen]. */
 object EditToDoScreenTestTags {
-  /** Tag for the To-Do title input field. */
+  /** Tag for the [ToDo] title input field. */
   const val INPUT_TODO_TITLE = "inputTodoTitle"
 
-  /** Tag for the To-Do description input field. */
+  /** Tag for the [ToDo] description input field. */
   const val INPUT_TODO_DESCRIPTION = "inputTodoDescription"
 
-  /** Tag for the To-Do due date input field. */
+  /** Tag for the [ToDo] due date input field. */
   const val INPUT_TODO_DATE = "inputTodoDate"
 
-  /** Tag for the To-Do due time input field. */
+  /** Tag for the [ToDo] due time input field. */
   const val INPUT_TODO_TIME = "inputTodoTime"
 
-  /** Tag for the Save button that submits the To-Do. */
+  /** Tag for the Save button that submits the [ToDo]. */
   const val TODO_SAVE = "todoSave"
 
-  /** Tag for the Delete button that deletes the To-Do. */
+  /** Tag for the Delete button that deletes the [ToDo]. */
   const val TODO_DELETE = "todoDelete"
 
   /** Tag for displaying error messages under text fields. */
@@ -88,14 +90,13 @@ object EditToDoScreenTestTags {
   const val MORE_OPTIONS = "moreOptions"
 }
 
-private const val DELAY = 1000L
-
 /**
- * Displays the screen for editing an existing [ToDo].
+ * Displays the screen for editing an existing ToDo.
  *
+ * @param todoUid The unique identifier of the [ToDo] to be edited.
  * @param editTodoViewModel The [EditTodoViewModel] that provides the current ToDo state.
- * @param onSave Callback invoked after a To-Do has been successfully edited (saved).
- * @param onDelete Callback invoked after a To-Do has been successfully deleted.
+ * @param onSave Callback invoked after a [ToDo] has been successfully edited (saved).
+ * @param onDelete Callback invoked after a [ToDo] has been successfully deleted.
  * @param goBack Callback triggered when the back arrow in the top app bar is pressed.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -164,22 +165,26 @@ fun EditToDoScreen(
 
               // Buttons row
               item {
-                Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+                Row(
+                    horizontalArrangement =
+                        Arrangement.spacedBy(
+                            dimensionResource(
+                                R.dimen.todo_buttons_row_horizontal_arrangement_space))) {
 
-                  // Category drop down
-                  CategoriesDropDown(
-                      { category -> editTodoViewModel.selectTodoTag(category) },
-                      showCreateTagDialog,
-                      todoUIState.tag,
-                      showWarningDeleteTagDialog,
-                      categoriesList)
-                  // Priority level drop down
-                  PriorityDropDown(
-                      onSelectPriorityLevel = { level ->
-                        editTodoViewModel.selectPriorityLevel(level)
-                      },
-                      currentPriorityLevel = todoUIState.priorityLevel)
-                }
+                      // Category drop down
+                      CategoriesDropDown(
+                          { category -> editTodoViewModel.selectTodoTag(category) },
+                          showCreateTagDialog,
+                          todoUIState.tag,
+                          showWarningDeleteTagDialog,
+                          categoriesList)
+                      // Priority level drop down
+                      PriorityDropDown(
+                          onSelectPriorityLevel = { level ->
+                            editTodoViewModel.selectPriorityLevel(level)
+                          },
+                          currentPriorityLevel = todoUIState.priorityLevel)
+                    }
               }
 
               // Title Input
@@ -231,7 +236,9 @@ fun EditToDoScreen(
 
                       Text(
                           text = stringResource(R.string.todos_advanced_settings),
-                          modifier = Modifier.weight(1f))
+                          modifier =
+                              Modifier.weight(
+                                  integerResource(R.integer.todo_options_bar_weight).toFloat()))
                     }
               }
 
@@ -380,7 +387,7 @@ fun EditToDoScreen(
       onConfirmDelete = { category -> editTodoViewModel.deleteCategory(category) })
 }
 
-// Helper function to preview the timer screen
+/** Preview of the [EditToDoScreen]. */
 @Preview
 @Composable
 fun EditToDoScreenPreview() {
