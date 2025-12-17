@@ -46,9 +46,9 @@ import com.android.gatherly.ui.profile.ProfileScreen
 import com.android.gatherly.ui.profile.UserProfileScreen
 import com.android.gatherly.ui.settings.SettingsScreen
 import com.android.gatherly.ui.theme.GatherlyTheme
-import com.android.gatherly.ui.todo.AddToDoScreen
-import com.android.gatherly.ui.todo.EditToDoScreen
-import com.android.gatherly.ui.todo.OverviewScreen
+import com.android.gatherly.ui.todo.AddTodoScreen
+import com.android.gatherly.ui.todo.EditTodoScreen
+import com.android.gatherly.ui.todo.TodoOverviewScreen
 import com.android.gatherly.utils.MapCoordinator
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
@@ -151,13 +151,13 @@ fun GatherlyApp(
         route = Screen.ToDoOverviewScreen.name,
     ) {
       composable(Screen.ToDoOverviewScreen.route) {
-        OverviewScreen(
+        TodoOverviewScreen(
             navigationActions = navigationActions,
             onAddTodo = { navigationActions.navigateTo(Screen.AddToDoScreen) },
             onSelectTodo = { navigationActions.navigateTo(Screen.EditToDoScreen(it.uid)) })
       }
       composable(Screen.AddToDoScreen.route) {
-        AddToDoScreen(
+        AddTodoScreen(
             onAdd = { navigationActions.navigateTo(Screen.ToDoOverviewScreen) },
             goBack = { navigationActions.goBack() })
       }
@@ -168,7 +168,7 @@ fun GatherlyApp(
 
         // Create the EditToDoScreen with the To-Do UID
         uid?.let {
-          EditToDoScreen(
+          EditTodoScreen(
               onSave = { navigationActions.navigateTo(Screen.ToDoOverviewScreen) },
               todoUid = it,
               goBack = { navigationActions.goBack() },

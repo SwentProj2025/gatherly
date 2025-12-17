@@ -25,7 +25,7 @@ import kotlinx.coroutines.launch
 /**
  * Represents the UI state for the Overview screen.
  *
- * @property todos A list of `ToDo` items to be displayed in the Overview screen. Defaults to an
+ * @property todos A list of [ToDo] items to be displayed in the Overview screen. Defaults to an
  *   empty list if no items are available.
  */
 data class OverviewUIState(
@@ -37,10 +37,11 @@ data class OverviewUIState(
 )
 
 /**
- * Specifies the available sorting criteria for the ToDo overview list.
+ * Specifies the available sorting criteria for the [ToDo] overview list.
  * - [DATE_ASC]: Sort tasks by increasing due date (earliest first).
  * - [DATE_DESC]: Sort tasks by decreasing due date (latest first).
  * - [ALPHABETICAL]: Sort tasks by their name in alphabetical order (A -> Z).
+ * - [PRIORITY_LEVEL]: Sort tasks by their priority level (highest priority first).
  */
 enum class TodoSortOrder {
   DATE_ASC,
@@ -52,10 +53,13 @@ enum class TodoSortOrder {
 /**
  * ViewModel for the Overview screen.
  *
- * Responsible for managing the UI state, by fetching and providing ToDo items via the
+ * Responsible for managing the UI state, by fetching and providing [ToDo] items via the
  * [ToDosRepository].
  *
- * @property todoRepository The repository used to fetch and manage ToDo items.
+ * @param todoRepository The repository used to fetch and manage [ToDo] items.
+ * @param profileRepository The repository used to fetch and manage user profiles.
+ * @param pointsRepository The repository used to manage user points.
+ * @param todoCategoryRepository The repository used to fetch and manage [ToDoCategory] items
  */
 class OverviewViewModel(
     private val todoRepository: ToDosRepository = ToDosRepositoryProvider.repository,
@@ -80,14 +84,14 @@ class OverviewViewModel(
     viewModelScope.launch { loadAllCategories() }
   }
 
-  /** Refreshes the UI state by fetching all [TODO] items from the repository. */
+  /** Refreshes the UI state by fetching all [ToDo] items from the repository. */
   fun refreshUIState() {
     _uiState.value = _uiState.value.copy(selectedCategory = null)
     getAllTodos()
     viewModelScope.launch { loadAllCategories() }
   }
 
-  /** Fetches all [TODO]s from the repository and updates the UI state. */
+  /** Fetches all [ToDo]s from the repository and updates the UI state. */
   private fun getAllTodos() {
     viewModelScope.launch {
       _uiState.value = _uiState.value.copy(isLoading = true, errorMsg = null)
@@ -103,6 +107,7 @@ class OverviewViewModel(
     }
   }
 
+  /** Loads all [ToDoCategory] items from the repository and updates the UI state. */
   private suspend fun loadAllCategories() {
     try {
       todoCategoryRepository.initializeDefaultCategories()
@@ -114,7 +119,7 @@ class OverviewViewModel(
     }
   }
 
-  /** Invoked when the user clicks on the checkbox, to mark the [TODO] as completed or ongoing. */
+  /** Invoked when the user clicks on the checkbox, to mark the [ToDo] as completed or ongoing. */
   fun onCheckboxChanged(uid: String, newStatus: ToDoStatus) {
     viewModelScope.launch {
       val ownerId = todoRepository.getTodo(uid).ownerId
@@ -123,12 +128,22 @@ class OverviewViewModel(
     }
   }
 
-  /** Invoked when users type in the search bar to filter [TODO]s according to the typed query. */
+  /**
+   * Invoked when users type in the search bar to filter [ToDo]s according to the typed query.
+   *
+   * @param query The search query entered by the user.
+   */
   fun searchTodos(query: String) {
     currentSearchQuery = query.trim()
     refreshVisibleTodos()
   }
 
+  /**
+   * Updates the current category filter of the UI and applies it immediately to the currently
+   * displayed list of [ToDo]s.
+   *
+   * @param category The new [ToDoCategory] selected by the user, or null to clear the filter.
+   */
   fun setCategoryFilter(category: ToDoCategory?) {
     _uiState.value = _uiState.value.copy(selectedCategory = category)
     refreshVisibleTodos()
@@ -136,7 +151,7 @@ class OverviewViewModel(
 
   /**
    * Updates the current sorting order of the UI and applies it immediately to the currently
-   * displayed list of [TODO]s.
+   * displayed list of [ToDo]s.
    *
    * @param order The new [TodoSortOrder] selected by the user.
    */
@@ -146,9 +161,9 @@ class OverviewViewModel(
   }
 
   /**
-   * Applies the current sorting rule to the given list of [TODO]s and return it.
+   * Applies the current sorting rule to the given list of [ToDo]s and return it.
    *
-   * @param list The list of [TODO]s to sort.
+   * @param list The list of [ToDo]s to sort.
    * @return A new list sorted according to the active sort order.
    */
   private fun applySortOrder(list: List<ToDo>): List<ToDo> {
@@ -160,6 +175,7 @@ class OverviewViewModel(
     }
   }
 
+  /** Refreshes the list of visible [ToDo]s based on the current filters and search query. */
   private fun refreshVisibleTodos() {
     val category = _uiState.value.selectedCategory
     val query = currentSearchQuery.trim().lowercase()

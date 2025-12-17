@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.DeleteForever
@@ -37,16 +38,14 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.integerResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
+import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todoCategory.ToDoCategory
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
-import com.android.gatherly.ui.theme.GatherlyTheme
 import com.android.gatherly.utils.AlertDialogCreateTag
 import com.android.gatherly.utils.AlertDialogWarningDeleteTag
 import com.android.gatherly.utils.CategoriesDropDown
@@ -56,29 +55,32 @@ import com.android.gatherly.utils.GatherlyAlertDialogActions
 import com.android.gatherly.utils.GatherlyDatePicker
 import com.android.gatherly.utils.PriorityDropDown
 import com.android.gatherly.utils.TimeInputField
+import com.android.gatherly.utils.ToDoLocationSuggestionsUtils
 import kotlinx.coroutines.delay
 
 // Portions of the code in this file are copy-pasted from the Bootcamp solution provided by the
 // SwEnt staff.
 
-/** Contains test tags used for UI testing on the Edit To-Do screen. */
-object EditToDoScreenTestTags {
-  /** Tag for the To-Do title input field. */
+private const val DELAY = 1000L
+
+/** Contains test tags used for UI testing on the [EditTodoScreen]. */
+object EditTodoScreenTestTags {
+  /** Tag for the [ToDo] title input field. */
   const val INPUT_TODO_TITLE = "inputTodoTitle"
 
-  /** Tag for the To-Do description input field. */
+  /** Tag for the [ToDo] description input field. */
   const val INPUT_TODO_DESCRIPTION = "inputTodoDescription"
 
-  /** Tag for the To-Do due date input field. */
+  /** Tag for the [ToDo] due date input field. */
   const val INPUT_TODO_DATE = "inputTodoDate"
 
-  /** Tag for the To-Do due time input field. */
+  /** Tag for the [ToDo] due time input field. */
   const val INPUT_TODO_TIME = "inputTodoTime"
 
-  /** Tag for the Save button that submits the To-Do. */
+  /** Tag for the Save button that submits the [ToDo]. */
   const val TODO_SAVE = "todoSave"
 
-  /** Tag for the Delete button that deletes the To-Do. */
+  /** Tag for the Delete button that deletes the [ToDo]. */
   const val TODO_DELETE = "todoDelete"
 
   /** Tag for displaying error messages under text fields. */
@@ -88,19 +90,18 @@ object EditToDoScreenTestTags {
   const val MORE_OPTIONS = "moreOptions"
 }
 
-private const val DELAY = 1000L
-
 /**
  * Displays the screen for editing an existing [ToDo].
  *
+ * @param todoUid The unique identifier of the [ToDo] to be edited.
  * @param editTodoViewModel The [EditTodoViewModel] that provides the current ToDo state.
- * @param onSave Callback invoked after a To-Do has been successfully edited (saved).
- * @param onDelete Callback invoked after a To-Do has been successfully deleted.
+ * @param onSave Callback invoked after a [ToDo] has been successfully edited (saved).
+ * @param onDelete Callback invoked after a [ToDo] has been successfully deleted.
  * @param goBack Callback triggered when the back arrow in the top app bar is pressed.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EditToDoScreen(
+fun EditTodoScreen(
     todoUid: String,
     editTodoViewModel: EditTodoViewModel = viewModel(),
     onSave: () -> Unit = {},
@@ -113,7 +114,7 @@ fun EditToDoScreen(
   val errorMsg = todoUIState.errorMsg
   val context = LocalContext.current
   val shouldShowDialog = remember { mutableStateOf(false) }
-  val expandAdvanced = remember { mutableStateOf(false) }
+  val expandAdvanced = remember { mutableStateOf(true) }
 
   val screenPadding = dimensionResource(id = R.dimen.padding_screen)
   val fieldSpacing = dimensionResource(id = R.dimen.spacing_between_fields)
@@ -162,26 +163,6 @@ fun EditToDoScreen(
             modifier = Modifier.fillMaxSize().padding(paddingVal).padding(screenPadding),
             verticalArrangement = Arrangement.spacedBy(fieldSpacing)) {
 
-              // Buttons row
-              item {
-                Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-
-                  // Category drop down
-                  CategoriesDropDown(
-                      { category -> editTodoViewModel.selectTodoTag(category) },
-                      showCreateTagDialog,
-                      todoUIState.tag,
-                      showWarningDeleteTagDialog,
-                      categoriesList)
-                  // Priority level drop down
-                  PriorityDropDown(
-                      onSelectPriorityLevel = { level ->
-                        editTodoViewModel.selectPriorityLevel(level)
-                      },
-                      currentPriorityLevel = todoUIState.priorityLevel)
-                }
-              }
-
               // Title Input
               item {
                 OutlinedTextField(
@@ -192,12 +173,12 @@ fun EditToDoScreen(
                     isError = todoUIState.titleError != null,
                     supportingText = {
                       todoUIState.titleError?.let {
-                        Text(it, modifier = Modifier.testTag(EditToDoScreenTestTags.ERROR_MESSAGE))
+                        Text(it, modifier = Modifier.testTag(EditTodoScreenTestTags.ERROR_MESSAGE))
                       }
                     },
                     colors = toDoTextFieldColors,
                     modifier =
-                        Modifier.fillMaxWidth().testTag(EditToDoScreenTestTags.INPUT_TODO_TITLE))
+                        Modifier.fillMaxWidth().testTag(EditTodoScreenTestTags.INPUT_TODO_TITLE))
               }
 
               // Description Input
@@ -210,7 +191,7 @@ fun EditToDoScreen(
                     colors = toDoTextFieldColors,
                     modifier =
                         Modifier.fillMaxWidth()
-                            .testTag(EditToDoScreenTestTags.INPUT_TODO_DESCRIPTION),
+                            .testTag(EditTodoScreenTestTags.INPUT_TODO_DESCRIPTION),
                     minLines = integerResource(R.integer.todo_description_min_lines),
                     maxLines = integerResource(R.integer.todo_description_max_lines))
               }
@@ -227,51 +208,25 @@ fun EditToDoScreen(
                               Modifier.rotate(if (expandAdvanced.value) 90f else 0f)
                                   .clickable(
                                       onClick = { expandAdvanced.value = !expandAdvanced.value })
-                                  .testTag(EditToDoScreenTestTags.MORE_OPTIONS))
+                                  .testTag(EditTodoScreenTestTags.MORE_OPTIONS))
 
                       Text(
                           text = stringResource(R.string.todos_advanced_settings),
-                          modifier = Modifier.weight(1f))
+                          modifier =
+                              Modifier.weight(
+                                  integerResource(R.integer.todo_options_bar_weight).toFloat()))
                     }
               }
 
-              // Location Input with dropdown
-              item {
-                LocationSuggestions(
-                    location = todoUIState.location,
-                    suggestions = todoUIState.suggestions,
-                    onLocationChanged = { editTodoViewModel.onLocationChanged(it) },
-                    onSelectLocation = { loc -> editTodoViewModel.selectLocation(loc) },
-                    modifier = Modifier.fillMaxWidth(),
-                    textFieldColors = toDoTextFieldColors)
-              }
-
-              // Due Date Input
-              item {
-                DatePickerInputField(
-                    value = todoUIState.dueDate,
-                    label = stringResource(R.string.todos_date_field_label),
-                    isErrorMessage = todoUIState.dueDateError,
-                    onClick = { showDatePicker = true },
-                    colors = toDoTextFieldColors,
-                    testTag =
-                        Pair(
-                            EditToDoScreenTestTags.INPUT_TODO_DATE,
-                            EditToDoScreenTestTags.ERROR_MESSAGE))
-              }
-
-              // Due Time Input
-              item {
-                TimeInputField(
-                    initialTime = todoUIState.dueTime,
-                    onTimeChanged = { editTodoViewModel.onTimeChanged(it) },
-                    dueTimeError = (todoUIState.dueTimeError != null),
-                    label = stringResource(R.string.todos_time_field_label),
-                    textFieldColors = toDoTextFieldColors,
-                    testTagInput = EditToDoScreenTestTags.INPUT_TODO_TIME,
-                    testTagErrorMessage = EditToDoScreenTestTags.ERROR_MESSAGE,
-                )
-              }
+              // Advanced options
+              advancedOptions(
+                  expandAdvanced = expandAdvanced.value,
+                  todoUIState = todoUIState,
+                  editTodoViewModel = editTodoViewModel,
+                  showCreateTagDialog = showCreateTagDialog,
+                  showWarningDeleteTagDialog = showWarningDeleteTagDialog,
+                  categoriesList = categoriesList,
+                  onDatePickerClick = { showDatePicker = true })
 
               item { Spacer(modifier = Modifier.height(fieldSpacing)) }
 
@@ -279,19 +234,12 @@ fun EditToDoScreen(
               item {
                 Button(
                     onClick = { editTodoViewModel.checkPastTime() },
-                    modifier = Modifier.fillMaxWidth().testTag(EditToDoScreenTestTags.TODO_SAVE),
+                    modifier = Modifier.fillMaxWidth().testTag(EditTodoScreenTestTags.TODO_SAVE),
                     colors =
                         ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.secondary),
-                    enabled = todoUIState.isValid && !todoUIState.isSaving) {
-                      Text(
-                          text =
-                              if (todoUIState.isSaving) {
-                                stringResource(R.string.saving)
-                              } else {
-                                stringResource(R.string.todos_save_button_text)
-                              },
-                          color = MaterialTheme.colorScheme.onSecondary)
+                    enabled = todoUIState.isValid) {
+                      SavingText(todoUIState = todoUIState)
                     }
               }
 
@@ -312,7 +260,7 @@ fun EditToDoScreen(
               item {
                 TextButton(
                     onClick = { shouldShowDialog.value = true },
-                    modifier = Modifier.fillMaxWidth().testTag(EditToDoScreenTestTags.TODO_DELETE),
+                    modifier = Modifier.fillMaxWidth().testTag(EditTodoScreenTestTags.TODO_DELETE),
                     // TextButton has no background by default
                     colors =
                         ButtonDefaults.textButtonColors(
@@ -380,9 +328,102 @@ fun EditToDoScreen(
       onConfirmDelete = { category -> editTodoViewModel.deleteCategory(category) })
 }
 
-// Helper function to preview the timer screen
-@Preview
+/**
+ * Displays the advanced options section in the To-Do editing screen.
+ *
+ * @param expandAdvanced Boolean indicating whether to show advanced options.
+ * @param todoUIState The current UI state of the Add To-Do screen.
+ * @param editTodoViewModel The ViewModel managing the Edit To-Do screen state.
+ * @param showCreateTagDialog MutableState controlling the visibility of the create tag dialog.
+ * @param showWarningDeleteTagDialog MutableState controlling the visibility of the delete tag
+ *   warning dialog.
+ * @param categoriesList List of available To-Do categories.
+ * @param onDatePickerClick Callback invoked when the date picker is clicked.
+ */
+fun LazyListScope.advancedOptions(
+    expandAdvanced: Boolean,
+    todoUIState: EditTodoUIState,
+    editTodoViewModel: EditTodoViewModel,
+    showCreateTagDialog: androidx.compose.runtime.MutableState<Boolean>,
+    showWarningDeleteTagDialog: androidx.compose.runtime.MutableState<ToDoCategory?>,
+    categoriesList: List<ToDoCategory>,
+    onDatePickerClick: () -> Unit,
+) {
+  if (expandAdvanced) {
+
+    // Buttons row
+    item {
+      Row(
+          horizontalArrangement =
+              Arrangement.spacedBy(
+                  dimensionResource(R.dimen.todo_buttons_row_horizontal_arrangement_space))) {
+
+            // Category drop down
+            CategoriesDropDown(
+                { category -> editTodoViewModel.selectTodoTag(category) },
+                showCreateTagDialog,
+                todoUIState.tag,
+                showWarningDeleteTagDialog,
+                categoriesList)
+            // Priority level drop down
+            PriorityDropDown(
+                onSelectPriorityLevel = { level -> editTodoViewModel.selectPriorityLevel(level) },
+                currentPriorityLevel = todoUIState.priorityLevel)
+          }
+    }
+
+    // Location Input with dropdown
+    item {
+      ToDoLocationSuggestionsUtils(
+          location = todoUIState.location,
+          suggestions = todoUIState.suggestions,
+          onLocationChanged = { editTodoViewModel.onLocationChanged(it) },
+          onSelectLocation = { loc -> editTodoViewModel.selectLocation(loc) },
+          modifier = Modifier.fillMaxWidth(),
+          textFieldColors = toDoTextFieldColors)
+    }
+
+    // Due Date Input
+    item {
+      DatePickerInputField(
+          value = todoUIState.dueDate,
+          label = stringResource(R.string.todos_date_field_label),
+          isErrorMessage = todoUIState.dueDateError,
+          onClick = { onDatePickerClick() },
+          colors = toDoTextFieldColors,
+          testTag =
+              Pair(EditTodoScreenTestTags.INPUT_TODO_DATE, EditTodoScreenTestTags.ERROR_MESSAGE))
+    }
+
+    // Due Time Input
+    item {
+      TimeInputField(
+          initialTime = todoUIState.dueTime,
+          onTimeChanged = { editTodoViewModel.onTimeChanged(it) },
+          dueTimeError = (todoUIState.dueTimeError != null),
+          label = stringResource(R.string.todos_time_field_label),
+          textFieldColors = toDoTextFieldColors,
+          testTagInput = EditTodoScreenTestTags.INPUT_TODO_TIME,
+          testTagErrorMessage = EditTodoScreenTestTags.ERROR_MESSAGE,
+      )
+    }
+  }
+}
+
+/**
+ * Displays the text inside the Save button, changing it to "Saving..." when a save operation is in
+ * progress.
+ *
+ * @param todoUIState The current UI state of the Add To-Do screen.
+ */
 @Composable
-fun EditToDoScreenPreview() {
-  GatherlyTheme(darkTheme = false) { EditToDoScreen(todoUid = "1") }
+fun SavingText(todoUIState: EditTodoUIState) {
+  Text(
+      text =
+          if (todoUIState.isSaving) {
+            stringResource(R.string.saving)
+          } else {
+            stringResource(R.string.todos_save_button_text)
+          },
+      color = MaterialTheme.colorScheme.onSecondary)
 }
