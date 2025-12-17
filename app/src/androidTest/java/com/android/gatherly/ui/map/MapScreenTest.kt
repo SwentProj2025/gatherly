@@ -365,10 +365,8 @@ class MapScreenTest {
     val cameraPos = viewModel.uiState.value.cameraPos
     assert(cameraPos != null)
 
-    // If your MapViewModel keeps EPFL_LATLNG private, replace this check by hard-coded values
-    // or expose EPFL_LATLNG in the production file.
-    assertEquals(46.5197, cameraPos!!.latitude, 0.0001)
-    assertEquals(6.5663, cameraPos.longitude, 0.0001)
+    assertEquals(46.519, cameraPos!!.latitude, 0.0001)
+    assertEquals(6.5668, cameraPos.longitude, 0.0001)
   }
 
   /** Verifies that the camera centers on the location of the last consulted ToDo. */
