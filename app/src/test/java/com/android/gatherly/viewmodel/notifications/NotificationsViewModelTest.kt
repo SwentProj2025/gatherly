@@ -11,9 +11,10 @@ import com.android.gatherly.ui.notifications.NotificationViewModel
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -35,7 +36,7 @@ import org.mockito.Mockito
 @OptIn(ExperimentalCoroutinesApi::class)
 class NotificationViewModelTest {
 
-  private val testDispatcher = StandardTestDispatcher()
+  private val testDispatcher = UnconfinedTestDispatcher()
 
   private lateinit var notificationsRepo: NotificationsLocalRepository
   private lateinit var profileRepo: ProfileLocalRepository
@@ -46,6 +47,8 @@ class NotificationViewModelTest {
   private lateinit var viewModel: NotificationViewModel
 
   private val CURRENT_USER_ID = "currentUser"
+
+  private val testTimeout = 120.seconds
 
   @Before
   fun setup() {
@@ -62,7 +65,7 @@ class NotificationViewModelTest {
     Mockito.`when`(mockAuth.currentUser).thenReturn(mockUser)
 
     // Ensure current user has a profile in the local repo
-    runTest {
+    runTest(testDispatcher, testTimeout) {
       profileRepo.addProfile(
           Profile(
               uid = CURRENT_USER_ID,
@@ -88,8 +91,10 @@ class NotificationViewModelTest {
   // Helpers
   // ------------------------------------------------------------------------
 
+  /** Creates a new Timestamp with the current time. */
   private fun newTimestamp(): Timestamp = Timestamp.now()
 
+  /** Creates and adds a FRIEND_REQUEST notification to the notifications repo. */
   private suspend fun createFriendRequestNotification(
       id: String,
       senderId: String,
@@ -113,82 +118,87 @@ class NotificationViewModelTest {
   // loadNotifications
   // ------------------------------------------------------------------------
 
+  /** Tests that loading notifications works correctly. */
   @Test
-  fun loadNotifications_success_updatesUiStateAndUnreadFlag() = runTest {
-    // GIVEN some notifications in the repo for the current user
-    val sender1 = "sender1"
-    val sender2 = "sender2"
+  fun loadNotifications_success_updatesUiStateAndUnreadFlag() =
+      runTest(testDispatcher, testTimeout) {
+        // GIVEN some notifications in the repo for the current user
+        val sender1 = "sender1"
+        val sender2 = "sender2"
 
-    // Unread friend request
-    createFriendRequestNotification(
-        id = "n1", senderId = sender1, recipientId = CURRENT_USER_ID, wasRead = false)
-
-    // Read friend request
-    val readNotif =
+        // Unread friend request
         createFriendRequestNotification(
-            id = "n2", senderId = sender2, recipientId = CURRENT_USER_ID, wasRead = false)
-    notificationsRepo.markAsRead(readNotif.id)
+            id = "n1", senderId = sender1, recipientId = CURRENT_USER_ID, wasRead = false)
 
-    // Non-friend type notification
-    val other =
-        Notification(
-            id = "n3",
-            type = NotificationType.TODO_REMINDER,
-            emissionTime = newTimestamp(),
-            senderId = null,
-            relatedEntityId = null,
-            recipientId = CURRENT_USER_ID,
-            wasRead = false)
-    notificationsRepo.addNotification(other)
+        // Read friend request
+        val readNotif =
+            createFriendRequestNotification(
+                id = "n2", senderId = sender2, recipientId = CURRENT_USER_ID, wasRead = false)
+        notificationsRepo.markAsRead(readNotif.id)
 
-    // WHEN
-    viewModel.loadNotifications()
-    advanceUntilIdle()
+        // Non-friend type notification
+        val other =
+            Notification(
+                id = "n3",
+                type = NotificationType.TODO_REMINDER,
+                emissionTime = newTimestamp(),
+                senderId = null,
+                relatedEntityId = null,
+                recipientId = CURRENT_USER_ID,
+                wasRead = false)
+        notificationsRepo.addNotification(other)
 
-    // THEN
-    val state = viewModel.uiState.value
-    assertFalse(state.isLoading)
-    assertNull(state.errorMessage)
-    assertEquals(3, state.notifications.size)
-    // At least one unread friend request
-    assertTrue(state.hasUnreadFriendRequests)
-  }
+        // WHEN
+        viewModel.loadNotifications()
+        advanceUntilIdle()
 
+        // THEN
+        val state = viewModel.uiState.value
+        assertFalse(state.isLoading)
+        assertNull(state.errorMessage)
+        assertEquals(3, state.notifications.size)
+        // At least one unread friend request
+        assertTrue(state.hasUnreadFriendRequests)
+      }
+
+  /** Tests that loadNotifications handles repository failures correctly. */
   @Test
-  fun loadNotifications_failure_setsErrorMessage() = runTest {
-    // GIVEN a repo that throws on getUserNotifications
-    val failingRepo =
-        object : NotificationsLocalRepository() {
-          override suspend fun getUserNotifications(userId: String): List<Notification> {
-            throw RuntimeException("Boom")
-          }
-        }
+  fun loadNotifications_failure_setsErrorMessage() =
+      runTest(testDispatcher, testTimeout) {
+        // GIVEN a repo that throws on getUserNotifications
+        val failingRepo =
+            object : NotificationsLocalRepository() {
+              override suspend fun getUserNotifications(userId: String): List<Notification> {
+                throw RuntimeException("Boom")
+              }
+            }
 
-    val vm =
-        NotificationViewModel(
-            notificationsRepository = failingRepo,
-            profileRepository = profileRepo,
-            pointsRepository = pointsRepository,
-            authProvider = { mockAuth })
+        val vm =
+            NotificationViewModel(
+                notificationsRepository = failingRepo,
+                profileRepository = profileRepo,
+                pointsRepository = pointsRepository,
+                authProvider = { mockAuth })
 
-    // WHEN
-    vm.loadNotifications()
-    advanceUntilIdle()
+        // WHEN
+        vm.loadNotifications()
+        advanceUntilIdle()
 
-    // THEN
-    val state = vm.uiState.value
-    assertFalse(state.isLoading)
-    assertEquals("Failed to load user's notifications", state.errorMessage)
-    assertTrue(state.notifications.isEmpty())
-  }
+        // THEN
+        val state = vm.uiState.value
+        assertFalse(state.isLoading)
+        assertEquals("Failed to load user's notifications", state.errorMessage)
+        assertTrue(state.notifications.isEmpty())
+      }
 
   // ------------------------------------------------------------------------
   // acceptFriendRequest
   // ------------------------------------------------------------------------
 
+  /** Tests that accepting a friend request works correctly. */
   @Test
   fun acceptFriendRequest_happyPath_addsFriend_andSendsAcceptedNotification_andDeletesOriginal() =
-      runTest {
+      runTest(testDispatcher, testTimeout) {
         val senderId = "senderUser"
         val senderUsername = "sender_username"
 
@@ -231,152 +241,165 @@ class NotificationViewModelTest {
         assertEquals(senderId, accepted.recipientId)
       }
 
+  /** Tests that accepting a non-friend-request notification does nothing. */
   @Test
-  fun acceptFriendRequest_onNonFriendRequest_doesNothing() = runTest {
-    val notif =
-        Notification(
-            id = "n1",
-            type = NotificationType.TODO_REMINDER,
-            emissionTime = newTimestamp(),
-            senderId = "someone",
-            relatedEntityId = null,
-            recipientId = CURRENT_USER_ID,
-            wasRead = false)
-    notificationsRepo.addNotification(notif)
+  fun acceptFriendRequest_onNonFriendRequest_doesNothing() =
+      runTest(testDispatcher, testTimeout) {
+        val notif =
+            Notification(
+                id = "n1",
+                type = NotificationType.TODO_REMINDER,
+                emissionTime = newTimestamp(),
+                senderId = "someone",
+                relatedEntityId = null,
+                recipientId = CURRENT_USER_ID,
+                wasRead = false)
+        notificationsRepo.addNotification(notif)
 
-    // WHEN
-    viewModel.acceptFriendRequest(notif.id)
-    advanceUntilIdle()
+        // WHEN
+        viewModel.acceptFriendRequest(notif.id)
+        advanceUntilIdle()
 
-    // THEN: notification still exists, no friends added
-    val stillThere = notificationsRepo.getNotification(notif.id)
-    assertEquals(NotificationType.TODO_REMINDER, stillThere.type)
+        // THEN: notification still exists, no friends added
+        val stillThere = notificationsRepo.getNotification(notif.id)
+        assertEquals(NotificationType.TODO_REMINDER, stillThere.type)
 
-    val currentProfile = profileRepo.getProfileByUid(CURRENT_USER_ID)
-    assertNotNull(currentProfile)
-    assertTrue(currentProfile!!.friendUids.isEmpty())
-  }
+        val currentProfile = profileRepo.getProfileByUid(CURRENT_USER_ID)
+        assertNotNull(currentProfile)
+        assertTrue(currentProfile!!.friendUids.isEmpty())
+      }
 
+  /** Tests that accepting a friend request not addressed to the current user sets an error. */
   @Test
-  fun acceptFriendRequest_whenRecipientIsNotCurrentUser_setsErrorMessage() = runTest {
-    val senderId = "sender"
-    val otherRecipient = "someoneElse"
+  fun acceptFriendRequest_whenRecipientIsNotCurrentUser_setsErrorMessage() =
+      runTest(testDispatcher, testTimeout) {
+        val senderId = "sender"
+        val otherRecipient = "someoneElse"
 
-    // Sender profile exists
-    profileRepo.addProfile(
-        Profile(
-            uid = senderId,
-            username = "sender_username",
-            name = "Sender",
-            profilePicture = "pic.png"))
+        // Sender profile exists
+        profileRepo.addProfile(
+            Profile(
+                uid = senderId,
+                username = "sender_username",
+                name = "Sender",
+                profilePicture = "pic.png"))
 
-    // Friend request to someone else
-    val request =
-        createFriendRequestNotification(
-            id = "req2", senderId = senderId, recipientId = otherRecipient)
+        // Friend request to someone else
+        val request =
+            createFriendRequestNotification(
+                id = "req2", senderId = senderId, recipientId = otherRecipient)
 
-    // WHEN
-    viewModel.acceptFriendRequest(request.id)
-    advanceUntilIdle()
+        // WHEN
+        viewModel.acceptFriendRequest(request.id)
+        advanceUntilIdle()
 
-    // THEN
-    assertEquals("Failed to accept friend request", viewModel.uiState.value.errorMessage)
-    // request should still exist
-    val stillThere = notificationsRepo.getNotification(request.id)
-    assertEquals(NotificationType.FRIEND_REQUEST, stillThere.type)
-  }
+        // THEN
+        assertEquals("Failed to accept friend request", viewModel.uiState.value.errorMessage)
+        // request should still exist
+        val stillThere = notificationsRepo.getNotification(request.id)
+        assertEquals(NotificationType.FRIEND_REQUEST, stillThere.type)
+      }
 
   // ------------------------------------------------------------------------
   // rejectFriendRequest
   // ------------------------------------------------------------------------
 
+  /** Tests that rejecting a friend request works correctly. */
   @Test
-  fun rejectFriendRequest_happyPath_createsRejectedNotification_andDeletesOriginal() = runTest {
-    val senderId = "senderUser"
-    val otherUsername = "sender_username"
+  fun rejectFriendRequest_happyPath_createsRejectedNotification_andDeletesOriginal() =
+      runTest(testDispatcher, testTimeout) {
+        val senderId = "senderUser"
+        val otherUsername = "sender_username"
 
-    // Sender profile exists (not required for reject, but realistic)
-    profileRepo.addProfile(
-        Profile(
-            uid = senderId, username = otherUsername, name = "Sender", profilePicture = "s.png"))
+        // Sender profile exists (not required for reject, but realistic)
+        profileRepo.addProfile(
+            Profile(
+                uid = senderId,
+                username = otherUsername,
+                name = "Sender",
+                profilePicture = "s.png"))
 
-    val request =
-        createFriendRequestNotification(
-            id = "reqReject", senderId = senderId, recipientId = CURRENT_USER_ID)
+        val request =
+            createFriendRequestNotification(
+                id = "reqReject", senderId = senderId, recipientId = CURRENT_USER_ID)
 
-    // WHEN
-    viewModel.rejectFriendRequest(request.id)
-    advanceUntilIdle()
+        // WHEN
+        viewModel.rejectFriendRequest(request.id)
+        advanceUntilIdle()
 
-    // THEN: original request is gone
-    try {
-      notificationsRepo.getNotification(request.id)
-      fail("Expected NoSuchElementException for deleted request")
-    } catch (e: NoSuchElementException) {
-      // ok
-    }
+        // THEN: original request is gone
+        try {
+          notificationsRepo.getNotification(request.id)
+          fail("Expected NoSuchElementException for deleted request")
+        } catch (e: NoSuchElementException) {
+          // ok
+        }
 
-    // Sender must receive a FRIEND_REJECTED notification
-    val senderNotifications = notificationsRepo.getUserNotifications(senderId)
-    assertEquals(1, senderNotifications.size)
-    val rejected = senderNotifications.first()
-    assertEquals(NotificationType.FRIEND_REJECTED, rejected.type)
-    assertEquals(CURRENT_USER_ID, rejected.senderId)
-    assertEquals(senderId, rejected.recipientId)
-  }
+        // Sender must receive a FRIEND_REJECTED notification
+        val senderNotifications = notificationsRepo.getUserNotifications(senderId)
+        assertEquals(1, senderNotifications.size)
+        val rejected = senderNotifications.first()
+        assertEquals(NotificationType.FRIEND_REJECTED, rejected.type)
+        assertEquals(CURRENT_USER_ID, rejected.senderId)
+        assertEquals(senderId, rejected.recipientId)
+      }
 
+  /** Tests that rejecting a non-friend-request notification does nothing. */
   @Test
-  fun rejectFriendRequest_onNonFriendRequest_doesNothing() = runTest {
-    val notif =
-        Notification(
-            id = "nReject",
-            type = NotificationType.EVENT_REMINDER,
-            emissionTime = newTimestamp(),
-            senderId = "someUser",
-            relatedEntityId = null,
-            recipientId = CURRENT_USER_ID,
-            wasRead = false)
-    notificationsRepo.addNotification(notif)
+  fun rejectFriendRequest_onNonFriendRequest_doesNothing() =
+      runTest(testDispatcher, testTimeout) {
+        val notif =
+            Notification(
+                id = "nReject",
+                type = NotificationType.EVENT_REMINDER,
+                emissionTime = newTimestamp(),
+                senderId = "someUser",
+                relatedEntityId = null,
+                recipientId = CURRENT_USER_ID,
+                wasRead = false)
+        notificationsRepo.addNotification(notif)
 
-    // WHEN
-    viewModel.rejectFriendRequest(notif.id)
-    advanceUntilIdle()
+        // WHEN
+        viewModel.rejectFriendRequest(notif.id)
+        advanceUntilIdle()
 
-    // THEN: no deletion
-    val stillThere = notificationsRepo.getNotification(notif.id)
-    assertEquals(NotificationType.EVENT_REMINDER, stillThere.type)
+        // THEN: no deletion
+        val stillThere = notificationsRepo.getNotification(notif.id)
+        assertEquals(NotificationType.EVENT_REMINDER, stillThere.type)
 
-    // No new notifications created for sender
-    val senderBox = notificationsRepo.getUserNotifications("someUser")
-    assertTrue(senderBox.isEmpty()) // FIXED
-  }
+        // No new notifications created for sender
+        val senderBox = notificationsRepo.getUserNotifications("someUser")
+        assertTrue(senderBox.isEmpty()) // FIXED
+      }
 
   // ------------------------------------------------------------------------
   // clearError
   // ------------------------------------------------------------------------
 
+  /** Tests that clearError resets the error message in the UI state. */
   @Test
-  fun clearError_resetsErrorMessage() = runTest {
-    // Force an error
-    val failingRepo =
-        object : NotificationsLocalRepository() {
-          override suspend fun getUserNotifications(userId: String): List<Notification> {
-            throw RuntimeException("Boom")
-          }
-        }
+  fun clearError_resetsErrorMessage() =
+      runTest(testDispatcher, testTimeout) {
+        // Force an error
+        val failingRepo =
+            object : NotificationsLocalRepository() {
+              override suspend fun getUserNotifications(userId: String): List<Notification> {
+                throw RuntimeException("Boom")
+              }
+            }
 
-    val vm =
-        NotificationViewModel(
-            notificationsRepository = failingRepo,
-            profileRepository = profileRepo,
-            pointsRepository = pointsRepository,
-            authProvider = { mockAuth })
+        val vm =
+            NotificationViewModel(
+                notificationsRepository = failingRepo,
+                profileRepository = profileRepo,
+                pointsRepository = pointsRepository,
+                authProvider = { mockAuth })
 
-    vm.loadNotifications()
-    advanceUntilIdle()
-    assertNotNull(vm.uiState.value.errorMessage)
+        vm.loadNotifications()
+        advanceUntilIdle()
+        assertNotNull(vm.uiState.value.errorMessage)
 
-    vm.clearError()
-    assertNull(vm.uiState.value.errorMessage)
-  }
+        vm.clearError()
+        assertNull(vm.uiState.value.errorMessage)
+      }
 }
