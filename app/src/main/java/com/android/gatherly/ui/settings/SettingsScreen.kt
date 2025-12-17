@@ -40,6 +40,7 @@ import com.android.gatherly.ui.navigation.*
 import com.android.gatherly.ui.profile.ProfilePictureWithStatus
 import com.android.gatherly.utils.GatherlyAlertDialog
 import com.android.gatherly.utils.GatherlyAlertDialogActions
+import com.android.gatherly.utils.LoadingAnimation
 import java.io.File
 
 // Technical constants
@@ -63,7 +64,6 @@ object SettingsScreenTestTags {
   const val PHOTO_PICKER_CANCEL_BUTTON = "settings_photo_picker_cancel_button"
   const val PROFILE_PICTURE_URL_NOT_EMPTY = "settings_profile_picture_url_not_empty"
   const val GOOGLE_BUTTON = "google_button"
-  const val LOADING = "loading"
   const val USER_STATUS = "settings_user_status"
   const val STATUS_DIALOG = "status_dialog"
   const val OPTION_ONLINE = "status_option_online"
@@ -164,12 +164,7 @@ fun SettingsScreen(
       containerColor = MaterialTheme.colorScheme.background,
       content = { paddingValues ->
         if (uiState.isLoadingProfile) {
-          Box(
-              modifier = Modifier.fillMaxSize().padding(paddingValues),
-              contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(
-                    modifier = Modifier.testTag(SettingsScreenTestTags.LOADING))
-              }
+          LoadingAnimation(stringResource(R.string.loading_settings_message), paddingValues)
         } else if (uiState.isAnon) {
 
           // If the user is anonymous, they do not have a profile

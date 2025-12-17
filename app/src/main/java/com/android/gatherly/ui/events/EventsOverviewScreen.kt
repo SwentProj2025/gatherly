@@ -413,7 +413,7 @@ fun EventsOverviewScreen(
                   // -- Loading animation while events are being fetched --
                   item {
                     Text(
-                        stringResource(R.string.events_loading),
+                        stringResource(R.string.loading_events),
                         modifier = Modifier.fillMaxWidth().padding(8.dp),
                         textAlign = TextAlign.Center,
                         style = MaterialTheme.typography.titleMedium,
@@ -452,7 +452,6 @@ fun EventsOverviewScreen(
                   }
                 }
               }
-
               if (!uiState.isAnon) {
                 // Spacer between Browse and Upcoming
                 item {
@@ -497,7 +496,7 @@ fun EventsOverviewScreen(
                     // -- Loading animation while events are being fetched --
                     item {
                       Text(
-                          stringResource(R.string.events_loading),
+                          stringResource(R.string.loading_events),
                           modifier = Modifier.fillMaxWidth().padding(8.dp),
                           textAlign = TextAlign.Center,
                           style = MaterialTheme.typography.titleMedium,
@@ -580,7 +579,7 @@ fun EventsOverviewScreen(
                     // -- Loading animation while events are being fetched --
                     item {
                       Text(
-                          stringResource(R.string.events_loading),
+                          stringResource(R.string.loading_events),
                           modifier = Modifier.fillMaxWidth().padding(8.dp),
                           textAlign = TextAlign.Center,
                           style = MaterialTheme.typography.titleMedium,

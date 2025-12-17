@@ -81,7 +81,7 @@ data class EditEventUIState(
     val displayToast: Boolean = false,
     val toastString: String? = null,
     val backToOverview: Boolean = false,
-    val isLoading: Boolean = false,
+    val isLoading: Boolean = true,
     val state: EventState = EventState.PUBLIC,
     val friend: String = "",
     val suggestedFriendsProfile: List<Profile> = emptyList(),
@@ -170,6 +170,7 @@ class EditEventViewModel(
       creatorName = event.creatorName
       participants = event.participants
       currentProfile = profileRepository.getProfileByUid(creatorId)!!
+      uiState = uiState.copy(isLoading = false)
     }
   }
 
