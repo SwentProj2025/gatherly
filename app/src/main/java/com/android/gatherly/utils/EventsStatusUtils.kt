@@ -5,6 +5,23 @@ import com.android.gatherly.model.event.EventStatus
 import com.google.firebase.Timestamp
 import java.util.Calendar
 
+/**
+ * Event status utilities for the Gatherly app.
+ *
+ * Provides functionality to determine an event's current status (UPCOMING, ONGOING, or PAST) based
+ * on the current time.
+ */
+
+/**
+ * Updates an event's status based on the current time.
+ *
+ * Compares the current timestamp against the event's start and end times to determine whether the
+ * event is upcoming, currently ongoing, or already past. The function combines the event's date
+ * with its start and end times to create precise timestamps for comparison.
+ *
+ * @param event The event to update.
+ * @return A copy of the event with its status field updated to reflect the current time.
+ */
 fun updateEventStatus(event: Event): Event {
   val date = event.date
   val startTime = event.startTime
@@ -15,6 +32,8 @@ fun updateEventStatus(event: Event): Event {
   val startCal = Calendar.getInstance().apply { time = startTime.toDate() }
 
   val endCal = Calendar.getInstance().apply { time = endTime.toDate() }
+
+  // Combine event date with start time to get precise event start timestamp
   val eventStart =
       Calendar.getInstance()
           .apply {
@@ -26,6 +45,7 @@ fun updateEventStatus(event: Event): Event {
           }
           .let { Timestamp(it.time) }
 
+  // Combine event date with end time to get precise event end timestamp
   val eventEnd =
       Calendar.getInstance()
           .apply {

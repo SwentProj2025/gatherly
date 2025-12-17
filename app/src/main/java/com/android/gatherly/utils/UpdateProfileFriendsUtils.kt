@@ -15,6 +15,11 @@ import com.android.gatherly.model.profile.ProfileRepository
  * - updates the friends list if needed
  * - updates pending states of current user's requests if needed
  * - deletes the processed notification Returns the fresh up-to-date profile for the user.
+ *
+ * @param profileRepository The repository to fetch and update profiles
+ * @param notificationsRepository The repository to fetch a user's notifications
+ * @param pointsRepository The repository to update a user's points history
+ * @param userId The user whose profile to update
  */
 suspend fun getProfileWithSyncedFriendNotifications(
     profileRepository: ProfileRepository,
@@ -46,6 +51,14 @@ suspend fun getProfileWithSyncedFriendNotifications(
   return profileRepository.getProfileByUid(userId)
 }
 
+/**
+ * Handles a friend request being accepted by the other party and updates the user profile
+ *
+ * @param profileRepository The repository to update profiles
+ * @param notificationsRepository The repository to fetch a user's notifications
+ * @param pointsRepository The repository to update a user's points history
+ * @param userId The user whose profile to update
+ */
 private suspend fun handleFriendAccepted(
     profileRepository: ProfileRepository,
     notificationsRepository: NotificationsRepository,
@@ -64,6 +77,14 @@ private suspend fun handleFriendAccepted(
   notificationsRepository.deleteNotification(notification.id)
 }
 
+/**
+ * Handles a friend request being rejected by the other party and updates the user profile
+ *
+ * @param profileRepository The repository to update profiles
+ * @param notificationsRepository The repository to fetch a user's notifications
+ * @param notification The notification to delete
+ * @param userId The user whose profile to update
+ */
 private suspend fun handleFriendRejected(
     profileRepository: ProfileRepository,
     notificationsRepository: NotificationsRepository,
@@ -77,6 +98,14 @@ private suspend fun handleFriendRejected(
   notificationsRepository.deleteNotification(notificationId = notification.id)
 }
 
+/**
+ * Handles a friend removal and updates the user profile
+ *
+ * @param profileRepository The repository to update profiles
+ * @param notificationsRepository The repository to fetch a user's notifications
+ * @param notification The notification to send
+ * @param userId The user whose profile to update
+ */
 private suspend fun handleRemoveFriend(
     profileRepository: ProfileRepository,
     notificationsRepository: NotificationsRepository,
@@ -93,6 +122,13 @@ private suspend fun handleRemoveFriend(
   notificationsRepository.deleteNotification(notification.id)
 }
 
+/**
+ * Handles a friend request being cancelled and updates the user profile
+ *
+ * @param notificationsRepository The repository to fetch a user's notifications
+ * @param notification The notification to delete
+ * @param notifications The existing notifications
+ */
 private suspend fun handleFriendRequestCancelled(
     notificationsRepository: NotificationsRepository,
     notification: Notification,
