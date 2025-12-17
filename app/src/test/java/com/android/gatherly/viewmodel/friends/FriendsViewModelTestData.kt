@@ -156,8 +156,6 @@ object FriendsViewModelTestsData {
           return null
         }
 
-        override suspend fun deleteUserProfile(uid: String) {}
-
         override suspend fun updateFocusPoints(
             uid: String,
             points: Double,
