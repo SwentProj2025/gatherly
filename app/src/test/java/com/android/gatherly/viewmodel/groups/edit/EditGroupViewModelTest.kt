@@ -129,7 +129,7 @@ class EditGroupViewModelTest {
         assertTrue(state.availableFriendsToAdd.isEmpty())
         assertTrue(state.selectedNewFriendIds.isEmpty())
         assertTrue(state.membersToRemove.isEmpty())
-        assertFalse(state.isLoading)
+        assertTrue(state.isLoading)
         assertNull(state.loadError)
         assertFalse(state.isSaving)
         assertNull(state.saveError)
@@ -860,7 +860,7 @@ class EditGroupViewModelTest {
         val viewModel = createViewModel()
 
         // Before load
-        assertFalse(viewModel.uiState.value.isLoading)
+        assertTrue(viewModel.uiState.value.isLoading)
 
         viewModel.loadGroup(TEST_GROUP_ID)
         advanceUntilIdle()

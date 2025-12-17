@@ -17,13 +17,14 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.credentials.CredentialManager
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.Screen
-import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.utils.DailyTodoAlarmScheduler
+import com.android.gatherly.utils.LoadingAnimation
 import com.google.firebase.auth.FirebaseAuth
 
 object SignInScreenTestTags {
@@ -31,7 +32,6 @@ object SignInScreenTestTags {
   const val WELCOME_SUBTITLE = "welcomeSubtitle"
   const val GOOGLE_BUTTON = "googleButton"
   const val ANONYMOUS_BUTTON = "anonymousButton"
-  const val LOADING_TEXT = "loadingText"
   const val SNACKBAR = "snackbar"
 }
 
@@ -80,25 +80,18 @@ fun SignInScreen(
 
   val scrollState = rememberScrollState()
 
-  Scaffold(
-      containerColor = MaterialTheme.colorScheme.background,
-      modifier = Modifier.fillMaxSize(),
-      snackbarHost = {
-        SnackbarHost(
-            hostState = snackBarHostState,
-            modifier = Modifier.testTag(SignInScreenTestTags.SNACKBAR))
-      },
-      content = { innerPadding ->
-        if (uiState.isLoading) {
-          Box(
-              modifier = Modifier.padding(innerPadding).fillMaxSize(),
-              contentAlignment = Alignment.Center) {
-                Text(
-                    text = stringResource(R.string.sign_in_logging_in),
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.testTag(SignInScreenTestTags.LOADING_TEXT))
-              }
-        } else {
+  if (uiState.isLoading) {
+    LoadingAnimation(stringResource(R.string.sign_in_logging_in), PaddingValues(0.dp))
+  } else {
+    Scaffold(
+        containerColor = MaterialTheme.colorScheme.background,
+        modifier = Modifier.fillMaxSize(),
+        snackbarHost = {
+          SnackbarHost(
+              hostState = snackBarHostState,
+              modifier = Modifier.testTag(SignInScreenTestTags.SNACKBAR))
+        },
+        content = { innerPadding ->
           Column(
               modifier =
                   Modifier.padding(innerPadding)
@@ -137,8 +130,8 @@ fun SignInScreen(
                 Spacer(
                     modifier = Modifier.height(dimensionResource(id = R.dimen.sign_in_top_spacing)))
               }
-        }
-      })
+        })
+  }
 }
 
 /**

@@ -13,6 +13,7 @@ import com.android.gatherly.utils.FakeCredentialManager
 import com.android.gatherly.utils.FakeJwtGenerator
 import com.android.gatherly.utils.FirebaseEmulator
 import com.android.gatherly.utils.FirestoreGatherlyTest
+import com.android.gatherly.utils.LoadingAnimationTestTags
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
 import org.junit.Before
@@ -88,13 +89,14 @@ class SignInScreenTest : FirestoreGatherlyTest() {
     composeTestRule.waitForIdle()
 
     // Check that the screen is loading
-    composeTestRule.onNodeWithTag(SignInScreenTestTags.LOADING_TEXT).assertIsDisplayed()
-
+    composeTestRule.onNodeWithTag(LoadingAnimationTestTags.LOADING_TEXT).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(LoadingAnimationTestTags.LOADING).assertIsDisplayed()
     // Wait until uiState becomes true or timeout is reached
     composeTestRule.waitUntil(timeoutMillis = WAIT_TIMEOUT) { signInViewModel.uiState.signedIn }
 
     // Check that the screen is no longer loading
-    composeTestRule.onNodeWithTag(SignInScreenTestTags.LOADING_TEXT).assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag(LoadingAnimationTestTags.LOADING_TEXT).assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag(LoadingAnimationTestTags.LOADING).assertIsNotDisplayed()
 
     // Assert that the state is updated and user is signed in
     val currentUser = FirebaseEmulator.auth.currentUser
@@ -116,13 +118,15 @@ class SignInScreenTest : FirestoreGatherlyTest() {
         .performClick()
 
     // Check that the screen is loading
-    composeTestRule.onNodeWithTag(SignInScreenTestTags.LOADING_TEXT).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(LoadingAnimationTestTags.LOADING_TEXT).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(LoadingAnimationTestTags.LOADING).assertIsDisplayed()
 
     // Wait until uiState becomes true or timeout is reached
     composeTestRule.waitUntil(timeoutMillis = WAIT_TIMEOUT) { signInViewModel.uiState.signedIn }
 
     // Check that the screen is no longer loading
-    composeTestRule.onNodeWithTag(SignInScreenTestTags.LOADING_TEXT).assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag(LoadingAnimationTestTags.LOADING_TEXT).assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag(LoadingAnimationTestTags.LOADING).assertIsNotDisplayed()
 
     assert(FirebaseEmulator.auth.currentUser != null)
   }
