@@ -75,17 +75,6 @@ enum class EventSortOrder {
 }
 
 /**
- * Function that retrieves "drawable" events, i.e. those which are not past, and have a valid
- * location.
- *
- * @param events input list of events to filter from
- * @return list of drawable events
- */
-private fun getDrawableEvents(events: List<Event>): List<Event> {
-  return events.filter { it.status != EventStatus.PAST && it.location != null }
-}
-
-/**
  * ViewModel for the Events screen.
  *
  * @param eventsRepository the repository to fetch events from
@@ -170,7 +159,7 @@ class EventsViewModel(
   fun onParticipate(eventId: String, currentUserId: String) {
     viewModelScope.launch {
       userParticipate(
-          eventsRepository, profileRepository, eventId, currentUserId, notificationsRepository)
+          eventsRepository, profileRepository, notificationsRepository, eventId, currentUserId)
       refreshEvents(currentUserId)
     }
   }
