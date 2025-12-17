@@ -66,9 +66,7 @@ class EditTodoViewModelTest {
 
     editTodoViewModel =
         EditTodoViewModel(
-            todoRepository = toDosRepository,
-            profileRepository = profileRepository,
-            todoCategoryRepository = toDoCategoryRepository)
+            todoRepository = toDosRepository, todoCategoryRepository = toDoCategoryRepository)
   }
 
   @After
@@ -247,10 +245,7 @@ class EditTodoViewModelTest {
          * override suspend fun toggleStatus(todoID: String) = Unit }
          */
         val viewModel =
-            EditTodoViewModel(
-                failingRepo,
-                profileRepository = profileRepository,
-                todoCategoryRepository = toDoCategoryRepository)
+            EditTodoViewModel(failingRepo, todoCategoryRepository = toDoCategoryRepository)
         viewModel.deleteToDo("anything")
 
         advanceUntilIdle()

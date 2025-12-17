@@ -36,6 +36,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.integerResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -169,7 +170,7 @@ fun FriendRequestsScreen(
                   } else {
                     // --- FRIEND REQUEST ITEMS ---
                     // --- SHOWING USERS' FRIEND REQUEST ITEMS ---
-                    FriendRequestsList(
+                    friendRequestsList(
                         friendRequests = friendRequests,
                         onAcceptFriendRequest = { notificationId ->
                           notificationsViewModel.acceptFriendRequest(notificationId)
@@ -242,28 +243,32 @@ private fun NotificationsItem(
               modifier =
                   Modifier.width(dimensionResource(R.dimen.spacing_between_fields_smaller_regular)))
 
-          Column(modifier = Modifier.weight(1f)) {
+          Column(
+              modifier =
+                  Modifier.weight(
+                      integerResource(R.integer.friend_request_column_weight).toFloat())) {
 
-            // -- Name Text --
-            Text(
-                text = senderName,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onBackground,
-                fontWeight = FontWeight.Bold,
-                modifier =
-                    Modifier.testTag(
-                        FriendRequestsScreenTestTags.getTestTagForSenderName(senderUsername)))
+                // -- Name Text --
+                Text(
+                    text = senderName,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    fontWeight = FontWeight.Bold,
+                    modifier =
+                        Modifier.testTag(
+                            FriendRequestsScreenTestTags.getTestTagForSenderName(senderUsername)))
 
-            // -- Username Text --
-            Text(
-                text = senderUsername,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onBackground,
-                fontWeight = FontWeight.Light,
-                modifier =
-                    Modifier.testTag(
-                        FriendRequestsScreenTestTags.getTestTagForSenderUsername(senderUsername)))
-          }
+                // -- Username Text --
+                Text(
+                    text = senderUsername,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    fontWeight = FontWeight.Light,
+                    modifier =
+                        Modifier.testTag(
+                            FriendRequestsScreenTestTags.getTestTagForSenderUsername(
+                                senderUsername)))
+              }
 
           // -- SPACER
           Spacer(
@@ -312,7 +317,7 @@ private fun NotificationsItem(
  * @param idToProfile Map of user IDs to their corresponding Profile objects.
  */
 @OptIn(ExperimentalFoundationApi::class)
-private fun LazyListScope.FriendRequestsList(
+private fun LazyListScope.friendRequestsList(
     friendRequests: List<Notification>,
     onAcceptFriendRequest: (String) -> Unit,
     onRejectFriendRequest: (String) -> Unit,

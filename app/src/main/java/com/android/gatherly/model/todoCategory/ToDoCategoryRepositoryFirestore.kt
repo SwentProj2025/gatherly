@@ -33,7 +33,12 @@ class ToDoCategoryRepositoryFirestore(private val db: FirebaseFirestore) : ToDoC
     return Firebase.auth.currentUser?.uid ?: throw IllegalStateException("No signed in user")
   }
 
-  /** Converts a Firestore DocumentSnapshot into a ToDoCategory object. */
+  /**
+   * Converts a Firestore [DocumentSnapshot] into a [ToDoCategory] object.
+   *
+   * @param doc The Firestore [DocumentSnapshot] to convert.
+   * @return A [ToDoCategory] if all required fields are present; `null` otherwise.
+   */
   private fun snapshotToCategory(doc: DocumentSnapshot): ToDoCategory? {
     val id = doc.getString("id") ?: return null
     val name = doc.getString("name") ?: return null
@@ -51,6 +56,12 @@ class ToDoCategoryRepositoryFirestore(private val db: FirebaseFirestore) : ToDoC
     return ToDoCategory(id, name, color, ownerId, isDefault, isDeleted)
   }
 
+  /**
+   * Converts a [ToDoCategory] object into a [Map] suitable for storing in Firestore.
+   *
+   * @param category The [ToDoCategory] to convert.
+   * @return A [Map] containing the category fields suitable for Firestore.
+   */
   private fun categoryToMap(category: ToDoCategory): Map<String, Any> {
     return mapOf(
         "id" to category.id,

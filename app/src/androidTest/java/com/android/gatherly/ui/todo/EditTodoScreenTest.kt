@@ -15,6 +15,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
+import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.model.todoCategory.ToDoCategoryLocalRepository
 import com.android.gatherly.model.todoCategory.ToDoCategoryRepository
@@ -30,6 +31,7 @@ import com.android.gatherly.utils.TestDates.currentMonth
 import com.android.gatherly.utils.TestDates.futureDate
 import com.android.gatherly.utils.TestDates.futureYear
 import com.android.gatherly.utils.TestDates.pastYear
+import com.android.gatherly.utils.ToDoLocationSuggestionsTestTags
 import com.android.gatherly.utils.UI_WAIT_TIMEOUT
 import com.android.gatherly.utils.openDatePicker
 import com.android.gatherly.utils.selectDateFromPicker
@@ -40,6 +42,12 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
+/**
+ * Instrumented tests for [EditTodoScreen] composable.
+ *
+ * Verifies that all UI components are displayed correctly and user interactions such as entering
+ * text, selecting dates, and deleting a [ToDo] function as expected.
+ */
 @OptIn(ExperimentalCoroutinesApi::class)
 class EditTodoScreenTest : GatherlyTest() {
   @get:Rule val composeTestRule = createComposeRule()
@@ -63,91 +71,93 @@ class EditTodoScreenTest : GatherlyTest() {
 
     editTodoViewModel =
         EditTodoViewModel(
-            todoRepository = repository,
-            profileRepository = profileRepository,
-            todoCategoryRepository = toDoCategoryRepository)
+            todoRepository = repository, todoCategoryRepository = toDoCategoryRepository)
     composeTestRule.setContent {
-      EditToDoScreen(todoUid = todo1.uid, editTodoViewModel = editTodoViewModel)
+      EditTodoScreen(todoUid = todo1.uid, editTodoViewModel = editTodoViewModel)
     }
-    composeTestRule
-        .onNodeWithTag(EditToDoScreenTestTags.MORE_OPTIONS)
-        .assertIsDisplayed()
-        .performClick()
   }
 
+  /** Fills the repository with a sample [ToDo] for testing. */
   private fun fill_repository() = runTest {
     repository.addTodo(toDo = todo1.copy(dueDate = currentDateTimestamp))
     advanceUntilIdle()
   }
 
+  /** Test: Verifies that all UI components are displayed correctly on the [EditTodoScreen]. */
   @Test
   fun displayAllComponents() {
     composeTestRule
-        .onNodeWithTag(EditToDoScreenTestTags.TODO_SAVE)
+        .onNodeWithTag(EditTodoScreenTestTags.TODO_SAVE)
         .assertExists()
         .assertTextContains("Save", substring = true, ignoreCase = true)
     composeTestRule
-        .onNodeWithTag(EditToDoScreenTestTags.TODO_DELETE)
+        .onNodeWithTag(EditTodoScreenTestTags.TODO_DELETE)
         .assertExists()
         .assertTextContains("Delete", substring = true, ignoreCase = true)
 
-    composeTestRule.onNodeWithTag(EditToDoScreenTestTags.TODO_DELETE).assertExists()
-    composeTestRule.onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_TITLE).assertExists()
-    composeTestRule.onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_DESCRIPTION).assertExists()
-    composeTestRule.onNodeWithTag(LocationSuggestionsTestTags.INPUT).assertExists()
-    composeTestRule.onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_DATE).assertExists()
-    composeTestRule.onNodeWithTag(EditToDoScreenTestTags.ERROR_MESSAGE).assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag(EditTodoScreenTestTags.TODO_DELETE).assertExists()
+    composeTestRule.onNodeWithTag(EditTodoScreenTestTags.INPUT_TODO_TITLE).assertExists()
+    composeTestRule.onNodeWithTag(EditTodoScreenTestTags.INPUT_TODO_DESCRIPTION).assertExists()
+    composeTestRule.onNodeWithTag(ToDoLocationSuggestionsTestTags.INPUT).assertExists()
+    composeTestRule.onNodeWithTag(EditTodoScreenTestTags.INPUT_TODO_DATE).assertExists()
+    composeTestRule.onNodeWithTag(EditTodoScreenTestTags.ERROR_MESSAGE).assertIsNotDisplayed()
   }
 
+  /** Test: Verifies that the user can enter a title for the [ToDo] item. */
   @Test
   fun canEnterTitle() {
     val text = "testTitle"
     composeTestRule.enterEditTodoTitle(text)
-    composeTestRule.onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_TITLE).assertTextContains(text)
+    composeTestRule.onNodeWithTag(EditTodoScreenTestTags.INPUT_TODO_TITLE).assertTextContains(text)
     composeTestRule
-        .onNodeWithTag(EditToDoScreenTestTags.ERROR_MESSAGE, useUnmergedTree = true)
+        .onNodeWithTag(EditTodoScreenTestTags.ERROR_MESSAGE, useUnmergedTree = true)
         .assertIsNotDisplayed()
   }
 
+  /** Test: Verifies that the user can enter a description for the [ToDo] item. */
   @Test
   fun canEnterDescription() {
     val text = "testDescription"
     composeTestRule.enterEditTodoDescription(text)
     composeTestRule
-        .onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_DESCRIPTION)
+        .onNodeWithTag(EditTodoScreenTestTags.INPUT_TODO_DESCRIPTION)
         .assertTextContains(text)
     composeTestRule
-        .onNodeWithTag(EditToDoScreenTestTags.ERROR_MESSAGE, useUnmergedTree = true)
+        .onNodeWithTag(EditTodoScreenTestTags.ERROR_MESSAGE, useUnmergedTree = true)
         .assertIsNotDisplayed()
   }
 
+  /** Test: Verifies that the user can enter a location for the [ToDo] item. */
   @Test
   fun canEnterLocation() {
     val text = "testLocation"
     composeTestRule.enterEditTodoLocation(text)
-    composeTestRule.onNodeWithTag(LocationSuggestionsTestTags.INPUT).assertTextContains(text)
+    composeTestRule.onNodeWithTag(ToDoLocationSuggestionsTestTags.INPUT).assertTextContains(text)
     composeTestRule
-        .onNodeWithTag(EditToDoScreenTestTags.ERROR_MESSAGE, useUnmergedTree = true)
+        .onNodeWithTag(EditTodoScreenTestTags.ERROR_MESSAGE, useUnmergedTree = true)
         .assertIsNotDisplayed()
   }
 
+  /** Test: Verifies that the user can enter a valid date for the [ToDo] item. */
   @Test
   fun canEnterAValidDate() {
-    composeTestRule.openDatePicker(EditToDoScreenTestTags.INPUT_TODO_DATE)
+    composeTestRule.openDatePicker(EditTodoScreenTestTags.INPUT_TODO_DATE)
     composeTestRule.selectDateFromPicker(currentDay, currentMonth, futureYear)
     composeTestRule
         .onAllNodes(hasText(futureDate, substring = true, ignoreCase = true))
-        .filterToOne(hasAnyAncestor(hasTestTag(EditToDoScreenTestTags.INPUT_TODO_DATE)))
+        .filterToOne(hasAnyAncestor(hasTestTag(EditTodoScreenTestTags.INPUT_TODO_DATE)))
         .assertExists()
   }
 
+  /** Test: Verifies that the user can enter a valid time for the [ToDo] item. */
   @Test
   fun canEnterAValidTime() {
     val text = "14:30"
     composeTestRule.enterEditTodoTime(text)
-    composeTestRule.onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_TIME).assertTextContains(text)
+    composeTestRule.onNodeWithTag(EditTodoScreenTestTags.INPUT_TODO_TIME).assertTextContains(text)
   }
 
+  /** Test: Verifies that entering an invalid time shows an error message. */
   @Test
   fun canEnterAnInvalidTime() {
     val invalidTime = "25:80" // Invalid time format
@@ -155,11 +165,12 @@ class EditTodoScreenTest : GatherlyTest() {
     composeTestRule.checkErrorMessageIsDisplayedForEditTodo()
   }
 
+  /** Test: Verifies that entering a past date shows an alert dialog. */
   @Test
   fun enterPastDate() {
-    composeTestRule.openDatePicker(EditToDoScreenTestTags.INPUT_TODO_DATE)
+    composeTestRule.openDatePicker(EditTodoScreenTestTags.INPUT_TODO_DATE)
     composeTestRule.selectDateFromPicker(currentDay, currentMonth, pastYear)
-    composeTestRule.onNodeWithTag(EditToDoScreenTestTags.TODO_SAVE).performClick()
+    composeTestRule.onNodeWithTag(EditTodoScreenTestTags.TODO_SAVE).performClick()
     composeTestRule.onNodeWithTag(AlertDialogTestTags.ALERT).assertIsDisplayed()
   }
 
@@ -167,7 +178,7 @@ class EditTodoScreenTest : GatherlyTest() {
   @Test
   fun deleteTodoShowsAlertDialog() {
     composeTestRule
-        .onNodeWithTag(EditToDoScreenTestTags.TODO_DELETE)
+        .onNodeWithTag(EditTodoScreenTestTags.TODO_DELETE)
         .assertIsDisplayed()
         .performClick()
     composeTestRule.onNodeWithTag(AlertDialogTestTags.ALERT).assertIsDisplayed()

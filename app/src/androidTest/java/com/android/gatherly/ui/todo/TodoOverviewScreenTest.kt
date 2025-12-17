@@ -41,8 +41,11 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
+private const val TIMEOUT = 5_000L
+
+/** Tests for the OverviewScreen composable UI component. */
 @OptIn(ExperimentalCoroutinesApi::class)
-class OverviewScreenTest : GatherlyTest() {
+class TodoOverviewScreenTest : GatherlyTest() {
   @get:Rule val composeTestRule = createComposeRule()
 
   private lateinit var overviewViewModel: OverviewViewModel
@@ -58,6 +61,7 @@ class OverviewScreenTest : GatherlyTest() {
     toDoCategoryRepository = ToDoCategoryLocalRepository()
   }
 
+  /** Helper: Sets the content of the test with optional initial [ToDo] items. */
   fun setContent(withInitialTodos: List<ToDo> = emptyList()) = runTest {
     withInitialTodos.forEach { repository.addTodo(it) }
     overviewViewModel =
@@ -66,39 +70,45 @@ class OverviewScreenTest : GatherlyTest() {
             profileRepository = profileRepository,
             pointsRepository = pointsRepository,
             todoCategoryRepository = toDoCategoryRepository)
-    composeTestRule.setContent { OverviewScreen(overviewViewModel = overviewViewModel) }
+    composeTestRule.setContent { TodoOverviewScreen(overviewViewModel = overviewViewModel) }
     profileRepository.addProfile(Profile(uid = "user", name = "Test User", profilePicture = ""))
     advanceUntilIdle()
   }
 
+  /** Test: Verifies that the correct test tags are set when the [ToDo] list is empty. */
   @Test
   fun testTagsCorrectlySetWhenListIsEmpty() {
     setContent()
     composeTestRule
-        .onNodeWithTag(OverviewScreenTestTags.TODO_LIST, useUnmergedTree = true)
+        .onNodeWithTag(TodoOverviewScreenTestTags.TODO_LIST, useUnmergedTree = true)
         .assertIsNotDisplayed()
     composeTestRule
-        .onNodeWithTag(OverviewScreenTestTags.EMPTY_TODO_LIST_MSG, useUnmergedTree = true)
+        .onNodeWithTag(TodoOverviewScreenTestTags.EMPTY_TODO_LIST_MSG, useUnmergedTree = true)
         .assertIsDisplayed()
   }
 
+  /** Test: Verifies that the correct test tags are set when the [ToDo] list is not empty. */
   @Test
   fun testTagsCorrectlySetWhenListIsNotEmpty() {
     setContent(withInitialTodos = listOf(todo1, todo2, todo3))
     composeTestRule
-        .onNodeWithTag(OverviewScreenTestTags.TODO_LIST, useUnmergedTree = true)
+        .onNodeWithTag(TodoOverviewScreenTestTags.TODO_LIST, useUnmergedTree = true)
         .assertIsDisplayed()
     composeTestRule
-        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todo1), useUnmergedTree = true)
+        .onNodeWithTag(
+            TodoOverviewScreenTestTags.getTestTagForTodoItem(todo1), useUnmergedTree = true)
         .assertIsDisplayed()
     composeTestRule
-        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todo2), useUnmergedTree = true)
+        .onNodeWithTag(
+            TodoOverviewScreenTestTags.getTestTagForTodoItem(todo2), useUnmergedTree = true)
         .assertIsDisplayed()
     composeTestRule
-        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todo3), useUnmergedTree = true)
+        .onNodeWithTag(
+            TodoOverviewScreenTestTags.getTestTagForTodoItem(todo3), useUnmergedTree = true)
         .assertIsDisplayed()
   }
 
+  /** Test: Verifies that a [ToDo] item's name is correctly displayed in the list. */
   @Test
   fun todoListDisplaysTaskName() {
     val todoList = listOf(todo1)
@@ -106,6 +116,7 @@ class OverviewScreenTest : GatherlyTest() {
     composeTestRule.onTodoItem(todo1, hasText(todo1.name))
   }
 
+  /** Test: Verifies that a [ToDo] item's due date is correctly displayed in the list. */
   @Test
   fun todoListDisplaysDueDate() {
     val todo = todo1.copy(dueDate = Timestamp.Companion.fromDate(2023, Calendar.DECEMBER, 25))
@@ -115,6 +126,7 @@ class OverviewScreenTest : GatherlyTest() {
     composeTestRule.onTodoItem(todo, hasText(dueDate))
   }
 
+  /** Test: Verifies that multiple existing [ToDo] items are displayed in the list. */
   @Test
   fun todoListDisplaysExistingTodos() {
     val todoList = listOf(todo1, todo2)
@@ -123,6 +135,7 @@ class OverviewScreenTest : GatherlyTest() {
     todoList.forEach { composeTestRule.onTodoItem(it, hasText(it.name)) }
   }
 
+  /** Test: Verifies that the due date of a [ToDo] item is correctly formatted in the list. */
   @Test
   fun dueDateIsCorrectlyFormatted() {
     val todo1 =
@@ -133,33 +146,39 @@ class OverviewScreenTest : GatherlyTest() {
     composeTestRule.onTodoItem(todo1, hasText(dueDate1))
   }
 
+  /** Test: Verifies that the [ToDo] list can be scrolled to reveal items not initially visible. */
   @Test
   fun canScrollOnTheTodoList() {
     val todos =
-        (1..50).toList<Int>().map { todo1.copy(uid = it.toString(), name = "${todo1.name} #$it") }
+        (1..50).toList().map { todo1.copy(uid = it.toString(), name = "${todo1.name} #$it") }
     setContent(withInitialTodos = todos)
     composeTestRule
         .onNodeWithTag(
-            OverviewScreenTestTags.getTestTagForTodoItem(todos.first()), useUnmergedTree = true)
+            TodoOverviewScreenTestTags.getTestTagForTodoItem(todos.first()), useUnmergedTree = true)
         .assertIsDisplayed()
     val lastNode =
         composeTestRule.onNodeWithTag(
-            OverviewScreenTestTags.getTestTagForTodoItem(todos.last()), useUnmergedTree = true)
+            TodoOverviewScreenTestTags.getTestTagForTodoItem(todos.last()), useUnmergedTree = true)
     lastNode.assertIsNotDisplayed()
     composeTestRule
-        .onNodeWithTag(OverviewScreenTestTags.TODO_LIST, useUnmergedTree = true)
-        .performScrollToNode(hasTestTag(OverviewScreenTestTags.getTestTagForTodoItem(todos.last())))
+        .onNodeWithTag(TodoOverviewScreenTestTags.TODO_LIST, useUnmergedTree = true)
+        .performScrollToNode(
+            hasTestTag(TodoOverviewScreenTestTags.getTestTagForTodoItem(todos.last())))
     lastNode.assertIsDisplayed()
   }
 
   // Portions of the code in this test were generated by an LLM.
+  /**
+   * Test: Verifies that checking and unchecking a [ToDo] item's checkbox correctly toggles its
+   * status between ONGOING and COMPLETED.
+   */
   @Test
   fun checkboxTogglesTodoStatusBetweenOngoingAndCompleted() {
     // create a single ongoing todo
     val todo = todo1.copy(status = ToDoStatus.ONGOING)
     setContent(withInitialTodos = listOf(todo))
 
-    val checkboxTag = OverviewScreenTestTags.getCheckboxTagForTodoItem(todo)
+    val checkboxTag = TodoOverviewScreenTestTags.getCheckboxTagForTodoItem(todo)
 
     // checkbox is not checked (Ongoing section)
     composeTestRule.onNodeWithTag(checkboxTag).assertExists().assertIsOff()
@@ -168,7 +187,7 @@ class OverviewScreenTest : GatherlyTest() {
     composeTestRule.onNodeWithTag(checkboxTag).performClick()
 
     // todo should now appear in the Completed section (checked)
-    composeTestRule.waitUntil(timeoutMillis = 5_000) {
+    composeTestRule.waitUntil(timeoutMillis = TIMEOUT) {
       // Wait until UI recomposes with updated status
       composeTestRule.onAllNodesWithTag(checkboxTag).fetchSemanticsNodes().any {
         it.config.contains(SemanticsProperties.ToggleableState)
@@ -181,13 +200,14 @@ class OverviewScreenTest : GatherlyTest() {
     composeTestRule.onNodeWithTag(checkboxTag).performClick()
 
     // should return to Ongoing section (unchecked)
-    composeTestRule.waitUntil(timeoutMillis = 5_000) {
+    composeTestRule.waitUntil(timeoutMillis = TIMEOUT) {
       composeTestRule.onAllNodesWithTag(checkboxTag).fetchSemanticsNodes().isNotEmpty()
     }
 
     composeTestRule.onNodeWithTag(checkboxTag).assertIsOff()
   }
 
+  /** Test: Verifies that the search bar correctly filters [ToDo] items by their name. */
   @Test
   fun searchBarFiltersTodosByName() = runTest {
     val todos =
@@ -200,24 +220,27 @@ class OverviewScreenTest : GatherlyTest() {
 
     // Type a query that matches only one item
     composeTestRule
-        .onNodeWithTag(OverviewScreenTestTags.SEARCH_BAR)
+        .onNodeWithTag(TodoOverviewScreenTestTags.SEARCH_BAR)
         .performClick()
         .performTextInput("dog")
 
     // Only "Walk dog" should remain visible
     composeTestRule
-        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todos[1]))
+        .onNodeWithTag(TodoOverviewScreenTestTags.getTestTagForTodoItem(todos[1]))
         .assertIsDisplayed()
 
     composeTestRule
-        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todos[0]))
+        .onNodeWithTag(TodoOverviewScreenTestTags.getTestTagForTodoItem(todos[0]))
         .assertIsNotDisplayed()
 
     composeTestRule
-        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todos[2]))
+        .onNodeWithTag(TodoOverviewScreenTestTags.getTestTagForTodoItem(todos[2]))
         .assertIsNotDisplayed()
   }
 
+  /**
+   * Test: Verifies that the search functionality matches [ToDo] items based on their description.
+   */
   @Test
   fun searchMatchesTodoDescription() = runTest {
     val todos =
@@ -229,26 +252,27 @@ class OverviewScreenTest : GatherlyTest() {
 
     // Search a word found only in the description of todo1
     composeTestRule
-        .onNodeWithTag(OverviewScreenTestTags.SEARCH_BAR)
+        .onNodeWithTag(TodoOverviewScreenTestTags.SEARCH_BAR)
         .performClick()
         .performTextInput("meeting")
 
     composeTestRule
-        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todos[0]))
+        .onNodeWithTag(TodoOverviewScreenTestTags.getTestTagForTodoItem(todos[0]))
         .assertIsDisplayed()
 
     composeTestRule
-        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todos[1]))
+        .onNodeWithTag(TodoOverviewScreenTestTags.getTestTagForTodoItem(todos[1]))
         .assertIsNotDisplayed()
   }
 
+  /** Test: Verifies that clearing the search input restores the full list of [ToDo] items. */
   @Test
   fun clearingSearchRestoresFullList() = runTest {
     val todos = listOf(todo1, todo2, todo3)
 
     setContent(withInitialTodos = todos)
 
-    val searchBar = composeTestRule.onNodeWithTag(OverviewScreenTestTags.SEARCH_BAR)
+    val searchBar = composeTestRule.onNodeWithTag(TodoOverviewScreenTestTags.SEARCH_BAR)
 
     // Filter down to a single match
     searchBar.performClick().performTextInput("abc")
@@ -261,22 +285,24 @@ class OverviewScreenTest : GatherlyTest() {
     // All todos should reappear
     todos.forEach { todo ->
       composeTestRule
-          .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todo))
+          .onNodeWithTag(TodoOverviewScreenTestTags.getTestTagForTodoItem(todo))
           .assertIsDisplayed()
     }
   }
 
+  /** Test: Verifies that the sort menu opens and displays options when clicked. */
   @Test
   fun sortMenu_opensOnClick() = runTest {
     setContent(withInitialTodos = listOf(todo1))
 
-    composeTestRule.onNodeWithTag(OverviewScreenTestTags.SORT_MENU_BUTTON).performClick()
+    composeTestRule.onNodeWithTag(TodoOverviewScreenTestTags.SORT_MENU_BUTTON).performClick()
 
     composeTestRule.onNode(hasText("Date ascending")).assertIsDisplayed()
     composeTestRule.onNode(hasText("Date descending")).assertIsDisplayed()
     composeTestRule.onNode(hasText("Alphabetical")).assertIsDisplayed()
   }
 
+  /** Test: Verifies that sorting [ToDo] items alphabetically changes their order correctly. */
   @Test
   fun alphabeticalSort_changesOrderCorrectly() = runTest {
     val todos =
@@ -286,7 +312,7 @@ class OverviewScreenTest : GatherlyTest() {
             todo3.copy(name = "Bravo", status = ToDoStatus.ONGOING))
     setContent(todos)
 
-    composeTestRule.onNodeWithTag(OverviewScreenTestTags.SORT_MENU_BUTTON).performClick()
+    composeTestRule.onNodeWithTag(TodoOverviewScreenTestTags.SORT_MENU_BUTTON).performClick()
     composeTestRule.onNode(hasText("Alphabetical")).performClick()
     advanceUntilIdle()
 
@@ -298,6 +324,10 @@ class OverviewScreenTest : GatherlyTest() {
     assertTrue(posBravo < posCharlie, "Bravo should appear above Charlie")
   }
 
+  /**
+   * Test: Verifies that sorting [ToDo] items by date in ascending order changes their order
+   * correctly.
+   */
   @Test
   fun sortDateAscending_changesOrderCorrectly() = runTest {
     val todoA = todo1.copy(name = "A", status = ToDoStatus.ONGOING, dueDate = Timestamp(1000, 0))
@@ -307,7 +337,7 @@ class OverviewScreenTest : GatherlyTest() {
     val todos = listOf(todoA, todoC, todoB)
     setContent(todos)
 
-    composeTestRule.onNodeWithTag(OverviewScreenTestTags.SORT_MENU_BUTTON).performClick()
+    composeTestRule.onNodeWithTag(TodoOverviewScreenTestTags.SORT_MENU_BUTTON).performClick()
     composeTestRule.onNode(hasText("Date ascending")).performClick()
     advanceUntilIdle()
 
@@ -319,6 +349,10 @@ class OverviewScreenTest : GatherlyTest() {
     assertTrue(posC < posB, "C should appear above B")
   }
 
+  /**
+   * Test: Verifies that sorting [ToDo] items by date in descending order changes their order
+   * correctly.
+   */
   @Test
   fun sortDateDescending_changesOrderCorrectly() = runTest {
     val a = todo1.copy(name = "A", dueDate = Timestamp(1000, 0), status = ToDoStatus.ONGOING)
@@ -328,7 +362,7 @@ class OverviewScreenTest : GatherlyTest() {
     val todos = listOf(a, b, c)
     setContent(withInitialTodos = todos)
 
-    composeTestRule.onNodeWithTag(OverviewScreenTestTags.SORT_MENU_BUTTON).performClick()
+    composeTestRule.onNodeWithTag(TodoOverviewScreenTestTags.SORT_MENU_BUTTON).performClick()
     composeTestRule.onNode(hasText("Date descending")).performClick()
     advanceUntilIdle()
 
@@ -343,6 +377,10 @@ class OverviewScreenTest : GatherlyTest() {
     assertTrue(posA < posC)
   }
 
+  /**
+   * Test: Verifies that searching and sorting [ToDo] items interact correctly to produce the
+   * expected order.
+   */
   @Test
   fun searchAndSortInteractCorrectly() = runTest {
     val banana = todo1.copy(name = "Banana")
@@ -351,11 +389,11 @@ class OverviewScreenTest : GatherlyTest() {
     setContent(listOf(banana, apple, apricot))
 
     // Search "ap"
-    composeTestRule.onNodeWithTag(OverviewScreenTestTags.SEARCH_BAR).performTextInput("ap")
+    composeTestRule.onNodeWithTag(TodoOverviewScreenTestTags.SEARCH_BAR).performTextInput("ap")
     advanceUntilIdle()
 
     // Sort alphabetical
-    composeTestRule.onNodeWithTag(OverviewScreenTestTags.SORT_MENU_BUTTON).performClick()
+    composeTestRule.onNodeWithTag(TodoOverviewScreenTestTags.SORT_MENU_BUTTON).performClick()
     composeTestRule.onNode(hasText("Alphabetical")).performClick()
     advanceUntilIdle()
 
@@ -365,6 +403,10 @@ class OverviewScreenTest : GatherlyTest() {
     assertTrue(posApple < posApricot)
   }
 
+  /**
+   * Test: Verifies that ongoing and completed [ToDo] items are sorted independently within their
+   * sections.
+   */
   @Test
   fun ongoingAndCompletedAreSortedIndependently() = runTest {
     val a = todo1.copy(name = "A", status = ToDoStatus.ONGOING, dueDate = Timestamp(3000, 0))
@@ -376,7 +418,7 @@ class OverviewScreenTest : GatherlyTest() {
 
     setContent(listOf(a, b, c, d))
 
-    composeTestRule.onNodeWithTag(OverviewScreenTestTags.SORT_MENU_BUTTON).performClick()
+    composeTestRule.onNodeWithTag(TodoOverviewScreenTestTags.SORT_MENU_BUTTON).performClick()
     composeTestRule.onNode(hasText("Date ascending")).performClick()
     advanceUntilIdle()
 
@@ -396,8 +438,9 @@ class OverviewScreenTest : GatherlyTest() {
     assertTrue(posA < posC)
   }
 
+  /** Helper: Returns the vertical position of a [ToDo] item in the list. */
   private fun positionOf(todo: ToDo): Float {
-    val tag = OverviewScreenTestTags.getTestTagForTodoItem(todo)
+    val tag = TodoOverviewScreenTestTags.getTestTagForTodoItem(todo)
 
     // Ensure it's brought into view first
     composeTestRule.onNodeWithTag(tag, useUnmergedTree = true).performScrollTo()
@@ -409,6 +452,10 @@ class OverviewScreenTest : GatherlyTest() {
         .top
   }
 
+  /**
+   * Test: Verifies that filtering [ToDo] items by category displays the correct items for each
+   * category.
+   */
   @Test
   fun correctTodoCategoryFeaturesDisplay() = runTest {
     val todoHomework = todo1.copy(name = "HOMEWORK", tag = TAG_HOMEWORK)
@@ -422,29 +469,30 @@ class OverviewScreenTest : GatherlyTest() {
     advanceUntilIdle()
 
     composeTestRule
-        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todoHomework))
+        .onNodeWithTag(TodoOverviewScreenTestTags.getTestTagForTodoItem(todoHomework))
         .assertIsDisplayed()
 
     composeTestRule.onNode(hasText("Courses")).performClick()
     advanceUntilIdle()
     composeTestRule
-        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todoCourses))
+        .onNodeWithTag(TodoOverviewScreenTestTags.getTestTagForTodoItem(todoCourses))
         .assertIsDisplayed()
 
     composeTestRule.onNode(hasText("Personal")).performClick()
     advanceUntilIdle()
 
     composeTestRule
-        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todoPersonal))
+        .onNodeWithTag(TodoOverviewScreenTestTags.getTestTagForTodoItem(todoPersonal))
         .assertIsDisplayed()
     composeTestRule.onNode(hasText("Project")).performClick()
     advanceUntilIdle()
 
     composeTestRule
-        .onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todoProject))
+        .onNodeWithTag(TodoOverviewScreenTestTags.getTestTagForTodoItem(todoProject))
         .assertIsDisplayed()
   }
 
+  /** Test: Verifies that sorting [ToDo] items by priority level changes their order correctly. */
   @Test
   fun correctPriorityLevelSortingDisplay() = runTest {
     val todoNonePriority = todo1.copy(name = "A", priorityLevel = ToDoPriority.NONE)
@@ -455,7 +503,7 @@ class OverviewScreenTest : GatherlyTest() {
 
     setContent(listOf(todoNonePriority, todoLowPriority, todoMediumPriority, todoHighPriority))
 
-    composeTestRule.onNodeWithTag(OverviewScreenTestTags.SORT_MENU_BUTTON).performClick()
+    composeTestRule.onNodeWithTag(TodoOverviewScreenTestTags.SORT_MENU_BUTTON).performClick()
     composeTestRule.onNode(hasText("Priority level")).performClick()
     advanceUntilIdle()
 

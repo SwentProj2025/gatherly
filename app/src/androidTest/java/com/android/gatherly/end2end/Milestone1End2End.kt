@@ -15,8 +15,8 @@ import com.android.gatherly.ui.authentication.SignInScreenTestTags
 import com.android.gatherly.ui.focusTimer.FocusTimerScreenTestTags
 import com.android.gatherly.ui.homePage.HomePageScreenTestTags
 import com.android.gatherly.ui.navigation.NavigationTestTags
-import com.android.gatherly.ui.todo.AddToDoScreenTestTags
-import com.android.gatherly.ui.todo.OverviewScreenTestTags
+import com.android.gatherly.ui.todo.AddTodoScreenTestTags
+import com.android.gatherly.ui.todo.TodoOverviewScreenTestTags
 import com.android.gatherly.utils.FirebaseEmulator
 import com.android.gatherly.utils.FirestoreGatherlyTest
 import com.android.gatherly.utils.openDatePicker
@@ -66,37 +66,37 @@ class Milestone1End2End : FirestoreGatherlyTest() {
 
     // wait for it to appear
     composeTestRule.waitUntil(TIMEOUT) {
-      composeTestRule.onNodeWithTag(OverviewScreenTestTags.CREATE_TODO_BUTTON).isDisplayed()
+      composeTestRule.onNodeWithTag(TodoOverviewScreenTestTags.CREATE_TODO_BUTTON).isDisplayed()
     }
 
     // click to create a todo
-    composeTestRule.onNodeWithTag(OverviewScreenTestTags.CREATE_TODO_BUTTON).performClick()
+    composeTestRule.onNodeWithTag(TodoOverviewScreenTestTags.CREATE_TODO_BUTTON).performClick()
     composeTestRule.waitForIdle()
 
     // wait for add todo screen to appear
     composeTestRule.waitUntil(TIMEOUT) {
-      composeTestRule.onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_TITLE).isDisplayed()
+      composeTestRule.onNodeWithTag(AddTodoScreenTestTags.INPUT_TODO_TITLE).isDisplayed()
     }
 
     composeTestRule
-        .onNodeWithTag(AddToDoScreenTestTags.MORE_OPTIONS)
+        .onNodeWithTag(AddTodoScreenTestTags.MORE_OPTIONS)
         .assertIsDisplayed()
         .performClick()
     // input information and save
-    composeTestRule.onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_TITLE).performTextInput("Title")
+    composeTestRule.onNodeWithTag(AddTodoScreenTestTags.INPUT_TODO_TITLE).performTextInput("Title")
     composeTestRule
-        .onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_DESCRIPTION)
+        .onNodeWithTag(AddTodoScreenTestTags.INPUT_TODO_DESCRIPTION)
         .performTextInput("Description")
-    composeTestRule.openDatePicker(AddToDoScreenTestTags.INPUT_TODO_DATE)
+    composeTestRule.openDatePicker(AddTodoScreenTestTags.INPUT_TODO_DATE)
     composeTestRule.selectDateFromPicker(
         LocalDate.now().dayOfMonth, LocalDate.now().month.value, LocalDate.now().year.plus(1))
-    composeTestRule.onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_TIME).performTextInput("10:00")
-    composeTestRule.onNodeWithTag(AddToDoScreenTestTags.TODO_SAVE).performClick()
+    composeTestRule.onNodeWithTag(AddTodoScreenTestTags.INPUT_TODO_TIME).performTextInput("10:00")
+    composeTestRule.onNodeWithTag(AddTodoScreenTestTags.TODO_SAVE).performClick()
     composeTestRule.waitForIdle()
 
     // wait for overview todos to appear again
     composeTestRule.waitUntil(TIMEOUT) {
-      composeTestRule.onNodeWithTag(OverviewScreenTestTags.CREATE_TODO_BUTTON).isDisplayed()
+      composeTestRule.onNodeWithTag(TodoOverviewScreenTestTags.CREATE_TODO_BUTTON).isDisplayed()
     }
 
     // go to timer tab
