@@ -217,7 +217,7 @@ fun EditEventsScreen(
   Scaffold(
       topBar = {
         TopNavigationMenu_Goback(
-            selectedTab = Tab.Events,
+            selectedTab = Tab.EventsOverview,
             modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
             goBack = goBack)
       }) { paddingVal ->

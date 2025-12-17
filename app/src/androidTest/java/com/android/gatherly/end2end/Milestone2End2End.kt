@@ -199,7 +199,7 @@ class Milestone2End2End : FirestoreGatherlyTest() {
     }
 
     // Go to settings
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).assertIsDisplayed().performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).assertIsDisplayed().performClick()
     composeTestRule
         .onNodeWithTag(NavigationTestTags.SETTINGS_TAB)
         .assertIsDisplayed()
@@ -223,7 +223,7 @@ class Milestone2End2End : FirestoreGatherlyTest() {
         .performClick()
 
     // Navigate to profile
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).assertIsDisplayed().performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).assertIsDisplayed().performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).assertIsDisplayed().performClick()
 
     // Wait for the username to actually update with the new value

@@ -159,13 +159,13 @@ fun OverviewScreen(
   Scaffold(
       topBar = {
         TopNavigationMenu(
-            selectedTab = Tab.Overview,
+            selectedTab = Tab.TodoOverview,
             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
             modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU))
       },
       bottomBar = {
         BottomNavigationMenu(
-            selectedTab = Tab.Overview,
+            selectedTab = Tab.TodoOverview,
             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
             modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU))
       },
