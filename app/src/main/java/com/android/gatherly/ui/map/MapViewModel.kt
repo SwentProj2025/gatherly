@@ -42,7 +42,7 @@ import kotlinx.coroutines.withTimeoutOrNull
  * - there is no pending navigation request from [MapCoordinator],
  * - and the user's current location cannot be fetched.
  */
-val EPFL_LATLNG = LatLng(46.5197, 6.5663)
+val EPFL_LATLNG = LatLng(46.519, 6.5668)
 
 /**
  * Timeout duration for fetching a first user location update.
@@ -154,7 +154,7 @@ class MapViewModel(
    */
   init {
     loadingDataJob =
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
           val todos = todosRepository.getAllTodos()
           todoList = getDrawableTodos(todos)
 
@@ -285,6 +285,9 @@ class MapViewModel(
    *   and [UIState.itemsList] to the appropriate mode so the UI matches the centered content.
    */
   suspend fun fetchLocationToCenterOn(context: Context): LatLng {
+
+    loadingDataJob?.join()
+
     _uiState.value.lastConsultedTodoId
         ?.let { lastTodoId -> todoList.find { it.uid == lastTodoId }?.location }
         ?.let {
