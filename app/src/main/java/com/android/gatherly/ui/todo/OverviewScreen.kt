@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -58,7 +59,6 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.integerResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
@@ -78,20 +78,20 @@ import java.util.Locale
 // SwEnt staff.
 
 /**
- * Contains test tags used in [OverviewScreen] and its child composables for identifying UI elements
+ * Contains test tags used in [OverviewScreen] and its child composable for identifying UI elements
  * during Compose UI testing.
  */
 object OverviewScreenTestTags {
-  /** Test tag for the FloatingActionButton used to create a new ToDo item. */
+  /** Test tag for the FloatingActionButton used to create a new [ToDo] item. */
   const val CREATE_TODO_BUTTON = "createTodoFab"
 
-  /** Test tag for the message displayed when there are no ToDo items. */
+  /** Test tag for the message displayed when there are no [ToDo] items. */
   const val EMPTY_TODO_LIST_MSG = "emptyTodoList"
 
-  /** Test tag for the LazyColumn that displays the list of ToDo items. */
+  /** Test tag for the LazyColumn that displays the list of [ToDo] items. */
   const val TODO_LIST = "todoList"
 
-  /** Test tag for the search bar used to search for todos */
+  /** Test tag for the search bar used to search for [ToDo]s */
   const val SEARCH_BAR = "searchBar"
 
   /** Test tag for the sort menu button */
@@ -101,7 +101,7 @@ object OverviewScreenTestTags {
    * Returns a unique test tag for the checkbox associated with a given [ToDo] item.
    *
    * @param todo The [ToDo] item whose checkbox tag will be generated.
-   * @return A string uniquely identifying the checkbox of the given ToDo.
+   * @return A string uniquely identifying the checkbox of the given [ToDo].
    */
   fun getCheckboxTagForTodoItem(todo: ToDo): String = "checkbox${todo.uid}"
 
@@ -109,7 +109,7 @@ object OverviewScreenTestTags {
    * Returns a unique test tag for the card or container representing a given [ToDo] item.
    *
    * @param todo The [ToDo] item whose test tag will be generated.
-   * @return A string uniquely identifying the ToDo item in the UI.
+   * @return A string uniquely identifying the [ToDo] item in the UI.
    */
   fun getTestTagForTodoItem(todo: ToDo): String = "todoItem${todo.uid}"
 
@@ -117,7 +117,7 @@ object OverviewScreenTestTags {
    * Returns a unique test tag for the button representing a given [ToDoCategory] item.
    *
    * @param category The [ToDoCategory] item whose test tag will be generated.
-   * @return A string uniquely identifying the ToDo item in the UI.
+   * @return A string uniquely identifying the [ToDo] item in the UI.
    */
   fun getTestTagForTagButton(category: ToDoCategory): String = "tagItem${category.id}"
 
@@ -125,12 +125,12 @@ object OverviewScreenTestTags {
 }
 
 /**
- * Displays an overview of ToDo items, grouped by their status (ongoing or completed).
+ * Displays an overview of [ToDo] items, grouped by their status (ongoing or completed).
  *
- * @param overviewViewModel The [OverviewViewModel] that provides the current ToDo list and state.
+ * @param overviewViewModel The [OverviewViewModel] that provides the current [ToDo] list and state.
  * @param onAddTodo A callback invoked when the user taps the Add button.
- * @param onSelectTodo A callback invoked when the user taps a specific ToDo item.
- * @param goHomePage A callback invoked when the user taps the home icon in the top app bar.
+ * @param onSelectTodo A callback invoked when the user taps a specific [ToDo] item.
+ * @param navigationActions Optional [NavigationActions] for handling tab navigation.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -138,7 +138,6 @@ fun OverviewScreen(
     overviewViewModel: OverviewViewModel = viewModel(),
     onAddTodo: () -> Unit = {},
     onSelectTodo: (ToDo) -> Unit = {},
-    goHomePage: () -> Unit = {},
     navigationActions: NavigationActions? = null
 ) {
 
@@ -211,7 +210,8 @@ fun OverviewScreen(
                               overviewViewModel.searchTodos(newText)
                             },
                             modifier =
-                                Modifier.weight(1f)
+                                Modifier.weight(
+                                        integerResource(R.integer.todo_search_bar_weight).toFloat())
                                     .padding(
                                         horizontal =
                                             dimensionResource(
@@ -234,86 +234,13 @@ fun OverviewScreen(
                   // -- Tag filter bar --
                   FilterTagBar(selectedTagFilter, categoriesList, overviewViewModel)
 
-                  if (todos.isNotEmpty()) {
-                    LazyColumn(
-                        contentPadding =
-                            PaddingValues(
-                                vertical =
-                                    dimensionResource(
-                                        id = R.dimen.todos_overview_vertical_padding)),
-                        modifier =
-                            Modifier.fillMaxWidth()
-                                .padding(
-                                    horizontal =
-                                        dimensionResource(
-                                            id = R.dimen.todos_overview_horizontal_padding))
-                                .testTag(OverviewScreenTestTags.TODO_LIST)) {
-
-                          // ONGOING SECTION
-                          if (ongoingTodos.isNotEmpty()) {
-                            item {
-                              Text(
-                                  text = stringResource(R.string.todos_ongoing_section_label),
-                                  style = MaterialTheme.typography.titleMedium,
-                                  fontWeight = FontWeight.Bold,
-                                  modifier =
-                                      Modifier.padding(
-                                          vertical =
-                                              dimensionResource(
-                                                  id =
-                                                      R.dimen
-                                                          .todos_overview_section_text_vertical_padding)))
-                            }
-                            items(ongoingTodos.size) { index ->
-                              ToDoItem(
-                                  todo = ongoingTodos[index],
-                                  onClick = { onSelectTodo(ongoingTodos[index]) },
-                                  isChecked = false,
-                                  onCheckedChange = { checked ->
-                                    val newStatus =
-                                        if (checked) ToDoStatus.ENDED else ToDoStatus.ONGOING
-                                    overviewViewModel.onCheckboxChanged(
-                                        ongoingTodos[index].uid, newStatus)
-                                  })
-                            }
-                          }
-
-                          // COMPLETED SECTION
-                          if (completedTodos.isNotEmpty()) {
-                            item {
-                              Text(
-                                  text = stringResource(R.string.todos_completed_section_label),
-                                  style = MaterialTheme.typography.titleMedium,
-                                  fontWeight = FontWeight.Bold,
-                                  modifier =
-                                      Modifier.padding(
-                                          vertical =
-                                              dimensionResource(
-                                                  id =
-                                                      R.dimen
-                                                          .todos_overview_section_text_vertical_padding)))
-                            }
-                            items(completedTodos.size) { index ->
-                              ToDoItem(
-                                  todo = completedTodos[index],
-                                  onClick = { onSelectTodo(completedTodos[index]) },
-                                  isChecked = true,
-                                  onCheckedChange = { checked ->
-                                    val newStatus =
-                                        if (checked) ToDoStatus.ENDED else ToDoStatus.ONGOING
-                                    overviewViewModel.onCheckboxChanged(
-                                        completedTodos[index].uid, newStatus)
-                                  })
-                            }
-                          }
-                        }
-                  } else {
-                    Text(
-                        modifier =
-                            Modifier.padding(pd)
-                                .testTag(OverviewScreenTestTags.EMPTY_TODO_LIST_MSG),
-                        text = stringResource(R.string.no_todos_text))
-                  }
+                  TodoItemsList(
+                      allTodos = todos,
+                      ongoingTodos = ongoingTodos,
+                      completedTodos = completedTodos,
+                      onSelectTodo = onSelectTodo,
+                      overviewViewModel = overviewViewModel,
+                      padding = pd)
                 }
               }
         }
@@ -322,13 +249,14 @@ fun OverviewScreen(
 
 /**
  * Displays a button that opens a dropdown menu allowing the user to choose a sorting order for the
- * ToDo list.
+ * [ToDo] list.
  *
  * When the icon button is tapped, a dropdown menu expands with three sorting options:
  * - Date descending
  * - Date ascending
  * - Alphabetical
  *
+ * @param currentOrder The currently selected [TodoSortOrder].
  * @param onSortSelected Callback invoked when the user selects a new [TodoSortOrder].
  */
 @Composable
@@ -400,7 +328,12 @@ fun SortMenu(currentOrder: TodoSortOrder, onSortSelected: (TodoSortOrder) -> Uni
   }
 }
 
-/** Helper composable function: Display the trailing Icon */
+/**
+ * Helper composable function: Display the trailing Icon
+ *
+ * @param currentOrder The current [TodoSortOrder] selected.
+ * @param itemOrder The [TodoSortOrder] represented by this menu item.
+ */
 @Composable
 private fun TrailingIcon(currentOrder: TodoSortOrder, itemOrder: TodoSortOrder) {
   if (currentOrder == itemOrder) {
@@ -416,7 +349,7 @@ private fun TrailingIcon(currentOrder: TodoSortOrder, itemOrder: TodoSortOrder) 
  * Displays a single ToDo item inside a [Card] with a checkbox and basic details.
  *
  * @param todo The [ToDo] item to display.
- * @param onClick A callback invoked when the user taps the ToDo card.
+ * @param onClick A callback invoked when the user taps the [ToDo] card.
  * @param isChecked Whether the checkbox should appear checked (true for completed tasks).
  * @param onCheckedChange A callback invoked when the user clicks on the checkbox state, to mark the
  *   Todo as completed or ongoing.
@@ -462,12 +395,15 @@ fun ToDoItem(
                       color = MaterialTheme.colorScheme.onSurfaceVariant,
                       fontWeight = FontWeight.Medium)
 
-                  Spacer(modifier = Modifier.width(10.dp))
+                  Spacer(
+                      modifier = Modifier.width(dimensionResource(R.dimen.todo_item_spacer_width)))
 
                   if (todo.tag != null) {
                     Icon(
                         imageVector = Icons.Filled.Folder,
-                        modifier = Modifier.size(25.dp).fillMaxSize(),
+                        modifier =
+                            Modifier.size(dimensionResource(R.dimen.todo_category_icon_size))
+                                .fillMaxSize(),
                         contentDescription = "Category icon",
                         tint = todo.tag.color,
                     )
@@ -490,7 +426,9 @@ fun ToDoItem(
           if (todo.priorityLevel != ToDoPriority.NONE) {
             Icon(
                 imageVector = Icons.Filled.Error,
-                modifier = Modifier.size(30.dp).fillMaxSize(),
+                modifier =
+                    Modifier.size(dimensionResource(R.dimen.todo_priority_level_icon_size))
+                        .fillMaxSize(),
                 contentDescription = "Priority level icon",
                 tint = priorityLevelColor(todo.priorityLevel))
           }
@@ -498,7 +436,13 @@ fun ToDoItem(
       }
 }
 
-/** Displays a filter bar with buttons to filter events by their status. */
+/**
+ * Displays a filter bar with buttons to filter events by their status.
+ *
+ * @param selectedTagFilter The currently selected [ToDoCategory] filter.
+ * @param categoriesList The list of available [ToDoCategory] items.
+ * @param overviewViewModel The [OverviewViewModel] to update the filter state.
+ */
 @Composable
 private fun FilterTagBar(
     selectedTagFilter: MutableState<ToDoCategory?>,
@@ -509,7 +453,9 @@ private fun FilterTagBar(
       modifier =
           Modifier.fillMaxWidth()
               .padding(vertical = dimensionResource(R.dimen.events_filter_bar_vertical_size)),
-      horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+      horizontalArrangement =
+          Arrangement.spacedBy(
+              dimensionResource(R.dimen.todo_filter_tag_horizontal_arrangement_space))) {
         item {
           FilterTagButton(
               stringResource(R.string.events_button_all_categories),
@@ -537,6 +483,8 @@ private fun FilterTagBar(
  * @param label The text label for the button.
  * @param category The [ToDoCategory] associated with this button.
  * @param selectedTagFilter The currently selected [ToDoCategory].
+ * @param overviewViewModel The [OverviewViewModel] to update the filter state.
+ * @param modifier The [Modifier] to be applied to this button.
  */
 @Composable
 private fun FilterTagButton(
@@ -565,4 +513,121 @@ private fun FilterTagButton(
       modifier = modifier.height(dimensionResource(R.dimen.events_filter_button_height))) {
         Text(text = label)
       }
+}
+
+/**
+ * Displays the completed ToDo section in the overview list.
+ *
+ * @param completedTodos The list of completed [ToDo] items.
+ * @param onSelectTodo A callback invoked when a specific [ToDo] item is selected.
+ * @param overviewViewModel The [OverviewViewModel] to handle checkbox state changes.
+ */
+private fun LazyListScope.completedTodoSection(
+    completedTodos: List<ToDo>,
+    onSelectTodo: (ToDo) -> Unit,
+    overviewViewModel: OverviewViewModel
+) {
+  if (completedTodos.isNotEmpty()) {
+    item {
+      Text(
+          text = stringResource(R.string.todos_completed_section_label),
+          style = MaterialTheme.typography.titleMedium,
+          fontWeight = FontWeight.Bold,
+          modifier =
+              Modifier.padding(
+                  vertical =
+                      dimensionResource(id = R.dimen.todos_overview_section_text_vertical_padding)))
+    }
+    items(completedTodos.size) { index ->
+      ToDoItem(
+          todo = completedTodos[index],
+          onClick = { onSelectTodo(completedTodos[index]) },
+          isChecked = true,
+          onCheckedChange = { checked ->
+            val newStatus = if (checked) ToDoStatus.ENDED else ToDoStatus.ONGOING
+            overviewViewModel.onCheckboxChanged(completedTodos[index].uid, newStatus)
+          })
+    }
+  }
+}
+
+/**
+ * Displays the ongoing [ToDo] section in the overview list.
+ *
+ * @param ongoingTodos The list of ongoing [ToDo] items.
+ * @param onSelectTodo A callback invoked when a specific [ToDo] item is selected.
+ * @param overviewViewModel The [OverviewViewModel] to handle checkbox state changes.
+ */
+private fun LazyListScope.ongoingTodoSection(
+    ongoingTodos: List<ToDo>,
+    onSelectTodo: (ToDo) -> Unit,
+    overviewViewModel: OverviewViewModel
+) {
+  if (ongoingTodos.isNotEmpty()) {
+    item {
+      Text(
+          text = stringResource(R.string.todos_ongoing_section_label),
+          style = MaterialTheme.typography.titleMedium,
+          fontWeight = FontWeight.Bold,
+          modifier =
+              Modifier.padding(
+                  vertical =
+                      dimensionResource(id = R.dimen.todos_overview_section_text_vertical_padding)))
+    }
+    items(ongoingTodos.size) { index ->
+      ToDoItem(
+          todo = ongoingTodos[index],
+          onClick = { onSelectTodo(ongoingTodos[index]) },
+          isChecked = false,
+          onCheckedChange = { checked ->
+            val newStatus = if (checked) ToDoStatus.ENDED else ToDoStatus.ONGOING
+            overviewViewModel.onCheckboxChanged(ongoingTodos[index].uid, newStatus)
+          })
+    }
+  }
+}
+
+/**
+ * Displays the list of [ToDo] items, grouped by ongoing and completed sections.
+ *
+ * @param allTodos The complete list of [ToDo] items.
+ * @param ongoingTodos The list of ongoing [ToDo] items.
+ * @param completedTodos The list of completed [ToDo] items.
+ * @param onSelectTodo A callback invoked when a specific [ToDo] item is selected.
+ * @param overviewViewModel The [OverviewViewModel] to handle checkbox state changes.
+ */
+@Composable
+private fun TodoItemsList(
+    allTodos: List<ToDo>,
+    ongoingTodos: List<ToDo>,
+    completedTodos: List<ToDo>,
+    onSelectTodo: (ToDo) -> Unit,
+    overviewViewModel: OverviewViewModel,
+    padding: PaddingValues,
+) {
+  if (allTodos.isNotEmpty()) {
+    LazyColumn(
+        contentPadding =
+            PaddingValues(
+                vertical = dimensionResource(id = R.dimen.todos_overview_vertical_padding)),
+        modifier =
+            Modifier.fillMaxWidth()
+                .padding(
+                    horizontal = dimensionResource(id = R.dimen.todos_overview_horizontal_padding))
+                .testTag(OverviewScreenTestTags.TODO_LIST)) {
+          ongoingTodoSection(
+              ongoingTodos = ongoingTodos,
+              onSelectTodo = onSelectTodo,
+              overviewViewModel = overviewViewModel)
+
+          completedTodoSection(
+              completedTodos = completedTodos,
+              onSelectTodo = onSelectTodo,
+              overviewViewModel = overviewViewModel)
+        }
+  } else {
+    Text(
+        modifier = Modifier.padding(padding).testTag(OverviewScreenTestTags.EMPTY_TODO_LIST_MSG),
+        text = stringResource(R.string.no_todos_text))
+  }
 }
