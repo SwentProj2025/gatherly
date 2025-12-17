@@ -14,7 +14,7 @@
     <dimen name="font_size_medium">16sp</dimen>
 
     <!-- Alpha Levels -->
-    <dimen name="alpha_placeholder">0.4dp</dimen>
+    <dimen name="alpha_placeholder">0.4</dimen>
 
     <!-- Spacing -->
     <dimen name="spacing_between_buttons">4dp</dimen>
