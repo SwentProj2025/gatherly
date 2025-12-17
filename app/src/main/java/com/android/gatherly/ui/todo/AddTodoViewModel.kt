@@ -83,9 +83,6 @@ private var client: OkHttpClient =
  * Handles user input updates, field validation, and saving [ToDo] items to the Firestore repository
  * through [ToDosRepository].
  *
- * Currently, location handling is limited to plain string input until the Location repository is
- * implemented.
- *
  * @param todoRepository The repository responsible for persisting [ToDo] items.
  * @param profileRepository The repository for user profile data.
  * @param pointsRepository The repository for managing user points.

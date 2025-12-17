@@ -37,7 +37,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.integerResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
@@ -46,7 +45,6 @@ import com.android.gatherly.model.todoCategory.ToDoCategory
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
-import com.android.gatherly.ui.theme.GatherlyTheme
 import com.android.gatherly.utils.AlertDialogCreateTag
 import com.android.gatherly.utils.AlertDialogWarningDeleteTag
 import com.android.gatherly.utils.CategoriesDropDown
@@ -361,11 +359,4 @@ fun SavingText(todoUIState: AddTodoUiState) {
             stringResource(R.string.todos_save_button_text)
           },
       color = MaterialTheme.colorScheme.onSecondary)
-}
-
-/** Preview of the AddToDoScreen in dark theme. */
-@Preview
-@Composable
-fun AddToDoScreenPreview() {
-  GatherlyTheme(darkTheme = true) { AddTodoScreen() }
 }
