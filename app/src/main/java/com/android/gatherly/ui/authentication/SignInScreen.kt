@@ -23,6 +23,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
 import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.Screen
+import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.utils.DailyTodoAlarmScheduler
 import com.android.gatherly.utils.LoadingAnimation
 import com.google.firebase.auth.FirebaseAuth
