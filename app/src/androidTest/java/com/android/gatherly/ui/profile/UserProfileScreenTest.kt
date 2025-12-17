@@ -10,7 +10,11 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
-/** UI test for UserProfileScreen. */
+/**
+ * UI test for UserProfileScreen.
+ *
+ * Verifies that all components are displayed correctly, and that error handling works as expected.
+ */
 class UserProfileScreenTest {
 
   @get:Rule val composeRule = createComposeRule()
@@ -35,6 +39,7 @@ class UserProfileScreenTest {
     viewModel = UserProfileViewModel(repository = repo)
   }
 
+  /** Sets the content of the compose rule to the UserProfileScreen with the test profile's UID. */
   private fun setContent() {
     composeRule.setContent { UserProfileScreen(uid = testProfile.uid, viewModel = viewModel) }
   }
