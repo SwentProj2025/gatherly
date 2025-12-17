@@ -221,9 +221,9 @@ class MapScreenTest {
     compose.setContent {
       MapScreen(viewModel = viewModel, coordinator = mapCoordinator)
       ToDoIcon(todo)
-      ToDoSheet(todo, onGoToToDo = {}, onClose = {})
+      ToDoSheet(todo, onGoToToDo = {})
       EventIcon(event)
-      EventSheet(event, onGoToEvent = {}, onClose = {})
+      EventSheet(event, onGoToEvent = {})
     }
     compose.waitForIdle()
     waitUntilCameraReady()
