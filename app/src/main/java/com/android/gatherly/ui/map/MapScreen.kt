@@ -19,7 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -37,13 +37,14 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
@@ -96,29 +97,9 @@ object MapScreenTestTags {
   const val LOADING_SCREEN = "loadingScreen"
   const val LOADING_SPINNER = "loadingSpinner"
   const val LOADING_TEXT = "loadingText"
-
-  // ToDo markers
-  fun todoMarker(id: String) = "todoMarker_$id"
-
-  fun todoMarkerExpanded(id: String) = "todoMarkerExpanded_$id"
-
-  // Event markers
-  fun eventMarker(id: String) = "eventMarker_$id"
 }
 
-/** Dimension constants to avoid magic numbers. */
-private object Dimensions {
-  val markerWidth = 180.dp
-  val markerHeightCollapsed = 50.dp
-  val cardPadding = 12.dp
-
-  val spacerPadding = 20.dp
-
-  val textPadding = 8.dp
-  val rowColPadding = 16.dp
-
-  val weight = 1f
-}
+private const val FULL_WIDTH_WEIGHT = 1f
 
 /**
  * A composable screen displaying ToDos and Events as interactive markers on a Google Map.
@@ -382,7 +363,7 @@ fun MapScreen(
                   CircularProgressIndicator(
                       color = MaterialTheme.colorScheme.primary,
                       modifier = Modifier.testTag(MapScreenTestTags.LOADING_SPINNER))
-                  Spacer(modifier = Modifier.height(16.dp))
+                  Spacer(modifier = Modifier.height(dimensionResource(R.dimen.map_loading_spacer)))
                   Text(
                       text = stringResource(R.string.loading_map),
                       color = MaterialTheme.colorScheme.onBackground,
@@ -396,10 +377,13 @@ fun MapScreen(
 
 // -------------------------------- Event icons --------------------------------
 /**
- * Pin-style Event marker icon with rounded pill shape and triangular pointer
+ * Pin-style marker icon for an [Event].
  *
- * @param event The Event data to display in the marker.
- * @param scale Scaling factor based on zoom level to prevent oversized markers when zoomed out.
+ * Uses allowed design-system colors: surfaceVariant/onSurfaceVariant for marker containers. If you
+ * want events to differ from todos, keep that difference in the text style only.
+ *
+ * @param event The [Event] displayed by this marker.
+ * @param scale Optional scaling factor (for future zoom-based sizing).
  */
 @Composable
 fun EventIcon(event: Event, scale: Float = 1f) {
@@ -419,62 +403,61 @@ fun EventIcon(event: Event, scale: Float = 1f) {
 }
 
 /**
- * Event Sheet displayed when an Event marker is tapped
+ * Bottom sheet shown when an [Event] marker is tapped.
  *
- * @param event The Event data to display in the marker.
- * @param onGoToEvent Go to Event Page when button is clicked.
- * @param onClose closes the sheet when tapped outside.
+ * @param event Selected [Event].
+ * @param onGoToEvent Called when the CTA button is pressed.
+ * @param onClose Called when the sheet should be dismissed.
  */
 @Composable
 fun EventSheet(event: Event, onGoToEvent: () -> Unit, onClose: () -> Unit) {
+  val datePattern = stringResource(R.string.map_date_format)
   val formattedDate =
-      remember(event.date) {
-        val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-        sdf.format(event.date.toDate())
+      remember(event.date, datePattern) {
+        SimpleDateFormat(datePattern, Locale.getDefault()).format(event.date.toDate())
       }
+
+  val sheetPadding = dimensionResource(R.dimen.map_sheet_padding)
+  val textPadding = dimensionResource(R.dimen.map_sheet_text_padding)
+  val spacer = dimensionResource(R.dimen.map_sheet_spacer)
 
   Column(
       modifier =
-          Modifier.fillMaxWidth()
-              .padding(Dimensions.rowColPadding)
-              .testTag(MapScreenTestTags.EVENT_SHEET)) {
+          Modifier.fillMaxWidth().padding(sheetPadding).testTag(MapScreenTestTags.EVENT_SHEET)) {
         Text(
             text = event.title.uppercase(),
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.testTag(MapScreenTestTags.EVENT_TITLE_SHEET))
 
-        Spacer(modifier = Modifier.size(Dimensions.spacerPadding))
+        Spacer(modifier = Modifier.height(spacer))
 
         Text(
-            modifier =
-                Modifier.padding(Dimensions.textPadding).testTag(MapScreenTestTags.EVENT_DATE),
+            modifier = Modifier.padding(textPadding).testTag(MapScreenTestTags.EVENT_DATE),
             text = formattedDate,
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onBackground)
+
         Text(
-            modifier =
-                Modifier.padding(Dimensions.textPadding)
-                    .testTag(MapScreenTestTags.EVENT_DESCRIPTION),
+            modifier = Modifier.padding(textPadding).testTag(MapScreenTestTags.EVENT_DESCRIPTION),
             text = event.description,
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onBackground)
 
-        Spacer(modifier = Modifier.size(Dimensions.spacerPadding))
+        Spacer(modifier = Modifier.height(spacer))
 
         Row(
-            modifier = Modifier.padding(Dimensions.rowColPadding),
+            modifier = Modifier.padding(sheetPadding),
             verticalAlignment = Alignment.CenterVertically) {
               Button(
                   modifier =
-                      Modifier.weight(Dimensions.weight).testTag(MapScreenTestTags.EVENT_BUTTON),
+                      Modifier.weight(FULL_WIDTH_WEIGHT).testTag(MapScreenTestTags.EVENT_BUTTON),
                   onClick = onGoToEvent,
                   colors =
-                      ButtonColors(
+                      ButtonDefaults.buttonColors(
                           containerColor = MaterialTheme.colorScheme.tertiary,
                           contentColor = MaterialTheme.colorScheme.onTertiary,
-                          disabledContainerColor = MaterialTheme.colorScheme.tertiary,
-                          disabledContentColor = MaterialTheme.colorScheme.onTertiary)) {
+                      )) {
                     Text(
                         text = stringResource(R.string.go_to_event_page_button),
                         style = MaterialTheme.typography.bodyLarge,
@@ -482,17 +465,19 @@ fun EventSheet(event: Event, onGoToEvent: () -> Unit, onClose: () -> Unit) {
                   }
             }
 
-        Spacer(modifier = Modifier.size(Dimensions.spacerPadding))
+        Spacer(modifier = Modifier.height(spacer))
       }
 }
 
 /** -------------------------------- [ToDo] icons -------------------------------- * */
 
 /**
- * Pin-style ToDo marker icon with rounded pill shape and triangular pointer
+ * Pin-style marker icon for a [ToDo].
  *
- * @param toDo The ToDo data to display in the marker.
- * @param scale Scaling factor based on zoom level to prevent oversized markers when zoomed out.
+ * Uses allowed design-system colors: surfaceVariant/onSurfaceVariant.
+ *
+ * @param toDo The [ToDo] displayed by this marker.
+ * @param scale Optional scaling factor (for future zoom-based sizing).
  */
 @Composable
 fun ToDoIcon(toDo: ToDo, scale: Float = 1f) {
@@ -512,65 +497,65 @@ fun ToDoIcon(toDo: ToDo, scale: Float = 1f) {
 }
 
 /**
- * [ToDo] Sheet displayed when a `toDo` marker is tapped
+ * Bottom sheet shown when a [ToDo] marker is tapped.
  *
- * @param toDo The [ToDo] data to display in the marker.
- * @param onGoToToDo Go to [ToDo] Page when button is clicked.
- * @param onClose closes the sheet when tapped outside.
+ * @param toDo Selected [ToDo].
+ * @param onGoToToDo Called when the CTA button is pressed.
+ * @param onClose Called when the sheet should be dismissed.
  */
 @Composable
 fun ToDoSheet(toDo: ToDo, onGoToToDo: () -> Unit, onClose: () -> Unit) {
-
+  val datePattern = stringResource(R.string.map_date_format)
   val formattedDate =
-      remember(toDo.dueDate) {
-        toDo.dueDate?.let { date ->
-          val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-          sdf.format(date.toDate())
-        } ?: ""
+      remember(toDo.dueDate, datePattern) {
+        toDo.dueDate
+            ?.let { date ->
+              SimpleDateFormat(datePattern, Locale.getDefault()).format(date.toDate())
+            }
+            .orEmpty()
       }
+
+  val sheetPadding = dimensionResource(R.dimen.map_sheet_padding)
+  val textPadding = dimensionResource(R.dimen.map_sheet_text_padding)
+  val spacer = dimensionResource(R.dimen.map_sheet_spacer)
 
   Column(
       modifier =
-          Modifier.fillMaxWidth()
-              .padding(Dimensions.rowColPadding)
-              .testTag(MapScreenTestTags.TODO_SHEET)) {
+          Modifier.fillMaxWidth().padding(sheetPadding).testTag(MapScreenTestTags.TODO_SHEET)) {
         Text(
             text = toDo.name.uppercase(),
             style = MaterialTheme.typography.titleLarge,
             color = MaterialTheme.colorScheme.onBackground,
             modifier = Modifier.testTag(MapScreenTestTags.TODO_TITLE_SHEET))
 
-        Spacer(modifier = Modifier.size(Dimensions.spacerPadding))
+        Spacer(modifier = Modifier.height(spacer))
 
         Text(
-            modifier =
-                Modifier.padding(Dimensions.textPadding).testTag(MapScreenTestTags.TODO_DUE_DATE),
+            modifier = Modifier.padding(textPadding).testTag(MapScreenTestTags.TODO_DUE_DATE),
             text = formattedDate,
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onBackground)
+
         Text(
-            modifier =
-                Modifier.padding(Dimensions.textPadding)
-                    .testTag(MapScreenTestTags.TODO_DESCRIPTION),
+            modifier = Modifier.padding(textPadding).testTag(MapScreenTestTags.TODO_DESCRIPTION),
             text = toDo.description,
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onBackground)
 
-        Spacer(modifier = Modifier.size(Dimensions.spacerPadding))
+        Spacer(modifier = Modifier.height(spacer))
 
         Row(
-            modifier = Modifier.padding(Dimensions.rowColPadding),
+            modifier = Modifier.padding(sheetPadding),
             verticalAlignment = Alignment.CenterVertically) {
               Button(
                   modifier =
-                      Modifier.weight(Dimensions.weight).testTag(MapScreenTestTags.TODO_BUTTON),
+                      Modifier.weight(FULL_WIDTH_WEIGHT).testTag(MapScreenTestTags.TODO_BUTTON),
                   onClick = onGoToToDo,
                   colors =
-                      ButtonColors(
+                      ButtonDefaults.buttonColors(
                           containerColor = MaterialTheme.colorScheme.secondary,
                           contentColor = MaterialTheme.colorScheme.onSecondary,
-                          disabledContainerColor = MaterialTheme.colorScheme.secondary,
-                          disabledContentColor = MaterialTheme.colorScheme.onSecondary)) {
+                      )) {
                     Text(
                         text = stringResource(R.string.go_to_todo_page_button),
                         style = MaterialTheme.typography.bodyLarge,
@@ -578,73 +563,85 @@ fun ToDoSheet(toDo: ToDo, onGoToToDo: () -> Unit, onClose: () -> Unit) {
                   }
             }
 
-        Spacer(modifier = Modifier.size(Dimensions.spacerPadding))
+        Spacer(modifier = Modifier.height(spacer))
       }
 }
 
 /**
  * Reusable pin-style marker UI for Google Maps markers.
  *
- * @param title Text shown inside the marker (will be uppercased).
- * @param containerColor Background color of the pill card and the filled triangle.
- * @param contentColor Text color inside the pill card.
- * @param borderColor Color of the border stroke and the triangle border.
+ * Uses dimens resources to avoid magic numbers and keep sizing consistent across markers.
+ *
+ * @param title Text shown inside the marker (uppercased).
+ * @param containerColor Background of the pill + filled triangle.
+ * @param contentColor Text color inside the pill.
+ * @param borderColor Border stroke color (pill + triangle border).
  * @param cardTestTag Test tag applied to the marker container.
- * @param titleTestTag Test tag applied to the title Text.
- * @param scale Multiplier applied to sizes (width, height, padding, border thickness, triangle
- *   size).
+ * @param titleTestTag Test tag applied to the title [Text].
+ * @param scale Optional multiplier applied to the marker sizes.
  */
 @Composable
 private fun PinMarkerIcon(
     title: String,
-    containerColor: androidx.compose.ui.graphics.Color,
-    contentColor: androidx.compose.ui.graphics.Color,
-    borderColor: androidx.compose.ui.graphics.Color,
+    containerColor: Color,
+    contentColor: Color,
+    borderColor: Color,
     cardTestTag: String,
     titleTestTag: String,
     scale: Float = 1f,
 ) {
+  val markerWidth = dimensionResource(R.dimen.map_marker_width) * scale
+  val markerHeight = dimensionResource(R.dimen.map_marker_height_collapsed) * scale
+  val cornerRadius = dimensionResource(R.dimen.map_marker_corner_radius) * scale
+  val elevation = dimensionResource(R.dimen.map_marker_elevation) * scale
+  val borderWidth = dimensionResource(R.dimen.map_marker_border_width) * scale
+  val triW = dimensionResource(R.dimen.map_marker_triangle_width) * scale
+  val triH = dimensionResource(R.dimen.map_marker_triangle_height) * scale
+  val padH = dimensionResource(R.dimen.map_marker_horizontal_padding) * scale
+  val padV = dimensionResource(R.dimen.map_marker_vertical_padding) * scale
+
   Column(
       horizontalAlignment = Alignment.CenterHorizontally,
       modifier = Modifier.testTag(cardTestTag)) {
         Card(
-            border = BorderStroke(2.dp * scale, borderColor),
-            shape = RoundedCornerShape(12.dp),
+            border = BorderStroke(borderWidth, borderColor),
+            shape = RoundedCornerShape(cornerRadius),
             colors =
                 CardDefaults.cardColors(
                     containerColor = containerColor, contentColor = contentColor),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-            modifier = Modifier.size(width = 180.dp * scale, height = 50.dp * scale)) {
-              Column(
-                  modifier = Modifier.padding(horizontal = 16.dp * scale, vertical = 12.dp * scale),
-                  horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(
-                        text = title.uppercase(),
-                        style =
-                            MaterialTheme.typography.bodyLarge.copy(
-                                fontSize = MaterialTheme.typography.bodyLarge.fontSize * scale),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        color = contentColor,
-                        fontWeight = FontWeight.Medium,
-                        modifier = Modifier.fillMaxWidth().testTag(titleTestTag))
-                  }
-            }
+            elevation = CardDefaults.cardElevation(defaultElevation = elevation),
+            modifier = Modifier.size(width = markerWidth, height = markerHeight),
+        ) {
+          Column(
+              modifier = Modifier.padding(horizontal = padH, vertical = padV),
+              horizontalAlignment = Alignment.CenterHorizontally,
+          ) {
+            Text(
+                text = title.uppercase(Locale.getDefault()),
+                style = MaterialTheme.typography.bodyLarge,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                color = contentColor,
+                fontWeight = FontWeight.Medium,
+                modifier = Modifier.fillMaxWidth().testTag(titleTestTag),
+            )
+          }
+        }
 
-        Canvas(modifier = Modifier.size(width = 24.dp * scale, height = 14.dp * scale)) {
+        Canvas(modifier = Modifier.size(width = triW, height = triH)) {
           val borderPath =
               Path().apply {
-                moveTo(size.width / 2, size.height)
+                moveTo(size.width / 2f, size.height)
                 lineTo(0f, 0f)
                 lineTo(size.width, 0f)
                 close()
               }
           drawPath(borderPath, color = borderColor)
 
+          val inset = borderWidth.toPx()
           val fillPath =
               Path().apply {
-                val inset = (2.dp * scale).toPx()
-                moveTo(size.width / 2, size.height - inset)
+                moveTo(size.width / 2f, size.height - inset)
                 lineTo(inset, 0f)
                 lineTo(size.width - inset, 0f)
                 close()

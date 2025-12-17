@@ -152,4 +152,19 @@
     <dimen name="focus_session_history_vertical_padding">8.dp</dimen>
     <dimen name="focus_session_history_horizontal_padding">16.dp</dimen>
     <dimen name="focus_session_history_button_height">35.dp</dimen>
+
+    <!-- Map Screen -->
+    <dimen name="map_marker_width">180dp</dimen>
+    <dimen name="map_marker_height_collapsed">50dp</dimen>
+    <dimen name="map_marker_corner_radius">12dp</dimen>
+    <dimen name="map_marker_border_width">2dp</dimen>
+    <dimen name="map_marker_elevation">4dp</dimen>
+    <dimen name="map_marker_triangle_width">24dp</dimen>
+    <dimen name="map_marker_triangle_height">14dp</dimen>
+    <dimen name="map_marker_horizontal_padding">16dp</dimen>
+    <dimen name="map_marker_vertical_padding">12dp</dimen>
+    <dimen name="map_sheet_padding">16dp</dimen>
+    <dimen name="map_sheet_text_padding">8dp</dimen>
+    <dimen name="map_sheet_spacer">20dp</dimen>
+    <dimen name="map_loading_spacer">16dp</dimen>
 </resources>
