@@ -1,19 +1,15 @@
 package com.android.gatherly.utils
 
-import androidx.activity.ComponentActivity
 import androidx.compose.ui.test.SemanticsMatcher
-import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasAnyDescendant
 import androidx.compose.ui.test.hasTestTag
-import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
-import androidx.test.ext.junit.rules.ActivityScenarioRule
 import com.android.gatherly.model.map.Location
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
@@ -21,12 +17,9 @@ import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.ui.todo.AddToDoScreenTestTags
 import com.android.gatherly.ui.todo.EditToDoScreenTestTags
-import com.android.gatherly.ui.todo.LocationSuggestionsTestTags
 import com.android.gatherly.ui.todo.OverviewScreenTestTags
 import com.google.firebase.Timestamp
-import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Locale
 import junit.framework.TestCase.assertEquals
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
@@ -36,7 +29,11 @@ import kotlinx.coroutines.test.runTest
 
 const val UI_WAIT_TIMEOUT = 100_000L
 
-/** Base class for Gatherly tests, providing common setup and utility functions. */
+/**
+ * Base class for Gatherly tests, providing common setup and utility functions.
+ *
+ * It includes predefined ToDo items and helper methods for interacting with the UI during tests.
+ */
 abstract class GatherlyTest() {
 
   var repository: ToDosRepository = ToDosLocalRepository()
@@ -74,41 +71,44 @@ abstract class GatherlyTest() {
           status = ToDoStatus.ENDED,
           ownerId = "user")
 
+  /** Enters the title of a ToDo into the EditTodo screen fields. */
   fun ComposeTestRule.enterEditTodoTitle(title: String) {
     onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_TITLE).performTextClearance()
     onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_TITLE).performTextInput(title)
   }
 
+  /** Enters the description of a ToDo into the EditTodo screen fields. */
   fun ComposeTestRule.enterEditTodoDescription(description: String) {
     onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_DESCRIPTION).performTextClearance()
     onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_DESCRIPTION).performTextInput(description)
   }
 
-  fun ComposeTestRule.enterEditTodoDate(date: String) {
-    onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_DATE).performTextClearance()
-    onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_DATE).performTextInput(date)
-  }
-
+  /** Enters the time of a ToDo into the EditTodo screen fields. */
   fun ComposeTestRule.enterEditTodoTime(time: String) {
     onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_TIME).performTextClearance()
     onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_TIME).performTextInput(time)
   }
 
+  /** Enters the location of a ToDo into the EditTodo screen fields. */
   fun ComposeTestRule.enterEditTodoLocation(location: String) {
-    onNodeWithTag(LocationSuggestionsTestTags.INPUT).performTextClearance()
-    onNodeWithTag(LocationSuggestionsTestTags.INPUT).performTextInput(location)
+    onNodeWithTag(ToDoLocationSuggestionsTestTags.INPUT).performTextClearance()
+    onNodeWithTag(ToDoLocationSuggestionsTestTags.INPUT).performTextInput(location)
   }
 
+  /** Clicks the Save button on the EditTodo screen. */
   fun ComposeTestRule.checkErrorMessageIsDisplayedForEditTodo() =
       onNodeWithTag(EditToDoScreenTestTags.ERROR_MESSAGE, useUnmergedTree = true)
           .assertIsDisplayed()
 
+  /** Enters the title of a ToDo into the AddTodo screen fields. */
   fun ComposeTestRule.enterAddTodoTitle(title: String) =
       onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_TITLE).performTextInput(title)
 
+  /** Enters the description of a ToDo into the AddTodo screen fields. */
   fun ComposeTestRule.enterAddTodoDescription(description: String) =
       onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_DESCRIPTION).performTextInput(description)
 
+  /** Enters the date of a ToDo into the AddTodo screen fields. */
   fun ComposeTestRule.enterAddTodoDate(date: String) = {
     openDatePicker(AddToDoScreenTestTags.INPUT_TODO_DATE)
     val parts = date.split("/")
@@ -120,18 +120,22 @@ abstract class GatherlyTest() {
     }
   }
 
+  /** Enters the time of a ToDo into the AddTodo screen fields. */
   fun ComposeTestRule.enterAddTodoTime(time: String) =
       onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_TIME).performTextInput(time)
 
+  /** Enters the location of a ToDo into the AddTodo screen fields. */
   fun ComposeTestRule.enterAddTodoLocation(location: String) =
-      onNodeWithTag(LocationSuggestionsTestTags.INPUT).performTextInput(location)
+      onNodeWithTag(ToDoLocationSuggestionsTestTags.INPUT).performTextInput(location)
 
+  /** Enters all details of a ToDo into the AddTodo screen fields. */
   fun ComposeTestRule.enterAddTodoDetails(todo: ToDo) {
     enterAddTodoTitle(todo.name)
     enterAddTodoDescription(todo.description)
     enterAddTodoLocation(todo.location?.name ?: "Any")
   }
 
+  /** Clicks the Save button on the AddTodo screen. */
   fun ComposeTestRule.clickOnSaveForAddTodo(waitForRedirection: Boolean = false) {
     onNodeWithTag(AddToDoScreenTestTags.TODO_SAVE).assertExists().performClick()
     waitUntil(UI_WAIT_TIMEOUT) {
@@ -140,26 +144,7 @@ abstract class GatherlyTest() {
     }
   }
 
-  private fun ComposeTestRule.waitUntilTodoIsDisplayed(todo: ToDo): SemanticsNodeInteraction {
-    waitUntil(UI_WAIT_TIMEOUT) {
-      onAllNodesWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todo))
-          .fetchSemanticsNodes()
-          .isNotEmpty()
-    }
-    return checkTodoItemIsDisplayed(todo)
-  }
-
-  fun ComposeTestRule.clickOnTodoItem(todo: ToDo) {
-    waitUntilTodoIsDisplayed(todo).performClick()
-  }
-
-  fun ComposeTestRule.checkTodoItemIsDisplayed(todo: ToDo): SemanticsNodeInteraction =
-      onNodeWithTag(OverviewScreenTestTags.getTestTagForTodoItem(todo)).assertIsDisplayed()
-
-  fun ComposeTestRule.checkOverviewScreenIsNotDisplayed() {
-    onNodeWithTag(OverviewScreenTestTags.TODO_LIST).assertDoesNotExist()
-  }
-
+  /** Asserts that a ToDo item is displayed in the ToDo overview screen. */
   fun ComposeTestRule.onTodoItem(todo: ToDo, matcher: SemanticsMatcher) {
     onNode(
             hasTestTag(OverviewScreenTestTags.getTestTagForTodoItem(todo))
@@ -168,41 +153,19 @@ abstract class GatherlyTest() {
         .assertIsDisplayed()
   }
 
+  /** Utility function to check that an error message is displayed on the Add ToDo screen. */
   fun ComposeTestRule.checkErrorMessageIsDisplayedForAddTodo() =
       onNodeWithTag(AddToDoScreenTestTags.ERROR_MESSAGE, useUnmergedTree = true).assertIsDisplayed()
 
+  /** Utility function to check that no ToDo items were added during the execution of an action. */
   fun checkNoTodoWereAdded(action: () -> Unit) {
     val numberOfTodos = runBlocking { repository.getAllTodos().size }
     action()
     runTest { assertEquals(numberOfTodos, repository.getAllTodos().size) }
   }
 
-  fun <A : ComponentActivity> AndroidComposeTestRule<ActivityScenarioRule<A>, A>
-      .checkActivityStateOnPressBack(shouldFinish: Boolean) {
-    activityRule.scenario.onActivity { activity ->
-      activity.onBackPressedDispatcher.onBackPressed()
-    }
-    waitUntil { activity.isFinishing == shouldFinish }
-    assertEquals(shouldFinish, activity.isFinishing)
-  }
-
-  fun ToDo.Equals(other: ToDo): Boolean =
-      name == other.name &&
-          description == other.description &&
-          (dueDate?.toDateString() ?: "") == (other.dueDate?.toDateString() ?: "") &&
-          status == other.status
-
-  fun ToDosRepository.getTodoByName(name: String): ToDo = runBlocking {
-    getAllTodos().first { it.name == name }
-  }
-
   companion object {
-    fun Timestamp.toDateString(): String {
-      val date = this.toDate()
-      val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.ROOT)
-      return dateFormat.format(date)
-    }
-
+    /** Helper function to create a Timestamp from year, month, and day. */
     fun Timestamp.Companion.fromDate(year: Int, month: Int, day: Int): Timestamp {
       val calendar = Calendar.getInstance()
       calendar.set(year, month, day, 0, 0, 0)
