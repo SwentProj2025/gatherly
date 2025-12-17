@@ -40,6 +40,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
+/** Tests for the [AddToDoScreen] composable. */
 class AddTodoScreenTest : GatherlyTest() {
   @get:Rule val composeTestRule = createComposeRule()
 
@@ -74,6 +75,7 @@ class AddTodoScreenTest : GatherlyTest() {
         .performClick()
   }
 
+  /** Test: Verifies that all components are displayed on the Add To-Do screen */
   @Test
   fun displayAllComponents() {
     composeTestRule
@@ -89,6 +91,7 @@ class AddTodoScreenTest : GatherlyTest() {
         .assertIsNotDisplayed()
   }
 
+  /** Test: Verifies that the user can enter a title */
   @Test
   fun canEnterTitle() {
     val text = "title"
@@ -99,6 +102,7 @@ class AddTodoScreenTest : GatherlyTest() {
         .assertIsNotDisplayed()
   }
 
+  /** Test: Verifies that the user can enter a description */
   @Test
   fun canEnterDescription() {
     val text = "description"
@@ -111,6 +115,7 @@ class AddTodoScreenTest : GatherlyTest() {
         .assertIsNotDisplayed()
   }
 
+  /** Test: Verifies that the user can enter a location */
   @Test
   fun canEnterLocation() {
     val text = "location"
@@ -121,6 +126,7 @@ class AddTodoScreenTest : GatherlyTest() {
         .assertIsNotDisplayed()
   }
 
+  /** Test: Verifies that the user can enter a valid date */
   @Test
   fun canEnterAValidDate() {
     composeTestRule.openDatePicker(AddToDoScreenTestTags.INPUT_TODO_DATE)
@@ -131,6 +137,7 @@ class AddTodoScreenTest : GatherlyTest() {
         .assertExists()
   }
 
+  /** Test: Verifies that the user can enter an invalid time */
   @Test
   fun canEnterAValidTime() {
     val text = "14:01"
@@ -138,6 +145,7 @@ class AddTodoScreenTest : GatherlyTest() {
     composeTestRule.onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_TIME).assertTextContains(text)
   }
 
+  /** Test: Verifies that the user can enter an invalid time */
   @Test
   fun canEnterAnInvalidTime() {
     val text = "13:99"
@@ -145,6 +153,7 @@ class AddTodoScreenTest : GatherlyTest() {
     composeTestRule.onNodeWithTag(AddToDoScreenTestTags.INPUT_TODO_TIME).assertTextContains(text)
   }
 
+  /** Test: Verifies that saving a to-do with valid details adds the to-do */
   @Test
   fun savingWithInvalidTitleShouldDoNothing() = checkNoTodoWereAdded {
     composeTestRule.enterAddTodoDetails(todo = todo1.copy(name = " "))
@@ -154,6 +163,7 @@ class AddTodoScreenTest : GatherlyTest() {
     composeTestRule.onNodeWithTag(AddToDoScreenTestTags.TODO_SAVE).assertExists()
   }
 
+  /** Test: Verifies that entering an empty title shows an error message */
   @Test
   fun enteringEmptyTitleShowsErrorMessage() {
     val invalidTitle = " "
@@ -161,6 +171,7 @@ class AddTodoScreenTest : GatherlyTest() {
     composeTestRule.checkErrorMessageIsDisplayedForAddTodo()
   }
 
+  /** Test: Verifies that entering an invalid time shows an error message */
   @Test
   fun enteringInvalidTimeShowsErrorMessage() {
     val invalidTime = "14:61" // Invalid time format
@@ -168,6 +179,7 @@ class AddTodoScreenTest : GatherlyTest() {
     composeTestRule.checkErrorMessageIsDisplayedForAddTodo()
   }
 
+  /** Test: Verifies that entering a past date shows an error dialog */
   @Test
   fun enterPastDate() =
       runTest(timeout = 60.seconds) {
