@@ -15,6 +15,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material3.*
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
@@ -73,6 +75,7 @@ object SettingsScreenTestTags {
   const val STATUS_AUTOMATIC_TITLE = "status_title_automatic"
   const val STATUS_MANUAL_TITLE = "status_title_manual"
   const val BIO_FIELD = "settings_bio_field"
+  const val DELETE_PROFILE_BUTTON = "settings_delete_profile_button"
 }
 
 /**
@@ -103,6 +106,7 @@ fun SettingsScreen(
 
   var showPhotoPickerDialog by remember { mutableStateOf(false) }
   var showStatusDialog by remember { mutableStateOf(false) }
+  var showDeleteProfileDialog by remember { mutableStateOf(false) }
 
   val imageFile = remember { File(context.filesDir, PROFILE_PIC_FILENAME) }
 
@@ -341,6 +345,53 @@ fun SettingsScreen(
                           value = uiState.bio,
                           onValueChange = { settingsViewModel.editBio(it) },
                           testTag = SettingsScreenTestTags.BIO_FIELD)
+
+                      Spacer(modifier = Modifier.height(fieldSpacingRegular))
+
+                      // Delete Profile Button
+                      TextButton(
+                          onClick = { showDeleteProfileDialog = true },
+                          modifier =
+                              Modifier.fillMaxWidth()
+                                  .testTag(SettingsScreenTestTags.DELETE_PROFILE_BUTTON),
+                          colors =
+                              ButtonDefaults.textButtonColors(
+                                  contentColor = MaterialTheme.colorScheme.error)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                              Icon(
+                                  imageVector = Icons.Filled.DeleteForever,
+                                  contentDescription =
+                                      stringResource(R.string.settings_delete_profile_button_text),
+                                  tint = MaterialTheme.colorScheme.error)
+                              Text(
+                                  text =
+                                      stringResource(R.string.settings_delete_profile_button_text),
+                                  color = MaterialTheme.colorScheme.error,
+                                  modifier =
+                                      Modifier.padding(
+                                          start = dimensionResource(id = R.dimen.padding_small)))
+                            }
+                          }
+
+                      // Delete Profile Confirmation Dialog
+                      if (showDeleteProfileDialog) {
+                        GatherlyAlertDialog(
+                            titleText = stringResource(R.string.settings_delete_profile_warning),
+                            bodyText =
+                                stringResource(R.string.settings_delete_profile_warning_text),
+                            dismissText = stringResource(R.string.cancel),
+                            confirmText = stringResource(R.string.delete),
+                            actions =
+                                GatherlyAlertDialogActions(
+                                    onDismiss = { showDeleteProfileDialog = false },
+                                    onConfirm = {
+                                      settingsViewModel.deleteProfile()
+                                      showDeleteProfileDialog = false
+                                      settingsViewModel.signOut(
+                                          credentialManager) // todo check this
+                                    }),
+                            isImportantWarning = true)
+                      }
                     }
 
                 Spacer(modifier = Modifier.height(fieldSpacingMedium))

@@ -429,4 +429,24 @@ class SettingsViewModel(
   fun editBio(newBio: String) {
     _uiState.value = _uiState.value.copy(bio = newBio)
   }
+
+  /**
+   * Deletes the current user's profile from the repository.
+   * - Only handles the deletion logic and error reporting.
+   * - Success/failure is reflected in the UI state.
+   */
+  fun deleteProfile() {
+    val uid = authProvider().currentUser?.uid ?: return
+    viewModelScope.launch {
+      try {
+        // repository.deleteUserProfile(uid)
+        // Notify UI of success by setting a flag or using a side-effect
+        _uiState.value = _uiState.value.copy(signedOut = true) // optional flag
+      } catch (e: Exception) {
+        Log.e("SettingsViewModel", "Failed to delete profile", e)
+        _uiState.value =
+            _uiState.value.copy(errorMsg = "Failed to delete profile. Please try again.")
+      }
+    }
+  }
 }

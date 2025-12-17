@@ -95,7 +95,8 @@ class SettingsScreenTest {
             SettingsScreenTestTags.SCHOOL_YEAR_FIELD,
             SettingsScreenTestTags.SAVE_BUTTON,
             SettingsScreenTestTags.BIO_FIELD,
-            SettingsScreenTestTags.USER_STATUS)
+            SettingsScreenTestTags.USER_STATUS,
+            SettingsScreenTestTags.DELETE_PROFILE_BUTTON)
 
     for (tag in tagsToCheck) {
       composeRule.onNodeWithTag(testTag = tag, useUnmergedTree = true).assertExists()
