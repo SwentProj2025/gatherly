@@ -1,6 +1,5 @@
 package com.android.gatherly.ui.points
 
-import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,8 +21,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -39,7 +40,14 @@ import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_Goback
 import java.text.SimpleDateFormat
+import java.util.Locale
 
+/**
+ * Test tags used in [FocusPointsScreen] for Compose UI testing.
+ *
+ * These tags allow tests to reliably find important UI elements such as the history cards and the
+ * info overlay.
+ */
 object FocusPointsTestTags {
   const val NO_HISTORY = "noHistory"
   const val HISTORY_CARD = "historyCard"
@@ -48,15 +56,27 @@ object FocusPointsTestTags {
   const val DISMISS_BUTTON = "dismissButton"
 }
 
-@SuppressLint("SimpleDateFormat")
+private const val INFO_CARD_SCREEN_FIT = 0.9f
+
+/**
+ * Screen showing how the user earned focus points and a history of point acquisitions.
+ *
+ * The screen displays:
+ * - A header with an info button opening an overlay explaining how to obtain points
+ * - Either an empty state message if no history exists, or a list of history cards otherwise
+ *
+ * @param focusPointsViewModel ViewModel providing the points history state.
+ * @param goBack Callback invoked when the user presses the back button in the top bar.
+ */
 @Composable
 fun FocusPointsScreen(
     focusPointsViewModel: FocusPointsViewModel = viewModel(),
     goBack: () -> Unit = {}
 ) {
 
-  val ui = focusPointsViewModel.uiState.collectAsState()
-  val showInfo = remember { mutableStateOf(false) }
+  val ui by focusPointsViewModel.uiState.collectAsState()
+
+  val showInfo = rememberSaveable { mutableStateOf(false) }
 
   Scaffold(
       topBar = {
@@ -84,7 +104,7 @@ fun FocusPointsScreen(
                     }
               }
 
-          if (ui.value.focusHistory.isEmpty()) {
+          if (ui.focusHistory.isEmpty()) {
             Text(
                 text = stringResource(R.string.focus_points_no_history),
                 color = MaterialTheme.colorScheme.onBackground,
@@ -93,7 +113,7 @@ fun FocusPointsScreen(
                         .padding(dimensionResource(R.dimen.padding_screen)))
           } else {
             LazyColumn(modifier = Modifier.padding(dimensionResource(R.dimen.padding_screen))) {
-              for (points in ui.value.focusHistory) {
+              for (points in ui.focusHistory) {
                 item {
                   Card(
                       colors =
@@ -118,7 +138,11 @@ fun FocusPointsScreen(
 
                               Text(text = reasonText)
 
-                              val sdf = SimpleDateFormat(stringResource(R.string.focus_date_format))
+                              val datePattern = stringResource(R.string.focus_date_format)
+                              val sdf =
+                                  remember(datePattern) {
+                                    SimpleDateFormat(datePattern, Locale.getDefault())
+                                  }
 
                               Text(
                                   text =
@@ -133,7 +157,7 @@ fun FocusPointsScreen(
           }
         }
 
-        val screenFit = 0.9f
+        val screenFit = INFO_CARD_SCREEN_FIT
 
         if (showInfo.value) {
           Box(
@@ -161,7 +185,8 @@ fun FocusPointsScreen(
                                         Modifier.testTag(FocusPointsTestTags.DISMISS_BUTTON)) {
                                       Icon(
                                           imageVector = Icons.Default.Cancel,
-                                          contentDescription = "Dismiss info")
+                                          contentDescription = "Dismiss info",
+                                          tint = MaterialTheme.colorScheme.onSurfaceVariant)
                                     }
                               }
                             }
@@ -200,6 +225,16 @@ fun FocusPointsScreen(
       }
 }
 
+/**
+ * Builds the localized "reason" line shown in each focus points history card.
+ *
+ * Each [Points] entry has a [PointsSource] describing why the points were awarded (timer session,
+ * badge unlock, or leaderboard rank). This function converts that source into a user-facing,
+ * localized string using string resources (and plurals for minutes).
+ *
+ * @param points The focus points entry for which we want to display the awarding reason.
+ * @return A localized string describing why the points were obtained.
+ */
 @Composable
 private fun reasonText(points: Points): String {
   return when (points.reason) {

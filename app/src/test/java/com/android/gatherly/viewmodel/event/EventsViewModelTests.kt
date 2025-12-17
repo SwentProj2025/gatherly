@@ -2,6 +2,8 @@ package com.android.gatherly.viewmodel.event
 
 import com.android.gatherly.model.event.EventsLocalRepository
 import com.android.gatherly.model.event.EventsRepository
+import com.android.gatherly.model.notification.NotificationsLocalRepository
+import com.android.gatherly.model.notification.NotificationsRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.ui.events.EventsViewModel
@@ -34,6 +36,8 @@ class EventsViewModelTests {
   private val testDispatcher = UnconfinedTestDispatcher()
   private lateinit var repo: EventsRepository
 
+  private lateinit var notificationsRepo: NotificationsRepository
+
   private lateinit var profileRepo: ProfileLocalRepository
   private lateinit var vm: EventsViewModel
   private lateinit var mockitoUtils: MockitoUtils
@@ -44,6 +48,7 @@ class EventsViewModelTests {
     Dispatchers.setMain(testDispatcher)
     repo = EventsLocalRepository()
     profileRepo = ProfileLocalRepository()
+    notificationsRepo = NotificationsLocalRepository()
     fillRepository()
 
     // Mock Firebase Auth
@@ -54,7 +59,8 @@ class EventsViewModelTests {
         EventsViewModel(
             profileRepository = profileRepo,
             eventsRepository = repo,
-            authProvider = { mockitoUtils.mockAuth })
+            authProvider = { mockitoUtils.mockAuth },
+            notificationsRepository = notificationsRepo)
   }
 
   @After

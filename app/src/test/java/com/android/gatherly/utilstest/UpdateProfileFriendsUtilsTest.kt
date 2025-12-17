@@ -7,7 +7,7 @@ import com.android.gatherly.model.points.PointsLocalRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.runUnconfinedTest
-import com.android.gatherly.utils.getProfileWithSyncedFriendNotifications
+import com.android.gatherly.utils.getProfileWithSyncedNotifications
 import com.google.firebase.Timestamp
 import kotlin.time.Duration.Companion.seconds
 import org.junit.Assert.*
@@ -49,8 +49,7 @@ class UpdateProfileFriendsUtilsTest {
                 wasRead = false)
         notifs.addNotification(notif)
 
-        val updated =
-            getProfileWithSyncedFriendNotifications(profiles, notifs, pointsRepository, "u1")
+        val updated = getProfileWithSyncedNotifications(profiles, notifs, pointsRepository, "u1")
 
         assertNotNull(updated)
         assertTrue(updated!!.friendUids.contains("u2"))
@@ -86,8 +85,7 @@ class UpdateProfileFriendsUtilsTest {
                 wasRead = false)
         notifs.addNotification(notif)
 
-        val updated =
-            getProfileWithSyncedFriendNotifications(profiles, notifs, pointsRepository, "u1")
+        val updated = getProfileWithSyncedNotifications(profiles, notifs, pointsRepository, "u1")
 
         assertNotNull(updated)
         assertTrue(updated!!.friendUids.isEmpty())
@@ -121,8 +119,7 @@ class UpdateProfileFriendsUtilsTest {
                 wasRead = false)
         notifs.addNotification(notif)
 
-        val updated =
-            getProfileWithSyncedFriendNotifications(profiles, notifs, pointsRepository, "u1")
+        val updated = getProfileWithSyncedNotifications(profiles, notifs, pointsRepository, "u1")
 
         assertNotNull(updated)
         assertTrue(updated!!.friendUids.isEmpty())
@@ -154,8 +151,7 @@ class UpdateProfileFriendsUtilsTest {
                 wasRead = false)
         notifs.addNotification(notif)
 
-        val updated =
-            getProfileWithSyncedFriendNotifications(profiles, notifs, pointsRepository, "u1")!!
+        val updated = getProfileWithSyncedNotifications(profiles, notifs, pointsRepository, "u1")!!
 
         assertTrue(updated.friendUids.contains("u2"))
         assertFalse(updated.pendingSentFriendsUids.contains("u2"))
@@ -185,8 +181,7 @@ class UpdateProfileFriendsUtilsTest {
                 wasRead = false)
         notifs.addNotification(notif)
 
-        val updated =
-            getProfileWithSyncedFriendNotifications(profiles, notifs, pointsRepository, "u1")!!
+        val updated = getProfileWithSyncedNotifications(profiles, notifs, pointsRepository, "u1")!!
 
         assertFalse(updated.friendUids.contains("u2"))
         assertFalse(updated.pendingSentFriendsUids.contains("u2"))
@@ -219,8 +214,7 @@ class UpdateProfileFriendsUtilsTest {
                 wasRead = false)
         notifs.addNotification(notif)
 
-        val updated =
-            getProfileWithSyncedFriendNotifications(profiles, notifs, pointsRepository, "u1")!!
+        val updated = getProfileWithSyncedNotifications(profiles, notifs, pointsRepository, "u1")!!
 
         assertFalse(updated.friendUids.contains("u2"))
 
@@ -274,8 +268,9 @@ class UpdateProfileFriendsUtilsTest {
         notifs.addNotification(request)
         notifs.addNotification(cancel)
 
+        // Sync u2’s profile with its notifications
         val updatedU2 =
-            getProfileWithSyncedFriendNotifications(profiles, notifs, pointsRepository, "u2")!!
+            getProfileWithSyncedNotifications(profiles, notifs, pointsRepository, "u2")!!
 
         try {
           notifs.getNotification("req1")

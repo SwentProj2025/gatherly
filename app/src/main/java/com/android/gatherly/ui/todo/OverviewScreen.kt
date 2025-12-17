@@ -71,6 +71,7 @@ import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu
+import com.android.gatherly.utils.LoadingAnimation
 import com.android.gatherly.utils.priorityLevelColor
 import java.util.Locale
 
@@ -158,13 +159,13 @@ fun OverviewScreen(
   Scaffold(
       topBar = {
         TopNavigationMenu(
-            selectedTab = Tab.Overview,
+            selectedTab = Tab.TodoOverview,
             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
             modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU))
       },
       bottomBar = {
         BottomNavigationMenu(
-            selectedTab = Tab.Overview,
+            selectedTab = Tab.TodoOverview,
             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
             modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU))
       },
@@ -181,9 +182,7 @@ fun OverviewScreen(
       },
       content = { pd ->
         if (uiState.isLoading) {
-          Box(contentAlignment = Alignment.Center) {
-            Text(modifier = Modifier.padding(pd), text = stringResource(R.string.todos_loading))
-          }
+          LoadingAnimation(stringResource(R.string.loading_todos), pd)
         } else {
           Box(
               modifier =

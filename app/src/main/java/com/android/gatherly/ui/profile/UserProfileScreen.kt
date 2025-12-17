@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -36,6 +35,7 @@ import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu
+import com.android.gatherly.utils.LoadingAnimation
 
 object UserProfileScreenTestTags {
   const val PROFILE_PICTURE = "userProfile_profilePicture"
@@ -97,11 +97,7 @@ fun UserProfileScreen(
       content = { padding ->
         when {
           uiState.isLoading -> {
-            Box(
-                modifier = Modifier.fillMaxSize().padding(padding),
-                contentAlignment = Alignment.Center) {
-                  CircularProgressIndicator()
-                }
+            LoadingAnimation(stringResource(R.string.loading_user_profile_message), padding)
           }
           profile == null -> {
             Box(

@@ -19,7 +19,7 @@ import kotlinx.coroutines.launch
 /** UI state for the Badge ViewModel */
 data class UIState(
     val badgesByType: Map<BadgeType, List<BadgeUI>> = emptyMap(),
-    val isLoading: Boolean = false,
+    val isLoading: Boolean = true,
 )
 
 /**
@@ -51,10 +51,14 @@ class BadgeViewModel(
   /** Load the user's profile and it's badgeIds list to get the UI state */
   private fun loadUserBadges() {
     viewModelScope.launch {
-      val uid = authProvider().currentUser?.uid ?: return@launch
-      val profile = repository.getProfileByUid(uid) ?: return@launch
-
-      _uiState.value = buildUiStateFromProfile(profile)
+      val uid =
+          authProvider().currentUser?.uid
+              ?: run {
+                _uiState.value = _uiState.value.copy(isLoading = true, badgesByType = emptyMap())
+                return@launch
+              }
+      val profile = repository.getProfileByUid(uid)
+      buildUiStateFromProfile(profile)
     }
   }
 
@@ -65,55 +69,57 @@ class BadgeViewModel(
    *
    * @param profile the user's profile
    */
-  private fun buildUiStateFromProfile(profile: Profile): UIState {
+  private fun buildUiStateFromProfile(profile: Profile?) {
+    _uiState.value = _uiState.value.copy(isLoading = true)
 
-    val userBadges: List<Badge> =
-        profile.badgeIds.mapNotNull { badgeId -> Badge.entries.firstOrNull { it.id == badgeId } }
+    if (profile == null) {
+      _uiState.value = _uiState.value.copy(isLoading = false, badgesByType = emptyMap())
+    } else {
+      val userBadges: List<Badge> =
+          profile.badgeIds.mapNotNull { badgeId -> Badge.entries.firstOrNull { it.id == badgeId } }
 
-    val highestRankByType: Map<BadgeType, BadgeRank?> =
-        BadgeType.entries.associateWith { type ->
-          userBadges.filter { it.type == type }.maxByOrNull { it.rank.ordinal }?.rank
-        }
+      val highestRankByType: Map<BadgeType, BadgeRank?> =
+          BadgeType.entries.associateWith { type ->
+            userBadges.filter { it.type == type }.maxByOrNull { it.rank.ordinal }?.rank
+          }
 
-    val badgesByType: Map<BadgeType, List<BadgeUI>> =
-        BadgeType.entries.associateWith { type ->
-          val highestRank = highestRankByType[type]
-          val blankIcon = type.blankIconRes()
+      val badgesByType: Map<BadgeType, List<BadgeUI>> =
+          BadgeType.entries.associateWith { type ->
+            val highestRank = highestRankByType[type]
+            val blankIcon = type.blankIconRes()
 
-          val allBadgesOfType =
-              Badge.entries.filter { it.type == type }.sortedBy { it.rank.ordinal }
+            val allBadgesOfType =
+                Badge.entries.filter { it.type == type }.sortedBy { it.rank.ordinal }
 
-          val obtainedBadges: List<Badge> =
-              if (highestRank == null) {
-                emptyList()
-              } else {
-                allBadgesOfType.filter { it.rank.ordinal <= highestRank.ordinal }
-              }
+            val obtainedBadges: List<Badge> =
+                if (highestRank == null) {
+                  emptyList()
+                } else {
+                  allBadgesOfType.filter { it.rank.ordinal <= highestRank.ordinal }
+                }
 
-          val nextLockedBadge: Badge? =
-              if (highestRank == null) {
-                allBadgesOfType.firstOrNull()
-              } else {
-                allBadgesOfType.firstOrNull { it.rank.ordinal > highestRank.ordinal }
-              }
+            val nextLockedBadge: Badge? =
+                if (highestRank == null) {
+                  allBadgesOfType.firstOrNull()
+                } else {
+                  allBadgesOfType.firstOrNull { it.rank.ordinal > highestRank.ordinal }
+                }
 
-          val obtainedUi: List<BadgeUI> =
-              obtainedBadges.map { badge ->
-                BadgeUI(title = badge.title, description = badge.description, icon = badge.iconRes)
-              }
+            val obtainedUi: List<BadgeUI> =
+                obtainedBadges.map { badge ->
+                  BadgeUI(
+                      title = badge.title, description = badge.description, icon = badge.iconRes)
+                }
 
-          val lockedUi: BadgeUI? =
-              nextLockedBadge?.let {
-                BadgeUI(title = lockedBadgeText, description = lockedBadgeText, icon = blankIcon)
-              }
+            val lockedUi: BadgeUI? =
+                nextLockedBadge?.let {
+                  BadgeUI(title = lockedBadgeText, description = lockedBadgeText, icon = blankIcon)
+                }
 
-          if (lockedUi != null) obtainedUi + lockedUi else obtainedUi
-        }
-
-    return UIState(
-        badgesByType = badgesByType,
-        isLoading = false,
-    )
+            if (lockedUi != null) obtainedUi + lockedUi else obtainedUi
+          }
+      _uiState.value = _uiState.value.copy(isLoading = false, badgesByType = badgesByType)
+    }
   }
 
   /**
