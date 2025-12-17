@@ -27,16 +27,16 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 /**
- * UI model for the Friends screen.
+ * UI model for the Friends screens.
  *
- * @property errorMsg optional message to display on network or logic errors
- * @property friends list of usernames that are confirmed friends
- * @property listNoFriends list of usernames that are not friends
- * @property pendingSentUsernames usernames for which the current user has sent a pending friend
- *   request
- * @property currentUserId the uid of the logged-in user
- * @property isLoading controls the loading indicator
- * @property profiles cached map of usernames to Profile for quick UI access
+ * @property errorMsg Optional message to display on errors.
+ * @property friends Usernames that are confirmed friends.
+ * @property listNoFriends Usernames that are not friends (and are signed-in users).
+ * @property pendingSentUsernames Usernames for which the current user has a pending outgoing friend
+ *   request.
+ * @property currentUserId UID of the logged-in user.
+ * @property isLoading Controls loading indicators in the UI.
+ * @property profiles Cached map of usernames to [Profile] for quick UI access.
  */
 data class FriendsUIState(
     val errorMsg: String? = null,
@@ -136,7 +136,7 @@ class FriendsViewModel(
       try {
         repository.deleteFriend(friend, currentUserId)
         refreshFriends(currentUserId)
-      } catch (e: Exception) {
+      } catch (_: Exception) {
         _uiState.value =
             _uiState.value.copy(friends = currentFriends, errorMsg = "Error failed to unfollow.")
       }
@@ -162,7 +162,7 @@ class FriendsViewModel(
       try {
         addFriendWithPointsCheck(repository, pointsRepository, friend, currentUserId)
         refreshFriends(currentUserId)
-      } catch (e: Exception) {
+      } catch (_: Exception) {
         _uiState.value =
             _uiState.value.copy(friends = currentFriends, errorMsg = "Error failed to follow.")
       }
@@ -204,7 +204,7 @@ class FriendsViewModel(
                 recipientId = friendUserId,
                 wasRead = false))
         refreshFriends(currentUserId)
-      } catch (e: Exception) {
+      } catch (_: Exception) {
         _uiState.value = _uiState.value.copy(errorMsg = "Failed to send friend request")
       }
     }
@@ -243,7 +243,7 @@ class FriendsViewModel(
                 wasRead = false))
 
         refreshFriends(currentUserId)
-      } catch (e: Exception) {
+      } catch (_: Exception) {
         _uiState.value = _uiState.value.copy(errorMsg = "Failed to remove friend")
       }
     }
@@ -275,12 +275,18 @@ class FriendsViewModel(
                 relatedEntityId = null,
                 wasRead = false))
         refreshFriends(currentUserId)
-      } catch (e: Exception) {
+      } catch (_: Exception) {
         _uiState.value = _uiState.value.copy(errorMsg = "Failed to cancel friend request")
       }
     }
   }
 
+  /**
+   * Filters friends and pending lists client-side (no repository access).
+   *
+   * This uses the cached "full" lists [allFriendsCache] and [allPendingCache] as the source of
+   * truth.
+   */
   fun searchFriends(query: String) {
     val normalized = query.trim().lowercase()
     if (normalized.isEmpty()) {
@@ -305,7 +311,6 @@ class FriendsViewModel(
         notificationsRepository: NotificationsRepository =
             NotificationsRepositoryProvider.repository,
         pointsRepository: PointsRepository = PointsRepositoryProvider.repository,
-        currentUserId: String = Firebase.auth.currentUser?.uid ?: ""
     ): ViewModelProvider.Factory {
       return GenericViewModelFactory {
         FriendsViewModel(profileRepository, notificationsRepository, pointsRepository)
