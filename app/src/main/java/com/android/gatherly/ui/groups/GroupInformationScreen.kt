@@ -201,7 +201,7 @@ fun EditButton(uiState: GroupInformationUIState, navigationActions: NavigationAc
   if (uiState.isAdmin) {
     // Edit group button
     Button(
-        onClick = { navigationActions?.navigateTo(Screen.EditGroup(uiState.group.gid)) },
+        onClick = { navigationActions?.navigateTo(Screen.EditGroupScreen(uiState.group.gid)) },
         modifier =
             Modifier.padding(all = dimensionResource(R.dimen.add_group_button_vertical))
                 .fillMaxWidth()

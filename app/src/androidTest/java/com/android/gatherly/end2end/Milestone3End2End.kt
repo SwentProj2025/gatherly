@@ -130,7 +130,7 @@ class Milestone3End2End : FirestoreGatherlyTest() {
    * logout tab, to sign out.
    */
   private fun signOutFromHomePage() {
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).performClick()
 
     composeTestRule.waitUntil(TIMEOUT) {
       composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).isDisplayed()
@@ -138,7 +138,7 @@ class Milestone3End2End : FirestoreGatherlyTest() {
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
     composeTestRule.checkProfileScreenIsDisplayed()
 
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).performClick()
 
     composeTestRule.waitUntil(TIMEOUT) {
       composeTestRule.onNodeWithTag(NavigationTestTags.LOGOUT_TAB).isDisplayed()
@@ -230,7 +230,7 @@ class Milestone3End2End : FirestoreGatherlyTest() {
    */
   private fun acceptFriendRequest(username: String) {
     composeTestRule.checkHomePageScreenCorrectlyDisplayed()
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.NOTIFICATIONS_TAB).performClick()
     composeTestRule.checkNotificationScreenIsDisplayed()
     composeTestRule.checkNotificationFriendsRequestIsDisplayed()

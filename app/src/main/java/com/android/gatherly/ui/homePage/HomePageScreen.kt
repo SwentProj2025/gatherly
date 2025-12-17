@@ -342,7 +342,7 @@ fun MiniMap(
                       state = rememberMarkerState(position = LatLng(loc.latitude, loc.longitude)),
                       onClick = {
                         coordinator.requestCenterOnTodo(todo.uid)
-                        navigationActions?.navigateTo(Screen.Map)
+                        navigationActions?.navigateTo(Screen.MapScreen)
                         true
                       }) {
                         ToDoIcon(todo)
@@ -359,7 +359,7 @@ fun MiniMap(
                       state = rememberMarkerState(position = LatLng(loc.latitude, loc.longitude)),
                       onClick = {
                         coordinator.requestCenterOnEvent(event.id)
-                        navigationActions?.navigateTo(Screen.Map)
+                        navigationActions?.navigateTo(Screen.MapScreen)
                         true
                       }) {
                         EventIcon(event)

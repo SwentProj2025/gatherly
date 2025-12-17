@@ -228,6 +228,11 @@
     <string name="friend_requests_notification_text">sent you a friend request.</string>
     <string name="friend_requests_notification_button_title">Visit Profile</string>
     <string name="friend_requests_accept_button_text">Accept</string>
+    <string name="notification_reminder_user">You</string>
+    <string name="notification_event_reminder">have an upcoming event.</string>
+    <string name="notification_todo_reminder">have an upcoming deadline.</string>
+    <string name="notification_group_added">has added you to a group.</string>
+    <string name="notification_event_added">has added you to an event.</string>
     <string name="friend_requests_reject_button_text">Reject</string>
 
     <!-- Friends Screen -->
@@ -302,6 +307,10 @@
     <string name="group_member_set_admin">Set as admin</string>
     <string name="edit_group_button">Save changes</string>
     <string name="group_delete_button">Delete group</string>
+
+    <!-- Map Screen -->
+    <string name="map_date_format">dd/MM/yyyy</string>
+
 
     <!-- Loading messages -->
     <string name="loading_badges_message">Loading your badges…</string>
