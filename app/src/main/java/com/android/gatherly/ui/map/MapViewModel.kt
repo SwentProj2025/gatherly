@@ -198,10 +198,12 @@ class MapViewModel(
    * This suspends until initial data loading is complete to ensure lookups can succeed, then sets
    * [UIState.cameraPos] based on [fetchLocationToCenterOn].
    */
-  suspend fun initialiseCameraPosition(context: Context) {
-    loadingDataJob?.join()
-    val pos = fetchLocationToCenterOn(context)
-    _uiState.update { it.copy(cameraPos = pos) }
+  fun initialiseCameraPosition(context: Context) {
+    viewModelScope.launch {
+      loadingDataJob?.join()
+      val pos = fetchLocationToCenterOn(context)
+      _uiState.update { it.copy(cameraPos = pos) }
+    }
   }
 
   /**

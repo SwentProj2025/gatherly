@@ -335,8 +335,7 @@ fun MapScreen(
                     vm.onItemConsulted(selectedEvent.id)
                     vm.clearSelection()
                     goToEvent(selectedEvent.id)
-                  },
-                  onClose = { vm.clearSelection() })
+                  })
             }
           } else if (selectedToDo != null) {
             ModalBottomSheet(sheetState = sheetState, onDismissRequest = { vm.clearSelection() }) {
@@ -347,8 +346,7 @@ fun MapScreen(
                     vm.onItemConsulted(selectedToDo.uid)
                     vm.clearSelection()
                     goToToDo()
-                  },
-                  onClose = { vm.clearSelection() })
+                  })
             }
           }
         } else {
@@ -407,10 +405,9 @@ fun EventIcon(event: Event, scale: Float = 1f) {
  *
  * @param event Selected [Event].
  * @param onGoToEvent Called when the CTA button is pressed.
- * @param onClose Called when the sheet should be dismissed.
  */
 @Composable
-fun EventSheet(event: Event, onGoToEvent: () -> Unit, onClose: () -> Unit) {
+fun EventSheet(event: Event, onGoToEvent: () -> Unit) {
   val datePattern = stringResource(R.string.map_date_format)
   val formattedDate =
       remember(event.date, datePattern) {
@@ -501,10 +498,9 @@ fun ToDoIcon(toDo: ToDo, scale: Float = 1f) {
  *
  * @param toDo Selected [ToDo].
  * @param onGoToToDo Called when the CTA button is pressed.
- * @param onClose Called when the sheet should be dismissed.
  */
 @Composable
-fun ToDoSheet(toDo: ToDo, onGoToToDo: () -> Unit, onClose: () -> Unit) {
+fun ToDoSheet(toDo: ToDo, onGoToToDo: () -> Unit) {
   val datePattern = stringResource(R.string.map_date_format)
   val formattedDate =
       remember(toDo.dueDate, datePattern) {
