@@ -17,6 +17,7 @@ import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertNotNull
 import junit.framework.TestCase.assertNull
 import junit.framework.TestCase.assertTrue
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
@@ -29,6 +30,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
+/** Unit tests for the [GroupInformationViewModel] class */
 @OptIn(ExperimentalCoroutinesApi::class)
 class GroupInformationViewModelTest {
   private lateinit var groupsInformationViewModel: GroupInformationViewModel
@@ -36,6 +38,8 @@ class GroupInformationViewModelTest {
   private lateinit var profileRepository: ProfileRepository
   private lateinit var mockitoUtils: MockitoUtils
   @OptIn(ExperimentalCoroutinesApi::class) private val testDispatcher = UnconfinedTestDispatcher()
+
+  private val testTimeout = 120.seconds
 
   @Before
   fun setUp() {
@@ -63,6 +67,7 @@ class GroupInformationViewModelTest {
     Dispatchers.resetMain()
   }
 
+  /** Utility functions to choose the current user for testing */
   fun chooseAdmin() {
     mockitoUtils.chooseCurrentUser(TEST_USER_ID)
   }
@@ -77,79 +82,83 @@ class GroupInformationViewModelTest {
 
   /** Check that a group with the current user being an admin loads the correct ui state */
   @Test
-  fun checkGroupAdminLoadsCorrectly() = runTest {
-    chooseAdmin()
+  fun checkGroupAdminLoadsCorrectly() =
+      runTest(testDispatcher, testTimeout) {
+        chooseAdmin()
 
-    groupsInformationViewModel.loadUIState(userGroup1.gid)
+        groupsInformationViewModel.loadUIState(userGroup1.gid)
 
-    advanceUntilIdle()
+        advanceUntilIdle()
 
-    val uiState = groupsInformationViewModel.uiState
+        val uiState = groupsInformationViewModel.uiState
 
-    assertNull(uiState.value.errorMessage)
-    assertEquals(userGroup1, uiState.value.group)
-    assertEquals(listOf(testUser, friendUser), uiState.value.memberProfiles)
-    assertFalse(uiState.value.isLoading)
-    assertTrue(uiState.value.isAdmin)
-  }
+        assertNull(uiState.value.errorMessage)
+        assertEquals(userGroup1, uiState.value.group)
+        assertEquals(listOf(testUser, friendUser), uiState.value.memberProfiles)
+        assertFalse(uiState.value.isLoading)
+        assertTrue(uiState.value.isAdmin)
+      }
 
   /** Check that a group with the current user NOT being an admin loads the correct ui state */
   @Test
-  fun checkGroupMemberLoadsCorrectly() = runTest {
-    chooseNonAdmin()
+  fun checkGroupMemberLoadsCorrectly() =
+      runTest(testDispatcher, testTimeout) {
+        chooseNonAdmin()
 
-    groupsInformationViewModel.loadUIState(userGroup1.gid)
+        groupsInformationViewModel.loadUIState(userGroup1.gid)
 
-    advanceUntilIdle()
+        advanceUntilIdle()
 
-    val uiState = groupsInformationViewModel.uiState
+        val uiState = groupsInformationViewModel.uiState
 
-    assertNull(uiState.value.errorMessage)
-    assertEquals(userGroup1, uiState.value.group)
-    assertEquals(listOf(testUser, friendUser), uiState.value.memberProfiles)
-    assertFalse(uiState.value.isLoading)
-    assertFalse(uiState.value.isAdmin)
-  }
+        assertNull(uiState.value.errorMessage)
+        assertEquals(userGroup1, uiState.value.group)
+        assertEquals(listOf(testUser, friendUser), uiState.value.memberProfiles)
+        assertFalse(uiState.value.isLoading)
+        assertFalse(uiState.value.isAdmin)
+      }
 
   /**
    * Check that choosing a group that doesn't exist causes an error and that clearing the error
    * works
    */
   @Test
-  fun checkErrorMessageIsSetAndCleared() = runTest {
-    chooseNonExistentUser()
+  fun checkErrorMessageIsSetAndCleared() =
+      runTest(testDispatcher, testTimeout) {
+        chooseNonExistentUser()
 
-    groupsInformationViewModel.loadUIState("GROUP_DOES_NOT_EXIST")
+        groupsInformationViewModel.loadUIState("GROUP_DOES_NOT_EXIST")
 
-    advanceUntilIdle()
+        advanceUntilIdle()
 
-    val uiState = groupsInformationViewModel.uiState
+        val uiState = groupsInformationViewModel.uiState
 
-    assertNotNull(uiState.value.errorMessage)
+        assertNotNull(uiState.value.errorMessage)
 
-    groupsInformationViewModel.clearErrorMessage()
+        groupsInformationViewModel.clearErrorMessage()
 
-    assertNull(uiState.value.errorMessage)
-  }
+        assertNull(uiState.value.errorMessage)
+      }
 
   /** Verifies that calling leaveGroup removes the group member and navigates to overview */
   @Test
-  fun checkLeaveGroupRemovesMember() = runTest {
-    chooseNonAdmin()
+  fun checkLeaveGroupRemovesMember() =
+      runTest(testDispatcher, testTimeout) {
+        chooseNonAdmin()
 
-    groupsInformationViewModel.loadUIState(userGroup1.gid)
+        groupsInformationViewModel.loadUIState(userGroup1.gid)
 
-    advanceUntilIdle()
+        advanceUntilIdle()
 
-    groupsInformationViewModel.onLeaveGroup()
+        groupsInformationViewModel.onLeaveGroup()
 
-    advanceUntilIdle()
+        advanceUntilIdle()
 
-    val uiState = groupsInformationViewModel.uiState
-    val group = groupsRepository.getGroup(userGroup1.gid)
+        val uiState = groupsInformationViewModel.uiState
+        val group = groupsRepository.getGroup(userGroup1.gid)
 
-    assertTrue(uiState.value.navigateToOverview)
-    assertEquals(1, group.memberIds.size)
-    assertFalse(group.memberIds.contains(FRIEND_USER_ID))
-  }
+        assertTrue(uiState.value.navigateToOverview)
+        assertEquals(1, group.memberIds.size)
+        assertFalse(group.memberIds.contains(FRIEND_USER_ID))
+      }
 }

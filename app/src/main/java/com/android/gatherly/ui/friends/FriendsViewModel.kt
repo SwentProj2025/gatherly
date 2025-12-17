@@ -14,7 +14,7 @@ import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.android.gatherly.utils.GenericViewModelFactory
 import com.android.gatherly.utils.addFriendWithPointsCheck
-import com.android.gatherly.utils.getProfileWithSyncedFriendNotifications
+import com.android.gatherly.utils.getProfileWithSyncedNotifications
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.ktx.auth
@@ -86,7 +86,7 @@ class FriendsViewModel(
   suspend fun refreshFriends(currentUserId: String) {
     _uiState.value = _uiState.value.copy(isLoading = true)
     try {
-      getProfileWithSyncedFriendNotifications(
+      getProfileWithSyncedNotifications(
           profileRepository = repository,
           notificationsRepository = notificationsRepository,
           pointsRepository = pointsRepository,

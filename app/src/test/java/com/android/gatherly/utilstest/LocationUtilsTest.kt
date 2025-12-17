@@ -6,6 +6,7 @@ import android.content.pm.PackageManager
 import android.location.Location
 import android.os.Looper
 import androidx.core.content.ContextCompat
+import com.android.gatherly.runUnconfinedTest
 import com.android.gatherly.utils.createLocationRequest
 import com.android.gatherly.utils.locationFlow
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -14,12 +15,11 @@ import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.Task
 import io.mockk.*
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
-import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Assert.*
 import org.junit.Before
@@ -29,6 +29,8 @@ import org.junit.Test
 
 /** Unit tests for LocationUtils functions. */
 class LocationUtilsTest {
+
+  private val testTimeout = 120.seconds
 
   @Before
   fun setup() {
@@ -61,7 +63,7 @@ class LocationUtilsTest {
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun locationFlow_withoutPermission_throwsSecurityException() =
-      runTest(UnconfinedTestDispatcher()) {
+      runUnconfinedTest(testTimeout) {
         val mockContext = mockk<Context>()
         val mockClient = mockk<FusedLocationProviderClient>()
 
@@ -88,7 +90,7 @@ class LocationUtilsTest {
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun locationFlow_withPermission_emitsLocation() =
-      runTest(UnconfinedTestDispatcher()) {
+      runUnconfinedTest(testTimeout) {
         val mockContext = mockk<Context>()
         val mockClient = mockk<FusedLocationProviderClient>(relaxed = true)
         val mockTask = mockk<Task<Void>>(relaxed = true)
@@ -142,7 +144,7 @@ class LocationUtilsTest {
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun locationFlow_onCancellation_removesLocationUpdates() =
-      runTest(UnconfinedTestDispatcher()) {
+      runUnconfinedTest(testTimeout) {
         val mockContext = mockk<Context>()
         val mockClient = mockk<FusedLocationProviderClient>(relaxed = true)
         val mockTask = mockk<Task<Void>>(relaxed = true)

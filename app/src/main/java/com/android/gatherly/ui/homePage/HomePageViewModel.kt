@@ -18,7 +18,7 @@ import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDoStatus
 import com.android.gatherly.model.todo.ToDosRepository
 import com.android.gatherly.model.todo.ToDosRepositoryProvider
-import com.android.gatherly.utils.getProfileWithSyncedFriendNotifications
+import com.android.gatherly.utils.getProfileWithSyncedNotifications
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
@@ -62,7 +62,7 @@ class HomePageViewModel(
         val todos = toDosRepository.getAllTodos()
         val events = eventsRepository.getAllEvents()
         val profile =
-            getProfileWithSyncedFriendNotifications(
+            getProfileWithSyncedNotifications(
                 profileRepository,
                 notificationsRepository,
                 pointsRepository,

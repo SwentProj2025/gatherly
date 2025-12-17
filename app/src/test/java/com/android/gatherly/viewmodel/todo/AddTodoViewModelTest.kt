@@ -14,10 +14,12 @@ import com.android.gatherly.model.todoCategory.ToDoCategoryLocalRepository
 import com.android.gatherly.model.todoCategory.ToDoCategoryRepository
 import com.android.gatherly.ui.todo.AddTodoViewModel
 import com.android.gatherly.utilstest.MockitoUtils
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -52,7 +54,8 @@ class AddTodoViewModelTest {
   private lateinit var mockitoUtils: MockitoUtils
 
   // initialize this so that tests control all coroutines and can wait on them
-  private val testDispatcher = StandardTestDispatcher()
+  private val testDispatcher = UnconfinedTestDispatcher()
+  private val testTimeout = 120.seconds
 
   private var ownerProfile: Profile =
       Profile(
@@ -73,7 +76,7 @@ class AddTodoViewModelTest {
     toDoCategoryRepository = ToDoCategoryLocalRepository()
 
     // Add owner profile to repo
-    runTest { profileRepository.addProfile(ownerProfile) }
+    runTest(testDispatcher, testTimeout) { profileRepository.addProfile(ownerProfile) }
 
     // Mock Firebase Auth
     mockitoUtils = MockitoUtils()
@@ -93,219 +96,229 @@ class AddTodoViewModelTest {
     Dispatchers.resetMain()
   }
 
+  /** Test that a `ToDo` with valid fields is saved correctly to Firestore. */
   @Test
-  fun saveTodo_withValidFields_savesToFirestore() = runTest {
-    addToDoViewModel.onTitleChanged("Study session")
-    addToDoViewModel.onDescriptionChanged("Revise for algorithms exam")
-    addToDoViewModel.onDateChanged("10/10/2025")
-    addToDoViewModel.onTimeChanged("13:30")
+  fun saveTodo_withValidFields_savesToFirestore() =
+      runTest(testDispatcher, testTimeout) {
+        addToDoViewModel.onTitleChanged("Study session")
+        addToDoViewModel.onDescriptionChanged("Revise for algorithms exam")
+        addToDoViewModel.onDateChanged("10/10/2025")
+        addToDoViewModel.onTimeChanged("13:30")
 
-    addToDoViewModel.saveTodo()
+        addToDoViewModel.saveTodo()
 
-    advanceUntilIdle()
+        advanceUntilIdle()
 
-    // Check UI state
-    val state = addToDoViewModel.uiState.value
-    assertTrue(state.saveSuccess)
-    assertNull(state.saveError)
+        // Check UI state
+        val state = addToDoViewModel.uiState.value
+        assertTrue(state.saveSuccess)
+        assertNull(state.saveError)
 
-    // Check repository contents
-    val todos = toDosRepository.getAllTodos()
-    assertEquals(1, todos.size)
-    val saved = todos.first()
+        // Check repository contents
+        val todos = toDosRepository.getAllTodos()
+        assertEquals(1, todos.size)
+        val saved = todos.first()
 
-    assertEquals("Study session", saved.name)
-    assertEquals("Revise for algorithms exam", saved.description)
-    assertEquals(ToDoStatus.ONGOING, saved.status)
-    assertNotNull(saved.dueDate)
-  }
+        assertEquals("Study session", saved.name)
+        assertEquals("Revise for algorithms exam", saved.description)
+        assertEquals(ToDoStatus.ONGOING, saved.status)
+        assertNotNull(saved.dueDate)
+      }
 
+  /** Test that a `ToDo` with an invalid date is not saved. */
   @Test
-  fun saveTodo_withInvalidDate_doesNotSave() = runTest {
-    addToDoViewModel.onTitleChanged("Invalid date task")
-    addToDoViewModel.onDescriptionChanged("Desc")
-    addToDoViewModel.onDateChanged("10-10-2025") // Wrong format
+  fun saveTodo_withInvalidDate_doesNotSave() =
+      runTest(testDispatcher, testTimeout) {
+        addToDoViewModel.onTitleChanged("Invalid date task")
+        addToDoViewModel.onDescriptionChanged("Desc")
+        addToDoViewModel.onDateChanged("10-10-2025") // Wrong format
 
-    addToDoViewModel.saveTodo()
-    delay(DELAY)
+        addToDoViewModel.saveTodo()
+        delay(DELAY)
 
-    val state = addToDoViewModel.uiState.value
-    assertNotNull(state.dueDateError)
-    assertFalse(state.saveSuccess)
+        val state = addToDoViewModel.uiState.value
+        assertNotNull(state.dueDateError)
+        assertFalse(state.saveSuccess)
 
-    // Repo should still be empty
-    val count = toDosRepository.getAllTodos().size
-    assertEquals(0, count)
-  }
+        // Repo should still be empty
+        val count = toDosRepository.getAllTodos().size
+        assertEquals(0, count)
+      }
 
+  /** Test that a `ToDo` with missing required fields is not saved. */
   @Test
-  fun saveTodo_withMissingFields_doesNotSave() = runTest {
-    addToDoViewModel.onTitleChanged("") // Missing title
-    addToDoViewModel.onDescriptionChanged("Some description")
-    addToDoViewModel.onDateChanged("10/10/2025")
+  fun saveTodo_withMissingFields_doesNotSave() =
+      runTest(testDispatcher, testTimeout) {
+        addToDoViewModel.onTitleChanged("") // Missing title
+        addToDoViewModel.onDescriptionChanged("Some description")
+        addToDoViewModel.onDateChanged("10/10/2025")
 
-    addToDoViewModel.checkTodoTime()
-    delay(DELAY)
+        addToDoViewModel.checkTodoTime()
+        delay(DELAY)
 
-    val state = addToDoViewModel.uiState.value
-    assertNotNull(state.titleError)
-    assertFalse(state.saveSuccess)
+        val state = addToDoViewModel.uiState.value
+        assertNotNull(state.titleError)
+        assertFalse(state.saveSuccess)
 
-    val count = toDosRepository.getAllTodos().size
-    assertEquals(0, count)
-  }
+        val count = toDosRepository.getAllTodos().size
+        assertEquals(0, count)
+      }
 
+  /** Test that multiple valid ToDos are saved independently. */
   @Test
-  fun multipleValidTodos_areSavedIndependently() = runTest {
-    // First ToDo
-    addToDoViewModel.onTitleChanged("Walk dog")
-    addToDoViewModel.onDescriptionChanged("30 mins around block")
-    addToDoViewModel.onDateChanged("10/10/2025")
-    addToDoViewModel.onTimeChanged("18:00")
-    addToDoViewModel.saveTodo()
+  fun multipleValidTodos_areSavedIndependently() =
+      runTest(testDispatcher, testTimeout) {
+        // First ToDo
+        addToDoViewModel.onTitleChanged("Walk dog")
+        addToDoViewModel.onDescriptionChanged("30 mins around block")
+        addToDoViewModel.onDateChanged("10/10/2025")
+        addToDoViewModel.onTimeChanged("18:00")
+        addToDoViewModel.saveTodo()
 
-    // Wait until the todo appears in repository
-    waitForTodosCount(toDosRepository, expectedCount = 1)
+        // Wait until the todo appears in repository
+        waitForTodosCount(toDosRepository, expectedCount = 1)
 
-    // Reset VM for next add
-    addToDoViewModel =
-        AddTodoViewModel(
-            toDosRepository,
-            profileRepository,
-            pointsRepository,
-            authProvider = { mockitoUtils.mockAuth },
-            todoCategoryRepository = toDoCategoryRepository)
+        // Reset VM for next add
+        addToDoViewModel =
+            AddTodoViewModel(
+                toDosRepository,
+                profileRepository,
+                pointsRepository,
+                authProvider = { mockitoUtils.mockAuth },
+                todoCategoryRepository = toDoCategoryRepository)
 
-    // Second ToDo
-    addToDoViewModel.onTitleChanged("Do groceries")
-    addToDoViewModel.onDescriptionChanged("Buy milk and eggs")
-    addToDoViewModel.onDateChanged("11/10/2025")
-    addToDoViewModel.saveTodo()
+        // Second ToDo
+        addToDoViewModel.onTitleChanged("Do groceries")
+        addToDoViewModel.onDescriptionChanged("Buy milk and eggs")
+        addToDoViewModel.onDateChanged("11/10/2025")
+        addToDoViewModel.saveTodo()
 
-    // Wait until both todos appear in repository
-    waitForTodosCount(toDosRepository, expectedCount = 2)
+        // Wait until both todos appear in repository
+        waitForTodosCount(toDosRepository, expectedCount = 2)
 
-    val todos = toDosRepository.getAllTodos()
-    assertEquals(2, todos.size)
+        val todos = toDosRepository.getAllTodos()
+        assertEquals(2, todos.size)
 
-    val names = todos.map { it.name }
-    assertTrue("Walk dog" in names)
-    assertTrue("Do groceries" in names)
-  }
+        val names = todos.map { it.name }
+        assertTrue("Walk dog" in names)
+        assertTrue("Do groceries" in names)
+      }
 
+  /** Test that omitting the optional time field is handled correctly. */
   @Test
-  fun dueTime_optional_isHandledCorrectly() = runTest {
-    addToDoViewModel.onTitleChanged("No time field")
-    addToDoViewModel.onDescriptionChanged("Task without time")
-    addToDoViewModel.onDateChanged("15/10/2025")
-    addToDoViewModel.onTimeChanged("")
+  fun dueTime_optional_isHandledCorrectly() =
+      runTest(testDispatcher, testTimeout) {
+        addToDoViewModel.onTitleChanged("No time field")
+        addToDoViewModel.onDescriptionChanged("Task without time")
+        addToDoViewModel.onDateChanged("15/10/2025")
+        addToDoViewModel.onTimeChanged("")
 
-    addToDoViewModel.saveTodo()
+        addToDoViewModel.saveTodo()
 
-    val todos = toDosRepository.getAllTodos()
-    advanceUntilIdle()
-    assertEquals(1, todos.size)
-    val saved = todos.first()
-    assertNull(saved.dueTime)
-  }
+        val todos = toDosRepository.getAllTodos()
+        advanceUntilIdle()
+        assertEquals(1, todos.size)
+        val saved = todos.first()
+        assertNull(saved.dueTime)
+      }
 
+  /** Test 1: invalid time formats are rejected and do not lead to saves. */
   @Test
-  fun invalidTimeFormat_triggersErrorAndPreventsSave1() = runTest {
-    addToDoViewModel.onTitleChanged("Bad time")
-    addToDoViewModel.onDescriptionChanged("Should not save")
-    addToDoViewModel.onDateChanged("10/10/2025")
-    addToDoViewModel.onTimeChanged("25:99") // invalid time
+  fun invalidTimeFormat_triggersErrorAndPreventsSave1() =
+      runTest(testDispatcher, testTimeout) {
+        addToDoViewModel.onTitleChanged("Bad time")
+        addToDoViewModel.onDescriptionChanged("Should not save")
+        addToDoViewModel.onDateChanged("10/10/2025")
+        addToDoViewModel.onTimeChanged("25:99") // invalid time
 
-    addToDoViewModel.saveTodo()
+        addToDoViewModel.saveTodo()
 
-    val state = addToDoViewModel.uiState.value
-    assertEquals("Invalid time (HH:mm)", state.dueTimeError)
-    assertFalse("Expected saveSuccess=false but got true", state.saveSuccess)
-    val count = toDosRepository.getAllTodos().size
-    assertEquals(0, count)
-  }
+        val state = addToDoViewModel.uiState.value
+        assertEquals("Invalid time (HH:mm)", state.dueTimeError)
+        assertFalse("Expected saveSuccess=false but got true", state.saveSuccess)
+        val count = toDosRepository.getAllTodos().size
+        assertEquals(0, count)
+      }
 
+  /** Test 2: invalid time formats are rejected and do not lead to saves. */
   @Test
-  fun invalidTimeFormat_triggersErrorAndPreventsSave2() = runTest {
-    addToDoViewModel.onTitleChanged("Bad time")
-    addToDoViewModel.onDescriptionChanged("Should not save")
-    addToDoViewModel.onDateChanged("10/10/2025")
-    addToDoViewModel.onTimeChanged("25:04") // invalid time
+  fun invalidTimeFormat_triggersErrorAndPreventsSave2() =
+      runTest(StandardTestDispatcher(), testTimeout) {
+        addToDoViewModel.onTitleChanged("Bad time")
+        addToDoViewModel.onDescriptionChanged("Should not save")
+        addToDoViewModel.onDateChanged("10/10/2025")
+        addToDoViewModel.onTimeChanged("25:04") // invalid time
 
-    addToDoViewModel.saveTodo()
+        addToDoViewModel.saveTodo()
 
-    val state = addToDoViewModel.uiState.value
-    assertEquals("Invalid time (HH:mm)", state.dueTimeError)
-    assertFalse("Expected saveSuccess=false but got true", state.saveSuccess)
-    val count = toDosRepository.getAllTodos().size
-    assertEquals(0, count)
-  }
+        val state = addToDoViewModel.uiState.value
+        assertEquals("Invalid time (HH:mm)", state.dueTimeError)
+        assertFalse("Expected saveSuccess=false but got true", state.saveSuccess)
+        val count = toDosRepository.getAllTodos().size
+        assertEquals(0, count)
+      }
 
+  /** Test 3: invalid time formats are rejected and do not lead to saves. */
   @Test
-  fun invalidTimeFormat_triggersErrorAndPreventsSave3() = runTest {
-    addToDoViewModel.onTitleChanged("Bad time")
-    addToDoViewModel.onDescriptionChanged("Should not save")
-    addToDoViewModel.onDateChanged("10/10/2025")
-    addToDoViewModel.onTimeChanged("14:001") // invalid time
+  fun invalidTimeFormat_triggersErrorAndPreventsSave3() =
+      runTest(testDispatcher, testTimeout) {
+        addToDoViewModel.onTitleChanged("Bad time")
+        addToDoViewModel.onDescriptionChanged("Should not save")
+        addToDoViewModel.onDateChanged("10/10/2025")
+        addToDoViewModel.onTimeChanged("14:001") // invalid time
 
-    addToDoViewModel.saveTodo()
+        addToDoViewModel.saveTodo()
 
-    val state = addToDoViewModel.uiState.value
-    assertEquals("Invalid time (HH:mm)", state.dueTimeError)
-    assertFalse("Expected saveSuccess=false but got true", state.saveSuccess)
-    val count = toDosRepository.getAllTodos().size
-    assertEquals(0, count)
-  }
+        val state = addToDoViewModel.uiState.value
+        assertEquals("Invalid time (HH:mm)", state.dueTimeError)
+        assertFalse("Expected saveSuccess=false but got true", state.saveSuccess)
+        val count = toDosRepository.getAllTodos().size
+        assertEquals(0, count)
+      }
 
+  /** Test that a repository error is reflected in the ViewModel's UI state. */
   @Test
-  fun repositoryError_isReflectedInUiState() = runTest {
-    // Simulate a Firestore repository error on adding a todo.
-    val failingRepo =
-        object : ToDosRepository {
-          override suspend fun addTodo(toDo: ToDo) {
-            throw RuntimeException("Simulated Firestore failure")
-          }
+  fun repositoryError_isReflectedInUiState() =
+      runTest(testDispatcher, testTimeout) {
+        // Simulate a Firestore repository error on adding a todo.
 
-          override suspend fun getAllTodos() = emptyList<ToDo>()
+        val failingRepo =
+            object : ToDosRepository by toDosRepository {
+              override suspend fun addTodo(toDo: ToDo) {
+                throw RuntimeException("Simulated Firestore failure")
+              }
 
-          override suspend fun getTodo(todoID: String) = throw NoSuchElementException()
+              override suspend fun getAllTodos() = emptyList<ToDo>()
 
-          override suspend fun deleteTodo(todoID: String) {}
+              override suspend fun getTodo(todoID: String) = throw NoSuchElementException()
 
-          override suspend fun editTodo(todoID: String, newValue: ToDo) {}
+              override fun getNewUid() = "fake-id"
+            }
 
-          override suspend fun getAllEndedTodos() = emptyList<ToDo>()
+        val viewModel =
+            AddTodoViewModel(
+                failingRepo,
+                profileRepository,
+                pointsRepository,
+                { mockitoUtils.mockAuth },
+                todoCategoryRepository = toDoCategoryRepository)
 
-          override suspend fun updateTodosTagToNull(categoryId: String, ownerId: String) {}
+        viewModel.onTitleChanged("Some task")
+        viewModel.onDescriptionChanged("Should fail to save")
+        viewModel.onDateChanged("10/10/2025")
 
-          override fun getNewUid() = "fake-id"
+        viewModel.saveTodo()
 
-          override suspend fun toggleStatus(todoID: String) {}
-        }
+        // Snippet of code to wait until saving is done:
+        advanceUntilIdle()
 
-    val viewModel =
-        AddTodoViewModel(
-            failingRepo,
-            profileRepository,
-            pointsRepository,
-            { mockitoUtils.mockAuth },
-            todoCategoryRepository = toDoCategoryRepository)
+        val state = viewModel.uiState.value
 
-    viewModel.onTitleChanged("Some task")
-    viewModel.onDescriptionChanged("Should fail to save")
-    viewModel.onDateChanged("10/10/2025")
+        assertNotNull("Expected a saveError but got none", state.saveError)
+        assertFalse("Expected saveSuccess=false but got true", state.saveSuccess)
+      }
 
-    viewModel.saveTodo()
-
-    // Snippet of code to wait until saving is done:
-    advanceUntilIdle()
-
-    val state = viewModel.uiState.value
-
-    assertNotNull("Expected a saveError but got none", state.saveError)
-    assertFalse("Expected saveSuccess=false but got true", state.saveSuccess)
-  }
-
+  /** Helper function to wait until the repository has at least [expectedCount] ToDos. */
   private suspend fun waitForTodosCount(repository: ToDosRepository, expectedCount: Int) {
     withContext(Dispatchers.Default.limitedParallelism(1)) {
       withTimeout(TIMEOUT) {

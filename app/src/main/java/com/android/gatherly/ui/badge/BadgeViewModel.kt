@@ -33,11 +33,9 @@ class BadgeViewModel(
 ) : ViewModel() {
 
   private val _uiState: MutableStateFlow<UIState> = MutableStateFlow(UIState())
+  val lockedBadgeText = "???"
 
-  /**
-   * StateFlow exposing the current UI state, including all event lists categorized by user
-   * relationship.
-   */
+  /** StateFlow exposing the current badge UI state */
   val uiState: StateFlow<UIState> = _uiState.asStateFlow()
 
   /** Initializes the ViewModel by loading the profile of the current user. */
@@ -105,7 +103,9 @@ class BadgeViewModel(
               }
 
           val lockedUi: BadgeUI? =
-              nextLockedBadge?.let { BadgeUI(title = "???", description = "???", icon = blankIcon) }
+              nextLockedBadge?.let {
+                BadgeUI(title = lockedBadgeText, description = lockedBadgeText, icon = blankIcon)
+              }
 
           if (lockedUi != null) obtainedUi + lockedUi else obtainedUi
         }
@@ -116,6 +116,16 @@ class BadgeViewModel(
     )
   }
 
+  /**
+   * Returns the drawable resource id of the "locked / not yet obtained" badge icon corresponding to
+   * this [BadgeType].
+   *
+   * This is used to display a placeholder badge in the UI when a higher rank badge exists for a
+   * type but has not been unlocked by the user yet.
+   *
+   * @return A drawable resource id for the placeholder icon associated with this badge type.
+   * @receiver The [BadgeType] for which we want the placeholder icon.
+   */
   private fun BadgeType.blankIconRes(): Int =
       when (this) {
         BadgeType.TODOS_CREATED -> R.drawable.blank_todo_created

@@ -85,6 +85,7 @@ object EventsViewModelTestsData {
           endTime = Timestamp(1720020000, 0),
           status = EventStatus.PAST)
 
+  /** All test events combined into a single list for convenience. */
   val allTestEvents =
       listOf(eventCreatedByTestUser, eventWithTestUserParticipating, globalEvent, pastEvent)
 }

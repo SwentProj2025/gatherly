@@ -118,10 +118,6 @@ class ProfileLocalRepository : ProfileRepository {
     return Friends(friendUsernames = friendUsernames, nonFriendUsernames = nonFriendUsernames)
   }
 
-  override suspend fun deleteUserProfile(uid: String) {
-    profiles.removeIf { it.uid == uid }
-  }
-
   // ---- FRIENDS GESTION PART ----
 
   override suspend fun getListNoFriends(currentUserId: String): List<String> {

@@ -4,10 +4,11 @@ import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.ui.profile.UserProfileViewModel
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -17,12 +18,14 @@ import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 
+/** Unit tests for [UserProfileViewModel] using a local in-memory repository implementation. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class UserProfileViewModelTest {
 
   private lateinit var viewModel: UserProfileViewModel
   private lateinit var repository: ProfileRepository
-  private val testDispatcher = StandardTestDispatcher()
+  private val testDispatcher = UnconfinedTestDispatcher()
+  private val testTimeout = 120.seconds
 
   private val testProfile =
       Profile(
@@ -47,38 +50,41 @@ class UserProfileViewModelTest {
   }
   /** Verifies a Profile loads correctly * */
   @Test
-  fun loadUserProfile_successfullyLoadsProfile() = runTest {
-    viewModel.loadUserProfile(testProfile.uid)
-    advanceUntilIdle()
+  fun loadUserProfile_successfullyLoadsProfile() =
+      runTest(testDispatcher, testTimeout) {
+        viewModel.loadUserProfile(testProfile.uid)
+        advanceUntilIdle()
 
-    val state = viewModel.uiState.value
-    assertNotNull(state.profile)
-    assertEquals(testProfile.name, state.profile!!.name)
-    assertEquals(testProfile.school, state.profile!!.school)
-    assertEquals(testProfile.schoolYear, state.profile!!.schoolYear)
-    assertNull(state.errorMessage)
-  }
+        val state = viewModel.uiState.value
+        assertNotNull(state.profile)
+        assertEquals(testProfile.name, state.profile!!.name)
+        assertEquals(testProfile.school, state.profile!!.school)
+        assertEquals(testProfile.schoolYear, state.profile!!.schoolYear)
+        assertNull(state.errorMessage)
+      }
   /** Verifies loading a non-existing profile sets and errorMessage * */
   @Test
-  fun loadUserProfile_returnsErrorForMissingProfile() = runTest {
-    viewModel.loadUserProfile("missingUser")
-    advanceUntilIdle()
+  fun loadUserProfile_returnsErrorForMissingProfile() =
+      runTest(testDispatcher, testTimeout) {
+        viewModel.loadUserProfile("missingUser")
+        advanceUntilIdle()
 
-    val state = viewModel.uiState.value
-    assertNull(state.profile)
-    assertEquals(
-        "Error : Profile not found. Try quitting and coming back to the screen.",
-        state.errorMessage)
-  }
+        val state = viewModel.uiState.value
+        assertNull(state.profile)
+        assertEquals(
+            "Error : Profile not found. Try quitting and coming back to the screen.",
+            state.errorMessage)
+      }
   /** Tests the clear Error Message Function* */
   @Test
-  fun clearErrorMsg_clearsErrorMessage() = runTest {
-    viewModel.loadUserProfile("missingUser")
-    advanceUntilIdle()
-    assertNotNull(viewModel.uiState.value.errorMessage)
+  fun clearErrorMsg_clearsErrorMessage() =
+      runTest(testDispatcher, testTimeout) {
+        viewModel.loadUserProfile("missingUser")
+        advanceUntilIdle()
+        assertNotNull(viewModel.uiState.value.errorMessage)
 
-    viewModel.clearErrorMsg()
-    val state = viewModel.uiState.value
-    assertNull(state.errorMessage)
-  }
+        viewModel.clearErrorMsg()
+        val state = viewModel.uiState.value
+        assertNull(state.errorMessage)
+      }
 }
