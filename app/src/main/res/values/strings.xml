@@ -307,6 +307,10 @@
     <string name="edit_group_button">Save changes</string>
     <string name="group_delete_button">Delete group</string>
 
+    <!-- Map Screen -->
+    <string name="map_date_format">dd/MM/yyyy</string>
+
+
     <!-- Loading messages -->
     <string name="loading_badges_message">Loading your badges…</string>
     <string name="loading_group_message">Loading group information…</string>
