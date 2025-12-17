@@ -15,6 +15,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
+import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.model.todoCategory.ToDoCategoryLocalRepository
 import com.android.gatherly.model.todoCategory.ToDoCategoryRepository
@@ -40,6 +41,12 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
+/**
+ * Instrumented tests for [EditToDoScreen] composable.
+ *
+ * Verifies that all UI components are displayed correctly and user interactions such as entering
+ * text, selecting dates, and deleting a [ToDo] function as expected.
+ */
 @OptIn(ExperimentalCoroutinesApi::class)
 class EditTodoScreenTest : GatherlyTest() {
   @get:Rule val composeTestRule = createComposeRule()
@@ -63,9 +70,7 @@ class EditTodoScreenTest : GatherlyTest() {
 
     editTodoViewModel =
         EditTodoViewModel(
-            todoRepository = repository,
-            profileRepository = profileRepository,
-            todoCategoryRepository = toDoCategoryRepository)
+            todoRepository = repository, todoCategoryRepository = toDoCategoryRepository)
     composeTestRule.setContent {
       EditToDoScreen(todoUid = todo1.uid, editTodoViewModel = editTodoViewModel)
     }
@@ -75,11 +80,13 @@ class EditTodoScreenTest : GatherlyTest() {
         .performClick()
   }
 
+  /** Fills the repository with a sample [ToDo] for testing. */
   private fun fill_repository() = runTest {
     repository.addTodo(toDo = todo1.copy(dueDate = currentDateTimestamp))
     advanceUntilIdle()
   }
 
+  /** Test: Verifies that all UI components are displayed correctly on the [EditToDoScreen]. */
   @Test
   fun displayAllComponents() {
     composeTestRule
@@ -99,6 +106,7 @@ class EditTodoScreenTest : GatherlyTest() {
     composeTestRule.onNodeWithTag(EditToDoScreenTestTags.ERROR_MESSAGE).assertIsNotDisplayed()
   }
 
+  /** Test: Verifies that the user can enter a title for the [ToDo] item. */
   @Test
   fun canEnterTitle() {
     val text = "testTitle"
@@ -109,6 +117,7 @@ class EditTodoScreenTest : GatherlyTest() {
         .assertIsNotDisplayed()
   }
 
+  /** Test: Verifies that the user can enter a description for the [ToDo] item. */
   @Test
   fun canEnterDescription() {
     val text = "testDescription"
@@ -121,6 +130,7 @@ class EditTodoScreenTest : GatherlyTest() {
         .assertIsNotDisplayed()
   }
 
+  /** Test: Verifies that the user can enter a location for the [ToDo] item. */
   @Test
   fun canEnterLocation() {
     val text = "testLocation"
@@ -131,6 +141,7 @@ class EditTodoScreenTest : GatherlyTest() {
         .assertIsNotDisplayed()
   }
 
+  /** Test: Verifies that the user can enter a valid date for the [ToDo] item. */
   @Test
   fun canEnterAValidDate() {
     composeTestRule.openDatePicker(EditToDoScreenTestTags.INPUT_TODO_DATE)
@@ -141,6 +152,7 @@ class EditTodoScreenTest : GatherlyTest() {
         .assertExists()
   }
 
+  /** Test: Verifies that the user can enter a valid time for the [ToDo] item. */
   @Test
   fun canEnterAValidTime() {
     val text = "14:30"
@@ -148,6 +160,7 @@ class EditTodoScreenTest : GatherlyTest() {
     composeTestRule.onNodeWithTag(EditToDoScreenTestTags.INPUT_TODO_TIME).assertTextContains(text)
   }
 
+  /** Test: Verifies that entering an invalid time shows an error message. */
   @Test
   fun canEnterAnInvalidTime() {
     val invalidTime = "25:80" // Invalid time format
@@ -155,6 +168,7 @@ class EditTodoScreenTest : GatherlyTest() {
     composeTestRule.checkErrorMessageIsDisplayedForEditTodo()
   }
 
+  /** Test: Verifies that entering a past date shows an alert dialog. */
   @Test
   fun enterPastDate() {
     composeTestRule.openDatePicker(EditToDoScreenTestTags.INPUT_TODO_DATE)
