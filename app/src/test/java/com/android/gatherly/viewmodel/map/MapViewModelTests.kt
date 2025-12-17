@@ -58,6 +58,14 @@ class MapViewModelTests {
 
   @OptIn(ExperimentalCoroutinesApi::class) private val testDispatcher = UnconfinedTestDispatcher()
 
+  companion object {
+    /** Simulated delay for repository data loading in race condition tests. */
+    private const val SIMULATED_DATA_LOAD_DELAY_MS = 1_000L
+
+    /** Small buffer to ensure virtual time passes beyond the simulated delay. */
+    private const val VIRTUAL_TIME_BUFFER_MS = 1L
+  }
+
   /**
    * Sets up the test environment by replacing the main dispatcher with a test dispatcher. This
    * allows control over coroutine execution during tests.
@@ -343,6 +351,7 @@ class MapViewModelTests {
         val actualTodosListAgain: List<ToDo> = vm.uiState.value.itemsList.map { it as ToDo }
         assertEquals(expectedTodosList, actualTodosListAgain)
       }
+
   /**
    * Verifies that consulting a todo item updates the last consulted todo ID and clears the camera
    * position in the UI state.
@@ -423,7 +432,12 @@ class MapViewModelTests {
         assertEquals(EPFL_LATLNG, vm.uiState.value.cameraPos)
       }
 
-  /** Verifies that fetching location to center on returns the last consulted todo's location. */
+  /**
+   * Verifies that fetching location to center on returns the last consulted todo's location.
+   *
+   * Updated to test through [MapViewModel.initialiseCameraPosition] since the ViewModel must not
+   * expose suspending functions.
+   */
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun fetchLocationToCenterOn_withLastConsultedTodo_returnsTodoLocation() =
@@ -442,16 +456,22 @@ class MapViewModelTests {
 
         vm.onItemConsulted(MapViewModelTestsTodos.incompleteTodoWithLocation1.uid)
 
-        val result = vm.fetchLocationToCenterOn(mockContext)
+        vm.initialiseCameraPosition(mockContext)
+        advanceUntilIdle()
 
         val expectedLatLng =
             LatLng(
                 MapViewModelTestsTodos.testLocation1.latitude,
                 MapViewModelTestsTodos.testLocation1.longitude)
-        assertEquals(expectedLatLng, result)
+        assertEquals(expectedLatLng, vm.uiState.value.cameraPos)
       }
 
-  /** Verifies that fetching location to center on returns the last consulted event's location. */
+  /**
+   * Verifies that fetching location to center on returns the last consulted event's location.
+   *
+   * Updated to test through [MapViewModel.initialiseCameraPosition] since the ViewModel must not
+   * expose suspending functions.
+   */
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun fetchLocationToCenterOn_withLastConsultedEvent_returnsEventLocation() =
@@ -471,16 +491,22 @@ class MapViewModelTests {
         vm.changeView() // Switch to events
         vm.onItemConsulted(MapViewModelTestsEvents.upcomingEventWithLocation1.id)
 
-        val result = vm.fetchLocationToCenterOn(mockContext)
+        vm.initialiseCameraPosition(mockContext)
+        advanceUntilIdle()
 
         val expectedLatLng =
             LatLng(
                 MapViewModelTestsEvents.testLocation1.latitude,
                 MapViewModelTestsEvents.testLocation1.longitude)
-        assertEquals(expectedLatLng, result)
+        assertEquals(expectedLatLng, vm.uiState.value.cameraPos)
       }
 
-  /** Verifies that fetching location to center on with no consulted item returns EPFL location. */
+  /**
+   * Verifies that fetching location to center on with no consulted item returns EPFL location.
+   *
+   * Updated to test through [MapViewModel.initialiseCameraPosition] since the ViewModel must not
+   * expose suspending functions.
+   */
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun fetchLocationToCenterOn_withNoConsultedItem_returnsEPFL() =
@@ -497,14 +523,18 @@ class MapViewModelTests {
                 coordinator = mockk(relaxed = true))
         advanceUntilIdle()
 
-        val result = vm.fetchLocationToCenterOn(mockContext)
+        vm.initialiseCameraPosition(mockContext)
+        advanceUntilIdle()
 
-        assertEquals(EPFL_LATLNG, result)
+        assertEquals(EPFL_LATLNG, vm.uiState.value.cameraPos)
       }
 
   /**
    * Verifies that fetching location to center on with location permission and no consulted item
    * returns current location.
+   *
+   * Updated to test through [MapViewModel.initialiseCameraPosition] since the ViewModel must not
+   * expose suspending functions.
    */
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
@@ -555,25 +585,21 @@ class MapViewModelTests {
                 fusedLocationClient = mockClient,
                 coordinator = mockk(relaxed = true))
 
-        // Start the call
-        var result: LatLng? = null
-        val job = launch { result = vm.fetchLocationToCenterOn(mockContext) }
+        advanceUntilIdle()
 
-        // Unlike other tests, advanceUntilIdle() here would force the 5s timeout to trigger
-        // This makes the function return the EPFL fallback, thus failing the test
+        // Start the call (non-suspending API)
+        vm.initialiseCameraPosition(mockContext)
 
-        // Trigger the callback
+        // Trigger the callback before advancing, so the flow emits and the function can return.
         assertNotNull("Callback should have been captured", capturedCallback)
         capturedCallback?.onLocationResult(locationResult)
 
-        // Now it is safe to advance, allowing the flow to emit and the function to return
         advanceUntilIdle()
 
         val expectedLatLng = LatLng(50.1231, 2.3253)
-        assertNotNull(result)
-        assertEquals(expectedLatLng, result)
-        job.cancel()
+        assertEquals(expectedLatLng, vm.uiState.value.cameraPos)
       }
+
   /**
    * Verifies that starting and stopping location updates manages the location job without crashing.
    */
@@ -642,6 +668,9 @@ class MapViewModelTests {
   /**
    * Verifies that if permissions are denied (SecurityException), the ViewModel catches it and
    * returns the fallback (EPFL) instead of crashing.
+   *
+   * Updated to test through [MapViewModel.initialiseCameraPosition] since the ViewModel must not
+   * expose suspending functions.
    */
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
@@ -673,14 +702,18 @@ class MapViewModelTests {
 
         advanceUntilIdle()
 
-        val result = vm.fetchLocationToCenterOn(mockContext)
+        vm.initialiseCameraPosition(mockContext)
+        advanceUntilIdle()
 
-        assertEquals(EPFL_LATLNG, result)
+        assertEquals(EPFL_LATLNG, vm.uiState.value.cameraPos)
       }
 
   /**
    * Verifies Android 12+ compatibility fix. Ensures that if the user selects "Approximate" (Coarse)
    * only, the map still centers on them (doesn't fallback to EPFL).
+   *
+   * Updated to test through [MapViewModel.initialiseCameraPosition] since the ViewModel must not
+   * expose suspending functions.
    */
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
@@ -726,17 +759,17 @@ class MapViewModelTests {
 
         val vm = MapViewModel(todosRepo, eventsRepo, mockClient, mockk(relaxed = true))
 
-        var result: LatLng? = null
-        val job = launch { result = vm.fetchLocationToCenterOn(mockContext) }
+        advanceUntilIdle()
+
+        // Start the call (non-suspending API)
+        vm.initialiseCameraPosition(mockContext)
 
         assertNotNull("Callback should capture even with only Coarse permission", capturedCallback)
         capturedCallback?.onLocationResult(locationResult)
 
         advanceUntilIdle()
 
-        assertEquals(LatLng(50.1231, 2.3253), result)
-
-        job.cancel()
+        assertEquals(LatLng(50.1231, 2.3253), vm.uiState.value.cameraPos)
       }
 
   /**
@@ -765,8 +798,8 @@ class MapViewModelTests {
                 status = EventStatus.UPCOMING)
 
         // We mock the Repositories to strictly control data return and avoid local repo issues
-        val eventsRepo = mockk<com.android.gatherly.model.event.EventsRepository>()
-        val todosRepo = mockk<com.android.gatherly.model.todo.ToDosRepository>(relaxed = true)
+        val eventsRepo = mockk<EventsRepository>()
+        val todosRepo = mockk<ToDosRepository>(relaxed = true)
         val mockContext = mockk<Context>(relaxed = true)
         val mockCoordinator = mockk<MapCoordinator>(relaxed = true)
 
@@ -799,91 +832,91 @@ class MapViewModelTests {
         // Verify camera position matches event location
         val expectedLatLng = LatLng(targetLocation.latitude, targetLocation.longitude)
         assertEquals(expectedLatLng, state.cameraPos)
-        // ============================ RACE CONDITION TESTS ============================ /
+      }
 
-        /**
-         * Verifies that [MapViewModel.initialiseCameraPosition] suspends execution until the data
-         * (Events/ToDos) has finished loading.
-         *
-         * This simulates a network delay to ensure the camera logic waits for the `loadingDataJob`
-         * to complete before attempting to calculate the center position.
-         */
-        @OptIn(ExperimentalCoroutinesApi::class)
-        @Test
-        fun initialiseCameraPosition_waitsForDataLoading_beforeSettingCamera() =
-            runTest(testDispatcher, testTimeout) {
-              // Mock repositories to simulate a slow network fetch
-              val mockTodosRepo = mockk<ToDosRepository>()
-              val mockEventsRepo = mockk<EventsRepository>()
+  // ============================ RACE CONDITION TESTS ============================ /
 
-              // Simulate a 1000ms delay in fetching todos
-              // This forces the viewModel's init block to take 1 second to finish.
-              coEvery { mockTodosRepo.getAllTodos() } coAnswers
-                  {
-                    delay(1000)
-                    emptyList()
-                  }
-              coEvery { mockEventsRepo.getAllEvents() } returns emptyList()
+  /**
+   * Verifies that [MapViewModel.initialiseCameraPosition] suspends execution until the data
+   * (Events/ToDos) has finished loading.
+   *
+   * This simulates a network delay to ensure the camera logic waits for the `loadingDataJob` to
+   * complete before attempting to calculate the center position.
+   */
+  @OptIn(ExperimentalCoroutinesApi::class)
+  @Test
+  fun initialiseCameraPosition_waitsForDataLoading_beforeSettingCamera() =
+      runTest(testDispatcher, testTimeout) {
+        // Mock repositories to simulate a slow network fetch
+        val mockTodosRepo = mockk<ToDosRepository>()
+        val mockEventsRepo = mockk<EventsRepository>()
 
-              val mockContext = mockk<Context>(relaxed = true)
-
-              // Initialize ViewModel (The init block starts the 1000ms fetch immediately)
-              val vm = MapViewModel(mockTodosRepo, mockEventsRepo, coordinator = MapCoordinator())
-
-              // Launch camera initialization (suspending)
-              // We want to assert the state while it is waiting.
-              val job = launch { vm.initialiseCameraPosition(mockContext) }
-
-              // Immediately after launch, cameraPos should be null
-              // The join() should be blocking execution because the 1000ms delay isn't over.
-              assertNull(
-                  "Camera should not be set while data is loading", vm.uiState.value.cameraPos)
-
-              // Advance time to finish the fetch (1000ms delay + 1ms buffer)
-              advanceTimeBy(1001)
-
-              // Now that data is loaded, the join() releases.
-              // The function proceeds and sets the camera (falling back to EPFL since lists are
-              // empty).
-              assertNotNull("Camera should be set after data loads", vm.uiState.value.cameraPos)
-              assertEquals(EPFL_LATLNG, vm.uiState.value.cameraPos)
-
-              job.cancel()
+        // Simulate a delay in fetching todos
+        // This forces the viewModel's init block to take time to finish.
+        coEvery { mockTodosRepo.getAllTodos() } coAnswers
+            {
+              delay(SIMULATED_DATA_LOAD_DELAY_MS)
+              emptyList()
             }
+        coEvery { mockEventsRepo.getAllEvents() } returns emptyList()
 
-        /**
-         * Verifies that [MapViewModel] handles empty data repositories gracefully without crashing.
-         *
-         * This ensures the removal of `lateinit` prevents UninitializedPropertyAccessException even
-         * if the repositories return no data immediately.
-         */
-        @OptIn(ExperimentalCoroutinesApi::class)
-        @Test
-        fun initialiseCameraPosition_withEmptyData_doesNotCrashAndUsesFallback() =
-            runTest(testDispatcher, testTimeout) {
-              // Mock repositories to return empty lists immediately
-              val mockTodosRepo = mockk<ToDosRepository>()
-              val mockEventsRepo = mockk<EventsRepository>()
+        val mockContext = mockk<Context>(relaxed = true)
 
-              coEvery { mockTodosRepo.getAllTodos() } returns emptyList()
-              coEvery { mockEventsRepo.getAllEvents() } returns emptyList()
+        // Initialize ViewModel (The init block starts the fetch immediately)
+        val vm = MapViewModel(mockTodosRepo, mockEventsRepo, coordinator = MapCoordinator())
 
-              val mockContext = mockk<Context>(relaxed = true)
+        // Launch camera initialization (suspending)
+        // We want to assert the state while it is waiting.
+        val job = launch { vm.initialiseCameraPosition(mockContext) }
 
-              // Initialize ViewModel
-              val vm = MapViewModel(mockTodosRepo, mockEventsRepo, coordinator = MapCoordinator())
+        // Immediately after launch, cameraPos should be null
+        // The join() should be blocking execution because the delay isn't over.
+        assertNull("Camera should not be set while data is loading", vm.uiState.value.cameraPos)
 
-              // Let the init block finish
-              advanceUntilIdle()
+        // Advance time to finish the fetch (delay + small buffer)
+        advanceTimeBy(SIMULATED_DATA_LOAD_DELAY_MS + VIRTUAL_TIME_BUFFER_MS)
+        advanceUntilIdle()
 
-              // Call the function that previously crashed
-              vm.initialiseCameraPosition(mockContext)
-              advanceUntilIdle()
+        // Now that data is loaded, the join() releases.
+        // The function proceeds and sets the camera (falling back to EPFL since lists are empty).
+        assertNotNull("Camera should be set after data loads", vm.uiState.value.cameraPos)
+        assertEquals(EPFL_LATLNG, vm.uiState.value.cameraPos)
 
-              // Verify it fell back to EPFL (default) instead of crashing
-              assertEquals(EPFL_LATLNG, vm.uiState.value.cameraPos)
-              assertTrue(vm.uiState.value.itemsList.isEmpty())
-            }
+        job.cancel()
+      }
+
+  /**
+   * Verifies that [MapViewModel] handles empty data repositories gracefully without crashing.
+   *
+   * This ensures the removal of `lateinit` prevents UninitializedPropertyAccessException even if
+   * the repositories return no data immediately.
+   */
+  @OptIn(ExperimentalCoroutinesApi::class)
+  @Test
+  fun initialiseCameraPosition_withEmptyData_doesNotCrashAndUsesFallback() =
+      runTest(testDispatcher, testTimeout) {
+        // Mock repositories to return empty lists immediately
+        val mockTodosRepo = mockk<ToDosRepository>()
+        val mockEventsRepo = mockk<EventsRepository>()
+
+        coEvery { mockTodosRepo.getAllTodos() } returns emptyList()
+        coEvery { mockEventsRepo.getAllEvents() } returns emptyList()
+
+        val mockContext = mockk<Context>(relaxed = true)
+
+        // Initialize ViewModel
+        val vm = MapViewModel(mockTodosRepo, mockEventsRepo, coordinator = MapCoordinator())
+
+        // Let the init block finish
+        advanceUntilIdle()
+
+        // Call the function that previously crashed
+        vm.initialiseCameraPosition(mockContext)
+        advanceUntilIdle()
+
+        // Verify it fell back to EPFL (default) instead of crashing
+        assertEquals(EPFL_LATLNG, vm.uiState.value.cameraPos)
+        assertTrue(vm.uiState.value.itemsList.isEmpty())
       }
 
   /**

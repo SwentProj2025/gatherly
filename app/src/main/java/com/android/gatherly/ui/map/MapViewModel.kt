@@ -286,7 +286,7 @@ class MapViewModel(
    * - When centering on a coordinator-provided id, this also updates [UIState.displayEventsPage]
    *   and [UIState.itemsList] to the appropriate mode so the UI matches the centered content.
    */
-  suspend fun fetchLocationToCenterOn(context: Context): LatLng {
+  private suspend fun fetchLocationToCenterOn(context: Context): LatLng {
 
     loadingDataJob?.join()
 
