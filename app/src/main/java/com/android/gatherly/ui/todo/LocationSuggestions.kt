@@ -4,10 +4,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Divider
+import androidx.compose.material3.DividerDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -25,19 +26,19 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.window.PopupProperties
 import com.android.gatherly.R
 import com.android.gatherly.model.map.Location
-import kotlin.collections.filterNotNull
 import kotlin.collections.isNotEmpty
 
 /**
  * A reusable composable that displays a location text input field with an attached dropdown menu
- * showing location suggestions. This component is shared between the AddTodo and EditTodo screens
- * to avoid code duplication.
+ * showing location suggestions. This component is shared between the [EditToDoScreen] and
+ * [AddToDoScreen] to avoid code duplication.
  *
  * @param location The current text value of the location field.
  * @param suggestions The list of suggested locations returned by the ViewModel.
  * @param onLocationChanged Callback triggered whenever the user edits the location text.
  * @param onSelectLocation Callback invoked when a suggestion is selected from the dropdown.
  * @param modifier The modifier to apply to the outer Box of this component.
+ * @param textFieldColors The colors to use for the OutlinedTextField.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -79,7 +80,7 @@ fun LocationSuggestions(
             Modifier.testTag(LocationSuggestionsTestTags.DROPDOWN)
                 .fillMaxWidth()
                 .heightIn(dimensionResource(R.dimen.todo_location_dropdown_height))) {
-          suggestions.filterNotNull().take(suggestionLimit).forEach { loc ->
+          suggestions.take(suggestionLimit).forEach { loc ->
             DropdownMenuItem(
                 text = {
                   val displayName =
@@ -97,7 +98,7 @@ fun LocationSuggestions(
                 },
                 modifier =
                     Modifier.padding(dimensionResource(R.dimen.todo_location_dropdown_padding)))
-            Divider()
+            HorizontalDivider(Modifier, DividerDefaults.Thickness, DividerDefaults.color)
           }
 
           if (suggestions.size > suggestionLimit) {
@@ -111,6 +112,7 @@ fun LocationSuggestions(
   }
 }
 
+/** Test tags for the [LocationSuggestions] composable. */
 object LocationSuggestionsTestTags {
   const val INPUT = "input"
   const val DROPDOWN = "dropdown"
