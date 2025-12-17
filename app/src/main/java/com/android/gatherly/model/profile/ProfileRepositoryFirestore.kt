@@ -12,7 +12,6 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.ktx.app
 import com.google.firebase.storage.FirebaseStorage
-import com.google.firebase.storage.ktx.storage
 import java.io.File
 import kotlinx.coroutines.tasks.await
 
@@ -68,67 +67,7 @@ class ProfileRepositoryFirestore(
   }
 
   override suspend fun deleteProfile(uid: String) {
-    profilesCollection.document(uid).delete().await()
-  }
-
-  override suspend fun deleteUserProfile(uid: String) {
     val profile = getProfileByUid(uid) ?: return
-
-    // Delete the user from all groups it is a part of:
-    // All groups the user belongs to:
-    val groupSnapshot = db.collection("groups").whereArrayContains("memberIds", uid).get().await()
-
-    // Loop through those groups:
-    for (doc in groupSnapshot.documents) {
-      val data = doc.data ?: continue
-      val members =
-          when (val value = data["memberIds"]) {
-            is List<*> -> {
-              require(value.all { it is String }) { "memberIds must be a List<String>" }
-              value.map { it as String }.toMutableList()
-            }
-            else -> mutableListOf()
-          }
-      val admins =
-          when (val value = data["adminIds"]) {
-            is List<*> -> {
-              require(value.all { it is String }) { "adminIds must be a List<String>" }
-              value.map { it as String }.toMutableList()
-            }
-            else -> mutableListOf()
-          }
-      val newMembers = members.filter { it != uid }
-      val newAdmins = admins.filter { it != uid }
-
-      db.collection("groups")
-          .document(doc.id)
-          .update(mapOf("memberIds" to newMembers, "adminIds" to newAdmins))
-          .await()
-    }
-
-    // Delete todos of the user:
-    val todosSnapshot = db.collection("users").document(uid).collection("todos").get().await()
-
-    for (doc in todosSnapshot.documents) {
-      doc.reference.delete().await()
-    }
-
-    // Delete events created by the user:
-    val eventsSnapshot = db.collection("events").whereEqualTo("creatorId", uid).get().await()
-
-    for (doc in eventsSnapshot.documents) {
-      doc.reference.delete().await()
-    }
-
-    // Delete focus sessions of the user:
-    val focusSessionsSnapshot =
-        db.collection("focusSessions").whereEqualTo("creatorId", uid).get().await()
-
-    for (doc in focusSessionsSnapshot.documents) {
-      doc.reference.delete().await()
-    }
-
-    // Delete username and profile:
     db.runBatch { batch ->
           if (profile.username.isNotBlank()) {
             batch.delete(usernamesCollection.document(profile.username))
@@ -136,13 +75,11 @@ class ProfileRepositoryFirestore(
           batch.delete(profilesCollection.document(uid))
         }
         .await()
-
-    // Delete profile picture:
     try {
-      val storageRef = Firebase.storage.reference.child("profile_pictures/$uid")
+      val storageRef = storage.reference.child("profile_pictures/$uid")
       storageRef.delete().await()
     } catch (e: Exception) {
-      Log.d("ProfileRepository", "No profile picture to delete: ${e.message}")
+      Log.w("ProfileRepository", "No profile picture to delete: ${e.message}")
     }
   }
 

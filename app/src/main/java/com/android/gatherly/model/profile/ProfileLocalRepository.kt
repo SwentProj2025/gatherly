@@ -51,10 +51,6 @@ class ProfileLocalRepository : ProfileRepository {
     profiles.removeAll { it.uid == uid }
   }
 
-  override suspend fun deleteUserProfile(uid: String) {
-    profiles.removeIf { it.uid == uid }
-  }
-
   // ---- CHECK PART ----
 
   override suspend fun isUidRegistered(uid: String): Boolean {

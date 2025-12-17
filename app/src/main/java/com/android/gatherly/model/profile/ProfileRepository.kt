@@ -37,21 +37,11 @@ interface ProfileRepository {
   suspend fun updateProfile(profile: Profile)
 
   /**
-   * Deletes the [Profile] with the specified uid.
+   * Deletes the [Profile] with the specified uid, the associated username and profile picture.
    *
    * @param uid The unique identifier of the user.
    */
   suspend fun deleteProfile(uid: String)
-
-  /**
-   * Deletes a user's entire profile, including:
-   * - Their document in /profiles/{uid}
-   * - Their username in /usernames/{username}
-   * - Their profile picture in Firebase Storage
-   *
-   * After this call, the username becomes available again for reuse.
-   */
-  suspend fun deleteUserProfile(uid: String)
 
   // --- CHECK METHODS ---
 
