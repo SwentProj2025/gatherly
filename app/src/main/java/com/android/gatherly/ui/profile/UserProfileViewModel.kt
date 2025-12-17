@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
+/** UI state for [UserProfileViewModel] */
 data class UserProfileState(
     val isLoading: Boolean = true,
     val profile: Profile? = null,
@@ -19,6 +20,9 @@ data class UserProfileState(
 /**
  * ViewModel for displaying another user's profile in the app. Fetches the profile from
  * [ProfileRepository] by uid and exposes loading/error state.
+ *
+ * @param repository The profile repository to fetch profiles from. Defaults to the provided
+ *   [ProfileRepositoryProvider.repository].
  */
 class UserProfileViewModel(
     private val repository: ProfileRepository = ProfileRepositoryProvider.repository
@@ -26,7 +30,12 @@ class UserProfileViewModel(
 
   private val _uiState = MutableStateFlow(UserProfileState())
   val uiState: StateFlow<UserProfileState> = _uiState
-  /** Sets an error message in the UI state and stops loading. */
+
+  /**
+   * Sets an error message in the UI state and stops loading.
+   *
+   * @param msg The error message to set.
+   */
   private fun setErrorMsg(msg: String?) {
     _uiState.value = _uiState.value.copy(isLoading = false, errorMessage = msg)
   }
@@ -39,6 +48,8 @@ class UserProfileViewModel(
   /**
    * Loads the profile with the given [uid]. Updates [uiState] with the loaded profile or an error
    * message.
+   *
+   * @param uid The UID of the user whose profile to load.
    */
   fun loadUserProfile(uid: String) {
     viewModelScope.launch {
@@ -47,7 +58,6 @@ class UserProfileViewModel(
       try {
         val profile = repository.getProfileByUid(uid)
         if (profile == null) {
-          Log.d("UserProfileViewModel", "Profile not found")
           setErrorMsg("Error : Profile not found. Try quitting and coming back to the screen.")
         } else {
           _uiState.value = UserProfileState(isLoading = false, profile = profile)

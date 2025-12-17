@@ -6,7 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsRepository
-import com.android.gatherly.model.event.EventsRepositoryFirestore
+import com.android.gatherly.model.event.EventsRepositoryProvider
 import com.android.gatherly.model.notification.NotificationsRepository
 import com.android.gatherly.model.notification.NotificationsRepositoryProvider
 import com.android.gatherly.model.points.PointsRepository
@@ -22,25 +22,51 @@ import com.android.gatherly.utils.getProfileWithSyncedNotifications
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
-import com.google.firebase.firestore.firestore
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
+/**
+ * UI state holder for the Home Page screen.
+ *
+ * Contains all data required to render the Home Page, including tasks, events, friends, and user
+ * status.
+ *
+ * @param displayableTodos Todos that can be displayed on the map.
+ * @param displayableEvents Events that can be displayed on the map.
+ * @param friends List of the user's friends.
+ * @param todos Full list of the user's todos.
+ * @param errorMsg Optional error message displayed when loading fails.
+ * @param isAnon Whether the current user is anonymous.
+ */
 data class HomePageUIState(
     val displayableTodos: List<ToDo> = emptyList(),
     val displayableEvents: List<Event> = emptyList(),
     val friends: List<Profile> = emptyList(),
     val todos: List<ToDo> = emptyList(),
-    val timerString: String = "Are you ready to focus?",
     val errorMsg: String? = null,
     val isAnon: Boolean = true,
     val isLoading: Boolean = true,
 )
 
+/**
+ * ViewModel for the Home Page screen.
+ *
+ * Responsible for:
+ * - Fetching todos, events, and profile data
+ * - Resolving friends and notification state
+ * - Exposing a single immutable UI state via [StateFlow]
+ *
+ * @param eventsRepository Repository used to fetch events.
+ * @param toDosRepository Repository used to fetch todos.
+ * @param profileRepository Repository used to fetch profiles.
+ * @param pointsRepository Repository used to fetch points data.
+ * @param notificationsRepository Repository used to fetch notifications.
+ * @param authProvider Provider for the current [FirebaseAuth] instance.
+ */
 class HomePageViewModel(
-    private val eventsRepository: EventsRepository = EventsRepositoryFirestore(Firebase.firestore),
+    private val eventsRepository: EventsRepository = EventsRepositoryProvider.repository,
     private val toDosRepository: ToDosRepository = ToDosRepositoryProvider.repository,
     private val profileRepository: ProfileRepository = ProfileRepositoryProvider.repository,
     private val pointsRepository: PointsRepository = PointsRepositoryProvider.repository,
@@ -50,13 +76,23 @@ class HomePageViewModel(
 ) : ViewModel() {
 
   private val _uiState = MutableStateFlow(HomePageUIState())
+  /**
+   * Public UI state exposed to the Home Page screen.
+   *
+   * This state should be observed by the UI layer and treated as immutable.
+   */
   val uiState: StateFlow<HomePageUIState> = _uiState.asStateFlow()
 
   init {
     updateUI()
   }
 
-  /** Updates the [uiState] with possibly new values from repositories */
+  /**
+   * Refreshes the Home Page UI state by fetching data from repositories.
+   *
+   * Loads todos, events, profile information, and friends, then updates the exposed [uiState]. In
+   * case of failure, an error message is set.
+   */
   fun updateUI() {
     viewModelScope.launch {
       try {

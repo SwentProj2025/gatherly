@@ -31,10 +31,16 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
-import androidx.compose.runtime.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -100,6 +106,9 @@ object MapScreenTestTags {
 }
 
 private const val FULL_WIDTH_WEIGHT = 1f
+private const val DEFAULT_MAP_ZOOM = 16f
+private const val EXPANDED_Z_INDEX = 2f
+private const val DEFAULT_Z_INDEX = 1f
 
 /**
  * A composable screen displaying ToDos and Events as interactive markers on a Google Map.
@@ -108,6 +117,10 @@ private const val FULL_WIDTH_WEIGHT = 1f
  * @param navigationActions Navigation actions for switching between app sections.
  * @param goToEvent Callback to navigate to the Event detail page.
  * @param goToToDo Callback to navigate to the [ToDo] detail page.
+ * @param runInitialisation Whether the screen should initialise the camera position on start.
+ * @param isLocationPermissionGrantedProvider Function used to check whether location permission is
+ *   granted.
+ * @param coordinator Coordinator used to pass one-shot navigation requests to the map (required).
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -125,11 +138,9 @@ fun MapScreen(
     },
     coordinator: MapCoordinator
 ) {
-  /** Location services setup * */
   val context = LocalContext.current
   val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
 
-  /** ViewModel setup * */
   val vm: MapViewModel =
       viewModel
           ?: viewModel(
@@ -139,66 +150,16 @@ fun MapScreen(
 
   val uiState by vm.uiState.collectAsState()
 
-  /** Coroutine scope for launching permission requests * */
-  val scope = rememberCoroutineScope()
-
-  /** Variable to track location permission status */
   var isLocationPermissionGranted by remember { mutableStateOf(false) }
 
-  /** Handle permission request for location access * */
-  val permissionLauncher =
-      rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
-          permissions ->
-        val isGranted =
-            permissions.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false) ||
-                permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false)
+  LocationPermissionEffect(
+      context = context,
+      viewModel = vm,
+      runInitialisation = runInitialisation,
+      isLocationPermissionGrantedProvider = isLocationPermissionGrantedProvider,
+      onPermissionStateChanged = { isLocationPermissionGranted = it },
+  )
 
-        isLocationPermissionGranted = isGranted
-
-        if (isGranted) {
-          vm.startLocationUpdates(context)
-        }
-
-        // Run initialization regardless of the result
-        // If granted, it tries to fetch user location
-        // If denied, it catches the error and falls back to EPFL (Default)
-        if (runInitialisation) {
-          scope.launch { vm.initialiseCameraPosition(context) }
-        }
-      }
-
-  /** Check permission and start location updates * */
-  LaunchedEffect(Unit) {
-    // Check if we already have permissions (Fine OR Coarse)
-
-    val hasPermission = isLocationPermissionGrantedProvider(context)
-
-    if (hasPermission) {
-      // Already existing permissions
-      // Set the blue dot state
-      isLocationPermissionGranted = true
-
-      // Start the location data stream
-      vm.startLocationUpdates(context)
-
-      // Initialize Camera
-      if (runInitialisation) {
-        vm.initialiseCameraPosition(context)
-      }
-    } else {
-      // No initial permission granted
-
-      // Disable blue dot to prevent crash
-      isLocationPermissionGranted = false
-
-      // Launch the dialog
-      permissionLauncher.launch(
-          arrayOf(
-              Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
-    }
-  }
-
-  /** Stop location updates when the composable is disposed * */
   DisposableEffect(Unit) {
     onDispose {
       vm.onNavigationToDifferentScreen()
@@ -206,7 +167,177 @@ fun MapScreen(
     }
   }
 
-  // Bottom sheet state for the selected event
+  Scaffold(
+      topBar = { MapTopBar(navigationActions) },
+      bottomBar = { MapBottomBar(navigationActions) },
+      floatingActionButtonPosition = FabPosition.Start,
+      floatingActionButton = {
+        MapToggleFab(
+            isVisible = uiState.cameraPos != null,
+            isEvents = uiState.displayEventsPage,
+            onToggle = { vm.changeView() })
+      },
+      content = { pd ->
+        MapScreenContent(
+            modifier = Modifier.padding(pd),
+            uiState = uiState,
+            isLocationPermissionGranted = isLocationPermissionGranted,
+            onClearSelection = { vm.clearSelection() },
+            onSelectItem = { vm.onSelectedItem(it) },
+            onGoToEvent = { eventId ->
+              vm.onItemConsulted(eventId)
+              vm.clearSelection()
+              goToEvent(eventId)
+            },
+            onGoToToDo = { todoId ->
+              vm.onItemConsulted(todoId)
+              vm.clearSelection()
+              goToToDo()
+            },
+        )
+      })
+}
+
+/**
+ * Handles location permission request flow and location initialisation side effects.
+ *
+ * @param context Android context used for permission checks and location updates.
+ * @param viewModel ViewModel used to start location updates and initialise the camera.
+ * @param runInitialisation Whether camera initialisation should be triggered.
+ * @param isLocationPermissionGrantedProvider Function used to check whether location permission is
+ *   granted.
+ * @param onPermissionStateChanged Callback invoked whenever the permission state changes.
+ */
+@Composable
+private fun LocationPermissionEffect(
+    context: Context,
+    viewModel: MapViewModel,
+    runInitialisation: Boolean,
+    isLocationPermissionGrantedProvider: (Context) -> Boolean,
+    onPermissionStateChanged: (Boolean) -> Unit,
+) {
+  val scope = rememberCoroutineScope()
+
+  val runInit: () -> Unit =
+      remember(runInitialisation, viewModel, context) {
+        {
+          if (runInitialisation) {
+            viewModel.initialiseCameraPosition(context)
+          }
+        }
+      }
+
+  val onGranted: () -> Unit =
+      remember(viewModel, context) { { viewModel.startLocationUpdates(context) } }
+
+  val permissionLauncher =
+      rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
+          permissions ->
+        val isGranted =
+            permissions.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false) ||
+                permissions.getOrDefault(Manifest.permission.ACCESS_COARSE_LOCATION, false)
+
+        onPermissionStateChanged(isGranted)
+        if (isGranted) onGranted()
+
+        scope.launch { runInit() }
+      }
+
+  LaunchedEffect(Unit) {
+    val hasPermission = isLocationPermissionGrantedProvider(context)
+    onPermissionStateChanged(hasPermission)
+
+    if (hasPermission) {
+      onGranted()
+      runInit()
+    } else {
+      permissionLauncher.launch(
+          arrayOf(
+              Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
+    }
+  }
+}
+
+/**
+ * Top app navigation bar for the map screen.
+ *
+ * @param navigationActions Navigation actions for switching between app sections.
+ */
+@Composable
+private fun MapTopBar(navigationActions: NavigationActions?) {
+  TopNavigationMenu(
+      selectedTab = Tab.Map,
+      onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
+      modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU))
+}
+
+/**
+ * Bottom app navigation bar for the map screen.
+ *
+ * @param navigationActions Navigation actions for switching between app sections.
+ */
+@Composable
+private fun MapBottomBar(navigationActions: NavigationActions?) {
+  BottomNavigationMenu(
+      selectedTab = Tab.Map,
+      onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
+      modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU))
+}
+
+/**
+ * Floating action button to toggle between ToDos and Events.
+ *
+ * @param isVisible Whether the FAB should be displayed.
+ * @param isEvents Whether the current mode is Events mode.
+ * @param onToggle Callback invoked when user taps the toggle.
+ */
+@Composable
+private fun MapToggleFab(isVisible: Boolean, isEvents: Boolean, onToggle: () -> Unit) {
+  if (!isVisible) return
+
+  ExtendedFloatingActionButton(
+      onClick = onToggle,
+      icon = {},
+      text = {
+        Text(
+            if (isEvents) stringResource(R.string.show_todos_button_title)
+            else stringResource(R.string.show_events_button_title))
+      },
+      containerColor =
+          if (isEvents) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.tertiary,
+      contentColor =
+          if (isEvents) MaterialTheme.colorScheme.onSecondary
+          else MaterialTheme.colorScheme.onTertiary,
+      modifier = Modifier.testTag(MapScreenTestTags.FILTER_TOGGLE))
+}
+
+/**
+ * Main content area for the map screen.
+ *
+ * @param modifier Modifier holding scaffold padding.
+ * @param uiState Current UI state from the ViewModel.
+ * @param isLocationPermissionGranted Whether location permission is granted (enables blue dot).
+ * @param onClearSelection Callback invoked when selection should be cleared.
+ * @param onSelectItem Callback invoked when a marker is tapped.
+ * @param onGoToEvent Callback invoked when user taps "Go to event".
+ * @param onGoToToDo Callback invoked when user taps "Go to todo".
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun MapScreenContent(
+    modifier: Modifier,
+    uiState: UIState,
+    isLocationPermissionGranted: Boolean,
+    onClearSelection: () -> Unit,
+    onSelectItem: (String) -> Unit,
+    onGoToEvent: (String) -> Unit,
+    onGoToToDo: (String) -> Unit,
+) {
+  if (uiState.cameraPos == null) {
+    LoadingContent(modifier)
+    return
+  }
+
   val selectedEvent =
       remember(uiState.selectedItemId, uiState.itemsList) {
         uiState.itemsList.asSequence().filterIsInstance<Event>().firstOrNull {
@@ -221,158 +352,203 @@ fun MapScreen(
         }
       }
 
+  // Created here to reduce parameter count and keep state local to the content.
   val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-  Scaffold(
-      topBar = {
-        TopNavigationMenu(
-            selectedTab = Tab.Map,
-            onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
-            modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU))
-      },
-      bottomBar = {
-        BottomNavigationMenu(
-            selectedTab = Tab.Map,
-            onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
-            modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU))
-      },
-      // Toggle button to switch between ToDos and Events
-      floatingActionButtonPosition = FabPosition.Start,
-      floatingActionButton = {
-        if (uiState.cameraPos != null) {
-          val isEvents = uiState.displayEventsPage
-          ExtendedFloatingActionButton(
-              onClick = { vm.changeView() },
-              icon = {},
-              text = {
-                Text(
-                    if (uiState.displayEventsPage) stringResource(R.string.show_todos_button_title)
-                    else stringResource(R.string.show_events_button_title))
-              },
-              containerColor =
-                  if (isEvents) MaterialTheme.colorScheme.secondary
-                  else MaterialTheme.colorScheme.tertiary,
-              contentColor =
-                  if (isEvents) MaterialTheme.colorScheme.onSecondary
-                  else MaterialTheme.colorScheme.onTertiary,
-              modifier = Modifier.testTag(MapScreenTestTags.FILTER_TOGGLE))
+  MapWithMarkers(
+      modifier = Modifier.fillMaxSize().then(modifier).testTag(MapScreenTestTags.GOOGLE_MAP_SCREEN),
+      cameraTarget = uiState.cameraPos,
+      isMyLocationEnabled = isLocationPermissionGranted,
+      items = uiState.itemsList,
+      selectedItemId = uiState.selectedItemId,
+      onMapClick = onClearSelection,
+      onSelectItem = onSelectItem,
+  )
+
+  SelectedItemSheets(
+      selectedEvent = selectedEvent,
+      selectedToDo = selectedToDo,
+      sheetState = sheetState,
+      onDismiss = onClearSelection,
+      onGoToEvent = onGoToEvent,
+      onGoToToDo = onGoToToDo,
+  )
+}
+
+/**
+ * Loading state content shown while camera position is not initialised.
+ *
+ * @param modifier Modifier carrying scaffold padding and sizing.
+ */
+@Composable
+private fun LoadingContent(modifier: Modifier) {
+  Box(
+      modifier =
+          Modifier.fillMaxSize()
+              .then(modifier)
+              .background(MaterialTheme.colorScheme.background)
+              .testTag(MapScreenTestTags.LOADING_SCREEN),
+      contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+          CircularProgressIndicator(
+              color = MaterialTheme.colorScheme.primary,
+              modifier = Modifier.testTag(MapScreenTestTags.LOADING_SPINNER))
+          Spacer(modifier = Modifier.height(dimensionResource(R.dimen.map_loading_spacer)))
+          Text(
+              text = stringResource(R.string.loading_map),
+              color = MaterialTheme.colorScheme.onBackground,
+              style = MaterialTheme.typography.bodyLarge,
+              modifier = Modifier.testTag(MapScreenTestTags.LOADING_TEXT))
         }
-      },
-      content = { pd ->
-        if (uiState.cameraPos != null) {
-          // Camera position state
-          val cameraPositionState = rememberCameraPositionState()
+      }
+}
 
-          // Handle nullable cameraPos with ?.let {}
-          LaunchedEffect(uiState.cameraPos) {
-            uiState.cameraPos?.let { pos ->
-              cameraPositionState.position = CameraPosition.fromLatLngZoom(pos, 16f)
-            }
-          }
+/**
+ * Google Map composable with markers rendered from the provided items.
+ *
+ * @param modifier Modifier applied to the GoogleMap.
+ * @param cameraTarget Initial camera target to center the map on.
+ * @param isMyLocationEnabled Whether "my location" blue dot is enabled.
+ * @param items List of items to render as markers (Events and ToDos).
+ * @param selectedItemId Currently selected item id (controls zIndex).
+ * @param onMapClick Callback invoked when map background is tapped.
+ * @param onSelectItem Callback invoked when a marker is tapped.
+ */
+@Composable
+private fun MapWithMarkers(
+    modifier: Modifier,
+    cameraTarget: LatLng?,
+    isMyLocationEnabled: Boolean,
+    items: List<com.android.gatherly.model.map.DisplayedMapElement>,
+    selectedItemId: String?,
+    onMapClick: () -> Unit,
+    onSelectItem: (String) -> Unit,
+) {
+  val cameraPositionState = rememberCameraPositionState()
 
-          GoogleMap(
-              modifier =
-                  Modifier.fillMaxSize().padding(pd).testTag(MapScreenTestTags.GOOGLE_MAP_SCREEN),
-              cameraPositionState = cameraPositionState,
-              onMapClick = { _ -> vm.clearSelection() },
-              properties = MapProperties(isMyLocationEnabled = isLocationPermissionGranted),
-              uiSettings = MapUiSettings(myLocationButtonEnabled = isLocationPermissionGranted)) {
-                uiState.itemsList.forEach { item ->
-                  when (item) {
-                    // -------------------------------- Todo Marker UI
-                    // -------------------------------
-                    is ToDo -> {
-                      val loc = item.location ?: return@forEach
-                      val isExpanded = uiState.selectedItemId == item.uid
-                      val z = if (isExpanded) 2f else 1f
+  LaunchedEffect(cameraTarget) {
+    cameraTarget?.let { pos ->
+      cameraPositionState.position = CameraPosition.fromLatLngZoom(pos, DEFAULT_MAP_ZOOM)
+    }
+  }
 
-                      key("todo_${item.uid}_$isExpanded") {
-                        val markerState =
-                            rememberMarkerState(position = LatLng(loc.latitude, loc.longitude))
+  GoogleMap(
+      modifier = modifier,
+      cameraPositionState = cameraPositionState,
+      onMapClick = { onMapClick() },
+      properties = MapProperties(isMyLocationEnabled = isMyLocationEnabled),
+      uiSettings = MapUiSettings(myLocationButtonEnabled = isMyLocationEnabled)) {
+        MapMarkers(items = items, selectedItemId = selectedItemId, onSelectItem = onSelectItem)
+      }
+}
 
-                        MarkerComposable(
-                            state = markerState,
-                            zIndex = z,
-                            onClick = {
-                              vm.onSelectedItem(item.uid)
-                              true
-                            }) {
-                              ToDoIcon(item)
-                            }
-                      }
-                    }
-                    // -------------------------------- Event Marker UI ---------------------------
-                    is Event -> {
-                      val loc = item.location ?: return@forEach
-                      val isExpanded = uiState.selectedItemId == item.id
-                      val z = if (isExpanded) 2f else 1f
+/**
+ * Renders markers for Events and ToDos.
+ *
+ * @param items List of displayed map elements (Events and ToDos).
+ * @param selectedItemId Currently selected item id.
+ * @param onSelectItem Callback invoked when a marker is tapped.
+ */
+@Composable
+private fun MapMarkers(
+    items: List<com.android.gatherly.model.map.DisplayedMapElement>,
+    selectedItemId: String?,
+    onSelectItem: (String) -> Unit,
+) {
+  items.forEach { item ->
+    when (item) {
+      is ToDo ->
+          ToDoMarker(item = item, isSelected = selectedItemId == item.uid, onSelect = onSelectItem)
+      is Event ->
+          EventMarker(item = item, isSelected = selectedItemId == item.id, onSelect = onSelectItem)
+    }
+  }
+}
 
-                      key("event_${item.id}_$isExpanded") {
-                        val markerState =
-                            rememberMarkerState(position = LatLng(loc.latitude, loc.longitude))
+/**
+ * Marker UI for a ToDo item.
+ *
+ * @param item ToDo item to display as a marker.
+ * @param isSelected Whether this marker is currently selected.
+ * @param onSelect Callback invoked when the marker is tapped.
+ */
+@Composable
+private fun ToDoMarker(item: ToDo, isSelected: Boolean, onSelect: (String) -> Unit) {
+  val loc = item.location ?: return
+  val z = if (isSelected) EXPANDED_Z_INDEX else DEFAULT_Z_INDEX
 
-                        MarkerComposable(
-                            state = markerState,
-                            zIndex = z,
-                            onClick = {
-                              vm.onSelectedItem(item.id)
-                              true
-                            }) {
-                              EventIcon(item)
-                            }
-                      }
-                    }
-                  }
-                }
-              }
-
-          if (selectedEvent != null) {
-            ModalBottomSheet(sheetState = sheetState, onDismissRequest = { vm.clearSelection() }) {
-              EventSheet(
-                  event = selectedEvent,
-                  onGoToEvent = {
-                    // Track consulted item before navigation
-                    vm.onItemConsulted(selectedEvent.id)
-                    vm.clearSelection()
-                    goToEvent(selectedEvent.id)
-                  },
-                  onClose = { vm.clearSelection() })
-            }
-          } else if (selectedToDo != null) {
-            ModalBottomSheet(sheetState = sheetState, onDismissRequest = { vm.clearSelection() }) {
-              ToDoSheet(
-                  toDo = selectedToDo,
-                  onGoToToDo = {
-                    // Track consulted item before navigation
-                    vm.onItemConsulted(selectedToDo.uid)
-                    vm.clearSelection()
-                    goToToDo()
-                  },
-                  onClose = { vm.clearSelection() })
-            }
-          }
-        } else {
-          Box(
-              modifier =
-                  Modifier.fillMaxSize()
-                      .padding(pd)
-                      .background(MaterialTheme.colorScheme.background)
-                      .testTag(MapScreenTestTags.LOADING_SCREEN),
-              contentAlignment = Alignment.Center) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                  CircularProgressIndicator(
-                      color = MaterialTheme.colorScheme.primary,
-                      modifier = Modifier.testTag(MapScreenTestTags.LOADING_SPINNER))
-                  Spacer(modifier = Modifier.height(dimensionResource(R.dimen.map_loading_spacer)))
-                  Text(
-                      text = stringResource(R.string.loading_map),
-                      color = MaterialTheme.colorScheme.onBackground,
-                      style = MaterialTheme.typography.bodyLarge,
-                      modifier = Modifier.testTag(MapScreenTestTags.LOADING_TEXT))
-                }
-              }
+  key("todo_${item.uid}_$isSelected") {
+    val markerState = rememberMarkerState(position = LatLng(loc.latitude, loc.longitude))
+    MarkerComposable(
+        state = markerState,
+        zIndex = z,
+        onClick = {
+          onSelect(item.uid)
+          true
+        }) {
+          ToDoIcon(item)
         }
-      })
+  }
+}
+
+/**
+ * Marker UI for an Event item.
+ *
+ * @param item Event item to display as a marker.
+ * @param isSelected Whether this marker is currently selected.
+ * @param onSelect Callback invoked when the marker is tapped.
+ */
+@Composable
+private fun EventMarker(item: Event, isSelected: Boolean, onSelect: (String) -> Unit) {
+  val loc = item.location ?: return
+  val z = if (isSelected) EXPANDED_Z_INDEX else DEFAULT_Z_INDEX
+
+  key("event_${item.id}_$isSelected") {
+    val markerState = rememberMarkerState(position = LatLng(loc.latitude, loc.longitude))
+    MarkerComposable(
+        state = markerState,
+        zIndex = z,
+        onClick = {
+          onSelect(item.id)
+          true
+        }) {
+          EventIcon(item)
+        }
+  }
+}
+
+/**
+ * Bottom sheets for selected items.
+ *
+ * @param selectedEvent Selected event if present.
+ * @param selectedToDo Selected todo if present.
+ * @param sheetState State object for the bottom sheet.
+ * @param onDismiss Callback invoked when a sheet is dismissed.
+ * @param onGoToEvent Callback invoked when user navigates to event.
+ * @param onGoToToDo Callback invoked when user navigates to todo.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SelectedItemSheets(
+    selectedEvent: Event?,
+    selectedToDo: ToDo?,
+    sheetState: androidx.compose.material3.SheetState,
+    onDismiss: () -> Unit,
+    onGoToEvent: (String) -> Unit,
+    onGoToToDo: (String) -> Unit,
+) {
+  when {
+    selectedEvent != null -> {
+      ModalBottomSheet(sheetState = sheetState, onDismissRequest = onDismiss) {
+        EventSheet(event = selectedEvent, onGoToEvent = { onGoToEvent(selectedEvent.id) })
+      }
+    }
+    selectedToDo != null -> {
+      ModalBottomSheet(sheetState = sheetState, onDismissRequest = onDismiss) {
+        ToDoSheet(toDo = selectedToDo, onGoToToDo = { onGoToToDo(selectedToDo.uid) })
+      }
+    }
+  }
 }
 
 // -------------------------------- Event icons --------------------------------
@@ -407,10 +583,9 @@ fun EventIcon(event: Event, scale: Float = 1f) {
  *
  * @param event Selected [Event].
  * @param onGoToEvent Called when the CTA button is pressed.
- * @param onClose Called when the sheet should be dismissed.
  */
 @Composable
-fun EventSheet(event: Event, onGoToEvent: () -> Unit, onClose: () -> Unit) {
+fun EventSheet(event: Event, onGoToEvent: () -> Unit) {
   val datePattern = stringResource(R.string.map_date_format)
   val formattedDate =
       remember(event.date, datePattern) {
@@ -501,10 +676,9 @@ fun ToDoIcon(toDo: ToDo, scale: Float = 1f) {
  *
  * @param toDo Selected [ToDo].
  * @param onGoToToDo Called when the CTA button is pressed.
- * @param onClose Called when the sheet should be dismissed.
  */
 @Composable
-fun ToDoSheet(toDo: ToDo, onGoToToDo: () -> Unit, onClose: () -> Unit) {
+fun ToDoSheet(toDo: ToDo, onGoToToDo: () -> Unit) {
   val datePattern = stringResource(R.string.map_date_format)
   val formattedDate =
       remember(toDo.dueDate, datePattern) {

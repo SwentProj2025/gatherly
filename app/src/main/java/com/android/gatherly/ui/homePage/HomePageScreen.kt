@@ -1,7 +1,5 @@
 package com.android.gatherly.ui.homePage
 
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -17,7 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
@@ -44,14 +41,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
@@ -59,7 +52,6 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
 import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.profile.Profile
-import com.android.gatherly.model.profile.ProfileStatus
 import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.ui.map.EventIcon
 import com.android.gatherly.ui.map.ToDoIcon
@@ -69,9 +61,9 @@ import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Screen
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_HomePage
+import com.android.gatherly.ui.profile.ProfilePictureWithStatus
 import com.android.gatherly.utils.LoadingAnimation
 import com.android.gatherly.utils.MapCoordinator
-import com.android.gatherly.utils.profilePicturePainter
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
@@ -142,15 +134,14 @@ data class HomePageScreenActions(
 )
 
 /**
- * Main Home Page screen composable.
+ * Root composable for the Home Page screen.
  *
- * Displays:
- * - Upcoming events and tasks
- * - A mini-map with markers
- * - Friends section
- * - Focus timer section
+ * Displays upcoming events, tasks, a mini map, friends section, and the focus timer section.
  *
- * Integrates data from [HomePageViewModel] and provides test tags for UI tests.
+ * @param homePageViewModel ViewModel providing UI state and updates.
+ * @param navigationActions Optional navigation callbacks.
+ * @param homePageScreenActions User interaction callbacks for this screen.
+ * @param coordinator Coordinator used for map centering requests.
  */
 @Composable
 fun HomePageScreen(
@@ -168,8 +159,6 @@ fun HomePageScreen(
   val uiState by homePageViewModel.uiState.collectAsState()
 
   val screenPadding = dimensionResource(id = R.dimen.padding_screen)
-  val verticalSpacing = dimensionResource(id = R.dimen.spacing_between_fields_medium)
-  val sectionSpacing = dimensionResource(id = R.dimen.homepage_section_spacing)
 
   Scaffold(
       topBar = {
@@ -187,17 +176,14 @@ fun HomePageScreen(
         if (uiState.isLoading) {
           LoadingAnimation(stringResource(R.string.loading_homepage_message), paddingValues)
         } else {
-          Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
-            Spacer(modifier = Modifier.height(verticalSpacing))
 
+          Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
             SectionTitle(
                 text = stringResource(id = R.string.homepage_upcoming_events_title),
                 modifier =
                     Modifier.padding(horizontal = screenPadding)
                         .testTag(HomePageScreenTestTags.UPCOMING_EVENTS_TITLE)
                         .clickable { homePageScreenActions.onClickEventsTitle() })
-
-            Spacer(modifier = Modifier.height(sectionSpacing))
 
             EventsAndFriendsSection(
                 todos = uiState.displayableTodos,
@@ -208,8 +194,6 @@ fun HomePageScreen(
                 coordinator = coordinator,
                 navigationActions = navigationActions)
 
-            Spacer(modifier = Modifier.height(verticalSpacing))
-
             SectionTitle(
                 text = stringResource(id = R.string.homepage_upcoming_tasks_title),
                 modifier =
@@ -217,19 +201,14 @@ fun HomePageScreen(
                         .testTag(HomePageScreenTestTags.UPCOMING_TASKS_TITLE)
                         .clickable { homePageScreenActions.onClickTodoTitle() })
 
-            Spacer(modifier = Modifier.height(sectionSpacing))
-
             TaskList(
+                modifier = Modifier.weight(1f),
                 todos = uiState.todos,
-                homePageScreenActions.onClickTodoTitle,
-                homePageScreenActions.onClickTodo)
+                onClickTodoTitle = homePageScreenActions.onClickTodoTitle,
+                onClickTodo = homePageScreenActions.onClickTodo)
 
-            Spacer(modifier = Modifier.height(verticalSpacing))
-
-            Spacer(modifier = Modifier.weight(1f))
             FocusSection(
                 modifier = Modifier.padding(horizontal = screenPadding),
-                timerString = uiState.timerString,
                 onClick = homePageScreenActions.onClickFocusButton)
 
             Spacer(
@@ -240,21 +219,33 @@ fun HomePageScreen(
       })
 }
 
-/** Simple reusable section title used throughout the Home Page. */
+/**
+ * Displays a section title with consistent typography and color.
+ *
+ * @param text Title text to display.
+ * @param modifier Optional modifier for layout and interactions.
+ */
 @Composable
 fun SectionTitle(text: String, modifier: Modifier = Modifier) {
 
   Text(
       text = text,
       color = MaterialTheme.colorScheme.onBackground,
-      fontSize = 20.sp,
-      modifier = modifier)
+      style = MaterialTheme.typography.titleLarge,
+      modifier =
+          modifier.padding(vertical = dimensionResource(id = R.dimen.homepage_section_spacing)))
 }
 
 /**
- * Displays the top half of the screen:
- * - Mini map of nearby todos/events
- * - Friends section
+ * Displays the top section containing the mini map and friends section.
+ *
+ * @param todos List of todos displayed on the mini map.
+ * @param events List of events displayed on the mini map.
+ * @param onClickFriendsSection Callback when the friends section is clicked.
+ * @param isAnon Whether the current user is anonymous.
+ * @param friends List of user friends.
+ * @param coordinator Coordinator used for map interactions.
+ * @param navigationActions Optional navigation callbacks.
  */
 @Composable
 fun EventsAndFriendsSection(
@@ -294,8 +285,15 @@ fun EventsAndFriendsSection(
 }
 
 /**
- * Displays a small, zoomable Google Map showing markers for todos and events. Defaults to the EPFL
- * campus if no locations are available.
+ * Displays a small Google Map with markers for todos or events.
+ *
+ * Defaults to a predefined location if no items have a location.
+ *
+ * @param todos Todos to display when in todo mode.
+ * @param events Events to display when in event mode.
+ * @param modifier Modifier controlling layout and size.
+ * @param coordinator Coordinator used to request map centering.
+ * @param navigationActions Optional navigation callbacks.
  */
 @Composable
 fun MiniMap(
@@ -413,33 +411,14 @@ fun FilterIconButton(isTodo: Boolean, onClick: () -> Unit) {
 }
 
 /**
- * Circular avatar for a friend profile.
+ * Displays a bordered, clickable friends section.
  *
- * @param profilePicUrl url to the picture data
+ * Shows either an empty state or a list of friend avatars.
+ *
+ * @param modifier Optional modifier for layout and styling.
+ * @param onClickFriendsSection Callback invoked when the section is clicked.
+ * @param friends List of friends to display.
  */
-@Composable
-fun FriendAvatar(
-    modifier: Modifier = Modifier,
-    profilePicUrl: String? = null,
-    status: ProfileStatus,
-    statusTag: String
-) {
-  val size = dimensionResource(id = R.dimen.homepage_friend_profile_pic_size)
-  Box(modifier = modifier.size(size)) {
-    Image(
-        painter = profilePicturePainter(profilePicUrl),
-        contentDescription = stringResource(id = R.string.homepage_profile_image_description),
-        modifier = Modifier.fillMaxSize().clip(CircleShape),
-        contentScale = ContentScale.Crop)
-
-    StatusIndicator(
-        status = status,
-        modifier = Modifier.align(Alignment.BottomEnd).testTag(statusTag),
-        size = size * 0.25f)
-  }
-}
-
-/** Displays a bordered section with friend avatars and a label. The entire section is clickable. */
 @Composable
 fun FriendsSection(
     modifier: Modifier = Modifier,
@@ -479,46 +458,56 @@ fun FriendsSection(
 }
 
 /**
- * Displays a vertical list of task items. Each [TaskItem] has a test tag for easier identification
- * in tests.
+ * Displays the list of upcoming tasks.
+ *
+ * Shows an empty-state message when no tasks are available.
+ *
+ * @param modifier Modifier controlling layout and available space.
+ * @param todos List of todos to display.
+ * @param onClickTodoTitle Callback invoked from the empty state.
+ * @param onClickTodo Callback invoked when a task is clicked.
  */
 @Composable
 fun TaskList(
+    modifier: Modifier = Modifier,
     todos: List<ToDo>,
     onClickTodoTitle: () -> Unit = {},
     onClickTodo: (ToDo) -> Unit = {}
 ) {
-  Column(
-      modifier =
-          Modifier.height(dimensionResource(id = R.dimen.homepage_task_section_height))
-              .fillMaxWidth()) {
-        if (todos.isEmpty()) {
-          TextButton(
-              onClick = onClickTodoTitle,
-              modifier =
-                  Modifier.padding(horizontal = dimensionResource(id = R.dimen.padding_small))
-                      .testTag(HomePageScreenTestTags.EMPTY_TASK_LIST_TEXT_BUTTON)) {
-                Text(
-                    text = stringResource(id = R.string.homepage_empty_task_list_message),
-                    color = MaterialTheme.colorScheme.onBackground)
-              }
-        } else {
+  Column(modifier = modifier.fillMaxWidth()) {
+    if (todos.isEmpty()) {
+      TextButton(
+          onClick = onClickTodoTitle,
+          modifier =
+              Modifier.padding(horizontal = dimensionResource(id = R.dimen.padding_small))
+                  .testTag(HomePageScreenTestTags.EMPTY_TASK_LIST_TEXT_BUTTON)) {
+            Text(
+                text = stringResource(id = R.string.homepage_empty_task_list_message),
+                color = MaterialTheme.colorScheme.onBackground)
+          }
+    } else {
 
-          LazyColumn(
-              modifier = Modifier.weight(1f).testTag(HomePageScreenTestTags.TASKS_LAZY_COLUMN)) {
-                items(todos.size) { index ->
-                  val todo = todos[index]
-                  TaskItem(
-                      modifier = Modifier.testTag(getTaskItemTestTag(todo.uid)),
-                      text = todo.description,
-                      onClick = { onClickTodo(todo) })
-                }
-              }
-        }
-      }
+      LazyColumn(
+          modifier = Modifier.fillMaxSize().testTag(HomePageScreenTestTags.TASKS_LAZY_COLUMN)) {
+            items(todos.size) { index ->
+              val todo = todos[index]
+              TaskItem(
+                  modifier = Modifier.testTag(getTaskItemTestTag(todo.uid)),
+                  text = todo.description,
+                  onClick = { onClickTodo(todo) })
+            }
+          }
+    }
+  }
 }
 
-/** A single clickable task item with a description and arrow icon. */
+/**
+ * Displays a single task item with its description and navigation arrow.
+ *
+ * @param modifier Optional modifier for layout and testing.
+ * @param text Task description text.
+ * @param onClick Callback invoked when the item is clicked.
+ */
 @Composable
 fun TaskItem(modifier: Modifier = Modifier, text: String, onClick: () -> Unit) {
   Surface(modifier = modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.background) {
@@ -527,7 +516,9 @@ fun TaskItem(modifier: Modifier = Modifier, text: String, onClick: () -> Unit) {
         modifier =
             Modifier.clickable(onClick = onClick)
                 .fillMaxWidth()
-                .padding(horizontal = paddingRegular, vertical = paddingRegular),
+                .padding(
+                    horizontal = paddingRegular,
+                    vertical = dimensionResource(id = R.dimen.padding_small)),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically) {
           Text(
@@ -545,16 +536,18 @@ fun TaskItem(modifier: Modifier = Modifier, text: String, onClick: () -> Unit) {
   }
 }
 
-/** Displays the focus timer text and button used for starting focus sessions. */
+/**
+ * Displays the focus timer and action button.
+ *
+ * @param modifier Modifier applied to the timer text and button.
+ * @param onClick Callback invoked when the focus button is pressed.
+ */
 @Composable
-fun FocusSection(modifier: Modifier = Modifier, timerString: String = "", onClick: () -> Unit) {
-  Text(
-      text = timerString,
-      color = MaterialTheme.colorScheme.onBackground,
-      style = MaterialTheme.typography.bodyLarge,
-      modifier = modifier.testTag(HomePageScreenTestTags.FOCUS_TIMER_TEXT))
+fun FocusSection(modifier: Modifier = Modifier, onClick: () -> Unit) {
 
-  Spacer(modifier = Modifier.height(dimensionResource(id = R.dimen.homepage_section_spacing)))
+  SectionTitle(
+      text = stringResource(id = R.string.homepage_focus_section_title),
+      modifier = modifier.testTag(HomePageScreenTestTags.FOCUS_TIMER_TEXT))
 
   Button(
       onClick = onClick,
@@ -579,28 +572,8 @@ fun FocusSection(modifier: Modifier = Modifier, timerString: String = "", onClic
  * @param friendUid The unique identifier of the friend.
  * @return The generated test tag for the friend's avatar.
  */
-fun getFriendAvatarTestTag(friendUid: String) =
+fun getFriendProfilePicTestTag(friendUid: String) =
     "${HomePageScreenTestTags.FRIEND_AVATAR_PREFIX}$friendUid"
-
-/**
- * Small colored status dot used to represent a user's presence state. (Green = Online, Red =
- * Offline, Blue = Focused)
- *
- * @param status The current [ProfileStatus] to display.
- * @param modifier Optional modifier for positioning.
- * @param size The diameter of the indicator.
- */
-@Composable
-fun StatusIndicator(status: ProfileStatus, modifier: Modifier = Modifier, size: Dp) {
-  val color =
-      when (status) {
-        ProfileStatus.ONLINE -> Color.Green
-        ProfileStatus.FOCUSED -> Color.Blue
-        ProfileStatus.OFFLINE -> Color.Red
-      }
-
-  Box(modifier = modifier.size(size).clip(CircleShape).background(color))
-}
 
 /**
  * Displays the empty state of the friends section.
@@ -641,11 +614,12 @@ private fun PopulatedFriendsView(friends: List<Profile>) {
     ) {
       items(friends.size) { index ->
         val friend = friends[index]
-        FriendAvatar(
-            profilePicUrl = friend.profilePicture,
-            modifier = Modifier.testTag(getFriendAvatarTestTag(friend.uid)),
+        ProfilePictureWithStatus(
+            profilePictureUrl = friend.profilePicture,
+            statusTestTag = getFriendStatusTestTag(friend.uid),
+            profilePictureTestTag = getFriendProfilePicTestTag(friend.uid),
             status = friend.status,
-            statusTag = getFriendStatusTestTag(friend.uid))
+            size = dimensionResource(id = R.dimen.homepage_friend_profile_pic_size))
       }
     }
     Text(
