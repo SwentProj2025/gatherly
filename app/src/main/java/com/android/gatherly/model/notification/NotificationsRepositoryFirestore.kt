@@ -1,6 +1,7 @@
 package com.android.gatherly.model.notification
 
 import com.google.firebase.auth.ktx.auth
+import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
@@ -17,40 +18,40 @@ import kotlinx.coroutines.tasks.await
 class NotificationsRepositoryFirestore(private val db: FirebaseFirestore) :
     NotificationsRepository {
 
-    /**
-     * Returns the UID of the currently authenticated user.
-     *
-     * @throws IllegalStateException if no user is currently signed in.
-     */
+  /** Reference to the "notifications" collection of the user with uid [userId]. */
+  private fun notificationsCollection(userId: String = currentUserId()): CollectionReference {
+    return db.collection("users").document(userId).collection("notifications")
+  }
+  /**
+   * The UID of the currently authenticated user.
+   *
+   * @throws IllegalStateException if no user is currently signed in.
+   */
   private fun currentUserId(): String {
     return Firebase.auth.currentUser?.uid ?: throw IllegalStateException("No signed in user")
   }
 
   override fun getNewId(): String {
-    return db.collection("users")
-        .document(currentUserId())
-        .collection("notifications")
-        .document()
-        .id
+    return notificationsCollection().document().id
   }
 
-    /**
-     * Retrieves all notifications addressed to the given user.
-     *
-     * Notifications are returned in chronological order (oldest first), based on their [Notification.emissionTime].
-     *
-     * @param userId UID of the user whose notifications should be retrieved.
-     * @return A list of notifications for the specified user.
-     * @throws SecurityException if attempting to fetch notifications for a user other than the currently signed-in one.
-     */
+  /**
+   * Retrieves all notifications addressed to the given user.
+   *
+   * Notifications are returned in chronological order (oldest first), based on their
+   * [Notification.emissionTime].
+   *
+   * @param userId UID of the user whose notifications should be retrieved.
+   * @return A list of notifications for the specified user.
+   * @throws SecurityException if attempting to fetch notifications for a user other than the
+   *   currently signed-in one.
+   */
   override suspend fun getUserNotifications(userId: String): List<Notification> {
     if (userId != currentUserId()) {
       throw SecurityException("Can only fetch notifications for the current user")
     }
     val querySnapshot =
-        db.collection("users")
-            .document(userId)
-            .collection("notifications")
+        notificationsCollection(userId)
             .orderBy("emissionTime", Query.Direction.ASCENDING)
             .get()
             .await()
@@ -58,40 +59,27 @@ class NotificationsRepositoryFirestore(private val db: FirebaseFirestore) :
   }
 
   override suspend fun getNotification(notificationId: String): Notification {
-    val doc =
-        db.collection("users")
-            .document(currentUserId())
-            .collection("notifications")
-            .document(notificationId)
-            .get()
-            .await()
+    val doc = notificationsCollection().document(notificationId).get().await()
     return snapshotToNotification(doc)
         ?: throw NoSuchElementException("Notification with ID $notificationId not found")
   }
 
   override suspend fun deleteNotification(notificationId: String) {
     getNotification(notificationId) // Verify it exists and belongs to current user
-    db.collection("users")
-        .document(currentUserId())
-        .collection("notifications")
-        .document(notificationId)
-        .delete()
-        .await()
+    notificationsCollection().document(notificationId).delete().await()
   }
 
-    /**
-     * Adds a new notification to the repository.
-     *
-     * @param notification The notification to add.
-     * @throws IllegalArgumentException if the notification has an empty recipientId.
-     */
+  /**
+   * Adds a new notification to the repository.
+   *
+   * @param notification The notification to add.
+   * @throws IllegalArgumentException if the notification has an empty recipientId.
+   */
   override suspend fun addNotification(notification: Notification) {
     require(notification.recipientId.isNotEmpty()) {
       "Notification can't have an empty recipientId"
     }
-    db.collection("users")
-        .document(notification.recipientId)
-        .collection("notifications")
+    notificationsCollection(notification.recipientId)
         .document(notification.id)
         .set(notificationToMap(notification))
         .await()
@@ -100,19 +88,14 @@ class NotificationsRepositoryFirestore(private val db: FirebaseFirestore) :
   override suspend fun markAsRead(notificationId: String) {
     val existing = getNotification(notificationId)
     if (existing.wasRead) return // Nothing to do
-    db.collection("users")
-        .document(currentUserId())
-        .collection("notifications")
-        .document(notificationId)
-        .update("wasRead", true)
-        .await()
+    notificationsCollection().document(notificationId).update("wasRead", true).await()
   }
 
-    /**
-     * Converts a Firestore [DocumentSnapshot] into a [Notification].
-     *
-     * Returns `null` if required fields are missing or invalid.
-     */
+  /**
+   * Converts a Firestore [DocumentSnapshot] into a [Notification].
+   *
+   * Returns `null` if required fields are missing or invalid.
+   */
   private fun snapshotToNotification(doc: DocumentSnapshot): Notification? {
     val id = doc.getString("id") ?: return null
     val typeString = doc.getString("type") ?: return null
