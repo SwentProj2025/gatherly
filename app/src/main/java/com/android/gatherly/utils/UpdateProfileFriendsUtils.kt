@@ -1,5 +1,6 @@
 package com.android.gatherly.utils
 
+import com.android.gatherly.model.badge.BadgeType
 import com.android.gatherly.model.notification.Notification
 import com.android.gatherly.model.notification.NotificationType
 import com.android.gatherly.model.notification.NotificationsRepository
@@ -8,7 +9,8 @@ import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 
 /**
- * Synchronises the user's friends list with all pending friend-related notifications.
+ * Synchronises the user's friends list with all pending friend-related notifications and events
+ * notifications.
  *
  * For every FRIEND_ACCEPTED, FRIEND_REJECTED, REMOVE_FRIEND, FRIEND_REQUEST_CANCELLED notification
  * addressed to [userId], this:
@@ -16,17 +18,22 @@ import com.android.gatherly.model.profile.ProfileRepository
  * - updates pending states of current user's requests if needed
  * - deletes the processed notification Returns the fresh up-to-date profile for the user.
  *
+ * For each EVENT_PARTICIPATION notification addressed to [userId], this awards one "events
+ * participated" increment for badges and deletes the notification. This function does not display
+ * any UI. It only performs background synchronisation.
+ *
  * @param profileRepository The repository to fetch and update profiles
  * @param notificationsRepository The repository to fetch a user's notifications
  * @param pointsRepository The repository to update a user's points history
  * @param userId The user whose profile to update
  */
-suspend fun getProfileWithSyncedFriendNotifications(
+suspend fun getProfileWithSyncedNotifications(
     profileRepository: ProfileRepository,
     notificationsRepository: NotificationsRepository,
     pointsRepository: PointsRepository,
     userId: String
 ): Profile? {
+
   val notifications = notificationsRepository.getUserNotifications(userId)
 
   for (notification in notifications) {
@@ -43,6 +50,15 @@ suspend fun getProfileWithSyncedFriendNotifications(
       }
       NotificationType.FRIEND_REQUEST_CANCELLED -> {
         handleFriendRequestCancelled(notificationsRepository, notification, notifications)
+      }
+      NotificationType.EVENT_PARTICIPATION -> {
+        handleEventParticipation(
+            profileRepository = profileRepository,
+            notificationsRepository = notificationsRepository,
+            pointsRepository = pointsRepository,
+            notification = notification,
+            userId = userId,
+        )
       }
       else -> {}
     }
@@ -144,5 +160,29 @@ private suspend fun handleFriendRequestCancelled(
       notificationsRepository.deleteNotification(notification.id)
     }
   }
+  notificationsRepository.deleteNotification(notification.id)
+}
+
+/**
+ * Handles an EVENT_PARTICIPATION notification:
+ * - awards the "events participated" badge counter
+ * - deletes the notification once processed
+ */
+private suspend fun handleEventParticipation(
+    profileRepository: ProfileRepository,
+    notificationsRepository: NotificationsRepository,
+    pointsRepository: PointsRepository,
+    notification: Notification,
+    userId: String,
+) {
+
+  if (notification.relatedEntityId.isNullOrBlank()) {
+    notificationsRepository.deleteNotification(notification.id)
+    return
+  }
+
+  incrementBadgeCheckPoints(
+      profileRepository, pointsRepository, userId, BadgeType.EVENTS_PARTICIPATED)
+
   notificationsRepository.deleteNotification(notification.id)
 }
