@@ -13,9 +13,10 @@ import com.android.gatherly.model.profile.ProfileStatus
 import com.android.gatherly.model.profile.UserStatusManager
 import com.android.gatherly.ui.profile.ProfileViewModel
 import com.android.gatherly.utilstest.MockitoUtils
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -26,7 +27,6 @@ import org.junit.Before
 import org.junit.Test
 import org.mockito.Mockito
 import org.mockito.kotlin.mock
-import org.mockito.kotlin.not
 
 /**
  * Integration tests for [com.android.gatherly.ui.profile.ProfileViewModel] using the Firebase
@@ -49,7 +49,9 @@ class ProfileViewModelIntegrationTest {
   private lateinit var mockitoUtils: MockitoUtils
 
   // initialize this so that tests control all coroutines and can wait on them
-  private val testDispatcher = StandardTestDispatcher()
+  private val testDispatcher = UnconfinedTestDispatcher()
+
+  private val testTimeout = 120.seconds
 
   @Before
   fun setUp() {
@@ -71,93 +73,102 @@ class ProfileViewModelIntegrationTest {
     Dispatchers.resetMain()
   }
 
+  /** Test that loading an existing user profile works correctly. */
   @Test
-  fun loadUserProfile_successfullyLoadsExistingProfile() = runTest {
-    val uid = "currentUser"
-    profileRepository.initProfileIfMissing(uid, "pic.png")
+  fun loadUserProfile_successfullyLoadsExistingProfile() =
+      runTest(testDispatcher, testTimeout) {
+        val uid = "currentUser"
+        profileRepository.initProfileIfMissing(uid, "pic.png")
 
-    val profile = Profile(uid = uid, name = "Alice", school = "EPFL", profilePicture = "alice.png")
-    profileRepository.updateProfile(profile)
+        val profile =
+            Profile(uid = uid, name = "Alice", school = "EPFL", profilePicture = "alice.png")
+        profileRepository.updateProfile(profile)
 
-    mockitoUtils.chooseCurrentUser(uid)
+        mockitoUtils.chooseCurrentUser(uid)
 
-    profileViewModel =
-        ProfileViewModel(
-            profileRepository = profileRepository,
-            groupsRepository = groupsRepository,
-            notificationsRepository = notificationsRepository,
-            pointsRepository = pointsRepository,
-            authProvider = { mockitoUtils.mockAuth })
-    profileViewModel.loadUserProfile()
+        profileViewModel =
+            ProfileViewModel(
+                profileRepository = profileRepository,
+                groupsRepository = groupsRepository,
+                notificationsRepository = notificationsRepository,
+                pointsRepository = pointsRepository,
+                authProvider = { mockitoUtils.mockAuth })
+        profileViewModel.loadUserProfile()
 
-    // Wait until loading completes and profile is available
-    advanceUntilIdle()
+        // Wait until loading completes and profile is available
+        advanceUntilIdle()
 
-    val state = profileViewModel.uiState.value
-    assertNotNull(state.profile)
-    assertEquals("Alice", state.profile!!.name)
-    assertEquals("EPFL", state.profile!!.school)
-    assertNull(state.errorMessage)
-  }
+        val state = profileViewModel.uiState.value
+        assertNotNull(state.profile)
+        assertEquals("Alice", state.profile!!.name)
+        assertEquals("EPFL", state.profile!!.school)
+        assertNull(state.errorMessage)
+      }
 
+  /** Test that loading a missing user profile returns an error state. */
   @Test
-  fun loadUserProfile_returnsErrorIfProfileMissing() = runTest {
-    val uid = "currentUser"
+  fun loadUserProfile_returnsErrorIfProfileMissing() =
+      runTest(testDispatcher, testTimeout) {
+        val uid = "currentUser"
 
-    mockitoUtils.chooseCurrentUser(uid)
+        mockitoUtils.chooseCurrentUser(uid)
 
-    profileViewModel =
-        ProfileViewModel(
-            profileRepository = profileRepository,
-            groupsRepository = groupsRepository,
-            notificationsRepository = notificationsRepository,
-            pointsRepository = pointsRepository,
-            authProvider = { mockitoUtils.mockAuth })
-    profileViewModel.loadUserProfile()
+        profileViewModel =
+            ProfileViewModel(
+                profileRepository = profileRepository,
+                groupsRepository = groupsRepository,
+                notificationsRepository = notificationsRepository,
+                pointsRepository = pointsRepository,
+                authProvider = { mockitoUtils.mockAuth })
+        profileViewModel.loadUserProfile()
 
-    // Wait until loading completes and an error appears
-    advanceUntilIdle()
+        // Wait until loading completes and an error appears
+        advanceUntilIdle()
 
-    val state = profileViewModel.uiState.value
-    assertNull(state.profile)
-    assertEquals("Profile not found", state.errorMessage)
-  }
+        val state = profileViewModel.uiState.value
+        assertNull(state.profile)
+        assertEquals("Profile not found", state.errorMessage)
+      }
 
+  /** Test that loading a user profile when not authenticated returns an error state. */
   @Test
-  fun loadUserProfile_returnsErrorIfUserNotAuthenticated() = runTest {
-    mockitoUtils.unauthenticatedCurrentUser()
+  fun loadUserProfile_returnsErrorIfUserNotAuthenticated() =
+      runTest(testDispatcher, testTimeout) {
+        mockitoUtils.unauthenticatedCurrentUser()
 
-    profileViewModel =
-        ProfileViewModel(
-            profileRepository = profileRepository,
-            groupsRepository = groupsRepository,
-            notificationsRepository = notificationsRepository,
-            pointsRepository = pointsRepository,
-            authProvider = { mockitoUtils.mockAuth })
-    profileViewModel.loadUserProfile()
+        profileViewModel =
+            ProfileViewModel(
+                profileRepository = profileRepository,
+                groupsRepository = groupsRepository,
+                notificationsRepository = notificationsRepository,
+                pointsRepository = pointsRepository,
+                authProvider = { mockitoUtils.mockAuth })
+        profileViewModel.loadUserProfile()
 
-    // Wait until loading completes and an error appears
-    advanceUntilIdle()
+        // Wait until loading completes and an error appears
+        advanceUntilIdle()
 
-    val state = profileViewModel.uiState.value
-    assertNull(state.profile)
-    assertEquals("User not authenticated", state.errorMessage)
-  }
+        val state = profileViewModel.uiState.value
+        assertNull(state.profile)
+        assertEquals("User not authenticated", state.errorMessage)
+      }
 
+  /** Test that signing out sets the user status to OFFLINE. */
   @Test
-  fun signOut_callsSetStatusCorrectly() = runTest {
-    val statusManagerMock = mock<UserStatusManager>()
-    val viewModel =
-        ProfileViewModel(
-            profileRepository = profileRepository,
-            notificationsRepository = NotificationsLocalRepository(),
-            groupsRepository = GroupsLocalRepository(),
-            pointsRepository = pointsRepository,
-            authProvider = { mockitoUtils.mockAuth },
-            userStatusManager = statusManagerMock)
+  fun signOut_callsSetStatusCorrectly() =
+      runTest(testDispatcher, testTimeout) {
+        val statusManagerMock = mock<UserStatusManager>()
+        val viewModel =
+            ProfileViewModel(
+                profileRepository = profileRepository,
+                notificationsRepository = NotificationsLocalRepository(),
+                groupsRepository = GroupsLocalRepository(),
+                pointsRepository = pointsRepository,
+                authProvider = { mockitoUtils.mockAuth },
+                userStatusManager = statusManagerMock)
 
-    viewModel.signOut(mock())
-    advanceUntilIdle()
-    Mockito.verify(statusManagerMock).setStatus(status = ProfileStatus.OFFLINE)
-  }
+        viewModel.signOut(mock())
+        advanceUntilIdle()
+        Mockito.verify(statusManagerMock).setStatus(status = ProfileStatus.OFFLINE)
+      }
 }

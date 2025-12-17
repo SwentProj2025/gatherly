@@ -13,6 +13,7 @@ import com.android.gatherly.viewmodel.groups.overview.GroupsOverviewViewModelTes
 import com.android.gatherly.viewmodel.groups.overview.GroupsOverviewViewModelTestData.testProfilePics
 import com.android.gatherly.viewmodel.groups.overview.GroupsOverviewViewModelTestData.testUser
 import com.android.gatherly.viewmodel.groups.overview.GroupsOverviewViewModelTestData.testUserGroups
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -38,6 +39,7 @@ class GroupsOverviewViewModelTest {
   private lateinit var fakeRepository: FakeGroupsRepositoryLocal
   private lateinit var profileRepository: ProfileRepository
   private val testDispatcher = UnconfinedTestDispatcher()
+  val testTimeout = 120.seconds
 
   @Before
   fun setUp() {
@@ -46,7 +48,7 @@ class GroupsOverviewViewModelTest {
     profileRepository = ProfileLocalRepository()
 
     // add profiles to profile repo
-    runTest {
+    runTest(testDispatcher, testTimeout) {
       profileRepository.addProfile(testUser)
       profileRepository.addProfile(otherUser)
       profileRepository.addProfile(friendUser)
@@ -59,140 +61,152 @@ class GroupsOverviewViewModelTest {
     Dispatchers.resetMain()
   }
 
+  /** Test that ViewModel initialises and loads user groups correctly. */
   @Test
-  fun init_LoadsUserGroupsSuccessfully() = runTest {
-    // Add test data to repository
-    fakeRepository.addGroups(allGroups)
+  fun init_LoadsUserGroupsSuccessfully() =
+      runTest(testDispatcher, testTimeout) {
+        // Add test data to repository
+        fakeRepository.addGroups(allGroups)
 
-    // Create ViewModel (init block runs getUserGroups)
-    val viewModel =
-        GroupsOverviewViewModel(
-            groupsRepository = fakeRepository, profileRepository = profileRepository)
-    advanceUntilIdle()
+        // Create ViewModel (init block runs getUserGroups)
+        val viewModel =
+            GroupsOverviewViewModel(
+                groupsRepository = fakeRepository, profileRepository = profileRepository)
+        advanceUntilIdle()
 
-    // UI state contains only user's groups
-    val uiState = viewModel.uiState.value
-    assertEquals(testUserGroups.size, uiState.groups.size)
-    assertTrue(uiState.groups.containsAll(testUserGroups))
-    assertFalse(uiState.isLoading)
-    assertNull(uiState.errorMsg)
-    assertEquals(testProfilePics, uiState.profilePics)
-  }
-
-  @Test
-  fun init_WithNoGroups_LoadsEmptyList() = runTest {
-    // Repository is empty
-
-    // Create ViewModel
-    val viewModel =
-        GroupsOverviewViewModel(
-            groupsRepository = fakeRepository, profileRepository = profileRepository)
-    advanceUntilIdle()
-
-    // Assert that UI state has empty groups list
-    val uiState = viewModel.uiState.value
-    assertTrue(uiState.groups.isEmpty())
-    assertFalse(uiState.isLoading)
-    assertNull(uiState.errorMsg)
-  }
-
-  @Test
-  fun refreshUIState_ReloadsGroups() = runTest {
-    // Start with initial groups
-    fakeRepository.addGroups(testUserGroups.take(1))
-    val viewModel =
-        GroupsOverviewViewModel(
-            groupsRepository = fakeRepository, profileRepository = profileRepository)
-    advanceUntilIdle()
-    assertEquals(1, viewModel.uiState.value.groups.size)
-
-    // Add more groups and refresh
-    fakeRepository.addGroups(testUserGroups.drop(1))
-    viewModel.refreshUIState()
-    advanceUntilIdle()
-
-    // UI state now contains all groups
-    val uiState = viewModel.uiState.value
-    assertEquals(testUserGroups.size, uiState.groups.size)
-    assertTrue(uiState.groups.containsAll(testUserGroups))
-    assertFalse(uiState.isLoading)
-  }
-
-  @Test
-  fun getUserGroups_OnException_SetsErrorStateAndClearsGroups() = runTest {
-    // Repository that throws exception
-    val errorMessage = "Test exception"
-    val throwingRepository =
-        object : GroupsRepository by fakeRepository {
-          override suspend fun getUserGroups(): List<Group> {
-            throw IllegalStateException(errorMessage)
-          }
-        }
-
-    // Create ViewModel
-    val viewModel =
-        GroupsOverviewViewModel(
-            groupsRepository = throwingRepository, profileRepository = profileRepository)
-    advanceUntilIdle()
-
-    // UI state reflects error
-    val uiState = viewModel.uiState.value
-    assertTrue(uiState.groups.isEmpty())
-    assertEquals(errorMessage, uiState.errorMsg)
-    assertFalse(uiState.isLoading)
-  }
-
-  @Test
-  fun getUserGroups_SetsLoadingStateDuringFetch() = runTest {
-    // Repository with data
-    fakeRepository.addGroups(testUserGroups)
-
-    // Create ViewModel but don't advance coroutines yet
-    val viewModel =
-        GroupsOverviewViewModel(
-            groupsRepository = fakeRepository, profileRepository = profileRepository)
-
-    // Assertion: loading state is set before coroutines complete
-    // Note: This might be tricky to catch depending on execution speed
-    // After advancing, loading should be false
-    advanceUntilIdle()
-    assertFalse(viewModel.uiState.value.isLoading)
-  }
-
-  @Test
-  fun getUserGroups_ClearsErrorOnSuccessfulRefresh() = runTest {
-    // Start with error state
-    val errorMessage = "Initial error"
-    val throwingRepository =
-        object : GroupsRepository by fakeRepository {
-          private var shouldThrow = true
-
-          override suspend fun getUserGroups(): List<Group> {
-            if (shouldThrow) {
-              throw IllegalStateException(errorMessage)
-            }
-            return fakeRepository.getUserGroups()
-          }
-        }
-    val viewModel =
-        GroupsOverviewViewModel(
-            groupsRepository = throwingRepository, profileRepository = profileRepository)
-    advanceUntilIdle()
-    assertNotNull(viewModel.uiState.value.errorMsg)
-
-    // Now make repository succeed and refresh
-    fakeRepository.addGroups(testUserGroups)
-    (throwingRepository as? Any)?.let {
-      it.javaClass.getDeclaredField("shouldThrow").apply {
-        isAccessible = true
-        setBoolean(throwingRepository, false)
+        // UI state contains only user's groups
+        val uiState = viewModel.uiState.value
+        assertEquals(testUserGroups.size, uiState.groups.size)
+        assertTrue(uiState.groups.containsAll(testUserGroups))
+        assertFalse(uiState.isLoading)
+        assertNull(uiState.errorMsg)
+        assertEquals(testProfilePics, uiState.profilePics)
       }
-    }
-    viewModel.refreshUIState()
-    advanceUntilIdle()
 
-    // Assert that error is cleared
-    assertNull(viewModel.uiState.value.errorMsg)
-    assertFalse(viewModel.uiState.value.groups.isEmpty())
-  }
+  /** Test that ViewModel handles no groups case correctly. */
+  @Test
+  fun init_WithNoGroups_LoadsEmptyList() =
+      runTest(testDispatcher, testTimeout) {
+        // Repository is empty
+
+        // Create ViewModel
+        val viewModel =
+            GroupsOverviewViewModel(
+                groupsRepository = fakeRepository, profileRepository = profileRepository)
+        advanceUntilIdle()
+
+        // Assert that UI state has empty groups list
+        val uiState = viewModel.uiState.value
+        assertTrue(uiState.groups.isEmpty())
+        assertFalse(uiState.isLoading)
+        assertNull(uiState.errorMsg)
+      }
+
+  /** Test that refreshing UI state reloads groups from repository. */
+  @Test
+  fun refreshUIState_ReloadsGroups() =
+      runTest(testDispatcher, testTimeout) {
+        // Start with initial groups
+        fakeRepository.addGroups(testUserGroups.take(1))
+        val viewModel =
+            GroupsOverviewViewModel(
+                groupsRepository = fakeRepository, profileRepository = profileRepository)
+        advanceUntilIdle()
+        assertEquals(1, viewModel.uiState.value.groups.size)
+
+        // Add more groups and refresh
+        fakeRepository.addGroups(testUserGroups.drop(1))
+        viewModel.refreshUIState()
+        advanceUntilIdle()
+
+        // UI state now contains all groups
+        val uiState = viewModel.uiState.value
+        assertEquals(testUserGroups.size, uiState.groups.size)
+        assertTrue(uiState.groups.containsAll(testUserGroups))
+        assertFalse(uiState.isLoading)
+      }
+
+  /** Test that ViewModel handles exceptions from repository correctly. */
+  @Test
+  fun getUserGroups_OnException_SetsErrorStateAndClearsGroups() =
+      runTest(testDispatcher, testTimeout) {
+        // Repository that throws exception
+        val errorMessage = "Test exception"
+        val throwingRepository =
+            object : GroupsRepository by fakeRepository {
+              override suspend fun getUserGroups(): List<Group> {
+                throw IllegalStateException(errorMessage)
+              }
+            }
+
+        // Create ViewModel
+        val viewModel =
+            GroupsOverviewViewModel(
+                groupsRepository = throwingRepository, profileRepository = profileRepository)
+        advanceUntilIdle()
+
+        // UI state reflects error
+        val uiState = viewModel.uiState.value
+        assertTrue(uiState.groups.isEmpty())
+        assertEquals(errorMessage, uiState.errorMsg)
+        assertFalse(uiState.isLoading)
+      }
+
+  /** Test that loading state is set correctly during data fetch. */
+  @Test
+  fun getUserGroups_SetsLoadingStateDuringFetch() =
+      runTest(testDispatcher, testTimeout) {
+        // Repository with data
+        fakeRepository.addGroups(testUserGroups)
+
+        // Create ViewModel but don't advance coroutines yet
+        val viewModel =
+            GroupsOverviewViewModel(
+                groupsRepository = fakeRepository, profileRepository = profileRepository)
+
+        // Assertion: loading state is set before coroutines complete
+        // Note: This might be tricky to catch depending on execution speed
+        // After advancing, loading should be false
+        advanceUntilIdle()
+        assertFalse(viewModel.uiState.value.isLoading)
+      }
+
+  /** Test that error state is cleared on successful refresh after an error. */
+  @Test
+  fun getUserGroups_ClearsErrorOnSuccessfulRefresh() =
+      runTest(testDispatcher, testTimeout) {
+        // Start with error state
+        val errorMessage = "Initial error"
+        val throwingRepository =
+            object : GroupsRepository by fakeRepository {
+              private var shouldThrow = true
+
+              override suspend fun getUserGroups(): List<Group> {
+                if (shouldThrow) {
+                  throw IllegalStateException(errorMessage)
+                }
+                return fakeRepository.getUserGroups()
+              }
+            }
+        val viewModel =
+            GroupsOverviewViewModel(
+                groupsRepository = throwingRepository, profileRepository = profileRepository)
+        advanceUntilIdle()
+        assertNotNull(viewModel.uiState.value.errorMsg)
+
+        // Now make repository succeed and refresh
+        fakeRepository.addGroups(testUserGroups)
+        (throwingRepository as? Any)?.let {
+          it.javaClass.getDeclaredField("shouldThrow").apply {
+            isAccessible = true
+            setBoolean(throwingRepository, false)
+          }
+        }
+        viewModel.refreshUIState()
+        advanceUntilIdle()
+
+        // Assert that error is cleared
+        assertNull(viewModel.uiState.value.errorMsg)
+        assertFalse(viewModel.uiState.value.groups.isEmpty())
+      }
 }

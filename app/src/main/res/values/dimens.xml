@@ -174,4 +174,21 @@
     <dimen name="focus_session_history_vertical_padding">8.dp</dimen>
     <dimen name="focus_session_history_horizontal_padding">16.dp</dimen>
     <dimen name="focus_session_history_button_height">35.dp</dimen>
+
+    <!-- Badge Screen -->
+    <dimen name="badge_screen_vertical_padding">8dp</dimen>
+    <dimen name="badge_screen_horizontal_padding">16dp</dimen>
+
+    <dimen name="badge_section_spacer_small">4dp</dimen>
+    <dimen name="badge_section_spacer_medium">10dp</dimen>
+    <dimen name="badge_section_spacer_large">16dp</dimen>
+
+    <dimen name="badge_card_padding_vertical">4dp</dimen>
+    <dimen name="badge_card_inner_padding">12dp</dimen>
+    <dimen name="badge_icon_size">48dp</dimen>
+    <dimen name="badge_row_spacer">12dp</dimen>
+    <dimen name="badge_text_spacer">4dp</dimen>
+
+    <dimen name="badge_card_corner_radius">8dp</dimen>
+    <dimen name="badge_card_stroke_width">1dp</dimen>
 </resources>

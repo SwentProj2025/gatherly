@@ -18,6 +18,8 @@ import com.android.gatherly.model.group.GroupsRepositoryFirestore
 import com.android.gatherly.model.map.Location
 import com.android.gatherly.model.map.LocationRepository
 import com.android.gatherly.model.map.NominatimLocationRepository
+import com.android.gatherly.model.notification.NotificationsRepository
+import com.android.gatherly.model.notification.NotificationsRepositoryProvider
 import com.android.gatherly.model.points.PointsRepository
 import com.android.gatherly.model.points.PointsRepositoryProvider
 import com.android.gatherly.model.profile.Profile
@@ -130,7 +132,9 @@ class AddEventViewModel(
     private val eventsRepository: EventsRepository,
     private val pointsRepository: PointsRepository,
     private val nominatimClient: LocationRepository = NominatimLocationRepository(client),
-    private val authProvider: () -> FirebaseAuth = { Firebase.auth }
+    private val authProvider: () -> FirebaseAuth = { Firebase.auth },
+    private val notificationsRepository: NotificationsRepository =
+        NotificationsRepositoryProvider.repository,
 ) : ViewModel() {
   // State with a private set
   var uiState by mutableStateOf(AddEventUiState())
@@ -583,6 +587,7 @@ class AddEventViewModel(
             eventsRepository,
             profileRepository,
             pointsRepository,
+            notificationsRepository,
             event,
             currentProfile.uid,
             participants)
