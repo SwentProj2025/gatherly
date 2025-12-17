@@ -25,8 +25,8 @@ enum class NotificationType {
   TODO_REMINDER,
   /** A reminder notification for an upcoming event the recipient participates in. */
   EVENT_REMINDER,
-    /** The recipient has been added to a group. */
-    GROUP_ADDED,
+  /** The recipient has been added to a group. */
+  GROUP_ADDED,
   /** The recipient has been added as a participant to an event. */
   EVENT_PARTICIPATION
 }

@@ -37,153 +37,153 @@ class NotificationsLocalRepositoryTest {
   /** Verify that multiple calls to getNewId return unique IDs. */
   @Test
   fun getNewId_returnsUniqueIds() =
-    runUnconfinedTest(testTimeout) {
-      val id1 = repository.getNewId()
-      val id2 = repository.getNewId()
-      val id3 = repository.getNewId()
+      runUnconfinedTest(testTimeout) {
+        val id1 = repository.getNewId()
+        val id2 = repository.getNewId()
+        val id3 = repository.getNewId()
 
-      assertNotEquals(id1, id2)
-      assertNotEquals(id1, id3)
-      assertNotEquals(id2, id3)
+        assertNotEquals(id1, id2)
+        assertNotEquals(id1, id3)
+        assertNotEquals(id2, id3)
 
-      assertEquals("0", id1)
-      assertEquals("1", id2)
-      assertEquals("2", id3)
-    }
+        assertEquals("0", id1)
+        assertEquals("1", id2)
+        assertEquals("2", id3)
+      }
 
   /** Add a notification and retrieve it by ID. */
   @Test
   fun addNotification_andGetNotification_returnsCorrectNotification() =
-    runUnconfinedTest(testTimeout) {
-      val notification = friendRequests[2]
-      repository.addNotification(notification)
-      assertEquals(notification, repository.getNotification(notification.id))
-    }
+      runUnconfinedTest(testTimeout) {
+        val notification = friendRequests[2]
+        repository.addNotification(notification)
+        assertEquals(notification, repository.getNotification(notification.id))
+      }
 
   /**
    * Add multiple notifications for different users and retrieve notifications for a specific user.
    */
   @Test
   fun getUserNotifications_returnsNotificationsForSpecificUser() =
-    runUnconfinedTest(testTimeout) {
-      addSampleNotifications()
+      runUnconfinedTest(testTimeout) {
+        addSampleNotifications()
 
-      val userBNotifications = repository.getUserNotifications("userB")
-      assertEquals(2, userBNotifications.size)
-      assertTrue(userBNotifications.all { it.recipientId == "userB" })
-    }
+        val userBNotifications = repository.getUserNotifications("userB")
+        assertEquals(2, userBNotifications.size)
+        assertTrue(userBNotifications.all { it.recipientId == "userB" })
+      }
 
   /** Add notification, mark as read, and verify wasRead is true. */
   @Test
   fun markAsRead_updatesNotificationReadStatus() =
-    runUnconfinedTest(testTimeout) {
-      repository.addNotification(eventReminders[2])
-      repository.markAsRead(eventReminders[2].id)
-      val updatedNotification = repository.getNotification(eventReminders[2].id)
-      assertTrue(updatedNotification.wasRead)
-    }
+      runUnconfinedTest(testTimeout) {
+        repository.addNotification(eventReminders[2])
+        repository.markAsRead(eventReminders[2].id)
+        val updatedNotification = repository.getNotification(eventReminders[2].id)
+        assertTrue(updatedNotification.wasRead)
+      }
 
   /** Add notification, delete it, and verify it's removed. */
   @Test
   fun deleteNotification_removesNotification() =
-    runUnconfinedTest(testTimeout) {
-      repository.addNotification(todoReminders[1])
-      assertEquals(1, repository.getUserNotifications("userB").size)
-      assertEquals(todoReminders[1], repository.getNotification(todoReminders[1].id))
+      runUnconfinedTest(testTimeout) {
+        repository.addNotification(todoReminders[1])
+        assertEquals(1, repository.getUserNotifications("userB").size)
+        assertEquals(todoReminders[1], repository.getNotification(todoReminders[1].id))
 
-      repository.deleteNotification(todoReminders[1].id)
+        repository.deleteNotification(todoReminders[1].id)
 
-      val userBNotifications = repository.getUserNotifications("userB")
-      assertEquals(0, userBNotifications.size)
-    }
+        val userBNotifications = repository.getUserNotifications("userB")
+        assertEquals(0, userBNotifications.size)
+      }
 
   // ============ Edge Cases ============
 
   /** Verify that getting a notification with an invalid ID throws NoSuchElementException. */
   @Test(expected = NoSuchElementException::class)
   fun getNotification_withInvalidId_throwsException() =
-    runUnconfinedTest(testTimeout) {
-      addSampleNotifications()
+      runUnconfinedTest(testTimeout) {
+        addSampleNotifications()
 
-      val invalidId = "non_existent_id"
-      repository.getNotification(invalidId)
-    }
+        val invalidId = "non_existent_id"
+        repository.getNotification(invalidId)
+      }
 
   /** Verify that marking a non-existent notification as read throws NoSuchElementException. */
   @Test(expected = NoSuchElementException::class)
   fun markAsRead_withInvalidId_throwsException() =
-    runUnconfinedTest(testTimeout) {
-      addSampleNotifications()
+      runUnconfinedTest(testTimeout) {
+        addSampleNotifications()
 
-      val invalidId = "non_existent_id"
-      repository.markAsRead(invalidId)
-    }
+        val invalidId = "non_existent_id"
+        repository.markAsRead(invalidId)
+      }
 
   /** Verify that deleting a non-existent notification throws NoSuchElementException. */
   @Test(expected = NoSuchElementException::class)
   fun deleteNotification_withInvalidId_throwsException() =
-    runUnconfinedTest(testTimeout) {
-      addSampleNotifications()
+      runUnconfinedTest(testTimeout) {
+        addSampleNotifications()
 
-      val invalidId = "non_existent_id"
-      repository.deleteNotification(invalidId)
-    }
+        val invalidId = "non_existent_id"
+        repository.deleteNotification(invalidId)
+      }
 
   /** Verify that adding a notification with a duplicate ID throws IllegalArgumentException. */
   @Test(expected = IllegalArgumentException::class)
   fun addNotification_withDuplicateId_throwsException() =
-    runUnconfinedTest(testTimeout) {
-      repository.addNotification(friendRequests[0])
-      repository.addNotification(friendRequests[0])
-    }
+      runUnconfinedTest(testTimeout) {
+        repository.addNotification(friendRequests[0])
+        repository.addNotification(friendRequests[0])
+      }
 
   /** Verify that getUserNotifications returns an empty list for a user with no notifications. */
   @Test
   fun getUserNotifications_withNoNotifications_returnsEmptyList() =
-    runUnconfinedTest(testTimeout) {
-      addSampleNotifications()
+      runUnconfinedTest(testTimeout) {
+        addSampleNotifications()
 
-      val noNotificationUser = "userE"
-      val userENotifications = repository.getUserNotifications(noNotificationUser)
-      assertTrue(userENotifications.isEmpty())
-    }
+        val noNotificationUser = "userE"
+        val userENotifications = repository.getUserNotifications(noNotificationUser)
+        assertTrue(userENotifications.isEmpty())
+      }
 
   // ============ State Verification ============
 
   /** Add notification, retrieve it, and verify all fields are preserved. */
   @Test
   fun addNotification_preservesAllFields() =
-    runUnconfinedTest(testTimeout) {
-      repository.addNotification(friendRequests[2])
-      assertEquals(friendRequests[2], repository.getNotification(friendRequests[2].id))
+      runUnconfinedTest(testTimeout) {
+        repository.addNotification(friendRequests[2])
+        assertEquals(friendRequests[2], repository.getNotification(friendRequests[2].id))
 
-      val retrievedNotification = repository.getNotification(friendRequests[2].id)
-      assertEquals(friendRequests[2].id, retrievedNotification.id)
-      assertEquals(friendRequests[2].type, retrievedNotification.type)
-      assertEquals(friendRequests[2].emissionTime, retrievedNotification.emissionTime)
-      assertEquals(friendRequests[2].senderId, retrievedNotification.senderId)
-      assertEquals(friendRequests[2].relatedEntityId, retrievedNotification.relatedEntityId)
-      assertEquals(friendRequests[2].recipientId, retrievedNotification.recipientId)
-      assertEquals(friendRequests[2].wasRead, retrievedNotification.wasRead)
-    }
+        val retrievedNotification = repository.getNotification(friendRequests[2].id)
+        assertEquals(friendRequests[2].id, retrievedNotification.id)
+        assertEquals(friendRequests[2].type, retrievedNotification.type)
+        assertEquals(friendRequests[2].emissionTime, retrievedNotification.emissionTime)
+        assertEquals(friendRequests[2].senderId, retrievedNotification.senderId)
+        assertEquals(friendRequests[2].relatedEntityId, retrievedNotification.relatedEntityId)
+        assertEquals(friendRequests[2].recipientId, retrievedNotification.recipientId)
+        assertEquals(friendRequests[2].wasRead, retrievedNotification.wasRead)
+      }
 
   /** Add notification, mark as read, and verify only wasRead field changes. */
   @Test
   fun markAsRead_onlyChangesWasReadField() =
-    runUnconfinedTest(testTimeout) {
-      repository.addNotification(eventReminders[1])
-      assertEquals(eventReminders[1], repository.getNotification(eventReminders[1].id))
-      repository.markAsRead(eventReminders[1].id)
-      val updatedNotification = repository.getNotification(eventReminders[1].id)
+      runUnconfinedTest(testTimeout) {
+        repository.addNotification(eventReminders[1])
+        assertEquals(eventReminders[1], repository.getNotification(eventReminders[1].id))
+        repository.markAsRead(eventReminders[1].id)
+        val updatedNotification = repository.getNotification(eventReminders[1].id)
 
-      assertTrue(updatedNotification.wasRead)
-      assertEquals(eventReminders[1].id, updatedNotification.id)
-      assertEquals(eventReminders[1].type, updatedNotification.type)
-      assertEquals(eventReminders[1].emissionTime, updatedNotification.emissionTime)
-      assertEquals(eventReminders[1].senderId, updatedNotification.senderId)
-      assertEquals(eventReminders[1].relatedEntityId, updatedNotification.relatedEntityId)
-      assertEquals(eventReminders[1].recipientId, updatedNotification.recipientId)
-    }
+        assertTrue(updatedNotification.wasRead)
+        assertEquals(eventReminders[1].id, updatedNotification.id)
+        assertEquals(eventReminders[1].type, updatedNotification.type)
+        assertEquals(eventReminders[1].emissionTime, updatedNotification.emissionTime)
+        assertEquals(eventReminders[1].senderId, updatedNotification.senderId)
+        assertEquals(eventReminders[1].relatedEntityId, updatedNotification.relatedEntityId)
+        assertEquals(eventReminders[1].recipientId, updatedNotification.recipientId)
+      }
 
   // ============ Ordering ============
 
@@ -193,11 +193,10 @@ class NotificationsLocalRepositoryTest {
    */
   @Test
   fun getUserNotifications_returnsNotificationsInAscendingTimeOrder() =
-    runUnconfinedTest(testTimeout) {
-      addSampleNotifications()
-      val userANotifications = repository.getUserNotifications("userA")
-      assertEquals(2, userANotifications.size)
-      assertEquals(userANotifications.sortedBy { it.emissionTime }, userANotifications)
-    }
-
+      runUnconfinedTest(testTimeout) {
+        addSampleNotifications()
+        val userANotifications = repository.getUserNotifications("userA")
+        assertEquals(2, userANotifications.size)
+        assertEquals(userANotifications.sortedBy { it.emissionTime }, userANotifications)
+      }
 }
