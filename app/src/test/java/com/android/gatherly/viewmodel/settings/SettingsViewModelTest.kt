@@ -485,4 +485,33 @@ class SettingsViewModelTest {
         advanceUntilIdle()
         Mockito.verify(statusManagerMock).setStatus(status = ProfileStatus.OFFLINE)
       }
+
+  /**
+   * Tests that the `deleteProfile()` function successfully deletes a user's profile.
+   *
+   * Verifies that:
+   * - `accountDeleted` is set to `true` after a successful profile deletion.
+   * - `errorMsg` in the UI state is `null`, indicating no errors occurred.
+   *
+   * The test mocks a user, ensures their profile exists, calls the deletion method, and then checks
+   * the resulting state.
+   */
+  @Test
+  fun deleteProfile_WhenSuccessful_EmitsAccountDeletedTrue() =
+      runTest(testDispatcher, testTimeout) {
+        // Given showing that a user exists
+        mockitoUtils.chooseCurrentUser("currentUser")
+
+        // Ensure profile exists
+        profileLocalRepository.initProfileIfMissing("currentUser", "")
+        advanceUntilIdle()
+
+        // When
+        viewModel.deleteProfile()
+        advanceUntilIdle()
+
+        // Then
+        assertTrue(viewModel.accountDeleted.value)
+        assertNull(viewModel.uiState.value.errorMsg)
+      }
 }
