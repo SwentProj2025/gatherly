@@ -45,7 +45,7 @@ private const val TIMEOUT = 5_000L
 
 /** Tests for the OverviewScreen composable UI component. */
 @OptIn(ExperimentalCoroutinesApi::class)
-class OverviewScreenTest : GatherlyTest() {
+class TodoOverviewScreenTest : GatherlyTest() {
   @get:Rule val composeTestRule = createComposeRule()
 
   private lateinit var overviewViewModel: OverviewViewModel

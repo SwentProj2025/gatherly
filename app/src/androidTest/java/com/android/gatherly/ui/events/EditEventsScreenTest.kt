@@ -24,7 +24,7 @@ import com.android.gatherly.model.map.Location
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
-import com.android.gatherly.ui.todo.AddToDoScreenTestTags
+import com.android.gatherly.ui.todo.AddTodoScreenTestTags
 import com.android.gatherly.utils.AlertDialogTestTags
 import com.android.gatherly.utils.EventsParticipantsSuggestionTestTag
 import com.google.firebase.Timestamp
@@ -159,7 +159,7 @@ class EditEventsScreenTest {
     composeTestRule.onNodeWithTag(EditEventsScreenTestTags.INPUT_START).assertIsDisplayed()
     composeTestRule.onNodeWithTag(EditEventsScreenTestTags.INPUT_END).assertIsDisplayed()
     composeTestRule
-        .onNodeWithTag(AddToDoScreenTestTags.ERROR_MESSAGE, useUnmergedTree = true)
+        .onNodeWithTag(AddTodoScreenTestTags.ERROR_MESSAGE, useUnmergedTree = true)
         .assertIsNotDisplayed()
     composeTestRule.onNodeWithTag(EditEventsScreenTestTags.BTN_SAVE)
     composeTestRule.onNodeWithTag(EditEventsScreenTestTags.BTN_DELETE)

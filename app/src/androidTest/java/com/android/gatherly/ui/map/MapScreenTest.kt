@@ -25,7 +25,7 @@ import com.android.gatherly.ui.events.EventsScreen
 import com.android.gatherly.ui.events.EventsScreenActions
 import com.android.gatherly.ui.events.EventsScreenTestTags
 import com.android.gatherly.ui.events.EventsViewModel
-import com.android.gatherly.ui.todo.OverviewScreenTestTags
+import com.android.gatherly.ui.todo.TodoOverviewScreenTestTags
 import com.android.gatherly.utils.AlertDialogTestTags
 import com.android.gatherly.utils.MapCoordinator
 import com.android.gatherly.utils.MockitoUtils
@@ -263,7 +263,7 @@ class MapScreenTest {
     renderDefaultMapUi()
     compose.onNodeWithTag(MapScreenTestTags.TODO_BUTTON, useUnmergedTree = true).performClick()
     compose
-        .onNodeWithTag(OverviewScreenTestTags.CREATE_TODO_BUTTON, useUnmergedTree = true)
+        .onNodeWithTag(TodoOverviewScreenTestTags.CREATE_TODO_BUTTON, useUnmergedTree = true)
         .isDisplayed()
   }
 
