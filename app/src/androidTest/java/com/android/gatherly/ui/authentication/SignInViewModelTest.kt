@@ -59,7 +59,7 @@ class SignInViewModelTest : FirestoreGatherlyTest() {
     waitForUserSignIn()
 
     // Check the loading, firebase user, destination screen and signedIn
-    assert(signInViewModel.uiState.isLoading)
+    assert(!signInViewModel.uiState.isLoading)
     assert(FirebaseEmulator.auth.currentUser != null)
     assert(!profileRepository.initProfileIfMissing(FirebaseEmulator.auth.currentUser?.uid!!, ""))
     assert(signInViewModel.uiState.destinationScreen == "init_profile")
