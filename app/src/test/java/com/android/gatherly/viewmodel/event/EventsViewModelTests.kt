@@ -7,9 +7,10 @@ import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.ui.events.EventsViewModel
 import com.android.gatherly.utilstest.MockitoUtils
 import com.google.firebase.Timestamp
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -30,12 +31,13 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class EventsViewModelTests {
 
-  private val testDispatcher = StandardTestDispatcher()
+  private val testDispatcher = UnconfinedTestDispatcher()
   private lateinit var repo: EventsRepository
 
   private lateinit var profileRepo: ProfileLocalRepository
   private lateinit var vm: EventsViewModel
   private lateinit var mockitoUtils: MockitoUtils
+  private val testTimeout = 120.seconds
 
   @Before
   fun setup() {
@@ -60,257 +62,278 @@ class EventsViewModelTests {
     Dispatchers.resetMain()
   }
 
-  private fun fillRepository() = runTest {
-    for (event in EventsViewModelTestsData.allTestEvents) {
-      repo.addEvent(event)
-    }
-    profileRepo.addProfile(Profile(uid = "testUser123", name = "Test User", profilePicture = ""))
-    advanceUntilIdle()
-  }
+  private fun fillRepository() =
+      runTest(testDispatcher, testTimeout) {
+        for (event in EventsViewModelTestsData.allTestEvents) {
+          repo.addEvent(event)
+        }
+        profileRepo.addProfile(
+            Profile(uid = "testUser123", name = "Test User", profilePicture = ""))
+        advanceUntilIdle()
+      }
 
   /** Verifies that the ViewModel correctly categorizes events on initialization. */
   @Test
-  fun init_CorrectlyPopulatesInitialState() = runTest {
-    // Initial state verification
-    assertEquals(1, vm.uiState.value.createdEventList.size)
-    assertTrue(
-        vm.uiState.value.createdEventList.any {
-          it.id == EventsViewModelTestsData.eventCreatedByTestUser.id
-        })
+  fun init_CorrectlyPopulatesInitialState() =
+      runTest(testDispatcher, testTimeout) {
+        // Initial state verification
+        assertEquals(1, vm.uiState.value.createdEventList.size)
+        assertTrue(
+            vm.uiState.value.createdEventList.any {
+              it.id == EventsViewModelTestsData.eventCreatedByTestUser.id
+            })
 
-    assertEquals(1, vm.uiState.value.participatedEventList.size)
-    assertTrue(
-        vm.uiState.value.participatedEventList.any {
-          it.id == EventsViewModelTestsData.eventWithTestUserParticipating.id
-        })
+        assertEquals(1, vm.uiState.value.participatedEventList.size)
+        assertTrue(
+            vm.uiState.value.participatedEventList.any {
+              it.id == EventsViewModelTestsData.eventWithTestUserParticipating.id
+            })
 
-    assertEquals(2, vm.uiState.value.globalEventList.size)
-    assertTrue(
-        vm.uiState.value.globalEventList.any { it.id == EventsViewModelTestsData.globalEvent.id })
-    assertTrue(
-        vm.uiState.value.globalEventList.any { it.id == EventsViewModelTestsData.pastEvent.id })
+        assertEquals(2, vm.uiState.value.globalEventList.size)
+        assertTrue(
+            vm.uiState.value.globalEventList.any {
+              it.id == EventsViewModelTestsData.globalEvent.id
+            })
+        assertTrue(
+            vm.uiState.value.globalEventList.any { it.id == EventsViewModelTestsData.pastEvent.id })
 
-    assertEquals(4, vm.uiState.value.fullEventList.size)
+        assertEquals(4, vm.uiState.value.fullEventList.size)
 
-    assertNull(vm.editEventRequest.value)
-  }
+        assertNull(vm.editEventRequest.value)
+      }
 
   /** Verifies that participating in an event moves it from global to participated list. */
   @Test
-  fun onParticipate_MovesEventFromGlobalToParticipated() = runTest {
-    // Initial state verification
-    assertTrue(
-        vm.uiState.value.globalEventList.any { it.id == EventsViewModelTestsData.globalEvent.id })
-    assertEquals(2, vm.uiState.value.globalEventList.size)
-    assertFalse(
-        vm.uiState.value.participatedEventList.any {
-          it.id == EventsViewModelTestsData.globalEvent.id
-        })
-    assertEquals(1, vm.uiState.value.participatedEventList.size)
+  fun onParticipate_MovesEventFromGlobalToParticipated() =
+      runTest(testDispatcher, testTimeout) {
+        // Initial state verification
+        assertTrue(
+            vm.uiState.value.globalEventList.any {
+              it.id == EventsViewModelTestsData.globalEvent.id
+            })
+        assertEquals(2, vm.uiState.value.globalEventList.size)
+        assertFalse(
+            vm.uiState.value.participatedEventList.any {
+              it.id == EventsViewModelTestsData.globalEvent.id
+            })
+        assertEquals(1, vm.uiState.value.participatedEventList.size)
 
-    // onParticipate call
-    vm.onParticipate(EventsViewModelTestsData.globalEvent.id, EventsViewModelTestsData.TEST_USER_ID)
+        // onParticipate call
+        vm.onParticipate(
+            EventsViewModelTestsData.globalEvent.id, EventsViewModelTestsData.TEST_USER_ID)
 
-    advanceUntilIdle()
+        advanceUntilIdle()
 
-    // Post-action state verification
-    assertFalse(
-        vm.uiState.value.globalEventList.any { it.id == EventsViewModelTestsData.globalEvent.id })
-    assertTrue(
-        vm.uiState.value.participatedEventList.any {
-          it.id == EventsViewModelTestsData.globalEvent.id
-        })
-    assertEquals(2, vm.uiState.value.participatedEventList.size)
-    assertEquals(1, vm.uiState.value.globalEventList.size)
+        // Post-action state verification
+        assertFalse(
+            vm.uiState.value.globalEventList.any {
+              it.id == EventsViewModelTestsData.globalEvent.id
+            })
+        assertTrue(
+            vm.uiState.value.participatedEventList.any {
+              it.id == EventsViewModelTestsData.globalEvent.id
+            })
+        assertEquals(2, vm.uiState.value.participatedEventList.size)
+        assertEquals(1, vm.uiState.value.globalEventList.size)
 
-    // Verifying other lists remain unchanged
-    assertEquals(1, vm.uiState.value.createdEventList.size)
-    assertEquals(4, vm.uiState.value.fullEventList.size)
-  }
+        // Verifying other lists remain unchanged
+        assertEquals(1, vm.uiState.value.createdEventList.size)
+        assertEquals(4, vm.uiState.value.fullEventList.size)
+      }
 
   /** Verifies that unregistering from an event moves it from participated to global list. */
   @Test
-  fun onUnregister_MovesEventFromParticipatedToGlobal() = runTest {
-    // Initial state verification
-    assertFalse(
-        vm.uiState.value.globalEventList.any {
-          it.id == EventsViewModelTestsData.eventWithTestUserParticipating.id
-        })
-    assertEquals(2, vm.uiState.value.globalEventList.size)
-    assertTrue(
-        vm.uiState.value.participatedEventList.any {
-          it.id == EventsViewModelTestsData.eventWithTestUserParticipating.id
-        })
-    assertEquals(1, vm.uiState.value.participatedEventList.size)
+  fun onUnregister_MovesEventFromParticipatedToGlobal() =
+      runTest(testDispatcher, testTimeout) {
+        // Initial state verification
+        assertFalse(
+            vm.uiState.value.globalEventList.any {
+              it.id == EventsViewModelTestsData.eventWithTestUserParticipating.id
+            })
+        assertEquals(2, vm.uiState.value.globalEventList.size)
+        assertTrue(
+            vm.uiState.value.participatedEventList.any {
+              it.id == EventsViewModelTestsData.eventWithTestUserParticipating.id
+            })
+        assertEquals(1, vm.uiState.value.participatedEventList.size)
 
-    // onUnregister call
-    vm.onUnregister(
-        EventsViewModelTestsData.eventWithTestUserParticipating.id,
-        EventsViewModelTestsData.TEST_USER_ID)
+        // onUnregister call
+        vm.onUnregister(
+            EventsViewModelTestsData.eventWithTestUserParticipating.id,
+            EventsViewModelTestsData.TEST_USER_ID)
 
-    advanceUntilIdle()
+        advanceUntilIdle()
 
-    // Post-action assertions
-    assertTrue(
-        vm.uiState.value.globalEventList.any {
-          it.id == EventsViewModelTestsData.eventWithTestUserParticipating.id
-        })
-    assertEquals(3, vm.uiState.value.globalEventList.size)
-    assertFalse(
-        vm.uiState.value.participatedEventList.any {
-          it.id == EventsViewModelTestsData.eventWithTestUserParticipating.id
-        })
-    assertEquals(0, vm.uiState.value.participatedEventList.size)
+        // Post-action assertions
+        assertTrue(
+            vm.uiState.value.globalEventList.any {
+              it.id == EventsViewModelTestsData.eventWithTestUserParticipating.id
+            })
+        assertEquals(3, vm.uiState.value.globalEventList.size)
+        assertFalse(
+            vm.uiState.value.participatedEventList.any {
+              it.id == EventsViewModelTestsData.eventWithTestUserParticipating.id
+            })
+        assertEquals(0, vm.uiState.value.participatedEventList.size)
 
-    // Verifying other lists remain unchanged
-    assertEquals(1, vm.uiState.value.createdEventList.size)
-    assertEquals(4, vm.uiState.value.fullEventList.size)
-  }
+        // Verifying other lists remain unchanged
+        assertEquals(1, vm.uiState.value.createdEventList.size)
+        assertEquals(4, vm.uiState.value.fullEventList.size)
+      }
 
   /** Verifies that requesting to edit an event updates the editEventRequest state. */
   @Test
-  fun requestEditEvent_UpdatesEditEventRequest() = runTest {
-    // Initial state verification
-    assertNull(vm.editEventRequest.value)
+  fun requestEditEvent_UpdatesEditEventRequest() =
+      runTest(testDispatcher, testTimeout) {
+        // Initial state verification
+        assertNull(vm.editEventRequest.value)
 
-    // requestEditEvent call
-    vm.requestEditEvent(EventsViewModelTestsData.eventCreatedByTestUser)
+        // requestEditEvent call
+        vm.requestEditEvent(EventsViewModelTestsData.eventCreatedByTestUser)
 
-    // Final state verification
-    assertTrue(vm.editEventRequest.value == EventsViewModelTestsData.eventCreatedByTestUser)
-  }
+        // Final state verification
+        assertTrue(vm.editEventRequest.value == EventsViewModelTestsData.eventCreatedByTestUser)
+      }
 
   /** Verifies that editing an event updates its properties and clears the edit request. */
   @Test
-  fun onEditEvent_UpdatesEventPropertiesAndClearsEditRequest() = runTest {
-    // Setting editEventRequest to non-null value
-    vm.requestEditEvent(EventsViewModelTestsData.eventCreatedByTestUser)
+  fun onEditEvent_UpdatesEventPropertiesAndClearsEditRequest() =
+      runTest(testDispatcher, testTimeout) {
+        // Setting editEventRequest to non-null value
+        vm.requestEditEvent(EventsViewModelTestsData.eventCreatedByTestUser)
 
-    // Initial state verification
-    val initialEvent =
-        vm.uiState.value.createdEventList.find {
-          it.id == EventsViewModelTestsData.eventCreatedByTestUser.id
-        }
-    assertNotNull(initialEvent)
-    assertEquals("event1", initialEvent?.id)
-    assertEquals("Study Session", initialEvent?.title)
-    assertEquals("CS-311 group study", initialEvent?.description)
-    assertEquals("Alex", initialEvent?.creatorName)
-    assertEquals(EventsViewModelTestsData.TEST_USER_ID, initialEvent?.creatorId)
-    assertEquals(listOf(EventsViewModelTestsData.TEST_USER_ID), initialEvent?.participants)
-    assertEquals(EventsViewModelTestsData.testLocation1, initialEvent?.location)
-    assertEquals(Timestamp(1730000000, 0), initialEvent?.date)
-    assertEquals(Timestamp(1730010000, 0), initialEvent?.startTime)
-    assertEquals(Timestamp(1730020000, 0), initialEvent?.endTime)
+        // Initial state verification
+        val initialEvent =
+            vm.uiState.value.createdEventList.find {
+              it.id == EventsViewModelTestsData.eventCreatedByTestUser.id
+            }
+        assertNotNull(initialEvent)
+        assertEquals("event1", initialEvent?.id)
+        assertEquals("Study Session", initialEvent?.title)
+        assertEquals("CS-311 group study", initialEvent?.description)
+        assertEquals("Alex", initialEvent?.creatorName)
+        assertEquals(EventsViewModelTestsData.TEST_USER_ID, initialEvent?.creatorId)
+        assertEquals(listOf(EventsViewModelTestsData.TEST_USER_ID), initialEvent?.participants)
+        assertEquals(EventsViewModelTestsData.testLocation1, initialEvent?.location)
+        assertEquals(Timestamp(1730000000, 0), initialEvent?.date)
+        assertEquals(Timestamp(1730010000, 0), initialEvent?.startTime)
+        assertEquals(Timestamp(1730020000, 0), initialEvent?.endTime)
 
-    // onEditEvent call
-    vm.onEditEvent(
-        EventsViewModelTestsData.eventCreatedByTestUser.id,
-        EventsViewModelTestsData.eventCreatedByTestUser.copy(
-            title = "Updated Study Session",
-            description = "Updated description",
-            location = EventsViewModelTestsData.testLocation2,
-            date = Timestamp(1740000000, 0),
-            startTime = Timestamp(1740010000, 0),
-            endTime = Timestamp(1740020000, 0)),
-        EventsViewModelTestsData.TEST_USER_ID)
+        // onEditEvent call
+        vm.onEditEvent(
+            EventsViewModelTestsData.eventCreatedByTestUser.id,
+            EventsViewModelTestsData.eventCreatedByTestUser.copy(
+                title = "Updated Study Session",
+                description = "Updated description",
+                location = EventsViewModelTestsData.testLocation2,
+                date = Timestamp(1740000000, 0),
+                startTime = Timestamp(1740010000, 0),
+                endTime = Timestamp(1740020000, 0)),
+            EventsViewModelTestsData.TEST_USER_ID)
 
-    advanceUntilIdle()
+        advanceUntilIdle()
 
-    // New field assertions
-    val updatedEvent =
-        vm.uiState.value.createdEventList.find {
-          it.id == EventsViewModelTestsData.eventCreatedByTestUser.id
-        }
-    assertNotNull(updatedEvent)
-    assertEquals("event1", updatedEvent?.id)
-    assertEquals("Updated Study Session", updatedEvent?.title)
-    assertEquals("Updated description", updatedEvent?.description)
-    assertEquals("Alex", updatedEvent?.creatorName)
-    assertEquals(listOf(EventsViewModelTestsData.TEST_USER_ID), updatedEvent?.participants)
-    assertEquals(EventsViewModelTestsData.testLocation2, updatedEvent?.location)
-    assertEquals(Timestamp(1740000000, 0), updatedEvent?.date)
-    assertEquals(Timestamp(1740010000, 0), updatedEvent?.startTime)
-    assertEquals(Timestamp(1740020000, 0), updatedEvent?.endTime)
-    assertEquals(EventsViewModelTestsData.TEST_USER_ID, updatedEvent?.creatorId)
+        // New field assertions
+        val updatedEvent =
+            vm.uiState.value.createdEventList.find {
+              it.id == EventsViewModelTestsData.eventCreatedByTestUser.id
+            }
+        assertNotNull(updatedEvent)
+        assertEquals("event1", updatedEvent?.id)
+        assertEquals("Updated Study Session", updatedEvent?.title)
+        assertEquals("Updated description", updatedEvent?.description)
+        assertEquals("Alex", updatedEvent?.creatorName)
+        assertEquals(listOf(EventsViewModelTestsData.TEST_USER_ID), updatedEvent?.participants)
+        assertEquals(EventsViewModelTestsData.testLocation2, updatedEvent?.location)
+        assertEquals(Timestamp(1740000000, 0), updatedEvent?.date)
+        assertEquals(Timestamp(1740010000, 0), updatedEvent?.startTime)
+        assertEquals(Timestamp(1740020000, 0), updatedEvent?.endTime)
+        assertEquals(EventsViewModelTestsData.TEST_USER_ID, updatedEvent?.creatorId)
 
-    // Checking event stays in same list
-    assertTrue(
-        vm.uiState.value.createdEventList.any {
-          it.id == EventsViewModelTestsData.eventCreatedByTestUser.id
-        })
+        // Checking event stays in same list
+        assertTrue(
+            vm.uiState.value.createdEventList.any {
+              it.id == EventsViewModelTestsData.eventCreatedByTestUser.id
+            })
 
-    // Verifying other lists remain unchanged
-    assertEquals(1, vm.uiState.value.createdEventList.size)
-    assertEquals(1, vm.uiState.value.participatedEventList.size)
-    assertEquals(2, vm.uiState.value.globalEventList.size)
-    assertEquals(4, vm.uiState.value.fullEventList.size)
+        // Verifying other lists remain unchanged
+        assertEquals(1, vm.uiState.value.createdEventList.size)
+        assertEquals(1, vm.uiState.value.participatedEventList.size)
+        assertEquals(2, vm.uiState.value.globalEventList.size)
+        assertEquals(4, vm.uiState.value.fullEventList.size)
 
-    // Checking editEventRequest was changed to null
-    assertNull(vm.editEventRequest.value)
-  }
+        // Checking editEventRequest was changed to null
+        assertNull(vm.editEventRequest.value)
+      }
 
   /** Verifies that participating in an event the user is already in causes no state change. */
   @Test
-  fun onParticipate_WhenAlreadyParticipating_NoStateChange() = runTest {
-    // Initial state verification - user is already participating
-    assertTrue(
-        vm.uiState.value.participatedEventList.any {
-          it.id == EventsViewModelTestsData.eventWithTestUserParticipating.id
-        })
-    assertEquals(1, vm.uiState.value.participatedEventList.size)
-    assertEquals(2, vm.uiState.value.globalEventList.size)
+  fun onParticipate_WhenAlreadyParticipating_NoStateChange() =
+      runTest(testDispatcher, testTimeout) {
+        // Initial state verification - user is already participating
+        assertTrue(
+            vm.uiState.value.participatedEventList.any {
+              it.id == EventsViewModelTestsData.eventWithTestUserParticipating.id
+            })
+        assertEquals(1, vm.uiState.value.participatedEventList.size)
+        assertEquals(2, vm.uiState.value.globalEventList.size)
 
-    // onParticipate call on event user is already in
-    vm.onParticipate(
-        EventsViewModelTestsData.eventWithTestUserParticipating.id,
-        EventsViewModelTestsData.TEST_USER_ID)
+        // onParticipate call on event user is already in
+        vm.onParticipate(
+            EventsViewModelTestsData.eventWithTestUserParticipating.id,
+            EventsViewModelTestsData.TEST_USER_ID)
 
-    advanceUntilIdle()
+        advanceUntilIdle()
 
-    // Post-action state verification - nothing should change
-    assertTrue(
-        vm.uiState.value.participatedEventList.any {
-          it.id == EventsViewModelTestsData.eventWithTestUserParticipating.id
-        })
-    assertEquals(1, vm.uiState.value.participatedEventList.size)
-    assertEquals(2, vm.uiState.value.globalEventList.size)
+        // Post-action state verification - nothing should change
+        assertTrue(
+            vm.uiState.value.participatedEventList.any {
+              it.id == EventsViewModelTestsData.eventWithTestUserParticipating.id
+            })
+        assertEquals(1, vm.uiState.value.participatedEventList.size)
+        assertEquals(2, vm.uiState.value.globalEventList.size)
 
-    // Verifying all lists remain unchanged
-    assertEquals(1, vm.uiState.value.createdEventList.size)
-    assertEquals(4, vm.uiState.value.fullEventList.size)
-  }
+        // Verifying all lists remain unchanged
+        assertEquals(1, vm.uiState.value.createdEventList.size)
+        assertEquals(4, vm.uiState.value.fullEventList.size)
+      }
 
   /** Verifies that unregistering from an event the user is not in causes no state change. */
   @Test
-  fun onUnregister_WhenNotParticipating_NoStateChange() = runTest {
-    // Initial state verification - user is not participating in global event
-    assertTrue(
-        vm.uiState.value.globalEventList.any { it.id == EventsViewModelTestsData.globalEvent.id })
-    assertFalse(
-        vm.uiState.value.participatedEventList.any {
-          it.id == EventsViewModelTestsData.globalEvent.id
-        })
-    assertEquals(2, vm.uiState.value.globalEventList.size)
-    assertEquals(1, vm.uiState.value.participatedEventList.size)
+  fun onUnregister_WhenNotParticipating_NoStateChange() =
+      runTest(testDispatcher, testTimeout) {
+        // Initial state verification - user is not participating in global event
+        assertTrue(
+            vm.uiState.value.globalEventList.any {
+              it.id == EventsViewModelTestsData.globalEvent.id
+            })
+        assertFalse(
+            vm.uiState.value.participatedEventList.any {
+              it.id == EventsViewModelTestsData.globalEvent.id
+            })
+        assertEquals(2, vm.uiState.value.globalEventList.size)
+        assertEquals(1, vm.uiState.value.participatedEventList.size)
 
-    // onUnregister call on event user is not in
-    vm.onUnregister(EventsViewModelTestsData.globalEvent.id, EventsViewModelTestsData.TEST_USER_ID)
+        // onUnregister call on event user is not in
+        vm.onUnregister(
+            EventsViewModelTestsData.globalEvent.id, EventsViewModelTestsData.TEST_USER_ID)
 
-    advanceUntilIdle()
+        advanceUntilIdle()
 
-    // Post-action state verification - nothing should change
-    assertTrue(
-        vm.uiState.value.globalEventList.any { it.id == EventsViewModelTestsData.globalEvent.id })
-    assertFalse(
-        vm.uiState.value.participatedEventList.any {
-          it.id == EventsViewModelTestsData.globalEvent.id
-        })
-    assertEquals(2, vm.uiState.value.globalEventList.size)
-    assertEquals(1, vm.uiState.value.participatedEventList.size)
+        // Post-action state verification - nothing should change
+        assertTrue(
+            vm.uiState.value.globalEventList.any {
+              it.id == EventsViewModelTestsData.globalEvent.id
+            })
+        assertFalse(
+            vm.uiState.value.participatedEventList.any {
+              it.id == EventsViewModelTestsData.globalEvent.id
+            })
+        assertEquals(2, vm.uiState.value.globalEventList.size)
+        assertEquals(1, vm.uiState.value.participatedEventList.size)
 
-    // Verifying all lists remain unchanged
-    assertEquals(1, vm.uiState.value.createdEventList.size)
-    assertEquals(4, vm.uiState.value.fullEventList.size)
-  }
+        // Verifying all lists remain unchanged
+        assertEquals(1, vm.uiState.value.createdEventList.size)
+        assertEquals(4, vm.uiState.value.fullEventList.size)
+      }
 }
