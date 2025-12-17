@@ -1,5 +1,13 @@
 package com.android.gatherly.model.todoCategory
 
+/**
+ * Simple in-memory implementation of [ToDoCategoryRepository] for testing or local use.
+ * * Stores categories in a mutable list.
+ * * Generates new IDs with a local counter.
+ * * Supports default categories from [DEFAULT_CATEGORIES].
+ *
+ * Note: Data is not persisted and IDs are not globally unique.
+ */
 class ToDoCategoryLocalRepository : ToDoCategoryRepository {
   private val categories: MutableList<ToDoCategory> = mutableListOf()
   private var counter = 0
