@@ -7,13 +7,17 @@ import com.google.firebase.firestore.firestore
 // SwEnt staff.
 
 /**
- * Provides a single instance of focus sessions the repository in the app. `repository` is mutable
- * for testing purposes.
+ * Provides a single instance of [FocusSessionsRepository] for the app.
+ *
+ * This object lazily initializes the repository with [FocusSessionsRepositoryFirestore] using
+ * Firebase Firestore. The [repository] property is mutable to allow swapping implementations for
+ * testing purposes.
  */
 object FocusSessionsRepositoryProvider {
   private val _repository: FocusSessionsRepository by lazy {
     FocusSessionsRepositoryFirestore(Firebase.firestore)
   }
 
+  /** The current instance of [FocusSessionsRepository]. Mutable for testing. */
   var repository: FocusSessionsRepository = _repository
 }
