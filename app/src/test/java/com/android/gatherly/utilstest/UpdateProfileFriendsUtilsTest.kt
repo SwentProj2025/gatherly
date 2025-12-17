@@ -49,7 +49,7 @@ class UpdateProfileFriendsUtilsTest {
                 wasRead = false)
         notifs.addNotification(notif)
 
-    val updated = getProfileWithSyncedNotifications(profiles, notifs, pointsRepository, "u1")
+        val updated = getProfileWithSyncedNotifications(profiles, notifs, pointsRepository, "u1")
 
         assertNotNull(updated)
         assertTrue(updated!!.friendUids.contains("u2"))
@@ -85,7 +85,7 @@ class UpdateProfileFriendsUtilsTest {
                 wasRead = false)
         notifs.addNotification(notif)
 
-    val updated = getProfileWithSyncedNotifications(profiles, notifs, pointsRepository, "u1")
+        val updated = getProfileWithSyncedNotifications(profiles, notifs, pointsRepository, "u1")
 
         assertNotNull(updated)
         assertTrue(updated!!.friendUids.isEmpty())
@@ -119,7 +119,7 @@ class UpdateProfileFriendsUtilsTest {
                 wasRead = false)
         notifs.addNotification(notif)
 
-    val updated = getProfileWithSyncedNotifications(profiles, notifs, pointsRepository, "u1")
+        val updated = getProfileWithSyncedNotifications(profiles, notifs, pointsRepository, "u1")
 
         assertNotNull(updated)
         assertTrue(updated!!.friendUids.isEmpty())
@@ -151,7 +151,7 @@ class UpdateProfileFriendsUtilsTest {
                 wasRead = false)
         notifs.addNotification(notif)
 
-    val updated = getProfileWithSyncedNotifications(profiles, notifs, pointsRepository, "u1")!!
+        val updated = getProfileWithSyncedNotifications(profiles, notifs, pointsRepository, "u1")!!
 
         assertTrue(updated.friendUids.contains("u2"))
         assertFalse(updated.pendingSentFriendsUids.contains("u2"))
@@ -181,7 +181,7 @@ class UpdateProfileFriendsUtilsTest {
                 wasRead = false)
         notifs.addNotification(notif)
 
-    val updated = getProfileWithSyncedNotifications(profiles, notifs, pointsRepository, "u1")!!
+        val updated = getProfileWithSyncedNotifications(profiles, notifs, pointsRepository, "u1")!!
 
         assertFalse(updated.friendUids.contains("u2"))
         assertFalse(updated.pendingSentFriendsUids.contains("u2"))
@@ -214,7 +214,7 @@ class UpdateProfileFriendsUtilsTest {
                 wasRead = false)
         notifs.addNotification(notif)
 
-    val updated = getProfileWithSyncedNotifications(profiles, notifs, pointsRepository, "u1")!!
+        val updated = getProfileWithSyncedNotifications(profiles, notifs, pointsRepository, "u1")!!
 
         assertFalse(updated.friendUids.contains("u2"))
 
@@ -268,8 +268,9 @@ class UpdateProfileFriendsUtilsTest {
         notifs.addNotification(request)
         notifs.addNotification(cancel)
 
-    // Sync u2’s profile with its notifications
-    val updatedU2 = getProfileWithSyncedNotifications(profiles, notifs, pointsRepository, "u2")!!
+        // Sync u2’s profile with its notifications
+        val updatedU2 =
+            getProfileWithSyncedNotifications(profiles, notifs, pointsRepository, "u2")!!
 
         try {
           notifs.getNotification("req1")

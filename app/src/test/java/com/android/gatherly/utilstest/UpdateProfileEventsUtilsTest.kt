@@ -56,14 +56,14 @@ class UpdateProfileEventsUtilsTest {
 
         val pointsRepository = PointsLocalRepository()
 
-    createEvent(
-        eventsRepository = eventsRepository,
-        profileRepository = profileRepository,
-        pointsRepository = pointsRepository,
-        notificationsRepository,
-        event = event,
-        creatorId = creatorId,
-        participants = participantIds)
+        createEvent(
+            eventsRepository = eventsRepository,
+            profileRepository = profileRepository,
+            pointsRepository = pointsRepository,
+            notificationsRepository,
+            event = event,
+            creatorId = creatorId,
+            participants = participantIds)
 
         // Events repository
         coVerify { eventsRepository.addEvent(event) }
