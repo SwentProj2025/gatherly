@@ -50,68 +50,90 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.dimensionResource
 import com.android.gatherly.R
 
+/**
+ * Sealed class representing different tabs in the navigation menu. Each tab has a name, an icon,
+ * and a destination screen.
+ *
+ * @param name The display name of the tab
+ * @param icon The icon associated with the tab
+ * @param destination The destination screen associated with the tab
+ */
 sealed class Tab(val name: String, val icon: ImageVector, val destination: Screen) {
-  object Timer : Tab("Timer", Icons.Outlined.Schedule, Screen.FocusTimerScreen)
 
-  object Overview : Tab("To-Do", Icons.Outlined.FormatListBulleted, Screen.OverviewToDo)
+  object SignOut : Tab("Sign Out", Icons.Outlined.Person, Screen.SignInScreen)
 
-  object Events : Tab("Events", Icons.Outlined.Group, Screen.EventsScreen)
+  /* To-Do related Tabs */
+  object TodoOverview : Tab("To-Do", Icons.Outlined.FormatListBulleted, Screen.ToDoOverviewScreen)
 
-  object EditEvent : Tab("Edit Event", Icons.Outlined.Edit, Screen.EditEventScreen)
+  object AddTodo : Tab("Add To-Do", Icons.Outlined.Add, Screen.AddToDoScreen)
+
+  object EditTodo : Tab("Edit To-Do", Icons.Outlined.Edit, Screen.EditTodoRootScreen)
+
+  /* Event related Tabs */
+  object EventsOverview : Tab("Events", Icons.Outlined.Group, Screen.EventsOverviewScreen)
 
   object AddEvent : Tab("Add Event", Icons.Outlined.Add, Screen.AddEventScreen)
 
-  object Map : Tab("Map", Icons.Outlined.Place, Screen.Map)
+  object EditEvent : Tab("Edit Event", Icons.Outlined.Edit, Screen.EditEventRootScreen)
 
-  object HomePage : Tab("Home", Icons.Outlined.Home, Screen.HomePage)
+  /* Timer Tab */
+  object Timer : Tab("Timer", Icons.Outlined.Schedule, Screen.FocusTimerScreen)
 
+  /* Map Tab */
+  object Map : Tab("Map", Icons.Outlined.Place, Screen.MapScreen)
+
+  /* Home page Tab */
+  object HomePage : Tab("Home", Icons.Outlined.Home, Screen.HomePageScreen)
+
+  /* Notifications Tab */
   object Notifications :
       Tab("Notifications", Icons.Outlined.Notifications, Screen.NotificationsScreen)
 
+  /* Friend related Tab */
   object FriendRequests :
       Tab("Friend Requests", Icons.Default.ChevronRight, Screen.FriendRequestsScreen)
-
-  object Profile : Tab("Your profile", Icons.Outlined.AccountCircle, Screen.ProfileScreen)
-
-  object Settings : Tab("Settings", Icons.Outlined.Settings, Screen.SettingsScreen)
-
-  object SignOut : Tab("Sign Out", Icons.Outlined.Person, Screen.SignIn)
 
   object Friends : Tab("Friends", Icons.Outlined.Diversity1, Screen.FriendsScreen)
 
   object FindFriends : Tab("Find Friends", Icons.Outlined.GroupAdd, Screen.FindFriendsScreen)
 
-  object UserProfile : Tab("User Profile", Icons.Outlined.AccountCircle, Screen.UserProfileScreen)
+  /* Profile related Tabs */
+  object Profile : Tab("Your profile", Icons.Outlined.AccountCircle, Screen.ProfileScreen)
 
-  object AddTodo : Tab("Add To-Do", Icons.Outlined.Add, Screen.AddToDo)
+  object Settings : Tab("Settings", Icons.Outlined.Settings, Screen.SettingsScreen)
 
-  object EditTodo : Tab("Edit To-Do", Icons.Outlined.Edit, Screen.Task)
+  object UserProfile :
+      Tab("User Profile", Icons.Outlined.AccountCircle, Screen.UserProfileRootScreen)
+
+  /* Group related Tabs */
+  object GroupsOverview : Tab("Groups Overview", Icons.Outlined.Group, Screen.OverviewGroupsScreen)
+
+  object GroupInfo : Tab("Group Information", Icons.Outlined.Info, Screen.GroupsInfoRootScreen)
+
+  object EditGroup : Tab("Edit Group", Icons.Outlined.Edit, Screen.EditGroupRootScreen)
 
   object AddGroup : Tab("Add Group", Icons.Outlined.GroupAdd, Screen.AddGroupScreen)
 
-  object GroupsOverview : Tab("Groups Overview", Icons.Outlined.Group, Screen.OverviewGroupsScreen)
-
-  object GroupInfo : Tab("Group Information", Icons.Outlined.Info, Screen.GroupsInfoScreen)
-
-  object EditGroup : Tab("Edit Group", Icons.Outlined.Edit, Screen.EditGroupScreen)
-
+  /* Badge Tab */
   object Badge : Tab("Badges", Icons.Outlined.Badge, Screen.BadgeScreen)
 
+  /* Focus Points Tab */
   object FocusPoints : Tab("Focus History", Icons.Outlined.History, Screen.FocusScreen)
 }
 
-private val bottomtabs =
+/** List of bottom bar navigation tabs */
+private val bottomBarTabs =
     listOf(
         Tab.Timer,
-        Tab.Overview,
-        Tab.Events,
+        Tab.TodoOverview,
+        Tab.EventsOverview,
         Tab.Map,
     )
 
-// PART 1: Navigation Bar
+/* ------------------------------ Bottom Navigation Bar functions ------------------------------- */
 /**
  * A bottom navigation menu with tabs for Timer, Overview, Events, and Map.
  *
@@ -128,10 +150,13 @@ fun BottomNavigationMenu(
 ) {
   NavigationBar(
       modifier =
-          modifier.fillMaxWidth().height(60.dp).testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU),
+          modifier
+              .fillMaxWidth()
+              .height(dimensionResource(R.dimen.bar_menu_height))
+              .testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU),
       containerColor = MaterialTheme.colorScheme.surfaceVariant,
       content = {
-        bottomtabs.forEach { tab ->
+        bottomBarTabs.forEach { tab ->
           val isSelected = tab == selectedTab
           NavigationBarItem(
               icon = {
@@ -153,14 +178,16 @@ fun BottomNavigationMenu(
               selected = tab == selectedTab,
               onClick = { onTabSelected(tab) },
               modifier =
-                  Modifier.clip(RoundedCornerShape(50.dp))
+                  Modifier.clip(
+                          RoundedCornerShape(
+                              dimensionResource(R.dimen.rounded_corner_shape_clip_large)))
                       .testTag(NavigationTestTags.getTabTestTag(tab)))
         }
       },
   )
 }
 
-// PART2 : Top App Bar functions
+/* -------------------------------- Top Navigation Bar functions ---------------------------- */
 
 /**
  * A top navigation menu with a centered title, a home button on the left, and a dropdown menu on
@@ -191,7 +218,10 @@ fun TopNavigationMenu(
       },
       actions = { TopDropdownMenu(onTabSelected = onTabSelected) },
       modifier =
-          modifier.fillMaxWidth().height(60.dp).testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
+          modifier
+              .fillMaxWidth()
+              .height(dimensionResource(R.dimen.bar_menu_height))
+              .testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
       colors = topAppColor())
 }
 
@@ -229,7 +259,10 @@ fun TopNavigationMenuSettings(
         TopDropdownMenuForSettings(onTabSelected = onTabSelected, onSignedOut = onSignedOut)
       },
       modifier =
-          modifier.fillMaxWidth().height(60.dp).testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
+          modifier
+              .fillMaxWidth()
+              .height(dimensionResource(R.dimen.bar_menu_height))
+              .testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
       colors = topAppColor())
 }
 
@@ -255,7 +288,10 @@ fun TopNavigationMenu_HomePage(
       },
       actions = { TopDropdownMenu(onTabSelected = onTabSelected) },
       modifier =
-          modifier.fillMaxWidth().height(60.dp).testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
+          modifier
+              .fillMaxWidth()
+              .height(dimensionResource(R.dimen.bar_menu_height))
+              .testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
       colors = topAppColor())
 }
 
@@ -293,7 +329,10 @@ fun TopNavigationMenu_Profile(
         TopDropdownMenuForProfile(onTabSelected = onTabSelected, onSignedOut = onSignedOut)
       },
       modifier =
-          modifier.fillMaxWidth().height(60.dp).testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
+          modifier
+              .fillMaxWidth()
+              .height(dimensionResource(R.dimen.bar_menu_height))
+              .testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
       colors = topAppColor())
 }
 
@@ -324,11 +363,14 @@ fun TopNavigationMenu_Goback(
             }
       },
       modifier =
-          modifier.fillMaxWidth().height(60.dp).testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
+          modifier
+              .fillMaxWidth()
+              .height(dimensionResource(R.dimen.bar_menu_height))
+              .testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
       colors = topAppColor())
 }
 
-////// PART3 :  Dropdown Menu functions
+/* -------------------------------- Top Bar Dropdown Menu functions ---------------------------- */
 
 /**
  * A top dropdown menu with options for Profile, Settings, and Logout.
@@ -343,7 +385,7 @@ fun TopDropdownMenu(onTabSelected: (Tab) -> Unit) {
   Box {
     IconButton(
         onClick = { expanded = !expanded },
-        modifier = Modifier.testTag(NavigationTestTags.DROPMENU)) {
+        modifier = Modifier.testTag(NavigationTestTags.DROP_MENU)) {
           Icon(Icons.Outlined.MoreVert, contentDescription = "Options")
         }
     DropdownMenu(
@@ -400,7 +442,7 @@ fun TopDropdownMenuForSettings(onTabSelected: (Tab) -> Unit, onSignedOut: () -> 
   Box {
     IconButton(
         onClick = { expanded = !expanded },
-        modifier = Modifier.testTag(NavigationTestTags.DROPMENU)) {
+        modifier = Modifier.testTag(NavigationTestTags.DROP_MENU)) {
           Icon(Icons.Outlined.Person, contentDescription = "Options")
         }
     DropdownMenu(
@@ -455,7 +497,7 @@ fun TopDropdownMenuForProfile(onTabSelected: (Tab) -> Unit, onSignedOut: () -> U
   Box {
     IconButton(
         onClick = { expanded = !expanded },
-        modifier = Modifier.testTag(NavigationTestTags.DROPMENU)) {
+        modifier = Modifier.testTag(NavigationTestTags.DROP_MENU)) {
           Icon(Icons.Outlined.Settings, contentDescription = "Options")
         }
     DropdownMenu(
@@ -497,7 +539,14 @@ fun TopDropdownMenuForProfile(onTabSelected: (Tab) -> Unit, onSignedOut: () -> U
   }
 }
 
-/** Helper function : Initiates sign-out */
+/* -------------------------------- Helper functions ---------------------------------------- */
+
+/**
+ * Helper function : Initiates sign-out
+ *
+ * @param signedOut A boolean indicating whether the user is signed out
+ * @param onSignedOut A callback function that is invoked when the user is signed out
+ */
 @Composable
 fun HandleSignedOutState(signedOut: Boolean, onSignedOut: () -> Unit) {
   val context = LocalContext.current
@@ -510,10 +559,10 @@ fun HandleSignedOutState(signedOut: Boolean, onSignedOut: () -> Unit) {
   }
 }
 
-/** Helper function : To simplificate the calling to the theme color of the top app bar */
+/** Helper private function : Customizes the top app bar colors */
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-fun topAppColor(): TopAppBarColors {
+private fun topAppColor(): TopAppBarColors {
   return TopAppBarColors(
       containerColor = MaterialTheme.colorScheme.background,
       scrolledContainerColor = MaterialTheme.colorScheme.background,
@@ -524,13 +573,13 @@ fun topAppColor(): TopAppBarColors {
 }
 
 /**
- * An Add Group section in the dropdown menu.
+ * Helper private function: Add Group section in the dropdown menu.
  *
  * @param onTabSelected A callback function that is invoked when a tab is selected. It takes a [Tab]
  *   as a parameter.
  */
 @Composable
-fun AddGroupDropdownItem(onTabSelected: (Tab) -> Unit) {
+private fun AddGroupDropdownItem(onTabSelected: (Tab) -> Unit) {
   DropdownMenuItem(
       text = { Text(Tab.AddGroup.name, color = MaterialTheme.colorScheme.onSurfaceVariant) },
       leadingIcon = {
@@ -540,17 +589,17 @@ fun AddGroupDropdownItem(onTabSelected: (Tab) -> Unit) {
             tint = MaterialTheme.colorScheme.onSurfaceVariant)
       },
       onClick = { onTabSelected(Tab.AddGroup) },
-      modifier = Modifier.testTag(NavigationTestTags.ADDGROUP_TAB))
+      modifier = Modifier.testTag(NavigationTestTags.ADD_GROUP_TAB))
 }
 
 /**
- * A Notifications section in the dropdown menu.
+ * Helper private function: A Notifications section in the dropdown menu.
  *
  * @param onTabSelected A callback function that is invoked when a tab is selected. It takes a [Tab]
  *   as a parameter.
  */
 @Composable
-fun NotificationsDropdownItem(onTabSelected: (Tab) -> Unit) {
+private fun NotificationsDropdownItem(onTabSelected: (Tab) -> Unit) {
   DropdownMenuItem(
       text = { Text(Tab.Notifications.name, color = MaterialTheme.colorScheme.onSurfaceVariant) },
       leadingIcon = {

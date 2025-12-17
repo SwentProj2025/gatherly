@@ -5,6 +5,7 @@ import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import com.android.gatherly.utils.LoadingAnimationTestTags
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Rule
@@ -141,9 +142,9 @@ class NotificationsScreenTest {
       composeTestRule.waitForIdle()
 
       if (environment.notificationsViewModel.uiState.value.isLoading) {
-        composeTestRule
-            .onNodeWithTag(NotificationsScreenTestTags.LOADING_CIRCLE)
-            .assertIsDisplayed()
+        composeTestRule.onNodeWithTag(LoadingAnimationTestTags.LOADING).assertIsDisplayed()
+
+        composeTestRule.onNodeWithTag(LoadingAnimationTestTags.LOADING_TEXT).assertIsDisplayed()
       }
     }
   }

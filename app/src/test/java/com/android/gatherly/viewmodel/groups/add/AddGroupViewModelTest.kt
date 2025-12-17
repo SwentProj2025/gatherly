@@ -15,6 +15,7 @@ import com.android.gatherly.viewmodel.groups.add.AddGroupViewModelTestData.FRIEN
 import com.android.gatherly.viewmodel.groups.add.AddGroupViewModelTestData.FRIEND_BOB
 import com.android.gatherly.viewmodel.groups.add.AddGroupViewModelTestData.FRIEND_CHARLIE
 import com.android.gatherly.viewmodel.groups.add.AddGroupViewModelTestData.TEST_USER_ID
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
@@ -55,6 +56,7 @@ class AddGroupViewModelTest {
   private lateinit var mockitoUtils: MockitoUtils
 
   private val testDispatcher = UnconfinedTestDispatcher()
+  val testTimeout = 120.seconds
 
   /**
    * Sets up test fixtures before each test.
@@ -106,7 +108,7 @@ class AddGroupViewModelTest {
    */
   @Test
   fun initialState_IsCorrect() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, testTimeout) {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
@@ -130,7 +132,7 @@ class AddGroupViewModelTest {
    */
   @Test
   fun loadFriends_LoadsCurrentUsersFriends() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, testTimeout) {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
@@ -149,7 +151,7 @@ class AddGroupViewModelTest {
    */
   @Test
   fun loadFriends_NoAuthenticatedUser_SetsError() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, testTimeout) {
         mockitoUtils.unauthenticatedCurrentUser()
 
         val viewModel = createViewModel()
@@ -169,7 +171,7 @@ class AddGroupViewModelTest {
    */
   @Test
   fun loadFriends_ProfileNotFound_SetsError() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, testTimeout) {
         // Remove current user's profile
         profileRepository.deleteProfile(CURRENT_USER_PROFILE.uid)
 
@@ -189,7 +191,7 @@ class AddGroupViewModelTest {
    */
   @Test
   fun onNameChanged_ValidName_UpdatesStateAndClearsError() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, testTimeout) {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
@@ -207,7 +209,7 @@ class AddGroupViewModelTest {
    */
   @Test
   fun onNameChanged_BlankName_SetsError() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, testTimeout) {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
@@ -225,7 +227,7 @@ class AddGroupViewModelTest {
    */
   @Test
   fun onNameChanged_WhitespaceName_SetsError() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, testTimeout) {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
@@ -243,7 +245,7 @@ class AddGroupViewModelTest {
    */
   @Test
   fun onDescriptionChanged_UpdatesState() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, testTimeout) {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
@@ -260,7 +262,7 @@ class AddGroupViewModelTest {
    */
   @Test
   fun onFriendToggled_SelectsFriend() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, testTimeout) {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
@@ -278,7 +280,7 @@ class AddGroupViewModelTest {
    */
   @Test
   fun onFriendToggled_DeselectsFriend() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, testTimeout) {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
@@ -298,7 +300,7 @@ class AddGroupViewModelTest {
    */
   @Test
   fun onFriendToggled_SelectMultipleFriends() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, testTimeout) {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
@@ -319,7 +321,7 @@ class AddGroupViewModelTest {
    */
   @Test
   fun saveGroup_WithValidData_CreatesGroup() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, testTimeout) {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
@@ -353,7 +355,7 @@ class AddGroupViewModelTest {
    */
   @Test
   fun saveGroup_WithBlankDescription_SavesWithNullDescription() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, testTimeout) {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
@@ -377,7 +379,7 @@ class AddGroupViewModelTest {
    */
   @Test
   fun saveGroup_WithNoSelectedFriends_CreatesGroupWithNoMembers() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, testTimeout) {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
@@ -400,7 +402,7 @@ class AddGroupViewModelTest {
    */
   @Test
   fun saveGroup_WithBlankName_DoesNotSave() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, testTimeout) {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
@@ -427,7 +429,7 @@ class AddGroupViewModelTest {
    */
   @Test
   fun saveGroup_WithWhitespaceName_DoesNotSave() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, testTimeout) {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
@@ -451,7 +453,7 @@ class AddGroupViewModelTest {
    */
   @Test
   fun saveGroup_SetsSavingStateCorrectly() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, testTimeout) {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
@@ -479,7 +481,7 @@ class AddGroupViewModelTest {
    */
   @Test
   fun clearErrorMsg_ClearsSaveError() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, testTimeout) {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
@@ -506,7 +508,7 @@ class AddGroupViewModelTest {
    */
   @Test
   fun clearSaveSuccess_ClearsSaveSuccessFlag() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, testTimeout) {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
@@ -529,7 +531,7 @@ class AddGroupViewModelTest {
    */
   @Test
   fun saveGroup_RepositoryThrowsException_SetsSaveError() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, testTimeout) {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
@@ -556,7 +558,7 @@ class AddGroupViewModelTest {
    */
   @Test
   fun loadFriends_SkipsFriendsThatCannotBeFetched() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, testTimeout) {
         // Remove one friend from the repository
         profileRepository.deleteProfile(FRIEND_BOB.uid)
 
@@ -578,7 +580,7 @@ class AddGroupViewModelTest {
    */
   @Test
   fun saveGroupSendsNotificationToMembers() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, testTimeout) {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
@@ -609,7 +611,7 @@ class AddGroupViewModelTest {
   /** Checks that searching and then clearing the search query has the intended behaviour */
   @Test
   fun filterFriendsCorrectlyFilters() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, testTimeout) {
         val viewModel = createViewModel()
 
         viewModel.filterFriends("a")

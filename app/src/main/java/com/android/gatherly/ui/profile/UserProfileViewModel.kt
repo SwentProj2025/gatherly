@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 
 /** UI state for [UserProfileViewModel] */
 data class UserProfileState(
-    val isLoading: Boolean = false,
+    val isLoading: Boolean = true,
     val profile: Profile? = null,
     val errorMessage: String? = null
 )

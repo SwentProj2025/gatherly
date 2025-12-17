@@ -74,7 +74,7 @@ class GroupsRepositoryFirestore(private val db: FirebaseFirestore) : GroupsRepos
 
   override suspend fun deleteGroup(groupId: String) {
     val existing = getGroup(groupId)
-    if (currentUserId() !in existing.adminIds) {
+    if (currentUserId() != existing.creatorId) {
       throw SecurityException("Only admins can delete this group")
     }
     collection.document(groupId).delete().await()
@@ -92,6 +92,9 @@ class GroupsRepositoryFirestore(private val db: FirebaseFirestore) : GroupsRepos
   override suspend fun removeMember(groupId: String, userId: String) {
     val existing = getGroup(groupId)
     val currentUser = currentUserId()
+
+    // Prevent creator from being removed from the group
+    check(userId != existing.creatorId) { "User cannot be removed from a group he created" }
 
     // Allow self-removal (leaving the group) OR admin removing someone
     if (currentUser != userId && currentUser !in existing.adminIds) {

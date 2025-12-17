@@ -2,106 +2,133 @@ package com.android.gatherly.ui.navigation
 
 import androidx.navigation.NavHostController
 
+/**
+ * Sealed class representing different screens in the application. Each screen has a route, a name,
+ * and a flag indicating if it's a top-level destination.
+ *
+ * @param route The navigation route for the screen
+ * @param name The display name of the screen
+ * @param isTopLevelDestination Boolean indicating if the screen is a top-level destination
+ */
 sealed class Screen(
     val route: String,
     val name: String,
     val isTopLevelDestination: Boolean = false
 ) {
 
-  object SignIn : Screen(route = "sign_in", name = "Authentification")
+  /* Authentication Related Screens */
+  object SignInScreen : Screen(route = "sign_in_screen", name = "Authentification")
 
-  object HomePage : Screen(route = "home_page", name = "Home Page", isTopLevelDestination = true)
+  object InitProfileScreen : Screen(route = "init_profile_screen", name = "Complete your profile")
 
-  object NotificationsScreen : Screen(route = "notifications", name = "Notifications")
+  /* Main Home page Screen */
+  object HomePageScreen :
+      Screen(route = "home_page_screen", name = "Home Page", isTopLevelDestination = true)
 
-  object FriendRequestsScreen : Screen(route = "friend_requests", name = "Friend Requests")
+  /* Notifications Screen */
+  object NotificationsScreen : Screen(route = "notifications_screen", name = "Notifications")
 
-  object OverviewToDo : Screen(route = "overview", name = "Overview")
+  /* Map Screen */
+  object MapScreen : Screen(route = "map_screen", name = "Map")
 
-  object Map : Screen(route = "map", name = "Map")
+  /* Focus Timer Screen */
+  object FocusTimerScreen : Screen(route = "focus_timer_screen", name = "Focus Timer")
 
-  object AddToDo : Screen(route = "add_todo", name = "Create a new task")
+  /* To-Do Related Screens */
+  object ToDoOverviewScreen : Screen(route = "todo_overview_screen", name = "To-Do Overview")
 
-  object Task : Screen(route = "edit_todo", name = "Edit a task")
+  object AddToDoScreen : Screen(route = "add_todo_screen", name = "Create a new To-Do")
 
-  data class EditToDo(val todoUid: String) :
-      Screen(route = "edit_todo/${todoUid}", name = "Edit ToDo") {
+  object EditTodoRootScreen : Screen(route = "edit_todo_screen", name = "Edit a To-Do")
+
+  data class EditToDoScreen(val todoUid: String) :
+      Screen(route = "edit_todo_screen/${todoUid}", name = "Edit a ToDo") {
     companion object {
-      const val route = "edit_todo/{uid}"
+      const val ROUTE = "edit_todo_screen/{uid}"
     }
   }
 
-  object FocusTimerScreen : Screen(route = "focus_timer_screen", name = "Focus Timer")
-
-  object EventsScreen : Screen(route = "events_screen", name = "Your events")
+  /* Event Related Screens */
+  object EventsOverviewScreen : Screen(route = "events_overview_screen", name = "Events Overview")
 
   data class EventsDetailsScreen(val eventUid: String) :
       Screen(route = "event_details/${eventUid}", name = "Event Details") {
     companion object {
-      const val route = "event_details/{uid}"
+      const val ROUTE = "event_details/{uid}"
     }
   }
 
   object AddEventScreen : Screen(route = "add_event_screen", name = "Create an event")
 
-  object EditEventScreen : Screen(route = "edit_event", name = "Edit event")
+  object EditEventRootScreen : Screen(route = "edit_event_screen", name = "Edit an event")
 
   data class EditEvent(val eventUid: String) :
-      Screen(route = "edit_event/${eventUid}", name = "Edit Event") {
+      Screen(route = "edit_event_screen/${eventUid}", name = "Edit an Event") {
     companion object {
-      const val route = "edit_event/{uid}"
+      const val ROUTE = "edit_event_screen/{uid}"
     }
   }
 
+  /* Profile Related Screens */
   object ProfileScreen : Screen(route = "profile_screen", name = "Your profile")
+
+  object SettingsScreen : Screen(route = "settings_screen", name = "Settings")
+
+  object UserProfileRootScreen : Screen(route = "user_profile_screen", name = "User Profile")
+
+  data class UserProfileScreen(val uid: String) :
+      Screen(route = "user_profile_screen/$uid", name = "User Profile") {
+    companion object {
+      const val ROUTE = "user_profile_screen/{uid}"
+    }
+  }
+
+  /* Friends Related Screens */
+  object FriendRequestsScreen : Screen(route = "friend_requests_screen", name = "Friend Requests")
 
   object FriendsScreen : Screen(route = "friends_screen", name = "Your friends")
 
   object FindFriendsScreen : Screen(route = "find_friends_screen", name = "Find new friends")
 
-  object SettingsScreen : Screen(route = "settings_screen", name = "Settings")
-
-  object InitProfileScreen : Screen(route = "init_profile_screen", name = "Complete your profile")
+  /* Groups Related Screens */
+  object OverviewGroupsScreen : Screen(route = "overview_groups_screen", name = "Groups Overview")
 
   object AddGroupScreen : Screen(route = "add_group_screen", name = "Add a New Group")
 
-  object OverviewGroupsScreen : Screen(route = "overview_groups_screen", name = "Groups overview")
+  object GroupsInfoRootScreen : Screen(route = "groups_info_screen", name = "Group information")
 
-  object GroupsInfoScreen : Screen(route = "groups_info_screen", name = "Group information")
-
-  data class GroupInfo(val groupUid: String) :
-      Screen(route = "group_info/${groupUid}", name = "Group Information") {
+  data class GroupInfoScreen(val groupUid: String) :
+      Screen(route = "group_info_screen/${groupUid}", name = "Group Information") {
     companion object {
-      const val route = "group_info/{uid}"
+      const val ROUTE = "group_info_screen/{uid}"
     }
   }
 
-  object EditGroupScreen : Screen(route = "edit_group", name = "Edit group")
+  object EditGroupRootScreen : Screen(route = "edit_group_screen", name = "Edit group")
 
-  data class EditGroup(val groupUid: String) :
-      Screen(route = "edit_group/${groupUid}", name = "Edit Group") {
+  data class EditGroupScreen(val groupUid: String) :
+      Screen(route = "edit_group_screen/${groupUid}", name = "Edit Group") {
     companion object {
-      const val route = "edit_group/{uid}"
+      const val ROUTE = "edit_group_screen/{uid}"
     }
   }
 
+  /* Badges Screen */
   object BadgeScreen : Screen(route = "badge_screen", name = "Badges")
 
+  /* Focus History Screen */
   object FocusScreen : Screen(route = "focus_history_screen", name = "Focus History")
-
-  object UserProfileScreen : Screen(route = "user_profile", name = "User Profile")
-
-  data class UserProfile(val uid: String) :
-      Screen(route = "user_profile_screen/$uid", name = "User Profile") {
-    companion object {
-      const val route = "user_profile_screen/{uid}"
-    }
-  }
 }
 
+/**
+ * Class that handles navigation actions using a NavHostController.
+ *
+ * @param navController The NavHostController used for navigation
+ */
 open class NavigationActions(
     private val navController: NavHostController,
 ) {
+
   /**
    * Navigate to the specified screen.
    *
@@ -117,7 +144,7 @@ open class NavigationActions(
         launchSingleTop = true
         popUpTo(screen.route) { inclusive = true }
       }
-      if (screen !is Screen.SignIn) {
+      if (screen !is Screen.SignInScreen) {
         // Restore state when reselecting a previously selected item
         restoreState = true
       }

@@ -58,12 +58,12 @@ class EventsOverviewScreenTest {
 
   private lateinit var currentUserId: String
   private lateinit var eventsRepository: EventsRepository
-
   private lateinit var profileRepository: ProfileRepository
-  private lateinit var eventsViewModel: EventsViewModel
+  private lateinit var eventsOverviewViewModel: EventsOverviewViewModel
   private lateinit var mockitoUtils: MockitoUtils
   private lateinit var mapCoordinator: MapCoordinator
 
+  /** Setup function to initialize repositories and ViewModel before each test */
   @Before
   fun setUp() {
     eventsRepository = EventsLocalRepository()
@@ -76,27 +76,29 @@ class EventsOverviewScreenTest {
     mockitoUtils = MockitoUtils()
   }
 
-  private val start =
-      SimpleDateFormat("HH:mm").parse("12:00") ?: throw NoSuchElementException("no date ")
-  private val finish =
-      SimpleDateFormat("HH:mm").parse("23:00") ?: throw NoSuchElementException("no date ")
-
   /** Helper function: set the content of the composeTestRule without initial events */
   private fun setContent(uid: String = currentUserId) {
     mockitoUtils.chooseCurrentUser(uid)
     currentUserId = uid
-    eventsViewModel =
-        EventsViewModel(
+    eventsOverviewViewModel =
+        EventsOverviewViewModel(
             eventsRepository = eventsRepository,
             profileRepository = profileRepository,
             authProvider = { mockitoUtils.mockAuth })
     composeTestRule.setContent {
-      EventsScreen(
-          eventsViewModel = eventsViewModel,
+      EventsOverviewScreen(
+          eventsOverviewViewModel = eventsOverviewViewModel,
           actions = EventsScreenActions(),
           coordinator = mapCoordinator)
     }
   }
+
+  /* ----------------------------- Helper Functions and Test Data -----------------------------*/
+
+  private val start =
+      SimpleDateFormat("HH:mm").parse("12:00") ?: throw NoSuchElementException("no date ")
+  private val finish =
+      SimpleDateFormat("HH:mm").parse("23:00") ?: throw NoSuchElementException("no date ")
 
   /** Helper function to create an event for the current user */
   private fun createYourEvent(currentUserId: String): Event {
@@ -114,7 +116,7 @@ class EventsOverviewScreenTest {
         status = EventStatus.UPCOMING)
   }
 
-  // Upcoming EVENT
+  // --- Upcoming EVENT
   private val tomorrowTimestamp = Timestamp(Date.from(Instant.now().plus(1, ChronoUnit.DAYS)))
   private val upcomingEvent =
       Event(
@@ -158,7 +160,7 @@ class EventsOverviewScreenTest {
           participants = listOf(),
           status = EventStatus.UPCOMING)
 
-  // ONGOING EVENT
+  // ---- ONGOING EVENT
   private val oneHourAgo = Timestamp(Date(System.currentTimeMillis() - 3600_000))
   private val oneHourLater = Timestamp(Date(System.currentTimeMillis() + 3600_000))
   private val ongoingEvent =
@@ -201,7 +203,7 @@ class EventsOverviewScreenTest {
           participants = listOf(),
           status = EventStatus.ONGOING)
 
-  // PAST EVENT
+  // ----- PAST EVENT
   private val yesterdayTimestamp = Timestamp(Date.from(Instant.now().minus(1, ChronoUnit.DAYS)))
   private val pastEvent =
       Event(
@@ -244,6 +246,8 @@ class EventsOverviewScreenTest {
           participants = listOf(),
           status = EventStatus.PAST)
 
+  /* --------------------------------------- Test Cases ----------------------------------------*/
+
   /**
    * Test: Verifies that when there is no event registered, all relevant UI components are displayed
    * correctly.
@@ -260,7 +264,9 @@ class EventsOverviewScreenTest {
     composeTestRule.onNodeWithTag(EventsScreenTestTags.UPCOMING_TITLE).assertIsDisplayed()
     composeTestRule.onNodeWithTag(EventsScreenTestTags.EMPTY_UPCOMING_LIST_MSG).assertIsDisplayed()
     composeTestRule.onNodeWithTag(EventsScreenTestTags.YOUR_EVENTS_TITLE).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(EventsScreenTestTags.EMPTY_OUREVENTS_LIST_MSG).assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(EventsScreenTestTags.EMPTY_OUR_EVENTS_LIST_MSG)
+        .assertIsDisplayed()
     composeTestRule.onNodeWithTag(EventsScreenTestTags.CREATE_EVENT_BUTTON).assertIsDisplayed()
     composeTestRule.onNodeWithTag(EventsScreenTestTags.ALL_LISTS).assertIsDisplayed()
   }
@@ -286,7 +292,7 @@ class EventsOverviewScreenTest {
     composeTestRule.onNodeWithTag(EventsScreenTestTags.EMPTY_UPCOMING_LIST_MSG).assertIsDisplayed()
     composeTestRule.onNodeWithTag(EventsScreenTestTags.YOUR_EVENTS_TITLE).assertIsDisplayed()
     composeTestRule
-        .onNodeWithTag(EventsScreenTestTags.EMPTY_OUREVENTS_LIST_MSG)
+        .onNodeWithTag(EventsScreenTestTags.EMPTY_OUR_EVENTS_LIST_MSG)
         .assertIsNotDisplayed()
     composeTestRule
         .onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(eventByBob))
@@ -326,7 +332,9 @@ class EventsOverviewScreenTest {
     composeTestRule.onNodeWithTag(EventsScreenTestTags.UPCOMING_TITLE).assertIsDisplayed()
     composeTestRule.onNodeWithTag(EventsScreenTestTags.EMPTY_UPCOMING_LIST_MSG).assertIsDisplayed()
     composeTestRule.onNodeWithTag(EventsScreenTestTags.YOUR_EVENTS_TITLE).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(EventsScreenTestTags.EMPTY_OUREVENTS_LIST_MSG).assertIsDisplayed()
+    composeTestRule
+        .onNodeWithTag(EventsScreenTestTags.EMPTY_OUR_EVENTS_LIST_MSG)
+        .assertIsDisplayed()
 
     // Check that the event details (title and date) are correctly displayed
     composeTestRule.onEventItem(eventByAlice, hasTestTag(EventsScreenTestTags.EVENT_TITLE))
@@ -737,9 +745,13 @@ class EventsOverviewScreenTest {
     }
   }
 
-  // ///////////////////// UTILS
+  /* --------------- Utils Functions for ComposeTestRule ----------------*/
 
-  /** Helper function to use when we want to click on a specific event item */
+  /**
+   * Helper function to use when we want to click on a specific event item
+   *
+   * @param event The event item to be clicked
+   */
   private fun ComposeTestRule.clickEventItem(event: Event) {
     waitUntilEventIsDisplayed(event).performClick()
   }
@@ -747,6 +759,8 @@ class EventsOverviewScreenTest {
   /**
    * Helper function to use when we want to check if the current screen displaying is the events
    * overview screen
+   *
+   * @param event The event item to be checked
    */
   private fun ComposeTestRule.waitUntilEventIsDisplayed(event: Event): SemanticsNodeInteraction {
     composeTestRule.checkEventsScreenIsDisplayed()
@@ -761,6 +775,8 @@ class EventsOverviewScreenTest {
   /**
    * Helper function to use when we want to check if a specific event item is displayed on the
    * screen
+   *
+   * @param event The event item to be checked
    */
   private fun ComposeTestRule.checkEventItemIsDisplayed(event: Event): SemanticsNodeInteraction =
       onNodeWithTag(EventsScreenTestTags.getTestTagForEventItem(event)).assertIsDisplayed()
@@ -777,6 +793,9 @@ class EventsOverviewScreenTest {
   /**
    * Helper function to use when we want to check if a specific event item is displayed on the
    * screen with a specific matcher
+   *
+   * @param event The event item to be checked
+   * @param matcher The semantics matcher to be used for checking
    */
   private fun ComposeTestRule.onEventItem(event: Event, matcher: SemanticsMatcher) {
     waitUntilEventIsDisplayed(event)
@@ -787,19 +806,21 @@ class EventsOverviewScreenTest {
         .assertIsDisplayed()
   }
 
+  /* --------------------------------------- Test Cases ----------------------------------------*/
+
   /** Check that the anonymous user sees only the browse events section */
   @Test
   fun anonUserSeesOnlyBrowseSection() {
     mockitoUtils.chooseCurrentUser("anon", true)
 
-    eventsViewModel =
-        EventsViewModel(
+    eventsOverviewViewModel =
+        EventsOverviewViewModel(
             eventsRepository = eventsRepository,
             profileRepository = profileRepository,
             authProvider = { mockitoUtils.mockAuth })
     composeTestRule.setContent {
-      EventsScreen(
-          eventsViewModel = eventsViewModel,
+      EventsOverviewScreen(
+          eventsOverviewViewModel = eventsOverviewViewModel,
           actions = EventsScreenActions(),
           coordinator = mapCoordinator)
     }
@@ -975,13 +996,18 @@ class EventsOverviewScreenTest {
         .assertIsNotDisplayed()
   }
 
-  /** Helper function to scroll to a specific event item in a list */
+  /* ------------------------- Helper Function to scroll ------------------------------------*/
+  /**
+   * Helper function to scroll to a specific event item in a list
+   *
+   * @param event The event item to scroll to
+   */
   private fun ComposeTestRule.scrollToEvent(event: Event) {
     onNodeWithTag(EventsScreenTestTags.ALL_LISTS)
         .performScrollToNode(hasTestTag(EventsScreenTestTags.getTestTagForEventItem(event)))
   }
 
-  // --- TEST SEARCH / FILTER EVENTS ---
+  /* ------------------------------ Test Data Filter cases ---------------------------------------*/
   private val eventA =
       Event(
           id = "eventA",
@@ -1051,6 +1077,8 @@ class EventsOverviewScreenTest {
           creatorId = "user5",
           participants = listOf(),
           status = EventStatus.UPCOMING)
+
+  /* -------------------------- Test Cases Filter cases ---------------------------------*/
 
   /** Test: Search bar filters events correctly by title */
   @Test
@@ -1248,7 +1276,7 @@ class EventsOverviewScreenTest {
           .isNotDisplayed()
     }
     composeTestRule
-        .onNodeWithTag(EventsScreenTestTags.EMPTY_OUREVENTS_LIST_MSG)
+        .onNodeWithTag(EventsScreenTestTags.EMPTY_OUR_EVENTS_LIST_MSG)
         .assertIsNotDisplayed()
   }
 
@@ -1264,16 +1292,16 @@ class EventsOverviewScreenTest {
     val eventMilano = upcomingEvent.copy(location = fakeLocationMilano)
     eventsRepository.addEvent(eventMilano)
 
-    eventsViewModel =
-        EventsViewModel(
+    eventsOverviewViewModel =
+        EventsOverviewViewModel(
             eventsRepository = eventsRepository,
             profileRepository = profileRepository,
             authProvider = { mockitoUtils.mockAuth },
             fakeCurrentUserLocation = fakeLocationEPFL)
 
     composeTestRule.setContent {
-      EventsScreen(
-          eventsViewModel = eventsViewModel,
+      EventsOverviewScreen(
+          eventsOverviewViewModel = eventsOverviewViewModel,
           actions = EventsScreenActions(),
           coordinator = mapCoordinator)
     }
