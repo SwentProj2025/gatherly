@@ -12,6 +12,7 @@ import com.android.gatherly.model.todo.ToDosRepository
  *
  * @param todoRepository The repository to manage ToDos.
  * @param profileRepository The repository to manage Profiles.
+ * @param pointsRepository The repository to manage points history
  * @param todo The ToDo to be added.
  * @param currentUserId The ID of the current user.
  */
@@ -32,6 +33,7 @@ suspend fun addTodo(
  *
  * @param todoRepository The repository to manage ToDos.
  * @param profileRepository The repository to manage Profiles.
+ * @param pointsRepository The repository to manage points history.
  * @param todoID The ID of the ToDo to be edited.
  * @param newStatus The new status of the ToDo.
  * @param currentUserId The ID of the current user.
