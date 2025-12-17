@@ -949,10 +949,10 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
             eventRepo,
             repo,
             pointsRepository,
+            notificationsRepository = NotificationsLocalRepository(),
             event,
             userAUid,
-            emptyList(),
-            notificationsRepository = NotificationsLocalRepository())
+            emptyList())
 
         // Verify that the event is in the User B profile's events list
         val profileA = repo.getProfileByUid(userAUid)
@@ -1045,10 +1045,10 @@ class ProfileRepositoryFirestoreTest : FirestoreGatherlyProfileTest() {
             eventRepo,
             repo,
             pointsRepository,
+            notificationsRepository = NotificationsLocalRepository(),
             event,
             userAUid,
-            emptyList(),
-            notificationsRepository = NotificationsLocalRepository())
+            emptyList())
 
         assertTrue(
             repository.getProfileByUid(userAUid)?.badgeIds?.contains("starting_EventsCreated") ==

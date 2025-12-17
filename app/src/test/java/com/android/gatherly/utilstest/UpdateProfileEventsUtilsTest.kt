@@ -55,10 +55,10 @@ class UpdateProfileEventsUtilsTest {
         eventsRepository = eventsRepository,
         profileRepository = profileRepository,
         pointsRepository = pointsRepository,
+        notificationsRepository,
         event = event,
         creatorId = creatorId,
-        participants = participantIds,
-        notificationsRepository)
+        participants = participantIds)
 
     // Events repository
     coVerify { eventsRepository.addEvent(event) }
