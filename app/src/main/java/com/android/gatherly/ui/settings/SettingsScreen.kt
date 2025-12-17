@@ -29,7 +29,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
 import androidx.credentials.CredentialManager
@@ -38,6 +37,7 @@ import com.android.gatherly.R
 import com.android.gatherly.model.profile.ProfileStatus
 import com.android.gatherly.ui.navigation.*
 import com.android.gatherly.ui.profile.ProfilePictureWithStatus
+import com.android.gatherly.ui.profile.StatusIndicator
 import com.android.gatherly.utils.GatherlyAlertDialog
 import com.android.gatherly.utils.GatherlyAlertDialogActions
 import java.io.File
@@ -80,6 +80,7 @@ object SettingsScreenTestTags {
  *
  * This screen allows editing of basic user details (e.g name, school).
  *
+ * @param settingsViewModel ViewModel holding settings UI state and business logic.
  * @param credentialManager Used for managing sign-out actions.
  * @param onSignedOut Callback triggered when the user signs out.
  * @param navigationActions Handles navigation between different app sections.
@@ -383,6 +384,14 @@ fun SettingsScreen(
       })
 }
 
+/**
+ * Signs the user out immediately or shows a warning dialog if the user is anonymous.
+ *
+ * @param uiState Current settings UI state.
+ * @param shouldShowLogOutWarning State controlling visibility of the logout warning dialog.
+ * @param settingsViewModel ViewModel responsible for sign-out logic.
+ * @param credentialManager Credential manager used to perform sign-out.
+ */
 fun signOutAlertIfAnon(
     uiState: SettingsUiState,
     shouldShowLogOutWarning: MutableState<Boolean>,
@@ -586,26 +595,6 @@ private fun PhotoPicker(
 }
 
 /**
- * Small colored status dot used to represent a user's presence state. (Green = Online, Red =
- * Offline, Blue = Focused)
- *
- * @param status The current [ProfileStatus] to display.
- * @param modifier Optional modifier for positioning.
- * @param size The diameter of the indicator.
- */
-@Composable
-fun StatusIndicator(status: ProfileStatus, modifier: Modifier = Modifier, size: Dp) {
-  val color =
-      when (status) {
-        ProfileStatus.ONLINE -> Color.Green
-        ProfileStatus.FOCUSED -> Color.Blue
-        ProfileStatus.OFFLINE -> Color.Red
-      }
-
-  Box(modifier = modifier.size(size).clip(CircleShape).background(color))
-}
-
-/**
  * Dialog allowing the user to choose a new status.
  *
  * @param visible Whether the dialog is shown.
@@ -684,7 +673,12 @@ fun StatusPickerDialog(
       })
 }
 
-/** Text explaining the different modes of the status */
+/**
+ * Displays a section title explaining a group of status options.
+ *
+ * @param text Text shown as the group title.
+ * @param testTag Tag used for UI testing.
+ */
 @Composable
 private fun StatusGroupTitle(text: String, testTag: String) {
   Text(
