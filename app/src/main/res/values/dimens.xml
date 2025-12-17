@@ -46,6 +46,7 @@
     <dimen name="rounded_corner_shape_medium">12dp</dimen>
     <dimen name="rounded_corner_shape_medium_large">16dp</dimen>
     <dimen name="rounded_corner_shape_large">20dp</dimen>
+    <dimen name="rounded_corner_shape_clip_large">50dp</dimen>
     <dimen name="border_width_regular">2dp</dimen>
 
     <!-- Thickness -->
@@ -173,4 +174,8 @@
 
     <dimen name="badge_card_corner_radius">8dp</dimen>
     <dimen name="badge_card_stroke_width">1dp</dimen>
+
+    <!-- Bar Menus -->
+    <dimen name="bar_menu_height">60.dp</dimen>
+
 </resources>

@@ -359,13 +359,13 @@ fun EventsScreen(
   Scaffold(
       topBar = {
         TopNavigationMenu(
-            selectedTab = Tab.Events,
+            selectedTab = Tab.EventsOverview,
             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
             modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU))
       },
       bottomBar = {
         BottomNavigationMenu(
-            selectedTab = Tab.Events,
+            selectedTab = Tab.EventsOverview,
             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
             modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU))
       },
@@ -648,7 +648,7 @@ fun EventsScreen(
                       },
                       onNeutral = {
                         coordinator.requestCenterOnEvent(event.id)
-                        navigationActions?.navigateTo(Screen.Map)
+                        navigationActions?.navigateTo(Screen.MapScreen)
                         isPopupOnBrowser.value = false
                       },
                       onOpenAttendeesList = { showAttendeesDialog.value = true }),
@@ -681,7 +681,7 @@ fun EventsScreen(
                       },
                       onNeutral = {
                         coordinator.requestCenterOnEvent(event.id)
-                        navigationActions?.navigateTo(Screen.Map)
+                        navigationActions?.navigateTo(Screen.MapScreen)
                         isPopupOnUpcoming.value = false
                       },
                       onOpenAttendeesList = { showAttendeesDialog.value = true },
@@ -714,7 +714,7 @@ fun EventsScreen(
                       },
                       onNeutral = {
                         coordinator.requestCenterOnEvent(event.id)
-                        navigationActions?.navigateTo(Screen.Map)
+                        navigationActions?.navigateTo(Screen.MapScreen)
                         isPopupOnYourE.value = false
                       },
                       onOpenAttendeesList = { showAttendeesDialog.value = true },

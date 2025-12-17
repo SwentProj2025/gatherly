@@ -187,7 +187,8 @@ fun OverviewContent(
                                 // Icon to go to group
                                 IconButton(
                                     onClick = {
-                                      navigationActions?.navigateTo(Screen.GroupInfo(group.gid))
+                                      navigationActions?.navigateTo(
+                                          Screen.GroupInfoScreen(group.gid))
                                     }) {
                                       Icon(
                                           imageVector = Icons.Outlined.ChevronRight,
