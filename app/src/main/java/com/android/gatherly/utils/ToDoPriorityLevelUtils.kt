@@ -33,7 +33,10 @@ import com.android.gatherly.ui.theme.Typography
 import com.android.gatherly.ui.theme.theme_todo_priority_level_high
 import com.android.gatherly.ui.theme.theme_todo_priority_level_low
 import com.android.gatherly.ui.theme.theme_todo_priority_level_medium
+import com.android.gatherly.ui.todo.AddToDoScreen
+import com.android.gatherly.ui.todo.EditToDoScreen
 
+/** Test tags for [PriorityDropDown] composable and its items. */
 object PriorityDropDownTestTags {
   const val PRIORITY_LEVEL_DROP_DOWN = "priorityLevelDropDown"
   const val PRIORITY_NONE_ITEM = "priorityLevelNoneItem"
@@ -44,7 +47,7 @@ object PriorityDropDownTestTags {
 
 /**
  * Helper composable function: The user can assign to his task a specif priority level Displayed in
- * Add, Edit ToDo screen
+ * [AddToDoScreen] and [EditToDoScreen]
  *
  * @param onSelectPriorityLevel : function when the user choose a level
  * @param currentPriorityLevel: the level that the user already choose.
@@ -118,7 +121,7 @@ fun PriorityDropDown(
   }
 }
 
-/** Helper data class: help to display the PriorityDropDownItem for each level */
+/** Helper data class: help to display the [PriorityDropdownItem] for each level */
 private data class PriorityItem(
     val level: ToDoPriority,
     val label: Int,
@@ -152,11 +155,16 @@ private fun PriorityDropdownItem(item: PriorityItem, isSelected: Boolean, onSele
     HorizontalDivider(
         modifier = Modifier.padding(vertical = dimensionResource(R.dimen.padding_small)),
         thickness = dimensionResource(R.dimen.thickness_small),
-        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
+        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f))
   }
 }
 
-/** Helper function: assign to each priority level a color. */
+/**
+ * Helper function: assign to each priority level a color.
+ *
+ * @param level: the priority level
+ * @return Color associated to the priority level
+ */
 @Composable
 fun priorityLevelColor(level: ToDoPriority): Color {
   return when (level) {
