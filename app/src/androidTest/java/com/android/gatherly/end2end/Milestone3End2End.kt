@@ -37,7 +37,7 @@ class Milestone3End2End : FirestoreGatherlyTest() {
       GrantPermissionRule.grant(
           Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
 
-  val TIMEOUT = 150000L
+  val TIMEOUT = 30000L
   private var currentCredentialManager: CredentialManager? = null
 
   // Credentials
