@@ -27,7 +27,7 @@ import com.android.gatherly.model.profile.ProfileRepository
  * @param pointsRepository The repository to update a user's points history
  * @param userId The user whose profile to update
  */
-suspend fun getProfileWithSyncedFriendNotifications(
+suspend fun getProfileWithSyncedNotifications(
     profileRepository: ProfileRepository,
     notificationsRepository: NotificationsRepository,
     pointsRepository: PointsRepository,

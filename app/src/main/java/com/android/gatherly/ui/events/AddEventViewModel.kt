@@ -124,7 +124,7 @@ class AddEventViewModel(
     private val pointsRepository: PointsRepository,
     private val nominatimClient: LocationRepository = NominatimLocationRepository(client),
     private val authProvider: () -> FirebaseAuth = { Firebase.auth },
-    val notificationsRepository: NotificationsRepository =
+    private val notificationsRepository: NotificationsRepository =
         NotificationsRepositoryProvider.repository,
 ) : ViewModel() {
   // State with a private set
@@ -578,10 +578,10 @@ class AddEventViewModel(
             eventsRepository,
             profileRepository,
             pointsRepository,
+            notificationsRepository,
             event,
             currentProfile.uid,
-            participants,
-            notificationsRepository)
+            participants)
         uiState =
             uiState.copy(
                 displayToast = true, toastString = "Saved", isSaving = false, backToOverview = true)

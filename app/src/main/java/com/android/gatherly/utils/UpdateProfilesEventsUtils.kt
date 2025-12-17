@@ -37,9 +37,9 @@ import kotlinx.coroutines.launch
 suspend fun userParticipate(
     eventsRepository: EventsRepository,
     profileRepository: ProfileRepository,
+    notificationsRepository: NotificationsRepository,
     eventId: String,
     userId: String,
-    notificationsRepository: NotificationsRepository,
     senderId: String? = null
 ) {
   eventsRepository.addParticipant(eventId, userId)
@@ -97,10 +97,10 @@ suspend fun createEvent(
     eventsRepository: EventsRepository,
     profileRepository: ProfileRepository,
     pointsRepository: PointsRepository,
+    notificationsRepository: NotificationsRepository,
     event: Event,
     creatorId: String,
     participants: List<String>,
-    notificationsRepository: NotificationsRepository
 ) {
   eventsRepository.addEvent(event)
   profileRepository.createEvent(event.id, creatorId)
