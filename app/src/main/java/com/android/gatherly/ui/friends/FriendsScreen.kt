@@ -74,6 +74,7 @@ object FriendsScreenTestTags {
   const val UNFRIENDING_TEXT_ANIMATION = "unfriendingTextAnimation"
   const val FRIENDS_SECTION_TITLE = "friendsSectionTitle"
   const val PENDING_SECTION_TITLE = "pendingSectionTitle"
+  const val FRIENDS_LIST = "friendsList"
 
   /**
    * Returns a unique test tag for the card or container representing a given [Profile.username]
@@ -391,7 +392,7 @@ private fun PendingRequestItem(
               contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
       modifier =
           modifier
-              .testTag(FriendsScreenTestTags.getTestTagForFriendItem(friendUsername))
+              .testTag(FriendsScreenTestTags.getTestTagForPendingFriendItem(friendUsername))
               .fillMaxWidth()
               .padding(vertical = dimensionResource(R.dimen.friends_item_card_padding_vertical))) {
         Row(
@@ -568,7 +569,8 @@ private fun FriendsListContent(
       modifier =
           Modifier.fillMaxWidth()
               .padding(horizontal = dimensionResource(R.dimen.padding_screen))
-              .padding(padding)) {
+              .padding(padding)
+              .testTag(FriendsScreenTestTags.FRIENDS_LIST)) {
         item { SearchBarContent(data.searchQuery, actions.onSearchQueryChange) }
 
         if (data.filteredFriends.isNotEmpty()) {
