@@ -32,58 +32,62 @@ import java.text.SimpleDateFormat
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 
-data class EditEventsUIState(
-    // the event title
+/**
+ * UI State for the Edit Event Screen
+ *
+ * @param name the event title
+ * @param description the event description
+ * @param location the event location
+ * @param date the event date
+ * @param startTime the event start time
+ * @param endTime the event end time
+ * @param participant the event participant search string
+ * @param participants list of event participants
+ * @param suggestedProfiles list of suggested profiles given the search string
+ * @param suggestedLocations list of suggested locations given the search string
+ * @param nameError if there is an error in the name
+ * @param descriptionError if there is an error in the description
+ * @param dateError if there is an error in the date
+ * @param startTimeError if there is an error in the start time
+ * @param endTimeError if there is an error in the end time
+ * @param displayToast if the UI should display a toast
+ * @param toastString the string the toast should display
+ * @param backToOverview when the event is edited or deleted, return to event overview
+ * @param isLoading when the event is being
+ * @param state the state of the event
+ * @param friend the friend participant search string
+ * @param suggestedFriendsProfile list of suggested friends given the search string
+ * @param group the event group search string
+ * @param groups when it's a private group event
+ * @param suggestedGroups list of suggested groups given the search string
+ * @param currentUserId the id of the current user
+ */
+data class EditEventUIState(
     val name: String = "",
-    // the event description
     val description: String = "",
-    // the event location
     val location: String = "",
-    // the event date
     val date: String = "",
-    // the event start time
     val startTime: String = "",
-    // the event end time
     val endTime: String = "",
-    // the event participant search string
     val participant: String = "",
-    // list of event participants
     val participants: List<Profile> = emptyList(),
-    // list of suggested profiles given the search string
     val suggestedProfiles: List<Profile> = emptyList(),
-    // list of suggested locations given the search string
     val suggestedLocations: List<Location> = emptyList(),
-    // if there is an error in the name
     val nameError: Boolean = false,
-    // if there is an error in the description
     val descriptionError: Boolean = false,
-    // if there is an error in the date
     val dateError: Boolean = false,
-    // if there is an error in the start time
     val startTimeError: Boolean = false,
-    // if there is an error in the end time
     val endTimeError: Boolean = false,
-    // if the UI should display a toast
     val displayToast: Boolean = false,
-    // the string the toast should display
     val toastString: String? = null,
-    // when the event is edited or deleted, return to event overview
     val backToOverview: Boolean = false,
-    // when the event is being
     val isLoading: Boolean = true,
-    // the state of the event
     val state: EventState = EventState.PUBLIC,
-    // the friend participant search string
     val friend: String = "",
-    // list of suggested friends given the search string
     val suggestedFriendsProfile: List<Profile> = emptyList(),
-    // the event group search string
     val group: String = "",
-    // when it's a private group event
     val groups: List<Group> = emptyList(),
-    // list of suggested groups given the search string
     val suggestedGroups: List<Group> = emptyList(),
-    // the id of the current user
     val currentUserId: String = ""
 )
 
@@ -101,8 +105,16 @@ private var client: OkHttpClient =
         }
         .build()
 
+/**
+ * ViewModel for the Edit Event Screen
+ *
+ * @param profileRepository the profile repository
+ * @param groupsRepository the groups repository
+ * @param eventsRepository the events repository
+ * @param nominatimClient the location repository
+ */
 @SuppressLint("SimpleDateFormat")
-class EditEventsViewModel(
+class EditEventViewModel(
     private val profileRepository: ProfileRepository,
     private val groupsRepository: GroupsRepository,
     private val eventsRepository: EventsRepository,
@@ -110,7 +122,7 @@ class EditEventsViewModel(
 ) : ViewModel() {
 
   // State with a private set
-  var uiState by mutableStateOf<EditEventsUIState>(EditEventsUIState())
+  var uiState by mutableStateOf<EditEventUIState>(EditEventUIState())
     private set
 
   // Formats used for date and time parsing
@@ -566,6 +578,12 @@ class EditEventsViewModel(
   /**
    * Companion Object used to encapsulate a static method to retrieve a ViewModelProvider.Factory
    * and its default dependencies.
+   *
+   * @param profileRepository the profile repository
+   * @param eventsRepository the events repository
+   * @param nominatimClient the location repository
+   * @param groupsRepository the groups repository
+   * @return a ViewModelProvider.Factory that provides an instance of EditEventsViewModel
    */
   companion object {
     fun provideFactory(
@@ -576,7 +594,7 @@ class EditEventsViewModel(
         groupsRepository: GroupsRepository = GroupsRepositoryFirestore(Firebase.firestore)
     ): ViewModelProvider.Factory {
       return GenericViewModelFactory {
-        EditEventsViewModel(
+        EditEventViewModel(
             profileRepository = profileRepository,
             eventsRepository = eventsRepository,
             nominatimClient = nominatimClient,

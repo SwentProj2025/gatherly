@@ -25,7 +25,7 @@ import com.android.gatherly.ui.authentication.SignInScreen
 import com.android.gatherly.ui.badge.BadgeScreen
 import com.android.gatherly.ui.events.AddEventScreen
 import com.android.gatherly.ui.events.EditEventsScreen
-import com.android.gatherly.ui.events.EventsScreen
+import com.android.gatherly.ui.events.EventsOverviewScreen
 import com.android.gatherly.ui.events.EventsScreenActions
 import com.android.gatherly.ui.focusTimer.TimerScreen
 import com.android.gatherly.ui.friends.FindFriendsScreen
@@ -213,7 +213,7 @@ fun GatherlyApp(
         route = Screen.EventsOverviewScreen.name,
     ) {
       composable(Screen.EventsOverviewScreen.route) {
-        EventsScreen(
+        EventsOverviewScreen(
             navigationActions = navigationActions,
             actions =
                 EventsScreenActions(
@@ -228,7 +228,7 @@ fun GatherlyApp(
       composable(Screen.EventsDetailsScreen.ROUTE) { navBackStackEntry ->
         val uid = navBackStackEntry.arguments?.getString("uid")
         uid?.let {
-          EventsScreen(
+          EventsOverviewScreen(
               navigationActions = navigationActions,
               actions =
                   EventsScreenActions(
