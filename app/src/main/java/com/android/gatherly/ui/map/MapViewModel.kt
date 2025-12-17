@@ -22,6 +22,7 @@ import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.maps.model.LatLng
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -39,20 +40,6 @@ val EPFL_LATLNG = LatLng(46.5197, 6.5663)
 /** Timeout duration for fetching user location. */
 private const val LOCATION_FETCH_TIMEOUT_MS = 5_000L
 
-/**
- * UI state for the Map screen.
- *
- * @property itemsList of drawable items (incomplete todos or upcoming/current events with valid
- *   locations).
- * @property selectedItemId ID of the `ToDo` or `Event` whose marker is currently selected, or null
- *   if none.
- * @property lastConsultedTodoId ID of the most recently consulted `ToDo`.
- * @property lastConsultedEventId ID of the most recently consulted `Event`.
- * @property cameraPos Current camera position on the map.
- * @property errorMsg Error message to display, or null if no error.
- * @property displayEventsPage Flag indicating whether events are being displayed (vs todos).
- * @property currentUserLocation The user's current location, if available.
- */
 data class UIState(
     val itemsList: List<DisplayedMapElement> = emptyList(),
     val selectedItemId: String? = null,
@@ -64,41 +51,14 @@ data class UIState(
     val currentUserLocation: LatLng? = null
 )
 
-/**
- * Filters todos to return only those that should be displayed on the map.
- *
- * A todo is drawable if it is not complete and has a valid location.
- *
- * @param todos The list of todos to filter.
- * @return List of todos that can be drawn on the map.
- */
 private fun getDrawableTodos(todos: List<ToDo>): List<ToDo> {
   return todos.filter { it.status != ToDoStatus.ENDED && it.location != null }
 }
 
-/**
- * Filters events to return only those that should be displayed on the map.
- *
- * An event is drawable if it is not past and has a valid location.
- *
- * @param events The list of events to filter.
- * @return List of events that can be drawn on the map.
- */
 private fun getDrawableEvents(events: List<Event>): List<Event> {
   return events.filter { it.status != EventStatus.PAST && it.location != null }
 }
 
-/**
- * ViewModel for the Map screen.
- *
- * Manages the UI state for displaying todos and events on a map, including marker selection, camera
- * positioning based on consulted items and user location, and user sign-out functionality.
- *
- * @property todosRepository Repository for accessing todo data.
- * @property eventsRepository Repository for accessing event data.
- * @property fusedLocationClient Client for accessing device location services.
- * @property coordinator Coordinator for handling navigation-triggered map centering.
- */
 class MapViewModel(
     private val todosRepository: ToDosRepository = ToDosRepositoryFirestore(Firebase.firestore),
     private val eventsRepository: EventsRepository = EventsRepositoryFirestore(Firebase.firestore),
@@ -106,24 +66,28 @@ class MapViewModel(
     private val coordinator: MapCoordinator
 ) : ViewModel() {
 
-  /** StateFlow that emits the current UI state for the Map screen. */
-  private val _uiState: MutableStateFlow<UIState> = MutableStateFlow(UIState())
+  private val _uiState = MutableStateFlow(UIState())
   val uiState: StateFlow<UIState> = _uiState.asStateFlow()
 
   private var todoList: List<ToDo> = emptyList()
   private var eventsList: List<Event> = emptyList()
 
-  /** Job for tracking user location updates. */
   private var locationJob: Job? = null
-
-  // Added to track the data loading status
   private var loadingDataJob: Job? = null
 
-  /**
-   * Starts collecting location updates and updates the UI state with the user's current location.
-   *
-   * @param context The context used to access location services.
-   */
+  init {
+    loadingDataJob =
+        viewModelScope.launch(Dispatchers.IO) {
+          val todos = todosRepository.getAllTodos()
+          todoList = getDrawableTodos(todos)
+
+          val events = eventsRepository.getAllEvents()
+          eventsList = getDrawableEvents(events)
+
+          _uiState.update { it.copy(itemsList = todoList, displayEventsPage = false) }
+        }
+  }
+
   fun startLocationUpdates(context: Context) {
     locationJob?.cancel()
     locationJob =
@@ -135,112 +99,57 @@ class MapViewModel(
         }
   }
 
-  /** Stops collecting location updates. */
   fun stopLocationUpdates() {
     locationJob?.cancel()
     locationJob = null
   }
 
-  /** Converts a custom Location object to a LatLng object. */
-  private fun toLatLng(location: Location): LatLng {
-    return LatLng(location.latitude, location.longitude)
-  }
+  private fun toLatLng(location: Location): LatLng = LatLng(location.latitude, location.longitude)
 
-  /**
-   * Initialises the camera position based on last consulted item or user location.
-   *
-   * @param context The context used to access location services.
-   */
-  @Suppress("SuspendFunctionOnCoroutineScope")
   suspend fun initialiseCameraPosition(context: Context) {
     loadingDataJob?.join()
-
     val pos = fetchLocationToCenterOn(context)
     _uiState.update { it.copy(cameraPos = pos) }
   }
 
-  /**
-   * Initialises the ViewModel by loading all todos and events from the repositories and filtering
-   * them to display only drawable items.
-   */
-  init {
-    loadingDataJob =
-        viewModelScope.launch {
-          val todos = todosRepository.getAllTodos()
-          todoList = getDrawableTodos(todos)
-
-          val events = eventsRepository.getAllEvents()
-          eventsList = getDrawableEvents(events)
-
-          _uiState.update { it.copy(itemsList = todoList, displayEventsPage = false) }
-        }
-  }
-
-  /**
-   * Handles a tap on a marker by selecting it.
-   *
-   * @param itemId The ID of the item whose marker was tapped.
-   */
   fun onSelectedItem(itemId: String) {
-    _uiState.value = _uiState.value.copy(selectedItemId = itemId)
+    _uiState.update { it.copy(selectedItemId = itemId) }
   }
 
-  /** Handles dismissal of an opened modal sheet. */
   fun clearSelection() {
     _uiState.update { it.copy(selectedItemId = null) }
   }
 
-  /**
-   * Handles when an item (`ToDo` or `Event`) is consulted by updating the last consulted ID and
-   * invalidating the camera position to trigger re-centering on return.
-   *
-   * @param itemId The ID of the item being consulted.
-   */
   fun onItemConsulted(itemId: String) {
-    if (_uiState.value.displayEventsPage) {
-      _uiState.value =
-          _uiState.value.copy(
-              lastConsultedEventId = itemId, lastConsultedTodoId = null, cameraPos = null)
-    } else {
-      _uiState.value =
-          _uiState.value.copy(
-              lastConsultedTodoId = itemId, lastConsultedEventId = null, cameraPos = null)
+    _uiState.update { state ->
+      if (state.displayEventsPage) {
+        state.copy(lastConsultedEventId = itemId, lastConsultedTodoId = null, cameraPos = null)
+      } else {
+        state.copy(lastConsultedTodoId = itemId, lastConsultedEventId = null, cameraPos = null)
+      }
     }
   }
 
-  /** Handles navigation away from the map screen by clearing the camera's position. */
   fun onNavigationToDifferentScreen() {
     _uiState.update { it.copy(cameraPos = null) }
   }
 
-  /** Handles the switch from viewing todos to viewing events on the map. */
   fun changeView() {
-    if (_uiState.value.displayEventsPage) {
-      _uiState.value = _uiState.value.copy(itemsList = todoList, displayEventsPage = false)
-    } else {
-      _uiState.value = _uiState.value.copy(itemsList = eventsList, displayEventsPage = true)
+    _uiState.update { state ->
+      if (state.displayEventsPage) {
+        state.copy(itemsList = todoList, displayEventsPage = false)
+      } else {
+        state.copy(itemsList = eventsList, displayEventsPage = true)
+      }
     }
   }
 
-  /**
-   * Fetches the location to center the map on based on a priority chain:
-   * 1. Last consulted `ToDo` (if any)
-   * 2. Unconsumed event or `ToDo` from coordinator (navigation-triggered)
-   * 3. Last consulted `Event` (if any)
-   * 4. User's current location (with 5-second timeout)
-   * 5. EPFL default location (fallback)
-   *
-   * @param context The context used to access location services.
-   * @return The LatLng position to center the camera on.
-   */
-  @Suppress("SuspendFunctionOnCoroutineScope")
   suspend fun fetchLocationToCenterOn(context: Context): LatLng {
-    if (_uiState.value.lastConsultedTodoId != null) {
-      val todo = todoList.find { it.uid == _uiState.value.lastConsultedTodoId }
-      if (todo?.location != null) {
-        return toLatLng(todo.location)
-      }
-    }
+    _uiState.value.lastConsultedTodoId
+        ?.let { lastTodoId -> todoList.find { it.uid == lastTodoId }?.location }
+        ?.let {
+          return toLatLng(it)
+        }
 
     coordinator.getUnconsumedEventId()?.let { eventId ->
       eventsList
@@ -248,7 +157,6 @@ class MapViewModel(
           ?.location
           ?.let { location ->
             coordinator.markConsumed()
-            // Switch to events view and update itemsList
             _uiState.update { it.copy(displayEventsPage = true, itemsList = eventsList) }
             return toLatLng(location)
           }
@@ -265,28 +173,28 @@ class MapViewModel(
           }
     }
 
-    if (_uiState.value.lastConsultedEventId != null) {
-      val event = eventsList.find { it.id == _uiState.value.lastConsultedEventId }
-      if (event?.location != null) {
-        return toLatLng(event.location)
-      }
-    }
+    _uiState.value.lastConsultedEventId
+        ?.let { lastEventId -> eventsList.find { it.id == lastEventId }?.location }
+        ?.let {
+          return toLatLng(it)
+        }
 
-    try {
-      val currentLocation =
+    val currentLocation =
+        try {
           withTimeoutOrNull(LOCATION_FETCH_TIMEOUT_MS) {
             fusedLocationClient?.locationFlow(context)?.first()
           }
+        } catch (_: Exception) {
+          null
+        }
 
-      if (currentLocation != null) {
-        return LatLng(currentLocation.latitude, currentLocation.longitude)
-      }
-    } catch (_: Exception) {}
+    if (currentLocation != null) {
+      return LatLng(currentLocation.latitude, currentLocation.longitude)
+    }
 
     return EPFL_LATLNG
   }
 
-  /** Factory method to provide a MapViewModel with default dependencies. */
   companion object {
     fun provideFactory(
         todosRepository: ToDosRepository = ToDosRepositoryFirestore(Firebase.firestore),
