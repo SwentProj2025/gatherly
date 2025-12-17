@@ -68,7 +68,7 @@ class MapScreenTest {
   private val participatingEventId = "e2"
   private val creatingEventId = "e3"
 
-  private val TEST_USER_ID = "testUserId"
+  private val testUserId = "testUserId"
 
   private val todo =
       ToDo(
@@ -108,7 +108,7 @@ class MapScreenTest {
           startTime = oneHourLater,
           endTime = twoHoursLater,
           creatorId = "org-1",
-          participants = listOf("u1", "u2", TEST_USER_ID),
+          participants = listOf("u1", "u2", testUserId),
           status = EventStatus.UPCOMING)
 
   private val creatingEvent =
@@ -121,8 +121,8 @@ class MapScreenTest {
           date = Timestamp(Date()),
           startTime = oneHourLater,
           endTime = twoHoursLater,
-          creatorId = TEST_USER_ID,
-          participants = listOf(TEST_USER_ID),
+          creatorId = testUserId,
+          participants = listOf(testUserId),
           status = EventStatus.UPCOMING)
 
   @Before
@@ -168,7 +168,7 @@ class MapScreenTest {
     compose.waitForIdle()
     runBlocking {
       while (viewModel.uiState.value.cameraPos == null) {
-        kotlinx.coroutines.delay(10)
+        delay(10)
       }
     }
   }
@@ -180,7 +180,7 @@ class MapScreenTest {
     compose.waitForIdle()
     runBlocking {
       while (viewModel.uiState.value.cameraPos == null) {
-        kotlinx.coroutines.delay(10)
+        delay(10)
       }
     }
   }
@@ -312,7 +312,7 @@ class MapScreenTest {
     val cameraPos = viewModel.uiState.value.cameraPos
     assert(cameraPos != null)
     assertEquals(todo.location!!.latitude, cameraPos!!.latitude, 0.0001)
-    assertEquals(todo.location!!.longitude, cameraPos.longitude, 0.0001)
+    assertEquals(todo.location.longitude, cameraPos.longitude, 0.0001)
   }
 
   @Test
@@ -529,7 +529,7 @@ class MapScreenTest {
       isMapScreenActive.value = false
     }
     mockitoUtils = MockitoUtils()
-    mockitoUtils.chooseCurrentUser(TEST_USER_ID)
+    mockitoUtils.chooseCurrentUser(testUserId)
 
     compose.setContent {
       if (isMapScreenActive.value) {
@@ -587,7 +587,7 @@ class MapScreenTest {
       isMapScreenActive.value = false
     }
     mockitoUtils = MockitoUtils()
-    mockitoUtils.chooseCurrentUser(TEST_USER_ID)
+    mockitoUtils.chooseCurrentUser(testUserId)
 
     compose.setContent {
       if (isMapScreenActive.value) {

@@ -37,7 +37,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 val EPFL_LATLNG = LatLng(46.5197, 6.5663)
 
 /** Timeout duration for fetching user location. */
-const val LOCATION_FETCH_TIMEOUT = 5000L
+private const val LOCATION_FETCH_TIMEOUT_MS = 5_000L
 
 /**
  * UI state for the Map screen.
@@ -187,7 +187,7 @@ class MapViewModel(
 
   /** Handles dismissal of an opened modal sheet. */
   fun clearSelection() {
-    _uiState.value = _uiState.value.copy(selectedItemId = null)
+    _uiState.update { it.copy(selectedItemId = null) }
   }
 
   /**
@@ -274,17 +274,14 @@ class MapViewModel(
 
     try {
       val currentLocation =
-          withTimeoutOrNull(LOCATION_FETCH_TIMEOUT) {
+          withTimeoutOrNull(LOCATION_FETCH_TIMEOUT_MS) {
             fusedLocationClient?.locationFlow(context)?.first()
           }
 
       if (currentLocation != null) {
         return LatLng(currentLocation.latitude, currentLocation.longitude)
       }
-    } catch (e: Exception) {
-      // Permission denied or other error
-      // Ignore this to fall back to EPFL default
-    }
+    } catch (_: Exception) {}
 
     return EPFL_LATLNG
   }
