@@ -1,8 +1,8 @@
 package com.android.gatherly.ui.settings
 
 import android.content.Context
-import android.net.Uri
 import android.util.Log
+import androidx.core.net.toUri
 import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
@@ -39,12 +39,28 @@ import kotlinx.coroutines.tasks.await
 // Portions of the code in this file are adapted from the bootcamp solution provided by Swent staff
 
 /**
- * UI state for the Settings screen. This state holds the data needed to display and edit a Profile
+ * UI state backing the Settings screen. This state holds the data needed to display and edit a
+ * Profile
  *
- * @property isValid Returns true if all mandatory fields are valid.
- *     - Currently, only [name] is mandatory, birthday needs proper format if not empty.
- *     - Optional fields ([school], [schoolYear], [profilePictureUrl], [birthday]) do not block
- *       saving even if they are empty.
+ * @property signedOut True when the user has signed out.
+ * @property name Display name of the user.
+ * @property username Unique username chosen by the user.
+ * @property school Optional school name.
+ * @property schoolYear Optional school year.
+ * @property profilePictureUrl URL of the user's profile picture.
+ * @property birthday User birthday formatted as dd/MM/yyyy.
+ * @property errorMsg Generic error message to display as a toast.
+ * @property invalidNameMsg Validation error for the name field.
+ * @property invalidUsernameMsg Validation error for the username field.
+ * @property invalidBirthdayMsg Validation error for the birthday field.
+ * @property isUsernameAvailable Result of username availability check.
+ * @property isLoadingProfile True while the profile is being loaded.
+ * @property saveSuccess True when profile save completes successfully.
+ * @property navigateToInit Triggers navigation to initial profile setup.
+ * @property isAnon True if the current user is anonymous.
+ * @property isSaving True while a save operation is in progress.
+ * @property currentUserStatus Current presence/status of the user.
+ * @property bio Optional user biography text.
  */
 data class SettingsUiState(
     val signedOut: Boolean = false,
@@ -78,8 +94,11 @@ data class SettingsUiState(
 }
 
 /**
- * ViewModel for the Settings screen. This ViewModel manages the state of input fields for the
- * Settings screen.
+ * ViewModel responsible for managing Settings screen state and profile updates.
+ *
+ * @param repository Repository used for reading and writing profile data.
+ * @param authProvider Provider for FirebaseAuth instance.
+ * @param userStatusManager Manages user presence/status updates.
  */
 class SettingsViewModel(
     private val repository: ProfileRepository = ProfileRepositoryProvider.repository,
@@ -88,12 +107,19 @@ class SettingsViewModel(
         UserStatusManager(authProvider(), repository),
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(SettingsUiState())
+  /** Observable UI state exposed to the Settings screen. */
   val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
   private var originalProfile: Profile? = null
 
-  /** Initiates sign-out */
-  fun signOut(credentialManager: CredentialManager): Unit {
+  /**
+   * Signs the user out of Firebase and clears credential state.
+   *
+   * Also sets the user's status to OFFLINE and updates UI state.
+   *
+   * @param credentialManager CredentialManager used to clear stored credentials.
+   */
+  fun signOut(credentialManager: CredentialManager) {
     viewModelScope.launch {
       userStatusManager.setStatus(ProfileStatus.OFFLINE)
       _uiState.value = _uiState.value.copy(signedOut = true)
@@ -158,9 +184,13 @@ class SettingsViewModel(
   }
 
   /**
-   * Updates a Profile document.
+   * Persists changes made to the user's profile.
    *
-   * @param id The id of the Profile to be updated.
+   * Validates input, checks username availability, uploads profile picture if changed, and updates
+   * the profile in the repository.
+   *
+   * @param id UID of the profile to update.
+   * @param isFirstTime True if this is the user's initial profile setup.
    */
   fun updateProfile(id: String = authProvider().currentUser?.uid!!, isFirstTime: Boolean) {
     _uiState.value = _uiState.value.copy(isSaving = true)
@@ -191,7 +221,7 @@ class SettingsViewModel(
         val newProfilePictureUrl =
             if (state.profilePictureUrl.isNotBlank() &&
                 state.profilePictureUrl != originalProfile?.profilePicture) {
-              repository.updateProfilePic(id, Uri.parse(state.profilePictureUrl))
+              repository.updateProfilePic(id, state.profilePictureUrl.toUri())
             } else {
               originalProfile?.profilePicture.orEmpty()
             }
@@ -219,6 +249,9 @@ class SettingsViewModel(
     }
   }
 
+  /**
+   * Updates the name field and verifies the name is not left blank. (If so an error message is set)
+   */
   fun editName(newName: String) {
     _uiState.value =
         _uiState.value.copy(
@@ -226,18 +259,17 @@ class SettingsViewModel(
             invalidNameMsg = if (newName.isBlank()) "Name cannot be empty" else null)
   }
 
+  /** Updates the school field. */
   fun editSchool(newSchool: String) {
     _uiState.value = _uiState.value.copy(school = newSchool)
   }
 
+  /** Updates the school year field. */
   fun editSchoolYear(newSchoolYear: String) {
     _uiState.value = _uiState.value.copy(schoolYear = newSchoolYear)
   }
 
-  fun editPhoto(newPhotoUrl: String) {
-    _uiState.value = _uiState.value.copy(profilePictureUrl = newPhotoUrl)
-  }
-
+  /** Updates the birthday field and validates date format. */
   fun editBirthday(newBirthday: String) {
     _uiState.value =
         _uiState.value.copy(
@@ -248,6 +280,7 @@ class SettingsViewModel(
                 else null)
   }
 
+  /** Updates the username and triggers availability check if valid. */
   fun editUsername(newUsername: String) {
     val normalized = Username.normalize(newUsername)
     val validFormat = Username.isValid(normalized)
@@ -266,13 +299,18 @@ class SettingsViewModel(
     }
   }
 
+  /** Updates the profile picture URL. */
   fun editProfilePictureUrl(newPhotoUrl: String) {
     _uiState.value = _uiState.value.copy(profilePictureUrl = newPhotoUrl)
   }
 
   /**
-   * Upgrades the user's current account to a Google account. The user keeps all of their current
-   * data
+   * Links the current anonymous account with a Google account.
+   *
+   * Preserves existing user data and initializes a profile if missing.
+   *
+   * @param context Android context used to resolve resources.
+   * @param credentialManager CredentialManager used for Google sign-in.
    */
   fun upgradeWithGoogle(context: Context, credentialManager: CredentialManager) {
     viewModelScope.launch {
@@ -322,6 +360,11 @@ class SettingsViewModel(
     }
   }
 
+  /**
+   * Checks whether a username is available and updates validation state.
+   *
+   * @param username Normalized username to verify.
+   */
   private fun checkUsernameAvailability(username: String) {
     viewModelScope.launch {
       try {
@@ -382,6 +425,7 @@ class SettingsViewModel(
     _uiState.value = _uiState.value.copy(currentUserStatus = status)
   }
 
+  /** Updates the bio field. */
   fun editBio(newBio: String) {
     _uiState.value = _uiState.value.copy(bio = newBio)
   }

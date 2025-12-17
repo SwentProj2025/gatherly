@@ -145,13 +145,6 @@ class SettingsViewModelTest {
     assertTrue(state.isValid)
   }
 
-  @Test
-  fun editPhoto_updatesProfilePictureUrl() {
-    val newUrl = "https://example.com/pic.jpg"
-    viewModel.editPhoto(newUrl)
-    assertEquals(newUrl, viewModel.uiState.value.profilePictureUrl)
-  }
-
   // ------------------------------------------------------------------------
   // USERNAME VALIDATION & AVAILABILITY
   // ------------------------------------------------------------------------

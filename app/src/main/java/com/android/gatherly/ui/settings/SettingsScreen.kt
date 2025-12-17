@@ -112,7 +112,7 @@ fun SettingsScreen(
   val pickImageLauncher =
       rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { uri: Uri?
         ->
-        uri?.let { settingsViewModel.editPhoto(uri.toString()) }
+        uri?.let { settingsViewModel.editProfilePictureUrl(uri.toString()) }
       }
 
   // launcher to take a photo with the camera
@@ -120,7 +120,8 @@ fun SettingsScreen(
       rememberLauncherForActivityResult(contract = ActivityResultContracts.TakePicture()) { success
         ->
         if (success) {
-          settingsViewModel.editPhoto("${imageFile.toURI()}?t=${System.currentTimeMillis()}")
+          settingsViewModel.editProfilePictureUrl(
+              "${imageFile.toURI()}?t=${System.currentTimeMillis()}")
         }
       }
 
