@@ -83,42 +83,44 @@ class FriendsViewModel(
    *
    * @param currentUserId the ID of the current user
    */
-  suspend fun refreshFriends(currentUserId: String) {
-    _uiState.value = _uiState.value.copy(isLoading = true)
-    try {
-      getProfileWithSyncedNotifications(
-          profileRepository = repository,
-          notificationsRepository = notificationsRepository,
-          pointsRepository = pointsRepository,
-          userId = currentUserId)
-      val friendsData = repository.getFriendsAndNonFriendsUsernames(currentUserId)
-      // Anonymous users are automatically assigned an empty username
-      val nonFriendSignedInUsers = friendsData.nonFriendUsernames.filterNot { it.isEmpty() }
-      val allUsernames = friendsData.friendUsernames + nonFriendSignedInUsers
-      val profiles =
-          allUsernames
-              .mapNotNull { username -> repository.getProfileByUsername(username) }
-              .associateBy { it.username }
+  fun refreshFriends(currentUserId: String) {
+    viewModelScope.launch {
+      _uiState.value = _uiState.value.copy(isLoading = true)
+      try {
+        getProfileWithSyncedNotifications(
+            profileRepository = repository,
+            notificationsRepository = notificationsRepository,
+            pointsRepository = pointsRepository,
+            userId = currentUserId)
+        val friendsData = repository.getFriendsAndNonFriendsUsernames(currentUserId)
+        // Anonymous users are automatically assigned an empty username
+        val nonFriendSignedInUsers = friendsData.nonFriendUsernames.filterNot { it.isEmpty() }
+        val allUsernames = friendsData.friendUsernames + nonFriendSignedInUsers
+        val profiles =
+            allUsernames
+                .mapNotNull { username -> repository.getProfileByUsername(username) }
+                .associateBy { it.username }
 
-      val currentUserProfile = repository.getProfileByUid(currentUserId)!!
-      val pendingSentUsernames =
-          currentUserProfile.pendingSentFriendsUids.mapNotNull { uid ->
-            repository.getProfileByUid(uid)?.username
-          }
-      allFriendsCache = friendsData.friendUsernames
-      allPendingCache = pendingSentUsernames
+        val currentUserProfile = repository.getProfileByUid(currentUserId)!!
+        val pendingSentUsernames =
+            currentUserProfile.pendingSentFriendsUids.mapNotNull { uid ->
+              repository.getProfileByUid(uid)?.username
+            }
+        allFriendsCache = friendsData.friendUsernames
+        allPendingCache = pendingSentUsernames
 
-      _uiState.value =
-          _uiState.value.copy(
-              friends = friendsData.friendUsernames,
-              listNoFriends = nonFriendSignedInUsers,
-              pendingSentUsernames = pendingSentUsernames,
-              profiles = profiles,
-              errorMsg = null,
-              currentUserId = currentUserId,
-              isLoading = false)
-    } catch (e: Exception) {
-      _uiState.value = _uiState.value.copy(errorMsg = "Failed to load friends: ${e.message}")
+        _uiState.value =
+            _uiState.value.copy(
+                friends = friendsData.friendUsernames,
+                listNoFriends = nonFriendSignedInUsers,
+                pendingSentUsernames = pendingSentUsernames,
+                profiles = profiles,
+                errorMsg = null,
+                currentUserId = currentUserId,
+                isLoading = false)
+      } catch (e: Exception) {
+        _uiState.value = _uiState.value.copy(errorMsg = "Failed to load friends: ${e.message}")
+      }
     }
   }
 
