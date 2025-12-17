@@ -47,6 +47,7 @@ import com.android.gatherly.R
 import com.android.gatherly.model.todoCategory.ToDoCategory
 import com.android.gatherly.ui.theme.Typography
 
+/** Test tags for CategoriesDropDown composable */
 object CategoriesDropDownTestTags {
 
   const val CATEGORY_DROP_DOWN = "categoryDropDown"
@@ -61,9 +62,18 @@ object CategoriesDropDownTestTags {
    * @param categoryName The String of [ToDoCategory] item whose test tag will be generated.
    * @return A string uniquely identifying the ToDoCategory item in the UI.
    */
-  fun getTestTagForCategoryItem(categoryName: String): String = "CategoryItem${categoryName}"
+  fun getTestTagForCategoryItem(categoryName: String): String = "CategoryItem$categoryName"
 }
 
+/**
+ * Drop down menu to select, create or delete a ToDoCategory
+ *
+ * @param onSelectTag lambda function to execute when the user select a tag
+ * @param showCreateTagDialog MutableState<Boolean> to show or not the create tag dialog
+ * @param currentTag The current selected ToDoCategory
+ * @param showWarningDeleteTagDialog MutableState of ToDoCategory? to show or not the warning dialog
+ * @param categoriesList List of ToDoCategory available
+ */
 @Composable
 fun CategoriesDropDown(
     onSelectTag: (ToDoCategory?) -> Unit,
@@ -123,7 +133,7 @@ fun CategoriesDropDown(
             HorizontalDivider(
                 modifier = Modifier.padding(vertical = dimensionResource(R.dimen.padding_small)),
                 thickness = dimensionResource(R.dimen.thickness_small),
-                color = MaterialTheme.colorScheme.onSurface)
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
 
             if (isModeEditOn) {
               DropdownMenuItem(
@@ -144,7 +154,7 @@ fun CategoriesDropDown(
               HorizontalDivider(
                   modifier = Modifier.padding(vertical = dimensionResource(R.dimen.padding_small)),
                   thickness = dimensionResource(R.dimen.thickness_small),
-                  color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
+                  color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f))
             }
 
             NoneCategoryItem(isModeEditOn, onSelectTag, expanded)
@@ -156,7 +166,9 @@ fun CategoriesDropDown(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically) {
-                          Text(category.name)
+                          Text(
+                              text = category.name,
+                              color = MaterialTheme.colorScheme.onSurfaceVariant)
 
                           ModeEditIcon(isModeEditOn)
                         }
@@ -175,7 +187,15 @@ fun CategoriesDropDown(
   }
 }
 
-/** Helper function: When a category item is clicked on */
+/**
+ * Helper function: When a category item is clicked on
+ *
+ * @param isModeEditOn boolean to know if the drop down is inn edit mode or not
+ * @param showWarningDeleteTagDialog MutableState of ToDoCategory? to show or not the warning dialog
+ * @param category The ToDoCategory item clicked
+ * @param onSelectTag lambda function to execute when the user select a tag
+ * @param expanded MutableState<Boolean> to control the drop down menu
+ */
 private fun onClickItem(
     isModeEditOn: Boolean,
     showWarningDeleteTagDialog: MutableState<ToDoCategory?>,
@@ -192,7 +212,13 @@ private fun onClickItem(
   }
 }
 
-/** Helper composable function: display the None Tag item */
+/**
+ * Helper composable function: display the None Tag item
+ *
+ * @param isModeEditOn boolean to know if the drop down is inn edit mode or not
+ * @param onSelectTag lambda function to execute when the user select the None tag
+ * @param expanded MutableState<Boolean> to control the drop down menu
+ */
 @Composable
 private fun NoneCategoryItem(
     isModeEditOn: Boolean,
@@ -207,7 +233,9 @@ private fun NoneCategoryItem(
               modifier = Modifier.fillMaxWidth(),
               horizontalArrangement = Arrangement.SpaceBetween,
               verticalAlignment = Alignment.CenterVertically) {
-                Text(stringResource(R.string.events_none_tag_label))
+                Text(
+                    text = stringResource(R.string.events_none_tag_label),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
               }
         },
         onClick = {
@@ -219,7 +247,7 @@ private fun NoneCategoryItem(
     HorizontalDivider(
         modifier = Modifier.padding(vertical = dimensionResource(R.dimen.padding_small)),
         thickness = dimensionResource(R.dimen.thickness_small),
-        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.2f))
+        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.2f))
   }
 }
 
@@ -261,6 +289,12 @@ object AlertDialogCreateTagTestTags {
   const val ALERT_CREATE_TAG_COLOR_RANDOM = "randomColorButtonAlertDialogCreateNewTag"
 }
 
+/**
+ * Alert dialog to create a new tag
+ *
+ * @param showCreateTagDialog MutableState<Boolean> to show or not the dialog
+ * @param onCreateTag lambda function to execute when the user create a new tag
+ */
 @Composable
 fun AlertDialogCreateTag(
     showCreateTagDialog: MutableState<Boolean>,
@@ -324,6 +358,12 @@ fun AlertDialogCreateTag(
   }
 }
 
+/**
+ * Alert dialog to warn the user when he is deleting a tag
+ *
+ * @param showWarningDeleteTagDialog MutableState of ToDoCategory? to show or not the dialog
+ * @param onConfirmDelete lambda function to execute when the user confirm the deletion
+ */
 @Composable
 fun AlertDialogWarningDeleteTag(
     showWarningDeleteTagDialog: MutableState<ToDoCategory?>,
@@ -348,6 +388,12 @@ fun AlertDialogWarningDeleteTag(
   }
 }
 
+/**
+ * Composable to display a box with a random color and a button to change the color
+ *
+ * @param color The current color to display
+ * @param onColorChange lambda function to execute when the user want a new random color
+ */
 @Composable
 fun RandomColorBox(color: Color, onColorChange: (Color) -> Unit) {
 
@@ -372,6 +418,7 @@ fun RandomColorBox(color: Color, onColorChange: (Color) -> Unit) {
       }
 }
 
+/** Helper function: generates a random Color */
 fun randomColor(): Color {
   return Color(
       red = Math.random().toFloat(),

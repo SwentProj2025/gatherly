@@ -13,8 +13,8 @@
     <dimen name="padding_large">32dp</dimen>
 
     <!-- Font Size -->
-    <dimen name="font_size_regular">14.sp</dimen>
-    <dimen name="font_size_medium">16.sp</dimen>
+    <dimen name="font_size_regular">14sp</dimen>
+    <dimen name="font_size_medium">16sp</dimen>
 
     <!-- Alpha Levels -->
     <dimen name="alpha_placeholder">0.4</dimen>
@@ -57,14 +57,14 @@
     <dimen name="thickness_small">1dp</dimen>
 
     <!-- Icons -->
+    <dimen name="icons_size_medium">30dp</dimen>
     <dimen name="icons_size_extra_small">16.dp</dimen>
     <dimen name="icons_size_small">20.dp</dimen>
-    <dimen name="icons_size_medium">30.dp</dimen>
 
     <!-- Box -->
+    <dimen name="box_size_large">150dp</dimen>
     <dimen name="box_width_size_small">1.dp</dimen>
     <dimen name="box_height_size_small">24.dp</dimen>
-    <dimen name="box_size_large">150.dp</dimen>
 
     <!-- Border -->
     <dimen name="border_width_small">1.dp</dimen>
@@ -78,81 +78,86 @@
     <dimen name="todo_item_checkbox_padding">8dp</dimen>
     <dimen name="todo_location_dropdown_height">200dp</dimen>
     <dimen name="todo_location_dropdown_padding">8dp</dimen>
+    <dimen name="todo_filter_tag_horizontal_arrangement_space">8dp</dimen>
+    <dimen name="todo_buttons_row_horizontal_arrangement_space">20dp</dimen>
+    <dimen name="todo_priority_level_icon_size">30dp</dimen>
+    <dimen name="todo_category_icon_size">25dp</dimen>
+    <dimen name="todo_item_spacer_width">10dp</dimen>
 
     <!-- HomePage -->
     <dimen name="homepage_task_item_height">56dp</dimen>
     <dimen name="homepage_task_item_spacing">12dp</dimen>
     <dimen name="homepage_arrow_icon_size">24dp</dimen>
-    <dimen name="homepage_section_title_size">20.sp</dimen>
-    <dimen name="homepage_focus_button_height">56.dp</dimen>
-    <dimen name="homepage_save_button_corner_radius">28.dp</dimen>
-    <dimen name="homepage_friend_profile_pic_size">48.dp</dimen>
-    <dimen name="homepage_friends_section_vertical_border_padding">12.dp</dimen>
-    <dimen name="homepage_friends_section_border_width">2.dp</dimen>
-    <dimen name="homepage_section_spacing">20.dp</dimen>
-    <dimen name="homepage_events_section_height">200.dp</dimen>
-    <dimen name="homepage_minimap_width">280.dp</dimen>
-    <dimen name="homepage_add_friends_icon_size">30.dp</dimen>
-    <dimen name="homepage_task_section_height">200.dp</dimen>
-    <dimen name="homepage_filter_icon_button_size">48.dp</dimen>
-    <dimen name="homepage_filter_card_elevation">4.dp</dimen>
+    <dimen name="homepage_section_title_size">20sp</dimen>
+    <dimen name="homepage_focus_button_height">56dp</dimen>
+    <dimen name="homepage_save_button_corner_radius">28dp</dimen>
+    <dimen name="homepage_friend_profile_pic_size">48dp</dimen>
+    <dimen name="homepage_friends_section_vertical_border_padding">12dp</dimen>
+    <dimen name="homepage_friends_section_border_width">2dp</dimen>
+    <dimen name="homepage_section_spacing">20dp</dimen>
+    <dimen name="homepage_events_section_height">200dp</dimen>
+    <dimen name="homepage_minimap_width">280dp</dimen>
+    <dimen name="homepage_add_friends_icon_size">30dp</dimen>
+    <dimen name="homepage_task_section_height">200dp</dimen>
+    <dimen name="homepage_filter_icon_button_size">48dp</dimen>
+    <dimen name="homepage_filter_card_elevation">4dp</dimen>
 
     <!-- Settings Screen -->
-    <dimen name="settings_status_dialog_selector_size">20.dp</dimen>
-    <dimen name="settings_status_dialog_status_size">14.dp</dimen>
-    <dimen name="settings_status_dialog_divider_thickness">1.dp</dimen>
+    <dimen name="settings_status_dialog_selector_size">20dp</dimen>
+    <dimen name="settings_status_dialog_status_size">14dp</dimen>
+    <dimen name="settings_status_dialog_divider_thickness">1dp</dimen>
 
     <!-- SignIn Screen -->
-    <dimen name="sign_in_top_spacing">80.dp</dimen>
-    <dimen name="sign_in_top_buttons_spacing">60.dp</dimen>
-    <dimen name="sign_in_welcome_text_spacing">20.dp</dimen>
-    <dimen name="sign_in_button_height">56.dp</dimen>
-    <dimen name="sign_in_button_icon_size">30.dp</dimen>
+    <dimen name="sign_in_top_spacing">80dp</dimen>
+    <dimen name="sign_in_top_buttons_spacing">60dp</dimen>
+    <dimen name="sign_in_welcome_text_spacing">20dp</dimen>
+    <dimen name="sign_in_button_height">56dp</dimen>
+    <dimen name="sign_in_button_icon_size">30dp</dimen>
 
 
     <!-- Friends Screen -->
-    <dimen name="friends_search_bar_width">10.dp</dimen>
-    <dimen name="friends_item_rounded_corner_shape">12.dp</dimen>
-    <dimen name="friends_find_button_height">80.dp</dimen>
-    <dimen name="friends_find_button_vertical">12.dp</dimen>
-    <dimen name="friends_item_card_border_width">1.dp</dimen>
-    <dimen name="friends_item_card_rounded_corner_shape">8.dp</dimen>
-    <dimen name="friends_item_card_padding_vertical">4.dp</dimen>
-    <dimen name="friends_item_card_padding">12.dp</dimen>
-    <dimen name="friends_item_profile_picture_size">56.dp</dimen>
-    <dimen name="lottie_icon_size_medium">120.dp</dimen>
-    <dimen name="lottie_icon_size_large">220.dp</dimen>
-    <dimen name="lottie_icon_size_extra_large">250.dp</dimen>
+    <dimen name="friends_search_bar_width">10dp</dimen>
+    <dimen name="friends_item_rounded_corner_shape">12dp</dimen>
+    <dimen name="friends_find_button_height">80dp</dimen>
+    <dimen name="friends_find_button_vertical">12dp</dimen>
+    <dimen name="friends_item_card_border_width">1dp</dimen>
+    <dimen name="friends_item_card_rounded_corner_shape">8dp</dimen>
+    <dimen name="friends_item_card_padding_vertical">4dp</dimen>
+    <dimen name="friends_item_card_padding">12dp</dimen>
+    <dimen name="friends_item_profile_picture_size">56dp</dimen>
+    <dimen name="lottie_icon_size_medium">120dp</dimen>
+    <dimen name="lottie_icon_size_large">220dp</dimen>
+    <dimen name="lottie_icon_size_extra_large">250dp</dimen>
 
     <!-- Find Friends Screen -->
-    <dimen name="find_friends_search_bar_width">10.dp</dimen>
-    <dimen name="find_friends_item_rounded_corner_shape">12.dp</dimen>
-    <dimen name="find_friends_find_button_height">80.dp</dimen>
-    <dimen name="find_friends_find_button_vertical">12.dp</dimen>
-    <dimen name="find_friends_item_card_border_width">1.dp</dimen>
-    <dimen name="find_friends_item_card_rounded_corner_shape">8.dp</dimen>
-    <dimen name="find_friends_item_card_padding_vertical">4.dp</dimen>
-    <dimen name="find_friends_item_card_padding">12.dp</dimen>
-    <dimen name="find_friends_item_profile_picture_size">56.dp</dimen>
+    <dimen name="find_friends_search_bar_width">10dp</dimen>
+    <dimen name="find_friends_item_rounded_corner_shape">12dp</dimen>
+    <dimen name="find_friends_find_button_height">80dp</dimen>
+    <dimen name="find_friends_find_button_vertical">12dp</dimen>
+    <dimen name="find_friends_item_card_border_width">1dp</dimen>
+    <dimen name="find_friends_item_card_rounded_corner_shape">8dp</dimen>
+    <dimen name="find_friends_item_card_padding_vertical">4dp</dimen>
+    <dimen name="find_friends_item_card_padding">12dp</dimen>
+    <dimen name="find_friends_item_profile_picture_size">56dp</dimen>
 
     <!-- Groups -->
-    <dimen name="add_group_button_height">80.dp</dimen>
-    <dimen name="add_group_button_vertical">12.dp</dimen>
-    <dimen name="add_group_horizontal_divider_thickness">2.dp</dimen>
-    <dimen name="add_group_friend_section_height">450.dp</dimen>
-    <dimen name="group_overview_horizontal_divider_thickness">1.dp</dimen>
-    <dimen name="group_overview_avatar_spacing">4.dp</dimen>
-    <dimen name="group_overview_row_horizontal_padding">16.dp</dimen>
-    <dimen name="group_overview_avatar_border_width">1.dp</dimen>
+    <dimen name="add_group_button_height">80dp</dimen>
+    <dimen name="add_group_button_vertical">12dp</dimen>
+    <dimen name="add_group_horizontal_divider_thickness">2dp</dimen>
+    <dimen name="add_group_friend_section_height">450dp</dimen>
+    <dimen name="group_overview_horizontal_divider_thickness">1dp</dimen>
+    <dimen name="group_overview_avatar_spacing">4dp</dimen>
+    <dimen name="group_overview_row_horizontal_padding">16dp</dimen>
+    <dimen name="group_overview_avatar_border_width">1dp</dimen>
 
     <!-- Profile Page -->
     <dimen name="profile_badges_spacer_width">110.dp</dimen>
 
     <!-- Events Screen -->
-    <dimen name="events_indicator_status_size">14.dp</dimen>
-    <dimen name="events_popup_horizontalArrangement_size">12.dp</dimen>
-    <dimen name="events_filter_bar_vertical_size">10.dp</dimen>
-    <dimen name="events_filter_button_height">35.dp</dimen>
+    <dimen name="events_indicator_status_size">14dp</dimen>
+    <dimen name="events_popup_horizontalArrangement_size">12dp</dimen>
+    <dimen name="events_filter_bar_vertical_size">10dp</dimen>
+    <dimen name="events_filter_button_height">35dp</dimen>
     <dimen name="events_overview_horizontal_padding">16dp</dimen>
     <dimen name="events_state_switch_button_width">60dp</dimen>
     <dimen name="events_state_switch_button_height">40dp</dimen>
@@ -162,21 +167,27 @@
     <dimen name="events_create_button_vertical">12dp</dimen>
 
     <!-- Notifications Screen -->
-    <dimen name="notification_avatar_spacing">4.dp</dimen>
-    <dimen name="notification_row_horizontal_padding">16.dp</dimen>
-    <dimen name="notification_avatar_border_width">1.dp</dimen>
-    <dimen name="friend_request_item_card_rounded_corner_shape">8.dp</dimen>
-    <dimen name="friend_request_item_card_padding_vertical">4.dp</dimen>
-    <dimen name="friend_request_item_card_padding">12.dp</dimen>
-    <dimen name="friend_request_item_profile_picture_size">56.dp</dimen>
+    <dimen name="notification_avatar_spacing">4dp</dimen>
+    <dimen name="notification_row_horizontal_padding">16dp</dimen>
+    <dimen name="notification_avatar_border_width">1dp</dimen>
+    <dimen name="friend_request_item_card_rounded_corner_shape">8dp</dimen>
+    <dimen name="friend_request_item_card_padding_vertical">4dp</dimen>
+    <dimen name="friend_request_item_card_padding">12dp</dimen>
+    <dimen name="friend_request_item_profile_picture_size">56dp</dimen>
 
     <!-- Focus History Screen -->
-    <dimen name="focus_item_height">100.dp</dimen>
-    <dimen name="focus_session_item_vertical_padding">4.dp</dimen>
-    <dimen name="focus_session_item_row_padding">12.dp</dimen>
-    <dimen name="focus_session_history_vertical_padding">8.dp</dimen>
-    <dimen name="focus_session_history_horizontal_padding">16.dp</dimen>
-    <dimen name="focus_session_history_button_height">35.dp</dimen>
+    <dimen name="focus_item_height">100dp</dimen>
+    <dimen name="focus_session_item_vertical_padding">4dp</dimen>
+    <dimen name="focus_session_item_row_padding">12dp</dimen>
+    <dimen name="focus_session_history_vertical_padding">8dp</dimen>
+    <dimen name="focus_session_history_horizontal_padding">16dp</dimen>
+    <dimen name="focus_session_history_button_height">35dp</dimen>
+    <dimen name="timer_corner">12dp</dimen>
+    <dimen name="timer_progress_width">15dp</dimen>
+    <dimen name="timer_progress_gap">5dp</dimen>
+    <dimen name="timer_padding">6dp</dimen>
+    <dimen name="timer_todo_height">60dp</dimen>
+    <dimen name="timer_bar_thickness">0.5dp</dimen>
 
     <!-- Map Screen -->
     <dimen name="map_marker_width">180dp</dimen>
