@@ -9,6 +9,12 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
+/**
+ * Instrumented tests for the Friend Requests Screen UI components and their behavior.
+ *
+ * These tests ensure that the Friend Requests Screen renders correctly, displays friend request
+ * items as expected, and handles loading states appropriately.
+ */
 class FriendRequestsScreenTest {
 
   @get:Rule val composeTestRule = createComposeRule()

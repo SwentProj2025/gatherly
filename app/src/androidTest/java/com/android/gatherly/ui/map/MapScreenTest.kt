@@ -44,32 +44,52 @@ import org.junit.Test
 
 // This file contains code written by an LLM (Claude.ai, Gemini Pro, GitHub Copilot).
 
-/** Tests for the MapScreen composable. */
+/**
+ * Instrumented UI tests for [MapScreen].
+ *
+ * Scope:
+ * - Rendering: Map is displayed, filter toggle exists, marker cards and sheets exist.
+ * - View switching: toggling between ToDo page and Events page.
+ * - Selection behavior: selecting an item opens the correct sheet and updates ViewModel state.
+ * - Dismiss behavior: closing a sheet clears the selection.
+ * - Navigation: tapping sheet buttons triggers navigation targets (ToDo overview or Event screen).
+ * - Loading state: when camera position is null and initialization is disabled, show loading UI.
+ * - Integration navigation: MapScreen -> EventsScreen and verify AlertDialog content for different
+ *   participation contexts (not participating, participating, creator).
+ */
 class MapScreenTest {
 
+  /** Compose rule used to host the composable under test in an instrumentation Activity. */
   @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
 
-  // Grant location permissions for the tests (required!)
+  /**
+   * Location permissions required by the map and any location-based initialization logic. Without
+   * this rule, the screen may remain in the loading state in CI or emulator runs.
+   */
   @get:Rule
   val permissionRule: GrantPermissionRule =
       GrantPermissionRule.grant(
           Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
+
+  /** In-memory repositories used to seed deterministic data for tests. */
   private lateinit var toDosRepository: ToDosRepository
   private lateinit var eventsRepository: EventsRepository
   private lateinit var profileRepository: ProfileRepository
-  private lateinit var mockitoUtils: MockitoUtils
 
+  /** Shared coordinator used for navigation and map coordination across screens. */
   private lateinit var mapCoordinator: MapCoordinator
+
+  /** ViewModel under test, driving [MapScreen] state. */
   private lateinit var viewModel: MapViewModel
 
+  /** Stable IDs used across tests for selection and navigation assertions. */
   private val todoId = "t1"
   private val eventId = "e1"
-
   private val participatingEventId = "e2"
   private val creatingEventId = "e3"
+  private val testUserId = "testUserId"
 
-  private val TEST_USER_ID = "testUserId"
-
+  /** Sample ToDo item used for marker, sheet, selection, and "consulted" tests. */
   private val todo =
       ToDo(
           uid = todoId,
@@ -81,8 +101,14 @@ class MapScreenTest {
           status = ToDoStatus.ONGOING,
           ownerId = "owner-1")
 
-  private val oneHourLater = Timestamp(Date(System.currentTimeMillis() + 3600_000))
-  private val twoHoursLater = Timestamp(Date(System.currentTimeMillis() + 7200_000))
+  /** Helper timestamps used to build deterministic event times. */
+  private val oneHourLater = Timestamp(Date(System.currentTimeMillis() + 3_600_000))
+  private val twoHoursLater = Timestamp(Date(System.currentTimeMillis() + 7_200_000))
+
+  /**
+   * Event where the current user is not a participant. Used to validate the "non participating"
+   * AlertDialog path.
+   */
   private val event =
       Event(
           id = eventId,
@@ -97,6 +123,10 @@ class MapScreenTest {
           participants = listOf("u1", "u2", "org-1"),
           status = EventStatus.UPCOMING)
 
+  /**
+   * Event where the current user participates. Used to validate the "participating" AlertDialog
+   * path.
+   */
   private val participatingEvent =
       Event(
           id = participatingEventId,
@@ -108,9 +138,10 @@ class MapScreenTest {
           startTime = oneHourLater,
           endTime = twoHoursLater,
           creatorId = "org-1",
-          participants = listOf("u1", "u2", TEST_USER_ID),
+          participants = listOf("u1", "u2", testUserId),
           status = EventStatus.UPCOMING)
 
+  /** Event created by the current user. Used to validate the "creator" AlertDialog path. */
   private val creatingEvent =
       Event(
           id = creatingEventId,
@@ -121,77 +152,111 @@ class MapScreenTest {
           date = Timestamp(Date()),
           startTime = oneHourLater,
           endTime = twoHoursLater,
-          creatorId = TEST_USER_ID,
-          participants = listOf(TEST_USER_ID),
+          creatorId = testUserId,
+          participants = listOf(testUserId),
           status = EventStatus.UPCOMING)
 
+  /**
+   * Creates repositories and the ViewModel with deterministic test data.
+   *
+   * The ViewModel loads its initial items asynchronously, so we wait until [UIState.itemsList] is
+   * populated before running assertions.
+   */
   @Before
   fun setUp() = runBlocking {
     toDosRepository = ToDosLocalRepository().apply { addTodo(todo) }
-    profileRepository = ProfileLocalRepository()
     eventsRepository =
         EventsLocalRepository().apply {
           addEvent(event)
           addEvent(participatingEvent)
           addEvent(creatingEvent)
         }
+    profileRepository = ProfileLocalRepository()
     mapCoordinator = MapCoordinator()
+
     viewModel =
         MapViewModel(
             todosRepository = toDosRepository,
             eventsRepository = eventsRepository,
             coordinator = mapCoordinator)
 
-    // Wait for ViewModel init to complete
-    while (viewModel.uiState.value.itemsList.isEmpty()) {
-      delay(10)
-    }
+    waitUntilViewModelLoaded()
   }
 
+  /**
+   * Stops background location updates after each test and waits for Compose to become idle. This
+   * prevents cross-test interference and reduces flakiness.
+   */
   @After
   fun tearDown() {
     viewModel.stopLocationUpdates()
     compose.waitForIdle()
   }
 
-  // Helper for your existing UI existence tests
+  /**
+   * Waits until the ViewModel has loaded its items list. Used to avoid racing the initial
+   * asynchronous state population.
+   */
+  private fun waitUntilViewModelLoaded() = runBlocking {
+    while (viewModel.uiState.value.itemsList.isEmpty()) delay(10)
+  }
+
+  /**
+   * Waits until the ViewModel exposes a non-null camera position. Used because MapScreen
+   * initializes camera position asynchronously.
+   */
+  private fun waitUntilCameraReady() = runBlocking {
+    while (viewModel.uiState.value.cameraPos == null) delay(10)
+  }
+
+  /**
+   * Renders MapScreen with additional marker and sheet composables.
+   *
+   * Why this helper exists:
+   * - Some UI elements (marker cards and sheets) have explicit test tags and can be asserted
+   *   directly.
+   * - Google Map marker nodes are not always accessible through Compose semantics in tests.
+   */
   private fun renderDefaultMapUi() {
     compose.setContent {
       MapScreen(viewModel = viewModel, coordinator = mapCoordinator)
       ToDoIcon(todo)
-      ToDoSheet(todo, onGoToToDo = {}, onClose = {})
+      ToDoSheet(todo, onGoToToDo = {})
       EventIcon(event)
-      EventSheet(event, onGoToEvent = {}, onClose = {})
+      EventSheet(event, onGoToEvent = {})
     }
-
-    // Wait for camera position to initialize
     compose.waitForIdle()
-    runBlocking {
-      while (viewModel.uiState.value.cameraPos == null) {
-        kotlinx.coroutines.delay(10)
-      }
-    }
+    waitUntilCameraReady()
   }
 
+  /**
+   * Renders only MapScreen.
+   *
+   * Use this helper when validating ViewModel-driven selection and UI state changes without
+   * manually composing extra marker and sheet components.
+   */
   private fun renderMapScreenOnly() {
     compose.setContent { MapScreen(viewModel = viewModel, coordinator = mapCoordinator) }
-
-    // Wait for camera position to initialize
     compose.waitForIdle()
-    runBlocking {
-      while (viewModel.uiState.value.cameraPos == null) {
-        kotlinx.coroutines.delay(10)
-      }
-    }
+    waitUntilCameraReady()
   }
 
+  /**
+   * Renders MapScreen with initialization disabled.
+   *
+   * This is used to keep the screen in a stable loading state for assertions: cameraPos stays null
+   * and the map and filter toggle should not be displayed.
+   */
   private fun renderMapScreenWithoutInitialisation() {
     compose.setContent {
       MapScreen(viewModel = viewModel, coordinator = mapCoordinator, runInitialisation = false)
     }
   }
 
-  // Check that the Google Map is displayed
+  /**
+   * Verifies that the Google Map container is present in the composition. This is a basic smoke
+   * test for MapScreen rendering.
+   */
   @Test
   fun google_map_is_displayed() {
     renderDefaultMapUi()
@@ -200,22 +265,22 @@ class MapScreenTest {
         .assertExists()
   }
 
-  // Check that the filter toggle button is displayed
+  /** Verifies that the filter toggle button is rendered. */
   @Test
-  fun button_is_displayed() {
+  fun filter_toggle_is_displayed() {
     renderDefaultMapUi()
     compose.onNodeWithTag(MapScreenTestTags.FILTER_TOGGLE, useUnmergedTree = true).assertExists()
   }
 
-  // Test Event_Icon exists
+  /** Verifies that an event marker card and title are present. */
   @Test
-  fun event_exists() {
+  fun event_icon_exists() {
     renderDefaultMapUi()
     compose.onNodeWithTag(MapScreenTestTags.EVENT_CARD, useUnmergedTree = true).assertExists()
     compose.onNodeWithTag(MapScreenTestTags.EVENT_TITLE, useUnmergedTree = true).assertExists()
   }
 
-  // Test Event Sheet exists
+  /** Verifies that the event bottom sheet shows all expected fields and the navigation button. */
   @Test
   fun event_sheet_exists() {
     renderDefaultMapUi()
@@ -230,15 +295,15 @@ class MapScreenTest {
     compose.onNodeWithTag(MapScreenTestTags.EVENT_BUTTON, useUnmergedTree = true).assertExists()
   }
 
-  // Test ToDo Icon exists
+  /** Verifies that a todo marker card and title are present. */
   @Test
-  fun todo_exists() {
+  fun todo_icon_exists() {
     renderDefaultMapUi()
     compose.onNodeWithTag(MapScreenTestTags.TODO_CARD, useUnmergedTree = true).assertExists()
     compose.onNodeWithTag(MapScreenTestTags.TODO_TITLE, useUnmergedTree = true).assertExists()
   }
 
-  // Test ToDo Sheet exists
+  /** Verifies that the todo bottom sheet shows all expected fields and the navigation button. */
   @Test
   fun todo_sheet_exists() {
     renderDefaultMapUi()
@@ -248,9 +313,13 @@ class MapScreenTest {
     compose.onNodeWithTag(MapScreenTestTags.TODO_DESCRIPTION, useUnmergedTree = true).assertExists()
     compose.onNodeWithTag(MapScreenTestTags.TODO_BUTTON, useUnmergedTree = true).assertExists()
   }
-  // Navigation tests
+
+  /**
+   * Verifies navigation to the Events feature via the event sheet button. This is a light
+   * integration check using test tags from EventsScreen.
+   */
   @Test
-  fun canGoToEvent() {
+  fun can_go_to_event() {
     renderDefaultMapUi()
     compose.onNodeWithTag(MapScreenTestTags.EVENT_BUTTON, useUnmergedTree = true).performClick()
     compose
@@ -258,8 +327,12 @@ class MapScreenTest {
         .isDisplayed()
   }
 
+  /**
+   * Verifies navigation to the ToDo overview via the todo sheet button. This is a light integration
+   * check using test tags from OverviewScreen.
+   */
   @Test
-  fun canGoToToDo() {
+  fun can_go_to_todo() {
     renderDefaultMapUi()
     compose.onNodeWithTag(MapScreenTestTags.TODO_BUTTON, useUnmergedTree = true).performClick()
     compose
@@ -267,16 +340,12 @@ class MapScreenTest {
         .isDisplayed()
   }
 
+  /**
+   * Smoke test ensuring MapScreen still renders after a todo was previously consulted. This
+   * protects against regressions where prior selection state breaks initialization.
+   */
   @Test
-  fun mapScreen_renders_with_camera_initialisation() {
-    renderDefaultMapUi()
-    compose
-        .onNodeWithTag(MapScreenTestTags.GOOGLE_MAP_SCREEN, useUnmergedTree = true)
-        .assertExists()
-  }
-
-  @Test
-  fun mapScreen_renders_after_consulting_todo() {
+  fun map_renders_after_consulting_todo() {
     viewModel.onItemConsulted(todoId)
     renderDefaultMapUi()
     compose
@@ -284,124 +353,113 @@ class MapScreenTest {
         .assertExists()
   }
 
+  /**
+   * Verifies the default camera target when there is no last consulted item. This checks the
+   * fallback behavior (EPFL coordinates).
+   */
   @Test
-  fun mapScreen_renders_with_EPFL_fallback() {
+  fun map_centers_on_EPFL_fallback() {
     renderDefaultMapUi()
-
-    // Wait for LaunchedEffect to complete
     compose.waitForIdle()
 
-    // Verify camera position was set to EPFL fallback
     val cameraPos = viewModel.uiState.value.cameraPos
     assert(cameraPos != null)
-    assertEquals(EPFL_LATLNG.latitude, cameraPos!!.latitude, 0.0001)
-    assertEquals(EPFL_LATLNG.longitude, cameraPos.longitude, 0.0001)
+
+    assertEquals(46.519, cameraPos!!.latitude, 0.0001)
+    assertEquals(6.5668, cameraPos.longitude, 0.0001)
   }
 
+  /** Verifies that the camera centers on the location of the last consulted ToDo. */
   @Test
-  fun mapScreen_renders_on_todo() {
-    // Mark todo as consulted
+  fun map_centers_on_consulted_todo() {
     viewModel.onItemConsulted(todoId)
-
     renderDefaultMapUi()
-
-    // Wait for LaunchedEffect to complete
     compose.waitForIdle()
 
-    // Verify camera position was set to consulted todo's location
     val cameraPos = viewModel.uiState.value.cameraPos
+    val todoLocation = requireNotNull(todo.location)
     assert(cameraPos != null)
-    assertEquals(todo.location!!.latitude, cameraPos!!.latitude, 0.0001)
-    assertEquals(todo.location!!.longitude, cameraPos.longitude, 0.0001)
+
+    assertEquals(todoLocation.latitude, cameraPos!!.latitude, 0.0001)
+    assertEquals(todoLocation.longitude, cameraPos.longitude, 0.0001)
   }
 
+  /**
+   * Selection behavior for ToDos:
+   * - Selecting a ToDo opens its sheet.
+   * - Clicking the sheet action marks it as "last consulted" in the ViewModel.
+   */
   @Test
-  fun clicking_todo_marker_opens_sheet_and_calls_onItemConsulted() {
+  fun selecting_todo_opens_sheet_and_consult_marks_last_todo() {
     renderMapScreenOnly()
-    compose.waitForIdle()
-
     assertEquals(null, viewModel.uiState.value.lastConsultedTodoId)
 
-    // Simulate marker click by calling ViewModel directly
     viewModel.onSelectedItem(todoId)
     compose.waitForIdle()
-
-    // Verify sheet opened
     compose.onNodeWithTag(MapScreenTestTags.TODO_SHEET, useUnmergedTree = true).assertExists()
 
-    // Click the navigation button
     compose.onNodeWithTag(MapScreenTestTags.TODO_BUTTON, useUnmergedTree = true).performClick()
     compose.waitForIdle()
 
-    // Verify onItemConsulted was called
     assertEquals(todoId, viewModel.uiState.value.lastConsultedTodoId)
   }
 
+  /**
+   * Selection behavior for Events:
+   * - Switches to event view first.
+   * - Selecting an Event opens its sheet.
+   * - Clicking the sheet action marks it as "last consulted" in the ViewModel.
+   */
   @Test
-  fun clicking_event_marker_opens_sheet_and_calls_onItemConsulted() {
+  fun selecting_event_opens_sheet_and_consult_marks_last_event() {
     viewModel.changeView()
     renderMapScreenOnly()
-    compose.waitForIdle()
-
     assertEquals(null, viewModel.uiState.value.lastConsultedEventId)
 
-    // Simulate marker click
     viewModel.onSelectedItem(eventId)
     compose.waitForIdle()
-
-    // Verify sheet opened
     compose.onNodeWithTag(MapScreenTestTags.EVENT_SHEET, useUnmergedTree = true).assertExists()
 
-    // Click button
     compose.onNodeWithTag(MapScreenTestTags.EVENT_BUTTON, useUnmergedTree = true).performClick()
     compose.waitForIdle()
 
-    // Verify onItemConsulted was called
     assertEquals(eventId, viewModel.uiState.value.lastConsultedEventId)
   }
 
+  /** Verifies that the filter toggle flips the ViewModel page state from todos to events. */
   @Test
   fun clicking_filter_toggle_changes_view() {
     renderMapScreenOnly()
-    compose.waitForIdle()
-
-    // Initially showing todos
     assertFalse(viewModel.uiState.value.displayEventsPage)
 
-    // Click filter toggle
     compose.onNodeWithTag(MapScreenTestTags.FILTER_TOGGLE, useUnmergedTree = true).performClick()
     compose.waitForIdle()
 
-    // Now showing events
     assertTrue(viewModel.uiState.value.displayEventsPage)
   }
 
+  /** Verifies that dismissing the ToDo sheet clears [UIState.selectedItemId] in the ViewModel. */
   @Test
   fun dismissing_todo_sheet_clears_selection() {
     renderMapScreenOnly()
-    compose.waitForIdle()
 
-    // Select a todo
     viewModel.onSelectedItem(todoId)
     compose.waitForIdle()
 
-    // Verify sheet is open and item is selected
     compose.onNodeWithTag(MapScreenTestTags.TODO_SHEET, useUnmergedTree = true).assertExists()
     assertEquals(todoId, viewModel.uiState.value.selectedItemId)
 
-    // The sheet's onDismissRequest will call clearSelection - simulate swipe down
     viewModel.clearSelection()
     compose.waitForIdle()
 
-    // Verify selection cleared
     assertNull(viewModel.uiState.value.selectedItemId)
   }
 
+  /** Verifies that dismissing the Event sheet clears [UIState.selectedItemId] in the ViewModel. */
   @Test
   fun dismissing_event_sheet_clears_selection() {
     viewModel.changeView()
     renderMapScreenOnly()
-    compose.waitForIdle()
 
     viewModel.onSelectedItem(eventId)
     compose.waitForIdle()
@@ -415,49 +473,52 @@ class MapScreenTest {
     assertNull(viewModel.uiState.value.selectedItemId)
   }
 
+  /**
+   * Verifies the loading UI when the camera position is null and initialization is disabled.
+   * Expected:
+   * - Loading screen elements are present.
+   * - Google map is not present.
+   */
   @Test
   fun loading_screen_displayed_when_camera_position_null() {
-    // Set the viewModel state to null
     viewModel.onNavigationToDifferentScreen()
-
-    // Render the composable, but *tell it not* to run the LaunchedEffect that fixes the state.
     renderMapScreenWithoutInitialisation()
 
-    // The UI is now stable in its loading state.
     compose.onNodeWithTag(MapScreenTestTags.LOADING_SCREEN, useUnmergedTree = true).assertExists()
     compose.onNodeWithTag(MapScreenTestTags.LOADING_SPINNER, useUnmergedTree = true).assertExists()
     compose.onNodeWithTag(MapScreenTestTags.LOADING_TEXT, useUnmergedTree = true).assertExists()
 
-    // Sanity check: Map not displayed
     compose
         .onNodeWithTag(MapScreenTestTags.GOOGLE_MAP_SCREEN, useUnmergedTree = true)
         .assertDoesNotExist()
   }
 
+  /**
+   * Verifies that the map UI and filter toggle are not visible while in loading state. This
+   * prevents accidental interaction with partially initialized map UI.
+   */
   @Test
-  fun google_map_not_displayed_when_loading() {
+  fun map_and_toggle_not_displayed_when_loading() {
     renderMapScreenWithoutInitialisation()
-
     compose
         .onNodeWithTag(MapScreenTestTags.GOOGLE_MAP_SCREEN, useUnmergedTree = true)
         .assertDoesNotExist()
-  }
-
-  @Test
-  fun filter_toggle_not_displayed_when_loading() {
-    renderMapScreenWithoutInitialisation()
-
     compose
         .onNodeWithTag(MapScreenTestTags.FILTER_TOGGLE, useUnmergedTree = true)
         .assertDoesNotExist()
   }
+
   /**
-   * Tests navigation from the MapScreen to the EventScreen when an event marker is clicked,
-   * including the display of the AlertDialog with event details. This test specifically checks for
-   * an event the user is not participating in.
+   * End to end navigation test: MapScreen -> EventsScreen for an event the user is not
+   * participating in.
+   *
+   * Expected:
+   * - Tapping the event action navigates to EventsScreen with the correct eventId.
+   * - An AlertDialog is shown.
+   * - Dialog title and body match the event content.
    */
   @Test
-  fun testMapScreenToEventScreenWithAlertDialog() {
+  fun navigate_map_to_event_screen_shows_alert_dialog_for_non_participating_event() {
     var navigatedEventId: String? = null
     val isMapScreenActive = mutableStateOf(true)
 
@@ -466,7 +527,7 @@ class MapScreenTest {
       isMapScreenActive.value = false
     }
 
-    mockitoUtils = MockitoUtils()
+    val mockitoUtils = MockitoUtils()
 
     compose.setContent {
       if (isMapScreenActive.value) {
@@ -489,23 +550,19 @@ class MapScreenTest {
 
     viewModel.onSelectedItem(eventId)
     compose.waitForIdle()
-
     compose.onNodeWithTag(MapScreenTestTags.EVENT_BUTTON, useUnmergedTree = true).performClick()
     compose.waitForIdle()
 
     assertEquals(eventId, navigatedEventId)
     compose.onNodeWithTag(AlertDialogTestTags.ALERT, useUnmergedTree = true).assertIsDisplayed()
-
     compose
         .onNodeWithTag(AlertDialogTestTags.TITLE, useUnmergedTree = true)
         .assertIsDisplayed()
         .assertTextEquals(event.title)
-
     compose
         .onNodeWithTag(AlertDialogTestTags.BODY, useUnmergedTree = true)
         .assertIsDisplayed()
         .assertTextEquals(event.description)
-
     compose
         .onNodeWithTag(AlertDialogTestTags.CONFIRM_BTN, useUnmergedTree = true)
         .assertIsDisplayed()
@@ -515,12 +572,14 @@ class MapScreenTest {
   }
 
   /**
-   * Tests navigation from the MapScreen to the EventScreen when an event marker is clicked,
-   * including the display of the AlertDialog with event details. This test specifically checks for
-   * an event the user is participating in.
+   * End to end navigation test: MapScreen -> EventsScreen for an event the user participates in.
+   *
+   * Expected:
+   * - Navigates with the correct eventId.
+   * - AlertDialog is shown and body matches the participating event description.
    */
   @Test
-  fun testMapScreenToParticipatingEvent() {
+  fun navigate_map_to_participating_event_shows_alert_dialog() {
     var navigatedEventId: String? = null
     val isMapScreenActive = mutableStateOf(true)
 
@@ -528,13 +587,13 @@ class MapScreenTest {
       navigatedEventId = id
       isMapScreenActive.value = false
     }
-    mockitoUtils = MockitoUtils()
-    mockitoUtils.chooseCurrentUser(TEST_USER_ID)
+
+    val mockitoUtils = MockitoUtils().apply { chooseCurrentUser(testUserId) }
 
     compose.setContent {
       if (isMapScreenActive.value) {
         viewModel.changeView()
-        MapScreen(viewModel = viewModel, goToEvent = goToEvent, coordinator = mapCoordinator)
+        MapScreen(viewModel = viewModel, coordinator = mapCoordinator, goToEvent = goToEvent)
       } else {
         val eventsVM =
             EventsOverviewViewModel(
@@ -552,18 +611,15 @@ class MapScreenTest {
 
     viewModel.onSelectedItem(participatingEventId)
     compose.waitForIdle()
-
     compose.onNodeWithTag(MapScreenTestTags.EVENT_BUTTON, useUnmergedTree = true).performClick()
     compose.waitForIdle()
 
     assertEquals(participatingEventId, navigatedEventId)
     compose.onNodeWithTag(AlertDialogTestTags.ALERT, useUnmergedTree = true).assertIsDisplayed()
-
     compose
         .onNodeWithTag(AlertDialogTestTags.BODY, useUnmergedTree = true)
         .assertIsDisplayed()
         .assertTextEquals(participatingEvent.description)
-
     compose
         .onNodeWithTag(AlertDialogTestTags.CONFIRM_BTN, useUnmergedTree = true)
         .assertIsDisplayed()
@@ -573,12 +629,14 @@ class MapScreenTest {
   }
 
   /**
-   * Tests navigation from the MapScreen to the EventScreen when an event marker is clicked,
-   * including the display of the AlertDialog with event details. This test specifically checks for
-   * an event the user created.
+   * End to end navigation test: MapScreen -> EventsScreen for an event created by the current user.
+   *
+   * Expected:
+   * - Navigates with the correct eventId.
+   * - AlertDialog is shown and body matches the created event description.
    */
   @Test
-  fun testMapScreenToCreatingEvent() {
+  fun navigate_map_to_creating_event_shows_alert_dialog() {
     var navigatedEventId: String? = null
     val isMapScreenActive = mutableStateOf(true)
 
@@ -586,13 +644,13 @@ class MapScreenTest {
       navigatedEventId = id
       isMapScreenActive.value = false
     }
-    mockitoUtils = MockitoUtils()
-    mockitoUtils.chooseCurrentUser(TEST_USER_ID)
+
+    val mockitoUtils = MockitoUtils().apply { chooseCurrentUser(testUserId) }
 
     compose.setContent {
       if (isMapScreenActive.value) {
         viewModel.changeView()
-        MapScreen(viewModel = viewModel, goToEvent = goToEvent, coordinator = mapCoordinator)
+        MapScreen(viewModel = viewModel, coordinator = mapCoordinator, goToEvent = goToEvent)
       } else {
         val eventsVM =
             EventsOverviewViewModel(
@@ -610,18 +668,15 @@ class MapScreenTest {
 
     viewModel.onSelectedItem(creatingEventId)
     compose.waitForIdle()
-
     compose.onNodeWithTag(MapScreenTestTags.EVENT_BUTTON, useUnmergedTree = true).performClick()
     compose.waitForIdle()
 
     assertEquals(creatingEventId, navigatedEventId)
     compose.onNodeWithTag(AlertDialogTestTags.ALERT, useUnmergedTree = true).assertIsDisplayed()
-
     compose
         .onNodeWithTag(AlertDialogTestTags.BODY, useUnmergedTree = true)
         .assertIsDisplayed()
         .assertTextEquals(creatingEvent.description)
-
     compose
         .onNodeWithTag(AlertDialogTestTags.CONFIRM_BTN, useUnmergedTree = true)
         .assertIsDisplayed()
