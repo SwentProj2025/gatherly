@@ -12,6 +12,12 @@ import androidx.credentials.exceptions.NoCredentialException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.R
+import com.android.gatherly.model.event.EventsRepository
+import com.android.gatherly.model.event.EventsRepositoryProvider
+import com.android.gatherly.model.focusSession.FocusSessionsRepository
+import com.android.gatherly.model.focusSession.FocusSessionsRepositoryProvider
+import com.android.gatherly.model.group.GroupsRepository
+import com.android.gatherly.model.group.GroupsRepositoryProvider
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryProvider
@@ -19,7 +25,10 @@ import com.android.gatherly.model.profile.ProfileStatus
 import com.android.gatherly.model.profile.UserStatusManager
 import com.android.gatherly.model.profile.UserStatusSource
 import com.android.gatherly.model.profile.Username
+import com.android.gatherly.model.todo.ToDosRepository
+import com.android.gatherly.model.todo.ToDosRepositoryProvider
 import com.android.gatherly.utils.DateParser
+import com.android.gatherly.utils.DeleteUserAccountUseCase
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.Companion.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
@@ -105,12 +114,28 @@ class SettingsViewModel(
     private val authProvider: () -> FirebaseAuth = { Firebase.auth },
     private val userStatusManager: UserStatusManager =
         UserStatusManager(authProvider(), repository),
+    private val groupsRepository: GroupsRepository = GroupsRepositoryProvider.repository,
+    private val eventsRepository: EventsRepository = EventsRepositoryProvider.repository,
+    private val focusSessionsRepository: FocusSessionsRepository =
+        FocusSessionsRepositoryProvider.repository,
+    private val todosRepository: ToDosRepository = ToDosRepositoryProvider.repository,
+    private val deleteUserAccountUseCase: DeleteUserAccountUseCase =
+        DeleteUserAccountUseCase(
+            profileRepository = repository,
+            groupsRepository = groupsRepository,
+            eventsRepository = eventsRepository,
+            focusSessionsRepository = focusSessionsRepository,
+            todosRepository = todosRepository,
+        )
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(SettingsUiState())
   /** Observable UI state exposed to the Settings screen. */
   val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()
 
   private var originalProfile: Profile? = null
+
+  private val _accountDeleted = MutableStateFlow(false)
+  val accountDeleted: StateFlow<Boolean> = _accountDeleted.asStateFlow()
 
   /**
    * Signs the user out of Firebase and clears credential state.
@@ -431,22 +456,34 @@ class SettingsViewModel(
   }
 
   /**
-   * Deletes the current user's profile from the repository.
-   * - Only handles the deletion logic and error reporting.
-   * - Success/failure is reflected in the UI state.
+   * Deletes the current user's account and all associated data.
+   *
+   * On success, emits an account-deleted event. On failure, exposes an error message.
    */
   fun deleteProfile() {
     val uid = authProvider().currentUser?.uid ?: return
     viewModelScope.launch {
       try {
-        // repository.deleteUserProfile(uid)
-        // Notify UI of success by setting a flag or using a side-effect
-        _uiState.value = _uiState.value.copy(signedOut = true) // optional flag
+        deleteUserAccountUseCase.deleteUserAccount(uid)
+        _accountDeleted.value = true
       } catch (e: Exception) {
         Log.e("SettingsViewModel", "Failed to delete profile", e)
         _uiState.value =
             _uiState.value.copy(errorMsg = "Failed to delete profile. Please try again.")
       }
+    }
+  }
+
+  /**
+   * Signs out the user after their account was deleted.
+   *
+   * @param credentialManager CredentialManager used to clear stored credentials.
+   */
+  fun signOutAfterDeletion(credentialManager: CredentialManager) {
+    viewModelScope.launch {
+      _uiState.value = _uiState.value.copy(signedOut = true)
+      authProvider().signOut()
+      credentialManager.clearCredentialState(ClearCredentialStateRequest())
     }
   }
 }

@@ -137,6 +137,14 @@ fun SettingsScreen(
     }
   }
 
+  val accountDeleted by settingsViewModel.accountDeleted.collectAsState()
+
+  LaunchedEffect(accountDeleted) {
+    if (accountDeleted) {
+      settingsViewModel.signOutAfterDeletion(credentialManager)
+    }
+  }
+
   val saveSuccess = uiState.saveSuccess
   LaunchedEffect(saveSuccess) {
     if (saveSuccess) {
@@ -387,8 +395,7 @@ fun SettingsScreen(
                                     onConfirm = {
                                       settingsViewModel.deleteProfile()
                                       showDeleteProfileDialog = false
-                                      settingsViewModel.signOut(
-                                          credentialManager) // todo check this
+                                      settingsViewModel.signOutAfterDeletion(credentialManager)
                                     }),
                             isImportantWarning = true)
                       }
