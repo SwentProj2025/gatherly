@@ -163,30 +163,6 @@ fun EditToDoScreen(
             modifier = Modifier.fillMaxSize().padding(paddingVal).padding(screenPadding),
             verticalArrangement = Arrangement.spacedBy(fieldSpacing)) {
 
-              // Buttons row
-              item {
-                Row(
-                    horizontalArrangement =
-                        Arrangement.spacedBy(
-                            dimensionResource(
-                                R.dimen.todo_buttons_row_horizontal_arrangement_space))) {
-
-                      // Category drop down
-                      CategoriesDropDown(
-                          { category -> editTodoViewModel.selectTodoTag(category) },
-                          showCreateTagDialog,
-                          todoUIState.tag,
-                          showWarningDeleteTagDialog,
-                          categoriesList)
-                      // Priority level drop down
-                      PriorityDropDown(
-                          onSelectPriorityLevel = { level ->
-                            editTodoViewModel.selectPriorityLevel(level)
-                          },
-                          currentPriorityLevel = todoUIState.priorityLevel)
-                    }
-              }
-
               // Title Input
               item {
                 OutlinedTextField(
@@ -241,43 +217,68 @@ fun EditToDoScreen(
                                   integerResource(R.integer.todo_options_bar_weight).toFloat()))
                     }
               }
+              if (expandAdvanced.value) {
+                // Buttons row
+                item {
+                  Row(
+                      horizontalArrangement =
+                          Arrangement.spacedBy(
+                              dimensionResource(
+                                  R.dimen.todo_buttons_row_horizontal_arrangement_space))) {
 
-              // Location Input with dropdown
-              item {
-                LocationSuggestions(
-                    location = todoUIState.location,
-                    suggestions = todoUIState.suggestions,
-                    onLocationChanged = { editTodoViewModel.onLocationChanged(it) },
-                    onSelectLocation = { loc -> editTodoViewModel.selectLocation(loc) },
-                    modifier = Modifier.fillMaxWidth(),
-                    textFieldColors = toDoTextFieldColors)
-              }
+                        // Category drop down
+                        CategoriesDropDown(
+                            { category -> editTodoViewModel.selectTodoTag(category) },
+                            showCreateTagDialog,
+                            todoUIState.tag,
+                            showWarningDeleteTagDialog,
+                            categoriesList)
+                        // Priority level drop down
+                        PriorityDropDown(
+                            onSelectPriorityLevel = { level ->
+                              editTodoViewModel.selectPriorityLevel(level)
+                            },
+                            currentPriorityLevel = todoUIState.priorityLevel)
+                      }
+                }
 
-              // Due Date Input
-              item {
-                DatePickerInputField(
-                    value = todoUIState.dueDate,
-                    label = stringResource(R.string.todos_date_field_label),
-                    isErrorMessage = todoUIState.dueDateError,
-                    onClick = { showDatePicker = true },
-                    colors = toDoTextFieldColors,
-                    testTag =
-                        Pair(
-                            EditToDoScreenTestTags.INPUT_TODO_DATE,
-                            EditToDoScreenTestTags.ERROR_MESSAGE))
-              }
+                // Location Input with dropdown
+                item {
+                  LocationSuggestions(
+                      location = todoUIState.location,
+                      suggestions = todoUIState.suggestions,
+                      onLocationChanged = { editTodoViewModel.onLocationChanged(it) },
+                      onSelectLocation = { loc -> editTodoViewModel.selectLocation(loc) },
+                      modifier = Modifier.fillMaxWidth(),
+                      textFieldColors = toDoTextFieldColors)
+                }
 
-              // Due Time Input
-              item {
-                TimeInputField(
-                    initialTime = todoUIState.dueTime,
-                    onTimeChanged = { editTodoViewModel.onTimeChanged(it) },
-                    dueTimeError = (todoUIState.dueTimeError != null),
-                    label = stringResource(R.string.todos_time_field_label),
-                    textFieldColors = toDoTextFieldColors,
-                    testTagInput = EditToDoScreenTestTags.INPUT_TODO_TIME,
-                    testTagErrorMessage = EditToDoScreenTestTags.ERROR_MESSAGE,
-                )
+                // Due Date Input
+                item {
+                  DatePickerInputField(
+                      value = todoUIState.dueDate,
+                      label = stringResource(R.string.todos_date_field_label),
+                      isErrorMessage = todoUIState.dueDateError,
+                      onClick = { showDatePicker = true },
+                      colors = toDoTextFieldColors,
+                      testTag =
+                          Pair(
+                              EditToDoScreenTestTags.INPUT_TODO_DATE,
+                              EditToDoScreenTestTags.ERROR_MESSAGE))
+                }
+
+                // Due Time Input
+                item {
+                  TimeInputField(
+                      initialTime = todoUIState.dueTime,
+                      onTimeChanged = { editTodoViewModel.onTimeChanged(it) },
+                      dueTimeError = (todoUIState.dueTimeError != null),
+                      label = stringResource(R.string.todos_time_field_label),
+                      textFieldColors = toDoTextFieldColors,
+                      testTagInput = EditToDoScreenTestTags.INPUT_TODO_TIME,
+                      testTagErrorMessage = EditToDoScreenTestTags.ERROR_MESSAGE,
+                  )
+                }
               }
 
               item { Spacer(modifier = Modifier.height(fieldSpacing)) }
