@@ -197,7 +197,7 @@ fun FriendRequestsScreen(
  * @param profilePicUrl Optional URL of the friend's profile picture.
  */
 @Composable
-private fun FriendRequestItem(
+private fun NotificationsItem(
     senderUsername: String,
     senderName: String,
     acceptFriendRequest: () -> Unit,
@@ -328,7 +328,7 @@ private fun LazyListScope.FriendRequestsList(
           return@items
         }
         val senderName = senderProfile.name
-        FriendRequestItem(
+        NotificationsItem(
             senderName = senderName,
             senderUsername = senderProfile.username,
             acceptFriendRequest = { onAcceptFriendRequest(friendRequest.id) },

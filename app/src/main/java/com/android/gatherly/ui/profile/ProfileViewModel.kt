@@ -26,7 +26,7 @@ import com.android.gatherly.model.profile.ProfileRepositoryProvider
 import com.android.gatherly.model.profile.ProfileStatus
 import com.android.gatherly.model.profile.UserStatusManager
 import com.android.gatherly.ui.badge.BadgeUI
-import com.android.gatherly.utils.getProfileWithSyncedFriendNotifications
+import com.android.gatherly.utils.getProfileWithSyncedNotifications
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.Companion.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
@@ -41,7 +41,7 @@ import kotlinx.coroutines.tasks.await
 
 /** Represents the UI state of the Profile screen. */
 data class ProfileState(
-    val isLoading: Boolean = false,
+    val isLoading: Boolean = true,
     val profile: Profile? = null,
     val groupsToMembers: Map<Group, List<Profile>> = emptyMap(),
     val focusPoints: Double = 0.0,
@@ -134,7 +134,7 @@ class ProfileViewModel(
 
       try {
         val profile =
-            getProfileWithSyncedFriendNotifications(
+            getProfileWithSyncedNotifications(
                 profileRepository,
                 notificationsRepository,
                 pointsRepository,

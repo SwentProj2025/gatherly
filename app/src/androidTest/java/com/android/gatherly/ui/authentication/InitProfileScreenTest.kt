@@ -26,6 +26,7 @@ class InitProfileScreenTest {
   private lateinit var mockAuth: FirebaseAuth
   private lateinit var mockUser: FirebaseUser
 
+  /** Set up local repositories, viewModel and screen */
   @Before
   fun setUp() {
     profileRepository = ProfileLocalRepository()
@@ -82,7 +83,7 @@ class InitProfileScreenTest {
     val usernameField = composeRule.onNodeWithTag(InitProfileScreenTestTags.USERNAME)
 
     // Trigger recomposition by typing then clearing
-    usernameField.performTextInput("tempuser")
+    usernameField.performTextInput("temp_user")
     usernameField.performTextClearance()
     composeRule.waitForIdle()
 
@@ -147,7 +148,7 @@ class InitProfileScreenTest {
   /** Ensures that valid inputs hide all error messages. */
   @Test
   fun initProfileScreen_noError_whenFieldsValid() {
-    composeRule.onNodeWithTag(InitProfileScreenTestTags.USERNAME).performTextInput("validuser")
+    composeRule.onNodeWithTag(InitProfileScreenTestTags.USERNAME).performTextInput("valid_user")
     composeRule.onNodeWithTag(InitProfileScreenTestTags.NAME_FIELD).performTextInput("Alice")
     composeRule.waitForIdle()
 
@@ -158,7 +159,7 @@ class InitProfileScreenTest {
   /** Verifies that the username field retains its entered text after input. */
   @Test
   fun initProfileScreen_usernameField_retainsValue() {
-    val username = "persistentuser"
+    val username = "persistent_user"
     composeRule.onNodeWithTag(InitProfileScreenTestTags.USERNAME).performTextInput(username)
     composeRule.waitForIdle()
     composeRule.onNodeWithTag(InitProfileScreenTestTags.USERNAME).assertTextEquals(username)
@@ -206,7 +207,7 @@ class InitProfileScreenTest {
   /** Ensures valid username displays success message text. */
   @Test
   fun initProfileScreen_showsValidUsernameConfirmationText() {
-    composeRule.onNodeWithTag(InitProfileScreenTestTags.USERNAME).performTextInput("uniqueuser")
+    composeRule.onNodeWithTag(InitProfileScreenTestTags.USERNAME).performTextInput("unique_user")
     composeRule.waitForIdle()
 
     composeRule.onNodeWithText("This username is available!").assertExists()

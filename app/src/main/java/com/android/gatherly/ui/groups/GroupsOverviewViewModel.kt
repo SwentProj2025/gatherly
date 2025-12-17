@@ -32,7 +32,7 @@ data class GroupsOverviewUIState(
     val groups: List<Group> = emptyList(),
     val profilePics: List<List<String>> = emptyList(),
     val errorMsg: String? = null,
-    val isLoading: Boolean = false
+    val isLoading: Boolean = true
 )
 
 /**

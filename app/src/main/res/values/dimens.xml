@@ -46,6 +46,7 @@
     <dimen name="rounded_corner_shape_medium">12dp</dimen>
     <dimen name="rounded_corner_shape_medium_large">16dp</dimen>
     <dimen name="rounded_corner_shape_large">20dp</dimen>
+    <dimen name="rounded_corner_shape_clip_large">50dp</dimen>
     <dimen name="border_width_regular">2dp</dimen>
 
     <!-- Thickness -->
@@ -157,6 +158,21 @@
     <dimen name="focus_session_history_horizontal_padding">16.dp</dimen>
     <dimen name="focus_session_history_button_height">35.dp</dimen>
 
+    <!-- Map Screen -->
+    <dimen name="map_marker_width">180dp</dimen>
+    <dimen name="map_marker_height_collapsed">50dp</dimen>
+    <dimen name="map_marker_corner_radius">12dp</dimen>
+    <dimen name="map_marker_border_width">2dp</dimen>
+    <dimen name="map_marker_elevation">4dp</dimen>
+    <dimen name="map_marker_triangle_width">24dp</dimen>
+    <dimen name="map_marker_triangle_height">14dp</dimen>
+    <dimen name="map_marker_horizontal_padding">16dp</dimen>
+    <dimen name="map_marker_vertical_padding">12dp</dimen>
+    <dimen name="map_sheet_padding">16dp</dimen>
+    <dimen name="map_sheet_text_padding">8dp</dimen>
+    <dimen name="map_sheet_spacer">20dp</dimen>
+    <dimen name="map_loading_spacer">16dp</dimen>
+
     <!-- Badge Screen -->
     <dimen name="badge_screen_vertical_padding">8dp</dimen>
     <dimen name="badge_screen_horizontal_padding">16dp</dimen>
@@ -173,4 +189,8 @@
 
     <dimen name="badge_card_corner_radius">8dp</dimen>
     <dimen name="badge_card_stroke_width">1dp</dimen>
+
+    <!-- Bar Menus -->
+    <dimen name="bar_menu_height">60.dp</dimen>
+
 </resources>
