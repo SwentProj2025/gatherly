@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.DeleteForever
@@ -216,69 +217,16 @@ fun EditTodoScreen(
                                   integerResource(R.integer.todo_options_bar_weight).toFloat()))
                     }
               }
-              if (expandAdvanced.value) {
-                // Buttons row
-                item {
-                  Row(
-                      horizontalArrangement =
-                          Arrangement.spacedBy(
-                              dimensionResource(
-                                  R.dimen.todo_buttons_row_horizontal_arrangement_space))) {
 
-                        // Category drop down
-                        CategoriesDropDown(
-                            { category -> editTodoViewModel.selectTodoTag(category) },
-                            showCreateTagDialog,
-                            todoUIState.tag,
-                            showWarningDeleteTagDialog,
-                            categoriesList)
-                        // Priority level drop down
-                        PriorityDropDown(
-                            onSelectPriorityLevel = { level ->
-                              editTodoViewModel.selectPriorityLevel(level)
-                            },
-                            currentPriorityLevel = todoUIState.priorityLevel)
-                      }
-                }
-
-                // Location Input with dropdown
-                item {
-                  ToDoLocationSuggestionsUtils(
-                      location = todoUIState.location,
-                      suggestions = todoUIState.suggestions,
-                      onLocationChanged = { editTodoViewModel.onLocationChanged(it) },
-                      onSelectLocation = { loc -> editTodoViewModel.selectLocation(loc) },
-                      modifier = Modifier.fillMaxWidth(),
-                      textFieldColors = toDoTextFieldColors)
-                }
-
-                // Due Date Input
-                item {
-                  DatePickerInputField(
-                      value = todoUIState.dueDate,
-                      label = stringResource(R.string.todos_date_field_label),
-                      isErrorMessage = todoUIState.dueDateError,
-                      onClick = { showDatePicker = true },
-                      colors = toDoTextFieldColors,
-                      testTag =
-                          Pair(
-                              EditTodoScreenTestTags.INPUT_TODO_DATE,
-                              EditTodoScreenTestTags.ERROR_MESSAGE))
-                }
-
-                // Due Time Input
-                item {
-                  TimeInputField(
-                      initialTime = todoUIState.dueTime,
-                      onTimeChanged = { editTodoViewModel.onTimeChanged(it) },
-                      dueTimeError = (todoUIState.dueTimeError != null),
-                      label = stringResource(R.string.todos_time_field_label),
-                      textFieldColors = toDoTextFieldColors,
-                      testTagInput = EditTodoScreenTestTags.INPUT_TODO_TIME,
-                      testTagErrorMessage = EditTodoScreenTestTags.ERROR_MESSAGE,
-                  )
-                }
-              }
+              // Advanced options
+              advancedOptions(
+                  expandAdvanced = expandAdvanced.value,
+                  todoUIState = todoUIState,
+                  addTodoViewModel = editTodoViewModel,
+                  showCreateTagDialog = showCreateTagDialog,
+                  showWarningDeleteTagDialog = showWarningDeleteTagDialog,
+                  categoriesList = categoriesList,
+                  onDatePickerClick = { showDatePicker = true })
 
               item { Spacer(modifier = Modifier.height(fieldSpacing)) }
 
@@ -290,15 +238,8 @@ fun EditTodoScreen(
                     colors =
                         ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.secondary),
-                    enabled = todoUIState.isValid && !todoUIState.isSaving) {
-                      Text(
-                          text =
-                              if (todoUIState.isSaving) {
-                                stringResource(R.string.saving)
-                              } else {
-                                stringResource(R.string.todos_save_button_text)
-                              },
-                          color = MaterialTheme.colorScheme.onSecondary)
+                    enabled = todoUIState.isValid) {
+                      SavingText(todoUIState = todoUIState)
                     }
               }
 
@@ -385,4 +326,104 @@ fun EditTodoScreen(
   AlertDialogWarningDeleteTag(
       showWarningDeleteTagDialog,
       onConfirmDelete = { category -> editTodoViewModel.deleteCategory(category) })
+}
+
+/**
+ * Displays the advanced options section in the To-Do editing screen.
+ *
+ * @param expandAdvanced Boolean indicating whether to show advanced options.
+ * @param todoUIState The current UI state of the Add To-Do screen.
+ * @param addTodoViewModel The ViewModel managing the Add To-Do screen state.
+ * @param showCreateTagDialog MutableState controlling the visibility of the create tag dialog.
+ * @param showWarningDeleteTagDialog MutableState controlling the visibility of the delete tag
+ *   warning dialog.
+ * @param categoriesList List of available To-Do categories.
+ * @param onDatePickerClick Callback invoked when the date picker is clicked.
+ */
+fun LazyListScope.advancedOptions(
+    expandAdvanced: Boolean,
+    todoUIState: EditTodoUIState,
+    addTodoViewModel: EditTodoViewModel,
+    showCreateTagDialog: androidx.compose.runtime.MutableState<Boolean>,
+    showWarningDeleteTagDialog: androidx.compose.runtime.MutableState<ToDoCategory?>,
+    categoriesList: List<ToDoCategory>,
+    onDatePickerClick: () -> Unit,
+) {
+  if (expandAdvanced) {
+
+    // Buttons row
+    item {
+      Row(
+          horizontalArrangement =
+              Arrangement.spacedBy(
+                  dimensionResource(R.dimen.todo_buttons_row_horizontal_arrangement_space))) {
+
+            // Category drop down
+            CategoriesDropDown(
+                { category -> addTodoViewModel.selectTodoTag(category) },
+                showCreateTagDialog,
+                todoUIState.tag,
+                showWarningDeleteTagDialog,
+                categoriesList)
+            // Priority level drop down
+            PriorityDropDown(
+                onSelectPriorityLevel = { level -> addTodoViewModel.selectPriorityLevel(level) },
+                currentPriorityLevel = todoUIState.priorityLevel)
+          }
+    }
+
+    // Location Input with dropdown
+    item {
+      ToDoLocationSuggestionsUtils(
+          location = todoUIState.location,
+          suggestions = todoUIState.suggestions,
+          onLocationChanged = { addTodoViewModel.onLocationChanged(it) },
+          onSelectLocation = { loc -> addTodoViewModel.selectLocation(loc) },
+          modifier = Modifier.fillMaxWidth(),
+          textFieldColors = toDoTextFieldColors)
+    }
+
+    // Due Date Input
+    item {
+      DatePickerInputField(
+          value = todoUIState.dueDate,
+          label = stringResource(R.string.todos_date_field_label),
+          isErrorMessage = todoUIState.dueDateError,
+          onClick = { onDatePickerClick },
+          colors = toDoTextFieldColors,
+          testTag =
+              Pair(AddTodoScreenTestTags.INPUT_TODO_DATE, AddTodoScreenTestTags.ERROR_MESSAGE))
+    }
+
+    // Due Time Input
+    item {
+      TimeInputField(
+          initialTime = todoUIState.dueTime,
+          onTimeChanged = { addTodoViewModel.onTimeChanged(it) },
+          dueTimeError = (todoUIState.dueTimeError != null),
+          label = stringResource(R.string.todos_time_field_label),
+          textFieldColors = toDoTextFieldColors,
+          testTagInput = AddTodoScreenTestTags.INPUT_TODO_TIME,
+          testTagErrorMessage = AddTodoScreenTestTags.ERROR_MESSAGE,
+      )
+    }
+  }
+}
+
+/**
+ * Displays the text inside the Save button, changing it to "Saving..." when a save operation is in
+ * progress.
+ *
+ * @param todoUIState The current UI state of the Add To-Do screen.
+ */
+@Composable
+fun SavingText(todoUIState: EditTodoUIState) {
+  Text(
+      text =
+          if (todoUIState.isSaving) {
+            stringResource(R.string.saving)
+          } else {
+            stringResource(R.string.todos_save_button_text)
+          },
+      color = MaterialTheme.colorScheme.onSecondary)
 }
