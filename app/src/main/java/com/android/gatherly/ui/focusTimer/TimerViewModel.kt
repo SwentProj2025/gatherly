@@ -115,6 +115,12 @@ class TimerViewModel(
   private var sessionStartedAt: Timestamp? = null
   private var currentSessionId: String? = null
 
+  private val maxHours = 23
+  private val maxMinutes = 59
+  private val maxSeconds = 59
+  private val hoursInSeconds = 3600L
+  private val minutesInSeconds = 60L
+
   init {
     loadUI()
   }
@@ -162,7 +168,7 @@ class TimerViewModel(
   fun setHours(hours: String) {
     if (!hours.isEmpty()) {
       val h = hours.toIntOrNull() ?: return setError("Invalid hour : Use numbers like 0–23 hours")
-      if (h !in 0..23) return setError("Invalid hour : Use numbers like 0–23 hours")
+      if (h !in 0..maxHours) return setError("Invalid hour : Use numbers like 0–23 hours")
     }
     _uiState.value = _uiState.value.copy(hours = hours)
   }
@@ -177,7 +183,7 @@ class TimerViewModel(
       val m =
           minutes.toIntOrNull()
               ?: return setError("Invalid minutes : Use numbers like 0–59 minutes")
-      if (m !in 0..59) return setError("Invalid minutes : Use numbers like 0–59 minutes")
+      if (m !in 0..maxMinutes) return setError("Invalid minutes : Use numbers like 0–59 minutes")
     }
     _uiState.value = _uiState.value.copy(minutes = minutes)
   }
@@ -192,7 +198,7 @@ class TimerViewModel(
       val s =
           seconds.toIntOrNull()
               ?: return setError("Invalid seconds : Use numbers like 0–59 seconds")
-      if (s !in 0..59) return setError("Invalid seconds : Use numbers like 0–59 seconds")
+      if (s !in 0..maxSeconds) return setError("Invalid seconds : Use numbers like 0–59 seconds")
     }
     _uiState.value = _uiState.value.copy(seconds = seconds)
   }
@@ -401,7 +407,7 @@ class TimerViewModel(
 
           // if we are on the minute, gain a focus depending on the time that has passed (every 5
           // minutes, the points gained increases by 5%)
-          if (elapsed.inWholeSeconds % 60 == 0L) {
+          if (elapsed.inWholeSeconds % minutesInSeconds == 0L) {
             val bonus = 1 + floor(elapsed.inWholeMinutes / 5.0) * 0.05
             val gained = kotlin.math.round((state.pointsGained + bonus) * 100) / 100
             state = state.copy(pointsGained = gained)
@@ -430,8 +436,9 @@ class TimerViewModel(
     val hh = h.toIntOrNull() ?: return null
     val mm = m.toIntOrNull() ?: return null
     val ss = s.toIntOrNull() ?: return null
-    if (hh !in 0..23 || mm !in 0..59 || ss !in 0..59) return null
-    val total = hh * 3600L + mm * 60L + ss
+
+    if (hh !in 0..maxHours || mm !in 0..maxMinutes || ss !in 0..maxSeconds) return null
+    val total = hh * hoursInSeconds + mm * minutesInSeconds + ss
     return total.seconds
   }
 
@@ -488,9 +495,9 @@ class TimerViewModel(
    */
   private fun updateClock(remainingTime: Duration) {
     val total = remainingTime.inWholeSeconds
-    val h = total / 3600
-    val m = (total % 3600) / 60
-    val s = total % 60
+    val h = total / hoursInSeconds
+    val m = (total % hoursInSeconds) / minutesInSeconds
+    val s = total % minutesInSeconds
 
     // Update the UI state with formatted time values : only 2 digits per metric and adding 0 if
     // only 1 digit like 01:15
