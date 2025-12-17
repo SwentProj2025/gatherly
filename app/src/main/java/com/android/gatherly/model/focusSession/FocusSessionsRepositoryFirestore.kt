@@ -29,9 +29,8 @@ class FocusSessionsRepositoryFirestore(private val db: FirebaseFirestore) :
    * Returns the user ID of the currently signed-in user, or throws an exception if no user is
    * signed in.
    */
-  private fun currentUserId(): String {
-    return Firebase.auth.currentUser?.uid ?: throw IllegalStateException("No signed in user")
-  }
+  private fun currentUserId(): String =
+      checkNotNull(Firebase.auth.currentUser?.uid) { "No signed in user" }
 
   override fun getNewId(): String {
     return collection.document().id

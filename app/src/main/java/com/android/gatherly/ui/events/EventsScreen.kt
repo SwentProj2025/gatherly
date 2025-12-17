@@ -359,13 +359,13 @@ fun EventsScreen(
   Scaffold(
       topBar = {
         TopNavigationMenu(
-            selectedTab = Tab.Events,
+            selectedTab = Tab.EventsOverview,
             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
             modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU))
       },
       bottomBar = {
         BottomNavigationMenu(
-            selectedTab = Tab.Events,
+            selectedTab = Tab.EventsOverview,
             onTabSelected = { tab -> navigationActions?.navigateTo(tab.destination) },
             modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU))
       },
@@ -417,7 +417,7 @@ fun EventsScreen(
                   // Events are loading so display that text
                   item {
                     Text(
-                        stringResource(R.string.events_loading),
+                        stringResource(R.string.loading_events),
                         modifier = Modifier.fillMaxWidth().padding(8.dp),
                         textAlign = TextAlign.Center,
                         style = MaterialTheme.typography.titleMedium,
@@ -454,7 +454,6 @@ fun EventsScreen(
                   }
                 }
               }
-
               if (!uiState.isAnon) {
                 // Spacer between Browse and Upcoming
                 item {
@@ -491,7 +490,7 @@ fun EventsScreen(
                     // Events are loading so display that text
                     item {
                       Text(
-                          stringResource(R.string.events_loading),
+                          stringResource(R.string.loading_events),
                           modifier = Modifier.fillMaxWidth().padding(8.dp),
                           textAlign = TextAlign.Center,
                           style = MaterialTheme.typography.titleMedium,
@@ -564,7 +563,7 @@ fun EventsScreen(
                     // Events are loading so display that text
                     item {
                       Text(
-                          stringResource(R.string.events_loading),
+                          stringResource(R.string.loading_events),
                           modifier = Modifier.fillMaxWidth().padding(8.dp),
                           textAlign = TextAlign.Center,
                           style = MaterialTheme.typography.titleMedium,
@@ -649,7 +648,7 @@ fun EventsScreen(
                       },
                       onNeutral = {
                         coordinator.requestCenterOnEvent(event.id)
-                        navigationActions?.navigateTo(Screen.Map)
+                        navigationActions?.navigateTo(Screen.MapScreen)
                         isPopupOnBrowser.value = false
                       },
                       onOpenAttendeesList = { showAttendeesDialog.value = true }),
@@ -682,7 +681,7 @@ fun EventsScreen(
                       },
                       onNeutral = {
                         coordinator.requestCenterOnEvent(event.id)
-                        navigationActions?.navigateTo(Screen.Map)
+                        navigationActions?.navigateTo(Screen.MapScreen)
                         isPopupOnUpcoming.value = false
                       },
                       onOpenAttendeesList = { showAttendeesDialog.value = true },
@@ -715,7 +714,7 @@ fun EventsScreen(
                       },
                       onNeutral = {
                         coordinator.requestCenterOnEvent(event.id)
-                        navigationActions?.navigateTo(Screen.Map)
+                        navigationActions?.navigateTo(Screen.MapScreen)
                         isPopupOnYourE.value = false
                       },
                       onOpenAttendeesList = { showAttendeesDialog.value = true },

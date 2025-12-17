@@ -53,20 +53,34 @@ import com.android.gatherly.utils.MapCoordinator
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 
+/**
+ * `MainActivity` is the entry point of the Gatherly application. It sets up the main UI and manages
+ * user status based on the activity lifecycle.
+ */
 class MainActivity : ComponentActivity() {
 
+  /**
+   * Called when the activity is first created. It sets the content view to the main composable
+   * function `GatherlyApp`, wrapped in the app's theme.
+   */
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContent { GatherlyTheme { Surface(modifier = Modifier.fillMaxSize()) { GatherlyApp() } } }
   }
 
+  // UserStatusManager instance to manage user online/offline status
   private val userStatusManager = UserStatusManager()
 
+  /** Called when the activity becomes visible to the user. It sets the user's status to ONLINE. */
   override fun onStart() {
     super.onStart()
     lifecycleScope.launch { userStatusManager.setStatus(ProfileStatus.ONLINE) }
   }
 
+  /**
+   * Called when the activity is no longer visible to the user. It sets the user's status to
+   * OFFLINE.
+   */
   override fun onStop() {
     super.onStop()
     lifecycleScope.launch { userStatusManager.setStatus(ProfileStatus.OFFLINE) }
@@ -86,72 +100,79 @@ fun GatherlyApp(
     context: Context = LocalContext.current,
     credentialManager: CredentialManager = CredentialManager.create(context),
 ) {
+  // Remember the NavController for navigation between screens
   val navController = rememberNavController()
+  // Initialize navigation actions with the NavController
   val navigationActions = NavigationActions(navController)
+  // Remember the MapCoordinator for managing map-related interactions
   val mapCoordinator = remember { MapCoordinator() }
+  // Determine the start destination based on user authentication status
   val startDestination =
-      if (FirebaseAuth.getInstance().currentUser == null) Screen.SignIn.name
-      else Screen.HomePage.name
+      if (FirebaseAuth.getInstance().currentUser == null) Screen.SignInScreen.name
+      else Screen.HomePageScreen.name
 
+  // Set up the NavHost with the navigation graph
   NavHost(navController = navController, startDestination = startDestination) {
 
-    // SIGN IN COMPOSABLE  ------------------------------
+    // ---------------------------- SIGN IN COMPOSABLE  ------------------------------
     navigation(
-        startDestination = Screen.SignIn.route,
-        route = Screen.SignIn.name,
+        startDestination = Screen.SignInScreen.route,
+        route = Screen.SignInScreen.name,
     ) {
-      composable(Screen.SignIn.route) {
+      composable(Screen.SignInScreen.route) {
         SignInScreen(credentialManager = credentialManager, navigationActions = navigationActions)
       }
     }
-    // HOMEPAGE COMPOSABLE  ------------------------------
+    // ----------------------------- HOMEPAGE COMPOSABLE  ------------------------------
     navigation(
-        startDestination = Screen.HomePage.route,
-        route = Screen.HomePage.name,
+        startDestination = Screen.HomePageScreen.route,
+        route = Screen.HomePageScreen.name,
     ) {
-      composable(Screen.HomePage.route) {
+      composable(Screen.HomePageScreen.route) {
         HomePageScreen(
             navigationActions = navigationActions,
             homePageScreenActions =
                 HomePageScreenActions(
                     onClickFocusButton = { navigationActions.navigateTo(Screen.FocusTimerScreen) },
-                    onClickTodoTitle = { navigationActions.navigateTo(Screen.OverviewToDo) },
+                    onClickTodoTitle = { navigationActions.navigateTo(Screen.ToDoOverviewScreen) },
                     onClickFriendsSection = { navigationActions.navigateTo(Screen.FriendsScreen) },
-                    onClickTodo = { navigationActions.navigateTo(Screen.EditToDo(it.uid)) },
-                    onClickEventsTitle = { navigationActions.navigateTo(Screen.EventsScreen) },
+                    onClickTodo = { navigationActions.navigateTo(Screen.EditToDoScreen(it.uid)) },
+                    onClickEventsTitle = {
+                      navigationActions.navigateTo(Screen.EventsOverviewScreen)
+                    },
                 ),
             coordinator = mapCoordinator)
       }
     }
 
-    // TODO COMPOSABLE  ------------------------------
+    // ------------------------------- TO-DO COMPOSABLE  ------------------------------
     navigation(
-        startDestination = Screen.OverviewToDo.route,
-        route = Screen.OverviewToDo.name,
+        startDestination = Screen.ToDoOverviewScreen.route,
+        route = Screen.ToDoOverviewScreen.name,
     ) {
-      composable(Screen.OverviewToDo.route) {
+      composable(Screen.ToDoOverviewScreen.route) {
         OverviewScreen(
             navigationActions = navigationActions,
-            onAddTodo = { navigationActions.navigateTo(Screen.AddToDo) },
-            onSelectTodo = { navigationActions.navigateTo(Screen.EditToDo(it.uid)) })
+            onAddTodo = { navigationActions.navigateTo(Screen.AddToDoScreen) },
+            onSelectTodo = { navigationActions.navigateTo(Screen.EditToDoScreen(it.uid)) })
       }
-      composable(Screen.AddToDo.route) {
+      composable(Screen.AddToDoScreen.route) {
         AddToDoScreen(
-            onAdd = { navigationActions.navigateTo(Screen.OverviewToDo) },
+            onAdd = { navigationActions.navigateTo(Screen.ToDoOverviewScreen) },
             goBack = { navigationActions.goBack() })
       }
 
-      composable(Screen.EditToDo.route) { navBackStackEntry ->
-        // Get the Todo UID from the arguments
+      composable(Screen.EditToDoScreen.ROUTE) { navBackStackEntry ->
+        // Get the To-Do UID from the arguments
         val uid = navBackStackEntry.arguments?.getString("uid")
 
-        // Create the EditToDoScreen with the Todo UID
+        // Create the EditToDoScreen with the To-Do UID
         uid?.let {
           EditToDoScreen(
-              onSave = { navigationActions.navigateTo(Screen.OverviewToDo) },
+              onSave = { navigationActions.navigateTo(Screen.ToDoOverviewScreen) },
               todoUid = it,
               goBack = { navigationActions.goBack() },
-              onDelete = { navigationActions.navigateTo(Screen.OverviewToDo) })
+              onDelete = { navigationActions.navigateTo(Screen.ToDoOverviewScreen) })
         }
             ?: run {
               Log.e("EditToDoScreen", "ToDo UID is null")
@@ -160,23 +181,23 @@ fun GatherlyApp(
       }
     }
 
-    // MAP COMPOSABLE  ------------------------------
+    // ---------------------------------- MAP COMPOSABLE  -------------------------------------
     navigation(
-        startDestination = Screen.Map.route,
-        route = Screen.Map.name,
+        startDestination = Screen.MapScreen.route,
+        route = Screen.MapScreen.name,
     ) {
-      composable(Screen.Map.route) {
+      composable(Screen.MapScreen.route) {
         MapScreen(
             navigationActions = navigationActions,
             goToEvent = { event ->
               navigationActions.navigateTo(Screen.EventsDetailsScreen(event))
             },
-            goToToDo = { navigationActions.navigateTo(Screen.OverviewToDo) },
+            goToToDo = { navigationActions.navigateTo(Screen.ToDoOverviewScreen) },
             coordinator = mapCoordinator)
       }
     }
 
-    // TIMER COMPOSABLE  ------------------------------
+    // ----------------------------------- TIMER COMPOSABLE ------------------------------------
     navigation(
         startDestination = Screen.FocusTimerScreen.route,
         route = Screen.FocusTimerScreen.name,
@@ -186,17 +207,17 @@ fun GatherlyApp(
       }
     }
 
-    // EVENTS COMPOSABLE  ------------------------------
+    // ----------------------------------- EVENTS COMPOSABLE  --------------------------------------
     navigation(
-        startDestination = Screen.EventsScreen.route,
-        route = Screen.EventsScreen.name,
+        startDestination = Screen.EventsOverviewScreen.route,
+        route = Screen.EventsOverviewScreen.name,
     ) {
-      composable(Screen.EventsScreen.route) {
+      composable(Screen.EventsOverviewScreen.route) {
         EventsScreen(
             navigationActions = navigationActions,
             actions =
                 EventsScreenActions(
-                    onSignedOut = { navigationActions.navigateTo(Screen.SignIn) },
+                    onSignedOut = { navigationActions.navigateTo(Screen.SignInScreen) },
                     onAddEvent = { navigationActions.navigateTo(Screen.AddEventScreen) },
                     navigateToEditEvent = { event ->
                       navigationActions.navigateTo(Screen.EditEvent(event.id))
@@ -204,14 +225,14 @@ fun GatherlyApp(
             coordinator = mapCoordinator)
       }
 
-      composable(Screen.EventsDetailsScreen.route) { navBackStackEntry ->
+      composable(Screen.EventsDetailsScreen.ROUTE) { navBackStackEntry ->
         val uid = navBackStackEntry.arguments?.getString("uid")
         uid?.let {
           EventsScreen(
               navigationActions = navigationActions,
               actions =
                   EventsScreenActions(
-                      onSignedOut = { navigationActions.navigateTo(Screen.SignIn) },
+                      onSignedOut = { navigationActions.navigateTo(Screen.SignInScreen) },
                       onAddEvent = { navigationActions.navigateTo(Screen.AddEventScreen) },
                       navigateToEditEvent = { event ->
                         navigationActions.navigateTo(Screen.EditEvent(event.id))
@@ -224,16 +245,16 @@ fun GatherlyApp(
       composable(Screen.AddEventScreen.route) {
         AddEventScreen(
             goBack = { navigationActions.goBack() },
-            onSave = { navigationActions.navigateTo(Screen.EventsScreen) })
+            onSave = { navigationActions.navigateTo(Screen.EventsOverviewScreen) })
       }
 
-      composable(Screen.EditEvent.route) { navBackStackEntry ->
+      composable(Screen.EditEvent.ROUTE) { navBackStackEntry ->
         val uid = navBackStackEntry.arguments?.getString("uid")
         uid?.let {
           EditEventsScreen(
               eventId = it,
               goBack = { navigationActions.goBack() },
-              onSave = { navigationActions.navigateTo(Screen.EventsScreen) })
+              onSave = { navigationActions.navigateTo(Screen.EventsOverviewScreen) })
         }
             ?: run {
               Log.e("EditEventsScreen", "Event UID is null")
@@ -242,7 +263,7 @@ fun GatherlyApp(
       }
     }
 
-    // PROFILE COMPOSABLE  ------------------------------
+    // ---------------------------------  PROFILE COMPOSABLE  ------------------------------------
     navigation(
         startDestination = Screen.ProfileScreen.route,
         route = Screen.ProfileScreen.name,
@@ -252,11 +273,11 @@ fun GatherlyApp(
             navigationActions = navigationActions,
             credentialManager = credentialManager,
             onBadgeClicked = { navigationActions.navigateTo(Screen.BadgeScreen) },
-            onSignedOut = { navigationActions.navigateTo(Screen.SignIn) })
+            onSignedOut = { navigationActions.navigateTo(Screen.SignInScreen) })
       }
     }
 
-    // BADGE COMPOSABLE  ------------------------------
+    // ----------------------------------- BADGE COMPOSABLE  --------------------------------------
     navigation(
         startDestination = Screen.BadgeScreen.route,
         route = Screen.BadgeScreen.name,
@@ -266,7 +287,7 @@ fun GatherlyApp(
       }
     }
 
-    // FOCUS HISTORY COMPOSABLE  ------------------------------
+    // --------------------------------- FOCUS HISTORY COMPOSABLE  --------------------------------
     navigation(
         startDestination = Screen.FocusScreen.route,
         route = Screen.FocusScreen.name,
@@ -276,7 +297,7 @@ fun GatherlyApp(
       }
     }
 
-    // SETTINGS COMPOSABLE  ------------------------------
+    // ----------------------------------  SETTINGS COMPOSABLE  -----------------------------------
     navigation(
         startDestination = Screen.SettingsScreen.route,
         route = Screen.SettingsScreen.name,
@@ -285,11 +306,11 @@ fun GatherlyApp(
         SettingsScreen(
             navigationActions = navigationActions,
             credentialManager = credentialManager,
-            onSignedOut = { navigationActions.navigateTo(Screen.SignIn) })
+            onSignedOut = { navigationActions.navigateTo(Screen.SignInScreen) })
       }
     }
 
-    // FRIENDS COMPOSABLE  ------------------------------
+    // ----------------------------------- FRIENDS COMPOSABLE  ----------------------------------
     navigation(
         startDestination = Screen.FriendsScreen.route,
         route = Screen.FriendsScreen.name,
@@ -299,7 +320,7 @@ fun GatherlyApp(
             onFindFriends = { navigationActions.navigateTo(Screen.FindFriendsScreen) },
             goBack = { navigationActions.goBack() },
             onClickFriend = { profile ->
-              navigationActions.navigateTo(Screen.UserProfile(profile.uid))
+              navigationActions.navigateTo(Screen.UserProfileScreen(profile.uid))
             })
       }
 
@@ -307,11 +328,11 @@ fun GatherlyApp(
         FindFriendsScreen(
             goBack = { navigationActions.goBack() },
             onClickFriend = { profile ->
-              navigationActions.navigateTo(Screen.UserProfile(profile.uid))
+              navigationActions.navigateTo(Screen.UserProfileScreen(profile.uid))
             })
       }
 
-      composable(Screen.UserProfile.route) { entry ->
+      composable(Screen.UserProfileScreen.ROUTE) { entry ->
         val uid = entry.arguments?.getString("uid")
 
         if (uid != null) {
@@ -325,7 +346,7 @@ fun GatherlyApp(
       }
     }
 
-    // INIT PROFILE COMPOSABLE  ------------------------------
+    // ---------------------------------- INIT PROFILE COMPOSABLE  ------------------------------
     navigation(
         startDestination = Screen.InitProfileScreen.route,
         route = Screen.InitProfileScreen.name,
@@ -335,7 +356,7 @@ fun GatherlyApp(
       }
     }
 
-    // NOTIFICATIONS COMPOSABLE  ------------------------------
+    // ---------------------------------- NOTIFICATIONS COMPOSABLE  ------------------------------
     navigation(
         startDestination = Screen.NotificationsScreen.route,
         route = Screen.NotificationsScreen.name,
@@ -349,7 +370,7 @@ fun GatherlyApp(
       }
     }
 
-    // FRIEND REQUESTS COMPOSABLE  ------------------------------
+    // -------------------------------- FRIEND REQUESTS COMPOSABLE  --------------------------------
     navigation(
         startDestination = Screen.FriendRequestsScreen.route,
         route = Screen.FriendRequestsScreen.name,
@@ -359,13 +380,13 @@ fun GatherlyApp(
       }
     }
 
-    // GROUPS COMPOSABLE  ------------------------------
+    // ------------------------------------ GROUPS COMPOSABLE  -------------------------------------
     navigation(
         startDestination = Screen.AddGroupScreen.route,
         route = Screen.AddGroupScreen.name,
     ) {
 
-      // ADD GROUP COMPOSABLE  ------------------------------
+      // --------------------------------- ADD GROUP COMPOSABLE  ----------------------------------
       composable(Screen.AddGroupScreen.route) {
         AddGroupScreen(
             goBack = { navigationActions.goBack() },
@@ -374,8 +395,8 @@ fun GatherlyApp(
 
       val nullUIDMessage = "Group UID is null"
 
-      // GROUP INFO COMPOSABLE  ------------------------------
-      composable(Screen.GroupInfo.route) { navBackStackEntry ->
+      // ---------------------------------- GROUP INFO COMPOSABLE  ---------------------------------
+      composable(Screen.GroupInfoScreen.ROUTE) { navBackStackEntry ->
         val uid = navBackStackEntry.arguments?.getString("uid")
         uid?.let { GroupInformationScreen(navigationActions = navigationActions, groupId = it) }
             ?: run {
@@ -384,14 +405,14 @@ fun GatherlyApp(
             }
       }
 
-      // EDIT GROUP COMPOSABLE  ------------------------------
-      composable(Screen.EditGroup.route) { navBackStackEntry ->
+      // --------------------------------- EDIT GROUP COMPOSABLE  ----------------------------------
+      composable(Screen.EditGroupScreen.ROUTE) { navBackStackEntry ->
         val uid = navBackStackEntry.arguments?.getString("uid")
         uid?.let { groupId ->
           EditGroupScreen(
               groupId = groupId,
               goBack = { navigationActions.goBack() },
-              onSaved = { navigationActions.navigateTo(Screen.GroupInfo(groupId)) },
+              onSaved = { navigationActions.navigateTo(Screen.GroupInfoScreen(groupId)) },
               onDelete = { navigationActions.navigateTo(Screen.OverviewGroupsScreen) })
         }
             ?: run {
@@ -401,7 +422,7 @@ fun GatherlyApp(
       }
     }
 
-    // GROUP OVERVIEW COMPOSABLE  ------------------------------
+    // ---------------------------------- GROUP OVERVIEW COMPOSABLE  ------------------------------
     navigation(
         startDestination = Screen.OverviewGroupsScreen.route,
         route = Screen.OverviewGroupsScreen.name,

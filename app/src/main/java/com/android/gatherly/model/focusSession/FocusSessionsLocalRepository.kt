@@ -10,8 +10,10 @@ package com.android.gatherly.model.focusSession
  */
 class FocusSessionsLocalRepository : FocusSessionsRepository {
 
+  /** Holds the focus sessions in memory. */
   private val focusSessions: MutableList<FocusSession> = mutableListOf()
 
+  /** Counter to generate unique IDs for new focus sessions. */
   private var counter = 0
 
   override fun getNewId(): String {

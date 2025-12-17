@@ -113,7 +113,7 @@ class FindFriendsScreenTest {
               .onNodeWithTag(FindFriendsScreenTestTags.getTestTagForFriendItem("francis"))
               .assertIsNotDisplayed()
           true
-        } catch (e: AssertionError) {
+        } catch (_: AssertionError) {
           false
         }
       }
