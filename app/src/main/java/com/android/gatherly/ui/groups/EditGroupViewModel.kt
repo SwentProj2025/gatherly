@@ -31,9 +31,26 @@ import kotlinx.coroutines.launch
 /**
  * Represents the UI state of the Edit Group screen.
  *
- * Holds the loaded group data, user-entered modifications, validation errors, member management
- * state, and progress flags used by [EditGroupViewModel] to manage the process of editing an
- * existing Group.
+ * @param groupId The id of the group that is loaded
+ * @param name The current name of the group
+ * @param description The current group description
+ * @param nameError The string to display if the name is blank
+ * @param currentMemberProfiles The list of profiles of members who are currently group members
+ * @param adminIds The list of ids of users who are admin
+ * @param friendsList The complete list of the user's friends
+ * @param availableFriendsToAdd List of friends that can still be added
+ * @param selectedNewFriendIds The list of ids of friends who have been selected to be added
+ * @param membersToRemove The list of ids of friends who have been selected to be removed
+ * @param currentUserId The id of the current user
+ * @param creatorId The id of the group creator
+ * @param isLoading If the screen is currently loading
+ * @param loadError If there was an error while loading the screen
+ * @param isSaving If the group is being saved
+ * @param saveError If there was an error while saving the group
+ * @param saveSuccess If the group was successfully saved, navigate back to overview
+ * @param friendsSearchQuery The search query by which to filter shown friends
+ * @param filteredAvailableFriends The friends to add that meet the query filter
+ * @param membersForList The current members of the group
  */
 data class EditGroupUiState(
     val groupId: String = "",
@@ -66,6 +83,9 @@ data class EditGroupUiState(
  *
  * @param groupsRepository The repository responsible for persisting Group items.
  * @param profileRepository The repository responsible for fetching user profiles and friends.
+ * @param pointsRepository The repository responsible for updating user points history
+ * @param notificationsRepository The repository responsible for fetching notifications repository
+ * @param authProvider Injection used to have mock auth in tests
  */
 class EditGroupViewModel(
     private val groupsRepository: GroupsRepository = GroupsRepositoryFirestore(Firebase.firestore),
@@ -76,6 +96,7 @@ class EditGroupViewModel(
         NotificationsRepositoryProvider.repository,
     private val authProvider: () -> FirebaseAuth = { Firebase.auth }
 ) : ViewModel() {
+  /** Private mutable state for Edit Group UI */
   private val _uiState = MutableStateFlow(EditGroupUiState())
 
   /** Public immutable access to the Edit Group UI state. */
@@ -89,43 +110,6 @@ class EditGroupViewModel(
   /** Clears the save success flag in the UI state. */
   fun clearSaveSuccess() {
     _uiState.value = _uiState.value.copy(saveSuccess = false)
-  }
-
-  /**
-   * Factory to create EditGroupViewModel with dependencies.
-   *
-   * @param groupsRepository The GroupsRepository to use (default: Firestore implementation).
-   * @param profileRepository The ProfileRepository to use (default: Firestore implementation).
-   * @param notificationsRepository The NotificationsRepository to use (default: provided by
-   *   NotificationsRepositoryProvider).
-   * @param authProvider A function that provides the FirebaseAuth instance (default:
-   *   Firebase.auth).
-   * @return A ViewModelProvider.Factory that creates EditGroupViewModel instances.
-   */
-  companion object {
-    fun provideFactory(
-        groupsRepository: GroupsRepository = GroupsRepositoryFirestore(Firebase.firestore),
-        profileRepository: ProfileRepository =
-            ProfileRepositoryFirestore(Firebase.firestore, Firebase.storage),
-        notificationsRepository: NotificationsRepository =
-            NotificationsRepositoryProvider.repository,
-        authProvider: () -> FirebaseAuth = { Firebase.auth }
-    ): ViewModelProvider.Factory {
-      return object : ViewModelProvider.Factory {
-        @Suppress("UNCHECKED_CAST")
-        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-          if (modelClass.isAssignableFrom(EditGroupViewModel::class.java)) {
-            return EditGroupViewModel(
-                groupsRepository = groupsRepository,
-                profileRepository = profileRepository,
-                notificationsRepository = notificationsRepository,
-                authProvider = authProvider)
-                as T
-          }
-          throw IllegalArgumentException("Unknown ViewModel class $modelClass")
-        }
-      }
-    }
   }
 
   /**
@@ -367,7 +351,7 @@ class EditGroupViewModel(
                 creatorId =
                     "", // Will be preserved by repository (we don't modify creator in edits)
                 name = validated.name,
-                description = if (validated.description.isBlank()) null else validated.description,
+                description = validated.description.ifBlank { null },
                 memberIds = finalMemberIds,
                 adminIds = finalAdminIds)
 
@@ -405,5 +389,42 @@ class EditGroupViewModel(
 
     _uiState.value =
         _uiState.value.copy(friendsSearchQuery = newQuery, filteredAvailableFriends = filtered)
+  }
+
+  /**
+   * Factory to create EditGroupViewModel with dependencies.
+   *
+   * @param groupsRepository The GroupsRepository to use (default: Firestore implementation).
+   * @param profileRepository The ProfileRepository to use (default: Firestore implementation).
+   * @param notificationsRepository The NotificationsRepository to use (default: provided by
+   *   NotificationsRepositoryProvider).
+   * @param authProvider A function that provides the FirebaseAuth instance (default:
+   *   Firebase.auth).
+   * @return A ViewModelProvider.Factory that creates EditGroupViewModel instances.
+   */
+  companion object {
+    fun provideFactory(
+        groupsRepository: GroupsRepository = GroupsRepositoryFirestore(Firebase.firestore),
+        profileRepository: ProfileRepository =
+            ProfileRepositoryFirestore(Firebase.firestore, Firebase.storage),
+        notificationsRepository: NotificationsRepository =
+            NotificationsRepositoryProvider.repository,
+        authProvider: () -> FirebaseAuth = { Firebase.auth }
+    ): ViewModelProvider.Factory {
+      return object : ViewModelProvider.Factory {
+        @Suppress("UNCHECKED_CAST")
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+          if (modelClass.isAssignableFrom(EditGroupViewModel::class.java)) {
+            return EditGroupViewModel(
+                groupsRepository = groupsRepository,
+                profileRepository = profileRepository,
+                notificationsRepository = notificationsRepository,
+                authProvider = authProvider)
+                as T
+          }
+          throw IllegalArgumentException("Unknown ViewModel class $modelClass")
+        }
+      }
+    }
   }
 }

@@ -270,7 +270,8 @@ fun AddGroupScreen(
                     }
                     Spacer(modifier = Modifier.height(smallSpacing))
                     HorizontalDivider(
-                        thickness = dividerThickness, color = MaterialTheme.colorScheme.primary)
+                        thickness = dividerThickness,
+                        color = MaterialTheme.colorScheme.onBackground)
                     Spacer(modifier = Modifier.height(smallSpacing))
                   }
                 }

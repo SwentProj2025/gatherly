@@ -24,8 +24,11 @@ import kotlinx.coroutines.launch
  * @param group the group to display
  * @param memberProfiles the list of member profiles
  * @param isAdmin true if the current user is an admin of the group
+ * @param isOwner true if the current user is the owner of the group
  * @param isLoading true if the screen is loading
  * @param errorMessage an error message, null if there is none
+ * @param navigateToOverview true if the user leaves the group, signals to navigate back to the
+ *   overview screen
  */
 data class GroupInformationUIState(
     val group: Group = Group(),
@@ -51,7 +54,10 @@ class GroupInformationViewModel(
     private val authProvider: () -> FirebaseAuth = { Firebase.auth }
 ) : ViewModel() {
 
+  /** Private mutable state for Group Information UI */
   private val _uiState = MutableStateFlow(GroupInformationUIState())
+
+  /** Public immutable access to the Group Information UI state. */
   val uiState: StateFlow<GroupInformationUIState> = _uiState.asStateFlow()
 
   /**
