@@ -126,7 +126,7 @@ class Milestone1End2End : FirestoreGatherlyTest() {
     composeTestRule.onNodeWithTag(FocusTimerScreenTestTags.STOP_BUTTON).performClick()
 
     // click on drop down menu
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).performClick()
     composeTestRule.waitForIdle()
 
     // wait for drop down menu to appear
@@ -138,7 +138,7 @@ class Milestone1End2End : FirestoreGatherlyTest() {
     composeTestRule.onNodeWithTag(NavigationTestTags.SETTINGS_TAB).performClick()
 
     // click on drop down menu
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).performClick()
     composeTestRule.waitForIdle()
 
     // wait for drop down menu to appear

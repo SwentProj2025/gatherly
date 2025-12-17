@@ -69,6 +69,7 @@ import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Screen
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu_HomePage
+import com.android.gatherly.utils.LoadingAnimation
 import com.android.gatherly.utils.MapCoordinator
 import com.android.gatherly.utils.profilePicturePainter
 import com.google.android.gms.maps.model.CameraPosition
@@ -183,54 +184,58 @@ fun HomePageScreen(
             modifier = Modifier.testTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU))
       },
       content = { paddingValues ->
-        Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
-          Spacer(modifier = Modifier.height(verticalSpacing))
+        if (uiState.isLoading) {
+          LoadingAnimation(stringResource(R.string.loading_homepage_message), paddingValues)
+        } else {
+          Column(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
+            Spacer(modifier = Modifier.height(verticalSpacing))
 
-          SectionTitle(
-              text = stringResource(id = R.string.homepage_upcoming_events_title),
-              modifier =
-                  Modifier.padding(horizontal = screenPadding)
-                      .testTag(HomePageScreenTestTags.UPCOMING_EVENTS_TITLE)
-                      .clickable { homePageScreenActions.onClickEventsTitle() })
+            SectionTitle(
+                text = stringResource(id = R.string.homepage_upcoming_events_title),
+                modifier =
+                    Modifier.padding(horizontal = screenPadding)
+                        .testTag(HomePageScreenTestTags.UPCOMING_EVENTS_TITLE)
+                        .clickable { homePageScreenActions.onClickEventsTitle() })
 
-          Spacer(modifier = Modifier.height(sectionSpacing))
+            Spacer(modifier = Modifier.height(sectionSpacing))
 
-          EventsAndFriendsSection(
-              todos = uiState.displayableTodos,
-              events = uiState.displayableEvents,
-              onClickFriendsSection = homePageScreenActions.onClickFriendsSection,
-              isAnon = uiState.isAnon,
-              friends = uiState.friends,
-              coordinator = coordinator,
-              navigationActions = navigationActions)
+            EventsAndFriendsSection(
+                todos = uiState.displayableTodos,
+                events = uiState.displayableEvents,
+                onClickFriendsSection = homePageScreenActions.onClickFriendsSection,
+                isAnon = uiState.isAnon,
+                friends = uiState.friends,
+                coordinator = coordinator,
+                navigationActions = navigationActions)
 
-          Spacer(modifier = Modifier.height(verticalSpacing))
+            Spacer(modifier = Modifier.height(verticalSpacing))
 
-          SectionTitle(
-              text = stringResource(id = R.string.homepage_upcoming_tasks_title),
-              modifier =
-                  Modifier.padding(horizontal = screenPadding)
-                      .testTag(HomePageScreenTestTags.UPCOMING_TASKS_TITLE)
-                      .clickable { homePageScreenActions.onClickTodoTitle() })
+            SectionTitle(
+                text = stringResource(id = R.string.homepage_upcoming_tasks_title),
+                modifier =
+                    Modifier.padding(horizontal = screenPadding)
+                        .testTag(HomePageScreenTestTags.UPCOMING_TASKS_TITLE)
+                        .clickable { homePageScreenActions.onClickTodoTitle() })
 
-          Spacer(modifier = Modifier.height(sectionSpacing))
+            Spacer(modifier = Modifier.height(sectionSpacing))
 
-          TaskList(
-              todos = uiState.todos,
-              homePageScreenActions.onClickTodoTitle,
-              homePageScreenActions.onClickTodo)
+            TaskList(
+                todos = uiState.todos,
+                homePageScreenActions.onClickTodoTitle,
+                homePageScreenActions.onClickTodo)
 
-          Spacer(modifier = Modifier.height(verticalSpacing))
+            Spacer(modifier = Modifier.height(verticalSpacing))
 
-          Spacer(modifier = Modifier.weight(1f))
-          FocusSection(
-              modifier = Modifier.padding(horizontal = screenPadding),
-              timerString = uiState.timerString,
-              onClick = homePageScreenActions.onClickFocusButton)
+            Spacer(modifier = Modifier.weight(1f))
+            FocusSection(
+                modifier = Modifier.padding(horizontal = screenPadding),
+                timerString = uiState.timerString,
+                onClick = homePageScreenActions.onClickFocusButton)
 
-          Spacer(
-              modifier =
-                  Modifier.height(dimensionResource(id = R.dimen.spacing_between_fields_regular)))
+            Spacer(
+                modifier =
+                    Modifier.height(dimensionResource(id = R.dimen.spacing_between_fields_regular)))
+          }
         }
       })
 }
@@ -339,7 +344,7 @@ fun MiniMap(
                       state = rememberMarkerState(position = LatLng(loc.latitude, loc.longitude)),
                       onClick = {
                         coordinator.requestCenterOnTodo(todo.uid)
-                        navigationActions?.navigateTo(Screen.Map)
+                        navigationActions?.navigateTo(Screen.MapScreen)
                         true
                       }) {
                         ToDoIcon(todo)
@@ -356,7 +361,7 @@ fun MiniMap(
                       state = rememberMarkerState(position = LatLng(loc.latitude, loc.longitude)),
                       onClick = {
                         coordinator.requestCenterOnEvent(event.id)
-                        navigationActions?.navigateTo(Screen.Map)
+                        navigationActions?.navigateTo(Screen.MapScreen)
                         true
                       }) {
                         EventIcon(event)

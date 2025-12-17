@@ -70,7 +70,7 @@ data class EditEventsUIState(
     // when the event is edited or deleted, return to event overview
     val backToOverview: Boolean = false,
     // when the event is being
-    val isLoading: Boolean = false,
+    val isLoading: Boolean = true,
     // the state of the event
     val state: EventState = EventState.PUBLIC,
     // the friend participant search string
@@ -95,7 +95,7 @@ private var client: OkHttpClient =
               chain
                   .request()
                   .newBuilder()
-                  .header("User-Agent", "BootcampApp (croissant.kerjan@gmail.com)")
+                  .header("User-Agent", "GatherlyApp (kerjangersende@gmail.com)")
                   .build()
           chain.proceed(request)
         }
@@ -158,6 +158,7 @@ class EditEventsViewModel(
       creatorName = event.creatorName
       participants = event.participants
       currentProfile = profileRepository.getProfileByUid(creatorId)!!
+      uiState = uiState.copy(isLoading = false)
     }
   }
 

@@ -20,7 +20,7 @@ import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -53,10 +53,10 @@ class TodoOverviewViewModelTest {
   private lateinit var profileRepository: ProfileRepository
   private lateinit var pointsRepository: PointsRepository
   private lateinit var mockitoUtils: MockitoUtils
-
   private lateinit var toDoCategoryRepository: ToDoCategoryRepository
 
-  private val testDispatcher = StandardTestDispatcher()
+  private val testDispatcher = UnconfinedTestDispatcher()
+  private val testTimeout = 120.seconds
 
   @Before
   fun setUp() {
@@ -99,10 +99,10 @@ class TodoOverviewViewModelTest {
         ownerId = ownerId)
   }
 
-  @OptIn(ExperimentalCoroutinesApi::class)
+  /** Test that loading todos successfully updates UI state with data. */
   @Test
   fun getAllTodos_success_updatesUiStateWithData() =
-      runTest(testDispatcher, timeout = 120.seconds) {
+      runTest(testDispatcher, testTimeout) {
         // Pre-populate repository
         val todo1 = makeTodo("Sample Todo 1")
         val todo2 = makeTodo("Sample Todo 2")
@@ -126,9 +126,10 @@ class TodoOverviewViewModelTest {
         assertTrue("Sample Todo 2" in names)
       }
 
+  /** Test that loading state is set correctly during fetch. */
   @Test
   fun getAllTodos_setsLoadingStateDuringFetch() =
-      runTest(testDispatcher, timeout = 120.seconds) {
+      runTest(testDispatcher, testTimeout) {
         overviewViewModel.refreshUIState()
 
         // Wait for loading to start
@@ -141,9 +142,10 @@ class TodoOverviewViewModelTest {
         assertFalse("Expected isLoading=false after job completion", state.isLoading)
       }
 
+  /** Test that loading from an empty repository returns an empty list. */
   @Test
   fun getAllTodos_withEmptyRepo_returnsEmptyList() =
-      runTest(testDispatcher, timeout = 120.seconds) {
+      runTest(testDispatcher, testTimeout) {
         // Repository has no data
         overviewViewModel.refreshUIState()
 
@@ -154,10 +156,10 @@ class TodoOverviewViewModelTest {
         assertNull(state.errorMsg)
       }
 
+  /** Test that refreshing UI state triggers reload successfully. */
   @Test
-  @OptIn(ExperimentalCoroutinesApi::class)
   fun refreshUiState_triggersReloadSuccessfully() =
-      runTest(testDispatcher, timeout = 120.seconds) {
+      runTest(testDispatcher, testTimeout) {
         val todo1 = makeTodo("Initial Todo")
         toDosRepository.addTodo(todo1)
 
@@ -185,10 +187,10 @@ class TodoOverviewViewModelTest {
         assertEquals(2, updatedCount)
       }
 
-  @OptIn(ExperimentalCoroutinesApi::class)
+  /** Test that changing checkbox status updates the todo and refreshes UI state. */
   @Test
   fun onCheckboxChanged_updatesStatusAndRefreshesUiState() =
-      runTest(testDispatcher, timeout = 120.seconds) {
+      runTest(testDispatcher, testTimeout) {
         // create and add a todo
         val todo = makeTodo("Status Change Test")
         toDosRepository.addTodo(todo)
@@ -200,7 +202,7 @@ class TodoOverviewViewModelTest {
 
         // Initial load
         overviewViewModel.refreshUIState()
-        waitUntilLoaded(overviewViewModel)
+        advanceUntilIdle()
 
         val initial = overviewViewModel.uiState.value.todos.first()
         assertEquals(ToDoStatus.ONGOING, initial.status)
@@ -217,9 +219,10 @@ class TodoOverviewViewModelTest {
             "Expected todo status to be updated to ENDED", ToDoStatus.ENDED, updatedTodo.status)
       }
 
+  /** Test that searching todos filters results correctly. */
   @Test
   fun searchTodos_filtersResultsCorrectly() =
-      runTest(testDispatcher, timeout = 120.seconds) {
+      runTest(testDispatcher, testTimeout) {
         val todoA = makeTodo("Lunch with Claire", description = "meet at EPFL")
         val todoB = makeTodo("Buy groceries", description = "milk and bread")
         val todoC = makeTodo("Running", description = "morning run")
@@ -243,9 +246,10 @@ class TodoOverviewViewModelTest {
         assertEquals(todoA.uid, filtered.first().uid)
       }
 
+  /** Test that clearing search query restores the full list. */
   @Test
   fun searchTodos_restoreFullList_whenQueryCleared() =
-      runTest(testDispatcher, timeout = 120.seconds) {
+      runTest(testDispatcher, testTimeout) {
         val todoA = makeTodo("Lunch with Claire")
         val todoB = makeTodo("Buy groceries")
 
@@ -275,9 +279,10 @@ class TodoOverviewViewModelTest {
         assertEquals(2, restored.size)
       }
 
+  /** Test that search filters against full list, not previously filtered results. */
   @Test
   fun searchTodos_filtersAgainstFullList_notFilteredResults() =
-      runTest(testDispatcher, timeout = 120.seconds) {
+      runTest(testDispatcher, testTimeout) {
         val todoA = makeTodo("Lunch with Claire")
         val todoB = makeTodo("Lundry")
         val todoC = makeTodo("Groceries")
@@ -312,9 +317,10 @@ class TodoOverviewViewModelTest {
         assertEquals(2, results.size)
       }
 
+  /** Test that changing sort order sorts the list correctly. */
   @Test
   fun sortOrder_changes_sortListCorrectly() =
-      runTest(testDispatcher, timeout = 120.seconds) {
+      runTest(testDispatcher, testTimeout) {
         val todoA =
             makeTodo("A", description = "", ownerId = "u").copy(dueDate = Timestamp(1000, 0))
         val todoB =
@@ -355,9 +361,10 @@ class TodoOverviewViewModelTest {
         assertEquals(listOf(todoA.uid, todoB.uid, todoC.uid), alpha.map { it.uid })
       }
 
+  /** Test that sorting persists after refresh. */
   @Test
   fun sorting_persists_after_refresh() =
-      runTest(testDispatcher, timeout = 120.seconds) {
+      runTest(testDispatcher, testTimeout) {
         val todo1 = makeTodo("A")
         val todo2 = makeTodo("B")
 
@@ -388,9 +395,10 @@ class TodoOverviewViewModelTest {
         assertEquals(listOf(todo1.uid, todo2.uid, todo3.uid), sortedAfterRefresh.map { it.uid })
       }
 
+  /** Test that search and sort interact correctly. */
   @Test
   fun search_and_sort_interact_correctly() =
-      runTest(testDispatcher, timeout = 120.seconds) {
+      runTest(testDispatcher, testTimeout) {
         val todoA = makeTodo("Alpha")
         val todoC = makeTodo("Charlie")
         val todoB = makeTodo("Bravo")

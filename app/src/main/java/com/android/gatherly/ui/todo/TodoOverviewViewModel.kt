@@ -32,7 +32,7 @@ data class OverviewUIState(
     val todos: List<ToDo> = emptyList(),
     val sortOrder: TodoSortOrder = TodoSortOrder.ALPHABETICAL,
     val errorMsg: String? = null,
-    val isLoading: Boolean = false,
+    val isLoading: Boolean = true,
     val selectedCategory: ToDoCategory? = null
 )
 

@@ -156,7 +156,7 @@ class NavigationTest : FirestoreGatherlyTest() {
     }
 
     // Go to profile screen
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).assertIsDisplayed().performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).assertIsDisplayed().performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).assertIsDisplayed().performClick()
     composeTestRule.waitUntil(timeout) {
       composeTestRule.onNodeWithTag(ProfileScreenTestTags.GOOGLE_BUTTON).isDisplayed()
@@ -184,10 +184,10 @@ class NavigationTest : FirestoreGatherlyTest() {
   @Test
   fun canLogOutFromProfile() {
     setUpWithGoogle()
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
     composeTestRule.checkProfileScreenIsDisplayed()
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.LOGOUT_TAB).performClick()
     composeTestRule.waitUntil(10_000L) {
       composeTestRule.onNodeWithTag(SignInScreenTestTags.WELCOME_TITLE).isDisplayed()
@@ -203,10 +203,10 @@ class NavigationTest : FirestoreGatherlyTest() {
   @Ignore("Extremely flaky test, needs investigation")
   fun canLogOutFromProfileAnon() {
     composeTestRule.setContent { GatherlyApp() }
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
     composeTestRule.checkProfileScreenIsDisplayed()
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.LOGOUT_TAB).performClick()
     composeTestRule
         .onNodeWithTag(AlertDialogTestTags.CONFIRM_BTN)
@@ -223,10 +223,10 @@ class NavigationTest : FirestoreGatherlyTest() {
   @Ignore("Extremely flaky test, needs investigation")
   fun canLogOutFromSettingsAnon() {
     composeTestRule.setContent { GatherlyApp() }
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.SETTINGS_TAB).performClick()
     composeTestRule.checkSettingsScreenIsDisplayed()
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.LOGOUT_TAB).performClick()
     composeTestRule
         .onNodeWithTag(AlertDialogTestTags.CONFIRM_BTN)
@@ -242,8 +242,8 @@ class NavigationTest : FirestoreGatherlyTest() {
   fun testTagsDropMenuAreCorrectlySet() {
     setUpWithGoogle()
     composeTestRule.onNodeWithTag(NavigationTestTags.TOP_NAVIGATION_MENU).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.SETTINGS_TAB).assertIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).assertIsDisplayed()
   }
@@ -256,7 +256,7 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule
         .onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
         .assertTextContains(value = "Home")
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).assertIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.HOMEPAGE_TAB).assertIsNotDisplayed()
   }
 
@@ -278,7 +278,7 @@ class NavigationTest : FirestoreGatherlyTest() {
   @Test
   fun canNavigateToProfileFromHomePage() {
     setUpWithGoogle()
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
     composeTestRule.checkProfileScreenIsDisplayed()
   }
@@ -290,7 +290,7 @@ class NavigationTest : FirestoreGatherlyTest() {
   @Test
   fun canNavigateToSettingsFromHomePage() {
     setUpWithGoogle()
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.SETTINGS_TAB).performClick()
     composeTestRule.checkSettingsScreenIsDisplayed()
   }
@@ -304,12 +304,12 @@ class NavigationTest : FirestoreGatherlyTest() {
   @Test
   fun NavigationBarIsCorrectlySetForProfile() {
     setUpWithGoogle()
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
     composeTestRule.checkProfileScreenIsDisplayed()
 
     composeTestRule.onNodeWithTag(NavigationTestTags.TOP_NAVIGATION_MENU).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).assertIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.HOMEPAGE_TAB).assertIsDisplayed()
 
     composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsDisplayed()
@@ -318,7 +318,7 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.onNodeWithTag(NavigationTestTags.OVERVIEW_TAB).assertIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.EVENTS_TAB).assertIsDisplayed()
 
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.SETTINGS_TAB).assertIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.LOGOUT_TAB).assertIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).assertIsNotDisplayed()
@@ -331,10 +331,10 @@ class NavigationTest : FirestoreGatherlyTest() {
   @Test
   fun NavigateFromProfileToSettings() {
     setUpWithGoogle()
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
     composeTestRule.checkProfileScreenIsDisplayed()
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.SETTINGS_TAB).performClick()
     composeTestRule.checkSettingsScreenIsDisplayed()
   }
@@ -346,7 +346,7 @@ class NavigationTest : FirestoreGatherlyTest() {
   @Test
   fun NavigateFromProfileToTimer() {
     setUpWithGoogle()
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
     composeTestRule.checkProfileScreenIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.TIMER_TAB).performClick()
@@ -360,7 +360,7 @@ class NavigationTest : FirestoreGatherlyTest() {
   @Test
   fun NavigateFromProfileToOverview() {
     setUpWithGoogle()
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
     composeTestRule.checkProfileScreenIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.OVERVIEW_TAB).performClick()
@@ -374,7 +374,7 @@ class NavigationTest : FirestoreGatherlyTest() {
   @Test
   fun NavigateFromProfileToEvents() {
     setUpWithGoogle()
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
     composeTestRule.checkProfileScreenIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.EVENTS_TAB).performClick()
@@ -388,7 +388,7 @@ class NavigationTest : FirestoreGatherlyTest() {
   @Test
   fun NavigateFromProfileToMap() {
     setUpWithGoogle()
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
     composeTestRule.checkProfileScreenIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.MAP_TAB).performClick()
@@ -402,7 +402,7 @@ class NavigationTest : FirestoreGatherlyTest() {
   @Test
   fun NavigateFromProfileToHomePage() {
     setUpWithGoogle()
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
     composeTestRule.checkProfileScreenIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.HOMEPAGE_TAB).performClick()
@@ -416,7 +416,7 @@ class NavigationTest : FirestoreGatherlyTest() {
    * repetitive performClick calls.
    */
   fun ComposeTestRule.navigateFromHomeToTimer() {
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.TIMER_TAB).performClick()
     composeTestRule.checkTimerScreenIsDisplayed()
@@ -431,7 +431,7 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.navigateFromHomeToTimer()
 
     composeTestRule.onNodeWithTag(NavigationTestTags.TOP_NAVIGATION_MENU).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).assertIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.HOMEPAGE_TAB).assertIsDisplayed()
 
     composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsDisplayed()
@@ -440,7 +440,7 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.onNodeWithTag(NavigationTestTags.OVERVIEW_TAB).assertIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.EVENTS_TAB).assertIsDisplayed()
 
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.SETTINGS_TAB).assertIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).assertIsDisplayed()
   }
@@ -465,7 +465,7 @@ class NavigationTest : FirestoreGatherlyTest() {
   fun NavigateFromTimerToSettings() {
     setUpWithGoogle()
     composeTestRule.navigateFromHomeToTimer()
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.SETTINGS_TAB).performClick()
     composeTestRule.checkSettingsScreenIsDisplayed()
   }
@@ -478,7 +478,7 @@ class NavigationTest : FirestoreGatherlyTest() {
   fun NavigateFromTimerToProfile() {
     setUpWithGoogle()
     composeTestRule.navigateFromHomeToTimer()
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
     composeTestRule.checkProfileScreenIsDisplayed()
   }
@@ -526,7 +526,7 @@ class NavigationTest : FirestoreGatherlyTest() {
    * repetitive performClick calls.
    */
   fun ComposeTestRule.navigateFromHomeToEvents() {
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.EVENTS_TAB).performClick()
     composeTestRule.checkEventsScreenIsDisplayed()
@@ -542,7 +542,7 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.navigateFromHomeToEvents()
 
     composeTestRule.onNodeWithTag(NavigationTestTags.TOP_NAVIGATION_MENU).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).assertIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.HOMEPAGE_TAB).assertIsDisplayed()
 
     composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsDisplayed()
@@ -551,7 +551,7 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.onNodeWithTag(NavigationTestTags.OVERVIEW_TAB).assertIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.EVENTS_TAB).assertIsDisplayed()
 
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.SETTINGS_TAB).assertIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).assertIsDisplayed()
   }
@@ -576,7 +576,7 @@ class NavigationTest : FirestoreGatherlyTest() {
   fun NavigateFromEventsToSettings() {
     setUpWithGoogle()
     composeTestRule.navigateFromHomeToEvents()
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.SETTINGS_TAB).performClick()
     composeTestRule.checkSettingsScreenIsDisplayed()
   }
@@ -589,7 +589,7 @@ class NavigationTest : FirestoreGatherlyTest() {
   fun NavigateFromEventsToProfile() {
     setUpWithGoogle()
     composeTestRule.navigateFromHomeToEvents()
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
     composeTestRule.checkProfileScreenIsDisplayed()
   }
@@ -637,7 +637,7 @@ class NavigationTest : FirestoreGatherlyTest() {
    * repetitive performClick calls.
    */
   fun ComposeTestRule.navigateFromHomeToMap() {
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.MAP_TAB).performClick()
     composeTestRule.checkMapScreenIsDisplayed()
@@ -653,7 +653,7 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.navigateFromHomeToMap()
 
     composeTestRule.onNodeWithTag(NavigationTestTags.TOP_NAVIGATION_MENU).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).assertIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.HOMEPAGE_TAB).assertIsDisplayed()
 
     composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsDisplayed()
@@ -662,7 +662,7 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.onNodeWithTag(NavigationTestTags.OVERVIEW_TAB).assertIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.EVENTS_TAB).assertIsDisplayed()
 
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.SETTINGS_TAB).assertIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).assertIsDisplayed()
   }
@@ -687,7 +687,7 @@ class NavigationTest : FirestoreGatherlyTest() {
   fun NavigateFromMapToSettings() {
     setUpWithGoogle()
     composeTestRule.navigateFromHomeToMap()
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.SETTINGS_TAB).performClick()
     composeTestRule.checkSettingsScreenIsDisplayed()
   }
@@ -700,7 +700,7 @@ class NavigationTest : FirestoreGatherlyTest() {
   fun NavigateFromMapToProfile() {
     setUpWithGoogle()
     composeTestRule.navigateFromHomeToMap()
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
     composeTestRule.checkProfileScreenIsDisplayed()
   }
@@ -748,7 +748,7 @@ class NavigationTest : FirestoreGatherlyTest() {
    * avoiding repetitive performClick calls.
    */
   fun ComposeTestRule.navigateFromHomeToOverview() {
-    onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    onNodeWithTag(NavigationTestTags.DROP_MENU).performClick()
     onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
     onNodeWithTag(NavigationTestTags.OVERVIEW_TAB).performClick()
     checkOverviewScreenIsDisplayed()
@@ -764,7 +764,7 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.navigateFromHomeToOverview()
 
     composeTestRule.onNodeWithTag(NavigationTestTags.TOP_NAVIGATION_MENU).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).assertIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.HOMEPAGE_TAB).assertIsDisplayed()
 
     composeTestRule.onNodeWithTag(NavigationTestTags.BOTTOM_NAVIGATION_MENU).assertIsDisplayed()
@@ -773,7 +773,7 @@ class NavigationTest : FirestoreGatherlyTest() {
     composeTestRule.onNodeWithTag(NavigationTestTags.OVERVIEW_TAB).assertIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.EVENTS_TAB).assertIsDisplayed()
 
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.SETTINGS_TAB).assertIsDisplayed()
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).assertIsDisplayed()
   }
@@ -786,7 +786,7 @@ class NavigationTest : FirestoreGatherlyTest() {
   fun NavigateFromOverviewToSettings() {
     setUpWithGoogle()
     composeTestRule.navigateFromHomeToOverview()
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.SETTINGS_TAB).performClick()
     composeTestRule.checkSettingsScreenIsDisplayed()
   }
@@ -799,7 +799,7 @@ class NavigationTest : FirestoreGatherlyTest() {
   fun NavigateFromOverviewToProfile() {
     setUpWithGoogle()
     composeTestRule.navigateFromHomeToOverview()
-    composeTestRule.onNodeWithTag(NavigationTestTags.DROPMENU).performClick()
+    composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
     composeTestRule.checkProfileScreenIsDisplayed()
   }

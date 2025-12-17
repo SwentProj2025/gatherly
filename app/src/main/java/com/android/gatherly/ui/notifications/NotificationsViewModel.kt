@@ -27,7 +27,7 @@ import kotlinx.coroutines.launch
 data class NotificationUiState(
     val notifications: List<Notification> = emptyList(),
     val idToProfile: Map<String, Profile> = emptyMap(),
-    val isLoading: Boolean = false,
+    val isLoading: Boolean = true,
     val errorMessage: String? = null,
     val hasUnreadFriendRequests: Boolean = false
 )

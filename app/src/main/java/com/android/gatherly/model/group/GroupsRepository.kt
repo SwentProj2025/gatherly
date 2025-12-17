@@ -75,10 +75,10 @@ interface GroupsRepository {
   /**
    * Deletes the [Group] with the given ID.
    *
-   * Only group admins are allowed to delete the group.
+   * Only group owner is allowed to delete the group.
    *
    * @param groupId The unique identifier of the group to delete.
-   * @throws SecurityException if the current user is not an admin of the group.
+   * @throws SecurityException if the current user is not the owner of the group.
    */
   suspend fun deleteGroup(groupId: String)
 
