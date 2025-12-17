@@ -65,7 +65,7 @@ data class EditGroupUiState(
     val membersToRemove: List<String> = emptyList(),
     val currentUserId: String = "",
     val creatorId: String = "",
-    val isLoading: Boolean = false,
+    val isLoading: Boolean = true,
     val loadError: String? = null,
     val isSaving: Boolean = false,
     val saveError: String? = null,
