@@ -35,7 +35,8 @@ data class HomePageUIState(
     val todos: List<ToDo> = emptyList(),
     val timerString: String = "Are you ready to focus?",
     val errorMsg: String? = null,
-    val isAnon: Boolean = true
+    val isAnon: Boolean = true,
+    val isLoading: Boolean = true,
 )
 
 class HomePageViewModel(
@@ -76,7 +77,8 @@ class HomePageViewModel(
                 displayableEvents = getDrawableEvents(events),
                 friends = friends,
                 todos = todos,
-                isAnon = isAnon)
+                isAnon = isAnon,
+                isLoading = false)
       } catch (e: Exception) {
         _uiState.value = _uiState.value.copy(errorMsg = "There was an error loading your home page")
         Log.e("Homepage loading", "Exception when loading lists for Homepage displaying: $e")

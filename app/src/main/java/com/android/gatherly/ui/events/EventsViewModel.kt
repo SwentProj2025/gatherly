@@ -50,7 +50,7 @@ data class EventsUIState(
     val errorMsg: String? = null,
     val currentUserId: String = "",
     val isAnon: Boolean = true,
-    val isLoading: Boolean = false,
+    val isLoading: Boolean = true,
     val sortOrder: EventSortOrder = EventSortOrder.DATE_ASC,
 )
 
