@@ -14,22 +14,25 @@ import org.junit.runner.RunWith
 import org.robolectric.Shadows
 import org.robolectric.annotation.Config
 
+/** * Tests for [DailyTodoAlarmScheduler]. */
 @RunWith(AndroidJUnit4::class)
 @Config(sdk = [33])
 class DailyTodoAlarmSchedulerTest {
 
   private val context = ApplicationProvider.getApplicationContext<Context>()
 
+  /** Test that computeNextMidnight returns a timestamp that is indeed the next midnight. */
   @Test
   fun computeNextMidnight_returnsTomorrowMidnight() {
     val now = System.currentTimeMillis()
     val midnight = DailyTodoAlarmScheduler(context).computeNextMidnight()
 
-    // should be > now and less than 24h ahead
+    // Should be > now and less than 24h ahead
     assertTrue(midnight > now)
     assertTrue(midnight - now <= 24 * 60 * 60 * 1000)
   }
 
+  /** Test that scheduleNextTodoCheck sets an exact alarm with the correct extras. */
   @Test
   fun scheduleNextTodoCheck_setsExactAlarmWithCorrectExtras() {
     val scheduler = DailyTodoAlarmScheduler(context)
@@ -51,6 +54,7 @@ class DailyTodoAlarmSchedulerTest {
     assertEquals(userId, intent.getStringExtra(DailyTodoAlarmScheduler.Companion.EXTRA_USER_ID))
   }
 
+  /** Test that the PendingIntent used has the correct flags. */
   @Test
   fun scheduleNextTodoCheck_usesCorrectPendingIntentFlags() {
     val scheduler = DailyTodoAlarmScheduler(context)
@@ -70,6 +74,7 @@ class DailyTodoAlarmSchedulerTest {
     assertTrue(flags and PendingIntent.FLAG_UPDATE_CURRENT != 0)
   }
 
+  /** Test that scheduling twice overrides the previous alarm. */
   @Test
   fun scheduleNextTodoCheck_overridesPreviousAlarm_whenCalledTwice() {
     val scheduler = DailyTodoAlarmScheduler(context)
@@ -94,6 +99,7 @@ class DailyTodoAlarmSchedulerTest {
     assertNotEquals(firstAlarm, secondAlarm)
   }
 
+  /** Test that computeNextMidnight correctly handles month and year changes. */
   @Test
   fun computeNextMidnight_handlesMonthYearChange() {
     val fakeNow =
@@ -114,6 +120,7 @@ class DailyTodoAlarmSchedulerTest {
     assertEquals(expected, result)
   }
 
+  /** Test that the Intent target is set to DailyTodoReminderReceiver. */
   @Test
   fun scheduleNextTodoCheck_setsIntentTargetToReceiver() {
     val scheduler = DailyTodoAlarmScheduler(context)
@@ -130,6 +137,7 @@ class DailyTodoAlarmSchedulerTest {
     assertEquals(DailyTodoReminderReceiver::class.java.name, intent.component?.className)
   }
 
+  /** Test that the alarm is scheduled at the computed next midnight time. */
   @Test
   fun scheduleNextTodoCheck_schedulesAtComputedMidnight() {
     val scheduler = DailyTodoAlarmScheduler(context)
