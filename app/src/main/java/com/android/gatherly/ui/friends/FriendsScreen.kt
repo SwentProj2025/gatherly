@@ -41,7 +41,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -162,6 +162,25 @@ private val ANIMATION_LOADING = R.raw.loading_profiles
 private const val ANIMATION_TIME = 3000
 private const val ANIMATION_LOADING_DELAY: Long = 2000
 
+/**
+ * Friends screen showing the current user's friends and pending outgoing friend requests.
+ *
+ * Features:
+ * - Search bar to filter friends and pending requests.
+ * - Two sections: friends and pending requests (only shown when non-empty).
+ * - Actions to unfriend an existing friend or cancel a pending request.
+ * - Navigation to the "Find Friends" screen.
+ * - A temporary Lottie animation message shown after an unfriend action.
+ *
+ * UI testing:
+ * - Uses stable test tags from [FriendsScreenTestTags] for key UI elements.
+ *
+ * @param friendsViewModel ViewModel providing friends data and actions. Defaults to the standard
+ *   factory instance.
+ * @param goBack Callback invoked when the top bar back arrow is pressed.
+ * @param onFindFriends Callback invoked when the user presses the "Find friends" button.
+ * @param onClickFriend Callback invoked when a friend row is tapped (opens that profile).
+ */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun FriendsScreen(
@@ -177,11 +196,11 @@ fun FriendsScreen(
   val currentUserIdFromVM = uiState.currentUserId
 
   // Holds the current text entered by the friend username in the search bar
-  var searchQuery by remember { mutableStateOf("") }
+  var searchQuery by rememberSaveable { mutableStateOf("") }
 
   // Holds the boolean that determines when to trigger the animation
   // after the current user unfriends a profile
-  var showUnfriendMessage by remember { mutableStateOf(false) }
+  var showUnfriendMessage by rememberSaveable { mutableStateOf(false) }
 
   // Holds the text displayed during the unfriend animation
   val messageText = stringResource(R.string.friends_unfriend_message)
@@ -281,12 +300,12 @@ private fun FriendItem(
       border =
           BorderStroke(
               dimensionResource(R.dimen.friends_item_card_border_width),
-              MaterialTheme.colorScheme.primary),
+              MaterialTheme.colorScheme.onSurfaceVariant),
       shape = RoundedCornerShape(dimensionResource(R.dimen.friends_item_card_rounded_corner_shape)),
       colors =
           CardDefaults.cardColors(
-              containerColor = MaterialTheme.colorScheme.secondaryContainer,
-              contentColor = MaterialTheme.colorScheme.onSecondaryContainer),
+              containerColor = MaterialTheme.colorScheme.surfaceVariant,
+              contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
       modifier =
           modifier
               .testTag(FriendsScreenTestTags.getTestTagForFriendItem(friend))
@@ -319,7 +338,7 @@ private fun FriendItem(
             Text(
                 text = friend,
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.primary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontWeight = FontWeight.Medium,
                 modifier =
                     Modifier.testTag(FriendsScreenTestTags.getTestTagForFriendUsername(friend))
@@ -341,6 +360,18 @@ private fun FriendItem(
       }
 }
 
+/**
+ * Displays a single pending friend request row.
+ *
+ * Shows the recipient's profile picture and username, with a button to cancel the pending request.
+ * The row uses only design-system colors (surfaceVariant/onSurfaceVariant) and exposes stable test
+ * tags for UI tests via [FriendsScreenTestTags].
+ *
+ * @param friendUsername Username of the user to whom the current user has sent a friend request.
+ * @param onCancel Callback invoked when the "Cancel request" button is pressed.
+ * @param modifier Optional modifier applied to the outer card container.
+ * @param profilePicUrl Optional URL of the pending user's profile picture.
+ */
 @Composable
 private fun PendingRequestItem(
     friendUsername: String,
@@ -352,17 +383,17 @@ private fun PendingRequestItem(
       border =
           BorderStroke(
               dimensionResource(R.dimen.friends_item_card_border_width),
-              MaterialTheme.colorScheme.primary),
+              MaterialTheme.colorScheme.onSurfaceVariant),
       shape = RoundedCornerShape(dimensionResource(R.dimen.friends_item_card_rounded_corner_shape)),
       colors =
           CardDefaults.cardColors(
-              containerColor = MaterialTheme.colorScheme.secondaryContainer,
-              contentColor = MaterialTheme.colorScheme.onSecondaryContainer),
+              containerColor = MaterialTheme.colorScheme.surfaceVariant,
+              contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
       modifier =
           modifier
+              .testTag(FriendsScreenTestTags.getTestTagForFriendItem(friendUsername))
               .fillMaxWidth()
-              .padding(vertical = dimensionResource(R.dimen.friends_item_card_padding_vertical))
-              .testTag(FriendsScreenTestTags.getTestTagForPendingFriendItem(friendUsername))) {
+              .padding(vertical = dimensionResource(R.dimen.friends_item_card_padding_vertical))) {
         Row(
             modifier =
                 Modifier.fillMaxWidth()
@@ -392,7 +423,7 @@ private fun PendingRequestItem(
             Text(
                 text = friendUsername,
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.primary,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 fontWeight = FontWeight.Medium,
                 modifier =
                     Modifier.testTag(
@@ -643,18 +674,20 @@ private fun SearchBarContent(searchQuery: String, onSearchQueryChange: (String) 
 @Composable
 private fun FindFriendButton(onFindFriends: () -> Unit) {
   Button(
-      onClick = { onFindFriends() },
+      onClick = onFindFriends,
       modifier =
           Modifier.fillMaxWidth()
               .height(dimensionResource(R.dimen.friends_find_button_height))
               .padding(vertical = dimensionResource(R.dimen.friends_find_button_vertical))
               .testTag(FriendsScreenTestTags.BUTTON_FIND_FRIENDS),
       shape = RoundedCornerShape(dimensionResource(R.dimen.friends_item_rounded_corner_shape)),
-      colors = buttonColors(containerColor = MaterialTheme.colorScheme.inversePrimary)) {
+      colors =
+          buttonColors(
+              containerColor = MaterialTheme.colorScheme.secondary,
+              contentColor = MaterialTheme.colorScheme.onSecondary)) {
         Text(
             text = stringResource(R.string.find_friends_button_label),
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Medium,
-            color = MaterialTheme.colorScheme.onPrimary)
+            style = MaterialTheme.typography.bodyLarge,
+            fontWeight = FontWeight.Medium)
       }
 }

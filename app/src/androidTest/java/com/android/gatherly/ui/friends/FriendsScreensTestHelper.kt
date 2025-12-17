@@ -94,7 +94,7 @@ class FriendsScreensTestHelper(private val composeTestRule: ComposeContentTestRu
           friendUids = emptyList())
 
   /** A user with only pending outgoing friend requests. */
-  val profileWithOnlyPendings =
+  val profileWithOnlyPending =
       Profile(
           uid = "userPending",
           name = "UserPend",
@@ -184,7 +184,7 @@ class FriendsScreensTestHelper(private val composeTestRule: ComposeContentTestRu
   fun setupWithAliceUID(screen: ScreenType) = setupUser(aliceProfile, screen)
 
   /** Sets up the test environment for a user with pending outgoing friend requests only. */
-  fun setupWithPendingProfile(screen: ScreenType) = setupUser(profileWithOnlyPendings, screen)
+  fun setupWithPendingProfile(screen: ScreenType) = setupUser(profileWithOnlyPending, screen)
 
   /** Sets up the test environment for a user with both friends and outgoing pending requests. */
   fun setupWithTotalProfile(screen: ScreenType) = setupUser(profileWithPendingAndFriends, screen)

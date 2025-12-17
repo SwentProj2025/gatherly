@@ -47,7 +47,7 @@ class FriendsScreenTest {
    * FindFriends screen.
    */
   @Test
-  fun testButtonFindFriendClikable() {
+  fun testButtonFindFriendClickable() {
     environment = helper.setupWithBobUID(FriendsScreensTestHelper.ScreenType.FRIENDS)
     composeTestRule.onNodeWithTag(FriendsScreenTestTags.EMPTY_LIST_MSG).assertIsDisplayed()
     composeTestRule
@@ -205,7 +205,7 @@ class FriendsScreenTest {
 
   /** Test: Friends and Pending section titles appear for a user with both. */
   @Test
-  fun testSectionTitlesDisplayedForUserWithFriendsAndPendings() {
+  fun testSectionTitlesDisplayedForUserWithFriendsAndPending() {
     environment = helper.setupWithTotalProfile(FriendsScreensTestHelper.ScreenType.FRIENDS)
     composeTestRule.waitForIdle()
 
