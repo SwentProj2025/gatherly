@@ -70,7 +70,8 @@ class ProfileRepositoryFirestore(
     val profile = getProfileByUid(uid) ?: return
     db.runBatch { batch ->
           if (profile.username.isNotBlank()) {
-            batch.delete(usernamesCollection.document(profile.username))
+            val normalizedUsername = Username.normalize(profile.username)
+            batch.delete(usernamesCollection.document(normalizedUsername))
           }
           batch.delete(profilesCollection.document(uid))
         }

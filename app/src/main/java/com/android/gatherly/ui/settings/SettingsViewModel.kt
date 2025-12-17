@@ -461,11 +461,12 @@ class SettingsViewModel(
    *
    * On success, emits an account-deleted event. On failure, exposes an error message.
    */
-  fun deleteProfile() {
+  fun deleteProfile(credentialManager: CredentialManager) {
     val uid = authProvider().currentUser?.uid ?: return
     viewModelScope.launch {
       try {
         deleteUserAccountUseCase.deleteUserAccount(uid)
+        signOutAfterDeletion(credentialManager)
         _accountDeleted.value = true
       } catch (e: Exception) {
         Log.e("SettingsViewModel", "Failed to delete profile", e)
@@ -480,7 +481,7 @@ class SettingsViewModel(
    *
    * @param credentialManager CredentialManager used to clear stored credentials.
    */
-  fun signOutAfterDeletion(credentialManager: CredentialManager) {
+  private fun signOutAfterDeletion(credentialManager: CredentialManager) {
     viewModelScope.launch {
       _uiState.value = _uiState.value.copy(signedOut = true)
       authProvider().signOut()
