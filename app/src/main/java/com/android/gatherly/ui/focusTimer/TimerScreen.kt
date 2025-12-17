@@ -58,7 +58,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -71,7 +70,6 @@ import com.android.gatherly.ui.navigation.NavigationActions
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu
-import com.android.gatherly.ui.theme.GatherlyTheme
 import com.android.gatherly.ui.theme.theme_leaderboard_bronze
 import com.android.gatherly.ui.theme.theme_leaderboard_gold
 import com.android.gatherly.ui.theme.theme_leaderboard_silver
@@ -133,6 +131,12 @@ object FocusTimerScreenTestTags {
       "focusSessionItem$focusSessionId"
 }
 
+/**
+ * Displays the different views of the timer
+ *
+ * @param timerViewModel Used to interact with data
+ * @param navigationActions Used to navigate to different screens
+ */
 @Composable
 fun TimerScreen(
     timerViewModel: TimerViewModel = viewModel(),
@@ -165,7 +169,11 @@ enum class TimerScreenTab {
   HISTORY
 }
 
-// Organises the display of different views within the screen
+/**
+ * Organises the display of different views within the screen
+ *
+ * @param timerViewModel Used to interact with data
+ */
 @Composable
 fun TimerScreenContent(timerViewModel: TimerViewModel) {
 
@@ -182,9 +190,9 @@ fun TimerScreenContent(timerViewModel: TimerViewModel) {
     }
   }
 
-  val corner = 12.dp
+  val corner = dimensionResource(R.dimen.timer_corner)
 
-  // Column to contain averything
+  // Column to contain everything
   Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
     // Top bar to select either timer or leaderboard view
     Row(
@@ -421,8 +429,8 @@ fun TimerStarted(uiState: TimerState, timerViewModel: TimerViewModel, corner: Dp
     // Timer circle and test
     Box(modifier = Modifier.weight(timerWeight), contentAlignment = Alignment.Center) {
       val progressRatio = 6.0 / 7.0
-      val progressWidth = 15.dp
-      val progressGap = 5.dp
+      val progressWidth = dimensionResource(R.dimen.timer_progress_width)
+      val progressGap = dimensionResource(R.dimen.timer_progress_gap)
 
       Box(
           modifier =
@@ -568,11 +576,12 @@ fun TimerNotStarted(uiState: TimerState, timerViewModel: TimerViewModel, corner:
               FocusTimerScreenTestTags.RESET_BUTTON)
         }
 
+    val padding = dimensionResource(R.dimen.timer_padding)
+    val todoHeight = dimensionResource(R.dimen.timer_todo_height)
+    val horizontalThickness = dimensionResource(R.dimen.timer_bar_thickness)
+
     // Todos to link, in a lazy column to enable scrolling
     LazyColumn(modifier = Modifier.fillMaxSize().weight(todosWeight)) {
-      val padding = 6.dp
-      val todoHeight = 60.dp
-      val horizontalThickness = 0.5.dp
 
       // Title text for linking todos
       item {
@@ -723,13 +732,6 @@ fun TimerTime(
   }
 }
 
-// Helper function to preview the timer screen
-@Preview
-@Composable
-fun TimerScreenPreview() {
-  GatherlyTheme { TimerScreen() }
-}
-
 /**
  * A composable to show the user's focus sessions history
  *
@@ -827,7 +829,7 @@ fun FocusSessionItem(
                 Text(
                     text = startedAtText,
                     style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.primary,
+                    color = MaterialTheme.colorScheme.onBackground,
                     fontWeight = FontWeight.Medium,
                     modifier =
                         Modifier.testTag(
@@ -838,7 +840,7 @@ fun FocusSessionItem(
                   Text(
                       text = linkedTodo.name,
                       style = MaterialTheme.typography.bodyMedium,
-                      color = MaterialTheme.colorScheme.primary,
+                      color = MaterialTheme.colorScheme.onBackground,
                       modifier =
                           Modifier.testTag(
                               FocusTimerScreenTestTags.getTodoTagForFocusSessionItem(

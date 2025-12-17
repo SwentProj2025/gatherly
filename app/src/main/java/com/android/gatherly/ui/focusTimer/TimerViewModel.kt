@@ -47,6 +47,7 @@ import kotlinx.coroutines.launch
  *
  * @param plannedDuration The total planned duration for the timer
  * @param remainingTime The remaining time left on the timer
+ * @param elapsedTime The total time elapsed since the timer was started
  * @param hours The hours part of the timer display (formatted as "HH")
  * @param minutes The minutes part of the timer display (formatted as "MM")
  * @param seconds The seconds part of the timer display (formatted as "SS")
@@ -57,6 +58,7 @@ import kotlinx.coroutines.launch
  * @param allTodos A list of all ToDo items available for linking
  * @param usersFocusSessions A list of focus sessions created by the current user
  * @param leaderboard A list of all friend profiles ordered by number of weekly points
+ * @param pointsGained Number of points gained up until now
  */
 data class TimerState(
     val plannedDuration: Duration = Duration.ZERO,
@@ -79,7 +81,12 @@ data class TimerState(
  * ViewModel that manages a focus countdown timer
  *
  * @param todoRepository The repository used to fetch and manage ToDos
+ * @param pointsRepository The repository used to update users points history
+ * @param profileRepository The repository used to fetch profiles
+ * @param notificationsRepository The repository used to fetch a user's notifications
  * @param userStatusManager Updates the current user's online/offline status.
+ * @param focusSessionsRepository The repository used to update user's focus sessions
+ * @param authProvider Used to inject mock providers in tests
  */
 class TimerViewModel(
     private val todoRepository: ToDosRepository = ToDosRepositoryProvider.repository,
@@ -93,7 +100,10 @@ class TimerViewModel(
     private val authProvider: () -> FirebaseAuth = { Firebase.auth }
 ) : ViewModel() {
 
+  /** Private mutable state for the Timer UI */
   private val _uiState = MutableStateFlow(TimerState())
+
+  /** Public immutable state for the Timer UI */
   val uiState: StateFlow<TimerState> = _uiState.asStateFlow()
 
   private var startedAt: Timestamp? = null
@@ -104,6 +114,12 @@ class TimerViewModel(
   // resets on pause/resume
   private var sessionStartedAt: Timestamp? = null
   private var currentSessionId: String? = null
+
+  private val maxHours = 23
+  private val maxMinutes = 59
+  private val maxSeconds = 59
+  private val hoursInSeconds = 3600L
+  private val minutesInSeconds = 60L
 
   init {
     loadUI()
@@ -151,8 +167,10 @@ class TimerViewModel(
    */
   fun setHours(hours: String) {
     if (!hours.isEmpty()) {
-      val h = hours.toIntOrNull() ?: return setError("Invalid hour : Use numbers like 0–23 hours")
-      if (h !in 0..23) return setError("Invalid hour : Use numbers like 0–23 hours")
+      val h =
+          hours.toIntOrNull()
+              ?: return setError("Invalid hour : Use numbers like 0–$maxHours hours")
+      if (h !in 0..maxHours) return setError("Invalid hour : Use numbers like 0–$maxHours hours")
     }
     _uiState.value = _uiState.value.copy(hours = hours)
   }
@@ -166,8 +184,9 @@ class TimerViewModel(
     if (!minutes.isEmpty()) {
       val m =
           minutes.toIntOrNull()
-              ?: return setError("Invalid minutes : Use numbers like 0–59 minutes")
-      if (m !in 0..59) return setError("Invalid minutes : Use numbers like 0–59 minutes")
+              ?: return setError("Invalid minutes : Use numbers like 0–$maxMinutes minutes")
+      if (m !in 0..maxMinutes)
+          return setError("Invalid minutes : Use numbers like 0–$maxMinutes minutes")
     }
     _uiState.value = _uiState.value.copy(minutes = minutes)
   }
@@ -181,8 +200,9 @@ class TimerViewModel(
     if (!seconds.isEmpty()) {
       val s =
           seconds.toIntOrNull()
-              ?: return setError("Invalid seconds : Use numbers like 0–59 seconds")
-      if (s !in 0..59) return setError("Invalid seconds : Use numbers like 0–59 seconds")
+              ?: return setError("Invalid seconds : Use numbers like 0–$maxSeconds seconds")
+      if (s !in 0..maxSeconds)
+          return setError("Invalid seconds : Use numbers like 0–$maxSeconds seconds")
     }
     _uiState.value = _uiState.value.copy(seconds = seconds)
   }
@@ -286,6 +306,7 @@ class TimerViewModel(
             isStarted = false,
             isPaused = false,
             errorMsg = null)
+
     viewModelScope.launch { userStatusManager.setStatus(ProfileStatus.ONLINE) }
     updateClock(Duration.ZERO)
     val updatedSession =
@@ -296,6 +317,7 @@ class TimerViewModel(
             duration = totalDurationSeconds.seconds,
             startedAt = started,
             endedAt = endedAt)
+
     viewModelScope.launch {
       try {
         focusSessionsRepository.updateFocusSession(sessionId, updatedSession)
@@ -389,9 +411,10 @@ class TimerViewModel(
 
           // if we are on the minute, gain a focus depending on the time that has passed (every 5
           // minutes, the points gained increases by 5%)
-          if (elapsed.inWholeSeconds % 60 == 0L) {
+          if (elapsed.inWholeSeconds % minutesInSeconds == 0L) {
             val bonus = 1 + floor(elapsed.inWholeMinutes / 5.0) * 0.05
-            state = state.copy(pointsGained = state.pointsGained + bonus)
+            val gained = kotlin.math.round((state.pointsGained + bonus) * 100) / 100
+            state = state.copy(pointsGained = gained)
           }
 
           _uiState.value = state.copy(remainingTime = remaining, elapsedTime = elapsed)
@@ -417,8 +440,9 @@ class TimerViewModel(
     val hh = h.toIntOrNull() ?: return null
     val mm = m.toIntOrNull() ?: return null
     val ss = s.toIntOrNull() ?: return null
-    if (hh !in 0..23 || mm !in 0..59 || ss !in 0..59) return null
-    val total = hh * 3600L + mm * 60L + ss
+
+    if (hh !in 0..maxHours || mm !in 0..maxMinutes || ss !in 0..maxSeconds) return null
+    val total = hh * hoursInSeconds + mm * minutesInSeconds + ss
     return total.seconds
   }
 
@@ -475,14 +499,12 @@ class TimerViewModel(
    */
   private fun updateClock(remainingTime: Duration) {
     val total = remainingTime.inWholeSeconds
-    val h = total / 3600
-    val m = (total % 3600) / 60
-    val s = total % 60
+    val h = total / hoursInSeconds
+    val m = (total % hoursInSeconds) / minutesInSeconds
+    val s = total % minutesInSeconds
 
-    /**
-     * Update the UI state with formatted time values : only 2 digits per metric and adding 0 if
-     * only 1 digit like 01:15
-     */
+    // Update the UI state with formatted time values : only 2 digits per metric and adding 0 if
+    // only 1 digit like 01:15
     _uiState.value =
         _uiState.value.copy(
             hours = h.toString().padStart(2, '0'),
@@ -497,6 +519,11 @@ class TimerViewModel(
     super.onCleared()
   }
 
+  /**
+   * Checks if a given user is the current user
+   *
+   * @param uid The user to compare to the current user
+   */
   fun isCurrentUser(uid: String): Boolean {
     return uid == authProvider().currentUser?.uid!!
   }
