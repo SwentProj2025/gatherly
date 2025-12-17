@@ -1,6 +1,5 @@
 package com.android.gatherly.ui.profile
 
-import GroupsOverview
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -77,7 +76,12 @@ object ProfileScreenTestTags {
   const val USER_BIO = "profileBio"
   const val PROFILE_BADGES = "profileBadges"
 
-  /** Test tag for the Badge Items */
+  /**
+   * Test tag for the Badge Items
+   *
+   * @param title The title of the badge.
+   * @return The test tag string for the badge item.
+   */
   fun badgeTest(title: String): String {
     return "badge_$title"
   }
@@ -89,6 +93,7 @@ object ProfileScreenTestTags {
  * @param profileViewModel The ViewModel that provides the data for the Profile screen.
  * @param credentialManager The CredentialManager instance for handling authentication credentials.
  * @param onSignedOut Callback function to be invoked when the user signs out.
+ * @param onBadgeClicked Callback function to be invoked when a badge is clicked.
  * @param navigationActions Navigation actions for navigating between different screens.
  */
 @Composable
@@ -344,7 +349,10 @@ fun ProfileScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.Center) {
                       BadgeIcon(focusSessionBadge, onClick = onBadgeClicked)
-                      Spacer(modifier = Modifier.width(110.dp))
+                      Spacer(
+                          modifier =
+                              Modifier.width(
+                                  dimensionResource(R.dimen.profile_badges_spacer_width)))
                       BadgeIcon(eventCreatedBadge, onClick = onBadgeClicked)
                     }
 
@@ -401,6 +409,12 @@ fun ProfileScreen(
       })
 }
 
+/**
+ * Composable function to display a badge icon.
+ *
+ * @param badgeUi The BadgeUI object containing the badge information.
+ * @param onClick The callback function to be invoked when the badge icon is clicked.
+ */
 @Composable
 fun BadgeIcon(badgeUi: BadgeUI, onClick: () -> Unit = {}) {
   Image(
@@ -412,7 +426,7 @@ fun BadgeIcon(badgeUi: BadgeUI, onClick: () -> Unit = {}) {
               .testTag(ProfileScreenTestTags.badgeTest(badgeUi.title)))
 }
 
-// Helper function to preview the timer screen
+/** Preview of the ProfileScreen composable function. */
 @Preview
 @Composable
 fun ProfileScreenPreview() {
@@ -425,6 +439,7 @@ fun ProfileScreenPreview() {
  * @param groups List of groups the user is a member of.
  * @param groupsToMembers Map of groups to their respective members.
  * @param modifier Modifier for styling.
+ * @param navigationActions Navigation actions for navigating to other screens.
  */
 @Composable
 fun GroupsSection(

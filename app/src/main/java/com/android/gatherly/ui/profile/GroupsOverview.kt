@@ -1,3 +1,5 @@
+package com.android.gatherly.ui.profile
+
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -10,10 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,16 +21,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
+import androidx.compose.ui.res.integerResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import com.android.gatherly.R
 import com.android.gatherly.model.group.Group
 import com.android.gatherly.model.profile.Profile
-import com.android.gatherly.ui.profile.ProfileScreenTestTags
 import com.android.gatherly.utils.profilePicturePainter
 
 const val MAX_MEMBERS_DISPLAYED = 3
 
+/**
+ * Composable that shows an overview of groups with their members' profile pictures and member
+ * count.
+ *
+ * @param groupsToMembers A map where each key is a Group and the value is a list of Profiles
+ *   representing the members of that group.
+ * @param modifier Modifier to be applied to the GroupsOverview container.
+ */
 @Composable
 fun GroupsOverview(groupsToMembers: Map<Group, List<Profile>>, modifier: Modifier = Modifier) {
   val profilePictureSize = dimensionResource(id = R.dimen.profile_pic_size_small)
@@ -88,26 +95,24 @@ fun GroupsOverview(groupsToMembers: Map<Group, List<Profile>>, modifier: Modifie
 
                 Spacer(modifier = Modifier.width(regularSpacing))
 
-                Column(modifier = Modifier.weight(1f)) {
-                  Text(
-                      text = group.name,
-                      modifier = Modifier.testTag("${ProfileScreenTestTags.GROUP_ROW_NAME}_$index"),
-                      style = MaterialTheme.typography.bodyLarge,
-                      fontWeight = FontWeight.SemiBold)
-                  Text(
-                      text = "$groupSize $memberText",
-                      modifier =
-                          Modifier.testTag(
-                              "${ProfileScreenTestTags.GROUP_ROW_MEMBER_COUNT}_$index"),
-                      style = MaterialTheme.typography.bodySmall,
-                      color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-
-                // This is just a temporary placeholder icon until group details screen is
-                // implemented, then it will be replaced by a button or clickable row
-                // TODO : Make the whole row clickable to navigate to group details when group
-                // details screen is ready
-                Icon(imageVector = Icons.Default.ChevronRight, contentDescription = null)
+                Column(
+                    modifier =
+                        Modifier.weight(
+                            integerResource(R.integer.groups_column_weight).toFloat())) {
+                      Text(
+                          text = group.name,
+                          modifier =
+                              Modifier.testTag("${ProfileScreenTestTags.GROUP_ROW_NAME}_$index"),
+                          style = MaterialTheme.typography.bodyLarge,
+                          fontWeight = FontWeight.SemiBold)
+                      Text(
+                          text = "$groupSize $memberText",
+                          modifier =
+                              Modifier.testTag(
+                                  "${ProfileScreenTestTags.GROUP_ROW_MEMBER_COUNT}_$index"),
+                          style = MaterialTheme.typography.bodySmall,
+                          color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
               }
 
           if (index < groups.lastIndex) {
