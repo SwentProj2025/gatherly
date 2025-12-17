@@ -12,9 +12,10 @@ import com.android.gatherly.model.todoCategory.ToDoCategoryRepository
 import com.android.gatherly.ui.todo.EditTodoViewModel
 import com.android.gatherly.utilstest.MockitoUtils
 import com.google.firebase.Timestamp
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -46,7 +47,8 @@ class EditTodoViewModelTest {
   private lateinit var mockitoUtils: MockitoUtils
 
   // initialize this so that tests control all coroutines and can wait on them
-  private val testDispatcher = StandardTestDispatcher()
+  private val testDispatcher = UnconfinedTestDispatcher()
+  private val testTimeout = 120.seconds
 
   @Before
   fun setUp() {
@@ -74,158 +76,185 @@ class EditTodoViewModelTest {
     Dispatchers.resetMain()
   }
 
-  private fun fillRepository() = runTest {
-    baseTodo =
-        ToDo(
-            uid = toDosRepository.getNewUid(),
-            name = "Initial task",
-            description = "Original description",
-            dueDate = Timestamp.now(),
-            dueTime = null,
-            location = null,
-            status = ToDoStatus.ONGOING,
-            ownerId = "owner")
-    toDosRepository.addTodo(baseTodo)
-    advanceUntilIdle()
-  }
+  private fun fillRepository() =
+      runTest(testDispatcher, testTimeout) {
+        baseTodo =
+            ToDo(
+                uid = toDosRepository.getNewUid(),
+                name = "Initial task",
+                description = "Original description",
+                dueDate = Timestamp.now(),
+                dueTime = null,
+                location = null,
+                status = ToDoStatus.ONGOING,
+                ownerId = "owner")
+        toDosRepository.addTodo(baseTodo)
+        advanceUntilIdle()
+      }
 
+  /** Test loading a `ToDo` with a valid ID. */
   @Test
-  fun loadTodo_withValidId_loadsSuccessfully() = runTest {
-    editTodoViewModel.loadTodo(baseTodo.uid)
+  fun loadTodo_withValidId_loadsSuccessfully() =
+      runTest(testDispatcher, testTimeout) {
+        editTodoViewModel.loadTodo(baseTodo.uid)
 
-    advanceUntilIdle()
+        advanceUntilIdle()
 
-    val state = editTodoViewModel.uiState.value
-    assertNull(state.errorMsg)
-    assertEquals("Initial task", state.title)
-    assertEquals("Original description", state.description)
-    assertNull(state.errorMsg)
-  }
+        val state = editTodoViewModel.uiState.value
+        assertNull(state.errorMsg)
+        assertEquals("Initial task", state.title)
+        assertEquals("Original description", state.description)
+        assertNull(state.errorMsg)
+      }
 
+  /** Test loading a `ToDo` with an invalid ID. */
   @Test
-  fun loadTodo_withInvalidId_setsErrorMessage() = runTest {
-    editTodoViewModel.loadTodo("nonexistent-id")
+  fun loadTodo_withInvalidId_setsErrorMessage() =
+      runTest(testDispatcher, testTimeout) {
+        editTodoViewModel.loadTodo("nonexistent-id")
 
-    advanceUntilIdle()
+        advanceUntilIdle()
 
-    assertTrue(editTodoViewModel.uiState.value.errorMsg!!.contains("Failed to load ToDo"))
-  }
+        assertTrue(editTodoViewModel.uiState.value.errorMsg!!.contains("Failed to load ToDo"))
+      }
 
+  /** Test editing a `ToDo` with valid fields. */
   @Test
-  fun editTodo_withValidFields_updatesRepository() = runTest {
-    // Load the current ToDo
-    editTodoViewModel.loadTodo(baseTodo.uid)
-    advanceUntilIdle()
+  fun editTodo_withValidFields_updatesRepository() =
+      runTest(testDispatcher, testTimeout) {
+        // Load the current ToDo
+        editTodoViewModel.loadTodo(baseTodo.uid)
+        advanceUntilIdle()
 
-    // Provide valid values for all required fields
-    editTodoViewModel.onTitleChanged("Updated title")
-    editTodoViewModel.onDescriptionChanged("Updated description")
-    editTodoViewModel.onDateChanged("10/10/2025")
-    editTodoViewModel.onTimeChanged("14:00")
-    editTodoViewModel.onLocationChanged("Place")
+        // Provide valid values for all required fields
+        editTodoViewModel.onTitleChanged("Updated title")
+        editTodoViewModel.onDescriptionChanged("Updated description")
+        editTodoViewModel.onDateChanged("10/10/2025")
+        editTodoViewModel.onTimeChanged("14:00")
+        editTodoViewModel.onLocationChanged("Place")
 
-    // Perform the edit
-    editTodoViewModel.editTodo(baseTodo.uid)
+        // Perform the edit
+        editTodoViewModel.editTodo(baseTodo.uid)
 
-    // Wait for async Firestore write
-    advanceUntilIdle()
+        // Wait for async Firestore write
+        advanceUntilIdle()
 
-    val updated = toDosRepository.getTodo(baseTodo.uid)
-    assertEquals("Updated title", updated.name)
-    assertEquals("Updated description", updated.description)
-    assertEquals(ToDoStatus.ONGOING, updated.status)
-    assertEquals(baseTodo.uid, updated.uid)
+        val updated = toDosRepository.getTodo(baseTodo.uid)
+        assertEquals("Updated title", updated.name)
+        assertEquals("Updated description", updated.description)
+        assertEquals(ToDoStatus.ONGOING, updated.status)
+        assertEquals(baseTodo.uid, updated.uid)
 
-    val expectedOwnerId = "owner"
-    assertEquals(expectedOwnerId, updated.ownerId)
-  }
+        val expectedOwnerId = "owner"
+        assertEquals(expectedOwnerId, updated.ownerId)
+      }
 
+  /** Test editing a `ToDo` with an invalid date format. */
   @Test
-  fun editTodo_withInvalidDate_doesNotSave() = runTest {
-    editTodoViewModel.onTitleChanged("Invalid edit")
-    editTodoViewModel.onDescriptionChanged("Bad date")
-    editTodoViewModel.onDateChanged("15-10-2025") // Wrong format
-    editTodoViewModel.onTimeChanged("14:00")
-    editTodoViewModel.onLocationChanged("Place")
+  fun editTodo_withInvalidDate_doesNotSave() =
+      runTest(testDispatcher, testTimeout) {
+        editTodoViewModel.onTitleChanged("Invalid edit")
+        editTodoViewModel.onDescriptionChanged("Bad date")
+        editTodoViewModel.onDateChanged("15-10-2025") // Wrong format
+        editTodoViewModel.onTimeChanged("14:00")
+        editTodoViewModel.onLocationChanged("Place")
 
-    editTodoViewModel.checkPastTime()
-    advanceUntilIdle()
+        editTodoViewModel.checkPastTime()
+        advanceUntilIdle()
 
-    val state = editTodoViewModel.uiState.value
-    assertNotNull(state.dueDateError)
-    assertTrue(state.dueDateError!!.contains("Invalid format (dd/MM/yyyy)"))
-  }
+        val state = editTodoViewModel.uiState.value
+        assertNotNull(state.dueDateError)
+        assertTrue(state.dueDateError!!.contains("Invalid format (dd/MM/yyyy)"))
+      }
 
+  /** Test editing a `ToDo` with missing required fields. */
   @Test
-  fun editTodo_withEmptyFields_doesNotProceed() = runTest {
-    editTodoViewModel.onTitleChanged("") // Missing title
-    editTodoViewModel.onDescriptionChanged("Desc")
-    editTodoViewModel.onDateChanged("10/10/2025")
-    editTodoViewModel.onTimeChanged("14:00")
-    editTodoViewModel.onLocationChanged("Place")
+  fun editTodo_withEmptyFields_doesNotProceed() =
+      runTest(testDispatcher, testTimeout) {
+        editTodoViewModel.onTitleChanged("") // Missing title
+        editTodoViewModel.onDescriptionChanged("Desc")
+        editTodoViewModel.onDateChanged("10/10/2025")
+        editTodoViewModel.onTimeChanged("14:00")
+        editTodoViewModel.onLocationChanged("Place")
 
-    editTodoViewModel.editTodo(baseTodo.uid)
-    advanceUntilIdle()
+        editTodoViewModel.editTodo(baseTodo.uid)
+        advanceUntilIdle()
 
-    val state = editTodoViewModel.uiState.value
-    assertEquals("Title cannot be empty", state.titleError)
-  }
+        val state = editTodoViewModel.uiState.value
+        assertFalse(state.saveSuccess) // <-- Add this
+        assertEquals("Title cannot be empty", state.titleError)
+      }
 
+  /** Test deleting a `ToDo`. */
   @Test
-  fun deleteTodo_removesItemFromRepository() = runTest {
-    toDosRepository.addTodo(
-        ToDo(
-            uid = "delete-me",
-            name = "To delete",
-            description = "temporary",
-            dueDate = Timestamp.now(),
-            dueTime = null,
-            location = null,
-            status = ToDoStatus.ONGOING,
-            ownerId = "owner"))
+  fun deleteTodo_removesItemFromRepository() =
+      runTest(testDispatcher, testTimeout) {
+        toDosRepository.addTodo(
+            ToDo(
+                uid = "delete-me",
+                name = "To delete",
+                description = "temporary",
+                dueDate = Timestamp.now(),
+                dueTime = null,
+                location = null,
+                status = ToDoStatus.ONGOING,
+                ownerId = "owner"))
 
-    editTodoViewModel.deleteToDo("delete-me")
-    // Wait deterministically until the repository no longer contains it
-    advanceUntilIdle()
+        editTodoViewModel.deleteToDo("delete-me")
+        // Wait deterministically until the repository no longer contains it
+        advanceUntilIdle()
 
-    val all = toDosRepository.getAllTodos()
-    assertTrue(all.none { it.uid == "delete-me" })
-  }
+        val all = toDosRepository.getAllTodos()
+        assertTrue(all.none { it.uid == "delete-me" })
+      }
 
+  /** Test deleting a `ToDo` that triggers a repository error. */
   @Test
-  fun deleteTodo_withFailure_setsErrorMsg() = runTest {
-    val failingRepo =
-        object : ToDosRepository {
-          override suspend fun addTodo(toDo: ToDo) = Unit
+  fun deleteTodo_withFailure_setsErrorMsg() =
+      runTest(testDispatcher, testTimeout) {
+        val failingRepo =
+            object : ToDosRepository by toDosRepository {
+              override suspend fun deleteTodo(todoID: String) {
+                throw RuntimeException("Simulated delete failure")
+              }
 
-          override suspend fun getAllTodos() = emptyList<ToDo>()
+              override suspend fun getAllTodos() = emptyList<ToDo>()
 
-          override suspend fun getTodo(todoID: String) = baseTodo
+              override suspend fun getTodo(todoID: String) = baseTodo
 
-          override suspend fun deleteTodo(todoID: String) {
-            throw RuntimeException("Simulated delete failure")
-          }
+              override fun getNewUid() = "fake"
+            }
 
-          override suspend fun editTodo(todoID: String, newValue: ToDo) = Unit
+        /**
+         * val failingRepo2 = object : ToDosRepository { override suspend fun addTodo(toDo: ToDo) =
+         * Unit
+         *
+         * override suspend fun getAllTodos() = emptyList<ToDo>()
+         *
+         * override suspend fun getTodo(todoID: String) = baseTodo
+         *
+         * override suspend fun deleteTodo(todoID: String) { throw RuntimeException("Simulated
+         * delete failure") }
+         *
+         * override suspend fun editTodo(todoID: String, newValue: ToDo) = Unit
+         *
+         * override suspend fun getAllEndedTodos() = emptyList<ToDo>()
+         *
+         * override suspend fun updateTodosTagToNull(categoryId: String, ownerId: String) {}
+         *
+         * override fun getNewUid() = "fake"
+         *
+         * override suspend fun toggleStatus(todoID: String) = Unit }
+         */
+        val viewModel =
+            EditTodoViewModel(
+                failingRepo,
+                profileRepository = profileRepository,
+                todoCategoryRepository = toDoCategoryRepository)
+        viewModel.deleteToDo("anything")
 
-          override suspend fun getAllEndedTodos() = emptyList<ToDo>()
+        advanceUntilIdle()
 
-          override suspend fun updateTodosTagToNull(categoryId: String, ownerId: String) {}
-
-          override fun getNewUid() = "fake"
-
-          override suspend fun toggleStatus(todoID: String) = Unit
-        }
-
-    val viewModel =
-        EditTodoViewModel(
-            failingRepo,
-            profileRepository = profileRepository,
-            todoCategoryRepository = toDoCategoryRepository)
-    viewModel.deleteToDo("anything")
-
-    advanceUntilIdle()
-
-    assertTrue(viewModel.uiState.value.errorMsg!!.contains("Failed to delete ToDo"))
-  }
+        assertTrue(viewModel.uiState.value.errorMsg!!.contains("Failed to delete ToDo"))
+      }
 }

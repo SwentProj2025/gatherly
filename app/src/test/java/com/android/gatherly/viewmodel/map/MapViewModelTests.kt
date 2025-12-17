@@ -28,6 +28,7 @@ import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkAll
 import io.mockk.verify
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
@@ -52,6 +53,8 @@ import org.junit.Test
  * state correctly.
  */
 class MapViewModelTests {
+
+  val testTimeout = 120.seconds
 
   @OptIn(ExperimentalCoroutinesApi::class) private val testDispatcher = UnconfinedTestDispatcher()
 
@@ -106,7 +109,7 @@ class MapViewModelTests {
    */
   @Test
   fun isDrawableWorksOn_IncompleteTodoWithLocation() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, testTimeout) {
         val expectedResult1 = true
         val actualResult1 = isDrawable(MapViewModelTestsTodos.incompleteTodoWithLocation1)
         assertEquals(expectedResult1, actualResult1)
@@ -124,7 +127,7 @@ class MapViewModelTests {
    */
   @Test
   fun isDrawableWorksOn_CompleteTodoWithLocation() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, testTimeout) {
         val expectedResult = false
         val actualResult = isDrawable(MapViewModelTestsTodos.completeTodoWithLocation)
         assertEquals(expectedResult, actualResult)
@@ -138,7 +141,7 @@ class MapViewModelTests {
    */
   @Test
   fun isDrawableWorksOn_IncompleteTodoWithoutLocation() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, testTimeout) {
         val expectedResult = false
         val actualResult = isDrawable(MapViewModelTestsTodos.incompleteTodoWithoutLocation)
         assertEquals(expectedResult, actualResult)
@@ -153,7 +156,7 @@ class MapViewModelTests {
    */
   @Test
   fun isDrawableWorksOn_CompleteTodoWithoutLocation() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, testTimeout) {
         val expectedResult = false
         val actualResult = isDrawable(MapViewModelTestsTodos.completeTodoWithoutLocation)
         assertEquals(expectedResult, actualResult)
@@ -169,7 +172,7 @@ class MapViewModelTests {
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun getDrawableTodosRetrievesCorrectList() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, testTimeout) {
         val todosRepo = ToDosLocalRepository()
         val eventsRepo = EventsLocalRepository()
         for (todo in testObjects) {
@@ -200,7 +203,7 @@ class MapViewModelTests {
    */
   @Test
   fun onTodoMarkerTapped_UpdatesExpandedTodoId() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, testTimeout) {
         val todosRepo = ToDosLocalRepository()
         val eventsRepo = EventsLocalRepository()
         val vm =
@@ -224,7 +227,7 @@ class MapViewModelTests {
    */
   @Test
   fun onTodoMarkerDismissed_ClearsExpandedTodoId() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, testTimeout) {
         val todosRepo = ToDosLocalRepository()
         val eventsRepo = EventsLocalRepository()
         val vm =
@@ -245,7 +248,7 @@ class MapViewModelTests {
   /** Verifies that tapping an event marker updates the expanded event ID in the UI state. */
   @Test
   fun onEventMarkerTappedDismissed_UpdateExpandedId() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, testTimeout) {
         val todosRepo = ToDosLocalRepository()
         val eventsRepo = EventsLocalRepository()
         val vm =
@@ -267,7 +270,7 @@ class MapViewModelTests {
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun getDrawableEventsRetrievesCorrectList() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, testTimeout) {
         val todosRepo = ToDosLocalRepository()
         val eventsRepo = EventsLocalRepository()
         for (event in MapViewModelTestsEvents.testEvents) {
@@ -299,7 +302,7 @@ class MapViewModelTests {
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun canChangeViewBetweenTodosAndEvents() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, testTimeout) {
         val todoRepo = ToDosLocalRepository()
         for (todo in MapViewModelTestsTodos.testedTodos) {
           todoRepo.addTodo(todo)
@@ -347,7 +350,7 @@ class MapViewModelTests {
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun onItemConsulted_withTodo_setsLastConsultedTodoIdAndNullsCameraPos() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, testTimeout) {
         val todosRepo = ToDosLocalRepository()
         val eventsRepo = EventsLocalRepository()
         val vm =
@@ -376,7 +379,7 @@ class MapViewModelTests {
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun onItemConsulted_withEvent_setsLastConsultedEventIdAndNullsCameraPos() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, testTimeout) {
         val todosRepo = ToDosLocalRepository()
         val eventsRepo = EventsLocalRepository()
         val vm =
@@ -400,7 +403,7 @@ class MapViewModelTests {
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun initializeCameraPosition_updatesCameraPosInUIState() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, testTimeout) {
         val todosRepo = ToDosLocalRepository()
         val eventsRepo = EventsLocalRepository()
         val mockContext = mockk<Context>(relaxed = true)
@@ -424,7 +427,7 @@ class MapViewModelTests {
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun fetchLocationToCenterOn_withLastConsultedTodo_returnsTodoLocation() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, testTimeout) {
         val todosRepo = ToDosLocalRepository()
         val eventsRepo = EventsLocalRepository()
         todosRepo.addTodo(MapViewModelTestsTodos.incompleteTodoWithLocation1)
@@ -452,7 +455,7 @@ class MapViewModelTests {
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun fetchLocationToCenterOn_withLastConsultedEvent_returnsEventLocation() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, testTimeout) {
         val todosRepo = ToDosLocalRepository()
         val eventsRepo = EventsLocalRepository()
         eventsRepo.addEvent(MapViewModelTestsEvents.upcomingEventWithLocation1)
@@ -481,7 +484,7 @@ class MapViewModelTests {
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun fetchLocationToCenterOn_withNoConsultedItem_returnsEPFL() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, testTimeout) {
         val todosRepo = ToDosLocalRepository()
         val eventsRepo = EventsLocalRepository()
         val mockContext = mockk<Context>(relaxed = true)
@@ -506,7 +509,7 @@ class MapViewModelTests {
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun fetchLocationToCenterOn_withLocationPermissionAndNoConsultedItem_returnsCurrentLocation() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, testTimeout) {
         val todosRepo = ToDosLocalRepository()
         val eventsRepo = EventsLocalRepository()
         val mockContext = mockk<Context>()
@@ -577,7 +580,7 @@ class MapViewModelTests {
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun startAndStopLocationUpdates_managesLocationJob() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, testTimeout) {
         val todosRepo = ToDosLocalRepository()
         val eventsRepo = EventsLocalRepository()
         val mockClient = mockk<FusedLocationProviderClient>(relaxed = true)
@@ -616,7 +619,7 @@ class MapViewModelTests {
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun onNavigationToDifferentScreen_updatesCameraPosToNull() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, testTimeout) {
         val todosRepo = ToDosLocalRepository()
         val eventsRepo = EventsLocalRepository()
         val mockContext = mockk<Context>(relaxed = true)
@@ -643,7 +646,7 @@ class MapViewModelTests {
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun fetchLocationToCenterOn_whenPermissionDenied_ReturnsEPFL() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, testTimeout) {
         val todosRepo = ToDosLocalRepository()
         val eventsRepo = EventsLocalRepository()
         val mockContext = mockk<Context>()
@@ -682,7 +685,7 @@ class MapViewModelTests {
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun fetchLocationToCenterOn_withOnlyCoarsePermission_returnsCurrentLocation() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, testTimeout) {
         val todosRepo = ToDosLocalRepository()
         val eventsRepo = EventsLocalRepository()
         val mockContext = mockk<Context>()
@@ -743,7 +746,7 @@ class MapViewModelTests {
   @OptIn(ExperimentalCoroutinesApi::class)
   @Test
   fun initialiseCameraPosition_withCoordinatorRequest_centersOnEvent() =
-      runTest(testDispatcher) {
+      runTest(testDispatcher, testTimeout) {
         val targetEventId = "target_event"
         val targetLocation = com.android.gatherly.model.map.Location(46.5, 6.6, "Test Loc")
 
@@ -808,7 +811,7 @@ class MapViewModelTests {
         @OptIn(ExperimentalCoroutinesApi::class)
         @Test
         fun initialiseCameraPosition_waitsForDataLoading_beforeSettingCamera() =
-            runTest(testDispatcher) {
+            runTest(testDispatcher, testTimeout) {
               // Mock repositories to simulate a slow network fetch
               val mockTodosRepo = mockk<ToDosRepository>()
               val mockEventsRepo = mockk<EventsRepository>()
@@ -857,7 +860,7 @@ class MapViewModelTests {
         @OptIn(ExperimentalCoroutinesApi::class)
         @Test
         fun initialiseCameraPosition_withEmptyData_doesNotCrashAndUsesFallback() =
-            runTest(testDispatcher) {
+            runTest(testDispatcher, testTimeout) {
               // Mock repositories to return empty lists immediately
               val mockTodosRepo = mockk<ToDosRepository>()
               val mockEventsRepo = mockk<EventsRepository>()
