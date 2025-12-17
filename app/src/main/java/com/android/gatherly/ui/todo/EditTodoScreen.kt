@@ -65,7 +65,7 @@ import kotlinx.coroutines.delay
 private const val DELAY = 1000L
 
 /** Contains test tags used for UI testing on the [EditTodoScreen]. */
-object EditToDoScreenTestTags {
+object EditTodoScreenTestTags {
   /** Tag for the [ToDo] title input field. */
   const val INPUT_TODO_TITLE = "inputTodoTitle"
 
@@ -174,12 +174,12 @@ fun EditTodoScreen(
                     isError = todoUIState.titleError != null,
                     supportingText = {
                       todoUIState.titleError?.let {
-                        Text(it, modifier = Modifier.testTag(EditToDoScreenTestTags.ERROR_MESSAGE))
+                        Text(it, modifier = Modifier.testTag(EditTodoScreenTestTags.ERROR_MESSAGE))
                       }
                     },
                     colors = toDoTextFieldColors,
                     modifier =
-                        Modifier.fillMaxWidth().testTag(EditToDoScreenTestTags.INPUT_TODO_TITLE))
+                        Modifier.fillMaxWidth().testTag(EditTodoScreenTestTags.INPUT_TODO_TITLE))
               }
 
               // Description Input
@@ -192,7 +192,7 @@ fun EditTodoScreen(
                     colors = toDoTextFieldColors,
                     modifier =
                         Modifier.fillMaxWidth()
-                            .testTag(EditToDoScreenTestTags.INPUT_TODO_DESCRIPTION),
+                            .testTag(EditTodoScreenTestTags.INPUT_TODO_DESCRIPTION),
                     minLines = integerResource(R.integer.todo_description_min_lines),
                     maxLines = integerResource(R.integer.todo_description_max_lines))
               }
@@ -209,7 +209,7 @@ fun EditTodoScreen(
                               Modifier.rotate(if (expandAdvanced.value) 90f else 0f)
                                   .clickable(
                                       onClick = { expandAdvanced.value = !expandAdvanced.value })
-                                  .testTag(EditToDoScreenTestTags.MORE_OPTIONS))
+                                  .testTag(EditTodoScreenTestTags.MORE_OPTIONS))
 
                       Text(
                           text = stringResource(R.string.todos_advanced_settings),
@@ -264,8 +264,8 @@ fun EditTodoScreen(
                       colors = toDoTextFieldColors,
                       testTag =
                           Pair(
-                              EditToDoScreenTestTags.INPUT_TODO_DATE,
-                              EditToDoScreenTestTags.ERROR_MESSAGE))
+                              EditTodoScreenTestTags.INPUT_TODO_DATE,
+                              EditTodoScreenTestTags.ERROR_MESSAGE))
                 }
 
                 // Due Time Input
@@ -276,8 +276,8 @@ fun EditTodoScreen(
                       dueTimeError = (todoUIState.dueTimeError != null),
                       label = stringResource(R.string.todos_time_field_label),
                       textFieldColors = toDoTextFieldColors,
-                      testTagInput = EditToDoScreenTestTags.INPUT_TODO_TIME,
-                      testTagErrorMessage = EditToDoScreenTestTags.ERROR_MESSAGE,
+                      testTagInput = EditTodoScreenTestTags.INPUT_TODO_TIME,
+                      testTagErrorMessage = EditTodoScreenTestTags.ERROR_MESSAGE,
                   )
                 }
               }
@@ -288,7 +288,7 @@ fun EditTodoScreen(
               item {
                 Button(
                     onClick = { editTodoViewModel.checkPastTime() },
-                    modifier = Modifier.fillMaxWidth().testTag(EditToDoScreenTestTags.TODO_SAVE),
+                    modifier = Modifier.fillMaxWidth().testTag(EditTodoScreenTestTags.TODO_SAVE),
                     colors =
                         ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.secondary),
@@ -321,7 +321,7 @@ fun EditTodoScreen(
               item {
                 TextButton(
                     onClick = { shouldShowDialog.value = true },
-                    modifier = Modifier.fillMaxWidth().testTag(EditToDoScreenTestTags.TODO_DELETE),
+                    modifier = Modifier.fillMaxWidth().testTag(EditTodoScreenTestTags.TODO_DELETE),
                     // TextButton has no background by default
                     colors =
                         ButtonDefaults.textButtonColors(

@@ -65,7 +65,7 @@ import kotlinx.coroutines.delay
 private const val DELAY = 1000L
 
 /** Contains test tags used for UI testing on the [AddTodoScreen]. */
-object AddToDoScreenTestTags {
+object AddTodoScreenTestTags {
   /** Tag for the [ToDo] title input field. */
   const val INPUT_TODO_TITLE = "inputTodoTitle"
 
@@ -187,12 +187,12 @@ fun AddTodoScreen(
                     isError = todoUIState.titleError != null,
                     supportingText = {
                       todoUIState.titleError?.let {
-                        Text(it, modifier = Modifier.testTag(AddToDoScreenTestTags.ERROR_MESSAGE))
+                        Text(it, modifier = Modifier.testTag(AddTodoScreenTestTags.ERROR_MESSAGE))
                       }
                     },
                     colors = toDoTextFieldColors,
                     modifier =
-                        Modifier.fillMaxWidth().testTag(AddToDoScreenTestTags.INPUT_TODO_TITLE))
+                        Modifier.fillMaxWidth().testTag(AddTodoScreenTestTags.INPUT_TODO_TITLE))
               }
 
               // Description Input
@@ -206,7 +206,7 @@ fun AddTodoScreen(
                     modifier =
                         Modifier.fillMaxWidth()
                             .height(inputHeight)
-                            .testTag(AddToDoScreenTestTags.INPUT_TODO_DESCRIPTION),
+                            .testTag(AddTodoScreenTestTags.INPUT_TODO_DESCRIPTION),
                     minLines = integerResource(R.integer.todo_description_min_lines),
                     maxLines = integerResource(R.integer.todo_description_max_lines))
               }
@@ -223,7 +223,7 @@ fun AddTodoScreen(
                               Modifier.rotate(90f * expandAdvanced.value.compareTo(false))
                                   .clickable(
                                       onClick = { expandAdvanced.value = !expandAdvanced.value })
-                                  .testTag(AddToDoScreenTestTags.MORE_OPTIONS))
+                                  .testTag(AddTodoScreenTestTags.MORE_OPTIONS))
 
                       Text(
                           text = stringResource(R.string.todos_advanced_settings),
@@ -280,8 +280,8 @@ fun AddTodoScreen(
                       colors = toDoTextFieldColors,
                       testTag =
                           Pair(
-                              AddToDoScreenTestTags.INPUT_TODO_DATE,
-                              AddToDoScreenTestTags.ERROR_MESSAGE))
+                              AddTodoScreenTestTags.INPUT_TODO_DATE,
+                              AddTodoScreenTestTags.ERROR_MESSAGE))
                 }
 
                 // Due Time Input
@@ -292,8 +292,8 @@ fun AddTodoScreen(
                       dueTimeError = (todoUIState.dueTimeError != null),
                       label = stringResource(R.string.todos_time_field_label),
                       textFieldColors = toDoTextFieldColors,
-                      testTagInput = AddToDoScreenTestTags.INPUT_TODO_TIME,
-                      testTagErrorMessage = AddToDoScreenTestTags.ERROR_MESSAGE,
+                      testTagInput = AddTodoScreenTestTags.INPUT_TODO_TIME,
+                      testTagErrorMessage = AddTodoScreenTestTags.ERROR_MESSAGE,
                   )
                 }
               }
@@ -304,7 +304,7 @@ fun AddTodoScreen(
               item {
                 Button(
                     onClick = { addTodoViewModel.checkTodoTime() },
-                    modifier = Modifier.fillMaxWidth().testTag(AddToDoScreenTestTags.TODO_SAVE),
+                    modifier = Modifier.fillMaxWidth().testTag(AddTodoScreenTestTags.TODO_SAVE),
                     colors =
                         ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.secondary),

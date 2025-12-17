@@ -47,7 +47,7 @@ private const val DELAY = 50L
  */
 @RunWith(AndroidJUnit4::class)
 @OptIn(ExperimentalCoroutinesApi::class)
-class OverviewViewModelTest {
+class TodoOverviewViewModelTest {
   private lateinit var overviewViewModel: OverviewViewModel
   private lateinit var toDosRepository: ToDosRepository
   private lateinit var profileRepository: ProfileRepository
