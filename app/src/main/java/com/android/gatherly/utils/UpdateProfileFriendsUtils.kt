@@ -21,6 +21,11 @@ import com.android.gatherly.model.profile.ProfileRepository
  * For each EVENT_PARTICIPATION notification addressed to [userId], this awards one "events
  * participated" increment for badges and deletes the notification. This function does not display
  * any UI. It only performs background synchronisation.
+ *
+ * @param profileRepository The repository to fetch and update profiles
+ * @param notificationsRepository The repository to fetch a user's notifications
+ * @param pointsRepository The repository to update a user's points history
+ * @param userId The user whose profile to update
  */
 suspend fun getProfileWithSyncedFriendNotifications(
     profileRepository: ProfileRepository,
@@ -63,10 +68,12 @@ suspend fun getProfileWithSyncedFriendNotifications(
 }
 
 /**
- * Handles a FRIEND_ACCEPTED notification:
- * - adds the sender as a friend for [userId] (and awards points if applicable)
- * - removes the pending request state
- * - deletes the notification once processed
+ * Handles a friend request being accepted by the other party and updates the user profile
+ *
+ * @param profileRepository The repository to update profiles
+ * @param notificationsRepository The repository to fetch a user's notifications
+ * @param pointsRepository The repository to update a user's points history
+ * @param userId The user whose profile to update
  */
 private suspend fun handleFriendAccepted(
     profileRepository: ProfileRepository,
@@ -87,9 +94,12 @@ private suspend fun handleFriendAccepted(
 }
 
 /**
- * Handles a FRIEND_REJECTED notification:
- * - removes the pending request state from [userId] to the sender
- * - deletes the notification once processed
+ * Handles a friend request being rejected by the other party and updates the user profile
+ *
+ * @param profileRepository The repository to update profiles
+ * @param notificationsRepository The repository to fetch a user's notifications
+ * @param notification The notification to delete
+ * @param userId The user whose profile to update
  */
 private suspend fun handleFriendRejected(
     profileRepository: ProfileRepository,
@@ -105,9 +115,12 @@ private suspend fun handleFriendRejected(
 }
 
 /**
- * Handles a REMOVE_FRIEND notification:
- * - deletes the sender from [userId]'s friend list (if possible)
- * - deletes the notification once processed
+ * Handles a friend removal and updates the user profile
+ *
+ * @param profileRepository The repository to update profiles
+ * @param notificationsRepository The repository to fetch a user's notifications
+ * @param notification The notification to send
+ * @param userId The user whose profile to update
  */
 private suspend fun handleRemoveFriend(
     profileRepository: ProfileRepository,
@@ -126,9 +139,11 @@ private suspend fun handleRemoveFriend(
 }
 
 /**
- * Handles a FRIEND_REQUEST_CANCELLED notification:
- * - finds the original FRIEND_REQUEST notification from the same sender and deletes it
- * - deletes the cancellation notification once processed
+ * Handles a friend request being cancelled and updates the user profile
+ *
+ * @param notificationsRepository The repository to fetch a user's notifications
+ * @param notification The notification to delete
+ * @param notifications The existing notifications
  */
 private suspend fun handleFriendRequestCancelled(
     notificationsRepository: NotificationsRepository,

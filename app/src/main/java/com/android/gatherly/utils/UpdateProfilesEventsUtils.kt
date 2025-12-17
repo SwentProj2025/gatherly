@@ -87,6 +87,7 @@ suspend fun userUnregister(
  *
  * @param eventsRepository : EventsRepository
  * @param profileRepository : ProfileRepository
+ * @param pointsRepository : PointsRepository
  * @param event : Event we want to create
  * @param creatorId : the ID of the profile of the creator of this event
  * @param participants : List of the participants ID to unregister from this event

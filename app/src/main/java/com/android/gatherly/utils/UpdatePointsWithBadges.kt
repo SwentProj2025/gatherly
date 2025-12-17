@@ -58,6 +58,14 @@ suspend fun addToPoints(
   profileRepository.updateFocusPoints(uid, obtained)
 }
 
+/**
+ * Adds a friend to a user, and checks whether the user should obtain a badge along with it
+ *
+ * @param profileRepository The repository to fetch and update profiles
+ * @param pointsRepository The repository to update a user's points history
+ * @param friend The friend to add
+ * @param currentUserId The user to add the friend to
+ */
 suspend fun addFriendWithPointsCheck(
     profileRepository: ProfileRepository,
     pointsRepository: PointsRepository,
