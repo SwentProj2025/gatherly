@@ -4,6 +4,7 @@ import com.android.gatherly.model.badge.BadgeType
 import com.android.gatherly.model.event.Event
 import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsRepository
+import com.android.gatherly.model.notification.NotificationsRepository
 import com.android.gatherly.model.points.PointsLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.runUnconfinedTest
@@ -20,6 +21,8 @@ import org.junit.Test
 class UpdateProfileEventsUtilsTest {
   private val eventsRepository = mockk<EventsRepository>(relaxed = true)
   private val profileRepository = mockk<ProfileRepository>(relaxed = true)
+
+  private val notificationsRepository = mockk<NotificationsRepository>(relaxed = true)
 
   private val creatorId = "creator123"
   private val participantIds = listOf("userA", "userB")
@@ -57,6 +60,7 @@ class UpdateProfileEventsUtilsTest {
             eventsRepository = eventsRepository,
             profileRepository = profileRepository,
             pointsRepository = pointsRepository,
+            notificationsRepository,
             event = event,
             creatorId = creatorId,
             participants = participantIds)

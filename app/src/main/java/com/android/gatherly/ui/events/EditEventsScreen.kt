@@ -57,6 +57,7 @@ import com.android.gatherly.utils.GatherlyDatePicker
 import com.android.gatherly.utils.GroupsActions
 import com.android.gatherly.utils.GroupsFieldItem
 import com.android.gatherly.utils.GroupsUiState
+import com.android.gatherly.utils.LoadingAnimation
 import com.android.gatherly.utils.ParticipantsActions
 import com.android.gatherly.utils.ParticipantsFieldItem
 import com.android.gatherly.utils.ParticipantsUiState
@@ -205,7 +206,7 @@ fun EditEventsScreen(
   Scaffold(
       topBar = {
         TopNavigationMenu_Goback(
-            selectedTab = Tab.Events,
+            selectedTab = Tab.EventsOverview,
             modifier = Modifier.testTag(NavigationTestTags.TOP_NAVIGATION_MENU),
             goBack = goBack)
       }) { paddingVal ->
@@ -216,85 +217,84 @@ fun EditEventsScreen(
                     .padding(screenPadding)
                     .testTag(EditEventsScreenTestTags.LIST),
             verticalArrangement = Arrangement.spacedBy(fieldSpacing)) {
-              if (!isPublicEvent) {
+              if (ui.isLoading) {
                 item {
-                  // Switch button to go to public event
-                  Row(verticalAlignment = Alignment.CenterVertically) {
-                    ElevatedButton(
-                        onClick = { showWarningPublicEvent = true },
-                        modifier =
-                            Modifier.testTag(
-                                EditEventsScreenTestTags.SWITCH_PUBLIC_PRIVATE_EVENT)) {
-                          Icon(
-                              imageVector = Icons.Filled.LockOpen,
-                              contentDescription = "Public Event",
-                              modifier = Modifier.size(19.dp))
-                        }
-                    Spacer(modifier = Modifier.width(12.dp))
-
-                    Text(
-                        text = stringResource(R.string.events_edit_private_to_public_label),
-                        style = MaterialTheme.typography.bodySmall)
-                  }
-                }
-              }
-
-              item {
-                // Name
-                OutlinedTextField(
-                    value = ui.name,
-                    onValueChange = { editEventsViewModel.updateName(it) },
-                    label = { Text(stringResource(R.string.events_title_field_label)) },
-                    placeholder = { Text(stringResource(R.string.events_title_field_placeholder)) },
-                    isError = ui.nameError,
-                    supportingText = {
-                      if (ui.nameError) {
-                        Text(
-                            "Name is required",
-                            modifier = Modifier.testTag(EditEventsScreenTestTags.ERROR_MESSAGE))
-                      }
-                    },
-                    colors = textFieldColors,
-                    modifier = Modifier.fillMaxWidth().testTag(EditEventsScreenTestTags.INPUT_NAME))
-              }
-
-              item {
-                // Description
-                OutlinedTextField(
-                    value = ui.description,
-                    onValueChange = { editEventsViewModel.updateDescription(it) },
-                    label = { Text(stringResource(R.string.events_description_field_label)) },
-                    placeholder = { Text(stringResource(R.string.events_description_placeholder)) },
-                    isError = ui.descriptionError,
-                    supportingText = {
-                      if (ui.descriptionError) {
-                        Text(
-                            "Description is required",
-                            modifier = Modifier.testTag(EditEventsScreenTestTags.ERROR_MESSAGE))
-                      }
-                    },
-                    colors = textFieldColors,
-                    modifier =
-                        Modifier.fillMaxWidth().testTag(EditEventsScreenTestTags.INPUT_DESCRIPTION),
-                    minLines = 3)
-              }
-
-              if (isPublicEvent) {
-
-                item {
-                  // Participants search with dropdown and + / - actions
-                  ParticipantsFieldItem(
-                      uiState = participantsUiState,
-                      currentUserId = ui.currentUserId,
-                      actions = actions,
-                      textFieldColors = textFieldColors,
-                      showProfilesDropdown = showProfilesDropdown)
+                  LoadingAnimation(stringResource(R.string.loading_event_message), paddingVal)
                 }
               } else {
-
-                if (isPrivateFriendsEvent) {
+                if (!isPublicEvent) {
                   item {
-                    // Participants friends search with dropdown and + / - actions
+                    // Switch button to go to public event
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                      ElevatedButton(
+                          onClick = { showWarningPublicEvent = true },
+                          modifier =
+                              Modifier.testTag(
+                                  EditEventsScreenTestTags.SWITCH_PUBLIC_PRIVATE_EVENT)) {
+                            Icon(
+                                imageVector = Icons.Filled.LockOpen,
+                                contentDescription = "Public Event",
+                                modifier = Modifier.size(19.dp))
+                          }
+                      Spacer(modifier = Modifier.width(12.dp))
+
+                      Text(
+                          text = stringResource(R.string.events_edit_private_to_public_label),
+                          style = MaterialTheme.typography.bodySmall)
+                    }
+                  }
+                }
+
+                item {
+                  // Name
+                  OutlinedTextField(
+                      value = ui.name,
+                      onValueChange = { editEventsViewModel.updateName(it) },
+                      label = { Text(stringResource(R.string.events_title_field_label)) },
+                      placeholder = {
+                        Text(stringResource(R.string.events_title_field_placeholder))
+                      },
+                      isError = ui.nameError,
+                      supportingText = {
+                        if (ui.nameError) {
+                          Text(
+                              "Name is required",
+                              modifier = Modifier.testTag(EditEventsScreenTestTags.ERROR_MESSAGE))
+                        }
+                      },
+                      colors = textFieldColors,
+                      modifier =
+                          Modifier.fillMaxWidth().testTag(EditEventsScreenTestTags.INPUT_NAME))
+                }
+
+                item {
+                  // Description
+                  OutlinedTextField(
+                      value = ui.description,
+                      onValueChange = { editEventsViewModel.updateDescription(it) },
+                      label = { Text(stringResource(R.string.events_description_field_label)) },
+                      placeholder = {
+                        Text(stringResource(R.string.events_description_placeholder))
+                      },
+                      isError = ui.descriptionError,
+                      supportingText = {
+                        if (ui.descriptionError) {
+                          Text(
+                              "Description is required",
+                              modifier = Modifier.testTag(EditEventsScreenTestTags.ERROR_MESSAGE))
+                        }
+                      },
+                      colors = textFieldColors,
+                      modifier =
+                          Modifier.fillMaxWidth()
+                              .testTag(EditEventsScreenTestTags.INPUT_DESCRIPTION),
+                      minLines = 3)
+                }
+
+                if (isPublicEvent) {
+
+                  item {
+                    // Participants search with dropdown and + / - actions
                     ParticipantsFieldItem(
                         uiState = participantsUiState,
                         currentUserId = ui.currentUserId,
@@ -303,154 +303,173 @@ fun EditEventsScreen(
                         showProfilesDropdown = showProfilesDropdown)
                   }
                 } else {
-                  item {
-                    // Group search with dropdown and + / - actions
-                    GroupsFieldItem(
-                        uiState = groupsUiState,
-                        actions = groupAction,
-                        textFieldColors = textFieldColors,
-                        showGroupsDropdown = showGroupDropDown)
+
+                  if (isPrivateFriendsEvent) {
+                    item {
+                      // Participants friends search with dropdown and + / - actions
+                      ParticipantsFieldItem(
+                          uiState = participantsUiState,
+                          currentUserId = ui.currentUserId,
+                          actions = actions,
+                          textFieldColors = textFieldColors,
+                          showProfilesDropdown = showProfilesDropdown)
+                    }
+                  } else {
+                    item {
+                      // Group search with dropdown and + / - actions
+                      GroupsFieldItem(
+                          uiState = groupsUiState,
+                          actions = groupAction,
+                          textFieldColors = textFieldColors,
+                          showGroupsDropdown = showGroupDropDown)
+                    }
                   }
                 }
-              }
 
-              item {
-                // Location with suggestions dropdown
-                Box(modifier = Modifier.fillMaxWidth()) {
-                  OutlinedTextField(
-                      value = ui.location,
-                      onValueChange = {
-                        editEventsViewModel.updateLocation(it)
-                        showLocationDropdown = it.isNotBlank()
-                      },
-                      label = { Text(stringResource(R.string.events_location_field_label)) },
-                      placeholder = {
-                        Text(stringResource(R.string.events_location_field_placeholder))
-                      },
+                item {
+                  // Location with suggestions dropdown
+                  Box(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedTextField(
+                        value = ui.location,
+                        onValueChange = {
+                          editEventsViewModel.updateLocation(it)
+                          showLocationDropdown = it.isNotBlank()
+                        },
+                        label = { Text(stringResource(R.string.events_location_field_label)) },
+                        placeholder = {
+                          Text(stringResource(R.string.events_location_field_placeholder))
+                        },
+                        colors = textFieldColors,
+                        modifier =
+                            Modifier.fillMaxWidth()
+                                .testTag(EditEventsScreenTestTags.INPUT_LOCATION))
+
+                    DropdownMenu(
+                        expanded = showLocationDropdown && ui.suggestedLocations.isNotEmpty(),
+                        onDismissRequest = { showLocationDropdown = false },
+                        properties = PopupProperties(focusable = false),
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        modifier =
+                            Modifier.testTag(EditEventsScreenTestTags.LOCATION_MENU)
+                                .fillMaxWidth()
+                                .height(200.dp)) {
+                          ui.suggestedLocations.take(3).forEach { loc ->
+                            DropdownMenuItem(
+                                text = {
+                                  Text(
+                                      text =
+                                          loc.name.take(40) +
+                                              if (loc.name.length > 40) "..." else "",
+                                      color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                },
+                                onClick = {
+                                  editEventsViewModel.selectLocation(loc)
+                                  showLocationDropdown = false
+                                },
+                                modifier =
+                                    Modifier.testTag(EditEventsScreenTestTags.INPUT_LOCATION))
+                          }
+                          if (ui.suggestedLocations.size > 3) {
+                            DropdownMenuItem(
+                                text = {
+                                  Text(
+                                      "More...", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                },
+                                onClick = {})
+                          }
+                        }
+                  }
+                }
+                item {
+                  // Date
+                  DatePickerInputField(
+                      value = ui.date,
+                      label = stringResource(R.string.events_date_field_label),
+                      isErrorMessage = if (!ui.dateError) null else "Invalid format or past date",
+                      onClick = { showDatePicker = true },
                       colors = textFieldColors,
-                      modifier =
-                          Modifier.fillMaxWidth().testTag(EditEventsScreenTestTags.INPUT_LOCATION))
+                      testTag =
+                          Pair(
+                              EditEventsScreenTestTags.INPUT_DATE,
+                              EditEventsScreenTestTags.ERROR_MESSAGE))
+                }
 
-                  DropdownMenu(
-                      expanded = showLocationDropdown && ui.suggestedLocations.isNotEmpty(),
-                      onDismissRequest = { showLocationDropdown = false },
-                      properties = PopupProperties(focusable = false),
-                      containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                item {
+                  // Start time
+                  TimeInputField(
+                      initialTime = ui.startTime,
+                      onTimeChanged = { editEventsViewModel.updateStartTime(it) },
+                      dueTimeError = ui.startTimeError,
+                      label = stringResource(R.string.events_start_time_field_label),
+                      textFieldColors = textFieldColors,
+                      testTagInput = EditEventsScreenTestTags.INPUT_START,
+                      testTagErrorMessage = EditEventsScreenTestTags.ERROR_MESSAGE,
+                      isStarting = true)
+                }
+
+                item {
+                  // End time
+                  TimeInputField(
+                      initialTime = ui.endTime,
+                      onTimeChanged = { editEventsViewModel.updateEndTime(it) },
+                      dueTimeError = ui.endTimeError,
+                      label = stringResource(R.string.events_end_time_field_label),
+                      textFieldColors = textFieldColors,
+                      testTagInput = EditEventsScreenTestTags.INPUT_END,
+                      testTagErrorMessage = EditEventsScreenTestTags.ERROR_MESSAGE,
+                      isStarting = false)
+                }
+
+                item {
+                  Spacer(modifier = Modifier.height(buttonSpacing))
+
+                  // Save
+                  Button(
+                      onClick = { editEventsViewModel.saveEvent() },
+                      modifier = Modifier.fillMaxWidth().testTag(EditEventsScreenTestTags.BTN_SAVE),
+                      colors =
+                          ButtonDefaults.buttonColors(
+                              containerColor = MaterialTheme.colorScheme.secondary),
+                      enabled =
+                          !ui.nameError &&
+                              !ui.descriptionError &&
+                              !ui.dateError &&
+                              !ui.startTimeError &&
+                              !ui.endTimeError &&
+                              !ui.isLoading) {
+                        Text(
+                            text =
+                                if (ui.isLoading) {
+                                  stringResource(R.string.saving)
+                                } else {
+                                  stringResource(R.string.settings_save)
+                                },
+                            color = MaterialTheme.colorScheme.onSecondary)
+                      }
+                }
+
+                item {
+                  // Delete
+                  TextButton(
+                      onClick = { shouldShowDialog.value = true },
                       modifier =
-                          Modifier.testTag(EditEventsScreenTestTags.LOCATION_MENU)
-                              .fillMaxWidth()
-                              .height(200.dp)) {
-                        ui.suggestedLocations.take(3).forEach { loc ->
-                          DropdownMenuItem(
-                              text = {
-                                Text(
-                                    text =
-                                        loc.name.take(40) + if (loc.name.length > 40) "..." else "",
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant)
-                              },
-                              onClick = {
-                                editEventsViewModel.selectLocation(loc)
-                                showLocationDropdown = false
-                              },
-                              modifier = Modifier.testTag(EditEventsScreenTestTags.INPUT_LOCATION))
-                        }
-                        if (ui.suggestedLocations.size > 3) {
-                          DropdownMenuItem(
-                              text = {
-                                Text("More...", color = MaterialTheme.colorScheme.onSurfaceVariant)
-                              },
-                              onClick = {})
-                        }
+                          Modifier.fillMaxWidth().testTag(EditEventsScreenTestTags.BTN_DELETE),
+                      colors =
+                          ButtonDefaults.textButtonColors(
+                              contentColor = MaterialTheme.colorScheme.error)) {
+                        Icon(
+                            imageVector = Icons.Filled.DeleteForever,
+                            contentDescription = "Delete event",
+                            tint = MaterialTheme.colorScheme.error)
+                        Text(
+                            "Delete",
+                            modifier = Modifier.padding(start = buttonSpacing),
+                            color = MaterialTheme.colorScheme.error)
                       }
                 }
               }
-              item {
-                // Date
-                DatePickerInputField(
-                    value = ui.date,
-                    label = stringResource(R.string.events_date_field_label),
-                    isErrorMessage = if (!ui.dateError) null else "Invalid format or past date",
-                    onClick = { showDatePicker = true },
-                    colors = textFieldColors,
-                    testTag =
-                        Pair(
-                            EditEventsScreenTestTags.INPUT_DATE,
-                            EditEventsScreenTestTags.ERROR_MESSAGE))
-              }
-
-              item {
-                // Start time
-                TimeInputField(
-                    initialTime = ui.startTime,
-                    onTimeChanged = { editEventsViewModel.updateStartTime(it) },
-                    dueTimeError = ui.startTimeError,
-                    label = stringResource(R.string.events_start_time_field_label),
-                    textFieldColors = textFieldColors,
-                    testTagInput = EditEventsScreenTestTags.INPUT_START,
-                    testTagErrorMessage = EditEventsScreenTestTags.ERROR_MESSAGE,
-                    isStarting = true)
-              }
-
-              item {
-                // End time
-                TimeInputField(
-                    initialTime = ui.endTime,
-                    onTimeChanged = { editEventsViewModel.updateEndTime(it) },
-                    dueTimeError = ui.endTimeError,
-                    label = stringResource(R.string.events_end_time_field_label),
-                    textFieldColors = textFieldColors,
-                    testTagInput = EditEventsScreenTestTags.INPUT_END,
-                    testTagErrorMessage = EditEventsScreenTestTags.ERROR_MESSAGE,
-                    isStarting = false)
-              }
-
-              item {
-                Spacer(modifier = Modifier.height(buttonSpacing))
-
-                // Save
-                Button(
-                    onClick = { editEventsViewModel.saveEvent() },
-                    modifier = Modifier.fillMaxWidth().testTag(EditEventsScreenTestTags.BTN_SAVE),
-                    colors =
-                        ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.secondary),
-                    enabled =
-                        !ui.nameError &&
-                            !ui.descriptionError &&
-                            !ui.dateError &&
-                            !ui.startTimeError &&
-                            !ui.endTimeError &&
-                            !ui.isLoading) {
-                      Text(
-                          text =
-                              if (ui.isLoading) {
-                                stringResource(R.string.saving)
-                              } else {
-                                stringResource(R.string.settings_save)
-                              },
-                          color = MaterialTheme.colorScheme.onSecondary)
-                    }
-              }
-
-              item {
-                // Delete
-                TextButton(
-                    onClick = { shouldShowDialog.value = true },
-                    modifier = Modifier.fillMaxWidth().testTag(EditEventsScreenTestTags.BTN_DELETE),
-                    colors =
-                        ButtonDefaults.textButtonColors(
-                            contentColor = MaterialTheme.colorScheme.error)) {
-                      Icon(
-                          imageVector = Icons.Filled.DeleteForever,
-                          contentDescription = "Delete event",
-                          tint = MaterialTheme.colorScheme.error)
-                      Text(
-                          "Delete",
-                          modifier = Modifier.padding(start = buttonSpacing),
-                          color = MaterialTheme.colorScheme.error)
-                    }
-              }
             }
+
         if (shouldShowDialog.value) {
           GatherlyAlertDialog(
               titleText = stringResource(R.string.events_delete_warning),

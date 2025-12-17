@@ -14,7 +14,7 @@ import com.android.gatherly.model.points.PointsRepositoryProvider
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
-import com.android.gatherly.utils.getProfileWithSyncedFriendNotifications
+import com.android.gatherly.utils.getProfileWithSyncedNotifications
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
@@ -65,7 +65,7 @@ data class EditGroupUiState(
     val membersToRemove: List<String> = emptyList(),
     val currentUserId: String = "",
     val creatorId: String = "",
-    val isLoading: Boolean = false,
+    val isLoading: Boolean = true,
     val loadError: String? = null,
     val isSaving: Boolean = false,
     val saveError: String? = null,
@@ -199,7 +199,7 @@ class EditGroupViewModel(
       val currentUserId =
           authProvider().currentUser?.uid ?: throw IllegalStateException("No signed in user")
       val currentProfile =
-          getProfileWithSyncedFriendNotifications(
+          getProfileWithSyncedNotifications(
               profileRepository = profileRepository,
               notificationsRepository = notificationsRepository,
               pointsRepository = pointsRepository,

@@ -13,6 +13,7 @@ import com.android.gatherly.utils.FakeCredentialManager
 import com.android.gatherly.utils.FakeJwtGenerator
 import com.android.gatherly.utils.FirebaseEmulator
 import com.android.gatherly.utils.FirestoreGatherlyTest
+import com.android.gatherly.utils.LoadingAnimationTestTags
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
 import org.junit.Before
@@ -23,18 +24,21 @@ import org.junit.runner.RunWith
 private const val WAIT_TIMEOUT = 15000L
 
 @RunWith(AndroidJUnit4::class)
+/** Tests the Sign in display */
 class SignInScreenTest : FirestoreGatherlyTest() {
 
   private lateinit var signInViewModel: SignInViewModel
 
   @get:Rule val composeTestRule = createComposeRule()
 
+  /** Sets up view model, and authentication */
   @Before
   override fun setUp() {
     super.setUp()
     FirebaseEmulator.auth.signOut()
   }
 
+  /** Checks that the configuration of google sign in is correct */
   @Test
   fun google_sign_in_is_configured() {
     val context = ApplicationProvider.getApplicationContext<Context>()
@@ -49,6 +53,7 @@ class SignInScreenTest : FirestoreGatherlyTest() {
         "Invalid Google client ID format: $clientId", clientId.endsWith(".googleusercontent.com"))
   }
 
+  /** Checks that all the correct components are displayed */
   @Test
   fun signInScreen_componentsAreDisplayed() {
     signInViewModel = SignInViewModel()
@@ -60,6 +65,7 @@ class SignInScreenTest : FirestoreGatherlyTest() {
     composeTestRule.onNodeWithTag(SignInScreenTestTags.ANONYMOUS_BUTTON).assertIsDisplayed()
   }
 
+  /** Checks that a user can click on the google sign in button to sign in */
   @Test
   fun canSignInWithGoogle() {
     val fakeToken =
@@ -83,13 +89,14 @@ class SignInScreenTest : FirestoreGatherlyTest() {
     composeTestRule.waitForIdle()
 
     // Check that the screen is loading
-    composeTestRule.onNodeWithTag(SignInScreenTestTags.LOADING_TEXT).assertIsDisplayed()
-
+    composeTestRule.onNodeWithTag(LoadingAnimationTestTags.LOADING_TEXT).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(LoadingAnimationTestTags.LOADING).assertIsDisplayed()
     // Wait until uiState becomes true or timeout is reached
     composeTestRule.waitUntil(timeoutMillis = WAIT_TIMEOUT) { signInViewModel.uiState.signedIn }
 
     // Check that the screen is no longer loading
-    composeTestRule.onNodeWithTag(SignInScreenTestTags.LOADING_TEXT).assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag(LoadingAnimationTestTags.LOADING_TEXT).assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag(LoadingAnimationTestTags.LOADING).assertIsNotDisplayed()
 
     // Assert that the state is updated and user is signed in
     val currentUser = FirebaseEmulator.auth.currentUser
@@ -99,6 +106,7 @@ class SignInScreenTest : FirestoreGatherlyTest() {
     }
   }
 
+  /** Checks that a user can sign in anonymously */
   @Test
   fun canSignInAnonymously() {
     signInViewModel = SignInViewModel()
@@ -110,17 +118,20 @@ class SignInScreenTest : FirestoreGatherlyTest() {
         .performClick()
 
     // Check that the screen is loading
-    composeTestRule.onNodeWithTag(SignInScreenTestTags.LOADING_TEXT).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(LoadingAnimationTestTags.LOADING_TEXT).assertIsDisplayed()
+    composeTestRule.onNodeWithTag(LoadingAnimationTestTags.LOADING).assertIsDisplayed()
 
     // Wait until uiState becomes true or timeout is reached
     composeTestRule.waitUntil(timeoutMillis = WAIT_TIMEOUT) { signInViewModel.uiState.signedIn }
 
     // Check that the screen is no longer loading
-    composeTestRule.onNodeWithTag(SignInScreenTestTags.LOADING_TEXT).assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag(LoadingAnimationTestTags.LOADING_TEXT).assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag(LoadingAnimationTestTags.LOADING).assertIsNotDisplayed()
 
     assert(FirebaseEmulator.auth.currentUser != null)
   }
 
+  /** Checks that a failed google sign in displays a snackbar */
   @Test
   fun failedSignInDisplaysSnackBar() {
     signInViewModel = SignInViewModel()

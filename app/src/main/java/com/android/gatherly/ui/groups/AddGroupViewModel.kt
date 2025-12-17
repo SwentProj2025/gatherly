@@ -18,7 +18,7 @@ import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryFirestore
 import com.android.gatherly.model.profile.ProfileRepositoryProvider
-import com.android.gatherly.utils.getProfileWithSyncedFriendNotifications
+import com.android.gatherly.utils.getProfileWithSyncedNotifications
 import com.google.firebase.Firebase
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
@@ -136,7 +136,7 @@ class AddGroupViewModel(
         val currentUserId =
             authProvider().currentUser?.uid ?: throw IllegalStateException("No signed in user")
         val currentProfile =
-            getProfileWithSyncedFriendNotifications(
+            getProfileWithSyncedNotifications(
                 profileRepository = profileRepository,
                 notificationsRepository = notificationsRepository,
                 pointsRepository = pointsRepository,

@@ -55,6 +55,9 @@ object InitProfileScreenTestTags {
  * - No top or bottom navigation
  * - User can’t leave until they save
  * - On save, navigates to Home
+ *
+ * @param navigationActions Used to navigate to different screens
+ * @param settingsViewModel Used to interact with data
  */
 @Composable
 fun InitProfileScreen(
@@ -71,10 +74,11 @@ fun InitProfileScreen(
           disabledContainerColor = MaterialTheme.colorScheme.surfaceVariant,
           focusedTextColor = MaterialTheme.colorScheme.onBackground,
           unfocusedTextColor = MaterialTheme.colorScheme.onBackground,
-          cursorColor = MaterialTheme.colorScheme.primary,
-          focusedBorderColor = MaterialTheme.colorScheme.primary,
+          cursorColor = MaterialTheme.colorScheme.onBackground,
+          focusedBorderColor = MaterialTheme.colorScheme.onBackground,
           unfocusedBorderColor = Color.Transparent)
 
+  // Loads the profile if it exists
   LaunchedEffect(currentUser?.uid) { currentUser?.uid?.let { settingsViewModel.loadProfile(it) } }
 
   val scrollState = rememberScrollState()
@@ -116,7 +120,7 @@ fun InitProfileScreen(
           if (uiState.isUsernameAvailable == true && uiState.invalidUsernameMsg == null) {
             Text(
                 text = stringResource(R.string.settings_valid_username),
-                color = MaterialTheme.colorScheme.primary,
+                color = MaterialTheme.colorScheme.onBackground,
                 fontSize = 14.sp,
                 modifier =
                     Modifier.padding(top = dimensionResource(id = R.dimen.padding_extra_small)))
@@ -246,7 +250,7 @@ fun InitProfileScreen(
  */
 private fun formatDateInput(input: String): String {
   // Remove any non-digit characters
-  val digits = input.filter { it.isDigit() }.take(8) // Limit to ddMMyyyy
+  val digits = input.filter { it.isDigit() }.take(8) // Limit to dd/MM/yyyy
   return buildString {
     for (i in digits.indices) {
       append(digits[i])

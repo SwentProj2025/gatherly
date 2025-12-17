@@ -50,8 +50,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.airbnb.lottie.compose.LottieAnimation
@@ -106,11 +104,10 @@ object FindFriendsScreenTestTags {
       "friendProfilePicture${username}"
 
   /**
-   * Returns a unique test tag for the card or container representing a given [Profile.username]
-   * item.
+   * Returns a unique test tag for the request button of the given user.
    *
-   * @param username The [Button] item for requesting button whose test tag will be generated.
-   * @return A string uniquely identifying the Friend username item in the UI.
+   * @param username Username of the friend whose request button test tag is generated.
+   * @return A unique test tag for the request button.
    */
   fun getTestTagForFriendRequestButton(username: String): String =
       "friendRequestingButton${username}"
@@ -122,6 +119,20 @@ private val ANIMATION_LOADING = R.raw.loading_profiles
 private const val ANIMATION_TIME = 3000
 private const val ANIMATION_LOADING_DELAY: Long = 2000
 
+/**
+ * Screen that lets the user discover new profiles and send friend requests.
+ *
+ * Displays:
+ * - a searchable list of usernames that are not yet friends
+ * - a loading animation while profiles are fetched
+ * - a short confirmation animation after sending a friend request
+ *
+ * The list excludes usernames already present in the pending sent requests list.
+ *
+ * @param friendsViewModel ViewModel providing the UI state and handling friend request actions.
+ * @param goBack Callback invoked when the back button in the top bar is pressed.
+ * @param onClickFriend Callback invoked when the user taps a profile entry (e.g., to open details).
+ */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun FindFriendsScreen(
@@ -213,11 +224,16 @@ fun FindFriendsScreen(
 }
 
 /**
- * Helper function : Composable helper that displays a single user profile item in the friends list.
+ * Displays a single "non-friend" profile row.
  *
- * @param friend Username of the friend to display.
- * @param request Callback triggered when the "Request" button is clicked.
- * @param modifier Optional [Modifier] for layout customization.
+ * Shows the user's profile picture, username, and a button to send a friend request. Uses only
+ * allowed design-system colors (surfaceVariant/onSurfaceVariant).
+ *
+ * @param friend Username to display.
+ * @param request Callback invoked when the request button is pressed.
+ * @param modifier Optional modifier applied to the outer card.
+ * @param profilePicUrl Optional URL of the friend's profile picture.
+ * @param onClickFriend Callback invoked when the username row is tapped.
  */
 @Composable
 private fun FriendItem(
@@ -231,66 +247,65 @@ private fun FriendItem(
       border =
           BorderStroke(
               dimensionResource(R.dimen.find_friends_item_card_border_width),
-              MaterialTheme.colorScheme.primary),
+              MaterialTheme.colorScheme.onSurfaceVariant),
       shape =
           RoundedCornerShape(
               dimensionResource(R.dimen.find_friends_item_card_rounded_corner_shape)),
       colors =
           CardDefaults.cardColors(
-              containerColor = MaterialTheme.colorScheme.secondaryContainer,
-              contentColor = MaterialTheme.colorScheme.onSecondaryContainer),
+              containerColor = MaterialTheme.colorScheme.surfaceVariant,
+              contentColor = MaterialTheme.colorScheme.onSurfaceVariant),
       modifier =
           modifier
               .testTag(FindFriendsScreenTestTags.getTestTagForFriendItem(friend))
               .fillMaxWidth()
-              .padding(vertical = 4.dp)) {
+              .padding(vertical = dimensionResource(R.dimen.padding_extra_small))) {
         Row(
             modifier =
                 Modifier.fillMaxWidth()
                     .padding(dimensionResource(R.dimen.find_friends_item_card_padding)),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-          Image(
-              painter = profilePicturePainter(profilePicUrl),
-              contentDescription = "Profile picture of $friend",
-              contentScale = ContentScale.Crop,
-              modifier =
-                  Modifier.size(dimensionResource(R.dimen.find_friends_item_profile_picture_size))
-                      .clip(CircleShape)
-                      .testTag(FindFriendsScreenTestTags.getTestTagForFriendProfilePicture(friend)))
+            verticalAlignment = Alignment.CenterVertically) {
+              Image(
+                  painter = profilePicturePainter(profilePicUrl),
+                  contentDescription = "Profile picture of $friend",
+                  contentScale = ContentScale.Crop,
+                  modifier =
+                      Modifier.size(
+                              dimensionResource(R.dimen.find_friends_item_profile_picture_size))
+                          .clip(CircleShape)
+                          .testTag(
+                              FindFriendsScreenTestTags.getTestTagForFriendProfilePicture(friend)))
 
-          // -- SPACER
-          Spacer(
-              modifier =
-                  Modifier.width(dimensionResource(R.dimen.spacing_between_fields_smaller_regular)))
+              Spacer(
+                  modifier =
+                      Modifier.width(
+                          dimensionResource(R.dimen.spacing_between_fields_smaller_regular)))
 
-          Column(modifier = Modifier.weight(1f)) {
-
-            // -- Username Text --
-            Text(
-                text = friend,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.primary,
-                fontWeight = FontWeight.Medium,
-                modifier =
-                    Modifier.testTag(FindFriendsScreenTestTags.getTestTagForFriendUsername(friend))
-                        .clickable { onClickFriend() })
-          }
-
-          // -- SPACER
-          Spacer(
-              modifier = Modifier.width(dimensionResource(R.dimen.spacing_between_fields_regular)))
-
-          // -- Request button --
-          Button(
-              onClick = request,
-              modifier =
-                  Modifier.wrapContentWidth()
-                      .testTag(
-                          FindFriendsScreenTestTags.getTestTagForFriendRequestButton(friend))) {
-                Text(stringResource(R.string.friends_request_button_title))
+              Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = friend,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    fontWeight = FontWeight.Medium,
+                    modifier =
+                        Modifier.testTag(
+                                FindFriendsScreenTestTags.getTestTagForFriendUsername(friend))
+                            .clickable { onClickFriend() })
               }
-        }
+
+              Spacer(
+                  modifier =
+                      Modifier.width(dimensionResource(R.dimen.spacing_between_fields_regular)))
+
+              Button(
+                  onClick = request,
+                  modifier =
+                      Modifier.wrapContentWidth()
+                          .testTag(
+                              FindFriendsScreenTestTags.getTestTagForFriendRequestButton(friend))) {
+                    Text(stringResource(R.string.friends_request_button_title))
+                  }
+            }
       }
 }
 
@@ -345,7 +360,7 @@ private fun FloatingMessage(text: String, modifier: Modifier = Modifier) {
                       Text(
                           text = text,
                           color = MaterialTheme.colorScheme.onSecondary,
-                          fontSize = 25.sp,
+                          style = MaterialTheme.typography.titleMedium,
                           fontWeight = FontWeight.Bold,
                           modifier =
                               Modifier.padding(dimensionResource(R.dimen.padding_regular))
@@ -357,12 +372,9 @@ private fun FloatingMessage(text: String, modifier: Modifier = Modifier) {
 }
 
 /**
- * Helper function: Composable helper that displays the animation when loading the needed profiles
- * item
+ * Displays the loading animation while profiles are being fetched.
  *
- * The animation consists of a Lottie searching waiting screen.
- *
- * @param padding
+ * @param padding PaddingValues coming from the parent Scaffold content.
  */
 @Composable
 private fun LoadingAnimationContent(padding: PaddingValues) {
