@@ -62,6 +62,11 @@
     <dimen name="todo_item_checkbox_padding">8dp</dimen>
     <dimen name="todo_location_dropdown_height">200dp</dimen>
     <dimen name="todo_location_dropdown_padding">8dp</dimen>
+    <dimen name="todo_filter_tag_horizontal_arrangement_space">8dp</dimen>
+    <dimen name="todo_buttons_row_horizontal_arrangement_space">20dp</dimen>
+    <dimen name="todo_priority_level_icon_size">30dp</dimen>
+    <dimen name="todo_category_icon_size">25dp</dimen>
+    <dimen name="todo_item_spacer_width">10dp</dimen>
 
     <!-- HomePage -->
     <dimen name="homepage_task_item_height">56dp</dimen>

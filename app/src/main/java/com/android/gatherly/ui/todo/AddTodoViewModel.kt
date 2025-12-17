@@ -1,7 +1,6 @@
 package com.android.gatherly.ui.todo
 
 import android.annotation.SuppressLint
-import android.util.Log
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -34,11 +33,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 
+private const val DELAY = 1000L
+
 /**
- * Represents the UI state of the Add ToDo screen.
+ * Represents the UI state of the Add [ToDo] screen.
  *
  * Holds user-entered data, validation errors, and progress flags used by [AddTodoViewModel] to
- * manage the process of creating a new ToDo.
+ * manage the process of creating a new [ToDo].
  */
 data class AddTodoUiState(
     val title: String = "",
@@ -70,22 +71,27 @@ private var client: OkHttpClient =
               chain
                   .request()
                   .newBuilder()
-                  .header("User-Agent", "BootcampApp (croissant.kerjan@gmail.com)")
+                  .header("User-Agent", "GatherlyApp (kerjangersende@gmail.com)")
                   .build()
           chain.proceed(request)
         }
         .build()
 
 /**
- * ViewModel responsible for managing the "Add ToDo" screen.
+ * ViewModel responsible for managing the [AddToDoScreen].
  *
- * Handles user input updates, field validation, and saving ToDo items to the Firestore repository
+ * Handles user input updates, field validation, and saving [ToDo] items to the Firestore repository
  * through [ToDosRepository].
  *
  * Currently, location handling is limited to plain string input until the Location repository is
  * implemented.
  *
- * @param todoRepository The repository responsible for persisting ToDo items.
+ * @param todoRepository The repository responsible for persisting [ToDo] items.
+ * @param profileRepository The repository for user profile data.
+ * @param pointsRepository The repository for managing user points.
+ * @param authProvider A lambda that provides the current [FirebaseAuth] instance.
+ * @param nominatimClient The repository for location search using Nominatim.
+ * @param todoCategoryRepository The repository for managing [ToDo] categories.
  */
 @SuppressLint("SimpleDateFormat")
 class AddTodoViewModel(
@@ -99,7 +105,7 @@ class AddTodoViewModel(
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(AddTodoUiState())
 
-  /** Public immutable access to the Add ToDo UI state. */
+  /** Public immutable access to the [AddTodoUiState]. */
   val uiState: StateFlow<AddTodoUiState> = _uiState.asStateFlow()
 
   private val _categories = MutableStateFlow<List<ToDoCategory>>(emptyList())
@@ -121,6 +127,7 @@ class AddTodoViewModel(
     }
   }
 
+  /** Initializes user-specific data such as default [ToDo] categories. */
   private suspend fun initializeUserData(userId: String) {
     try {
       todoCategoryRepository.initializeDefaultCategories()
@@ -128,9 +135,9 @@ class AddTodoViewModel(
       val list = todoCategoryRepository.getAllCategories()
       _categories.value = list
       _isInitialized.value = true
-    } catch (e: Exception) {
+    } catch (_: Exception) {
       viewModelScope.launch {
-        delay(1000)
+        delay(DELAY)
         initializeUserData(userId)
       }
     }
@@ -328,7 +335,7 @@ class AddTodoViewModel(
     }
   }
 
-  /** Checks that the todo time is valid before saving */
+  /** Checks that the [ToDo] time is valid before saving */
   fun checkTodoTime() {
     val validated =
         _uiState.value.copy(
@@ -414,7 +421,6 @@ class AddTodoViewModel(
 
         addTodo(todoRepository, profileRepository, pointsRepository, todo, ownerId)
         _uiState.value = _uiState.value.copy(isSaving = false, saveSuccess = true)
-        Log.d("AddTodoVM", "SUCCESS todo with: ${todo}")
       } catch (e: Exception) {
         _uiState.value = _uiState.value.copy(isSaving = false, saveError = e.message)
       }

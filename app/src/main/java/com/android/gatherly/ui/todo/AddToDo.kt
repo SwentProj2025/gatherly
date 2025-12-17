@@ -38,10 +38,10 @@ import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.integerResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.android.gatherly.R
+import com.android.gatherly.model.todo.ToDo
 import com.android.gatherly.model.todoCategory.ToDoCategory
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import com.android.gatherly.ui.navigation.Tab
@@ -61,21 +61,23 @@ import kotlinx.coroutines.delay
 // Portions of the code in this file are copy-pasted from the Bootcamp solution provided by the
 // SwEnt staff.
 
-/** Contains test tags used for UI testing on the Add To-Do screen. */
+private const val DELAY = 1000L
+
+/** Contains test tags used for UI testing on the [AddToDoScreen]. */
 object AddToDoScreenTestTags {
-  /** Tag for the To-Do title input field. */
+  /** Tag for the [ToDo] title input field. */
   const val INPUT_TODO_TITLE = "inputTodoTitle"
 
-  /** Tag for the To-Do description input field. */
+  /** Tag for the [ToDo] description input field. */
   const val INPUT_TODO_DESCRIPTION = "inputTodoDescription"
 
-  /** Tag for the To-Do due date input field. */
+  /** Tag for the [ToDo] due date input field. */
   const val INPUT_TODO_DATE = "inputTodoDate"
 
-  /** Tag for the To-Do due time input field. */
+  /** Tag for the [ToDo] due time input field. */
   const val INPUT_TODO_TIME = "inputTodoTime"
 
-  /** Tag for the Save button that submits the To-Do. */
+  /** Tag for the Save button that submits the [ToDo]. */
   const val TODO_SAVE = "todoSave"
 
   /** Tag for displaying error messages under text fields. */
@@ -83,12 +85,11 @@ object AddToDoScreenTestTags {
 
   /** Tag for the extra options button */
   const val MORE_OPTIONS = "moreOptions"
-  const val DROP_DOWN_PRIORITY_LEVEL = "dropDownPriorityLevel"
 }
 
 /**
- * Text field colors defined outside the composable scope to be shared between add and edit todo
- * screens
+ * Text field colors defined outside the composable scope to be shared between [AddToDoScreen] and
+ * [EditToDoScreen]
  */
 val toDoTextFieldColors
   @Composable
@@ -112,7 +113,7 @@ val toDoTextFieldColors
 /**
  * Displays the screen for creating and saving a new [ToDo].
  *
- * @param addTodoViewModel The [AddTodoViewModel] that provides the current ToDo state.
+ * @param addTodoViewModel The [AddTodoViewModel] that provides the current [ToDo] state.
  * @param onAdd Callback invoked after a To-Do has been successfully added.
  * @param goBack Callback triggered when the back arrow in the top app bar is pressed.
  */
@@ -151,7 +152,7 @@ fun AddToDoScreen(
   // Search location when input changes
   LaunchedEffect(todoUIState.location) {
     if (todoUIState.location.isNotBlank()) {
-      delay(1000)
+      delay(DELAY)
       addTodoViewModel.searchLocationByString(todoUIState.location)
     }
   }
@@ -225,7 +226,9 @@ fun AddToDoScreen(
 
                       Text(
                           text = stringResource(R.string.todos_advanced_settings),
-                          modifier = Modifier.weight(1f))
+                          modifier =
+                              Modifier.weight(
+                                  integerResource(R.integer.todo_options_bar_weight).toFloat()))
                     }
               }
 
@@ -233,22 +236,26 @@ fun AddToDoScreen(
 
                 // Buttons row
                 item {
-                  Row(horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+                  Row(
+                      horizontalArrangement =
+                          Arrangement.spacedBy(
+                              dimensionResource(
+                                  R.dimen.todo_buttons_row_horizontal_arrangement_space))) {
 
-                    // Category drop down
-                    CategoriesDropDown(
-                        { category -> addTodoViewModel.selectTodoTag(category) },
-                        showCreateTagDialog,
-                        todoUIState.tag,
-                        showWarningDeleteTagDialog,
-                        categoriesList)
-                    // Priority level drop down
-                    PriorityDropDown(
-                        onSelectPriorityLevel = { level ->
-                          addTodoViewModel.selectPriorityLevel(level)
-                        },
-                        currentPriorityLevel = todoUIState.priorityLevel)
-                  }
+                        // Category drop down
+                        CategoriesDropDown(
+                            { category -> addTodoViewModel.selectTodoTag(category) },
+                            showCreateTagDialog,
+                            todoUIState.tag,
+                            showWarningDeleteTagDialog,
+                            categoriesList)
+                        // Priority level drop down
+                        PriorityDropDown(
+                            onSelectPriorityLevel = { level ->
+                              addTodoViewModel.selectPriorityLevel(level)
+                            },
+                            currentPriorityLevel = todoUIState.priorityLevel)
+                      }
                 }
 
                 // Location Input with dropdown
@@ -337,6 +344,12 @@ fun AddToDoScreen(
       onConfirmDelete = { category -> addTodoViewModel.deleteCategory(category) })
 }
 
+/**
+ * Displays the text inside the Save button, changing it to "Saving..." when a save operation is in
+ * progress.
+ *
+ * @param todoUIState The current UI state of the Add To-Do screen.
+ */
 @Composable
 fun SavingText(todoUIState: AddTodoUiState) {
   Text(
@@ -349,7 +362,7 @@ fun SavingText(todoUIState: AddTodoUiState) {
       color = MaterialTheme.colorScheme.onSecondary)
 }
 
-// Helper function to preview the timer screen
+/** Preview of the AddToDoScreen in dark theme. */
 @Preview
 @Composable
 fun AddToDoScreenPreview() {
