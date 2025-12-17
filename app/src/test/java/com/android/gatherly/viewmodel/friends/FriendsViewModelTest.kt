@@ -248,8 +248,6 @@ class FriendsViewModelTest {
             TODO("Not yet implemented")
           }
 
-          override suspend fun deleteUserProfile(uid: String) {}
-
           override suspend fun updateFocusPoints(
               uid: String,
               points: Double,
