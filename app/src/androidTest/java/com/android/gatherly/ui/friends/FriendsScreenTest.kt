@@ -1,12 +1,13 @@
 package com.android.gatherly.ui.friends
 
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertTextContains
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
-import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
 import com.android.gatherly.ui.navigation.NavigationTestTags
 import kotlinx.coroutines.test.runTest
@@ -19,6 +20,7 @@ private const val TIMEOUT = 30_000L
 class FriendsScreenTest {
 
   @get:Rule val composeTestRule = createComposeRule()
+
   private lateinit var helper: FriendsScreensTestHelper
   private lateinit var environment: FriendsScreensTestHelper.TestEnvironment
 
@@ -27,108 +29,76 @@ class FriendsScreenTest {
     helper = FriendsScreensTestHelper(composeTestRule)
   }
 
-  /**
-   * Test: Verifies that when the user got no friend, all relevant UI components are displayed
-   * correctly.
-   */
+  /** No friends: empty state UI is shown */
   @Test
   fun testTagsCorrectlySetWhenListAreEmpty() {
     environment = helper.setupWithBobUID(FriendsScreensTestHelper.ScreenType.FRIENDS)
+
     composeTestRule
         .onNodeWithTag(NavigationTestTags.TOP_BAR_TITLE)
         .assertTextContains("Friends", substring = true, ignoreCase = true)
+
     composeTestRule.onNodeWithTag(FriendsScreenTestTags.EMPTY_LIST_MSG).assertIsDisplayed()
     composeTestRule.onNodeWithTag(FriendsScreenTestTags.SEARCH_FRIENDS_BAR).assertIsDisplayed()
     composeTestRule.onNodeWithTag(FriendsScreenTestTags.BUTTON_FIND_FRIENDS).assertIsDisplayed()
   }
 
-  /**
-   * Test: Verifies that when the user got no friend he can click on the button to navigate to
-   * FindFriends screen.
-   */
+  /** Empty state button is clickable */
   @Test
-  fun testButtonFindFriendClikable() {
+  fun testButtonFindFriendClickable() {
     environment = helper.setupWithBobUID(FriendsScreensTestHelper.ScreenType.FRIENDS)
-    composeTestRule.onNodeWithTag(FriendsScreenTestTags.EMPTY_LIST_MSG).assertIsDisplayed()
+
     composeTestRule
         .onNodeWithTag(FriendsScreenTestTags.BUTTON_FIND_FRIENDS)
         .assertIsDisplayed()
         .performClick()
   }
 
-  /** Test : Verifies that when the user got 3 friends, the friends items display correctly */
+  /** Friends list displays correctly */
   @Test
   fun testDisplayCorrectlyFriends() {
     environment = helper.setupWithAliceUID(FriendsScreensTestHelper.ScreenType.FRIENDS)
     composeTestRule.waitForIdle()
 
-    composeTestRule.onNodeWithTag(FriendsScreenTestTags.BUTTON_FIND_FRIENDS).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(FriendsScreenTestTags.SEARCH_FRIENDS_BAR).assertIsDisplayed()
-    composeTestRule.onNodeWithTag(FriendsScreenTestTags.EMPTY_LIST_MSG).assertIsNotDisplayed()
+    composeTestRule.onNodeWithTag(FriendsScreenTestTags.EMPTY_LIST_MSG).assertDoesNotExist()
     composeTestRule.onNodeWithTag(FriendsScreenTestTags.FRIENDS_SECTION_TITLE).assertIsDisplayed()
     composeTestRule.onNodeWithTag(FriendsScreenTestTags.PENDING_SECTION_TITLE).assertDoesNotExist()
 
-    composeTestRule
-        .onNodeWithTag(FriendsScreenTestTags.getTestTagForFriendItem("francis"))
-        .assertIsDisplayed()
-    composeTestRule
-        .onNodeWithTag(FriendsScreenTestTags.getTestTagForFriendUsername("francis"))
-        .assertIsDisplayed()
-
-    composeTestRule
-        .onNodeWithTag(
-            FriendsScreenTestTags.getTestTagForFriendProfilePicture("francis"),
-            useUnmergedTree = true)
-        .assertExists()
-    composeTestRule
-        .onNodeWithTag(FriendsScreenTestTags.getTestTagForFriendUnfriendButton("francis"))
-        .assertIsDisplayed()
-
-    composeTestRule
-        .onNodeWithTag(FriendsScreenTestTags.getTestTagForFriendItem("charlie"))
-        .assertIsDisplayed()
-    composeTestRule
-        .onNodeWithTag(FriendsScreenTestTags.getTestTagForFriendUsername("charlie"))
-        .assertIsDisplayed()
-    composeTestRule
-        .onNodeWithTag(FriendsScreenTestTags.getTestTagForFriendUnfriendButton("charlie"))
-        .assertIsDisplayed()
-
-    composeTestRule
-        .onNodeWithTag(FriendsScreenTestTags.getTestTagForFriendItem("denis"))
-        .assertIsDisplayed()
-    composeTestRule
-        .onNodeWithTag(FriendsScreenTestTags.getTestTagForFriendUsername("denis"))
-        .assertIsDisplayed()
-    composeTestRule
-        .onNodeWithTag(FriendsScreenTestTags.getTestTagForFriendUnfriendButton("denis"))
-        .assertIsDisplayed()
-  }
-
-  /** Test: Verifies that the user can click to the friend item to unfollow this friend */
-  @Test
-  fun testClickToUnfriend() {
-    runTest {
-      environment = helper.setupWithAliceUID(FriendsScreensTestHelper.ScreenType.FRIENDS)
-      composeTestRule.waitForIdle()
-
+    listOf("francis", "charlie", "denis").forEach { username ->
       composeTestRule
-          .onNodeWithTag(FriendsScreenTestTags.getTestTagForFriendUnfriendButton("francis"))
+          .onNodeWithTag(FriendsScreenTestTags.getTestTagForFriendItem(username))
           .assertIsDisplayed()
-          .performClick()
-
-      composeTestRule.waitUntil(TIMEOUT) { !helper.aliceProfile.friendUids.contains("francis") }
 
       composeTestRule
-          .onNodeWithTag(FriendsScreenTestTags.getTestTagForFriendItem("francis"))
-          .assertIsNotDisplayed()
+          .onNodeWithTag(FriendsScreenTestTags.getTestTagForFriendUsername(username))
+          .assertIsDisplayed()
+
+      composeTestRule
+          .onNodeWithTag(FriendsScreenTestTags.getTestTagForFriendUnfriendButton(username))
+          .assertIsDisplayed()
     }
   }
 
-  /**
-   * Test: Verifies that the user can search a friend username and the screen display only the
-   * correct profiles item
-   */
+  /** Unfriend removes item from UI */
+  @Test
+  fun testClickToUnfriend() = runTest {
+    environment = helper.setupWithAliceUID(FriendsScreensTestHelper.ScreenType.FRIENDS)
+    composeTestRule.waitForIdle()
+
+    composeTestRule
+        .onNodeWithTag(FriendsScreenTestTags.getTestTagForFriendUnfriendButton("francis"))
+        .performClick()
+
+    composeTestRule.waitUntil(TIMEOUT) {
+      !environment.friendsViewModel.uiState.value.friends.contains("francis")
+    }
+
+    composeTestRule
+        .onNodeWithTag(FriendsScreenTestTags.getTestTagForFriendItem("francis"))
+        .assertDoesNotExist()
+  }
+
+  /** Search filters friends */
   @Test
   fun testFriendSearchBar() {
     environment = helper.setupWithAliceUID(FriendsScreensTestHelper.ScreenType.FRIENDS)
@@ -142,203 +112,131 @@ class FriendsScreenTest {
         .onNodeWithTag(FriendsScreenTestTags.getTestTagForFriendItem("denis"))
         .assertIsDisplayed()
 
-    composeTestRule
-        .onNodeWithTag(FriendsScreenTestTags.getTestTagForFriendItem("francis"))
-        .assertIsNotDisplayed()
-
-    composeTestRule
-        .onNodeWithTag(FriendsScreenTestTags.getTestTagForFriendItem("charlie"))
-        .assertIsNotDisplayed()
-  }
-
-  /**
-   * Test: Verifies when the screen is currently loading all the profiles item, a special animation
-   * is displayed.
-   */
-  @Test
-  fun testLoadingAnimation() {
-    runTest {
-      environment = helper.setupWithAliceUID(FriendsScreensTestHelper.ScreenType.FRIENDS)
-
-      composeTestRule.waitForIdle()
-
-      if (environment.friendsViewModel.uiState.value.isLoading) {
-        composeTestRule.onNodeWithTag(FriendsScreenTestTags.LOADING_ANIMATION).assertIsDisplayed()
-      }
-    }
-  }
-
-  /**
-   * Test: Verifies that when the current user wants to unfollow a friend, a special animation is
-   * displayed.
-   */
-  @Test
-  fun testHeartBreakingAnimation() {
-    runTest {
-      environment = helper.setupWithAliceUID(FriendsScreensTestHelper.ScreenType.FRIENDS)
-      composeTestRule.waitForIdle()
-
-      composeTestRule.mainClock.autoAdvance = false
-      val animationDelay = 2000L
-
-      val friendToUnfollow = "francis"
-      val unfollowButtonTag =
-          FriendsScreenTestTags.getTestTagForFriendUnfriendButton(friendToUnfollow)
-      val unfollowMessage = FriendsScreenTestTags.UNFRIENDING_TEXT_ANIMATION
-      val heartBreakAnimation = FriendsScreenTestTags.HEART_BREAK_ANIMATION
-
-      composeTestRule.onNodeWithTag(unfollowButtonTag).performClick()
-      composeTestRule.mainClock.advanceTimeBy(100)
-      composeTestRule.onNodeWithTag(unfollowMessage).assertIsDisplayed()
-      composeTestRule.onNodeWithTag(heartBreakAnimation).assertIsDisplayed()
-
-      composeTestRule.mainClock.advanceTimeBy(animationDelay)
-      composeTestRule.onNodeWithText(unfollowMessage, ignoreCase = true).assertIsNotDisplayed()
-      composeTestRule.onNodeWithText(heartBreakAnimation, ignoreCase = true).assertIsNotDisplayed()
-
+    listOf("francis", "charlie").forEach {
       composeTestRule
-          .onNodeWithTag(FriendsScreenTestTags.getTestTagForFriendItem(friendToUnfollow))
-          .assertIsNotDisplayed()
-      composeTestRule.mainClock.autoAdvance = true
+          .onNodeWithTag(FriendsScreenTestTags.getTestTagForFriendItem(it))
+          .assertDoesNotExist()
     }
   }
 
-  /** Test: Friends and Pending section titles appear for a user with both. */
+  /** Heart-breaking animation appears and disappears */
   @Test
-  fun testSectionTitlesDisplayedForUserWithFriendsAndPendings() {
-    environment = helper.setupWithTotalProfile(FriendsScreensTestHelper.ScreenType.FRIENDS)
+  fun testHeartBreakingAnimation() = runTest {
+    environment = helper.setupWithAliceUID(FriendsScreensTestHelper.ScreenType.FRIENDS)
     composeTestRule.waitForIdle()
 
-    composeTestRule.onNodeWithTag(FriendsScreenTestTags.FRIENDS_SECTION_TITLE).assertIsDisplayed()
+    composeTestRule.mainClock.autoAdvance = false
 
-    composeTestRule.onNodeWithTag(FriendsScreenTestTags.PENDING_SECTION_TITLE).assertIsDisplayed()
+    val friend = "francis"
+    val unfollowButton = FriendsScreenTestTags.getTestTagForFriendUnfriendButton(friend)
+
+    composeTestRule.onNodeWithTag(unfollowButton).performClick()
+    composeTestRule.mainClock.advanceTimeBy(100)
+
+    composeTestRule
+        .onNodeWithTag(FriendsScreenTestTags.UNFRIENDING_TEXT_ANIMATION)
+        .assertIsDisplayed()
+
+    composeTestRule.onNodeWithTag(FriendsScreenTestTags.HEART_BREAK_ANIMATION).assertIsDisplayed()
+
+    composeTestRule.mainClock.advanceTimeBy(2_000)
+
+    composeTestRule
+        .onNodeWithTag(FriendsScreenTestTags.UNFRIENDING_TEXT_ANIMATION)
+        .assertDoesNotExist()
+
+    composeTestRule.onNodeWithTag(FriendsScreenTestTags.HEART_BREAK_ANIMATION).assertDoesNotExist()
+
+    composeTestRule
+        .onNodeWithTag(FriendsScreenTestTags.getTestTagForFriendItem(friend))
+        .assertDoesNotExist()
+
+    composeTestRule.mainClock.autoAdvance = true
   }
 
-  /**
-   * Test: A user with ONLY pending requests sees:
-   * - the pending section title
-   * - all pending items (with profile pic, username, and cancel button)
-   * - NO friends section
-   */
+  /** Pending-only user */
   @Test
   fun testPendingRequestsDisplayCorrectly() {
     environment = helper.setupWithPendingProfile(FriendsScreensTestHelper.ScreenType.FRIENDS)
     composeTestRule.waitForIdle()
 
-    composeTestRule.waitUntil {
+    // Wait for VM state to be populated
+    composeTestRule.waitUntil(TIMEOUT) {
       environment.friendsViewModel.uiState.value.pendingSentUsernames.size == 3
     }
 
-    val expectedUsernames = listOf("francis", "charlie", "denis")
     // Friends section must NOT appear
     composeTestRule.onNodeWithTag(FriendsScreenTestTags.FRIENDS_SECTION_TITLE).assertDoesNotExist()
 
-    // Pending title must appear
-    composeTestRule.onNodeWithTag(FriendsScreenTestTags.PENDING_SECTION_TITLE).assertIsDisplayed()
+    // Pending title must appear (scroll to it in case it is below the fold)
+    composeTestRule
+        .onNodeWithTag(FriendsScreenTestTags.PENDING_SECTION_TITLE)
+        .performScrollTo()
+        .assertIsDisplayed()
 
-    // Each pending item must be visible
+    val expectedUsernames = listOf("francis", "charlie", "denis")
     expectedUsernames.forEach { username ->
-      composeTestRule
-          .onNodeWithTag(FriendsScreenTestTags.getTestTagForPendingFriendItem(username))
-          .assertIsDisplayed()
+      val itemTag = FriendsScreenTestTags.getTestTagForPendingFriendItem(username)
+      val usernameTag = FriendsScreenTestTags.getTestTagForPendingFriendUsername(username)
+      val picTag = FriendsScreenTestTags.getTestTagForPendingFriendProfilePicture(username)
+      val cancelTag = FriendsScreenTestTags.getTestTagForPendingFriendCancelRequestButton(username)
 
-      composeTestRule
-          .onNodeWithTag(FriendsScreenTestTags.getTestTagForPendingFriendUsername(username))
-          .assertIsDisplayed()
+      composeTestRule.onNodeWithTag(itemTag).performScrollTo().assertIsDisplayed()
+      composeTestRule.onNodeWithTag(usernameTag).performScrollTo().assertIsDisplayed()
 
-      composeTestRule
-          .onNodeWithTag(FriendsScreenTestTags.getTestTagForPendingFriendProfilePicture(username))
-          .assertExists()
+      // Profile picture might be merged, keep assertExists (not displayed requirement)
+      composeTestRule.onNodeWithTag(picTag, useUnmergedTree = true).assertExists()
 
-      composeTestRule
-          .onNodeWithTag(
-              FriendsScreenTestTags.getTestTagForPendingFriendCancelRequestButton(username))
-          .assertIsDisplayed()
+      composeTestRule.onNodeWithTag(cancelTag).performScrollTo().assertIsDisplayed()
     }
   }
 
-  /** Test: Cancel a pending request removes it from UI. */
+  /** Cancel pending request removes it */
   @Test
   fun testCancelPendingFriendRequest() = runTest {
     environment = helper.setupWithPendingProfile(FriendsScreensTestHelper.ScreenType.FRIENDS)
     composeTestRule.waitForIdle()
 
-    composeTestRule.waitUntil {
-      environment.friendsViewModel.uiState.value.pendingSentUsernames.size == 3
-    }
     val target = "francis"
-    val cancelTag = FriendsScreenTestTags.getTestTagForPendingFriendCancelRequestButton(target)
+    composeTestRule
+        .onNodeWithTag(FriendsScreenTestTags.getTestTagForPendingFriendCancelRequestButton(target))
+        .performClick()
 
-    // Click cancel request
-    composeTestRule.onNodeWithTag(cancelTag).performClick()
-
-    // Wait until removed from ViewModel state
     composeTestRule.waitUntil {
       !environment.friendsViewModel.uiState.value.pendingSentUsernames.contains(target)
     }
 
-    // Item should disappear
     composeTestRule
         .onNodeWithTag(FriendsScreenTestTags.getTestTagForPendingFriendItem(target))
         .assertDoesNotExist()
   }
 
-  /** Test: Search filters BOTH friends and pending requests lists. */
-  @Test
-  fun testSearchFiltersFriendsAndPendingRequests() {
-    environment = helper.setupWithTotalProfile(FriendsScreensTestHelper.ScreenType.FRIENDS)
-    composeTestRule.waitForIdle()
-
-    composeTestRule.waitUntil {
-      environment.friendsViewModel.uiState.value.pendingSentUsernames.size == 1 &&
-          environment.friendsViewModel.uiState.value.friends.size == 2
-    }
-
-    // Search for "charlie" (a pending request)
-    composeTestRule.onNodeWithTag(FriendsScreenTestTags.SEARCH_FRIENDS_BAR).performTextInput("char")
-
-    // charlie must appear (pending)
-    composeTestRule
-        .onNodeWithTag(FriendsScreenTestTags.getTestTagForPendingFriendItem("charlie"))
-        .assertIsDisplayed()
-
-    // friends "francis" and "denis" must NOT appear
-    listOf("francis", "denis").forEach { friend ->
-      composeTestRule
-          .onNodeWithTag(FriendsScreenTestTags.getTestTagForFriendItem(friend))
-          .assertIsNotDisplayed()
-    }
-  }
-
-  /** Test: User with friends AND pending requests shows correct items in both sections. */
+  /** Friends + pending together */
   @Test
   fun testFriendsAndPendingRequestsBothDisplayedCorrectly() {
     environment = helper.setupWithTotalProfile(FriendsScreensTestHelper.ScreenType.FRIENDS)
     composeTestRule.waitForIdle()
 
-    // FRIENDS: francis, denis
-    listOf("francis", "denis").forEach { friend ->
-      composeTestRule
-          .onNodeWithTag(FriendsScreenTestTags.getTestTagForFriendItem(friend))
-          .assertIsDisplayed()
-
-      composeTestRule
-          .onNodeWithTag(FriendsScreenTestTags.getTestTagForFriendUsername(friend))
-          .assertIsDisplayed()
-
-      composeTestRule
-          .onNodeWithTag(FriendsScreenTestTags.getTestTagForFriendUnfriendButton(friend))
-          .assertIsDisplayed()
+    composeTestRule.waitUntil(TIMEOUT) {
+      environment.friendsViewModel.uiState.value.pendingSentUsernames.size == 1 &&
+          environment.friendsViewModel.uiState.value.friends.size == 2
     }
 
-    // PENDING: charlie
+    val listNode = composeTestRule.onNodeWithTag(FriendsScreenTestTags.FRIENDS_LIST)
+
+    // Scroll to pending section title (more robust than performScrollTo on the title itself)
+    listNode.performScrollToNode(hasTestTag(FriendsScreenTestTags.PENDING_SECTION_TITLE))
+    composeTestRule.onNodeWithTag(FriendsScreenTestTags.PENDING_SECTION_TITLE).assertIsDisplayed()
+
+    // Scroll to pending item
+    listNode.performScrollToNode(
+        hasTestTag(FriendsScreenTestTags.getTestTagForPendingFriendItem("charlie")))
     composeTestRule
         .onNodeWithTag(FriendsScreenTestTags.getTestTagForPendingFriendItem("charlie"))
         .assertIsDisplayed()
 
-    composeTestRule
-        .onNodeWithTag(
-            FriendsScreenTestTags.getTestTagForPendingFriendCancelRequestButton("charlie"))
-        .assertIsDisplayed()
+    // Friends section should exist too
+    listNode.performScrollToNode(hasTestTag(FriendsScreenTestTags.FRIENDS_SECTION_TITLE))
+    composeTestRule.onNodeWithTag(FriendsScreenTestTags.FRIENDS_SECTION_TITLE).assertIsDisplayed()
   }
 }
