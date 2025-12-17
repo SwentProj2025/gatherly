@@ -149,6 +149,9 @@
     <dimen name="group_overview_row_horizontal_padding">16dp</dimen>
     <dimen name="group_overview_avatar_border_width">1dp</dimen>
 
+    <!-- Profile Page -->
+    <dimen name="profile_badges_spacer_width">110.dp</dimen>
+
     <!-- Events Screen -->
     <dimen name="events_indicator_status_size">14dp</dimen>
     <dimen name="events_popup_horizontalArrangement_size">12dp</dimen>

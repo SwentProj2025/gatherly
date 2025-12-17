@@ -85,6 +85,7 @@ fun ProfilePicture(
  * @param status The current [ProfileStatus] to display.
  * @param modifier Optional modifier for positioning.
  * @param size The diameter of the indicator.
+ * @param testTag A tag that will be applied to the indicator for testing purposes.
  */
 @Composable
 fun StatusIndicator(

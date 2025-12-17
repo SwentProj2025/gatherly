@@ -26,6 +26,12 @@ import com.android.gatherly.model.profile.ProfileRepositoryProvider
 import com.android.gatherly.model.profile.ProfileStatus
 import com.android.gatherly.model.profile.UserStatusManager
 import com.android.gatherly.ui.badge.BadgeUI
+import com.android.gatherly.ui.badge.EVENTS_CREATED_BADGE
+import com.android.gatherly.ui.badge.EVENTS_PARTICIPATED_BADGE
+import com.android.gatherly.ui.badge.FOCUS_SESSIONS_COMPLETED_BADGE
+import com.android.gatherly.ui.badge.FRIENDS_ADDED_BADGE
+import com.android.gatherly.ui.badge.TODOS_COMPLETED_BADGE
+import com.android.gatherly.ui.badge.TODOS_CREATED_BADGE
 import com.android.gatherly.utils.getProfileWithSyncedNotifications
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
@@ -51,36 +57,12 @@ data class ProfileState(
     val isAnon: Boolean = true,
     val topBadges: Map<BadgeType, BadgeUI> =
         mapOf(
-            BadgeType.TODOS_CREATED to
-                BadgeUI(
-                    "Blank Todo Created Badge",
-                    "Create your first Todo to get a Badge!",
-                    R.drawable.blank_todo_created),
-            BadgeType.TODOS_COMPLETED to
-                BadgeUI(
-                    "Blank Todo Completed Badge",
-                    "Complete your first Todo to get a Badge!",
-                    R.drawable.blank_todo_completed),
-            BadgeType.EVENTS_CREATED to
-                BadgeUI(
-                    "Blank Event Created Badge",
-                    "Create your first Event to get a Badge!",
-                    R.drawable.blank_event_created),
-            BadgeType.EVENTS_PARTICIPATED to
-                BadgeUI(
-                    "Blank Event Participated Badge",
-                    "Participate to your first Todo to get a Badge!",
-                    R.drawable.blank_event_participated),
-            BadgeType.FRIENDS_ADDED to
-                BadgeUI(
-                    "Blank Friend Badge",
-                    "Add your first Friend to get a Badge!",
-                    R.drawable.blank_friends),
-            BadgeType.FOCUS_SESSIONS_COMPLETED to
-                BadgeUI(
-                    "Blank Focus Session Badge",
-                    "Complete your first Focus Session to get a Badge!",
-                    R.drawable.blank_focus_session))
+            BadgeType.TODOS_CREATED to TODOS_CREATED_BADGE,
+            BadgeType.TODOS_COMPLETED to TODOS_COMPLETED_BADGE,
+            BadgeType.EVENTS_CREATED to EVENTS_CREATED_BADGE,
+            BadgeType.EVENTS_PARTICIPATED to EVENTS_PARTICIPATED_BADGE,
+            BadgeType.FRIENDS_ADDED to FRIENDS_ADDED_BADGE,
+            BadgeType.FOCUS_SESSIONS_COMPLETED to FOCUS_SESSIONS_COMPLETED_BADGE)
 )
 
 /**
@@ -95,7 +77,10 @@ data class ProfileState(
  *
  * @param profileRepository The [ProfileRepository] used to interact with Firestore.
  * @param groupsRepository The [GroupsRepository] used to fetch user groups.
+ * @param pointsRepository The [PointsRepository] used to fetch user points.
+ * @param notificationsRepository The [NotificationsRepository] used to sync friend notifications.
  * @param authProvider A lambda that provides the current [FirebaseAuth] instance.
+ * @param userStatusManager The [UserStatusManager] used to update user status on sign-out.
  */
 class ProfileViewModel(
     private val profileRepository: ProfileRepository = ProfileRepositoryProvider.repository,
@@ -189,7 +174,10 @@ class ProfileViewModel(
 
   /**
    * Upgrades the user's current account to a Google account. The user keeps all of their current
-   * data
+   * data.
+   *
+   * @param context The context used to access resources.
+   * @param credentialManager The CredentialManager used to retrieve Google credentials.
    */
   fun upgradeWithGoogle(context: Context, credentialManager: CredentialManager) {
     viewModelScope.launch {
@@ -240,8 +228,12 @@ class ProfileViewModel(
     }
   }
 
-  /** Initiates sign-out */
-  fun signOut(credentialManager: CredentialManager): Unit {
+  /**
+   * Initiates sign-out.
+   *
+   * @param credentialManager The CredentialManager used to clear credentials.
+   */
+  fun signOut(credentialManager: CredentialManager) {
     viewModelScope.launch {
       userStatusManager.setStatus(ProfileStatus.OFFLINE)
       _uiState.value = _uiState.value.copy(signedOut = true)
@@ -253,7 +245,10 @@ class ProfileViewModel(
   /**
    * Builds the top badges map for the profile screen:
    * - starts from the default blank badges
-   * - replaces each entry with the highest ranked badge of that type, if the user has one
+   * - replaces each entry with the highest ranked badge of that type, if the user has one.
+   *
+   * @param profile The user's profile containing badge IDs.
+   * @return A map of [BadgeType] to [BadgeUI] representing the user's top badges.
    */
   private fun buildUiStateFromProfile(profile: Profile): Map<BadgeType, BadgeUI> {
     val userBadges: List<Badge> =

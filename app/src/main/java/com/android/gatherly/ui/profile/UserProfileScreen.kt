@@ -37,6 +37,7 @@ import com.android.gatherly.ui.navigation.Tab
 import com.android.gatherly.ui.navigation.TopNavigationMenu
 import com.android.gatherly.utils.LoadingAnimation
 
+/** Test tags for UserProfileScreen components */
 object UserProfileScreenTestTags {
   const val PROFILE_PICTURE = "userProfile_profilePicture"
   const val USERNAME = "userProfile_username"
@@ -49,7 +50,11 @@ object UserProfileScreenTestTags {
 }
 
 /**
- * Screen displaying infos of a user profile (not of the current user but of friends for example)
+ * Screen displaying infos of a user profile (not of the current user but of friends for example).
+ *
+ * @param uid The user ID of the profile to display
+ * @param navigationActions The navigation actions to be performed from this screen
+ * @param viewModel The ViewModel managing the user profile data
  */
 @Composable
 fun UserProfileScreen(
