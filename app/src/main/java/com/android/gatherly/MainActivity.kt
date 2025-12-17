@@ -341,7 +341,11 @@ fun GatherlyApp(
         route = Screen.NotificationsScreen.name,
     ) {
       composable(Screen.NotificationsScreen.route) {
-        NotificationsScreen(navigationActions = navigationActions)
+        NotificationsScreen(
+            navigationActions = navigationActions,
+            onVisitProfile = { profile ->
+              navigationActions.navigateTo(Screen.UserProfile(profile.uid))
+            })
       }
     }
 
