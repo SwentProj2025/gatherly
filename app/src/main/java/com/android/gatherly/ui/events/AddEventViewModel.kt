@@ -100,7 +100,7 @@ private var client: OkHttpClient =
               chain
                   .request()
                   .newBuilder()
-                  .header("User-Agent", "BootcampApp (croissant.kerjan@gmail.com)")
+                  .header("User-Agent", "GatherlyApp (kerjangersende@gmail.com)")
                   .build()
           chain.proceed(request)
         }
