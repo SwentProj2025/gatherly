@@ -40,6 +40,11 @@ data class NotificationUiState(
  *
  * It coordinates between [NotificationsRepository] for notifications and [ProfileRepository] for
  * updating the friends list
+ *
+ * @param notificationsRepository Repository providing notification data.
+ * @param profileRepository Repository providing profile data.
+ * @param pointsRepository Repository providing points data.
+ * @param authProvider Function that provides the [FirebaseAuth] instance to use.
  */
 class NotificationViewModel(
     private val notificationsRepository: NotificationsRepository =
@@ -80,7 +85,7 @@ class NotificationViewModel(
                 idToProfile = idToProfile,
                 isLoading = false,
                 hasUnreadFriendRequests = hasUnreadFriendRequests)
-      } catch (e: Exception) {
+      } catch (_: Exception) {
         _uiState.value =
             _uiState.value.copy(
                 isLoading = false, errorMessage = "Failed to load user's notifications")
@@ -88,7 +93,11 @@ class NotificationViewModel(
     }
   }
 
-  /** Accepts a friend request represented by [notificationId]. */
+  /**
+   * Accepts a friend request represented by [notificationId].
+   *
+   * @param notificationId The ID of the friend request notification to accept.
+   */
   fun acceptFriendRequest(notificationId: String) {
     viewModelScope.launch {
       try {
@@ -128,13 +137,17 @@ class NotificationViewModel(
         notificationsRepository.addNotification(acceptedNotification)
         notificationsRepository.deleteNotification(notification.id)
         loadNotifications()
-      } catch (e: Exception) {
+      } catch (_: Exception) {
         _uiState.value = _uiState.value.copy(errorMessage = "Failed to accept friend request")
       }
     }
   }
 
-  /** Rejects a friend request represented by [notificationId]. */
+  /**
+   * Rejects a friend request represented by [notificationId].
+   *
+   * @param notificationId The ID of the friend request notification to reject.
+   */
   fun rejectFriendRequest(notificationId: String) {
     viewModelScope.launch {
       try {
@@ -167,7 +180,7 @@ class NotificationViewModel(
         notificationsRepository.addNotification(rejectedNotification)
         notificationsRepository.deleteNotification(notification.id)
         loadNotifications()
-      } catch (e: Exception) {
+      } catch (_: Exception) {
         _uiState.value = _uiState.value.copy(errorMessage = "Failed to reject friend request")
       }
     }
