@@ -7,6 +7,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.android.gatherly.model.event.Event
+import com.android.gatherly.model.event.EventState
 import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsRepository
 import com.android.gatherly.model.event.EventsRepositoryFirestore
@@ -310,7 +311,11 @@ class EventsViewModel(
     val createdEventList = sorted.filter { it.creatorId == currentUserId }
 
     val globalEventList =
-        sorted.filter { it.creatorId != currentUserId && !it.participants.contains(currentUserId) }
+        sorted.filter {
+          it.creatorId != currentUserId &&
+              !it.participants.contains(currentUserId) &&
+              conditionToParticipate(it, currentUserId)
+        }
 
     return ProcessedEvents(
         fullEventList = sorted,
@@ -388,6 +393,33 @@ class EventsViewModel(
     _currentUserLocation.value = newLocation
     if (_uiState.value.sortOrder == EventSortOrder.PROXIMITY) {
       viewModelScope.launch { updateUIStateWithProcessedEvents(_uiState.value.currentUserId) }
+    }
+  }
+
+  /**
+   * Helper private function : return true if the user can participate to the event
+   *
+   * @param event the event to check
+   * @param currentUserId the id of the current user
+   * @return Boolean indicating if the user can participate to the event depending on its state
+   */
+  private fun conditionToParticipate(event: Event, currentUserId: String): Boolean {
+    return when (event.state) {
+      EventState.PUBLIC -> true
+      EventState.PRIVATE_GROUP -> false
+      EventState.PRIVATE_FRIENDS -> {
+        val final = false
+        viewModelScope.launch {
+          val creatorProfile = profileRepository.getProfileByUid(event.creatorId)
+          if (creatorProfile == null) {
+            false
+          } else {
+            val friendsIdsList = creatorProfile.friendUids
+            friendsIdsList.contains(currentUserId)
+          }
+        }
+        return final
+      }
     }
   }
 }
