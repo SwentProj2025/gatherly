@@ -24,7 +24,6 @@ import com.android.gatherly.utils.FirebaseEmulator
 import com.android.gatherly.utils.FirestoreGatherlyTest
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
-import kotlin.test.Ignore
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
@@ -200,7 +199,6 @@ class NavigationTest : FirestoreGatherlyTest() {
    * anonymous, they get a warning before signing out
    */
   @Test
-  @Ignore("Extremely flaky test, needs investigation")
   fun canLogOutFromProfileAnon() {
     composeTestRule.setContent { GatherlyApp() }
     composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).performClick()
@@ -220,7 +218,6 @@ class NavigationTest : FirestoreGatherlyTest() {
    * anonymous, they get a warning before signing out
    */
   @Test
-  @Ignore("Extremely flaky test, needs investigation")
   fun canLogOutFromSettingsAnon() {
     composeTestRule.setContent { GatherlyApp() }
     composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).performClick()
