@@ -17,6 +17,7 @@ import org.junit.Test
  */
 class ToDosRepositoryFirestoreTest : FirestoreGatherlyTest() {
 
+  /** Verifies that multiple todos can be added and retrieved correctly. */
   @Test
   fun add_and_getAll_works() =
       runTest(timeout = 120.seconds) {
@@ -29,6 +30,7 @@ class ToDosRepositoryFirestoreTest : FirestoreGatherlyTest() {
         assertTrue(todos.any { it.name == "Walk the dog" })
       }
 
+  /** Verifies that getTodo returns the exact todo with all core fields intact. */
   @Test
   fun getTodo_returns_exact_todo() =
       runTest(timeout = 120.seconds) {
@@ -41,6 +43,7 @@ class ToDosRepositoryFirestoreTest : FirestoreGatherlyTest() {
         assertEquals(todo1.status, retrieved.status)
       }
 
+  /** Verifies that getTodo throws when the requested todo does not exist. */
   @Test
   fun getTodo_throws_when_not_found() =
       runTest(timeout = 120.seconds) {
@@ -52,6 +55,7 @@ class ToDosRepositoryFirestoreTest : FirestoreGatherlyTest() {
         }
       }
 
+  /** Verifies that todos with location and due time are stored and retrieved correctly. */
   @Test
   fun addTodo_with_location_and_dueTime_stores_correctly() =
       runTest(timeout = 120.seconds) {
@@ -67,6 +71,7 @@ class ToDosRepositoryFirestoreTest : FirestoreGatherlyTest() {
         assertEquals(46.52, fetched.location?.latitude ?: 0.0, 0.0001)
       }
 
+  /** Verifies that editTodo updates an existing todo's fields correctly. */
   @Test
   fun editTodo_updates_existing_todo() =
       runTest(timeout = 120.seconds) {
@@ -85,6 +90,7 @@ class ToDosRepositoryFirestoreTest : FirestoreGatherlyTest() {
         assertEquals(ToDoStatus.ENDED, fetched.status)
       }
 
+  /** Verifies that deleteTodo removes the specified todo from the repository. */
   @Test
   fun deleteTodo_removes_it() =
       runTest(timeout = 120.seconds) {
@@ -98,6 +104,7 @@ class ToDosRepositoryFirestoreTest : FirestoreGatherlyTest() {
         assertEquals(todo2.uid, todos.first().uid)
       }
 
+  /** Verifies that deleting a non-existent todo throws an exception. */
   @Test
   fun deleteTodo_throws_if_not_found() =
       runTest(timeout = 120.seconds) {
@@ -109,6 +116,7 @@ class ToDosRepositoryFirestoreTest : FirestoreGatherlyTest() {
         }
       }
 
+  /** Verifies that toggleStatus correctly flips a todo's completion state. */
   @Test
   fun toggleStatus_flips_status_correctly() =
       runTest(timeout = 120.seconds) {
@@ -125,6 +133,7 @@ class ToDosRepositoryFirestoreTest : FirestoreGatherlyTest() {
         assertEquals(ToDoStatus.ONGOING, backToOngoing.status)
       }
 
+  /** Verifies that getAllEndedTodos returns only completed todos. */
   @Test
   fun getAllEndedTodos_returns_only_completed() =
       runTest(timeout = 120.seconds) {
@@ -141,6 +150,7 @@ class ToDosRepositoryFirestoreTest : FirestoreGatherlyTest() {
         assertTrue(endedTodos.all { it.status == ToDoStatus.ENDED })
       }
 
+  /** Verifies that getNewUid generates unique, non-empty identifiers. */
   @Test
   fun getNewUid_returns_unique_values() {
     val id1 = repository.getNewUid()
