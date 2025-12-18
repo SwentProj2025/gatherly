@@ -485,4 +485,67 @@ class SettingsViewModelTest {
         advanceUntilIdle()
         Mockito.verify(statusManagerMock).setStatus(status = ProfileStatus.OFFLINE)
       }
+
+  /** Tests that deleteProfile calls deleteUserAccountUseCase and signs out on success. */
+  @Test
+  fun deleteProfile_Success_SetsSignedOut() =
+      runTest(testDispatcher, testTimeout) {
+        val deleteUseCaseMock = mock<com.android.gatherly.utils.DeleteUserAccountUseCase>()
+
+        val viewModelWithMock = createViewModelWithMockDelete(deleteUseCaseMock)
+
+        viewModelWithMock.deleteProfile(credentialManager)
+        advanceUntilIdle()
+
+        Mockito.verify(deleteUseCaseMock).deleteUserAccount("currentUser")
+        assertTrue(viewModelWithMock.uiState.value.signedOut)
+      }
+
+  /** Tests that deleteProfile sets errorMsg when deletion fails. */
+  @Test
+  fun deleteProfile_Failure_SetsErrorMsg() =
+      runTest(testDispatcher, testTimeout) {
+        val deleteUseCaseMock = mock<com.android.gatherly.utils.DeleteUserAccountUseCase>()
+        Mockito.`when`(deleteUseCaseMock.deleteUserAccount("currentUser"))
+            .thenThrow(RuntimeException("fail"))
+
+        val viewModelWithMock = createViewModelWithMockDelete(deleteUseCaseMock)
+
+        viewModelWithMock.deleteProfile(credentialManager)
+        advanceUntilIdle()
+
+        val state = viewModelWithMock.uiState.value
+        assertEquals("Failed to delete profile. Please try again.", state.errorMsg)
+        assertFalse(state.signedOut)
+      }
+
+  /**
+   * Creates a [SettingsViewModel] instance with a mocked DeleteUserAccountUseCase and a mocked
+   * authentication provider. This is used for testing deleteProfile behavior without relying on
+   * real Firebase or Android components.
+   *
+   * @param deleteUseCaseMock The mocked DeleteUserAccountUseCase to inject.
+   * @return A [SettingsViewModel] instance with the mock dependencies applied.
+   */
+  private fun createViewModelWithMockDelete(
+      deleteUseCaseMock: com.android.gatherly.utils.DeleteUserAccountUseCase
+  ): SettingsViewModel {
+    val mockAuthProvider = mockitoUtils.mockAuth
+    Mockito.`when`(mockAuthProvider.currentUser).thenReturn(mockitoUtils.mockUser)
+
+    return SettingsViewModel(
+            profileRepository = profileLocalRepository,
+            userStatusManager = statusManagerMock,
+            authProvider = { mockAuthProvider },
+            groupsRepository = groupsLocalRepository,
+            eventsRepository = eventsLocalRepository,
+            focusSessionsRepository = focusSessionsLocalRepository,
+            todosRepository = toDosLocalRepository)
+        .also {
+          it.javaClass.getDeclaredField("deleteUserAccountUseCase").apply {
+            isAccessible = true
+            set(it, deleteUseCaseMock)
+          }
+        }
+  }
 }
