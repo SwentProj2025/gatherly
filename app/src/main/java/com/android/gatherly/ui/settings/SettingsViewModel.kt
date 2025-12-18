@@ -399,8 +399,10 @@ class SettingsViewModel(
   private fun checkUsernameAvailability(username: String) {
     viewModelScope.launch {
       try {
-        if (username == originalProfile?.username) {
-          _uiState.value.copy(isUsernameAvailable = true, invalidUsernameMsg = null)
+        val originalNormalizedUsername = originalProfile?.username?.let { Username.normalize(it) }
+        if (username == originalNormalizedUsername) {
+          _uiState.value =
+              _uiState.value.copy(isUsernameAvailable = true, invalidUsernameMsg = null)
           return@launch
         }
         val available = profileRepository.isUsernameAvailable(username)
