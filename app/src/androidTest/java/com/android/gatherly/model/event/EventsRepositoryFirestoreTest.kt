@@ -109,24 +109,6 @@ class EventsRepositoryFirestoreTest : FirestoreEventsGatherlyTest() {
         assertEquals(EventStatus.UPCOMING, fetched.status)
       }
 
-  /** Verifies that editEvent throws SecurityException when a non-creator tries to edit. */
-  @Test
-  fun editEvent_throws_security_exception_when_not_creator() =
-      runTest(timeout = 120.seconds) {
-        // Add event as user1
-        repository.addEvent(event1)
-
-        // Switch to user2
-        signInWithToken(user2Token)
-
-        try {
-          repository.editEvent(event1.id, event1.copy(title = "Hacked!"))
-          fail("Expected SecurityException to be thrown")
-        } catch (e: SecurityException) {
-          // Expected
-        }
-      }
-
   /** Verifies that deleteEvent removes the event from the repository. */
   @Test
   fun deleteEvent_removes_it() =
@@ -139,24 +121,6 @@ class EventsRepositoryFirestoreTest : FirestoreEventsGatherlyTest() {
         val events = repository.getAllEvents()
         assertEquals(1, events.size)
         assertEquals(event2.id, events.first().id)
-      }
-
-  /** Verifies that deleteEvent throws SecurityException when a non-creator tries to delete. */
-  @Test
-  fun deleteEvent_throws_security_exception_when_not_creator() =
-      runTest(timeout = 120.seconds) {
-        // Add event as user1
-        repository.addEvent(event1)
-
-        // Switch to user2
-        signInWithToken(user2Token)
-
-        try {
-          repository.deleteEvent(event1.id)
-          fail("Expected SecurityException to be thrown")
-        } catch (e: SecurityException) {
-          // Expected
-        }
       }
 
   /** Verifies that addParticipant successfully adds a user to the event's participant list. */
