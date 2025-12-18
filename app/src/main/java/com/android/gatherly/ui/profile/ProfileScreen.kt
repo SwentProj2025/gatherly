@@ -65,7 +65,6 @@ object ProfileScreenTestTags {
   const val PROFILE_SCHOOL = "profileSchool"
   const val PROFILE_FRIENDS_COUNT = "profileFriendsCount"
   const val PROFILE_FOCUS_POINTS_COUNT = "profileFocusPointsCount"
-  const val PROFILE_FOCUS_SESSIONS = "profileFocusSessions"
   const val PROFILE_GROUPS = "profileGroups"
   const val GROUPS_OVERVIEW_CONTAINER = "groupsOverviewContainer"
   const val GROUP_ROW = "groupRow"
@@ -360,21 +359,6 @@ fun ProfileScreen(
                     }
 
                 Spacer(modifier = Modifier.height(fieldSpacingLarge))
-
-                // Focus Sessions
-                Text(
-                    text = stringResource(R.string.profile_focus_sessions_section_title),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    textAlign = TextAlign.Center,
-                    modifier =
-                        Modifier.fillMaxWidth()
-                            .testTag(ProfileScreenTestTags.PROFILE_FOCUS_SESSIONS))
-                Spacer(modifier = Modifier.height(fieldSpacingSmall))
-                Text(
-                    text = stringResource(R.string.profile_empty_focus_sessions_message),
-                    style = MaterialTheme.typography.bodyMedium,
-                    textAlign = TextAlign.Center)
 
                 // Groups
                 Spacer(modifier = Modifier.height(fieldSpacingLarge))
