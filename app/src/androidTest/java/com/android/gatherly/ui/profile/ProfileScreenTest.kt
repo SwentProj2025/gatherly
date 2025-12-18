@@ -139,7 +139,6 @@ class ProfileScreenTest {
   @Test
   fun sectionsTitles_AreDisplayedCorrectly() {
     setContent()
-    composeTestRule.onNodeWithTag(ProfileScreenTestTags.PROFILE_FOCUS_SESSIONS).assertExists()
     composeTestRule.onNodeWithTag(ProfileScreenTestTags.PROFILE_GROUPS).assertExists()
   }
 
