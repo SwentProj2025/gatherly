@@ -3,6 +3,7 @@ package com.android.gatherly.utilstest
 import com.android.gatherly.model.event.EventsLocalRepository
 import com.android.gatherly.model.focusSession.FocusSessionsLocalRepository
 import com.android.gatherly.model.group.GroupsLocalRepository
+import com.android.gatherly.model.notification.NotificationsLocalRepository
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.utils.DeleteUserAccountUseCase
@@ -25,6 +26,7 @@ import kotlinx.coroutines.test.runTest
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
+import org.mockito.kotlin.not
 
 /**
  * Unit tests for [com.android.gatherly.utils.DeleteUserAccountUseCase] using local in-memory
@@ -41,6 +43,8 @@ class DeleteUserAccountUseCaseTest {
   private lateinit var focusRepo: FocusSessionsLocalRepository
   private lateinit var todosRepo: ToDosLocalRepository
   private lateinit var useCase: DeleteUserAccountUseCase
+  private lateinit var notificationsLocalRepository: NotificationsLocalRepository
+
   private lateinit var testDispatcher: TestDispatcher
   private val testTimeout = 120.seconds
 
@@ -52,6 +56,7 @@ class DeleteUserAccountUseCaseTest {
     eventsRepo = EventsLocalRepository()
     focusRepo = FocusSessionsLocalRepository()
     todosRepo = ToDosLocalRepository()
+    notificationsLocalRepository = NotificationsLocalRepository()
     testDispatcher = UnconfinedTestDispatcher()
 
     useCase =
@@ -60,7 +65,8 @@ class DeleteUserAccountUseCaseTest {
             groupsRepository = groupsRepo,
             eventsRepository = eventsRepo,
             focusSessionsRepository = focusRepo,
-            todosRepository = todosRepo)
+            todosRepository = todosRepo,
+            notificationsRepository = notificationsLocalRepository)
   }
 
   @Test

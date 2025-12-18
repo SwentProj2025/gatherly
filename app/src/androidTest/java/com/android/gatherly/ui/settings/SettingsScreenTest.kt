@@ -8,6 +8,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.android.gatherly.model.event.EventsLocalRepository
 import com.android.gatherly.model.focusSession.FocusSessionsLocalRepository
 import com.android.gatherly.model.group.GroupsLocalRepository
+import com.android.gatherly.model.notification.NotificationsLocalRepository
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.todo.ToDosLocalRepository
@@ -45,6 +46,7 @@ class SettingsScreenTest {
   private lateinit var eventsLocalRepository: EventsLocalRepository
   private lateinit var focusSessionsLocalRepository: FocusSessionsLocalRepository
   private lateinit var toDosLocalRepository: ToDosLocalRepository
+  private lateinit var notificationsLocalRepository: NotificationsLocalRepository
   private lateinit var settingsViewModel: SettingsViewModel
   private lateinit var mockitoUtils: MockitoUtils
 
@@ -56,6 +58,7 @@ class SettingsScreenTest {
     eventsLocalRepository = EventsLocalRepository()
     focusSessionsLocalRepository = FocusSessionsLocalRepository()
     toDosLocalRepository = ToDosLocalRepository()
+    notificationsLocalRepository = NotificationsLocalRepository()
     fill_repository()
   }
 
@@ -81,7 +84,8 @@ class SettingsScreenTest {
             groupsRepository = groupsLocalRepository,
             eventsRepository = eventsLocalRepository,
             focusSessionsRepository = focusSessionsLocalRepository,
-            todosRepository = toDosLocalRepository)
+            todosRepository = toDosLocalRepository,
+            notificationsRepository = notificationsLocalRepository)
     composeRule.setContent { SettingsScreen(settingsViewModel) }
   }
 
@@ -422,7 +426,8 @@ class SettingsScreenTest {
             groupsRepository = groupsLocalRepository,
             eventsRepository = eventsLocalRepository,
             focusSessionsRepository = focusSessionsLocalRepository,
-            todosRepository = toDosLocalRepository)
+            todosRepository = toDosLocalRepository,
+            notificationsRepository = notificationsLocalRepository)
     composeRule.setContent { SettingsScreen(settingsViewModel) }
 
     composeRule.onNodeWithTag(SettingsScreenTestTags.GOOGLE_BUTTON).assertIsDisplayed()

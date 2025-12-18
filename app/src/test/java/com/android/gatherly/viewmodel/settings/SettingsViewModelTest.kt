@@ -5,6 +5,7 @@ import androidx.credentials.CredentialManager
 import com.android.gatherly.model.event.EventsLocalRepository
 import com.android.gatherly.model.focusSession.FocusSessionsLocalRepository
 import com.android.gatherly.model.group.GroupsLocalRepository
+import com.android.gatherly.model.notification.NotificationsLocalRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileStatus
@@ -43,6 +44,7 @@ class SettingsViewModelTest {
   private lateinit var eventsLocalRepository: EventsLocalRepository
   private lateinit var focusSessionsLocalRepository: FocusSessionsLocalRepository
   private lateinit var toDosLocalRepository: ToDosLocalRepository
+  private lateinit var notificationsLocalRepository: NotificationsLocalRepository
   private lateinit var viewModel: SettingsViewModel
   private lateinit var mockitoUtils: MockitoUtils
   private lateinit var statusManagerMock: UserStatusManager
@@ -57,6 +59,7 @@ class SettingsViewModelTest {
     eventsLocalRepository = EventsLocalRepository()
     focusSessionsLocalRepository = FocusSessionsLocalRepository()
     toDosLocalRepository = ToDosLocalRepository()
+    notificationsLocalRepository = NotificationsLocalRepository()
     statusManagerMock = mock()
     fill_repository()
     credentialManager = mock()
@@ -71,7 +74,8 @@ class SettingsViewModelTest {
             groupsRepository = groupsLocalRepository,
             eventsRepository = eventsLocalRepository,
             focusSessionsRepository = focusSessionsLocalRepository,
-            todosRepository = toDosLocalRepository)
+            todosRepository = toDosLocalRepository,
+            notificationsRepository = notificationsLocalRepository)
   }
 
   @After
@@ -384,7 +388,8 @@ class SettingsViewModelTest {
                 groupsRepository = groupsLocalRepository,
                 eventsRepository = eventsLocalRepository,
                 focusSessionsRepository = focusSessionsLocalRepository,
-                todosRepository = toDosLocalRepository)
+                todosRepository = toDosLocalRepository,
+                notificationsRepository = notificationsLocalRepository)
 
         val originalProfile =
             Profile(uid = uid, name = "Alice", username = "alice_ok", profilePicture = "same_url")
@@ -421,7 +426,8 @@ class SettingsViewModelTest {
                 groupsRepository = groupsLocalRepository,
                 eventsRepository = eventsLocalRepository,
                 focusSessionsRepository = focusSessionsLocalRepository,
-                todosRepository = toDosLocalRepository)
+                todosRepository = toDosLocalRepository,
+                notificationsRepository = notificationsLocalRepository)
 
         val fakeUri = Mockito.mock(Uri::class.java)
         Mockito.mockStatic(Uri::class.java).use { mockedStatic ->
@@ -540,7 +546,8 @@ class SettingsViewModelTest {
             groupsRepository = groupsLocalRepository,
             eventsRepository = eventsLocalRepository,
             focusSessionsRepository = focusSessionsLocalRepository,
-            todosRepository = toDosLocalRepository)
+            todosRepository = toDosLocalRepository,
+            notificationsRepository = notificationsLocalRepository)
         .also {
           it.javaClass.getDeclaredField("deleteUserAccountUseCase").apply {
             isAccessible = true

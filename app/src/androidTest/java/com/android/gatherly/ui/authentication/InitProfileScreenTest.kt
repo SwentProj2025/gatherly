@@ -3,8 +3,13 @@ package com.android.gatherly.ui.authentication
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.android.gatherly.model.event.EventsLocalRepository
+import com.android.gatherly.model.focusSession.FocusSessionsLocalRepository
+import com.android.gatherly.model.group.GroupsLocalRepository
+import com.android.gatherly.model.notification.NotificationsLocalRepository
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
+import com.android.gatherly.model.todo.ToDosLocalRepository
 import com.android.gatherly.ui.settings.SettingsViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -22,6 +27,11 @@ class InitProfileScreenTest {
   @get:Rule val composeRule = createComposeRule()
 
   private lateinit var profileRepository: ProfileRepository
+  private lateinit var groupsLocalRepository: GroupsLocalRepository
+  private lateinit var eventsLocalRepository: EventsLocalRepository
+  private lateinit var focusSessionsLocalRepository: FocusSessionsLocalRepository
+  private lateinit var toDosLocalRepository: ToDosLocalRepository
+  private lateinit var notificationsLocalRepository: NotificationsLocalRepository
   private lateinit var settingsViewModel: SettingsViewModel
   private lateinit var mockAuth: FirebaseAuth
   private lateinit var mockUser: FirebaseUser
@@ -30,6 +40,11 @@ class InitProfileScreenTest {
   @Before
   fun setUp() {
     profileRepository = ProfileLocalRepository()
+    groupsLocalRepository = GroupsLocalRepository()
+    eventsLocalRepository = EventsLocalRepository()
+    focusSessionsLocalRepository = FocusSessionsLocalRepository()
+    toDosLocalRepository = ToDosLocalRepository()
+    notificationsLocalRepository = NotificationsLocalRepository()
 
     // Mock Firebase Auth
     mockAuth = mock(FirebaseAuth::class.java)

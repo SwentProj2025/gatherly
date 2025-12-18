@@ -18,6 +18,8 @@ import com.android.gatherly.model.focusSession.FocusSessionsRepository
 import com.android.gatherly.model.focusSession.FocusSessionsRepositoryProvider
 import com.android.gatherly.model.group.GroupsRepository
 import com.android.gatherly.model.group.GroupsRepositoryProvider
+import com.android.gatherly.model.notification.NotificationsRepository
+import com.android.gatherly.model.notification.NotificationsRepositoryProvider
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileRepository
 import com.android.gatherly.model.profile.ProfileRepositoryProvider
@@ -112,6 +114,7 @@ data class SettingsUiState(
  * @param eventsRepository Repository for managing user events.
  * @param focusSessionsRepository Repository for managing user focus sessions.
  * @param todosRepository Repository for managing user to-dos.
+ * @param notificationsRepository Repository for managing user notifications
  */
 class SettingsViewModel(
     private val profileRepository: ProfileRepository = ProfileRepositoryProvider.repository,
@@ -123,6 +126,8 @@ class SettingsViewModel(
     private val focusSessionsRepository: FocusSessionsRepository =
         FocusSessionsRepositoryProvider.repository,
     private val todosRepository: ToDosRepository = ToDosRepositoryProvider.repository,
+    private val notificationsRepository: NotificationsRepository =
+        NotificationsRepositoryProvider.repository,
 ) : ViewModel() {
   private val _uiState = MutableStateFlow(SettingsUiState())
   /** Observable UI state exposed to the Settings screen. */
@@ -138,7 +143,8 @@ class SettingsViewModel(
           groupsRepository = groupsRepository,
           eventsRepository = eventsRepository,
           focusSessionsRepository = focusSessionsRepository,
-          todosRepository = todosRepository)
+          todosRepository = todosRepository,
+          notificationsRepository = notificationsRepository)
 
   private var originalProfile: Profile? = null
 
