@@ -1,9 +1,11 @@
 package com.android.gatherly.model.todo
 
+import com.android.gatherly.model.todoCategory.ToDoCategory
+
 /**
  * Repository interface that defines all operations for managing [ToDo] items.
  *
- * This abstraction allows different data sources (e.g., Firestore, local DB, or fake data)
+ * This abstraction allows different implementations (e.g., Firestore or in-memory repositories)
  */
 interface ToDosRepository {
 
@@ -11,19 +13,19 @@ interface ToDosRepository {
   fun getNewUid(): String
 
   /**
-   * Retrieves all [ToDo] items from the repository.
+   * Retrieves all [ToDo] items owned by the current signed-in user.
    *
-   * @return A list of all [ToDo] items.
+   * @return A list of all the user's [ToDo] items.
    */
   suspend fun getAllTodos(): List<ToDo>
 
   /**
    * Retrieves a specific [ToDo] item by its unique identifier.
    *
-   * @param todoID The unique identifier of the [ToDo] item to retrieve.
-   * @return The [ToDo] item with the specified identifier.
+   * @param todoId The unique identifier of the [ToDo] item to retrieve.
+   * @return The corresponding [ToDo].
    */
-  suspend fun getTodo(todoID: String): ToDo
+  suspend fun getTodo(todoId: String): ToDo
 
   /**
    * Adds a new [ToDo] item to the repository.
@@ -35,24 +37,24 @@ interface ToDosRepository {
   /**
    * Edits an existing [ToDo] item in the repository.
    *
-   * @param todoID The unique identifier of the [ToDo] item to edit.
+   * @param todoId The unique identifier of the [ToDo] item to edit.
    * @param newValue The new value for the [ToDo] item.
    */
-  suspend fun editTodo(todoID: String, newValue: ToDo)
+  suspend fun editTodo(todoId: String, newValue: ToDo)
 
   /**
    * Deletes a [ToDo] item from the repository.
    *
-   * @param todoID The unique identifier of the [ToDo] item to delete.
+   * @param todoId The unique identifier of the [ToDo] item to delete.
    */
-  suspend fun deleteTodo(todoID: String)
+  suspend fun deleteTodo(todoId: String)
 
   /**
-   * Toggles the status of a [ToDo] (e.g., between ongoing and ended).
+   * Toggles the status of a [ToDo] between [ToDoStatus.ONGOING] and [ToDoStatus.ENDED].
    *
-   * @param todoID The identifier of the [ToDo] to toggle.
+   * @param todoId The identifier of the [ToDo] to toggle.
    */
-  suspend fun toggleStatus(todoID: String)
+  suspend fun toggleStatus(todoId: String)
 
   /**
    * Retrieves all [ToDo] items marked as ended from the repository.
@@ -61,6 +63,13 @@ interface ToDosRepository {
    */
   suspend fun getAllEndedTodos(): List<ToDo>
 
-  /** Retrieves all [ToDo] items to put the tag to null when this one is deleted */
+  /**
+   * Clears the tag reference for all [ToDo] items using a given category.
+   *
+   * This is typically called when a [ToDoCategory] is deleted to avoid dangling references.
+   *
+   * @param categoryId The identifier of the deleted category.
+   * @param ownerId The owner of the affected [ToDo] items.
+   */
   suspend fun updateTodosTagToNull(categoryId: String, ownerId: String)
 }

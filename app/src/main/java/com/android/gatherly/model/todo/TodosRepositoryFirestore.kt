@@ -35,12 +35,6 @@ class ToDosRepositoryFirestore(private val db: FirebaseFirestore) : ToDosReposit
     return Firebase.auth.currentUser?.uid ?: throw IllegalStateException("No signed in user")
   }
 
-  /**
-   * Creates and returns a new Firestore document ID.
-   *
-   * This method does **not** contact Firestore; it only generates a client-side identifier that
-   * will later be used for a new document.
-   */
   override fun getNewUid(): String {
     return collection.document().id
   }
@@ -52,25 +46,21 @@ class ToDosRepositoryFirestore(private val db: FirebaseFirestore) : ToDosReposit
    * @throws IllegalStateException if no user is signed in.
    */
   override suspend fun getAllTodos(): List<ToDo> {
-    val snap =
-        collection
-            .whereEqualTo("ownerId", currentUserId())
-            .get()
-            .await() // QuerySnapShot in this case pretty much list of docs.
+    val snap = collection.get().await() // QuerySnapShot in this case pretty much list of docs.
     return snap.documents.mapNotNull { doc -> snapshotToToDo(doc) }
   }
 
   /**
    * Retrieves a single todo by ID.
    *
-   * @param todoID The unique ID matching the wanted [ToDo].
+   * @param todoId The unique ID matching the wanted [ToDo].
    * @return The matching [ToDo].
    * @throws NoSuchElementException if the [ToDo] is missing.
    * @throws SecurityException if the document's ownerId differs from the current user.
    */
-  override suspend fun getTodo(todoID: String): ToDo {
-    val doc = collection.document(todoID).get().await()
-    val todo = snapshotToToDo(doc) ?: throw NoSuchElementException("Todo with id=$todoID not found")
+  override suspend fun getTodo(todoId: String): ToDo {
+    val doc = collection.document(todoId).get().await()
+    val todo = snapshotToToDo(doc) ?: throw NoSuchElementException("Todo with id=$todoId not found")
     if (todo.ownerId != currentUserId()) {
       throw SecurityException("Todo doesn't belong to signed in user.")
     }
@@ -93,54 +83,54 @@ class ToDosRepositoryFirestore(private val db: FirebaseFirestore) : ToDosReposit
   /**
    * Updates an existing [ToDo] with new data.
    *
-   * @param todoID The unique ID matching the [ToDo] to update.
+   * @param todoId The unique ID matching the [ToDo] to update.
    * @param newValue The new [ToDo] content to store.
    * @throws NoSuchElementException if no document matches the given ID.
    * @throws SecurityException if the [ToDo] is not owned by the signed-in user.
    */
-  override suspend fun editTodo(todoID: String, newValue: ToDo) {
-    val doc = collection.document(todoID).get().await()
+  override suspend fun editTodo(todoId: String, newValue: ToDo) {
+    val doc = collection.document(todoId).get().await()
     val existing =
-        snapshotToToDo(doc) ?: throw NoSuchElementException("Todo with id=$todoID not found")
+        snapshotToToDo(doc) ?: throw NoSuchElementException("Todo with id=$todoId not found")
 
     if (existing.ownerId != currentUserId()) {
       throw SecurityException("Todo does not belong to signed in user")
     }
 
     val newValue = newValue.copy(ownerId = currentUserId())
-    collection.document(todoID).set(todoToMap(newValue)).await()
+    collection.document(todoId).set(todoToMap(newValue)).await()
   }
 
   /**
    * Deletes a [ToDo] by ID.
    *
-   * @param todoID The unique ID matching the [ToDo] to delete.
+   * @param todoId The unique ID matching the [ToDo] to delete.
    * @throws NoSuchElementException if the [ToDo] does not exist.
    * @throws SecurityException if the [ToDo] is not owned by the signed-in user.
    */
-  override suspend fun deleteTodo(todoID: String) {
-    val doc = collection.document(todoID).get().await()
+  override suspend fun deleteTodo(todoId: String) {
+    val doc = collection.document(todoId).get().await()
     val existing =
-        snapshotToToDo(doc) ?: throw NoSuchElementException("Todo with id=$todoID not found")
+        snapshotToToDo(doc) ?: throw NoSuchElementException("Todo with id=$todoId not found")
 
     if (existing.ownerId != currentUserId()) {
       throw SecurityException("Todo does not belong to signed in user")
     }
 
-    collection.document(todoID).delete().await()
+    collection.document(todoId).delete().await()
   }
 
   /**
    * Toggles a [ToDo]'s completion status between [ToDoStatus.ONGOING] and [ToDoStatus.ENDED].
    *
-   * @param todoID The unique ID matching the [ToDo] to toggle.
+   * @param todoId The unique ID matching the [ToDo] to toggle.
    * @throws NoSuchElementException if the [ToDo] does not exist.
    * @throws SecurityException if the [ToDo] is not owned by the signed-in user.
    */
-  override suspend fun toggleStatus(todoID: String) {
-    val todo = getTodo(todoID)
+  override suspend fun toggleStatus(todoId: String) {
+    val todo = getTodo(todoId)
     val newStatus = if (todo.status == ToDoStatus.ENDED) ToDoStatus.ONGOING else ToDoStatus.ENDED
-    editTodo(todoID, todo.copy(status = newStatus))
+    editTodo(todoId, todo.copy(status = newStatus))
   }
 
   /**
@@ -157,6 +147,23 @@ class ToDosRepositoryFirestore(private val db: FirebaseFirestore) : ToDosReposit
             .get()
             .await() // QuerySnapShot in this case pretty much list of docs.
     return snap.documents.mapNotNull { doc -> snapshotToToDo(doc) }
+  }
+
+  override suspend fun updateTodosTagToNull(categoryId: String, ownerId: String) {
+    val todosToUpdate =
+        db.collection("users")
+            .document(ownerId)
+            .collection("todos")
+            .whereEqualTo("tag.id", categoryId)
+            .get()
+            .await()
+
+    val batch = db.batch()
+
+    for (document in todosToUpdate.documents) {
+      batch.update(document.reference, "tag", null)
+    }
+    batch.commit().await()
   }
 
   /**
@@ -193,8 +200,8 @@ class ToDosRepositoryFirestore(private val db: FirebaseFirestore) : ToDosReposit
         categoryMap?.let { catMap ->
           val categoryId = catMap["id"] as? String
           val categoryName = catMap["name"] as? String
-          val categoryColorLong = catMap["color"] as? Long
-          val categoryColor = categoryColorLong?.let { Color(it) }
+          val categoryColorInt = catMap["color"] as? Long
+          val categoryColor = categoryColorInt?.let { Color(it) }
           val categoryIsDefault = catMap["isDefault"] as? Boolean
           val categoryIsDeleted = catMap["isDeleted"] as? Boolean
           if (categoryId != null &&
@@ -238,7 +245,7 @@ class ToDosRepositoryFirestore(private val db: FirebaseFirestore) : ToDosReposit
             },
         "status" to todo.status.name,
         "ownerId" to todo.ownerId,
-        "priority" to todo.priorityLevel,
+        "priority" to todo.priorityLevel.name,
         "tag" to
             todo.tag?.let { category ->
               mapOf(
@@ -249,22 +256,5 @@ class ToDosRepositoryFirestore(private val db: FirebaseFirestore) : ToDosReposit
                   "isDeleted" to category.isDeleted,
                   "ownerId" to category.ownerId)
             })
-  }
-
-  override suspend fun updateTodosTagToNull(categoryId: String, ownerId: String) {
-    val todosToUpdate =
-        db.collection("users")
-            .document(ownerId)
-            .collection("todos")
-            .whereEqualTo("tag.id", categoryId)
-            .get()
-            .await()
-
-    val batch = db.batch()
-
-    for (document in todosToUpdate.documents) {
-      batch.update(document.reference, "tag", null)
-    }
-    batch.commit().await()
   }
 }

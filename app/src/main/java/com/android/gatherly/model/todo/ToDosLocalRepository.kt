@@ -2,11 +2,19 @@ package com.android.gatherly.model.todo
 
 import kotlin.String
 
-/** Represents a repository that manages a local list of todos. */
+/**
+ * In-memory implementation of [ToDosRepository].
+ *
+ * This repository is used for unit tests and local execution, without any persistence layer.
+ *
+ * @param limitToUser If non-null, restricts all operations to todos owned by the specified user.
+ */
 class ToDosLocalRepository(private val limitToUser: String? = null) : ToDosRepository {
 
+  /** In-memory storage for todos. */
   private val todos: MutableList<ToDo> = mutableListOf()
 
+  /** ID counter for generating unique todo IDs. */
   private var counter = 0
 
   override fun getNewUid(): String {
@@ -21,8 +29,8 @@ class ToDosLocalRepository(private val limitToUser: String? = null) : ToDosRepos
     }
   }
 
-  override suspend fun getTodo(todoID: String): ToDo {
-    return todos.find { it.uid == todoID }
+  override suspend fun getTodo(todoId: String): ToDo {
+    return todos.find { it.uid == todoId }
         ?: throw Exception("ToDosRepositoryLocal: ToDo not found")
   }
 
@@ -30,8 +38,8 @@ class ToDosLocalRepository(private val limitToUser: String? = null) : ToDosRepos
     todos.add(toDo)
   }
 
-  override suspend fun editTodo(todoID: String, newValue: ToDo) {
-    val index = todos.indexOfFirst { it.uid == todoID }
+  override suspend fun editTodo(todoId: String, newValue: ToDo) {
+    val index = todos.indexOfFirst { it.uid == todoId }
     if (index != -1) {
       todos[index] = newValue
     } else {
@@ -39,8 +47,8 @@ class ToDosLocalRepository(private val limitToUser: String? = null) : ToDosRepos
     }
   }
 
-  override suspend fun deleteTodo(todoID: String) {
-    val index = todos.indexOfFirst { it.uid == todoID }
+  override suspend fun deleteTodo(todoId: String) {
+    val index = todos.indexOfFirst { it.uid == todoId }
     if (index != -1) {
       todos.removeAt(index)
     } else {
@@ -48,12 +56,10 @@ class ToDosLocalRepository(private val limitToUser: String? = null) : ToDosRepos
     }
   }
 
-  override suspend fun toggleStatus(todoID: String) {
-    TODO("Not yet implemented")
-  }
+  override suspend fun toggleStatus(todoId: String) {}
 
   override suspend fun getAllEndedTodos(): List<ToDo> {
-    TODO("Not yet implemented")
+    return emptyList()
   }
 
   override suspend fun updateTodosTagToNull(categoryId: String, ownerId: String) {
