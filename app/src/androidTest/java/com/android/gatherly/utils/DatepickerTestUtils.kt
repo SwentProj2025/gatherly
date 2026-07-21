@@ -15,6 +15,7 @@ import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
 import com.google.firebase.Timestamp
+import java.text.SimpleDateFormat
 import java.time.LocalDate
 import java.time.Month
 import java.util.Calendar
@@ -32,8 +33,8 @@ object TestDates {
   val pastYear = currentYear - 1
   val futureYear = currentYear + 1
 
-  val futureDate = "$currentDay/$currentMonth/$futureYear"
-  val pastDate = "$currentDay/$currentMonth/$pastYear"
+  // Must match the format used by GatherlyDatePicker (utils/DatePickerUtils.kt).
+  private val displayFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
 
   val calendar =
       Calendar.getInstance().apply {
@@ -41,7 +42,8 @@ object TestDates {
         set(Calendar.MONTH, currentMonth - 1)
         set(Calendar.DAY_OF_MONTH, currentDay)
       }
-  val futureDueDate: Timestamp = Timestamp(calendar.time)
+
+  val futureDate: String = displayFormatter.format(calendar.time)
 
   val calendarPast =
       Calendar.getInstance().apply {
@@ -49,7 +51,8 @@ object TestDates {
         set(Calendar.MONTH, currentMonth - 1)
         set(Calendar.DAY_OF_MONTH, currentDay)
       }
-  val pastDueDate: Timestamp = Timestamp(calendarPast.time)
+
+  val pastDate: String = displayFormatter.format(calendarPast.time)
 
   val calendarCurrent =
       Calendar.getInstance().apply {
