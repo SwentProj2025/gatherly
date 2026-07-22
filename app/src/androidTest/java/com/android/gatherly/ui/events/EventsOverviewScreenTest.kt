@@ -25,6 +25,7 @@ import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.event.EventsLocalRepository
 import com.android.gatherly.model.event.EventsRepository
 import com.android.gatherly.model.map.Location
+import com.android.gatherly.model.notification.NotificationsLocalRepository
 import com.android.gatherly.model.profile.Profile
 import com.android.gatherly.model.profile.ProfileLocalRepository
 import com.android.gatherly.model.profile.ProfileRepository
@@ -39,8 +40,8 @@ import java.text.SimpleDateFormat
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import java.util.Date
+import java.util.Locale
 import java.util.NoSuchElementException
-import kotlin.math.ceil
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -84,7 +85,8 @@ class EventsOverviewScreenTest {
         EventsOverviewViewModel(
             eventsRepository = eventsRepository,
             profileRepository = profileRepository,
-            authProvider = { mockitoUtils.mockAuth })
+            authProvider = { mockitoUtils.mockAuth },
+            notificationsRepository = NotificationsLocalRepository())
     composeTestRule.setContent {
       EventsOverviewScreen(
           eventsOverviewViewModel = eventsOverviewViewModel,
@@ -1003,8 +1005,9 @@ class EventsOverviewScreenTest {
    * @param event The event item to scroll to
    */
   private fun ComposeTestRule.scrollToEvent(event: Event) {
-    onNodeWithTag(EventsScreenTestTags.ALL_LISTS)
-        .performScrollToNode(hasTestTag(EventsScreenTestTags.getTestTagForEventItem(event)))
+    val tag = EventsScreenTestTags.getTestTagForEventItem(event)
+    onNodeWithTag(EventsScreenTestTags.ALL_LISTS).performScrollToNode(hasTestTag(tag))
+    waitUntil(UI_WAIT_TIMEOUT) { onAllNodesWithTag(tag).fetchSemanticsNodes().isNotEmpty() }
   }
 
   /* ------------------------------ Test Data Filter cases ---------------------------------------*/
@@ -1336,11 +1339,11 @@ class EventsOverviewScreenTest {
           .isDisplayed()
     }
 
-    val distance = distance(fakeLocationEPFL, fakeLocationMilano)
-    val roundUp = ceil(distance * 10) / 10
+    val distanceKm = distance(fakeLocationEPFL, fakeLocationMilano)
+    val expected = String.format(Locale.getDefault(), "%.1f km", distanceKm)
     composeTestRule
         .onNodeWithTag(EventsScreenTestTags.ICONS_PROXIMITY_DISTANCE_TEXT, useUnmergedTree = true)
         .assertIsDisplayed()
-        .assertTextContains("$roundUp km")
+        .assertTextContains(expected)
   }
 }
