@@ -37,7 +37,7 @@ class Milestone3End2End : FirestoreGatherlyTest() {
       GrantPermissionRule.grant(
           Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
 
-  val TIMEOUT = 300000L
+  val TIMEOUT = 60_000L
   private var currentCredentialManager: CredentialManager? = null
 
   // Credentials
@@ -221,7 +221,7 @@ class Milestone3End2End : FirestoreGatherlyTest() {
     // Sleep to let the async Firestore writes complete before the caller triggers
     // restartAppWithUser (which cancels viewModelScope mid-write).
     // See PR description for context on the underlying race in FriendsViewModel.
-    Thread.sleep(3000)
+    Thread.sleep(5000)
   }
 
   /**
