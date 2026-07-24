@@ -220,7 +220,7 @@ class Milestone3End2End : FirestoreGatherlyTest() {
     // The friend request send is fire-and-forget from the UI (viewModelScope.launch).
     // Sleep to let the async Firestore writes complete before the caller triggers
     // restartAppWithUser (which cancels viewModelScope mid-write).
-    // See PR description for context on the underlying race in FriendsViewModel.
+    // See PR #570 description for context on the underlying race in FriendsViewModel.
     Thread.sleep(5000)
   }
 

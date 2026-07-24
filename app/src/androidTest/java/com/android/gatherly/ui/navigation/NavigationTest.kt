@@ -25,6 +25,7 @@ import com.android.gatherly.utils.FirestoreGatherlyTest
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
 import org.junit.Rule
 import org.junit.Test
@@ -200,7 +201,14 @@ class NavigationTest : FirestoreGatherlyTest() {
    */
   @Test
   fun canLogOutFromProfileAnon() {
+    runTest(timeout = 60.seconds) {
+      FirebaseEmulator.auth.signOut()
+      FirebaseEmulator.auth.signInAnonymously().await()
+    }
+
     composeTestRule.setContent { GatherlyApp() }
+    composeTestRule.waitForIdle()
+
     composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.PROFILE_TAB).performClick()
     composeTestRule.checkProfileScreenIsDisplayed()
@@ -210,6 +218,9 @@ class NavigationTest : FirestoreGatherlyTest() {
         .onNodeWithTag(AlertDialogTestTags.CONFIRM_BTN)
         .assertIsDisplayed()
         .performClick()
+    composeTestRule.waitUntil(10_000L) {
+      composeTestRule.onNodeWithTag(SignInScreenTestTags.WELCOME_TITLE).isDisplayed()
+    }
     composeTestRule.checkSignInScreenIsDisplayed()
   }
 
@@ -219,7 +230,14 @@ class NavigationTest : FirestoreGatherlyTest() {
    */
   @Test
   fun canLogOutFromSettingsAnon() {
+    runTest(timeout = 60.seconds) {
+      FirebaseEmulator.auth.signOut()
+      FirebaseEmulator.auth.signInAnonymously().await()
+    }
+
     composeTestRule.setContent { GatherlyApp() }
+    composeTestRule.waitForIdle()
+
     composeTestRule.onNodeWithTag(NavigationTestTags.DROP_MENU).performClick()
     composeTestRule.onNodeWithTag(NavigationTestTags.SETTINGS_TAB).performClick()
     composeTestRule.checkSettingsScreenIsDisplayed()
@@ -229,6 +247,9 @@ class NavigationTest : FirestoreGatherlyTest() {
         .onNodeWithTag(AlertDialogTestTags.CONFIRM_BTN)
         .assertIsDisplayed()
         .performClick()
+    composeTestRule.waitUntil(10_000L) {
+      composeTestRule.onNodeWithTag(SignInScreenTestTags.WELCOME_TITLE).isDisplayed()
+    }
     composeTestRule.checkSignInScreenIsDisplayed()
   }
 
