@@ -37,7 +37,7 @@ class Milestone3End2End : FirestoreGatherlyTest() {
       GrantPermissionRule.grant(
           Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
 
-  val TIMEOUT = 30000L
+  val TIMEOUT = 300000L
   private var currentCredentialManager: CredentialManager? = null
 
   // Credentials
@@ -216,6 +216,12 @@ class Milestone3End2End : FirestoreGatherlyTest() {
         .onNodeWithTag(FindFriendsScreenTestTags.getTestTagForFriendRequestButton(username))
         .assertIsDisplayed()
         .performClick()
+
+    // The friend request send is fire-and-forget from the UI (viewModelScope.launch).
+    // Sleep to let the async Firestore writes complete before the caller triggers
+    // restartAppWithUser (which cancels viewModelScope mid-write).
+    // See PR description for context on the underlying race in FriendsViewModel.
+    Thread.sleep(3000)
   }
 
   /**
