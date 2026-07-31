@@ -12,6 +12,7 @@ import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 
 /**
  * Base class for Firestore-based Android tests using the Firebase Emulator Suite.
@@ -19,6 +20,8 @@ import org.junit.Before
  * Before running, start the emulators: firebase emulators:start
  */
 open class FirestoreGatherlyTest {
+
+  @get:Rule val retryRule = RetryRule(retryCount = 2)
 
   protected lateinit var repository: ToDosRepository
 

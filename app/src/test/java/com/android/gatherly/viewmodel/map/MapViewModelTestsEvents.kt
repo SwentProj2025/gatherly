@@ -5,6 +5,7 @@ import com.android.gatherly.model.event.EventStatus
 import com.android.gatherly.model.map.Location
 import com.google.firebase.Timestamp
 import java.text.SimpleDateFormat
+import java.util.Calendar
 
 object MapViewModelTestsEvents {
   val testLocation1 = Location(latitude = 46.5190, longitude = 6.5668, name = "BC Building")
@@ -13,7 +14,19 @@ object MapViewModelTestsEvents {
   val testLocation2 =
       Location(latitude = 46.5186, longitude = 6.5661, name = "Rolex Learning Center")
 
-  val christmas2025 = Timestamp(SimpleDateFormat("dd/MM/yyyy").parse("25/12/2025")!!)
+  val nextYearChristmas: Timestamp =
+      Calendar.getInstance()
+          .apply {
+            set(Calendar.YEAR, get(Calendar.YEAR) + 1)
+            set(Calendar.MONTH, Calendar.DECEMBER)
+            set(Calendar.DAY_OF_MONTH, 25)
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+          }
+          .let { Timestamp(it.time) }
+
   val newYears2023 = Timestamp(SimpleDateFormat("dd/MM/yyyy").parse("01/01/2023")!!)
   val mexicoGP = Timestamp(SimpleDateFormat("dd/MM/yyyy").parse("26/10/2023")!!)
   val startTime = Timestamp(SimpleDateFormat("HH:mm").parse("10:00")!!)
@@ -23,11 +36,11 @@ object MapViewModelTestsEvents {
   val upcomingEventWithLocation1 =
       Event(
           id = "upcoming_location",
-          title = "Celebrate Christmas 2025",
-          description = "Come celebrate christmas with us in a few months :)",
+          title = "Celebrate Next year's Christmas",
+          description = "Come celebrate christmas with us next year :)",
           creatorName = "Gatherly team",
           location = testLocation1,
-          date = christmas2025,
+          date = nextYearChristmas,
           startTime = startTime,
           endTime = endTime,
           creatorId = "gersende",
@@ -39,11 +52,11 @@ object MapViewModelTestsEvents {
   val upcomingEventWithLocation2 =
       Event(
           id = "upcoming_location_2",
-          title = "Christmas anti-party",
+          title = "Next Year Christmas anti-party",
           description = ">:(",
           creatorName = "Anti-Gatherly team",
           location = testLocation2,
-          date = christmas2025,
+          date = nextYearChristmas,
           startTime = startTime,
           endTime = endTime,
           creatorId = "anti-gersende",
